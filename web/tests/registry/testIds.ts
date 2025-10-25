@@ -1,516 +1,392 @@
 /**
- * Test IDs Registry - UPDATED OCTOBER 22, 2025
+ * Test ID Registry
  * 
- * Complete test ID registry reflecting current system state
- * Updated after major performance improvements and TypeScript error fixes
+ * Centralized registry of test IDs used across E2E tests
+ * to ensure consistency and maintainability.
+ * 
+ * @fileoverview Test ID registry for E2E testing
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @updated 2025-10-24
+ * @status ACTIVE
+ * @version 1.0.0
  */
 
 /**
- * TEST STATUS REGISTRY - OCTOBER 22, 2025
+ * Test ID Registry Class
  * 
- * ✅ WORKING TESTS (Properly Implemented):
- * - Authentication tests: 16/16 passing - tests actual auth page without bypasses
- * - Dashboard functionality: Load time ~0.35s (EXCEEDED <3s target!)
- * - API endpoints: All returning proper authentication responses
- * - Test categories: Accessibility, compatibility, security, monitoring all re-enabled
- * 
- * ❌ BROKEN TESTS (Bad Practices - Need Fixing):
- * - Voting system tests: Using ?e2e=1 bypass and AuthHelper.authenticateWithOnboarding()
- * - Onboarding flow tests: Same bad authentication practices
- * - Database audit tests: Looking for non-existent form elements like [data-testid="username"]
- * - User journey tests: Using authentication bypasses instead of real flows
- * 
- * 🔧 MAJOR ACHIEVEMENTS:
- * - Performance: Dashboard load time reduced from 8-18s to ~0.35s (95%+ improvement!)
- * - TypeScript: Reduced from 42 to 15 errors (64% reduction!)
- * - API Schema: All APIs correctly using existing database fields
- * - Privacy: Dangerous geo_lat/geo_lon fields successfully removed
- * - Database: Identified 67 used tables and 157 unused tables
+ * Provides centralized access to all test IDs used in E2E tests
+ * to ensure consistency and easy maintenance.
  */
+export class TestIds {
+  // Authentication related test IDs
+  static readonly AUTH = {
+    LOGIN_FORM: 'login-form',
+    REGISTER_FORM: 'register-form',
+    EMAIL_INPUT: 'email-input',
+    PASSWORD_INPUT: 'password-input',
+    LOGIN_BUTTON: 'login-button',
+    REGISTER_BUTTON: 'register-button',
+    LOGOUT_BUTTON: 'logout-button',
+    FORGOT_PASSWORD_LINK: 'forgot-password-link',
+    RESET_PASSWORD_FORM: 'reset-password-form',
+    RESET_PASSWORD_BUTTON: 'reset-password-button'
+  } as const;
 
-export const T = {
-  // Auth related
-  loginButton: 'login-button',
-  registerButton: 'register-button',
-  logoutButton: 'logout-button',
-  
-  // Poll related
-  createPollButton: 'create-poll-button',
-  voteButton: 'vote-button',
-  pollTitle: 'poll-title',
-  
-  // Navigation
-  navigation: 'navigation',
-  userMenu: 'user-menu',
-  languageSelector: 'language-selector',
-  
-  // Admin
-  admin: {
-    accessDenied: 'admin-access-denied',
-    usersTab: 'admin-users-tab',
-    pollsTab: 'admin-polls-tab',
-    userList: 'admin-user-list',
-    pollList: 'admin-poll-list',
-    promoteUser: (userId: string) => `admin-promote-user-${userId}`,
-    banUser: (userId: string) => `admin-ban-user-${userId}`,
-    
-    // Admin Dashboard
-    dashboard: 'admin-dashboard',
-    dashboardTitle: 'admin-dashboard-title',
-    systemHealthBadge: 'admin-system-health-badge',
-    refreshButton: 'admin-refresh-button',
-    
-    // Admin Dashboard Tabs
-    overviewTab: 'admin-overview-tab',
-    analyticsTab: 'admin-analytics-tab',
-    messagesTab: 'admin-messages-tab',
-    systemTab: 'admin-system-tab',
-    
-    // Admin Dashboard Cards
-    totalUsersCard: 'admin-total-users-card',
-    totalPollsCard: 'admin-total-polls-card',
-    totalVotesCard: 'admin-total-votes-card',
-    systemHealthCard: 'admin-system-health-card',
-    
-    // Admin Quick Actions
-    createSiteMessageAction: 'admin-create-site-message-action',
-    manageUsersAction: 'admin-manage-users-action',
-    reviewFeedbackAction: 'admin-review-feedback-action',
-    systemStatusAction: 'admin-system-status-action',
-    
-    // Admin Analytics
-    userEngagementSection: 'admin-user-engagement-section',
-    systemPerformanceSection: 'admin-system-performance-section',
-    
-    // Admin Site Messages
-    siteMessagesTitle: 'admin-site-messages-title',
-    createMessageButton: 'admin-create-message-button',
-    messageList: 'admin-message-list',
-    
-    // Admin System
-    databasePerformanceSection: 'admin-database-performance-section',
-    serverResourcesSection: 'admin-server-resources-section',
-  },
-  
-  // Login/Register
-  login: {
-    email: 'login-email',
-    password: 'login-password',
-    submit: 'login-submit',
-    form: 'auth-form',
-    toggle: 'auth-toggle',
-    error: 'auth-error',
-    success: 'success-message',
-  },
-  
-  // WebAuthn
-  webauthn: {
-    register: 'webauthn-register',
+  // Navigation related test IDs
+  static readonly NAVIGATION = {
+    MAIN_NAV: 'main-navigation',
+    MOBILE_MENU: 'mobile-menu',
+    MOBILE_MENU_TOGGLE: 'mobile-menu-toggle',
+    USER_MENU: 'user-menu',
+    USER_MENU_TOGGLE: 'user-menu-toggle',
+    ADMIN_MENU: 'admin-menu',
+    ADMIN_MENU_TOGGLE: 'admin-menu-toggle',
+    BREADCRUMBS: 'breadcrumbs'
+  } as const;
+
+  // Dashboard related test IDs
+  static readonly DASHBOARD = {
+    DASHBOARD_CONTAINER: 'dashboard-container',
+    WELCOME_MESSAGE: 'welcome-message',
+    USER_STATS: 'user-stats',
+    RECENT_ACTIVITY: 'recent-activity',
+    QUICK_ACTIONS: 'quick-actions',
+    NOTIFICATIONS: 'notifications',
+    NOTIFICATION_BELL: 'notification-bell',
+    NOTIFICATION_COUNT: 'notification-count'
+  } as const;
+
+  // Profile related test IDs
+  static readonly PROFILE = {
+    PROFILE_FORM: 'profile-form',
+    PROFILE_EDIT_BUTTON: 'profile-edit-button',
+    PROFILE_SAVE_BUTTON: 'profile-save-button',
+    PROFILE_CANCEL_BUTTON: 'profile-cancel-button',
+    NAME_INPUT: 'name-input',
+    BIO_INPUT: 'bio-input',
+    INTERESTS_INPUT: 'interests-input',
+    AVATAR_UPLOAD: 'avatar-upload',
+    AVATAR_IMAGE: 'avatar-image',
+    PREFERENCES_SECTION: 'preferences-section',
+    PRIVACY_SETTINGS: 'privacy-settings',
+    NOTIFICATION_SETTINGS: 'notification-settings'
+  } as const;
+
+  // Polls related test IDs
+  static readonly POLLS = {
+    POLLS_CONTAINER: 'polls-container',
+    POLL_CREATE_BUTTON: 'poll-create-button',
+    POLL_CREATE_FORM: 'poll-create-form',
+    POLL_TITLE_INPUT: 'poll-title-input',
+    POLL_DESCRIPTION_INPUT: 'poll-description-input',
+    POLL_OPTION_INPUT: 'poll-option-input',
+    POLL_ADD_OPTION_BUTTON: 'poll-add-option-button',
+    POLL_REMOVE_OPTION_BUTTON: 'poll-remove-option-button',
+    POLL_SUBMIT_BUTTON: 'poll-submit-button',
+    POLL_CANCEL_BUTTON: 'poll-cancel-button',
+    POLL_ITEM: 'poll-item',
+    POLL_VOTE_BUTTON: 'poll-vote-button',
+    POLL_RESULTS: 'poll-results',
+    POLL_SHARE_BUTTON: 'poll-share-button',
+    POLL_EDIT_BUTTON: 'poll-edit-button',
+    POLL_DELETE_BUTTON: 'poll-delete-button'
+  } as const;
+
+  // Hashtags related test IDs
+  static readonly HASHTAGS = {
+    HASHTAG_INPUT: 'hashtag-input',
+    HASHTAG_SUGGESTIONS: 'hashtag-suggestions',
+    HASHTAG_ITEM: 'hashtag-item',
+    HASHTAG_REMOVE_BUTTON: 'hashtag-remove-button',
+    TRENDING_HASHTAGS: 'trending-hashtags',
+    HASHTAG_SEARCH: 'hashtag-search',
+    HASHTAG_FILTER: 'hashtag-filter'
+  } as const;
+
+  // Admin related test IDs
+  static readonly ADMIN = {
+    ADMIN_DASHBOARD: 'admin-dashboard',
+    ADMIN_SIDEBAR: 'admin-sidebar',
+    ADMIN_CONTENT: 'admin-content',
+    USER_MANAGEMENT: 'user-management',
+    USER_TABLE: 'user-table',
+    USER_ROW: 'user-row',
+    USER_EDIT_BUTTON: 'user-edit-button',
+    USER_DELETE_BUTTON: 'user-delete-button',
+    USER_BAN_BUTTON: 'user-ban-button',
+    USER_UNBAN_BUTTON: 'user-unban-button',
+    CONTENT_MODERATION: 'content-moderation',
+    MODERATION_QUEUE: 'moderation-queue',
+    APPROVE_BUTTON: 'approve-button',
+    REJECT_BUTTON: 'reject-button',
+    SYSTEM_SETTINGS: 'system-settings',
+    FEATURE_FLAGS: 'feature-flags',
+    ANALYTICS: 'analytics',
+    REPORTS: 'reports',
+    // Additional admin test IDs
+    USER_LIST: 'user-list',
+    POLL_LIST: 'poll-list',
+    OVERVIEW_TAB: 'overview-tab',
+    ANALYTICS_TAB: 'analytics-tab',
+    DASHBOARD: 'admin-dashboard'
+  } as const;
+
+  // Forms related test IDs
+  static readonly FORMS = {
+    FORM_CONTAINER: 'form-container',
+    FORM_SUBMIT_BUTTON: 'form-submit-button',
+    FORM_CANCEL_BUTTON: 'form-cancel-button',
+    FORM_RESET_BUTTON: 'form-reset-button',
+    FORM_ERROR_MESSAGE: 'form-error-message',
+    FORM_SUCCESS_MESSAGE: 'form-success-message',
+    FORM_LOADING: 'form-loading',
+    FORM_VALIDATION_ERROR: 'form-validation-error'
+  } as const;
+
+  // Modals related test IDs
+  static readonly MODALS = {
+    MODAL_CONTAINER: 'modal-container',
+    MODAL_OVERLAY: 'modal-overlay',
+    MODAL_CLOSE_BUTTON: 'modal-close-button',
+    MODAL_HEADER: 'modal-header',
+    MODAL_BODY: 'modal-body',
+    MODAL_FOOTER: 'modal-footer',
+    MODAL_CONFIRM_BUTTON: 'modal-confirm-button',
+    MODAL_CANCEL_BUTTON: 'modal-cancel-button'
+  } as const;
+
+  // Loading states related test IDs
+  static readonly LOADING = {
+    LOADING_SPINNER: 'loading-spinner',
+    LOADING_OVERLAY: 'loading-overlay',
+    LOADING_MESSAGE: 'loading-message',
+    SKELETON_LOADER: 'skeleton-loader',
+    PROGRESS_BAR: 'progress-bar'
+  } as const;
+
+  // Error states related test IDs
+  static readonly ERRORS = {
+    ERROR_MESSAGE: 'error-message',
+    ERROR_CONTAINER: 'error-container',
+    ERROR_RETRY_BUTTON: 'error-retry-button',
+    ERROR_DISMISS_BUTTON: 'error-dismiss-button',
+    NETWORK_ERROR: 'network-error',
+    VALIDATION_ERROR: 'validation-error',
+    SERVER_ERROR: 'server-error'
+  } as const;
+
+  // Success states related test IDs
+  static readonly SUCCESS = {
+    SUCCESS_MESSAGE: 'success-message',
+    SUCCESS_CONTAINER: 'success-container',
+    SUCCESS_DISMISS_BUTTON: 'success-dismiss-button',
+    SUCCESS_ICON: 'success-icon'
+  } as const;
+
+  // Accessibility related test IDs
+  static readonly A11Y = {
+    SKIP_LINK: 'skip-link',
+    MAIN_CONTENT: 'main-content',
+    LANDMARK_NAV: 'landmark-nav',
+    LANDMARK_MAIN: 'landmark-main',
+    LANDMARK_ASIDE: 'landmark-aside',
+    LANDMARK_FOOTER: 'landmark-footer',
+    FOCUS_TRAP: 'focus-trap',
+    ARIA_LIVE_REGION: 'aria-live-region'
+  } as const;
+
+  // Performance related test IDs
+  static readonly PERFORMANCE = {
+    PERFORMANCE_MARKER: 'performance-marker',
+    RENDER_TIME: 'render-time',
+    LOAD_TIME: 'load-time',
+    INTERACTION_TIME: 'interaction-time'
+  } as const;
+
+  // Security related test IDs
+  static readonly SECURITY = {
+    CSRF_TOKEN: 'csrf-token',
+    SECURITY_HEADER: 'security-header',
+    AUTH_TOKEN: 'auth-token',
+    SESSION_ID: 'session-id'
+  } as const;
+
+  // Analytics related test IDs
+  static readonly ANALYTICS = {
+    ANALYTICS_TRACKER: 'analytics-tracker',
+    TRACKING_PIXEL: 'tracking-pixel',
+    EVENT_TRIGGER: 'event-trigger',
+    METRIC_COUNTER: 'metric-counter'
+  } as const;
+
+  // Internationalization related test IDs
+  static readonly I18N = {
+    LANGUAGE_SELECTOR: 'language-selector',
+    CURRENCY_SELECTOR: 'currency-selector',
+    TIMEZONE_SELECTOR: 'timezone-selector',
+    LOCALE_DISPLAY: 'locale-display'
+  } as const;
+
+  // WebAuthn related test IDs
+  static readonly WEBAUTHN = {
+    WEBAUTHN_BUTTON: 'webauthn-button',
+    WEBAUTHN_REGISTER: 'webauthn-register',
+    WEBAUTHN_AUTHENTICATE: 'webauthn-authenticate',
+    WEBAUTHN_CREDENTIALS: 'webauthn-credentials',
+    WEBAUTHN_ADD_CREDENTIAL: 'webauthn-add-credential',
+    WEBAUTHN_REMOVE_CREDENTIAL: 'webauthn-remove-credential',
+    FEATURES: 'webauthn-features',
+    // Additional properties for PasskeyControls
     login: 'webauthn-login',
     prompt: 'webauthn-prompt',
-    features: 'webauthn-features',
     biometricButton: 'webauthn-biometric-button',
     crossDeviceButton: 'webauthn-cross-device-button',
     qr: 'webauthn-qr',
     authPrompt: 'webauthn-auth-prompt',
     biometricPrompt: 'webauthn-biometric-prompt',
     networkError: 'webauthn-network-error',
-    serverError: 'webauthn-server-error',
-  },
-  
-  // Poll Creation
-  pollCreate: {
-    title: 'poll-create-title',
-    titleError: 'poll-create-title-error',
-    description: 'poll-create-description',
-    category: 'poll-create-category',
-    votingMethod: 'poll-create-voting-method',
-    votingMethodError: 'poll-create-voting-method-error',
-    optionInput: (index: number) => `poll-create-option-input-${index}`,
-    removeOption: (index: number) => `poll-create-remove-option-${index}`,
-    addOption: 'poll-create-add-option',
-    optionsError: 'poll-create-options-error',
-    startTime: 'poll-create-start-time',
-    endTime: 'poll-create-end-time',
-    timingError: 'poll-create-timing-error',
-    privacyLevel: 'poll-create-privacy-level',
-    submit: 'poll-create-submit',
-    reset: 'poll-create-reset',
-  },
-  
-  // Generic
-  submitButton: 'submit-button',
-  cancelButton: 'cancel-button',
-  loadingSpinner: 'loading-spinner',
-  
-  // PWA
-  pwa: {
-    status: 'pwa-status',
-    installPrompt: 'pwa-install-prompt',
-    installButton: 'pwa-install-button',
-    installedStatus: 'pwa-installed-status',
-    offlineIndicator: 'offline-indicator',
-    offlineQueue: 'offline-queue',
-    syncButton: 'pwa-sync-button',
-    clearButton: 'pwa-clear-button',
-    requestPermissionButton: 'pwa-request-permission-button',
-    testNotificationButton: 'pwa-test-notification-button',
-    firstFocusable: 'pwa-first-focusable',
-    installingIndicator: 'pwa-installing-indicator',
-    installedIndicator: 'pwa-installed-indicator',
-    notificationPermission: 'pwa-notification-permission',
-    notificationPreferences: 'pwa-notification-preferences',
-    regularUserNotifications: 'regular-user-notifications',
-    offlineSync: 'offline-sync',
-    syncError: 'pwa-sync-error',
-    secondFocusable: 'pwa-second-focusable',
-    stateAnnouncement: 'pwa-state-announcement',
-    adminUserNotifications: 'admin-user-notifications',
-    installError: 'pwa-install-error',
-    mobileNotifications: 'mobile-notifications',
-  },
+    serverError: 'webauthn-server-error'
+  } as const;
 
-  // Accessibility
-  accessibility: {
-    mainHeading: 'main-heading',
-    sectionHeading: 'section-heading',
-    searchInput: 'search-input',
-    filterButton: 'filter-button',
-    feedItem: (id: string) => `feed-item-${id}`,
-    liveRegion: 'live-region',
-    statusMessage: 'status-message',
-    errorMessage: 'error-message',
-    alertMessage: 'alert-message',
-    loadingIndicator: 'loading-indicator',
-    skipLink: 'skip-link',
-    focusTrap: 'focus-trap',
-    modal: 'modal',
-    dialog: 'dialog',
-    complementary: 'complementary',
-    navigation: 'navigation',
-    main: 'main',
-    banner: 'banner',
-    contentinfo: 'contentinfo',
-    form: 'form',
-    search: 'search',
-    article: 'article',
-    region: 'region',
-    button: 'button',
-    link: 'link',
-    textbox: 'textbox',
-    checkbox: 'checkbox',
-    radio: 'radio',
-    select: 'select',
-    slider: 'slider',
-    progressbar: 'progressbar',
-    tablist: 'tablist',
-    tab: 'tab',
-    tabpanel: 'tabpanel',
-    menu: 'menu',
-    menuitem: 'menuitem',
-    tree: 'tree',
-    treeitem: 'treeitem',
-    grid: 'grid',
-    row: 'row',
-    cell: 'cell',
-    table: 'table',
-    columnheader: 'columnheader',
-    rowheader: 'rowheader',
-    list: 'list',
-    listitem: 'listitem',
-    group: 'group',
-    separator: 'separator',
-    toolbar: 'toolbar',
-    tooltip: 'tooltip',
-    status: 'status',
-    alert: 'alert',
-    log: 'log',
-    marquee: 'marquee',
-    timer: 'timer',
-    application: 'application',
-    document: 'document',
-    presentation: 'presentation',
-    img: 'img',
-    figure: 'figure',
-    caption: 'caption',
-    legend: 'legend',
-    fieldset: 'fieldset',
-    label: 'label',
-    description: 'description',
-    details: 'details',
-    summary: 'summary',
-    disclosure: 'disclosure',
-    disclosureButton: 'disclosure-button',
-    disclosurePanel: 'disclosure-panel',
-    combobox: 'combobox',
-    listbox: 'listbox',
-    option: 'option',
-    spinbutton: 'spinbutton',
-    switch: 'switch',
-  },
-  
-  // Poll
-  poll: {
-    item: 'poll-item',
-    title: 'poll-title',
-    description: 'poll-description',
-    results: 'poll-results',
-    voteCount: 'vote-count',
-    category: 'poll-category',
-    privacy: 'poll-privacy',
-    timing: 'poll-timing',
-    voteError: 'vote-error',
-    search: 'poll-search',
-    categoryFilter: 'category-filter',
-  },
+  // Feedback related test IDs
+  static readonly FEEDBACK = {
+    FEEDBACK_FORM: 'feedback-form',
+    FEEDBACK_RATING: 'feedback-rating',
+    FEEDBACK_COMMENT: 'feedback-comment',
+    FEEDBACK_SUBMIT: 'feedback-submit',
+    FEEDBACK_SUCCESS: 'feedback-success'
+  } as const;
 
-  // Social Sharing
-  socialSharing: {
-    shareButton: 'share-button',
-    shareModal: 'share-modal',
-    shareTwitter: 'share-twitter',
-    shareFacebook: 'share-facebook',
-    shareLinkedin: 'share-linkedin',
-    shareEmail: 'share-email',
-    shareNative: 'share-native',
-    shareCount: 'share-count',
-    shareUrl: 'share-url',
-    shareTitle: 'share-title',
-    shareDescription: 'share-description',
-  },
-  
-  // Navigation
-  pollsNav: 'polls-nav',
-  profileLink: 'profile-link',
-  
-  // Dashboard
-  dashboard: {
-    page: 'dashboard-page',
-    header: 'dashboard-header',
-    content: 'dashboard-content',
-    nav: 'dashboard-nav',
-    title: 'dashboard-title',
-    userInfo: 'user-info',
-    userName: 'user-name',
-    userEmail: 'user-email',
-    
-    // Personal Dashboard Tabs
-    overviewTab: 'dashboard-overview-tab',
-    feedTab: 'dashboard-feed-tab',
-    analyticsTab: 'dashboard-analytics-tab',
-    
-    // Personal Dashboard Sections
-    personalAnalytics: 'personal-analytics',
-    personalizedContent: 'personalized-content',
-    engagementScore: 'engagement-score',
-    advancedPrivacy: 'advanced-privacy',
-    contactSystem: 'contact-system',
-    internationalization: 'internationalization',
-    electedOfficials: 'elected-officials',
-    officialCard: (id: string) => `official-card-${id}`,
-    quickActions: 'quick-actions',
-    recentActivity: 'recent-activity',
-    
-    // Dashboard Settings
-    dashboardSettings: 'dashboard-settings',
-    settingsTitle: 'dashboard-settings-title',
-    settingsContent: 'dashboard-settings-content',
-    
-    // Settings Toggles
-    showQuickActionsToggle: 'show-quick-actions-toggle',
-    showElectedOfficialsToggle: 'show-elected-officials-toggle',
-    showRecentActivityToggle: 'show-recent-activity-toggle',
-    showEngagementScoreToggle: 'show-engagement-score-toggle',
-    
-    // Personal Analytics Cards
-    totalVotes: 'total-votes',
-    pollsCreated: 'polls-created',
-    activePolls: 'active-polls',
-    votesOnUserPolls: 'votes-on-user-polls',
-    participationScore: 'participation-score',
-    
-    // Quick Actions
-    createPollAction: 'create-poll-action',
-    updateProfileAction: 'update-profile-action',
-    setLocationAction: 'set-location-action',
-    exportDataAction: 'export-data-action',
-    
-    // Elected Officials
-    officialName: (id: string) => `official-name-${id}`,
-    officialTitle: (id: string) => `official-title-${id}`,
-    officialEmail: (id: string) => `official-email-${id}`,
-    officialPhone: (id: string) => `official-phone-${id}`,
-    
-    // UnifiedFeed Integration
-    unifiedFeed: 'unified-feed',
-    feedTitle: 'feed-title',
-    feedContent: 'feed-content',
-    metricsSection: 'metrics-section',
-    metricsTitle: 'metrics-title',
-    metricsGrid: 'metrics-grid',
-    metricPollsCreated: 'metric-polls-created',
-    metricVotesCast: 'metric-votes-cast',
-    metricParticipation: 'metric-participation',
-    metricSessionTime: 'metric-session-time',
-    metricValue: 'metric-value',
-    metricLabel: 'metric-label',
-    pollsSection: 'polls-section',
-    pollsHeader: 'polls-header',
-    pollsTitle: 'polls-title',
-    pollsList: 'polls-list',
-    pollItem: (id: string) => `poll-item-${id}`,
-    pollTitle: 'poll-title',
-    pollStatus: 'poll-status',
-    pollVotes: 'poll-votes',
-    createPollBtn: 'create-poll-btn',
-    recentActivitySection: 'recent-activity-section',
-    activityTitle: 'activity-title',
-    activityList: 'activity-list',
-    activityItem: (id: string) => `activity-item-${id}`,
-    activityText: 'activity-text',
-    activityTime: 'activity-time',
-    navDashboard: 'nav-dashboard',
-    navPolls: 'nav-polls',
-    navCivics: 'nav-civics',
-    navProfile: 'nav-profile',
-  },
-  
-  // Onboarding
-  onboarding: {
-    flow: 'onboarding-flow',
-    progress: 'onboarding-progress',
-    currentStep: 'current-step',
-    totalSteps: 'total-steps',
-    welcomeStep: 'welcome-step',
-    welcomeTitle: 'welcome-title',
-    welcomeSubtitle: 'welcome-subtitle',
-    welcomeNext: 'welcome-next',
-    welcomeSkip: 'welcome-skip',
-    privacyStep: 'privacy-step',
-    privacyTitle: 'privacy-title',
-    privacyOptions: 'privacy-options',
-    notificationsLabel: 'notifications-label',
-    notificationsCheckbox: 'notifications-checkbox',
-    dataSharingLabel: 'data-sharing-label',
-    dataSharingCheckbox: 'data-sharing-checkbox',
-    privacyNext: 'privacy-next',
-    privacyBack: 'privacy-back',
-    demographicsStep: 'demographics-step',
-    demographicsTitle: 'demographics-title',
-    demographicsForm: 'demographics-form',
-    ageInput: 'age-input',
-    genderSelect: 'gender-select',
-    locationInput: 'location-input',
-    demographicsNext: 'demographics-next',
-    demographicsBack: 'demographics-back',
-    demographicsSkip: 'demographics-skip',
-    authStep: 'auth-step',
-    authTitle: 'auth-title',
-    authSubtitle: 'auth-subtitle',
-    authNext: 'auth-next',
-    authBack: 'auth-back',
-    profileStep: 'profile-step',
-    profileTitle: 'profile-title',
-    profileForm: 'profile-form',
-    usernameInput: 'username-input',
-    bioTextarea: 'bio-textarea',
-    profileNext: 'profile-next',
-    profileBack: 'profile-back',
-    profileSkip: 'profile-skip',
-    completeStep: 'complete-step',
-    completeTitle: 'complete-title',
-    completeSubtitle: 'complete-subtitle',
-    completeFinish: 'complete-finish',
-    tourNext: 'tour-next',
-    dataUsageNext: 'data-usage-next',
-    interestsNext: 'interests-next',
-    experienceNext: 'experience-next',
-  },
-  
-  // Forms
-  registerForm: 'register-form',
-  loginForm: 'login-form',
-  loginError: 'login-error',
-  
-  // User
-  signUpButton: 'sign-up-button',
-  completeOnboarding: 'complete-onboarding',
-  biometricSetupButton: 'biometric-setup-button',
-  
-  // Admin
-  adminUsersTab: 'admin-users-tab',
-  adminPollsTab: 'admin-polls-tab',
-  adminSystemTab: 'admin-system-tab',
-  systemStatus: 'system-status',
-  deletePollButton: 'delete-poll-button',
-  moderatePollButton: 'moderate-poll-button',
-  
-  // Navigation & UI Components
-  hamburgerMenu: 'hamburger-menu',
-  themeToggle: 'theme-toggle',
-  onlineIndicator: 'online-indicator',
-  mainHeading: 'main-heading',
-  button: 'button',
-  status: 'status',
-  
-  // Test Toggle (for debugging)
-  testToggle: 'test-toggle',
-  
-  // Login Form
-  loginHydrated: 'login-hydrated',
-  
-  // Onboarding Passkey Setup
-  onboardingPasskeySetup: 'onboarding-passkey-setup',
-  authPasskeyOption: 'auth-passkey-option',
-  authEmailOption: 'auth-email-option',
-  authGoogleOption: 'auth-google-option',
-  
-  // Onboarding Flow Steps
-  welcomeNext: 'welcome-next',
-  privacyNext: 'privacy-next',
-  profileNext: 'profile-next',
-  tourNext: 'tour-next',
-  dataUsageNext: 'data-usage-next',
-  interestsNext: 'interests-next',
-  experienceNext: 'experience-next',
-  
-  // Form Validation & UI Elements
-  emailValidation: 'email-validation',
-  passwordStrength: 'password-strength',
-  passwordMatch: 'password-match',
-  displayNameValidation: 'display-name-validation',
-  successMessage: 'success-message',
-  userAvatar: 'user-avatar',
-  emailError: 'email-error',
-  passwordError: 'password-error',
-  displayNameError: 'display-name-error',
-  errorSummary: 'error-summary',
-  errorCount: 'error-count',
-  passwordToggle: 'password-toggle',
-  errorMessage: 'error-message',
-  retryButton: 'retry-button',
-  mobileMenu: 'mobile-menu',
-  csrfToken: 'csrf-token',
-  rateLimitMessage: 'rate-limit-message',
+  // Civic actions related test IDs
+  static readonly CIVIC_ACTIONS = {
+    CIVIC_ACTIONS_CONTAINER: 'civic-actions-container',
+    ACTION_CREATE_BUTTON: 'action-create-button',
+    ACTION_FORM: 'action-form',
+    ACTION_TITLE_INPUT: 'action-title-input',
+    ACTION_DESCRIPTION_INPUT: 'action-description-input',
+    ACTION_TYPE_SELECT: 'action-type-select',
+    ACTION_PRIORITY_SELECT: 'action-priority-select',
+    ACTION_DUE_DATE_INPUT: 'action-due-date-input',
+    ACTION_SUBMIT_BUTTON: 'action-submit-button',
+    ACTION_ITEM: 'action-item',
+    ACTION_EDIT_BUTTON: 'action-edit-button',
+    ACTION_DELETE_BUTTON: 'action-delete-button',
+    ACTION_COMPLETE_BUTTON: 'action-complete-button'
+  } as const;
 
-  // Internationalization (i18n)
-  i18n: {
-    languageSelector: 'language-selector',
-    languageDropdown: 'language-dropdown',
-    translatedText: 'translated-text',
-    welcomeMessage: 'welcome-message',
-    navigationHome: 'nav-home',
-    navigationDashboard: 'nav-dashboard',
-    navigationPolls: 'nav-polls',
-    navigationRepresentatives: 'nav-representatives',
-    navigationAnalytics: 'nav-analytics',
-    navigationProfile: 'nav-profile',
-    navigationSettings: 'nav-settings',
-    navigationAdmin: 'nav-admin',
-    navigationLogout: 'nav-logout',
-    navigationLogin: 'nav-login',
-    navigationRegister: 'nav-register'
-  },
-} as const;
+  // Contact messaging related test IDs
+  static readonly CONTACT = {
+    CONTACT_FORM: 'contact-form',
+    CONTACT_RECIPIENT_SELECT: 'contact-recipient-select',
+    CONTACT_SUBJECT_INPUT: 'contact-subject-input',
+    CONTACT_MESSAGE_INPUT: 'contact-message-input',
+    CONTACT_PRIORITY_SELECT: 'contact-priority-select',
+    CONTACT_SUBMIT_BUTTON: 'contact-submit-button',
+    CONTACT_THREAD: 'contact-thread',
+    CONTACT_MESSAGE: 'contact-message',
+    CONTACT_REPLY_BUTTON: 'contact-reply-button'
+  } as const;
 
-export type TestId = typeof T[keyof typeof T];
+  /**
+   * Get all test IDs as a flat object
+   * @returns Object containing all test IDs
+   */
+  static getAllTestIds(): Record<string, string> {
+    const allIds: Record<string, string> = {};
+    
+    // Flatten all test ID categories
+    Object.entries(TestIds).forEach(([category, ids]) => {
+      if (typeof ids === 'object' && ids !== null) {
+        Object.entries(ids).forEach(([key, value]) => {
+          allIds[`${category}.${key}`] = value as string;
+        });
+      }
+    });
+    
+    return allIds;
+  }
+
+  /**
+   * Validate test ID exists
+   * @param testId - Test ID to validate
+   * @returns boolean - True if test ID exists
+   */
+  static isValidTestId(testId: string): boolean {
+    const allIds = TestIds.getAllTestIds();
+    return Object.values(allIds).includes(testId);
+  }
+
+  /**
+   * Get test ID by category and key
+   * @param category - Test ID category
+   * @param key - Test ID key
+   * @returns string | undefined - Test ID value or undefined
+   */
+  static getTestId(category: string, key: string): string | undefined {
+    const categoryIds = (TestIds as any)[category];
+    if (categoryIds && typeof categoryIds === 'object') {
+      const value = categoryIds[key];
+      return typeof value === 'string' ? value : undefined;
+    }
+    return undefined;
+  }
+
+  /**
+   * Generate dynamic test IDs for admin functions
+   */
+  static readonly admin = {
+    // Static properties
+    userList: 'user-list',
+    pollList: 'poll-list',
+    overviewTab: 'overview-tab',
+    analyticsTab: 'analytics-tab',
+    dashboard: 'admin-dashboard',
+    // Dynamic methods
+    promoteUser: (userId: string) => `promote-user-${userId}`,
+    banUser: (userId: string) => `ban-user-${userId}`,
+    unbanUser: (userId: string) => `unban-user-${userId}`,
+    editUser: (userId: string) => `edit-user-${userId}`,
+    deleteUser: (userId: string) => `delete-user-${userId}`
+  };
+
+  /**
+   * Login related test IDs
+   */
+  static readonly login = {
+    submit: 'login-submit',
+    form: 'login-form',
+    email: 'login-email',
+    password: 'login-password'
+  };
+
+  /**
+   * Login form test ID
+   */
+  static readonly loginForm = 'login-form';
+
+  /**
+   * Login error test ID
+   */
+  static readonly loginError = 'login-error';
+
+  /**
+   * Submit button test ID
+   */
+  static readonly submitButton = 'login-submit';
+
+  /**
+   * Login hydration sentinel for E2E tests
+   */
+  static readonly loginHydrated = 'login-hydrated';
+}
+
+/**
+ * Default export for convenience
+ */
+export default TestIds;
+
+/**
+ * Alias for easier access
+ */
+export const T = TestIds;

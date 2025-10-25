@@ -1,210 +1,334 @@
 /**
- * Database Tracker
+ * Database Tracker Utility
  * 
- * Tracks database table usage during E2E tests to identify
- * which tables are actively used by the application.
+ * Comprehensive database tracking system for E2E tests to monitor
+ * which tables and queries are actually used during testing.
  * 
- * Created: January 27, 2025
- * Updated: January 27, 2025
- * Purpose: Database table usage auditing for E2E testing
+ * @fileoverview Database tracking and analysis for E2E testing
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @updated 2025-10-24
+ * @status ACTIVE
+ * @version 1.0.0
+ * 
+ * @requires @supabase/supabase-js
+ * @requires fs
+ * @requires path
  */
 
-interface DatabaseQuery {
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Interface for database query tracking
+ */
+export interface DatabaseQuery {
   table: string;
-  operation: string;
+  operation: 'select' | 'insert' | 'update' | 'delete';
   context: string;
   timestamp: Date;
 }
 
-interface DatabaseResults {
-    totalTables: number;
-    totalQueries: number;
-    mostUsedTable: string;
-  tablesUsed: string[];
+/**
+ * Interface for database results
+ */
+export interface DatabaseResults {
   queries: DatabaseQuery[];
-  verifiedTables: number;
-  dataVerificationEntries: number;
+  tablesUsed: Set<string>;
+  operationsCount: Map<string, number>;
+  contextCount: Map<string, number>;
 }
 
+/**
+ * Database Tracker Class
+ * 
+ * Tracks all database interactions during E2E testing to identify
+ * which tables and operations are actually used in production.
+ */
 export class DatabaseTracker {
-  private static queries: DatabaseQuery[] = [];
-  private static verifiedTables: Set<string> = new Set();
-  private static dataVerificationEntries: number = 0;
-  private static supabaseClient: any = null;
+  private static instance: DatabaseTracker;
+  private queries: DatabaseQuery[] = [];
+  private supabase: SupabaseClient | null = null;
+  private logFile: string;
+
+  /**
+   * Constructor for DatabaseTracker
+   * @param logFile - Path to log file for tracking
+   */
+  constructor(logFile?: string) {
+    this.logFile = logFile || path.join(process.cwd(), 'database-tracking.log');
+    this.initializeSupabase();
+  }
+
+  /**
+   * Get singleton instance of DatabaseTracker
+   * @returns DatabaseTracker instance
+   */
+  public static getInstance(): DatabaseTracker {
+    if (!DatabaseTracker.instance) {
+      DatabaseTracker.instance = new DatabaseTracker();
+    }
+    return DatabaseTracker.instance;
+  }
+
+  /**
+   * Initialize Supabase client for database operations
+   * @private
+   */
+  private initializeSupabase(): void {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        console.warn('⚠️  Supabase credentials not found, database tracking limited');
+        return;
+      }
+
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      console.log('🔌 Supabase client initialized for data verification');
+    } catch (error) {
+      console.error('❌ Error initializing Supabase client:', error);
+    }
+  }
+
+  /**
+   * Initialize Supabase client with custom credentials
+   * @param supabaseUrl - Supabase URL
+   * @param supabaseKey - Supabase key
+   */
+  public static initializeSupabase(supabaseUrl: string, supabaseKey: string): void {
+    const tracker = DatabaseTracker.getInstance();
+    try {
+      tracker.supabase = createClient(supabaseUrl, supabaseKey);
+      console.log('🔌 Supabase client initialized for data verification');
+    } catch (error) {
+      console.error('❌ Error initializing Supabase client:', error);
+    }
+  }
+
+  /**
+   * Reset database tracking
+   */
+  public static reset(): void {
+    const tracker = DatabaseTracker.getInstance();
+    tracker.queries = [];
+    console.log('🔄 Enhanced database tracking reset');
+  }
 
   /**
    * Track a database query
+   * @param table - Database table name
+   * @param operation - Database operation type
+   * @param context - Context where query was made
    */
-  static trackQuery(table: string, operation: string, context: string): void {
+  public static trackQuery(table: string, operation: DatabaseQuery['operation'], context: string): void {
+    const tracker = DatabaseTracker.getInstance();
+    
     const query: DatabaseQuery = {
       table,
       operation,
       context,
       timestamp: new Date()
     };
+
+    tracker.queries.push(query);
     
-    this.queries.push(query);
+    // Log to file
+    const logEntry = `[${query.timestamp.toISOString()}] ${operation.toUpperCase()} ${table} - ${context}\n`;
+    fs.appendFileSync(tracker.logFile, logEntry);
+    
     console.log(`📊 Database Query: ${operation} on ${table} (${context})`);
   }
 
   /**
-   * Mark a table as verified
+   * Get all tracked queries
+   * @returns Array of database queries
    */
-  static markTableVerified(table: string): void {
-    this.verifiedTables.add(table);
-    console.log(`✅ Table verified: ${table}`);
+  public static getQueries(): DatabaseQuery[] {
+    return DatabaseTracker.getInstance().queries;
   }
 
   /**
-   * Track data verification entry
+   * Get unique tables used
+   * @returns Set of table names
    */
-  static trackDataVerification(): void {
-    this.dataVerificationEntries++;
-    console.log(`🔍 Data verification entry tracked`);
+  public static getTablesUsed(): Set<string> {
+    const queries = DatabaseTracker.getQueries();
+    return new Set(queries.map(q => q.table));
   }
 
   /**
-   * Get current results
+   * Get operation counts
+   * @returns Map of operation counts
    */
-  static getResults(): DatabaseResults {
-    const tablesUsed = Array.from(new Set(this.queries.map(q => q.table)));
-    const tableCounts = tablesUsed.reduce((acc, table) => {
-      acc[table] = this.queries.filter(q => q.table === table).length;
-      return acc;
-    }, {} as Record<string, number>);
+  public static getOperationCounts(): Map<string, number> {
+    const queries = DatabaseTracker.getQueries();
+    const counts = new Map<string, number>();
     
-    const mostUsedTable = Object.entries(tableCounts).reduce((a, b) => 
-      tableCounts[a[0]] > tableCounts[b[0]] ? a : b, ['', 0]
-    )[0];
+    queries.forEach(query => {
+      const key = `${query.operation}_${query.table}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    
+    return counts;
+  }
+
+  /**
+   * Get context counts
+   * @returns Map of context counts
+   */
+  public static getContextCounts(): Map<string, number> {
+    const queries = DatabaseTracker.getQueries();
+    const counts = new Map<string, number>();
+    
+    queries.forEach(query => {
+      counts.set(query.context, (counts.get(query.context) || 0) + 1);
+    });
+    
+    return counts;
+  }
+
+  /**
+   * Generate comprehensive report
+   * @returns Database results summary
+   */
+  public static generateReport(): DatabaseResults {
+    const queries = DatabaseTracker.getQueries();
+    const tablesUsed = DatabaseTracker.getTablesUsed();
+    const operationsCount = DatabaseTracker.getOperationCounts();
+    const contextCount = DatabaseTracker.getContextCounts();
 
     return {
-      totalTables: tablesUsed.length,
-      totalQueries: this.queries.length,
-      mostUsedTable,
+      queries,
       tablesUsed,
-      queries: Array.from(this.queries),
-      verifiedTables: this.verifiedTables.size,
-      dataVerificationEntries: this.dataVerificationEntries
+      operationsCount,
+      contextCount
     };
   }
 
   /**
-   * Reset tracking data
+   * Save tracking report to file
+   * @param filename - Output filename
    */
-  static reset(): void {
-    this.queries = [];
-    this.verifiedTables.clear();
-    this.dataVerificationEntries = 0;
-    console.log('🔄 Enhanced database tracking reset');
+  public static async saveReport(filename: string): Promise<void> {
+    try {
+      const report = DatabaseTracker.generateReport();
+      const reportPath = path.join(process.cwd(), filename);
+      
+      const reportData = {
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalQueries: report.queries.length,
+          uniqueTables: report.tablesUsed.size,
+          operationsCount: Object.fromEntries(report.operationsCount),
+          contextCount: Object.fromEntries(report.contextCount)
+        },
+        queries: report.queries,
+        tablesUsed: Array.from(report.tablesUsed),
+        recommendations: DatabaseTracker.generateRecommendations(report)
+      };
+      
+      fs.writeFileSync(reportPath, JSON.stringify(reportData, null, 2));
+      console.log(`📄 Database tracking report saved to: ${reportPath}`);
+    } catch (error) {
+      console.error('❌ Error saving database report:', error);
+    }
   }
 
   /**
-   * Get table usage statistics
+   * Generate recommendations based on tracking data
+   * @param results - Database results
+   * @returns Array of recommendations
    */
-  static getTableStats(): Record<string, number> {
-    const tableCounts = this.queries.reduce((acc, query) => {
-      acc[query.table] = (acc[query.table] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  private static generateRecommendations(results: DatabaseResults): string[] {
+    const recommendations: string[] = [];
     
-    return tableCounts;
-  }
-
-  /**
-   * Get queries by table
-   */
-  static getQueriesByTable(table: string): DatabaseQuery[] {
-    return this.queries.filter(q => q.table === table);
-  }
-
-  /**
-   * Get queries by operation
-   */
-  static getQueriesByOperation(operation: string): DatabaseQuery[] {
-    return this.queries.filter(q => q.operation === operation);
-  }
-
-  /**
-   * Get queries by context
-   */
-  static getQueriesByContext(context: string): DatabaseQuery[] {
-    return this.queries.filter(q => q.context === context);
-  }
-
-  /**
-   * Initialize Supabase client for database tracking
-   */
-  static initializeSupabase(supabaseUrl: string, supabaseKey: string): void {
-    console.log('🔌 Supabase client initialized for data verification');
-    // Store the client for potential future use
-    this.supabaseClient = { url: supabaseUrl, key: supabaseKey };
-  }
-
-  /**
-   * Get Supabase client
-   */
-  static getSupabaseClient(): any {
-    return this.supabaseClient;
-  }
-
-  /**
-   * Get standardized report path for test results
-   */
-  static getReportPath(testName: string): string {
-    const path = require('path');
-    return path.join('/Users/alaughingkitsune/src/Choices/web/test-results', 'reports', `${testName}-database-report.json`);
-  }
-
-  /**
-   * Get used tables (alias for getUsedTables)
-   */
-  static getUsedTables(): string[] {
-    return Array.from(new Set(this.queries.map(q => q.table)));
-  }
-
-  /**
-   * Get verified tables (alias for getVerifiedTables)
-   */
-  static getVerifiedTables(): string[] {
-    return Array.from(this.verifiedTables);
-  }
-
-  /**
-   * Get query log (alias for getQueryLog)
-   */
-  static getQueryLog(): DatabaseQuery[] {
-    return Array.from(this.queries);
-  }
-
-  /**
-   * Get data verification (alias for getDataVerification)
-   */
-  static getDataVerification(): any[] {
-    return this.dataVerificationEntries;
-  }
-
-  /**
-   * Generate report (alias for generateReport)
-   */
-  static generateReport(): DatabaseResults {
-    return this.getResults();
-  }
-
-  /**
-   * Save report (alias for saveReport)
-   */
-  static saveReport(reportPath: string, results: DatabaseResults): void {
-    const fs = require('fs');
-    const path = require('path');
+    // Tables with high usage
+    const highUsageTables = Array.from(results.tablesUsed).filter(table => {
+      const count = results.queries.filter(q => q.table === table).length;
+      return count > 5;
+    });
     
-    // Ensure directory exists
-    const dir = path.dirname(reportPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (highUsageTables.length > 0) {
+      recommendations.push(`High usage tables: ${highUsageTables.join(', ')}`);
     }
     
-    fs.writeFileSync(reportPath, JSON.stringify(results, null, 2));
-    console.log(`📊 Database usage report saved to: ${reportPath}`);
+    // Tables with low usage
+    const lowUsageTables = Array.from(results.tablesUsed).filter(table => {
+      const count = results.queries.filter(q => q.table === table).length;
+      return count <= 2;
+    });
+    
+    if (lowUsageTables.length > 0) {
+      recommendations.push(`Low usage tables (consider optimization): ${lowUsageTables.join(', ')}`);
+    }
+    
+    // Operation patterns
+    const selectCount = results.queries.filter(q => q.operation === 'select').length;
+    const writeCount = results.queries.filter(q => ['insert', 'update', 'delete'].includes(q.operation)).length;
+    
+    if (selectCount > writeCount * 3) {
+      recommendations.push('Read-heavy workload detected - consider read replicas');
+    }
+    
+    return recommendations;
+  }
+}
+
+/**
+ * Table Usage Analyzer
+ * 
+ * Analyzes database table usage patterns and provides insights
+ * for optimization and schema design.
+ */
+export class TableUsageAnalyzer {
+  /**
+   * Analyze table usage patterns
+   * @param usedTables - Set of used table names
+   * @param allTables - Array of all available tables
+   * @returns Analysis results
+   */
+  public static analyzeUsage(usedTables: Set<string>, allTables: string[]): {
+    summary: {
+      usagePercentage: number;
+      unusedTables: number;
+      usedTables: number;
+    };
+    recommendations: {
+      safeToRemove: string[];
+      reviewNeeded: string[];
+      optimize: string[];
+    };
+  } {
+    const usedTablesArray = Array.from(usedTables);
+    const unusedTables = allTables.filter(table => !usedTables.has(table));
+    const usagePercentage = (usedTablesArray.length / allTables.length) * 100;
+    
+    return {
+      summary: {
+        usagePercentage,
+        unusedTables: unusedTables.length,
+        usedTables: usedTablesArray.length
+      },
+      recommendations: {
+        safeToRemove: unusedTables.filter(table => 
+          !table.includes('auth') && 
+          !table.includes('user') && 
+          !table.includes('session')
+        ),
+        reviewNeeded: unusedTables.filter(table => 
+          table.includes('auth') || 
+          table.includes('user') || 
+          table.includes('session')
+        ),
+        optimize: usedTablesArray.filter(table => {
+          const count = DatabaseTracker.getQueries().filter(q => q.table === table).length;
+          return count > 10;
+        })
+      }
+    };
   }
 }
 

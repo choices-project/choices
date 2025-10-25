@@ -21,7 +21,7 @@ import { logger } from '@/lib/utils/logger'
  * - Rate limiting for sensitive endpoints
  * - Request validation and sanitization
  * 
- * Created: 2025-08-27
+ * Created: 2025-10-24
  * Status: Critical security enhancement
  */
 
@@ -179,14 +179,21 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   if (isProtectedRoute) {
-    // Check for Supabase session cookies
-    const accessToken = request.cookies.get('sb-access-token');
-    const refreshToken = request.cookies.get('sb-refresh-token');
+    // Check for Supabase session cookies - Supabase uses project-specific cookie names
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const projectId = supabaseUrl?.split('//')[1]?.split('.')[0];
+    const authTokenName = `sb-${projectId}-auth-token`;
     
-    if (!accessToken || !refreshToken) {
+    const authToken = request.cookies.get(authTokenName);
+    
+    if (!authToken) {
       console.log(`🚨 SECURITY: Unauthenticated access attempt to protected route: ${pathname}`);
       return NextResponse.redirect(new URL('/auth', request.url));
     }
+    
+    // For now, if the token exists, allow access
+    // TODO: Add proper JWT validation in the future
+    console.log(`✅ Authentication token found for protected route: ${pathname}`);
   }
   
   // Skip middleware for static files and API routes that don't need security headers

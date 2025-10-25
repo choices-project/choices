@@ -410,14 +410,16 @@ async function sendRepresentativeNotification(
   representative: any
 ) {
   try {
-    // Check if representative has notifications enabled
-    const { data: notificationPrefs } = await supabase
-      .from('user_notification_preferences')
-      .select('contact_messages')
+    // Check if representative has notifications enabled using new schema
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('privacy_settings')
       .eq('user_id', representative.user_id)
       .single();
 
-    if (notificationPrefs?.contact_messages !== false) {
+    const contactMessagesEnabled = userProfile?.privacy_settings?.contact_messages !== false;
+
+    if (contactMessagesEnabled) {
       // Create notification
       await supabase
         .from('admin_notifications')

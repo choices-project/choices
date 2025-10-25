@@ -170,7 +170,7 @@ export function isLanguageSupported(language: string): language is SupportedLang
  */
 export function getLanguageDisplayName(language: SupportedLanguage): string {
   const langOption = LANGUAGE_OPTIONS.find(lang => lang.code === language);
-  return langOption?.native || langOption?.name || language;
+  return langOption?.native || (langOption as any)?.name || language;
 }
 
 /**

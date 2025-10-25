@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Civics 2.0 Main Page
  * 
@@ -7,8 +9,6 @@
  * - Instagram-like social feed
  * - FREE APIs integration
  */
-
-'use client';
 
 import { 
   MagnifyingGlassIcon, 

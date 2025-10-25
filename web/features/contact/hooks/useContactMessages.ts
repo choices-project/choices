@@ -101,8 +101,8 @@ export function useContactMessages(representativeId: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(messageData),
       });
 
@@ -179,8 +179,8 @@ export function useContactThreads() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(threadData),
       });
 

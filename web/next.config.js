@@ -63,6 +63,32 @@ const nextConfig = {
       '@': require('path').resolve(__dirname, './')
     }
 
+    // Exclude service worker files from server build
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        '/sw.js': 'commonjs /sw.js',
+        '/workbox-*.js': 'commonjs /workbox-*.js'
+      });
+      
+      // Add fallback for client-side globals
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'self': false,
+        'window': false,
+        'navigator': false,
+        'document': false
+      };
+      
+      // Exclude service worker files from server bundle
+      config.module = config.module || {};
+      config.module.rules = config.module.rules || [];
+      config.module.rules.push({
+        test: /\.(sw|workbox)\.js$/,
+        use: 'null-loader'
+      });
+    }
+
     // Performance optimizations
     if (!dev) {
       // Enable tree shaking in production

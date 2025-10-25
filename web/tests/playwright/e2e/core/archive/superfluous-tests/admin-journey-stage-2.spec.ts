@@ -14,8 +14,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { DatabaseTracker } from '../../utils/database-tracker';
-import { ConsistentTestUserManager, ADMIN_TEST_USER } from '../../utils/consistent-test-user';
+import { DatabaseTracker } from '../../../utils/database-tracker';
+import { ConsistentTestUserManager, ADMIN_TEST_USER } from '../../../utils/consistent-test-user';
 
 test.describe('Admin Journey Stage 2', () => {
   test.beforeEach(async ({ page }) => {

@@ -102,10 +102,14 @@ function UnifiedFeed({
   // const { getTrendingHashtags } = useHashtagActions();
   // const { trendingCount } = useHashtagStats();
   
-  // Mock data for testing
+  // Simplified state management to prevent timeout
   const [feeds, setFeeds] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
   const loadFeeds = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/feeds');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -113,15 +117,18 @@ function UnifiedFeed({
       const data = await response.json();
       console.log('[UnifiedFeed] API response:', data);
       setFeeds(data.feeds || []);
+      setLoadError(null);
     } catch (error) {
       console.error('[UnifiedFeed] API error:', error);
-      throw error;
+      setLoadError('Failed to load feeds');
+    } finally {
+      setIsLoading(false);
     }
   };
+  
   const likeFeed = () => Promise.resolve();
   const bookmarkFeed = () => Promise.resolve();
-  const refreshFeeds = () => Promise.resolve();
-  const isLoading = false;
+  const refreshFeeds = () => loadFeeds();
   const pwaStore = { isOnline: true };
   const user = { id: 'test-user' };
   const addNotification = () => {};
@@ -318,12 +325,16 @@ function UnifiedFeed({
     }
   }, [loadFeeds, loadHashtagPollsFeed, setError]);
 
-  // Initialize feed data with cleanup - re-enabled with stable dependencies
+  // Initialize feed data with cleanup - simplified to prevent timeout
   useEffect(() => {
-    console.log('[UnifiedFeed] useEffect triggered', { userId, loadFeedData: typeof loadFeedData });
+    console.log('[UnifiedFeed] useEffect triggered', { userId });
     if (userId) {
-      console.log('[UnifiedFeed] Calling loadFeedData with userId:', userId);
-      loadFeedData();
+      console.log('[UnifiedFeed] Loading feeds for userId:', userId);
+      // Simplified feed loading to prevent timeout
+      loadFeeds().catch(error => {
+        console.error('[UnifiedFeed] Error loading feeds:', error);
+        setLoadError('Failed to load feeds');
+      });
     } else {
       console.log('[UnifiedFeed] No userId provided');
     }
@@ -916,6 +927,34 @@ function UnifiedFeed({
       document.body.classList.remove('dark');
     }
   }, [isClient]);
+
+  // Show loading state to prevent timeout
+  if (isLoading) {
+    return (
+      <div className={cn('unified-feed', className)} data-testid="unified-feed">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (loadError) {
+    return (
+      <div className={cn('unified-feed', className)} data-testid="unified-feed">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600">Error Loading Feed</h3>
+            <p className="text-gray-600">{loadError}</p>
+            <Button onClick={loadFeeds} className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

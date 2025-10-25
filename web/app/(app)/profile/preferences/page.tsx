@@ -20,10 +20,12 @@ export default function ProfilePreferencesPage() {
       if (!user) return;
       
       try {
-        const response = await fetch('/api/v1/user/interests');
+        const response = await fetch('/api/profile');
         if (response.ok) {
           const data = await response.json();
-          setUserInterests(data.interests || []);
+          // Extract interests from the profile data
+          const interests = data.interests?.categories || data.profile?.primary_concerns || [];
+          setUserInterests(interests);
         }
       } catch (error) {
         console.error('Failed to load user interests:', error);
@@ -40,12 +42,18 @@ export default function ProfilePreferencesPage() {
     setMessage(null);
 
     try {
-      const response = await fetch('/api/v1/user/interests', {
+      const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ interests }),
+        body: JSON.stringify({ 
+          interests: {
+            categories: interests,
+            keywords: [],
+            topics: []
+          }
+        }),
       });
 
       if (response.ok) {

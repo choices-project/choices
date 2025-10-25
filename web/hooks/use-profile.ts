@@ -39,10 +39,10 @@ async function getCurrentProfile() {
   
   // Transform API response to match expected format
   return {
-    success: apiData.success,
+    success: true,
     data: {
       ...apiData.profile,
-      email: apiData.email,
+      email: apiData.profile?.email,
     },
   };
 }

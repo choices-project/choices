@@ -16,16 +16,100 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { useUser, useUserActions } from '@/lib/stores'
+import { useUser, useUserActions, useUserLoading, useIsAuthenticated } from '@/lib/stores'
 import { useI18n } from '@/hooks/useI18n'
 import LanguageSelector from '@/components/shared/LanguageSelector'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [hasError, setHasError] = useState(false)
   const pathname = usePathname()
-  const user = useUser();
-  const { signOut } = useUserActions();
-  const { t } = useI18n();
+
+  // Error boundary for component
+  if (hasError) {
+    return (
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-gray-200 rounded"></div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-20 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+  
+  // Safe user hook with error handling and loading state
+  let user: any = null;
+  let signOut: (() => Promise<void>) | null = null;
+  let isLoading = false;
+  let isAuthenticated = false;
+  
+  // Try each hook individually to isolate issues
+  try {
+    user = useUser();
+  } catch (error) {
+    console.warn('useUser hook failed:', error);
+    user = null;
+    setHasError(true);
+  }
+  
+  try {
+    const userActions = useUserActions();
+    signOut = userActions?.signOut || null;
+  } catch (error) {
+    console.warn('useUserActions hook failed:', error);
+    signOut = null;
+    setHasError(true);
+  }
+  
+  try {
+    isLoading = useUserLoading() || false;
+  } catch (error) {
+    console.warn('useUserLoading hook failed:', error);
+    isLoading = false;
+    setHasError(true);
+  }
+  
+  try {
+    isAuthenticated = useIsAuthenticated() || false;
+  } catch (error) {
+    console.warn('useIsAuthenticated hook failed:', error);
+    isAuthenticated = false;
+    setHasError(true);
+  }
+  
+  // Safe i18n hook with error handling
+  let t: (key: string) => string;
+  try {
+    const i18n = useI18n();
+    t = i18n.t;
+  } catch (error) {
+    console.warn('i18n hook failed, using fallback:', error);
+    t = (key: string) => key; // Fallback to key as translation
+  }
+
+  // Show loading state if user data is still loading or if we're not authenticated yet
+  if (isLoading || (!isAuthenticated && !user)) {
+    return (
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -37,7 +121,9 @@ export default function GlobalNavigation() {
 
   const handleLogout = async () => {
     try {
-      await signOut()
+      if (signOut) {
+        await signOut()
+      }
       closeMobileMenu()
     } catch (error) {
       console.error('Logout failed:', error)

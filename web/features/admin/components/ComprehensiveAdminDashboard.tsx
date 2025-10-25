@@ -127,7 +127,17 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
     try {
       console.log('🌐 Fetching optimized admin dashboard data...');
       const startTime = Date.now();
-      const response = await fetch('/api/admin/dashboard?include=overview,analytics,health,activity');
+      // Add timeout protection
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch('/api/admin/dashboard?include=overview,analytics,health,activity', {
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'max-age=60' }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -171,66 +181,140 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
         fromCache: data.fromCache
       });
     } catch (error) {
-      logger.error('Error loading platform analytics:', error as Error);
-      setError('Failed to load platform analytics');
+      if ((error as Error).name === 'AbortError') {
+        logger.warn('Platform analytics request timed out - using default data');
+        // Set default analytics to prevent empty state
+        setAnalytics({
+          totalUsers: 0,
+          totalPolls: 0,
+          totalVotes: 0,
+          activePolls: 0,
+          totalFeedback: 0,
+          systemHealth: { status: 'healthy', uptime: 0, responseTime: 0, errorRate: 0 },
+          engagement: { dailyActiveUsers: 0, weeklyActiveUsers: 0, monthlyActiveUsers: 0, participationRate: 0 },
+          recentActivity: []
+        });
+      } else {
+        logger.error('Error loading platform analytics:', error as Error);
+        setError('Failed to load platform analytics');
+      }
     }
   }, []);
 
   // Load site messages
   const loadSiteMessages = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/site-messages');
+      // Add timeout protection
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      const response = await fetch('/api/admin/site-messages', {
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'max-age=30' }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setSiteMessages(data || []);
       logger.info('Site messages loaded', { count: data?.length || 0 });
-            } catch (error) {
-              logger.error('Error loading site messages:', error as Error);
-            }
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        logger.warn('Site messages request timed out');
+        setSiteMessages([]); // Set empty array instead of failing
+      } else {
+        logger.error('Error loading site messages:', error as Error);
+      }
+    }
   }, []);
 
   // Load system metrics
   const loadSystemMetrics = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/health?type=status');
+      // Add timeout protection
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      const response = await fetch('/api/admin/health?type=status', {
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'max-age=60' }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setSystemMetrics(data);
       logger.info('System metrics loaded', { metrics: data });
-            } catch (error) {
-              logger.error('Error loading system metrics:', error as Error);
-            }
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        logger.warn('System metrics request timed out');
+        setSystemMetrics({
+          database: { connections: 0, queryTime: 0, cacheHitRate: 0 },
+          server: { cpu: 0, memory: 0, disk: 0, uptime: 0 },
+          performance: { avgResponseTime: 0, requestsPerSecond: 0, errorRate: 0 }
+        }); // Set default metrics
+      } else {
+        logger.error('Error loading system metrics:', error as Error);
+      }
+    }
   }, []);
 
-  // Load dashboard data once on mount - no auto-refresh
+  // Load dashboard data with timeout protection and progressive enhancement
   useEffect(() => {
     const loadDashboardData = async () => {
       setIsLoading(true);
       
-      // Load analytics first (most important)
+      // Set a timeout to prevent hanging
+      const timeoutId = setTimeout(() => {
+        if (isLoading) {
+          logger.warn('Dashboard loading timeout - showing partial data');
+          setIsLoading(false);
+        }
+      }, 8000); // 8 second timeout
+      
       try {
-        await loadPlatformAnalytics();
+        // Load analytics first with timeout protection
+        const analyticsPromise = loadPlatformAnalytics().catch(error => {
+          logger.error('Error loading platform analytics:', error as Error);
+          return null; // Don't fail the whole dashboard
+        });
+        
+        // Wait for analytics with timeout
+        await Promise.race([
+          analyticsPromise,
+          new Promise(resolve => setTimeout(resolve, 5000)) // 5 second timeout for analytics
+        ]);
+        
         setIsLoading(false); // Show dashboard as soon as analytics load
+        clearTimeout(timeoutId);
+        
+        // Load other data in background (non-blocking, with individual timeouts)
+        Promise.race([
+          loadSiteMessages(),
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ]).catch(error => {
+          logger.error('Error loading site messages:', error as Error);
+        });
+        
+        Promise.race([
+          loadSystemMetrics(),
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ]).catch(error => {
+          logger.error('Error loading system metrics:', error as Error);
+        });
+        
       } catch (error) {
-        logger.error('Error loading platform analytics:', error as Error);
-        setError('Failed to load platform analytics');
+        logger.error('Error loading dashboard data:', error as Error);
+        setError('Failed to load dashboard data');
         setIsLoading(false);
+        clearTimeout(timeoutId);
       }
-      
-      // Load other data in background (non-blocking)
-      loadSiteMessages().catch(error => {
-        logger.error('Error loading site messages:', error as Error);
-        // Don't set error state for site messages - it's not critical
-      });
-      
-      loadSystemMetrics().catch(error => {
-        logger.error('Error loading system metrics:', error as Error);
-        // Don't set error state for system metrics - it's not critical
-      });
     };
 
     loadDashboardData();

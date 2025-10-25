@@ -50,10 +50,10 @@ export async function loginAction(formData: FormData) {
 
   logger.info('User authenticated successfully', { userId: authData.user.id });
   
-  // Check if user has completed onboarding
+  // Check if user has completed onboarding based on key fields
   const { data: profile, error: profileError } = await (supabase as any)
     .from('user_profiles')
-    .select('onboarding_completed')
+    .select('demographics, primary_concerns, community_focus, participation_style')
     .eq('user_id', authData.user.id)
     .single();
 
@@ -65,8 +65,16 @@ export async function loginAction(formData: FormData) {
   // Supabase automatically sets session cookies
   // No need for manual session management
   
+  // Check onboarding completion based on presence of key fields
+  const isOnboardingCompleted = !!(
+    profile?.demographics && 
+    profile?.primary_concerns && 
+    profile?.community_focus &&
+    profile?.participation_style
+  );
+  
   // Redirect based on onboarding status
-  if (profile?.onboarding_completed === true) {
+  if (isOnboardingCompleted) {
     logger.info('User has completed onboarding, redirecting to dashboard');
     redirect('/dashboard');
   } else {

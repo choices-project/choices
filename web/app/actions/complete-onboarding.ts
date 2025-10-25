@@ -58,10 +58,13 @@ export const completeOnboarding = createSecureServerAction(
       throw new Error('Supabase client not available')
     }
 
-    // Update or create user profile to mark onboarding as completed
+    // Update or create user profile with onboarding data
     const updateData = {
-      onboarding_completed: true,
-      preferences: {
+      demographics: validatedData.demographics,
+      primary_concerns: validatedData.primaryConcerns,
+      community_focus: validatedData.communityFocus,
+      participation_style: validatedData.participationStyle,
+      privacy_settings: {
         notifications: validatedData.notifications,
         dataSharing: validatedData.dataSharing,
         theme: validatedData.theme

@@ -23,15 +23,15 @@ export default function BiometricSetupPage() {
       setStep('registering')
       setMessage('Setting up biometric authentication...')
 
-      // Get current user info (you'll need to implement this based on your auth system)
-      const userResponse = await fetch('/api/auth/me')
+      // Get current user info using existing profile API
+      const userResponse = await fetch('/api/profile')
       const userData = await userResponse.json()
 
-      if (!userResponse.ok || !userData.user) {
+      if (!userResponse.ok || !userData.profile) {
         throw new Error('Please log in to set up biometric authentication')
       }
 
-      const { user } = userData
+      const user = userData.profile
 
       // Get registration options
       const optionsResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/options', {

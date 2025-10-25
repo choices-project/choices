@@ -376,17 +376,15 @@ export const useCivicsStore = create<CivicsStore>()(
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/civics/representatives', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ address }),
-            });
+            // Use the existing secure by-address API
+            const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
             
             if (!response.ok) {
               throw new Error('Failed to load representatives');
             }
             
-            const representatives = await response.json();
+            const data = await response.json();
+            const representatives = data.representatives || [];
             set({ representatives });
             
             logger.info('Representatives loaded', {
@@ -409,17 +407,15 @@ export const useCivicsStore = create<CivicsStore>()(
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/civics/districts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ address }),
-            });
+            // Use the existing secure by-address API to get district information
+            const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
             
             if (!response.ok) {
               throw new Error('Failed to load districts');
             }
             
-            const districts = await response.json();
+            const data = await response.json();
+            const districts = data.districts || [];
             set({ districts });
             
             logger.info('Districts loaded', {
@@ -442,13 +438,15 @@ export const useCivicsStore = create<CivicsStore>()(
             setLoading(true);
             setError(null);
             
+            // Use the real civic actions API
             const response = await fetch('/api/civics/actions');
             
             if (!response.ok) {
               throw new Error('Failed to load civic actions');
             }
             
-            const actions = await response.json();
+            const data = await response.json();
+            const actions = data.data?.actions || [];
             set({ civicActions: actions });
             
             logger.info('Civic actions loaded', {
@@ -470,9 +468,12 @@ export const useCivicsStore = create<CivicsStore>()(
             setUpdating(true);
             setError(null);
             
+            // Use the real civic actions API
             const response = await fetch('/api/civics/actions', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+              },
               body: JSON.stringify(action),
             });
             
@@ -480,9 +481,18 @@ export const useCivicsStore = create<CivicsStore>()(
               throw new Error('Failed to save civic action');
             }
             
+            const data = await response.json();
+            const savedAction = data.data?.action;
+            
+            if (savedAction) {
+              // Update the store with the new action
+              const { civicActions } = get();
+              set({ civicActions: [...civicActions, savedAction] });
+            }
+            
             logger.info('Civic action saved', {
-              actionId: action.id,
-              type: action.type
+              actionId: savedAction?.id,
+              type: savedAction?.type
             });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';

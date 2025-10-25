@@ -23,6 +23,7 @@ import {
 } from '@/lib/core/auth/idempotency'
 import { getSecurityConfig } from '@/lib/security/config'
 import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Common validation schemas
 export const BaseActionSchema = z.object({
@@ -204,11 +205,18 @@ export async function requireAdmin(context: ServerActionContext): Promise<{
 }> {
   const user = await getAuthenticatedUser(context)
   
-  if (user.userRole !== 'admin') {
+  // Use RBAC system to check admin status
+  const supabase = getSupabaseServerClient()
+  const { data: isAdmin, error } = await supabase.rpc('is_admin', {
+    user_id: user.userId
+  })
+  
+  if (error || !isAdmin) {
     logger.warn('Unauthorized admin access attempt', {
       userId: user.userId,
       userRole: user.userRole,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      rbacError: error?.message
     })
     throw new Error('Admin access required')
   }

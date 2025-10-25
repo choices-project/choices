@@ -1,293 +1,349 @@
 /**
- * Consistent Test User Management
+ * Consistent Test User Manager
  * 
- * Manages a dedicated test user for consistent tracking across all E2E tests.
- * Provides user creation, authentication, and cleanup functionality.
+ * Manages consistent test users across E2E tests to ensure
+ * reliable and reproducible test results.
  * 
- * Created: October 23, 2025
- * Status: ✅ ACTIVE
+ * @fileoverview Test user management for E2E testing
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @updated 2025-10-24
+ * @status ACTIVE
+ * @version 1.0.0
+ * 
+ * @requires @supabase/supabase-js
  */
 
-export const CONSISTENT_TEST_USER = {
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+/**
+ * Interface for test user data
+ */
+export interface TestUser {
+  email: string;
+  password: string;
+  name: string;
+  isAdmin: boolean;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Consistent test user for regular user testing
+ */
+export const CONSISTENT_TEST_USER: TestUser = {
   email: 'consistent-test-user@example.com',
-  password: 'ConsistentUser123!',
-  username: 'consistentuser',
-  displayName: 'Consistent Test User',
-  location: 'San Francisco, CA',
-  preferences: {
-    notifications: true,
-    dataSharing: true,
-    civics: true,
-    hashtags: ['politics', 'civics', 'democracy']
+  password: 'testpassword123',
+  name: 'Consistent Test User',
+  isAdmin: false,
+  metadata: {
+    interests: ['politics', 'environment', 'technology']
   }
 };
 
-export const ADMIN_TEST_USER = {
+/**
+ * Admin test user for admin testing
+ */
+export const ADMIN_TEST_USER: TestUser = {
   email: 'admin-test-user@example.com',
-  password: 'AdminPassword123!',
-  username: 'admintestuser',
-  displayName: 'Admin Test User',
-  location: 'San Francisco, CA',
-  preferences: {
-    notifications: true,
-    dataSharing: true,
-    civics: true,
-    hashtags: ['admin', 'management', 'system']
+  password: 'adminpassword123',
+  name: 'Admin Test User',
+  isAdmin: true,
+  metadata: {
+    interests: ['administration', 'management'],
+    adminLevel: 'super'
   }
 };
 
+/**
+ * Consistent Test User Manager Class
+ * 
+ * Manages test user lifecycle and ensures consistent state
+ * across E2E test runs.
+ */
 export class ConsistentTestUserManager {
-  private static userCreated = false;
-  private static userAuthenticated = false;
-  private static adminUserCreated = false;
-  private static adminUserAuthenticated = false;
+  private static instance: ConsistentTestUserManager;
+  private supabase: SupabaseClient | null = null;
+  private initialized: boolean = false;
 
   /**
-   * Ensure the consistent test user exists
-   * 
-   * CORRECT APPROACH: Test users should use normal auth flow, not admin APIs
+   * Constructor for ConsistentTestUserManager
    */
-  static async ensureUserExists(): Promise<boolean> {
-    if (this.userCreated) {
-      return true;
+  constructor() {
+    this.initializeSupabase();
+  }
+
+  /**
+   * Get singleton instance
+   * @returns ConsistentTestUserManager instance
+   */
+  public static getInstance(): ConsistentTestUserManager {
+    if (!ConsistentTestUserManager.instance) {
+      ConsistentTestUserManager.instance = new ConsistentTestUserManager();
+    }
+    return ConsistentTestUserManager.instance;
+  }
+
+  /**
+   * Ensure consistent test user exists (static method)
+   * @returns Promise<boolean> - True if user exists or was created
+   */
+  public static async ensureUserExists(): Promise<boolean> {
+    const manager = ConsistentTestUserManager.getInstance();
+    return await manager.ensureUserExists(CONSISTENT_TEST_USER);
+  }
+
+  /**
+   * Ensure admin test user exists (static method)
+   * @returns Promise<boolean> - True if user exists or was created
+   */
+  public static async ensureAdminUserExists(): Promise<boolean> {
+    const manager = ConsistentTestUserManager.getInstance();
+    return await manager.ensureUserExists(ADMIN_TEST_USER);
+  }
+
+  /**
+   * Initialize Supabase client
+   * @private
+   */
+  private initializeSupabase(): void {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        console.warn('⚠️  Supabase credentials not found, test user management limited');
+        return;
+      }
+
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      this.initialized = true;
+      console.log('🔌 Supabase client initialized for test user management');
+    } catch (error) {
+      console.error('❌ Error initializing Supabase client:', error);
+    }
+  }
+
+  /**
+   * Check if test user exists
+   * @param user - Test user to check
+   * @returns Promise<boolean> - True if user exists
+   */
+  public async userExists(user: TestUser): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot check user existence');
+      return false;
     }
 
     try {
-      // Use regular Supabase client (not admin) for test users
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_tJOpGO2IPjujJDQou44P_g_BgbTFBfc';
+      const { data, error } = await this.supabase.auth.admin.listUsers();
       
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      // CORRECT: Test users should use normal auth flow
-      console.log('🔐 Attempting to sign in with consistent test user...');
-      
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: CONSISTENT_TEST_USER.email,
-        password: CONSISTENT_TEST_USER.password
-      });
-      
-      if (signInData.user && !signInError) {
-        console.log('✅ Consistent test user exists and can sign in');
-        this.userCreated = true;
-        return true;
-      }
-      
-      // If sign in fails, try to register the user
-      console.log('📝 Consistent test user does not exist, attempting registration...');
-      
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: CONSISTENT_TEST_USER.email,
-        password: CONSISTENT_TEST_USER.password,
-        options: {
-          data: {
-            username: CONSISTENT_TEST_USER.username,
-            display_name: CONSISTENT_TEST_USER.displayName
-          }
-        }
-      });
-      
-      if (signUpError || !signUpData.user) {
-        console.log(`⚠️ Error registering test user: ${signUpError?.message}`);
+      if (error) {
+        console.error('❌ Error checking user existence:', error);
         return false;
       }
-      
-      console.log('✅ Consistent test user registered successfully');
-      this.userCreated = true;
-      return true;
 
+      return data.users.some(u => u.email === user.email);
     } catch (error) {
-      console.log(`⚠️ Error ensuring user exists: ${error}`);
+      console.error('❌ Error checking user existence:', error);
       return false;
     }
   }
 
   /**
-   * Authenticate the consistent test user
+   * Create test user if it doesn't exist
+   * @param user - Test user to create
+   * @returns Promise<boolean> - True if user was created or already exists
    */
-  static async authenticateUser(page: any): Promise<boolean> {
-    if (this.userAuthenticated) {
-      return true;
-    }
-
-    try {
-      console.log('🔐 Authenticating consistent test user...');
-      
-      // Navigate to login page
-      await page.goto('/auth');
-      await page.waitForLoadState('networkidle');
-      
-      // Check if login form exists
-      const emailField = await page.locator('[data-testid="login-email"]').isVisible();
-      const passwordField = await page.locator('[data-testid="login-password"]').isVisible();
-      const submitButton = await page.locator('[data-testid="login-submit"]').isVisible();
-      
-      if (emailField && passwordField && submitButton) {
-        await page.fill('[data-testid="login-email"]', CONSISTENT_TEST_USER.email);
-        await page.fill('[data-testid="login-password"]', CONSISTENT_TEST_USER.password);
-        await page.click('[data-testid="login-submit"]');
-        
-        // Wait for redirect
-        await page.waitForTimeout(3000);
-        
-        this.userAuthenticated = true;
-        console.log('✅ Consistent test user authenticated');
-        return true;
-      } else {
-        console.log('❌ Login form not found');
-        return false;
-      }
-      
-    } catch (error) {
-      console.log(`⚠️ Error authenticating user: ${error}`);
+  public async ensureUserExists(user: TestUser): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot create user');
       return false;
     }
-  }
-
-  /**
-   * Get user preferences for testing
-   */
-  static getUserPreferences() {
-    return CONSISTENT_TEST_USER.preferences;
-  }
-
-  /**
-   * Reset user state for fresh testing
-   */
-  static resetUserState() {
-    this.userCreated = false;
-    this.userAuthenticated = false;
-    this.adminUserCreated = false;
-    this.adminUserAuthenticated = false;
-    console.log('🔄 Consistent test user state reset');
-  }
-
-  /**
-   * Track user activity in database
-   */
-  static trackUserActivity(activity: string, context: string) {
-    console.log(`📊 User Activity: ${activity} (${context})`);
-    // This would integrate with DatabaseTracker
-  }
-
-  /**
-   * Ensure the admin test user exists
-   * 
-   * Creates admin user directly in database with service role key
-   */
-  static async ensureAdminUserExists(): Promise<boolean> {
-    if (this.adminUserCreated) {
-      return true;
-    }
 
     try {
-      // Use SERVICE ROLE client for direct database access
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co';
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-      if (!serviceRoleKey) {
-        console.log('⚠️ SUPABASE_SERVICE_ROLE_KEY not found in environment');
-        return false;
-      }
-
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      });
-
-      // Check if admin user already exists
-      const { data: existingProfile } = await supabaseAdmin
-        .from('user_profiles')
-        .select('user_id')
-        .eq('email', ADMIN_TEST_USER.email)
-        .single();
-
-      if (existingProfile) {
-        console.log('✅ Admin test user already exists in database');
-        this.adminUserCreated = true;
+      const exists = await this.userExists(user);
+      
+      if (exists) {
+        console.log(`✅ Test user already exists: ${user.email}`);
         return true;
       }
 
-      // Create admin user directly in auth.users table
-      console.log('📝 Creating admin test user directly in database...');
-
-      const { data: createUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-        email: ADMIN_TEST_USER.email,
-        password: ADMIN_TEST_USER.password,
-        email_confirm: true, // Skip email confirmation
+      console.log(`📝 Creating test user: ${user.email}`);
+      
+      const { data, error } = await this.supabase.auth.admin.createUser({
+        email: user.email,
+        password: user.password,
+        email_confirm: true,
         user_metadata: {
-          username: ADMIN_TEST_USER.username,
-          display_name: ADMIN_TEST_USER.displayName
+          name: user.name,
+          is_admin: user.isAdmin,
+          ...user.metadata
         }
       });
 
-      if (createUserError || !createUserData.user) {
-        console.log(`⚠️ Error creating admin test user: ${createUserError?.message}`);
+      if (error) {
+        console.error(`❌ Error creating test user ${user.email}:`, error);
         return false;
       }
 
-      console.log('✅ Admin test user created in auth.users');
-
-      // Create admin profile with T3 trust tier
-      const { error: profileError } = await supabaseAdmin
-        .from('user_profiles')
-        .insert({
-          user_id: createUserData.user.id,
-          username: ADMIN_TEST_USER.username,
-          email: ADMIN_TEST_USER.email,
-          bio: 'Admin Test User',
-          is_active: true,
-          trust_tier: 'T3' // Admin tier
-        });
-
-      if (profileError) {
-        console.log(`⚠️ Error creating admin profile: ${profileError.message}`);
-        return false;
-      }
-
-      console.log('✅ Admin profile created with T3 trust tier');
-
-      // Create admin role
-      const { error: roleError } = await supabaseAdmin
-        .from('user_roles')
-        .insert({
-          user_id: createUserData.user.id,
-          role: 'admin',
-          is_active: true
-        });
-
-      if (roleError) {
-        console.log(`⚠️ Error creating admin role: ${roleError.message}`);
-        return false;
-      }
-
-      console.log('✅ Admin role created');
-      this.adminUserCreated = true;
+      console.log(`✅ Test user created successfully: ${user.email}`);
       return true;
-
     } catch (error) {
-      console.log(`⚠️ Error ensuring admin user exists: ${error}`);
+      console.error(`❌ Error creating test user ${user.email}:`, error);
       return false;
     }
   }
 
   /**
-   * Get admin test user credentials
+   * Delete test user
+   * @param user - Test user to delete
+   * @returns Promise<boolean> - True if user was deleted
    */
-  static getAdminUser() {
-    return ADMIN_TEST_USER;
+  public async deleteUser(user: TestUser): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot delete user');
+      return false;
+    }
+
+    try {
+      const { data: users, error: listError } = await this.supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error('❌ Error listing users:', listError);
+        return false;
+      }
+
+      const targetUser = users.users.find(u => u.email === user.email);
+      
+      if (!targetUser) {
+        console.log(`ℹ️  User not found: ${user.email}`);
+        return true;
+      }
+
+      const { error } = await this.supabase.auth.admin.deleteUser(targetUser.id);
+      
+      if (error) {
+        console.error(`❌ Error deleting user ${user.email}:`, error);
+        return false;
+      }
+
+      console.log(`✅ Test user deleted: ${user.email}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Error deleting user ${user.email}:`, error);
+      return false;
+    }
   }
 
   /**
-   * Get admin user preferences
+   * Clean up all test users
+   * @returns Promise<boolean> - True if cleanup was successful
    */
-  static getAdminUserPreferences() {
-    return ADMIN_TEST_USER.preferences;
+  public async cleanupTestUsers(): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot cleanup users');
+      return false;
+    }
+
+    try {
+      console.log('🧹 Cleaning up test users...');
+      
+      const { data: users, error } = await this.supabase.auth.admin.listUsers();
+      
+      if (error) {
+        console.error('❌ Error listing users for cleanup:', error);
+        return false;
+      }
+
+      const testUsers = users.users.filter(u => 
+        u.email?.includes('test') || 
+        u.email?.includes('example.com')
+      );
+
+      let success = true;
+      for (const user of testUsers) {
+        const { error: deleteError } = await this.supabase.auth.admin.deleteUser(user.id);
+        if (deleteError) {
+          console.error(`❌ Error deleting user ${user.email}:`, deleteError);
+          success = false;
+        } else {
+          console.log(`✅ Cleaned up user: ${user.email}`);
+        }
+      }
+
+      return success;
+    } catch (error) {
+      console.error('❌ Error during cleanup:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get user by email
+   * @param email - User email
+   * @returns Promise<TestUser | null> - User data or null
+   */
+  public async getUserByEmail(email: string): Promise<TestUser | null> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot get user');
+      return null;
+    }
+
+    try {
+      const { data: users, error } = await this.supabase.auth.admin.listUsers();
+      
+      if (error) {
+        console.error('❌ Error getting user:', error);
+        return null;
+      }
+
+      const user = users.users.find(u => u.email === email);
+      
+      if (!user) {
+        return null;
+      }
+
+      return {
+        email: user.email || '',
+        password: '', // Cannot retrieve password
+        name: user.user_metadata?.name || '',
+        isAdmin: user.user_metadata?.is_admin || false,
+        metadata: user.user_metadata
+      };
+    } catch (error) {
+      console.error('❌ Error getting user:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Verify test user setup
+   * @returns Promise<boolean> - True if setup is correct
+   */
+  public async verifySetup(): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase not initialized, cannot verify setup');
+      return false;
+    }
+
+    try {
+      console.log('🔍 Verifying test user setup...');
+      
+      const consistentExists = await this.userExists(CONSISTENT_TEST_USER);
+      const adminExists = await this.userExists(ADMIN_TEST_USER);
+      
+      console.log(`📊 Consistent user exists: ${consistentExists}`);
+      console.log(`📊 Admin user exists: ${adminExists}`);
+      
+      return consistentExists && adminExists;
+    } catch (error) {
+      console.error('❌ Error verifying setup:', error);
+      return false;
+    }
   }
 }
 
+/**
+ * Default export for convenience
+ */
 export default ConsistentTestUserManager;

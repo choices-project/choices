@@ -22,10 +22,30 @@ export async function POST() {
 
     logger.info('User logged out successfully')
 
-    return NextResponse.json({
+    // Create response
+    const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully'
     })
+
+    // Clear Supabase session cookies
+    response.cookies.set('sb-access-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0
+    })
+    
+    response.cookies.set('sb-refresh-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0
+    })
+
+    return response
 
   } catch (error) {
     logger.error('Logout error', error instanceof Error ? error : new Error(String(error)))

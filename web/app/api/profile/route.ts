@@ -36,7 +36,7 @@ const profileSchema = z.object({
   trust_tier: z.string().optional(),
   is_admin: z.boolean().optional(),
   is_active: z.boolean().optional(),
-  onboarding_completed: z.boolean().optional(),
+  // onboarding_completed removed - determined by presence of key fields
   // Additional fields that exist in database
   community_focus: z.array(z.string()).optional(),
   primary_concerns: z.array(z.string()).optional(),
@@ -99,16 +99,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error fetching profile' }, { status: 500 });
     }
 
-    // Fetch preferences
-    const { data: preferences, error: preferencesError } = await supabase
-      .from('user_notification_preferences')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (preferencesError && preferencesError.code !== 'PGRST116') {
-      logger.error('Error fetching preferences', preferencesError);
-      return NextResponse.json({ error: 'Error fetching preferences' }, { status: 500 });
+    // Fetch preferences from user_profiles.privacy_settings (new schema)
+    let preferences = null;
+    if (profile?.privacy_settings) {
+      preferences = profile.privacy_settings;
     }
 
     // Fetch interests - FUNCTIONALITY MERGED INTO user_profiles
@@ -119,10 +113,16 @@ export async function GET(request: NextRequest) {
     };
     const interestsError = null;
 
-    // Fetch onboarding progress - FUNCTIONALITY MERGED INTO user_profiles
+    // Fetch onboarding progress - determined by presence of key fields
+    const isOnboardingCompleted = !!(
+      profile?.demographics && 
+      profile?.primary_concerns && 
+      profile?.community_focus &&
+      profile?.participation_style
+    );
     const onboarding = {
-      completed: profile?.onboarding_completed || false,
-      data: profile?.onboarding_data || {}
+      completed: isOnboardingCompleted,
+      data: profile?.demographics || {}
     };
     const onboardingError = null;
 
@@ -182,19 +182,26 @@ export async function POST(request: NextRequest) {
       response = NextResponse.json({ message: 'Profile updated successfully', profile: data }, { status: 200 });
     }
 
-    // Handle preferences updates
+    // Handle preferences updates - now stored in user_profiles.privacy_settings
     if (body.preferences) {
       const parsedPreferences = preferencesSchema.safeParse(body.preferences);
       if (!parsedPreferences.success) {
         logger.warn('Invalid preferences data', parsedPreferences.error.issues);
         return NextResponse.json({ error: 'Invalid preferences data', details: parsedPreferences.error.issues }, { status: 400 });
       }
+      
+      // Update privacy_settings in user_profiles table
       const { data, error } = await supabase
-        .from('user_notification_preferences')
-        .upsert({ user_id: user.id, ...parsedPreferences.data }, { onConflict: 'user_id' })
+        .from('user_profiles')
+        .update({ 
+          privacy_settings: parsedPreferences.data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
         .select();
+        
       if (error) {
-        logger.error('Error upserting preferences', error);
+        logger.error('Error updating preferences', error);
         return NextResponse.json({ error: 'Error updating preferences' }, { status: 500 });
       }
       logger.info('Preferences updated successfully', { userId: user.id, preferences: data });
@@ -233,15 +240,11 @@ export async function POST(request: NextRequest) {
         logger.warn('Invalid onboarding data', parsedOnboarding.error.issues);
         return NextResponse.json({ error: 'Invalid onboarding data', details: parsedOnboarding.error.issues }, { status: 400 });
       }
-    // FUNCTIONALITY MERGED INTO user_profiles - update profile with onboarding
+    // Update profile with onboarding data - no separate onboarding_completed field
     const { data, error } = await supabase
       .from('user_profiles')
       .update({
-        onboarding_completed: parsedOnboarding.data.completed,
-        onboarding_data: {
-          step: parsedOnboarding.data.step,
-          completed_at: parsedOnboarding.data.completed_at
-        }
+        demographics: parsedOnboarding.data.data
       })
       .eq('user_id', user.id)
       .select();
@@ -363,12 +366,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    // Delete all related data
+    // Delete all related data using new schema
     const deletePromises = [
-      supabase.from('user_profiles').delete().eq('id', user.id),
-      supabase.from('user_notification_preferences').delete().eq('user_id', user.id),
-      // TABLES DO NOT EXIST - user_interests, user_onboarding_progress
-      // TODO: Create these tables or remove these delete operations
+      supabase.from('user_profiles').delete().eq('user_id', user.id),
+      supabase.from('votes').delete().eq('user_id', user.id),
+      supabase.from('polls').delete().eq('created_by', user.id),
+      supabase.from('analytics_events').delete().eq('user_id', user.id),
+      supabase.from('user_hashtags').delete().eq('user_id', user.id),
+      supabase.from('feedback').delete().eq('user_id', user.id),
     ];
 
     const results = await Promise.allSettled(deletePromises);

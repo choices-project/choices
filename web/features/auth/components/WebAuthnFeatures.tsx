@@ -15,7 +15,7 @@ import { FeatureWrapper } from './WebAuthnPrompt';
 export function WebAuthnFeatures() {
   return (
     <FeatureWrapper feature="WEBAUTHN">
-      <div data-testid={T.webauthn.features} className="webauthn-features">
+      <div data-testid={T.WEBAUTHN.FEATURES} className="webauthn-features">
         <h3>WebAuthn Features</h3>
         <ul>
           <li>Passkey Authentication</li>

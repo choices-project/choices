@@ -53,7 +53,7 @@ class ClientSessionManager {
         return
       }
       
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('/api/profile', {
         method: 'GET',
         credentials: 'include', // Ensure cookies are sent
         headers: {
@@ -65,10 +65,29 @@ class ClientSessionManager {
       logger.info('Client session: Response status', { status: response.status })
 
       if (response.ok) {
-        const userData = await response.json()
-        logger.info('Client session: User data received:', userData.username)
-        this.user = userData
-        this.notifyListeners(userData)
+        const profileData = await response.json()
+        if (profileData.profile) {
+          // Transform profile data to match ClientUser interface
+          const userData: ClientUser = {
+            id: profileData.profile.user_id,
+            stableId: profileData.profile.user_id, // Use user_id as stableId
+            username: profileData.profile.username,
+            displayName: profileData.profile.display_name,
+            email: profileData.email,
+            verificationTier: profileData.profile.trust_tier || 'T0',
+            isActive: profileData.profile.is_active,
+            twoFactorEnabled: false, // Not implemented yet
+            createdAt: profileData.profile.created_at,
+            updatedAt: profileData.profile.updated_at
+          }
+          logger.info('Client session: User data received:', { username: userData.username })
+          this.user = userData
+          this.notifyListeners(userData)
+        } else {
+          logger.info('Client session: No profile data found')
+          this.user = null
+          this.notifyListeners(null)
+        }
       } else {
         logger.info('Client session: No valid session found')
         this.user = null

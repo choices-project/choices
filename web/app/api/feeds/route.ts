@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,17 @@ export async function GET(request: NextRequest) {
     // Fetch active polls from polls table
     const { data: polls, error: pollsError } = await (supabaseClient as any)
       .from('polls')
-      .select('id, title, description, options, total_votes, status, created_at, hashtags, primary_hashtag')
+      .select(`
+        id, 
+        title, 
+        description, 
+        total_votes, 
+        status, 
+        created_at, 
+        hashtags, 
+        primary_hashtag,
+        poll_options(id, text, vote_count)
+      `)
       .eq('status', 'active')
       .limit(limit);
 
@@ -79,7 +89,7 @@ export async function GET(request: NextRequest) {
       pollData: {
         id: poll.id,
         title: poll.title,
-        options: poll.options,
+        options: poll.poll_options || [],
         totalVotes: poll.total_votes || 0,
         status: poll.status,
         primaryHashtag: poll.primary_hashtag

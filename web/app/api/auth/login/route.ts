@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
       username: profile.username 
     })
 
-    return NextResponse.json({
+    // Create response with user data
+    const response = NextResponse.json({
       success: true,
       user: {
         id: authData.user.id,
@@ -102,6 +103,31 @@ export async function POST(request: NextRequest) {
       session: authData.session,
       token: authData.session?.access_token
     })
+
+    // Set Supabase session cookies for middleware authentication
+    if (authData.session) {
+      const maxAge = 60 * 60 * 24 * 7 // 7 days
+      
+      // Set access token cookie
+      response.cookies.set('sb-access-token', authData.session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: maxAge
+      })
+      
+      // Set refresh token cookie
+      response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: maxAge
+      })
+    }
+
+    return response
 
   } catch (error) {
     logger.error('Login error', error instanceof Error ? error : new Error(String(error)))

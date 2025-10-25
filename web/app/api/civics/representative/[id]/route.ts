@@ -5,10 +5,12 @@ import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
 
+// SECURITY: Use regular Supabase client with user authentication, not service role
+// Users should access data through Supabase with RLS, not service role APIs
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: true } }
 );
 
 export async function GET(

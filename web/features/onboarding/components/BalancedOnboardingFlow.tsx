@@ -921,11 +921,19 @@ const BalancedOnboardingFlow: React.FC = () => {
           const supabase = await getSupabaseBrowserClient();
           const { data: profile } = await supabase
             .from('user_profiles')
-            .select('onboarding_completed')
+            .select('demographics, primary_concerns, community_focus, participation_style')
             .eq('user_id', user.id)
             .single();
 
-          if (profile?.onboarding_completed) {
+          // Check onboarding completion based on presence of key fields
+          const isOnboardingCompleted = !!(
+            profile?.demographics && 
+            profile?.primary_concerns && 
+            profile?.community_focus &&
+            profile?.participation_style
+          );
+
+          if (isOnboardingCompleted) {
             // User has already completed onboarding, redirect to dashboard
             const { safeNavigate } = await import('@/lib/utils/ssr-safe');
             safeNavigate('/dashboard');
@@ -962,7 +970,10 @@ const BalancedOnboardingFlow: React.FC = () => {
         const { error } = await supabase
           .from('user_profiles')
           .update({ 
-            onboarding_completed: true,
+            demographics: formData.demographics,
+            primary_concerns: formData.primaryConcerns,
+            community_focus: formData.communityFocus,
+            participation_style: formData.participationStyle,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);

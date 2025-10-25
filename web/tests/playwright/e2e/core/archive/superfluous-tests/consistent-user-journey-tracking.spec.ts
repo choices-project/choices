@@ -10,7 +10,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { DatabaseTracker } from '../../../utils/database-tracker';
+import { DatabaseTracker } from '../../../../utils/database-tracker';
 
 // Dedicated test user for consistent tracking
 const CONSISTENT_TEST_USER = {
@@ -220,7 +220,7 @@ test.describe('Consistent User Journey Tracking', () => {
     console.log(`- Operations: ${JSON.stringify(report.summary.operations)}`);
     
     console.log('📋 Tables Used in Consistent User Journey:');
-    report.usedTables.forEach(table => {
+    report.usedTables.forEach((table: string) => {
       console.log(`  - ${table}`);
     });
     
