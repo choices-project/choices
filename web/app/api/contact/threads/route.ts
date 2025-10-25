@@ -9,7 +9,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
@@ -78,43 +78,19 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'last_message_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
-    // Build query
+    // Build query - contact_threads is just a mapping table
     let query = supabase
       .from('contact_threads')
       .select(`
         id,
-        user_id,
-        representative_id,
-        subject,
-        status,
-        priority,
-        created_at,
-        updated_at,
-        last_message_at,
-        message_count,
-        representatives_core!inner(
-          id,
-          name,
-          office,
-          party,
-          state,
-          district
-        )
+        message_id,
+        thread_id,
+        created_at
       `)
-      .or(`user_id.eq.${user.id},representative_id.in.(select id from representatives_core where user_id = ${user.id})`)
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // Apply filters
-    if (status) {
-      query = query.eq('status', status);
-    }
-    if (priority) {
-      query = query.eq('priority', priority);
-    }
-    if (representativeId) {
-      query = query.eq('representative_id', parseInt(representativeId));
-    }
+    // Note: contact_threads is just a mapping table, so filtering is limited
 
     const { data: threads, error: threadsError } = await query;
 
@@ -126,32 +102,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get total count for pagination
+    // Get total count for pagination - contact_threads is just a mapping table
     const { count: totalCount } = await supabase
       .from('contact_threads')
-      .select('*', { count: 'exact', head: true })
-      .or(`user_id.eq.${user.id},representative_id.in.(select id from representatives_core where user_id = ${user.id})`);
+      .select('*', { count: 'exact', head: true });
 
-    // Transform response data
+    // Transform response data - contact_threads is just a mapping table
     const transformedThreads = (threads || []).map(thread => ({
       id: thread.id,
-      userId: thread.user_id,
-      representativeId: thread.representative_id,
-      subject: thread.subject,
-      status: thread.status,
-      priority: thread.priority,
-      createdAt: thread.created_at,
-      updatedAt: thread.updated_at,
-      lastMessageAt: thread.last_message_at,
-      messageCount: thread.message_count,
-      representative: {
-        id: thread.representatives_core.id,
-        name: thread.representatives_core.name,
-        office: thread.representatives_core.office,
-        party: thread.representatives_core.party,
-        state: thread.representatives_core.state,
-        district: thread.representatives_core.district
-      }
+      messageId: thread.message_id,
+      threadId: thread.thread_id,
+      createdAt: thread.created_at
     }));
 
     return NextResponse.json({

@@ -83,39 +83,14 @@ export const vote = createSecureServerAction(
       throw new Error('Invalid option selection')
     }
 
-    // Create vote records
-    // Note: Using actual schema fields - choice is a number (index of option)
-    const voteData = validatedData.optionIds.map(optionId => {
-      // Find the index of the option in the poll's options array
-      const choiceIndex = ((poll as any).options as string[]).indexOf(optionId)
-      return {
-        id: uuidv4(),
-        poll_id: validatedData.pollId,
-        user_id: validatedData.anonymous ? 'anonymous' : user.userId as any,
-        choice: choiceIndex, // Index of the selected option
-        voting_method: (poll as any).voting_method as string,
-        vote_data: {
-          option: optionId,
-          timestamp: new Date().toISOString(),
-          anonymous: validatedData.anonymous ?? false
-        },
-        verification_token: null,
-        is_verified: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        ip_address: null,
-        user_agent: null,
-        session_id: null,
-        device_fingerprint: null,
-        time_spent_seconds: 0,
-        page_views: 1,
-        engagement_actions: [],
-        trust_score_at_vote: null,
-        vote_metadata: {},
-        analytics_data: {},
-        is_active: true
-      }
-    })
+    // Create vote records using the actual database schema
+    const voteData = validatedData.optionIds.map(optionId => ({
+      id: uuidv4(),
+      poll_id: validatedData.pollId,
+      user_id: validatedData.anonymous ? 'anonymous' : user.userId as any,
+      option_id: optionId,
+      vote_weight: 1
+    }))
 
     const { error: voteError } = await supabase
       .from('votes')

@@ -38,9 +38,29 @@ export class JourneyFileTracker {
     this.trackedFiles.add('tests/playwright/e2e/core/admin-journey-complete.spec.ts');
     this.trackedFiles.add('tests/playwright/e2e/core/complete-platform-journey.spec.ts');
     this.trackedFiles.add('tests/playwright/e2e/core/user-journey-complete.spec.ts');
+    this.trackedFiles.add('tests/playwright/e2e/core/real-database-activity-test.spec.ts');
+    this.trackedFiles.add('tests/playwright/e2e/core/authentication.spec.ts');
+    this.trackedFiles.add('tests/playwright/e2e/core/core-issues-test.spec.ts');
     this.trackedFiles.add('tests/utils/database-tracker.ts');
     this.trackedFiles.add('tests/utils/real-test-user-manager.ts');
-    // Note: lib/utils/auth-sync.ts has import path issues, excluding for now
+    
+    // Application files touched by user journeys
+    this.trackedFiles.add('app/(app)/dashboard/page.tsx');
+    this.trackedFiles.add('app/(app)/profile/page.tsx');
+    this.trackedFiles.add('app/(app)/profile/edit/page.tsx');
+    this.trackedFiles.add('app/(app)/profile/preferences/page.tsx');
+    this.trackedFiles.add('app/(app)/polls/page.tsx');
+    this.trackedFiles.add('app/(app)/polls/create/page.tsx');
+    this.trackedFiles.add('app/(app)/polls/[id]/page.tsx');
+    this.trackedFiles.add('app/(app)/feed/page.tsx');
+    this.trackedFiles.add('app/auth/page.tsx');
+    this.trackedFiles.add('app/auth/verify/route.ts');
+    
+    // API routes touched by user journeys
+    this.trackedFiles.add('app/api/profile/route.ts');
+    this.trackedFiles.add('app/api/polls/route.ts');
+    this.trackedFiles.add('app/api/feeds/route.ts');
+    this.trackedFiles.add('app/api/hashtags/route.ts');
     
     console.log('🎯 Journey File Tracker initialized');
     console.log(`📁 Journey files: ${this.journeyFiles.size}`);
@@ -97,8 +117,8 @@ export class JourneyFileTracker {
       const tsFiles = this.getTrackedFiles().filter(f => f.endsWith('.ts') || f.endsWith('.tsx'));
       if (tsFiles.length > 0) {
         console.log(`🔍 TypeScript checking ${tsFiles.length} files...`);
-        // Check only tracked files with proper JSX support
-        const tsCommand = `npx tsc --noEmit --jsx react-jsx --target es2020 --module esnext --moduleResolution bundler --allowSyntheticDefaultImports --esModuleInterop --skipLibCheck ${tsFiles.map(f => `"${f}"`).join(' ')}`;
+        // Use project's TypeScript configuration for proper path resolution
+        const tsCommand = `npx tsc --noEmit --project tsconfig.json --skipLibCheck`;
         execSync(tsCommand, { stdio: 'inherit' });
         console.log('✅ TypeScript check passed');
       }
@@ -146,11 +166,11 @@ export class JourneyFileTracker {
       // Generate database report
       this.databaseReport = DatabaseTracker.generateReport();
       console.log('📊 Database tracking completed');
-      console.log(`📈 Tables used: ${this.databaseReport.summary.totalTables}`);
-      console.log(`📈 Total queries: ${this.databaseReport.summary.totalQueries}`);
+      console.log(`📈 Tables used: ${this.databaseReport.tablesUsed.size}`);
+      console.log(`📈 Total queries: ${this.databaseReport.queries.length}`);
       
       // Save database report
-      await DatabaseTracker.saveReport('/Users/alaughingkitsune/src/Choices/web/test-results/reports/journey-expansion-database-report.json', this.databaseReport);
+      await DatabaseTracker.saveReport('test-results/reports/journey-expansion-database-report.json');
       
       // Also try to load any existing stage reports
       await this.loadExistingReports();

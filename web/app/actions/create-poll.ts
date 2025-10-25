@@ -12,7 +12,18 @@ import {
 } from '@/lib/core/auth/server-actions'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-
+/**
+ * @fileoverview Poll Creation Server Action
+ * 
+ * Secure poll creation action with comprehensive validation, security features,
+ * and moderation capabilities. Handles poll creation with validation,
+ * spam prevention, and content moderation.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
 
 // Validation schema for poll creation
 const CreatePollSchema = z.object({

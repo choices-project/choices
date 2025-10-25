@@ -60,10 +60,6 @@ export const completeOnboarding = createSecureServerAction(
 
     // Update or create user profile with onboarding data
     const updateData = {
-      demographics: validatedData.demographics,
-      primary_concerns: validatedData.primaryConcerns,
-      community_focus: validatedData.communityFocus,
-      participation_style: validatedData.participationStyle,
       privacy_settings: {
         notifications: validatedData.notifications,
         dataSharing: validatedData.dataSharing,

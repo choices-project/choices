@@ -9,7 +9,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 import { rateLimiters } from '@/lib/security/rate-limit';
 
@@ -138,69 +138,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let finalThreadId = threadId;
-
-    // Create new thread if not provided
-    if (!threadId) {
-      const { data: newThread, error: threadError } = await supabase
-        .from('contact_threads')
-        .insert({
-          user_id: user.id,
-          representative_id: parseInt(representativeId),
-          subject,
-          priority,
-          status: 'active'
-        })
-        .select('id')
-        .single();
-
-      if (threadError || !newThread) {
-        logger.error('Failed to create thread', new Error(threadError?.message || 'Unknown error'), { error: threadError });
-        return NextResponse.json(
-          { success: false, error: 'Failed to create message thread' },
-          { status: 500 }
-        );
-      }
-
-      finalThreadId = newThread.id;
-    } else {
-      // Verify thread belongs to user
-      const { data: existingThread, error: threadError } = await supabase
-        .from('contact_threads')
-        .select('id, user_id, status')
-        .eq('id', threadId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (threadError || !existingThread) {
-        logger.warn('Invalid thread access attempt', { threadId, userId: user.id });
-        return NextResponse.json(
-          { success: false, error: 'Thread not found or access denied' },
-          { status: 404 }
-        );
-      }
-
-      // Check if thread is closed
-      if (existingThread.status === 'closed') {
-        return NextResponse.json(
-          { success: false, error: 'Cannot send message to closed thread' },
-          { status: 400 }
-        );
-      }
-    }
+    // Generate a thread ID for grouping related messages
+    const finalThreadId = threadId || crypto.randomUUID();
 
     // Create message
     const { data: message, error: messageError } = await supabase
       .from('contact_messages')
       .insert({
-        thread_id: finalThreadId!,
-        sender_id: user.id,
-          recipient_id: parseInt(representativeId),
-        content,
-        subject,
-        priority,
-        message_type: messageType,
-        attachments,
+        id: crypto.randomUUID(),
+        user_id: user.id,
+        representative_id: parseInt(representativeId),
+        message: content,
+        subject: subject || 'Contact Message',
+        priority: priority || 'normal',
         status: 'sent',
         metadata: {
           user_agent: request.headers.get('user-agent'),
@@ -210,17 +160,14 @@ export async function POST(request: NextRequest) {
       })
       .select(`
         id,
-        thread_id,
-        sender_id,
-        recipient_id,
-        content,
+        user_id,
+        representative_id,
+        message,
         subject,
         status,
         priority,
-        message_type,
-        attachments,
         created_at,
-        metadata
+        updated_at
       `)
       .single();
 
@@ -237,10 +184,9 @@ export async function POST(request: NextRequest) {
       .from('message_delivery_logs')
       .insert({
         message_id: message.id,
-        delivery_method: 'web',
         delivery_status: 'sent',
-        delivery_attempts: 1,
-        delivered_at: new Date().toISOString()
+        delivery_timestamp: new Date().toISOString(),
+        retry_count: 1
       });
 
     // Send notification to representative (if they have notifications enabled)
@@ -259,17 +205,14 @@ export async function POST(request: NextRequest) {
       success: true,
       message: {
         id: message.id,
-        threadId: message.thread_id,
-        senderId: message.sender_id,
-        recipientId: message.recipient_id,
-        content: message.content,
+        userId: message.user_id,
+        representativeId: message.representative_id,
+        message: message.message,
         subject: message.subject,
         status: message.status,
         priority: message.priority,
-        messageType: message.message_type,
-        attachments: message.attachments,
         createdAt: message.created_at,
-        metadata: message.metadata
+        updatedAt: message.updated_at
       },
       threadId: finalThreadId,
       responseTime

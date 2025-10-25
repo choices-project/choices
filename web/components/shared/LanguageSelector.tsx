@@ -1,11 +1,13 @@
 /**
- * Language Selector Component
+ * @fileoverview Language Selector Component
  * 
- * Dropdown component for selecting application language
- * Integrates with i18n system and app store
+ * Dropdown component for selecting application language.
+ * Integrates with i18n system and app store.
  * 
- * Created: January 23, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 'use client';

@@ -1,20 +1,36 @@
 /**
- * Polls Store - Zustand Implementation
+ * @fileoverview Polls Store - Zustand Implementation
  * 
- * Comprehensive poll state management including poll data, voting state,
- * poll interactions, and poll preferences. Consolidates poll-related state management.
+ * Poll state management with auto-locking, moderation, trending,
+ * analytics integration, and civic engagement.
  * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * This store provides:
+ * - Poll data structures with advanced features
+ * - Auto-locking and moderation system integration
+ * - Engagement scoring and trending algorithms
+ * - Analytics tracking and civic engagement
+ * - Trust scoring and user reputation management
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../logger';
 
-// Poll data types
+/**
+ * Sophisticated Poll data structure with advanced features
+ * 
+ * Represents a poll with comprehensive tracking capabilities including
+ * auto-locking, moderation, engagement scoring, and civic integration.
+ * 
+ * @interface Poll
+ */
 interface Poll {
   id: string;
   title: string;
@@ -28,9 +44,49 @@ interface Poll {
     name: string;
     avatar?: string;
     verified: boolean;
+    trustTier: 'bronze' | 'silver' | 'gold' | 'platinum';
   };
-  status: 'draft' | 'active' | 'closed' | 'archived';
+  status: 'draft' | 'active' | 'closed' | 'archived' | 'locked';
   visibility: 'public' | 'private' | 'unlisted';
+  
+  // Sophisticated poll features
+  autoLockAt?: string;
+  lockDuration?: number;
+  lockType?: 'automatic' | 'manual' | 'scheduled';
+  lockReason?: string;
+  lockedBy?: string;
+  
+  // Moderation system
+  moderationStatus: 'pending' | 'approved' | 'rejected';
+  moderationReviewedBy?: string;
+  moderationReviewedAt?: string;
+  moderationNotes?: string;
+  
+  // Engagement tracking
+  engagementScore: number;
+  participationRate: number;
+  totalViews: number;
+  participation: number;
+  
+  // Privacy & verification
+  privacyLevel: 'public' | 'private' | 'restricted';
+  isVerified: boolean;
+  isFeatured: boolean;
+  isTrending: boolean;
+  trendingScore: number;
+  
+  // Advanced settings
+  pollSettings: {
+    allowAnonymous: boolean;
+    requireVerification: boolean;
+    autoLockDuration?: number;
+    moderationRequired: boolean;
+    allowMultipleVotes: boolean;
+    showResultsBeforeClose: boolean;
+    allowComments: boolean;
+    allowSharing: boolean;
+    requireAuthentication: boolean;
+  };
   settings: {
     allowMultipleVotes: boolean;
     allowAnonymousVotes: boolean;
@@ -105,7 +161,7 @@ interface PollComment {
 }
 
 interface PollFilters {
-  status: Array<'draft' | 'active' | 'closed' | 'archived'>;
+  status: Array<'draft' | 'active' | 'closed' | 'archived' | 'locked'>;
   category: string[];
   tags: string[];
   author: string[];

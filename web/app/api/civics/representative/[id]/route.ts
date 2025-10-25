@@ -1,3 +1,16 @@
+/**
+ * Civics Representative Detail API Route
+ * 
+ * Provides detailed representative information with normalized table data
+ * including contacts, photos, social media, and activity records.
+ * 
+ * @fileoverview Representative detail API with normalized data
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use normalized tables instead of JSONB
+ * @feature CIVICS_REPRESENTATIVE_DETAILS
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -13,6 +26,23 @@ const supabase = createClient(
   { auth: { persistSession: true } }
 );
 
+/**
+ * GET /api/civics/representative/[id]
+ * 
+ * Retrieves detailed information for a specific representative including
+ * contacts, photos, social media, activity records, and crosswalk data.
+ * 
+ * @param request - NextRequest object
+ * @param params - Route parameters containing representative ID
+ * @returns NextResponse with detailed representative data or error
+ * 
+ * @example
+ * GET /api/civics/representative/123
+ * 
+ * @throws {400} When representative ID is invalid
+ * @throws {404} When representative is not found
+ * @throws {500} When database query fails
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -65,98 +95,27 @@ export async function GET(
       );
     }
 
-    // Get contact information from representatives_core
-    const { data: contactInfo } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        primary_email,
-        primary_phone,
-        office,
-        district,
-        state,
-        party,
-        enhanced_contacts,
-        data_quality_score,
-        last_verified,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
+    // Get enhanced data from normalized tables
+    const { data: contacts } = await supabase
+      .from('representative_contacts')
+      .select('contact_type, value, is_verified, source')
+      .eq('representative_id', representativeId);
 
-    // Get social media engagement from representatives_core
+    const { data: photos } = await supabase
+      .from('representative_photos')
+      .select('url, is_primary, source')
+      .eq('representative_id', representativeId);
+
     const { data: socialMedia } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        enhanced_social_media,
-        facebook_url,
-        instagram_handle,
-        linkedin_url,
-        twitter_handle,
-        youtube_url,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
+      .from('representative_social_media')
+      .select('platform, handle, url, is_verified, is_primary')
+      .eq('representative_id', representativeId);
 
-    // Get campaign finance data from representatives_core
-    const { data: campaignFinance } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        enhanced_activity,
-        data_quality_score,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
-
-    // Get voting behavior summary from representatives_core
-    const { data: votingBehavior } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        enhanced_activity,
-        data_quality_score,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
-
-    // Get recent votes from representatives_core
-    const { data: recentVotes } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        enhanced_activity,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
-
-    // Get policy positions from representatives_core
-    const { data: policyPositions } = await supabase
-      .from('representatives_core')
-      .select(`
-        id,
-        name,
-        enhanced_activity,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
+    const { data: activity } = await supabase
+      .from('representative_activity')
+      .select('type, title, description, date, source')
+      .eq('representative_id', representativeId)
+      .order('date', { ascending: false });
 
     // Get canonical ID resolution (crosswalk data)
     const { data: crosswalkEntries } = await supabase
@@ -185,118 +144,79 @@ export async function GET(
       
       // Contact Information
       contact: {
-        email: contactInfo?.primary_email || null,
-        phone: contactInfo?.primary_phone || null,
+        email: representative.primary_email || null,
+        phone: representative.primary_phone || null,
         fax: null, // Not available in representatives_core
-        website: null, // Not available in representatives_core
-        office_addresses: contactInfo?.enhanced_contacts || [],
+        website: representative.primary_website || null,
+        office_addresses: contacts?.map((contact: any) => ({
+          type: contact.contact_type,
+          value: contact.value,
+          is_verified: contact.is_verified,
+          source: contact.source
+        })) || [],
         preferred_contact_method: 'email',
         response_time_expectation: 'within_week',
-        quality_score: contactInfo?.data_quality_score || 0,
-        last_verified: contactInfo?.last_verified || null
+        quality_score: representative.data_quality_score || 0,
+        last_verified: representative.last_verified || null
       },
       
       // Social Media (only if social sharing features are enabled)
       social_media: isFeatureEnabled('SOCIAL_SHARING') ? {
-        platforms: [
-          ...(socialMedia?.facebook_url ? [{
-            platform: 'facebook',
-            handle: socialMedia.facebook_url,
-            url: socialMedia.facebook_url,
-            followers_count: 0,
-            engagement_rate: 0,
-            verified: false,
-            official_account: true,
-            last_updated: socialMedia.last_updated
-          }] : []),
-          ...(socialMedia?.instagram_handle ? [{
-            platform: 'instagram',
-            handle: socialMedia.instagram_handle,
-            url: `https://instagram.com/${socialMedia.instagram_handle}`,
-            followers_count: 0,
-            engagement_rate: 0,
-            verified: false,
-            official_account: true,
-            last_updated: socialMedia.last_updated
-          }] : []),
-          ...(socialMedia?.twitter_handle ? [{
-            platform: 'twitter',
-            handle: socialMedia.twitter_handle,
-            url: `https://twitter.com/${socialMedia.twitter_handle}`,
-            followers_count: 0,
-            engagement_rate: 0,
-            verified: false,
-            official_account: true,
-            last_updated: socialMedia.last_updated
-          }] : []),
-          ...(socialMedia?.linkedin_url ? [{
-            platform: 'linkedin',
-            handle: socialMedia.linkedin_url,
-            url: socialMedia.linkedin_url,
-            followers_count: 0,
-            engagement_rate: 0,
-            verified: false,
-            official_account: true,
-            last_updated: socialMedia.last_updated
-          }] : []),
-          ...(socialMedia?.youtube_url ? [{
-            platform: 'youtube',
-            handle: socialMedia.youtube_url,
-            url: socialMedia.youtube_url,
-            followers_count: 0,
-            engagement_rate: 0,
-            verified: false,
-            official_account: true,
-            last_updated: socialMedia.last_updated
-          }] : [])
-        ],
+        platforms: socialMedia?.map((social: any) => ({
+          platform: social.platform,
+          handle: social.handle,
+          url: social.url,
+          followers_count: 0, // Not available in current schema
+          engagement_rate: 0, // Not available in current schema
+          verified: social.is_verified,
+          official_account: true,
+          is_primary: social.is_primary,
+          last_updated: new Date().toISOString()
+        })) || [],
         summary: {
-          total_platforms: [
-            socialMedia?.facebook_url,
-            socialMedia?.instagram_handle,
-            socialMedia?.twitter_handle,
-            socialMedia?.linkedin_url,
-            socialMedia?.youtube_url
-          ].filter(Boolean).length,
-          verified_accounts: 0, // Not available in representatives_core
-          total_followers: 0 // Not available in representatives_core
+          total_platforms: socialMedia?.length || 0,
+          verified_accounts: socialMedia?.filter((s: any) => s.is_verified).length || 0,
+          total_followers: 0 // Not available in current schema
         }
       } : null,
       
       // Campaign Finance (only if civics campaign finance is enabled)
-      campaign_finance: isFeatureEnabled('CIVICS_CAMPAIGN_FINANCE') && campaignFinance ? {
-        election_year: (campaignFinance as any).election_year,
-        total_receipts: (campaignFinance as any).total_receipts,
-        total_disbursements: (campaignFinance as any).total_disbursements,
-        cash_on_hand: (campaignFinance as any).cash_on_hand,
-        individual_contributions: (campaignFinance as any).individual_contributions,
-        pac_contributions: (campaignFinance as any).pac_contributions,
-        self_financing: (campaignFinance as any).self_financing,
-        top_contributors: (campaignFinance as any).top_contributors,
-        industry_contributions: (campaignFinance as any).industry_contributions,
-        last_updated: campaignFinance.last_updated
+      campaign_finance: isFeatureEnabled('CIVICS_CAMPAIGN_FINANCE') ? {
+        activities: activity?.filter((act: any) => act.type === 'campaign_finance').map((act: any) => ({
+          title: act.title,
+          description: act.description,
+          date: act.date,
+          source: act.source
+        })) || [],
+        last_updated: new Date().toISOString()
       } : null,
       
       // Voting Behavior (only if civics voting records are enabled)
-      voting_behavior: isFeatureEnabled('CIVICS_VOTING_RECORDS') && votingBehavior ? {
-        analysis_period: 'current_term', // Not available in representatives_core
-        total_votes: 0, // Not available in representatives_core
-        missed_votes: 0, // Not available in representatives_core
-        party_line_votes: 0, // Not available in representatives_core
-        bipartisan_votes: 0, // Not available in representatives_core
-        party_unity_score: 0, // Not available in representatives_core
-        bipartisan_score: 0, // Not available in representatives_core
-        attendance_rate: 0, // Not available in representatives_core
-        ideology_score: 0, // Not available in representatives_core
-        key_vote_positions: [], // Not available in representatives_core
-        last_updated: votingBehavior.last_updated
+      voting_behavior: isFeatureEnabled('CIVICS_VOTING_RECORDS') ? {
+        activities: activity?.filter((act: any) => act.type === 'voting_record').map((act: any) => ({
+          title: act.title,
+          description: act.description,
+          date: act.date,
+          source: act.source
+        })) || [],
+        last_updated: new Date().toISOString()
       } : null,
       
-      // Recent Votes (not available in representatives_core)
-      recent_votes: [],
+      // Recent Votes
+      recent_votes: activity?.filter((act: any) => act.type === 'vote').map((act: any) => ({
+        title: act.title,
+        description: act.description,
+        date: act.date,
+        source: act.source
+      })) || [],
       
-      // Policy Positions (not available in representatives_core)
-      policy_positions: [],
+      // Policy Positions
+      policy_positions: activity?.filter((act: any) => act.type === 'policy_position').map((act: any) => ({
+        title: act.title,
+        description: act.description,
+        date: act.date,
+        source: act.source
+      })) || [],
       
       // Canonical ID Resolution
       canonical_ids: crosswalkEntries?.map(entry => ({
@@ -309,15 +229,11 @@ export async function GET(
 
       // Data Quality Summary
       data_quality: {
-        contact_info_available: (representative).contact_info_available || false,
-        social_media_available: (representative).social_media_available || false,
-        campaign_finance_available: (representative).campaign_finance_available || false,
-        voting_records_available: (representative).voting_records_available || false,
-        overall_quality_score: Math.round(
-          ((contactInfo?.data_quality_score || 0) + 
-           (campaignFinance ? 90 : 0) + 
-           (votingBehavior ? 85 : 0)) / 3
-        )
+        contact_info_available: (contacts && contacts.length > 0) || false,
+        social_media_available: (socialMedia && socialMedia.length > 0) || false,
+        campaign_finance_available: activity?.some((act: any) => act.type === 'campaign_finance') || false,
+        voting_records_available: activity?.some((act: any) => act.type === 'voting_record') || false,
+        overall_quality_score: representative.data_quality_score || 0
       },
       
       // Metadata

@@ -1,16 +1,18 @@
 /**
- * Real-time Messaging Service
+ * @fileoverview Real-time Messaging Service
  * 
  * Provides real-time messaging capabilities using Supabase real-time subscriptions.
  * Handles message delivery, status updates, and thread notifications.
  * 
- * Created: January 23, 2025
- * Status: ✅ IMPLEMENTATION READY
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
-import { OptimizedSupabaseClient } from '@/lib/supabase/client';
-import { type RealtimeChannel } from '@supabase/supabase-js';
-import { logger } from '@/lib/utils/logger';
+import { createClient } from '../../utils/supabase/client';
+import { type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '../logger';
 
 // ============================================================================
 // TYPES
@@ -79,7 +81,7 @@ export class ContactMessagingService {
   private channels: Map<string, RealtimeChannel> = new Map();
 
   constructor() {
-    this.supabase = OptimizedSupabaseClient.getBrowserClient();
+    this.supabase = createClient();
   }
 
   // ============================================================================

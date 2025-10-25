@@ -14,7 +14,7 @@
 
 import * as crypto from 'node:crypto';
 
-import { isPresent } from '@/lib/utils/clean';
+import { isPresent } from '../utils/clean';
 
 export interface UserRanking {
   pollId: string;

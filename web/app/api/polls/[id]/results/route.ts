@@ -2,7 +2,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +19,7 @@ export async function GET(
     // Fetch poll data and calculate aggregated results
     const { data: poll, error: pollError } = await supabaseClient
       .from('polls')
-      .select('id, title, options, total_votes, participation, status')
+      .select('id, title, participation, status')
       .eq('id', pollId)
       .eq('status', 'active')
       .single();
@@ -38,18 +38,33 @@ export async function GET(
       );
     }
 
-    // Calculate aggregated results (all zeros for now since no votes exist)
-    const options = (poll.options as unknown[]) || [];
-    const aggregatedResults = options.reduce((acc: Record<string, number>, _option: unknown, index: number) => {
-      acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
+    // Get poll options from the poll_options table
+    const { data: pollOptions, error: optionsError } = await supabaseClient
+      .from('poll_options')
+      .select('id, text, vote_count')
+      .eq('poll_id', pollId)
+      .order('order_index');
+
+    if (optionsError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch poll options' },
+        { status: 500 }
+      );
+    }
+
+    // Calculate aggregated results
+    const aggregatedResults = (pollOptions || []).reduce((acc: Record<string, number>, option: any) => {
+      acc[option.id] = option.vote_count || 0;
       return acc;
     }, {});
+
+    const totalVotes = (pollOptions || []).reduce((sum: number, option: any) => sum + (option.vote_count || 0), 0);
 
     // Additional security: ensure no sensitive data is returned
     const sanitizedResults = {
       id: poll.id,
       title: poll.title,
-      total_votes: poll.total_votes ?? 0,
+      total_votes: totalVotes,
       participation: poll.participation ?? 0,
       aggregated_results: aggregatedResults,
       // Only include safe, public fields

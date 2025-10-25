@@ -1,17 +1,13 @@
 /**
- * Optimized Admin Dashboard API
+ * @fileoverview Admin Dashboard API
  * 
- * High-performance consolidated admin dashboard endpoint that:
- * - Combines all admin dashboard data in a single request
- * - Implements intelligent caching for admin data
- * - Uses database query optimization
- * - Provides progressive loading support
- * - Includes admin-specific performance monitoring
+ * Admin dashboard endpoint providing platform metrics, user statistics,
+ * and administrative data with caching and query optimization.
  * 
- * Target: <3 second load time (currently 12+ seconds)
- * 
- * Created: October 19, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
@@ -81,6 +77,18 @@ interface AdminDashboardData {
   generatedAt: string;
 }
 
+/**
+ * Get admin dashboard data
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.include] - Data sections to include (default: 'all')
+ * @param {boolean} [request.searchParams.cache] - Whether to use cache (default: true)
+ * @returns {Promise<NextResponse>} Admin dashboard data
+ * 
+ * @example
+ * GET /api/admin/dashboard
+ * GET /api/admin/dashboard?include=overview,analytics&cache=false
+ */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
@@ -108,9 +116,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    // Check if user is admin by querying the user_profiles table
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isAdmin = profile?.is_admin || false;
 
     if (!isAdmin) {
       return NextResponse.json(

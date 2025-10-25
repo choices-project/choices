@@ -1371,13 +1371,13 @@ async function getRecentActivity() {
         is_verified: false,
         is_featured: false
       },
-      content_type: (usage.content_type as 'poll' | 'comment' | 'profile' | 'feed') || 'poll',
-      content_id: usage.content_id || '',
+      content_type: 'poll' as const,
+      content_id: '',
       user_id: usage.user_id,
       created_at: usage.created_at,
-      context: usage.context || undefined,
-      sentiment: (usage.sentiment as 'positive' | 'neutral' | 'negative') || 'neutral',
-      engagement_score: usage.engagement_score || 0
+      context: undefined,
+      sentiment: 'neutral' as const,
+      engagement_score: 0
     })) || [];
   } catch (error) {
     console.error('Failed to get recent activity:', error);

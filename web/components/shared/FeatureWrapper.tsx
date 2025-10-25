@@ -1,8 +1,13 @@
 /**
- * Feature Wrapper Component
+ * @fileoverview Feature Wrapper Component
  * 
- * A React component that conditionally renders content based on feature flags.
+ * React component that conditionally renders content based on feature flags.
  * Provides a clean way to wrap components or sections that depend on specific features.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import type { ReactNode } from 'react';
@@ -31,6 +36,14 @@ export interface FeatureWrapperProps {
 
 /**
  * Wrapper component for a single feature flag
+ * 
+ * @param {FeatureWrapperProps} props - Component props
+ * @returns {React.ReactElement | null} Rendered component or null
+ * 
+ * @example
+ * <FeatureWrapper feature="new-feature">
+ *   <NewFeatureComponent />
+ * </FeatureWrapper>
  */
 export function FeatureWrapper({
   feature,
@@ -94,6 +107,14 @@ export interface FeatureWrapperBatchProps {
 
 /**
  * Wrapper component for multiple feature flags
+ * 
+ * @param {FeatureWrapperBatchProps} props - Component props
+ * @returns {React.ReactElement | null} Rendered component or null
+ * 
+ * @example
+ * <FeatureWrapperBatch features={["feature1", "feature2"]}>
+ *   <MultipleFeatureComponent />
+ * </FeatureWrapperBatch>
  */
 export function FeatureWrapperBatch({
   features,
@@ -161,6 +182,14 @@ export interface FeatureWrapperWithDependenciesProps {
 
 /**
  * Wrapper component for feature flags with dependencies
+ * 
+ * @param {FeatureWrapperWithDependenciesProps} props - Component props
+ * @returns {React.ReactElement | null} Rendered component or null
+ * 
+ * @example
+ * <FeatureWrapperWithDependencies feature="main-feature">
+ *   <MainFeatureComponent />
+ * </FeatureWrapperWithDependencies>
  */
 export function FeatureWrapperWithDependencies({
   feature,
@@ -212,7 +241,15 @@ export function FeatureWrapperWithDependencies({
 }
 
 /**
- * Higher-order component for wrapping components with feature flags
+ * Higher-order component for wrapping components with a single feature flag
+ * 
+ * @param {React.ComponentType<P>} WrappedComponent - Component to wrap
+ * @param {string} feature - Feature flag to check
+ * @param {React.ComponentType<P>} [fallback] - Fallback component when feature is disabled
+ * @returns {React.ComponentType<P>} Wrapped component
+ * 
+ * @example
+ * const MyComponent = withFeatureFlag(MyComponent, 'new-feature');
  */
 export function withFeatureFlag<P extends object>(
   WrappedComponent: React.ComponentType<P>,
@@ -241,6 +278,15 @@ export function withFeatureFlag<P extends object>(
 
 /**
  * Higher-order component for wrapping components with multiple feature flags
+ * 
+ * @param {React.ComponentType<P>} WrappedComponent - Component to wrap
+ * @param {string[]} features - Feature flags to check
+ * @param {React.ComponentType<P>} [fallback] - Fallback component when features are disabled
+ * @param {boolean} [anyEnabled] - Whether any feature needs to be enabled (default: false)
+ * @returns {React.ComponentType<P>} Wrapped component
+ * 
+ * @example
+ * const MyComponent = withFeatureFlagsBatch(MyComponent, ['feature1', 'feature2']);
  */
 export function withFeatureFlagsBatch<P extends object>(
   WrappedComponent: React.ComponentType<P>,
@@ -272,6 +318,11 @@ export function withFeatureFlagsBatch<P extends object>(
 
 /**
  * Utility component for debugging feature flags
+ * 
+ * @returns {React.ReactElement} Debug component showing feature flag status
+ * 
+ * @example
+ * <FeatureFlagDebugger />
  */
 export function FeatureFlagDebugger(): React.ReactElement {
   const { getAllFlags, systemInfo, isLoading } = useFeatureFlags();

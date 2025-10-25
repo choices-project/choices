@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Analytics Hook
+ * 
+ * Analytics hook for comprehensive analytics data, engagement metrics, and civic
+ * engagement tracking.
+ * 
+ * This hook provides:
+ * - Analytics data structures
+ * - Engagement scoring and trust metrics
+ * - Civic engagement analytics
+ * - Performance optimization tracking
+ * - Real-time analytics updates
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
@@ -5,6 +24,14 @@ import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 import { withOptional } from '@/lib/utils/objects';
 
+/**
+ * Sophisticated Analytics Data with advanced features
+ * 
+ * Comprehensive analytics data structure leveraging our 37-table database
+ * schema for detailed engagement tracking, civic metrics, and performance analysis.
+ * 
+ * @interface AnalyticsData
+ */
 interface AnalyticsData {
   period: string;
   summary: {
@@ -14,16 +41,43 @@ interface AnalyticsData {
     activeUsers: number;
     newPolls: number;
     newVotes: number;
+    // Advanced metrics
+    engagementScore: number;
+    trustScore: number;
+    participationRate: number;
+    conversionRate: number;
+    bounceRate: number;
+    sessionDuration: number;
   };
   trends: {
     userGrowth: Array<{ date: string; count: number }>;
     pollActivity: Array<{ date: string; count: number }>;
     voteActivity: Array<{ date: string; count: number }>;
+    // Advanced trends
+    engagementTrends: Array<{ date: string; score: number }>;
+    trustTrends: Array<{ date: string; score: number }>;
+    civicEngagement: Array<{ date: string; actions: number }>;
+  };
+  // Sophisticated analytics features
+  events: {
+    pollCreated: number;
+    pollVoted: number;
+    civicActionCreated: number;
+    notificationSent: number;
+    userEngagement: number;
+  };
+  civicEngagement: {
+    totalActions: number;
+    activePetitions: number;
+    representativeInteractions: number;
+    signatureCount: number;
   };
   generatedAt: string;
   performance: {
     queryOptimized: boolean;
     cacheEnabled: boolean;
+    analyticsEventsTracked: number;
+    eventDataPoints: number;
   };
 }
 

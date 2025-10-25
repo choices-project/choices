@@ -1,8 +1,0 @@
-{
-  "minTrust": {
-    "/app/api/district/route.ts": "T0",
-    "/app/api/candidates/route.ts": "T0",
-    "/app/api/candidates/[personId]/route.ts": "T0",
-    "/app/api/comments/route.ts": "T3"
-  }
-}

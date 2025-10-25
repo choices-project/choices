@@ -8,7 +8,7 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '@/lib/utils/logger';
+import { devLog } from '../../logger';
 
 import type { 
   VotingStrategy, 

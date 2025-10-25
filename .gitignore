@@ -123,4 +123,4 @@ supabase/.temp
 settings_exporter/
 tests/test_exporter.py
 export_bundle.zip
-claude_memory/
+claude_memory/services/civics-backend/data/openstates-people/

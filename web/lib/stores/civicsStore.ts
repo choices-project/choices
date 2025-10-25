@@ -1,19 +1,21 @@
 /**
- * Civics Store - Zustand Implementation
+ * @fileoverview Civics Store - Zustand Implementation
  * 
- * Comprehensive civic engagement state management including representative data,
+ * Civic engagement state management including representative data,
  * geographic services, civic actions, and civic preferences. Consolidates civic
  * state management and representative information.
  * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../logger';
 
 // Civic data types
 interface Representative {

@@ -6,6 +6,19 @@
  * Updated: October 6, 2025
  */
 
+/**
+ * Civics State Representatives API Route
+ * 
+ * Provides state-based representative lookup with normalized table data
+ * including contacts, photos, social media, and activity records.
+ * 
+ * @fileoverview State-based representative lookup API with normalized data
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use normalized tables instead of JSONB
+ * @feature CIVICS_STATE_LOOKUP
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
@@ -20,6 +33,21 @@ const supabase = createClient(
   { auth: { persistSession: true } }
 );
 
+/**
+ * GET /api/civics/by-state
+ * 
+ * Retrieves representatives for a specific state with optional filtering
+ * by level (federal/state) and chamber (house/senate). Returns normalized data.
+ * 
+ * @param request - NextRequest with state query parameter and optional filters
+ * @returns NextResponse with representative data or error
+ * 
+ * @example
+ * GET /api/civics/by-state?state=CA&level=federal&chamber=house
+ * 
+ * @throws {400} When state parameter is missing or invalid
+ * @throws {500} When database query fails
+ */
 export async function GET(request: NextRequest) {
   const logger = createApiLogger('/api/civics/by-state', 'GET');
   
@@ -98,10 +126,10 @@ export async function GET(request: NextRequest) {
         verification_status,
         created_at,
         last_updated,
-        enhanced_contacts,
-        enhanced_photos,
-        enhanced_activity,
-        enhanced_social_media
+        representative_contacts(contact_type, value, is_verified, source),
+        representative_photos(url, is_primary, source),
+        representative_social_media(platform, handle, url, is_verified),
+        representative_activity(type, title, description, date, source)
       `)
       .eq('state', state)
       .limit(limit);
@@ -132,7 +160,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    // Process the data to include enhanced data in the response
+    // Process the data to include enhanced data from normalized tables
     const processedData = (data || []).map(rep => ({
       id: rep.id,
       name: rep.name,
@@ -165,11 +193,31 @@ export async function GET(request: NextRequest) {
       verification_status: rep.verification_status,
       created_at: rep.created_at,
       last_updated: rep.last_updated,
-      // Enhanced data from JSONB columns
-      contacts: rep.enhanced_contacts || [],
-      photos: rep.enhanced_photos || [],
-      activity: rep.enhanced_activity || [],
-      social_media: rep.enhanced_social_media || []
+      // Enhanced data from normalized tables
+      contacts: rep.representative_contacts?.map((contact: any) => ({
+        type: contact.contact_type,
+        value: contact.value,
+        is_verified: contact.is_verified,
+        source: contact.source
+      })) || [],
+      photos: rep.representative_photos?.map((photo: any) => ({
+        url: photo.url,
+        is_primary: photo.is_primary,
+        source: photo.source
+      })) || [],
+      activity: rep.representative_activity?.map((activity: any) => ({
+        type: activity.type,
+        title: activity.title,
+        description: activity.description,
+        date: activity.date,
+        source: activity.source
+      })) || [],
+      social_media: rep.representative_social_media?.map((social: any) => ({
+        platform: social.platform,
+        handle: social.handle,
+        url: social.url,
+        is_verified: social.is_verified
+      })) || []
     }));
 
     // Cache the result for future requests

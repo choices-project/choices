@@ -1,11 +1,13 @@
 /**
- * Enhanced Profile React Query Hooks
+ * @fileoverview Profile React Query Hooks
  * 
- * Superior implementation using React Query for state management
- * Provides proper caching, optimistic updates, and error handling
+ * Implementation using React Query for state management.
+ * Provides proper caching, optimistic updates, and error handling.
  * 
- * Created: January 27, 2025
- * Status: ✅ SUPERIOR IMPLEMENTATION
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 'use client';

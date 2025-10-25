@@ -1,43 +1,34 @@
+/**
+ * @fileoverview Polls API
+ * 
+ * Poll management API providing poll creation, retrieval, and management
+ * with features including auto-locking, moderation, and analytics.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
-// Temporarily comment out hashtag imports to isolate the issue
-// import { getTrendingHashtags } from '@/features/hashtags/lib/hashtag-service';
-// import { calculateTrendingHashtags } from '@/features/hashtags/lib/hashtag-analytics';
 
 /**
- * Enhanced Polls API with Hashtag Integration
+ * Get polls with filtering and sorting
  * 
- * This API endpoint provides comprehensive poll management with advanced features:
- * - Hashtag-based filtering and search
- * - Trending hashtag integration
- * - Advanced sorting (newest, popular, trending, engagement)
- * - Analytics and engagement tracking
- * - Performance optimization with caching
- * 
- * @route GET /api/polls
- * @param {string} status - Filter by poll status (active, closed, trending)
- * @param {string} category - Filter by poll category
- * @param {string} hashtags - Filter by hashtags (comma-separated)
- * @param {string} search - Search in poll titles and descriptions
- * @param {string} sort - Sort order (newest, popular, trending, engagement)
- * @param {string} view_mode - View mode (grid, list, trending)
- * @param {boolean} include_hashtag_data - Include hashtag and engagement data
- * @param {boolean} include_analytics - Include trending hashtag analytics
- * @param {number} limit - Number of polls to return (default: 20)
- * @param {number} offset - Number of polls to skip (default: 0)
- * 
- * @returns {Object} Enhanced poll data with hashtag integration
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.status] - Filter by poll status (active, closed, trending)
+ * @param {string} [request.searchParams.category] - Filter by poll category
+ * @param {string} [request.searchParams.hashtags] - Filter by hashtags (comma-separated)
+ * @param {string} [request.searchParams.search] - Search in poll titles and descriptions
+ * @param {string} [request.searchParams.sort] - Sort order (newest, popular, trending, engagement)
+ * @param {number} [request.searchParams.limit] - Number of polls to return (default: 20)
+ * @param {number} [request.searchParams.offset] - Number of polls to skip (default: 0)
+ * @returns {Promise<NextResponse>} Poll data response
  * 
  * @example
- * // Get trending polls with hashtag data
- * GET /api/polls?status=trending&include_hashtag_data=true&include_analytics=true
- * 
- * // Search polls by hashtag
- * GET /api/polls?hashtags=technology,politics&sort=trending
- * 
- * // Get polls with search and filtering
- * GET /api/polls?search=climate&category=environment&sort=popular
+ * GET /api/polls?status=trending&category=politics&sort=popular
  */
 export async function GET(request: NextRequest) {
   try {
@@ -232,7 +223,25 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/polls - Create a new poll
+ * Create a new poll
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} request.body.title - Poll title
+ * @param {string} [request.body.description] - Poll description
+ * @param {string} request.body.question - Poll question
+ * @param {Array<string>} request.body.options - Poll options (minimum 2)
+ * @param {string} [request.body.category] - Poll category (default: 'general')
+ * @param {Array<string>} [request.body.tags] - Poll tags
+ * @param {Object} [request.body.settings] - Poll settings
+ * @returns {Promise<NextResponse>} Created poll data
+ * 
+ * @example
+ * POST /api/polls
+ * {
+ *   "title": "Community Budget Vote",
+ *   "question": "How should we allocate the budget?",
+ *   "options": ["Education", "Healthcare", "Infrastructure"]
+ * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -268,7 +277,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Create poll
+    // Create sophisticated poll with enhanced features
+    const autoLockAt = settings?.autoLockDuration 
+      ? new Date(Date.now() + settings.autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .insert({
@@ -280,6 +293,34 @@ export async function POST(request: NextRequest) {
         created_by: user.id,
         status: 'active',
         visibility: 'public',
+        
+        // Sophisticated poll features
+        auto_lock_at: autoLockAt,
+        lock_duration: settings?.autoLockDuration || null,
+        lock_type: settings?.autoLockDuration ? 'automatic' : null,
+        moderation_status: settings?.requireModeration ? 'pending' : 'approved',
+        privacy_level: settings?.privacyLevel || 'public',
+        is_verified: false,
+        is_featured: false,
+        is_trending: false,
+        trending_score: 0,
+        engagement_score: 0,
+        participation_rate: 0,
+        total_views: 0,
+        participation: 0,
+        
+        // Advanced settings
+        poll_settings: {
+          allow_anonymous: settings?.allowAnonymousVotes !== false,
+          require_verification: settings?.requireVerification || false,
+          auto_lock_duration: settings?.autoLockDuration || null,
+          moderation_required: settings?.requireModeration || false,
+          allow_multiple_votes: settings?.allowMultipleVotes || false,
+          show_results_before_close: settings?.showResultsBeforeClose || false,
+          allow_comments: settings?.allowComments !== false,
+          allow_sharing: settings?.allowSharing !== false,
+          require_authentication: settings?.requireAuthentication || false
+        },
         settings: {
           allow_multiple_votes: settings?.allowMultipleVotes || false,
           allow_anonymous_votes: settings?.allowAnonymousVotes || true,
@@ -321,19 +362,75 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create poll options' }, { status: 500 });
     }
 
-    logger.info('Poll created successfully', { 
+    // Track poll creation analytics
+    const sessionId = crypto.randomUUID();
+    const { data: analyticsEvent } = await supabase
+      .from('analytics_events')
+      .insert({
+        event_type: 'poll_created',
+        user_id: user.id,
+        session_id: sessionId,
+        event_data: {
+          poll_id: poll.id,
+          poll_title: poll.title,
+          poll_category: poll.category,
+          poll_settings: poll.poll_settings,
+          auto_lock_at: poll.auto_lock_at,
+          moderation_status: poll.moderation_status
+        },
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+        user_agent: request.headers.get('user-agent'),
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    // Store detailed analytics data
+    if (analyticsEvent) {
+      await supabase
+        .from('analytics_event_data')
+        .insert([
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_category',
+            data_value: poll.category,
+            data_type: 'string'
+          },
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_auto_lock',
+            data_value: poll.auto_lock_at ? 'true' : 'false',
+            data_type: 'boolean'
+          },
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_moderation_required',
+            data_value: poll.moderation_status === 'pending' ? 'true' : 'false',
+            data_type: 'boolean'
+          }
+        ]);
+    }
+
+    logger.info('Poll created successfully with analytics tracking', { 
       pollId: poll.id, 
       title: poll.title, 
-      authorId: user.id 
+      authorId: user.id,
+      analyticsEventId: analyticsEvent?.id
     });
 
     return NextResponse.json({
       poll: {
-      id: poll.id,
-      title: poll.title,
-      description: poll.description,
-      category: poll.category,
-      status: poll.status,
+        id: poll.id,
+        title: poll.title,
+        description: poll.description,
+        category: poll.category,
+        status: poll.status,
+        autoLockAt: poll.auto_lock_at,
+        moderationStatus: poll.moderation_status,
+        privacyLevel: poll.privacy_level,
+        isVerified: poll.is_verified,
+        isFeatured: poll.is_featured,
+        engagementScore: poll.engagement_score,
         createdAt: poll.created_at
       }
     }, { status: 201 });

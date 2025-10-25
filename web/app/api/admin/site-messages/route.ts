@@ -30,9 +30,14 @@ async function GET(request: NextRequest, context: any) {
       );
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    // Check if user is admin by querying the user_profiles table
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isAdmin = profile?.is_admin || false;
 
     if (!isAdmin) {
       return NextResponse.json(
@@ -112,9 +117,14 @@ async function POST(request: NextRequest, context: any) {
       );
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    // Check if user is admin by querying the user_profiles table
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isAdmin = profile?.is_admin || false;
 
     if (!isAdmin) {
       return NextResponse.json(

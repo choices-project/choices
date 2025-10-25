@@ -1,11 +1,13 @@
 /**
- * Minimal Hashtag Store - Fallback Implementation
+ * @fileoverview Minimal Hashtag Store - Fallback Implementation
  * 
- * A lightweight hashtag store that doesn't depend on database tables
- * Used when the full hashtag system isn't available
+ * A lightweight hashtag store that doesn't depend on database tables.
+ * Used when the full hashtag system isn't available.
  * 
- * Created: January 25, 2025
- * Status: ✅ FALLBACK
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';

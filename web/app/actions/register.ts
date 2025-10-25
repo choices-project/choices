@@ -4,13 +4,26 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { logSecurityEvent } from '@/lib/core/auth/server-actions';
+import { logSecurityEvent } from '../../lib/core/auth/server-actions';
 
 // Import the existing ServerActionContext type
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
-import { TypeGuardError } from '@/lib/core/types/guards';
-import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
+import type { ServerActionContext } from '../../lib/core/auth/server-actions';
+import { TypeGuardError } from '../../lib/core/types/guards';
+import { logger } from '../../lib/logger';
+import { getSupabaseServerClient, getSupabaseAdminClient } from '../../utils/supabase/server';
+
+/**
+ * @fileoverview User Registration Server Action
+ * 
+ * Secure user registration action with comprehensive validation, security features,
+ * and fraud prevention. Handles user account creation with email verification,
+ * username validation, and security logging.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
 
 const RegisterForm = z.object({
   email: z.string().email('Invalid email'),

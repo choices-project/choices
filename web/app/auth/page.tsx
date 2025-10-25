@@ -160,20 +160,20 @@ export default function AuthPage() {
               }
             }}
             className="text-blue-600 hover:underline text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-            data-testid={T.login.toggle}
+            data-testid="auth-toggle"
             tabIndex={0}
           >
             {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid={T.login.form}>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid={T.AUTH.LOGIN_FORM}>
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
               {error && (
                 <div 
                   className="bg-red-50 border border-red-200 rounded-md p-4" 
-                  data-testid={T.login.error}
+                  data-testid="auth-error"
                   role="alert"
                   aria-live="assertive"
                 >
@@ -198,7 +198,7 @@ export default function AuthPage() {
               </div>
 
           {message && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4" data-testid={T.login.success}>
+            <div className="bg-green-50 border border-green-200 rounded-md p-4" data-testid="auth-success">
               <div className="flex">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
                 <div className="ml-3">

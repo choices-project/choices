@@ -56,7 +56,7 @@ test.describe('Core Issues Test', () => {
       
       performanceResults.push({
         page: pagePath,
-        loadTime: loadTime
+        loadTime
       });
       
       console.log(`⏱️ ${pagePath}: ${loadTime}ms`);

@@ -1,19 +1,14 @@
 /**
- * Consolidated Analytics API Endpoint
+ * @fileoverview Analytics API
  * 
- * This endpoint consolidates all analytics functionality:
- * - General analytics with auth
- * - Public statistics
- * - Analytics summary
- * - Poll-specific analytics
- * - User-specific analytics
+ * Basic analytics endpoint providing platform metrics and user statistics
+ * with rate limiting. Currently uses direct database queries for polls,
+ * votes, and user activity data.
  * 
- * Usage:
- * GET /api/analytics - General analytics (requires admin auth)
- * GET /api/analytics?type=public - Public statistics (no auth required)
- * GET /api/analytics?type=summary - Analytics summary (no auth required)
- * GET /api/analytics?type=poll&id={pollId} - Poll-specific analytics (requires admin auth)
- * GET /api/analytics?type=user&id={userId} - User-specific analytics (requires admin auth)
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import type { NextRequest } from 'next/server';
@@ -36,6 +31,19 @@ const rateLimitMiddleware = createRateLimitMiddleware({
 // Combined middleware: rate limiting + admin auth
 const middleware = combineMiddleware(rateLimitMiddleware);
 
+/**
+ * Get analytics data
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.type] - Analytics type (general, public, summary, poll, user)
+ * @param {string} [request.searchParams.id] - ID for poll or user specific analytics
+ * @param {string} [request.searchParams.period] - Time period for analytics (default: '7d')
+ * @returns {Promise<NextResponse>} Analytics data response
+ * 
+ * @example
+ * GET /api/analytics?type=public
+ * GET /api/analytics?type=poll&id=poll-123
+ */
 export const GET = async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -157,9 +165,14 @@ export const GET = async (request: NextRequest) => {
           );
         }
 
-        // Check if user is admin
-        const { data: isAdmin } = await supabase
-          .rpc('is_admin', { input_user_id: user.id });
+        // Check if user is admin by querying the user_profiles table
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_admin')
+          .eq('user_id', user.id)
+          .single();
+        
+        const isAdmin = profile?.is_admin || false;
 
         if (!isAdmin) {
           return NextResponse.json(
@@ -213,9 +226,14 @@ export const GET = async (request: NextRequest) => {
           );
         }
 
-        // Check if user is admin
-        const { data: isAdmin } = await supabase
-          .rpc('is_admin', { input_user_id: user.id });
+        // Check if user is admin by querying the user_profiles table
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_admin')
+          .eq('user_id', user.id)
+          .single();
+        
+        const isAdmin = profile?.is_admin || false;
 
         if (!isAdmin) {
           return NextResponse.json(
@@ -262,9 +280,14 @@ export const GET = async (request: NextRequest) => {
           );
         }
 
-        // Check if user is admin
-        const { data: isAdmin } = await supabase
-          .rpc('is_admin', { input_user_id: user.id });
+        // Check if user is admin by querying the user_profiles table
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_admin')
+          .eq('user_id', user.id)
+          .single();
+        
+        const isAdmin = profile?.is_admin || false;
 
         if (!isAdmin) {
           return NextResponse.json(

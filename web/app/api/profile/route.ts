@@ -1,20 +1,14 @@
 /**
- * Comprehensive Profile API Endpoint
+ * @fileoverview Profile Management API
  * 
- * This endpoint provides complete profile management functionality:
- * - User profile CRUD operations
- * - Avatar upload and management
- * - User preferences management
- * - User interests management
- * - Onboarding progress tracking
- * - Profile validation and sanitization
- * - Error handling and logging
+ * Comprehensive profile management API providing user profile CRUD operations,
+ * preferences management, interests tracking, and onboarding progress handling.
+ * Supports avatar uploads, privacy settings, and complete user data management.
  * 
- * Endpoints:
- * GET /api/profile - Get current user profile with all related data
- * POST /api/profile - Create or update user profile
- * PUT /api/profile - Update user profile
- * DELETE /api/profile - Delete user profile
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
@@ -71,7 +65,17 @@ const onboardingSchema = z.object({
 });
 
 /**
- * GET /api/profile - Get current user profile with all related data
+ * Get user profile with preferences, interests, and onboarding data
+ * 
+ * Fetches the authenticated user's profile from user_profiles table,
+ * along with privacy_settings as preferences, interests, and onboarding progress.
+ * 
+ * @param {NextRequest} request - Request object
+ * @returns {Promise<NextResponse>} Object containing profile, preferences, interests, and onboarding data
+ * 
+ * @example
+ * GET /api/profile
+ * // Returns: { profile: {...}, preferences: {...}, interests: {...}, onboarding: {...} }
  */
 export async function GET(request: NextRequest) {
   try {
@@ -143,7 +147,29 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/profile - Create or update user profile with comprehensive data
+ * Handle profile, preferences, interests, and onboarding updates
+ * 
+ * Processes different types of updates based on request body:
+ * - profile: Updates user_profiles table fields
+ * - preferences: Updates privacy_settings in user_profiles
+ * - interests: Updates interests in user_profiles
+ * - onboarding: Updates onboarding progress and demographics
+ * - avatar: Handles avatar upload to storage
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {Object} [request.body.profile] - Profile data to update
+ * @param {Object} [request.body.preferences] - Privacy preferences to update
+ * @param {Object} [request.body.interests] - User interests to update
+ * @param {Object} [request.body.onboarding] - Onboarding progress to update
+ * @param {File} [request.body.avatar] - Avatar file to upload
+ * @returns {Promise<NextResponse>} Update result for the specific action taken
+ * 
+ * @example
+ * POST /api/profile
+ * {
+ *   "profile": { "display_name": "John Doe", "bio": "Developer" },
+ *   "preferences": { "notifications": true, "dataSharing": false }
+ * }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -244,7 +270,12 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('user_profiles')
       .update({
-        demographics: parsedOnboarding.data.data
+        demographics: parsedOnboarding.data,
+        trust_tier: 'bronze', // Start with bronze trust tier
+        participation_style: 'balanced',
+        primary_concerns: [],
+        community_focus: [],
+        updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id)
       .select();
@@ -302,7 +333,18 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PUT /api/profile - Update user profile (full replacement)
+ * Update user profile (full replacement)
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {Object} request.body - Complete profile data
+ * @returns {Promise<NextResponse>} Profile update result
+ * 
+ * @example
+ * PUT /api/profile
+ * {
+ *   "display_name": "John Doe",
+ *   "bio": "Updated bio"
+ * }
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -350,7 +392,13 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/profile - Delete user profile and all related data
+ * Delete user profile
+ * 
+ * @param {NextRequest} request - Request object
+ * @returns {Promise<NextResponse>} Profile deletion result
+ * 
+ * @example
+ * DELETE /api/profile
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -395,7 +443,17 @@ export async function DELETE(request: NextRequest) {
 }
 
 /**
- * PATCH /api/profile - Partial update of user profile
+ * Partial update of user profile
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {Object} request.body - Partial profile data to update
+ * @returns {Promise<NextResponse>} Profile update result
+ * 
+ * @example
+ * PATCH /api/profile
+ * {
+ *   "bio": "Updated bio only"
+ * }
  */
 export async function PATCH(request: NextRequest) {
   try {

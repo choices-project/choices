@@ -1,14 +1,16 @@
 /**
- * Internationalization (i18n) System
+ * @fileoverview Internationalization (i18n) System
  * 
- * Multi-language support for the Choices platform
- * Supports 10 languages with dynamic translation loading
+ * Multi-language support for the Choices platform.
+ * Supports 10 languages with dynamic translation loading.
  * 
- * Created: January 23, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
-import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
+import { LANGUAGE_OPTIONS } from '../../features/profile/utils/profile-constants';
 
 export type SupportedLanguage = typeof LANGUAGE_OPTIONS[number]['code'];
 

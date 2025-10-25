@@ -5,8 +5,9 @@
  * Includes privacy protection, validation, and error handling.
  * 
  * @fileoverview Address-based representative lookup form
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use correct API endpoint
  * @feature CIVICS_ADDRESS_LOOKUP
  */
 
@@ -55,10 +56,9 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
     try {
       // Call the address lookup API
-      const response = await fetch('/api/v1/civics/address-lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address })
+      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       });
       
       if (!response.ok) {

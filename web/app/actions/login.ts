@@ -6,13 +6,15 @@ import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
- * Modern Supabase Authentication Login Action
+ * @fileoverview Modern Supabase Authentication Login Action
  * 
- * Completely rebuilt to use Supabase native authentication
- * Removes all old concepts: ia_users, stable_id, custom auth
+ * Implementation using Supabase native authentication.
+ * Handles user login with email and password validation.
  * 
- * Created: January 4, 2025
- * Status: ✅ SUPERIOR IMPLEMENTATION
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 export async function loginAction(formData: FormData) {
   logger.info('Modern Supabase login action called');

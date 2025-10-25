@@ -242,7 +242,7 @@ export class DatabaseTracker {
    * @param results - Database results
    * @returns Array of recommendations
    */
-  private static generateRecommendations(results: DatabaseResults): string[] {
+  public static generateRecommendations(results: DatabaseResults): string[] {
     const recommendations: string[] = [];
     
     // Tables with high usage
@@ -283,7 +283,7 @@ export class DatabaseTracker {
  * Analyzes database table usage patterns and provides insights
  * for optimization and schema design.
  */
-export class TableUsageAnalyzer {
+class TableUsageAnalyzer {
   /**
    * Analyze table usage patterns
    * @param usedTables - Set of used table names

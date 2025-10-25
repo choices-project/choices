@@ -1,3 +1,16 @@
+/**
+ * Civics Address Lookup API Route
+ * 
+ * Provides address-based representative lookup with Google Civic API integration
+ * and fallback to database queries. Uses normalized tables for enhanced data.
+ * 
+ * @fileoverview Address-based representative lookup API
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use normalized tables instead of JSONB
+ * @feature CIVICS_ADDRESS_LOOKUP
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -12,6 +25,22 @@ const supabase = createClient(
   { auth: { persistSession: true } }
 );
 
+/**
+ * GET /api/civics/by-address
+ * 
+ * Looks up representatives for a given address using Google Civic API
+ * with fallback to database queries. Returns normalized representative data.
+ * 
+ * @param req - NextRequest with address query parameter
+ * @returns NextResponse with representative data or error
+ * 
+ * @example
+ * GET /api/civics/by-address?address=123 Main St, Anytown, CA 90210
+ * 
+ * @throws {400} When address parameter is missing
+ * @throws {500} When database query fails
+ * @throws {500} When Google Civic API fails
+ */
 export async function GET(req: NextRequest) {
   const logger = createApiLogger('/api/civics/by-address', 'GET');
   
@@ -66,10 +95,16 @@ export async function GET(req: NextRequest) {
       const state = extractStateFromAddress(address);
       logger.info('Extracted state from address', { state });
       
-      // Query representatives from the extracted state
+      // Query representatives from the extracted state with normalized data
       const { data: representatives, error } = await supabase
         .from('representatives_core')
-        .select('*')
+        .select(`
+          *,
+          representative_contacts!inner(contact_type, value, is_verified, source),
+          representative_photos!inner(url, is_primary, source),
+          representative_social_media!inner(platform, handle, url, is_verified),
+          representative_activity!inner(type, title, description, date, source)
+        `)
         .eq('state', state)
         .order('level', { ascending: true });
 
@@ -95,10 +130,16 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Find representatives that match the electoral districts
+    // Find representatives that match the electoral districts with normalized data
     const { data: representatives, error } = await supabase
       .from('representatives_core')
-      .select('*')
+      .select(`
+        *,
+        representative_contacts!inner(contact_type, value, is_verified, source),
+        representative_photos!inner(url, is_primary, source),
+        representative_social_media!inner(platform, handle, url, is_verified),
+        representative_activity!inner(type, title, description, date, source)
+      `)
       .order('level', { ascending: true });
 
     if (error) {
@@ -236,7 +277,21 @@ function determineDistrictLevel(name: string): string {
 }
 
 /**
- * Transform database representative to API format
+ * Transform database representative to API format with normalized data
+ * 
+ * Converts database representative record with normalized table joins
+ * into API response format with enhanced data from related tables.
+ * 
+ * @param rep - Representative record from database with normalized joins
+ * @returns Transformed representative object for API response
+ * 
+ * @example
+ * const transformed = transformRepresentative({
+ *   id: '123',
+ *   name: 'John Doe',
+ *   representative_contacts: [{ type: 'email', value: 'john@example.com' }],
+ *   representative_photos: [{ url: 'photo.jpg', is_primary: true }]
+ * });
  */
 function transformRepresentative(rep: any): any {
   return {
@@ -260,7 +315,32 @@ function transformRepresentative(rep: any): any {
     last_verified: rep.last_verified,
     verification_status: rep.verification_status,
     created_at: rep.created_at,
-    last_updated: rep.last_updated
+    last_updated: rep.last_updated,
+    // Enhanced data from normalized tables
+    contacts: rep.representative_contacts?.map((contact: any) => ({
+      type: contact.contact_type,
+      value: contact.value,
+      is_verified: contact.is_verified,
+      source: contact.source
+    })) || [],
+    photos: rep.representative_photos?.map((photo: any) => ({
+      url: photo.url,
+      is_primary: photo.is_primary,
+      source: photo.source
+    })) || [],
+    social_media: rep.representative_social_media?.map((social: any) => ({
+      platform: social.platform,
+      handle: social.handle,
+      url: social.url,
+      is_verified: social.is_verified
+    })) || [],
+    activity: rep.representative_activity?.map((activity: any) => ({
+      type: activity.type,
+      title: activity.title,
+      description: activity.description,
+      date: activity.date,
+      source: activity.source
+    })) || []
   };
 }
 

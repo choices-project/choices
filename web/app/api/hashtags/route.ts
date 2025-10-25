@@ -1,17 +1,13 @@
 /**
- * Consolidated Hashtags API Endpoint
+ * @fileoverview Hashtags API
  * 
- * This endpoint consolidates all hashtag functionality:
- * - Hashtag flagging
- * - Hashtag moderation
- * - Moderation queue
- * - Hashtag approval/rejection
+ * Hashtag management API providing hashtag flagging, moderation,
+ * and approval/rejection functionality.
  * 
- * Usage:
- * GET /api/hashtags?action=moderation-queue - Get moderation queue
- * POST /api/hashtags?action=flag - Flag a hashtag
- * POST /api/hashtags?action=approve&flagId={id} - Approve a flag
- * POST /api/hashtags?action=reject&flagId={id} - Reject a flag
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
@@ -21,6 +17,16 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Get hashtag moderation queue
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.action] - Action type (moderation-queue)
+ * @returns {Promise<NextResponse>} Moderation queue data
+ * 
+ * @example
+ * GET /api/hashtags?action=moderation-queue
+ */
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -74,6 +80,18 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Handle hashtag actions (flag, approve, reject)
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.action] - Action type (flag, approve, reject)
+ * @param {string} [request.searchParams.flagId] - Flag ID for approve/reject actions
+ * @returns {Promise<NextResponse>} Action result
+ * 
+ * @example
+ * POST /api/hashtags?action=flag
+ * POST /api/hashtags?action=approve&flagId=123
+ */
 export async function POST(request: NextRequest) {
   try {
     const url = new URL(request.url);

@@ -1,14 +1,16 @@
 /**
- * Core Voting Engine
+ * @fileoverview Core Voting Engine
  * 
- * This module provides the main voting engine that orchestrates different voting strategies
+ * Main voting engine that orchestrates different voting strategies
  * and handles vote processing, validation, and results calculation.
  * 
- * Created: September 15, 2025
- * Updated: September 15, 2025
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
-import { devLog } from '@/lib/utils/logger';
+import { devLog } from '../logger';
 
 import { ApprovalStrategy } from './strategies/approval';
 import { QuadraticStrategy } from './strategies/quadratic';

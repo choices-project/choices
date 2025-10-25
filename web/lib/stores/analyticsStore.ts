@@ -1,35 +1,56 @@
 /**
- * Analytics Store - Zustand Implementation
+ * @fileoverview Analytics Store - Zustand Implementation
  * 
- * Comprehensive analytics state management including event tracking,
+ * Analytics state management including event tracking,
  * user behavior analytics, performance metrics, and analytics preferences.
  * Consolidates scattered analytics hooks and local state.
  * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../logger';
 
-// Analytics data types
+// Sophisticated Analytics data types with advanced features
 interface AnalyticsEvent {
   id: string;
+  event_type: string;
+  user_id?: string;
+  session_id: string;
+  event_data: Record<string, any>;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+  timestamp: string;
   type: string;
   category: string;
   action: string;
   label?: string;
   value?: number;
-  timestamp: string;
-  userId?: string;
-  sessionId: string;
   metadata?: Record<string, any>;
-  page?: string;
-  userAgent?: string;
-  referrer?: string;
+  analytics_event_data?: Array<{
+    data_key: string;
+    data_value: string;
+    data_type: string;
+  }>;
+}
+
+// Advanced analytics metrics
+interface AnalyticsMetrics {
+  totalEvents: number;
+  uniqueUsers: number;
+  sessionDuration: number;
+  bounceRate: number;
+  conversionRate: number;
+  engagementScore: number;
+  trustScore: number;
+  participationRate: number;
 }
 
 // Chart data types for analytics visualization
@@ -235,6 +256,10 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         trackPageView: (page, metadata) => {
           const { trackEvent } = get();
           trackEvent({
+            event_type: 'page_view',
+            session_id: get().sessionId,
+            event_data: {},
+            created_at: new Date().toISOString(),
             type: 'page_view',
             category: 'navigation',
             action: 'page_view',
@@ -252,6 +277,10 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         trackUserAction: (action, category, label, value) => {
           const { trackEvent } = get();
           trackEvent({
+            event_type: 'user_action',
+            session_id: get().sessionId,
+            event_data: {},
+            created_at: new Date().toISOString(),
             type: 'user_action',
             category,
             action,
@@ -263,6 +292,10 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         trackError: (error, context) => {
           const { trackEvent } = get();
           trackEvent({
+            event_type: 'error',
+            session_id: get().sessionId,
+            event_data: {},
+            created_at: new Date().toISOString(),
             type: 'error',
             category: 'error',
             action: 'error_occurred',

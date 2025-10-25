@@ -1,13 +1,16 @@
 /**
- * Role-Based Access Control (RBAC) Utilities
+ * @fileoverview Role-Based Access Control (RBAC) Utilities
  * 
- * @created: October 24, 2025
- * @updated: October 24, 2025
- * @purpose: Professional RBAC system for multi-role admin management
+ * Professional RBAC system for multi-role admin management.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
-import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
+import { createClient } from '../utils/supabase/client';
+import type { Database } from '../types/database';
 
 type SupabaseClient = ReturnType<typeof createClient>;
 
@@ -35,17 +38,23 @@ export class RBACService {
    */
   async hasRole(userId: string, roleName: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.rpc('has_role', {
-        user_id: userId,
-        role_name: roleName
-      });
+      const { data, error } = await this.supabase
+        .from('user_roles')
+        .select(`
+          roles!inner(
+            name
+          )
+        `)
+        .eq('user_id', userId)
+        .eq('roles.name', roleName)
+        .single();
 
       if (error) {
         console.error('Error checking role:', error);
         return false;
       }
 
-      return data === true;
+      return !!data;
     } catch (error) {
       console.error('Error in hasRole:', error);
       return false;
@@ -57,17 +66,27 @@ export class RBACService {
    */
   async hasPermission(userId: string, permissionName: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.rpc('has_permission', {
-        user_id: userId,
-        permission_name: permissionName
-      });
+      const { data, error } = await this.supabase
+        .from('user_roles')
+        .select(`
+          roles!inner(
+            role_permissions!inner(
+              permissions!inner(
+                name
+              )
+            )
+          )
+        `)
+        .eq('user_id', userId)
+        .eq('roles.role_permissions.permissions.name', permissionName)
+        .single();
 
       if (error) {
         console.error('Error checking permission:', error);
         return false;
       }
 
-      return data === true;
+      return !!data;
     } catch (error) {
       console.error('Error in hasPermission:', error);
       return false;
@@ -79,16 +98,18 @@ export class RBACService {
    */
   async isAdmin(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.rpc('is_admin', {
-        user_id: userId
-      });
+      const { data, error } = await this.supabase
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('user_id', userId)
+        .single();
 
       if (error) {
         console.error('Error checking admin status:', error);
         return false;
       }
 
-      return data === true;
+      return data?.is_admin || false;
     } catch (error) {
       console.error('Error in isAdmin:', error);
       return false;
@@ -100,16 +121,30 @@ export class RBACService {
    */
   async getUserRoles(userId: string): Promise<UserRole[]> {
     try {
-      const { data, error } = await this.supabase.rpc('get_user_roles', {
-        user_id: userId
-      });
+      const { data, error } = await this.supabase
+        .from('user_roles')
+        .select(`
+          created_at,
+          roles!inner(
+            name,
+            level,
+            description
+          )
+        `)
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error getting user roles:', error);
         return [];
       }
 
-      return data || [];
+      return data?.map(userRole => ({
+        role_name: userRole.roles.name,
+        role_level: userRole.roles.level || 0,
+        is_active: true,
+        created_at: userRole.created_at || new Date().toISOString(),
+        assigned_at: userRole.created_at || new Date().toISOString()
+      })) || [];
     } catch (error) {
       console.error('Error in getUserRoles:', error);
       return [];
@@ -121,16 +156,33 @@ export class RBACService {
    */
   async getUserPermissions(userId: string): Promise<UserPermission[]> {
     try {
-      const { data, error } = await this.supabase.rpc('get_user_permissions', {
-        user_id: userId
-      });
+      const { data, error } = await this.supabase
+        .from('user_roles')
+        .select(`
+          roles!inner(
+            role_permissions!inner(
+              permissions!inner(
+                name,
+                resource,
+                action
+              )
+            )
+          )
+        `)
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error getting user permissions:', error);
         return [];
       }
 
-      return data || [];
+      return data?.flatMap(userRole => 
+        userRole.roles.role_permissions?.map(rolePerm => ({
+          permission_name: rolePerm.permissions.name,
+          resource: rolePerm.permissions.resource,
+          action: rolePerm.permissions.action
+        })) || []
+      ) || [];
     } catch (error) {
       console.error('Error in getUserPermissions:', error);
       return [];

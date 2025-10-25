@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Global Navigation Component
+ * 
+ * Global navigation component providing site navigation, user authentication,
+ * and responsive mobile menu functionality.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
+
 'use client'
 
 import { 
@@ -20,6 +32,14 @@ import { useUser, useUserActions, useUserLoading, useIsAuthenticated } from '@/l
 import { useI18n } from '@/hooks/useI18n'
 import LanguageSelector from '@/components/shared/LanguageSelector'
 
+/**
+ * Global Navigation Component
+ * 
+ * @returns {JSX.Element} Global navigation component
+ * 
+ * @example
+ * <GlobalNavigation />
+ */
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -60,7 +80,13 @@ export default function GlobalNavigation() {
   
   try {
     const userActions = useUserActions();
-    signOut = userActions?.signOut || null;
+    signOut = userActions?.signOut ? async () => {
+      try {
+        userActions.signOut();
+      } catch (error) {
+        console.error('SignOut error:', error);
+      }
+    } : null;
   } catch (error) {
     console.warn('useUserActions hook failed:', error);
     signOut = null;
@@ -122,7 +148,10 @@ export default function GlobalNavigation() {
   const handleLogout = async () => {
     try {
       if (signOut) {
-        await signOut()
+        const result = signOut()
+        if (result instanceof Promise) {
+          await result
+        }
       }
       closeMobileMenu()
     } catch (error) {

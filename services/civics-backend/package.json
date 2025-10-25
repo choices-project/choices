@@ -1,0 +1,63 @@
+{
+  "name": "civics-backend",
+  "version": "1.0.0",
+  "description": "Standalone civics data ingestion and processing system",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "tsx scripts/sophisticated-main-pipeline.ts",
+    "dev": "tsx scripts/sophisticated-main-pipeline.ts --dev",
+    "test": "tsx scripts/test-sophisticated-system.ts",
+    "test-pipeline": "tsx scripts/sophisticated-main-pipeline.ts test",
+    "federal": "tsx scripts/sophisticated-main-pipeline.ts federal",
+    "state": "tsx scripts/sophisticated-main-pipeline.ts state",
+    "build": "tsc",
+    "clean": "rm -rf dist/*.js dist/*.js.map",
+    "setup": "npm install && ./setup.sh",
+    "legacy": "node scripts/main-pipeline.js"
+  },
+  "keywords": [
+    "civics",
+    "data-ingestion",
+    "representatives",
+    "congress",
+    "openstates",
+    "fec",
+    "wikipedia"
+  ],
+  "author": "Choices Platform",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2",
+    "yaml": "^2.3.4",
+    "cheerio": "^1.0.0-rc.12",
+    "wikipedia": "^2.1.2",
+    "axios": "^1.6.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "uuid": "^9.0.1",
+    "jsdom": "^23.0.0",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/lodash": "^4.14.202",
+    "@types/uuid": "^9.0.7",
+    "@types/jsdom": "^21.1.6",
+    "typescript": "^5.3.0",
+    "tsx": "^4.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/choices-platform/civics-backend"
+  },
+  "bugs": {
+    "url": "https://github.com/choices-platform/civics-backend/issues"
+  },
+  "homepage": "https://github.com/choices-platform/civics-backend#readme"
+}

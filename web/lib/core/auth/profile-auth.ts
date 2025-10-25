@@ -101,9 +101,8 @@ export async function getCurrentProfileUser(): Promise<ProfileUser | null> {
       };
     }
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    // Check if user is admin by checking the profile
+    const isAdmin = profile.is_admin || false;
 
     return {
       id: user.id,

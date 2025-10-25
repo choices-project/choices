@@ -1,6 +1,15 @@
-// Balanced Onboarding Flow
-// 5 essential steps: Welcome, Privacy, Demographics, Auth, Complete
-// Created: October 2, 2025
+/**
+ * @fileoverview Balanced Onboarding Flow Component
+ * 
+ * Comprehensive onboarding flow with 5 essential steps: Welcome, Privacy, 
+ * Demographics, Authentication, and Completion. Provides a balanced user 
+ * experience with progressive disclosure and privacy-first design.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
 
 'use client';
 
@@ -428,7 +437,7 @@ const DemographicsStep: React.FC<{
             </button>
             <button
               onClick={onNext}
-              data-testid={T.profileNext}
+              data-testid={T.FORMS.FORM_SUBMIT_BUTTON}
               className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               Continue
@@ -1073,5 +1082,3 @@ const BalancedOnboardingFlow: React.FC = () => {
     </div>
   );
 };
-
-export default BalancedOnboardingFlow;

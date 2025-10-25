@@ -1,181 +1,112 @@
-# Supabase Database Scripts
+# OpenStates Database Population Script
 
-This directory contains safe, production-ready scripts for inspecting and maintaining your Supabase database.
+This script processes the OpenStates YAML files and populates your database with **current representatives only** (no retired/historical data).
 
-## 🔒 Safety First
+## 🚀 Quick Start
 
-All scripts in this directory are designed with safety as the top priority:
+### 1. Set up your environment variables
 
-- **Read-only operations** - No data modification
-- **No schema changes** - No table or index modifications
-- **Safe error handling** - Graceful failure without side effects
-- **Clear documentation** - Every script explains what it does
+Create a `.env.local` file in the project root with your Supabase credentials:
 
-## 📁 Available Scripts
-
-### `generate-comprehensive-schema.js` ⭐ **PRIMARY**
-
-**Purpose**: Generate comprehensive TypeScript types for all 121 database tables from actual Supabase dashboard
-
-**What it does**:
-- Generates complete TypeScript Database interface for ALL actual tables
-- Covers all major systems (core, hashtags, analytics, civics, privacy, WebAuthn, etc.)
-- Creates production-ready type definitions based on real database structure
-- Updates `web/types/database-comprehensive.ts`
-- **RESOLVES AUTHENTICATION ISSUES** - Includes missing WebAuthn tables
-
-**Usage**:
 ```bash
-cd /Users/alaughingkitsune/src/Choices
-node scripts/generate-comprehensive-schema.js
+# .env.local
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
-**Output**: Complete TypeScript schema with 121 tables from actual Supabase dashboard
+### 2. Run the setup script
 
-### `discover-all-tables.js` 🔍 **DISCOVERY**
-
-**Purpose**: Discover all tables in the database using comprehensive testing
-
-**What it does**:
-- Tests 469 potential table names
-- Identifies all accessible tables
-- Discovers tables with data vs empty tables
-- Creates comprehensive table inventory
-- **BREAKTHROUGH**: Found all 121 actual tables!
-
-**Usage**:
 ```bash
-cd /Users/alaughingkitsune/src/Choices
-node scripts/discover-all-tables.js
+cd scripts
+./setup-and-run.sh
 ```
 
-**Output**: Complete inventory of all database tables with accessibility status
+That's it! The script will:
+- Install required dependencies
+- Process all OpenStates YAML files
+- Populate your database with current representatives only
+- Set up the ID crosswalk for your superior ingest pipeline
 
-### `supabase-inspection.js`
+## 📊 What It Does
 
-**Purpose**: Comprehensive database health check and performance analysis
+### ✅ Processes Only Current Representatives
+- **Legislature**: Current senators and representatives
+- **Executive**: Current governors and lieutenant governors  
+- **Municipal**: Current mayors (if available)
+- **Skips**: Retired, historical, and inactive representatives
 
-**What it does**:
-- Database size and table statistics
-- Cache hit rate analysis
-- Index usage and performance
-- Query performance metrics
-- Bloat detection
+### ✅ Populates All Tables
+- `openstates_people_data` - Core person information
+- `openstates_people_roles` - Current roles only
+- `openstates_people_contacts` - Contact information
+- `openstates_people_social_media` - Social media handles
+- `openstates_people_sources` - Source URLs
+- `openstates_people_identifiers` - External IDs
+- `representatives_core` - Enhanced representative data
+- `id_crosswalk` - Canonical ID mapping for superior pipeline
 
-**Usage**:
+### ✅ Smart Filtering
+- Only processes files from `legislature/` and `executive/` directories
+- Filters out roles with end dates in the past
+- Skips retired representatives
+- Focuses on active, current office holders
+
+## 📈 Expected Results
+
+After running, you should see:
+- **~5,000-8,000 current representatives** (varies by state)
+- **All 50 states + DC + territories** processed
+- **Clean, current data** ready for your superior ingest pipeline
+- **ID crosswalk** populated for efficient API routing
+
+## 🔧 Manual Setup (Alternative)
+
+If you prefer to run manually:
+
 ```bash
-cd /Users/alaughingkitsune/src/Choices
-node scripts/supabase-inspection.js
+# Install dependencies
+npm install
+
+# Set environment variables
+export SUPABASE_URL="your-supabase-url"
+export SUPABASE_SERVICE_ROLE_KEY="your-service-key"
+
+# Run the script
+node populate-openstates-current.js
 ```
 
-**Output**: Safe, read-only analysis of your database performance
+## 🎯 Next Steps
 
-### `database-schema.js`
+After population:
+1. **Test your superior ingest pipeline** with the ID crosswalk
+2. **Verify data quality** with the verification queries
+3. **Optimize performance** based on your usage patterns
+4. **Scale up** to process additional data sources
 
-**Purpose**: Comprehensive database schema inspection and documentation
+## 🐛 Troubleshooting
 
-**What it does**:
-- Queries all tables, columns, indexes, constraints
-- Generates detailed schema documentation
-- Identifies relationships and dependencies
-- Creates comprehensive schema reports
+### Common Issues:
 
-**Usage**:
-```bash
-cd /Users/alaughingkitsune/src/Choices
-node scripts/database-schema.js
-```
+1. **"OpenStates data directory not found"**
+   - Make sure the YAML files are in the correct location
+   - Check the path in the script configuration
 
-**Output**: Detailed schema documentation and analysis
+2. **"Supabase connection failed"**
+   - Verify your credentials in `.env.local`
+   - Check that your Supabase project is active
 
-### `simple-schema-check.js`
+3. **"Permission denied"**
+   - Make sure the script is executable: `chmod +x setup-and-run.sh`
 
-**Purpose**: Quick database table verification
-
-**What it does**:
-- Verifies specific tables exist
-- Quick health check
-- Validates WebAuthn tables
-- Fast table accessibility test
-
-**Usage**:
-```bash
-cd /Users/alaughingkitsune/src/Choices
-node scripts/simple-schema-check.js
-```
-
-**Output**: Quick table verification results
-
-**Current script collection**: 8 production-ready scripts, all current and useful.
-
-## 🚫 What These Scripts DON'T Do
-
-- ❌ Modify any data
-- ❌ Change schema structure
-- ❌ Drop tables or indexes
-- ❌ Execute unsafe SQL
-- ❌ Access sensitive user data
-
-## 🔧 Prerequisites
-
-1. **Environment Setup**: Ensure your `web/.env.local` file contains:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   ```
-
-2. **Node.js Dependencies**: Scripts use the same dependencies as your web app
-
-## 📊 Understanding the Output
-
-### Cache Hit Rates
-- **✅ 99%+**: Excellent performance
-- **⚠️ 95-99%**: Good, but could be better
-- **❌ <95%**: Poor performance, consider upgrading compute
-
-### Index Analysis
-- **Unused Indexes**: Indexes that have never been scanned (candidates for removal)
-- **Large Indexes**: Indexes taking up significant space
-- **Scan Counts**: How often indexes are used
-
-### Table Statistics
-- **Size**: Total size including indexes
-- **Bloat**: Dead tuples that need cleanup
-- **Live Tuples**: Active data rows
-
-### Query Performance
-- **Total Time**: Cumulative execution time
-- **Mean Time**: Average execution time
-- **Calls**: How often the query runs
-
-## 🛠️ Troubleshooting
-
-### "Missing Supabase credentials"
-- Check that `web/.env.local` exists and contains the required variables
-- Ensure the service role key has the correct permissions
-
-### "Could not get [metric]"
-- Some metrics require `pg_stat_statements` to be enabled
-- This is normal and doesn't affect the safety of the script
-
-### "No data available"
-- Some metrics may not be available on all Supabase plans
-- The script will gracefully handle missing data
-
-## 🔄 Regular Maintenance
-
-Run the inspection script regularly to:
-- Monitor database health
-- Identify performance issues early
-- Track optimization progress
-- Ensure efficient resource usage
+4. **"Module not found"**
+   - Run `npm install` to install dependencies
 
 ## 📞 Support
 
-If you encounter issues with these scripts:
-1. Check the error messages - they're designed to be helpful
-2. Verify your environment setup
-3. Ensure you have the necessary Supabase permissions
+If you encounter issues:
+1. Check the console output for specific error messages
+2. Verify your Supabase credentials
+3. Ensure the OpenStates YAML files are accessible
+4. Check that your database schema is properly set up
 
-Remember: These scripts are **read-only** and **safe to run** in production environments.
-
+The script will provide detailed statistics and error reporting to help you troubleshoot any issues.

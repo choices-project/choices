@@ -188,7 +188,12 @@ test.describe('Real Database Activity Test', () => {
     console.log('📝 Step 4: Verifying real database activity...');
     
     // Check if user profile was created
-    const { data: profiles, error: profilesError } = await DatabaseTracker.supabase
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_tJOpGO2IPjujJDQou44P_g_BgbTFBfc';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: profiles, error: profilesError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('email', testUser.email)
@@ -203,7 +208,7 @@ test.describe('Real Database Activity Test', () => {
     }
     
     // Check if polls were created
-    const { data: polls, error: pollsError } = await DatabaseTracker.supabase
+    const { data: polls, error: pollsError } = await supabase
       .from('polls')
       .select('*')
       .eq('title', `Real Test Poll ${timestamp}`)
@@ -223,18 +228,18 @@ test.describe('Real Database Activity Test', () => {
     
     console.log('📝 Step 5: Database analysis...');
     
-    const results = DatabaseTracker.getResults();
+    const results = DatabaseTracker.generateReport();
     console.log('📊 Real Database Activity Results:');
-    console.log(`- Total Tables Used: ${results.totalTables}`);
-    console.log(`- Total Queries: ${results.totalQueries}`);
-    console.log(`- Most Used Table: ${results.mostUsedTable}`);
+    console.log(`- Total Tables Used: ${results.tablesUsed.size}`);
+    console.log(`- Total Queries: ${results.queries.length}`);
+    console.log(`- Tables Used: ${Array.from(results.tablesUsed).join(', ')}`);
     
     // Generate report
     const report = {
       test: 'Real Database Activity Test',
       user: testUser.email,
       timestamp: new Date().toISOString(),
-      results: results,
+      results,
       databaseActivity: {
         userProfileCreated: !!profiles,
         pollCreated: !!polls,
@@ -251,8 +256,8 @@ test.describe('Real Database Activity Test', () => {
     console.log('📄 Report saved: real-database-activity-test.json');
     
     // Assertions
-    expect(results.totalTables).toBeGreaterThan(0);
-    expect(results.totalQueries).toBeGreaterThan(0);
+    expect(results.tablesUsed.size).toBeGreaterThan(0);
+    expect(results.queries.length).toBeGreaterThan(0);
     
     console.log('✅ Real Database Activity Test completed successfully');
   });

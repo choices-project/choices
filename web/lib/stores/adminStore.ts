@@ -1,11 +1,13 @@
 /**
- * Admin Store - Zustand Implementation
+ * @fileoverview Admin Store - Zustand Implementation
  * 
  * Admin-specific business logic and data management.
  * UI state (sidebar, notifications, navigation) moved to global stores.
  * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
  */
 
 import { create } from 'zustand';
@@ -19,10 +21,10 @@ import type {
   SystemMetrics,
   ActivityItem,
   AdminUser,
-} from '@/features/admin/types';
-import { logger } from '@/lib/utils/logger';
-import { getSupabaseClient } from '@/utils/supabase/client';
-import type { Database } from '@/types/database';
+} from '../../features/admin/types';
+import { logger } from '../logger';
+import { getSupabaseClient } from '../../utils/supabase/client';
+import type { Database } from '../../types/database';
 
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 
@@ -219,13 +221,14 @@ export const useAdminStore = create<AdminStore>()(
             const { data: users, error } = await supabase
               .from('user_profiles')
               .select(`
+                id,
                 user_id,
                 email,
                 display_name,
                 is_admin,
                 is_active,
                 created_at,
-                last_active_at
+                updated_at
               `)
               .order('created_at', { ascending: false });
 
@@ -235,13 +238,13 @@ export const useAdminStore = create<AdminStore>()(
 
             // Transform data to match AdminUser interface
             const adminUsers: AdminUser[] = users?.map((user) => ({
-              id: user.user_id,
+              id: user.id || user.user_id,
               email: user.email,
               name: user.display_name ?? 'Unknown User',
               role: user.is_admin ? 'admin' : 'user',
               status: user.is_active ? 'active' : 'inactive',
               created_at: user.created_at ?? '',
-              last_login: user.last_active_at ?? undefined
+              last_login: user.updated_at ?? undefined
             })) ?? [];
 
             set({ users: adminUsers });

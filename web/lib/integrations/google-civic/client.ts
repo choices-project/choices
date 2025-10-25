@@ -3,6 +3,13 @@
  * 
  * Production-ready client for the Google Civic Information API with proper
  * error handling, rate limiting, caching, and data validation.
+ * Updated to use OCD-IDs for geographic mapping instead of deprecated Representatives API.
+ * 
+ * @fileoverview Google Civic API integration with OCD-ID support
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use Divisions API for OCD-IDs
+ * @feature GOOGLE_CIVIC_INTEGRATION
  */
 
 import { logger } from '@/lib/utils/logger';
@@ -126,24 +133,75 @@ export class GoogleCivicClient {
   }
 
   /**
-   * Look up representatives for an address
+   * Look up OCD-IDs for an address (replaces deprecated Representatives API)
+   * 
+   * Uses the Divisions API to retrieve OCD-IDs for geographic divisions
+   * instead of the deprecated Representatives API.
+   * 
+   * @param address - Address to look up
+   * @returns Promise resolving to address lookup result with OCD-IDs
+   * 
+   * @example
+   * const result = await client.lookupAddress('123 Main St, Anytown, CA 90210');
+   * console.log(result.ocdIds); // ['ocd-division/country:us/state:ca/cd:12']
+   * 
+   * @throws {ApplicationError} When API request fails or rate limit exceeded
    */
   async lookupAddress(address: string): Promise<AddressLookupResult> {
     await this.checkRateLimit();
 
     try {
-      logger.info('Looking up address in Google Civic API', { address });
+      logger.info('Looking up OCD-IDs for address in Google Civic API', { address });
 
-      const response = await this.makeRequest<GoogleCivicResponse>('/representatives', {
+      // Use Divisions API to get OCD-IDs for geographic mapping
+      const response = await this.makeRequest<GoogleCivicResponse>('/divisions', {
         address,
         includeOffices: true,
-        levels: ['country', 'administrativeArea1', 'administrativeArea2', 'locality'],
-        roles: ['legislatorUpperBody', 'legislatorLowerBody', 'headOfState', 'headOfGovernment']
+        levels: ['country', 'administrativeArea1', 'administrativeArea2', 'locality']
       });
 
       return this.transformResponse(response, address);
     } catch (error) {
-      logger.error('Failed to lookup address in Google Civic API', error instanceof Error ? error : new Error('Unknown error'));
+      logger.error('Failed to lookup OCD-IDs in Google Civic API', error instanceof Error ? error : new Error('Unknown error'));
+      throw error;
+    }
+  }
+
+  /**
+   * Get OCD-IDs for geographic mapping
+   * 
+   * Retrieves Open Civic Data Identifiers (OCD-IDs) for a given address
+   * using the Google Civic Divisions API. These IDs can be used for
+   * geographic mapping and district lookups.
+   * 
+   * @param address - Address to get OCD-IDs for
+   * @returns Promise resolving to array of OCD-IDs
+   * 
+   * @example
+   * const ocdIds = await client.getOCDIds('123 Main St, Anytown, CA 90210');
+   * console.log(ocdIds); // ['ocd-division/country:us/state:ca/cd:12']
+   * 
+   * @throws {ApplicationError} When API request fails or rate limit exceeded
+   */
+  async getOCDIds(address: string): Promise<string[]> {
+    await this.checkRateLimit();
+
+    try {
+      logger.info('Getting OCD-IDs for address', { address });
+
+      const response = await this.makeRequest<GoogleCivicResponse>('/divisions', {
+        address,
+        includeOffices: true,
+        levels: ['country', 'administrativeArea1', 'administrativeArea2', 'locality']
+      });
+
+      // Extract OCD-IDs from divisions
+      const ocdIds = Object.keys(response.divisions || {});
+      logger.info('Retrieved OCD-IDs', { ocdIds, count: ocdIds.length });
+      
+      return ocdIds;
+    } catch (error) {
+      logger.error('Failed to get OCD-IDs', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }

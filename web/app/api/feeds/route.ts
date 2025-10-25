@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Feeds API
+ * 
+ * Feed management API providing poll feeds with filtering,
+ * sorting, and engagement metrics.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -6,7 +18,19 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/feeds - Get feed items (polls) for the UnifiedFeed component
+/**
+ * Get feed items
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.limit] - Number of items to return (default: 20)
+ * @param {string} [request.searchParams.category] - Category filter (default: 'all')
+ * @param {string} [request.searchParams.sort] - Sort order (trending, engagement, newest)
+ * @param {boolean} [request.searchParams.includeAnalytics] - Include analytics data
+ * @returns {Promise<NextResponse>} Feed data response
+ * 
+ * @example
+ * GET /api/feeds?limit=10&category=politics&sort=trending
+ */
 export async function GET(request: NextRequest) {
   try {
     const supabaseClient = await getSupabaseServerClient();
@@ -24,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     devLog('Fetching feed items (polls)...', { limit, category });
 
-    // Fetch active polls from polls table
+    // Fetch active polls with sophisticated engagement features
     const { data: polls, error: pollsError } = await (supabaseClient as any)
       .from('polls')
       .select(`
@@ -36,9 +60,23 @@ export async function GET(request: NextRequest) {
         created_at, 
         hashtags, 
         primary_hashtag,
+        engagement_score,
+        participation_rate,
+        total_views,
+        participation,
+        is_trending,
+        trending_score,
+        is_featured,
+        is_verified,
+        auto_lock_at,
+        moderation_status,
+        privacy_level,
         poll_options(id, text, vote_count)
       `)
       .eq('status', 'active')
+      .order('trending_score', { ascending: false })
+      .order('engagement_score', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (pollsError) {

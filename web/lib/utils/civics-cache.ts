@@ -3,6 +3,13 @@
  * 
  * Provides intelligent caching for civics endpoints to improve performance
  * and reduce database load. Implements multi-layer caching strategy.
+ * Updated to use normalized tables instead of JSONB columns.
+ * 
+ * @fileoverview Civics caching and query optimization with normalized data
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use normalized tables instead of JSONB
+ * @feature CIVICS_CACHING
  * 
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
@@ -203,7 +210,7 @@ export class CivicsCache {
  */
 export class CivicsQueryOptimizer {
   /**
-   * Optimized representative query with all related data
+   * Optimized representative query with normalized table joins
    */
   static getRepresentativeQuery(supabase: any, id: string) {
     return supabase
@@ -233,10 +240,10 @@ export class CivicsQueryOptimizer {
         last_verified,
         created_at,
         last_updated,
-        enhanced_contacts,
-        enhanced_photos,
-        enhanced_activity,
-        enhanced_social_media
+        representative_contacts(contact_type, value, is_verified, source),
+        representative_photos(url, is_primary, source),
+        representative_social_media(platform, handle, url, is_verified),
+        representative_activity(type, title, description, date, source)
       `)
       .eq('id', id)
       .single();
@@ -280,10 +287,10 @@ export class CivicsQueryOptimizer {
         verification_status,
         created_at,
         last_updated,
-        enhanced_contacts,
-        enhanced_photos,
-        enhanced_activity,
-        enhanced_social_media
+        representative_contacts(contact_type, value, is_verified, source),
+        representative_photos(url, is_primary, source),
+        representative_social_media(platform, handle, url, is_verified),
+        representative_activity(type, title, description, date, source)
       `)
       .eq('state', state)
       .limit(limit);
