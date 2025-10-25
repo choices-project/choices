@@ -142,7 +142,7 @@ export class ConsistentTestUserManager {
         return false;
       }
 
-      return data.users.some(u => u.email === user.email);
+      return data.users.some((u: any) => u.email === user.email);
     } catch (error) {
       console.error('❌ Error checking user existence:', error);
       return false;
@@ -213,7 +213,7 @@ export class ConsistentTestUserManager {
         return false;
       }
 
-      const targetUser = users.users.find(u => u.email === user.email);
+      const targetUser = users.users.find((u: any) => u.email === user.email);
       
       if (!targetUser) {
         console.log(`ℹ️  User not found: ${user.email}`);
@@ -256,8 +256,8 @@ export class ConsistentTestUserManager {
       }
 
       const testUsers = users.users.filter(u => 
-        u.email?.includes('test') || 
-        u.email?.includes('example.com')
+        (u as any).email?.includes('test') ||
+        (u as any).email?.includes('example.com')
       );
 
       let success = true;
@@ -297,7 +297,7 @@ export class ConsistentTestUserManager {
         return null;
       }
 
-      const user = users.users.find(u => u.email === email);
+      const user = users.users.find((u: any) => u.email === email);
       
       if (!user) {
         return null;
