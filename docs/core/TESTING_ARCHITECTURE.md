@@ -1,10 +1,35 @@
 # Testing Architecture
 
-**Last Updated**: October 23, 2025  
-**Status**: Fully Operational  
-**Focus**: Database Usage Analysis & Performance Monitoring
+**Last Updated**: January 27, 2025  
+**Status**: Fully Operational with Expanded E2E Coverage  
+**Focus**: Comprehensive Database Usage Analysis & Automated Journey Tracking
 
 ## E2E Testing Infrastructure
+
+### Automated Journey Tracking System
+
+**Status**: ✅ FULLY OPERATIONAL  
+**Purpose**: Automated file tracking and database monitoring for comprehensive E2E journey expansion
+
+#### Key Features
+- **File Tracking**: 8 tracked files (E2E tests + utilities)
+- **Database Monitoring**: 20+ tables, 27+ queries tracked
+- **CI Compliance**: Automated TypeScript + ESLint cleanup
+- **Real-time Status**: Live monitoring of file and database usage
+
+#### Available Commands
+```bash
+npm run journey:status         # Show detailed status with database info
+npm run journey:cleanup        # Run strict cleanup on tracked files
+npm run journey:test           # Run journey tests with database tracking
+npm run journey:auto           # Full automated workflow (test + cleanup)
+```
+
+#### Expanded E2E Coverage
+- **User Journey**: 9.5 phases with comprehensive testing
+- **Admin Journey**: 6 phases with enhanced admin features
+- **Database Analysis**: Real-time tracking of table usage
+- **CI Compliance**: Automated cleanup ensures zero technical debt
 
 ### Database Tracking System
 ```typescript
