@@ -21,6 +21,19 @@ npm start
 - **Node.js 18+** - [Download here](https://nodejs.org/)
 - **Database** - Supabase account with service role key
 - **API Keys** - See [API Keys](#api-keys) section below
+- **OpenStates People Data** - Automatically included via git submodule
+
+## 🏛️ Data Sources & Attribution
+
+### OpenStates People Data
+This system uses data from the [OpenStates People](https://github.com/openstates/people) project, which provides comprehensive information about state legislators across the United States.
+
+- **License**: MIT License
+- **Attribution**: See [data/OPENSTATES_ATTRIBUTION.md](data/OPENSTATES_ATTRIBUTION.md)
+- **Repository**: [https://github.com/openstates/people](https://github.com/openstates/people)
+- **Organization**: [OpenStates](https://openstates.org/)
+
+We are grateful to the OpenStates team for providing this valuable public resource that enables civic engagement and transparency in state government.
 
 ## 🔧 Installation
 
