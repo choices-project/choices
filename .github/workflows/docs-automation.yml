@@ -1,0 +1,89 @@
+name: Documentation Automation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'web/**'
+      - 'scripts/**'
+  pull_request:
+    paths:
+      - 'docs/**'
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  docs-validation:
+    runs-on: ubuntu-latest
+    name: Validate Documentation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+          
+      - name: Validate documentation structure
+        run: |
+          node scripts/validate-docs.js
+          
+      - name: Check for broken links
+        run: |
+          npx markdown-link-check docs/**/*.md --quiet
+          
+      - name: Update documentation timestamps
+        run: |
+          node scripts/update-doc-timestamps.js
+          
+      - name: Archive outdated documentation
+        run: |
+          node scripts/archive-outdated-docs.js
+          
+      - name: Commit documentation updates
+        if: github.event_name == 'schedule'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/
+          git diff --staged --quiet || git commit -m "🤖 Automated documentation updates [skip ci]"
+          git push
+
+  docs-quality:
+    runs-on: ubuntu-latest
+    name: Documentation Quality Check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install markdown tools
+        run: |
+          npm install -g markdownlint-cli
+          npm install -g markdown-link-check
+          
+      - name: Lint markdown files
+        run: |
+          markdownlint docs/**/*.md --ignore node_modules
+          
+      - name: Check markdown links
+        run: |
+          markdown-link-check docs/**/*.md --quiet
+          
+      - name: Validate documentation completeness
+        run: |
+          node scripts/validate-docs.js

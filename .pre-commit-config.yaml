@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: docs-validation
+        name: Documentation Validation
+        entry: node scripts/validate-docs.js
+        language: node
+        files: \.md$
+        pass_filenames: false
+        
+      - id: docs-timestamps
+        name: Update Documentation Timestamps
+        entry: node scripts/update-doc-timestamps.js
+        language: node
+        files: \.md$
+        pass_filenames: false
+        
+      - id: markdown-lint
+        name: Markdown Linting
+        entry: markdownlint
+        language: system
+        files: \.md$
+        args: [--ignore, node_modules]
+        
+      - id: markdown-link-check
+        name: Markdown Link Check
+        entry: markdown-link-check
+        language: system
+        files: \.md$
+        args: [--quiet]
