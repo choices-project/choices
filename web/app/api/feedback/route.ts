@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       // CSP violations are always anonymous and high priority
       const cspData = {
         user_id: null, // Always anonymous
-        type: 'csp-violation',
+        feedback_type: 'csp-violation', // Changed from 'type' to 'feedback_type'
         title: 'CSP Violation Report',
         description: `CSP Violation: ${description}`,
         sentiment: 'negative',
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
     // Prepare enhanced feedback data
     const feedbackData = {
       user_id: user?.id || null,
-      type,
+      feedback_type: type, // Changed from 'type' to 'feedback_type'
       title: title.trim(),
       description: description.trim(),
       sentiment,
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
 
     devLog('Inserting enhanced feedback data:', {
       user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
-      type: feedbackData.type,
+      type: feedbackData.feedback_type,
       sentiment: feedbackData.sentiment,
       sessionId: userJourney?.sessionId,
       currentPage: userJourney?.currentPage,

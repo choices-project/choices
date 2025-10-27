@@ -288,57 +288,126 @@ export type Database = {
           },
         ]
       }
+      feature_usage: {
+        Row: {
+          action_type: string
+          context: Json | null
+          duration: number | null
+          error_message: string | null
+          feature_name: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          success: boolean | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          context?: Json | null
+          duration?: number | null
+          error_message?: string | null
+          feature_name: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          success?: boolean | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          context?: Json | null
+          duration?: number | null
+          error_message?: string | null
+          feature_name?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          success?: boolean | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
+          ai_analysis: Json | null
           assigned_to: string | null
           category: string | null
           created_at: string | null
           description: string
           feedback_type: string
           id: string
+          impact_score: number | null
+          metadata: Json | null
           priority: string | null
+          reproducibility: string | null
           resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
+          screenshot: string | null
+          sentiment: string | null
+          severity: string | null
           status: string | null
           tags: string[] | null
           title: string
+          type: string | null
           updated_at: string | null
           user_id: string | null
+          user_journey: Json | null
         }
         Insert: {
+          ai_analysis?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
           description: string
           feedback_type: string
           id?: string
+          impact_score?: number | null
+          metadata?: Json | null
           priority?: string | null
+          reproducibility?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          screenshot?: string | null
+          sentiment?: string | null
+          severity?: string | null
           status?: string | null
           tags?: string[] | null
           title: string
+          type?: string | null
           updated_at?: string | null
           user_id?: string | null
+          user_journey?: Json | null
         }
         Update: {
+          ai_analysis?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
           description?: string
           feedback_type?: string
           id?: string
+          impact_score?: number | null
+          metadata?: Json | null
           priority?: string | null
+          reproducibility?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          screenshot?: string | null
+          sentiment?: string | null
+          severity?: string | null
           status?: string | null
           tags?: string[] | null
           title?: string
+          type?: string | null
           updated_at?: string | null
           user_id?: string | null
+          user_journey?: Json | null
         }
         Relationships: []
       }
@@ -911,6 +980,51 @@ export type Database = {
           id?: string
           name?: string
           resource?: string
+        }
+        Relationships: []
+      }
+      platform_analytics: {
+        Row: {
+          category: string | null
+          dimensions: Json | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          period_end: string | null
+          period_start: string | null
+          source: string | null
+          subcategory: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          category?: string | null
+          dimensions?: Json | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          period_end?: string | null
+          period_start?: string | null
+          source?: string | null
+          subcategory?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          category?: string | null
+          dimensions?: Json | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          period_end?: string | null
+          period_start?: string | null
+          source?: string | null
+          subcategory?: string | null
+          timestamp?: string | null
         }
         Relationships: []
       }
@@ -1490,6 +1604,114 @@ export type Database = {
         }
         Relationships: []
       }
+      site_messages: {
+        Row: {
+          action_text: string | null
+          action_url: string | null
+          created_at: string | null
+          created_by: string | null
+          dismissible: boolean | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          last_viewed_at: string | null
+          message: string
+          metadata: Json | null
+          priority: string | null
+          start_date: string | null
+          status: string | null
+          target_audience: string | null
+          title: string
+          type: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismissible?: boolean | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_viewed_at?: string | null
+          message: string
+          metadata?: Json | null
+          priority?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismissible?: boolean | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_viewed_at?: string | null
+          message?: string
+          metadata?: Json | null
+          priority?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      system_health: {
+        Row: {
+          alerts: Json | null
+          details: Json | null
+          error_rate: number | null
+          health_status: string
+          id: string
+          last_check: string | null
+          metadata: Json | null
+          next_check: string | null
+          response_time: number | null
+          service_name: string
+          uptime_percentage: number | null
+        }
+        Insert: {
+          alerts?: Json | null
+          details?: Json | null
+          error_rate?: number | null
+          health_status: string
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          next_check?: string | null
+          response_time?: number | null
+          service_name: string
+          uptime_percentage?: number | null
+        }
+        Update: {
+          alerts?: Json | null
+          details?: Json | null
+          error_rate?: number | null
+          health_status?: string
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          next_check?: string | null
+          response_time?: number | null
+          service_name?: string
+          uptime_percentage?: number | null
+        }
+        Relationships: []
+      }
       trust_tier_analytics: {
         Row: {
           changed_by: string | null
@@ -1736,6 +1958,69 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          actions_count: number | null
+          avg_page_load_time: number | null
+          bounce_rate: number | null
+          conversion_events: Json | null
+          device_info: Json | null
+          ended_at: string | null
+          id: string
+          ip_address: unknown
+          is_active: boolean | null
+          last_activity: string | null
+          location: Json | null
+          metadata: Json | null
+          page_views: number | null
+          session_id: string
+          started_at: string | null
+          total_session_duration: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actions_count?: number | null
+          avg_page_load_time?: number | null
+          bounce_rate?: number | null
+          conversion_events?: Json | null
+          device_info?: Json | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: Json | null
+          metadata?: Json | null
+          page_views?: number | null
+          session_id: string
+          started_at?: string | null
+          total_session_duration?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actions_count?: number | null
+          avg_page_load_time?: number | null
+          bounce_rate?: number | null
+          conversion_events?: Json | null
+          device_info?: Json | null
+          ended_at?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: Json | null
+          metadata?: Json | null
+          page_views?: number | null
+          session_id?: string
+          started_at?: string | null
+          total_session_duration?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       vote_trust_tiers: {
         Row: {
           confidence_score: number | null
@@ -1938,6 +2223,21 @@ export type Database = {
       }
     }
     Functions: {
+      aggregate_platform_metrics: {
+        Args: {
+          end_time: string
+          metric_name_param: string
+          start_time: string
+        }
+        Returns: {
+          avg_value: number
+          count_records: number
+          max_value: number
+          metric_name: string
+          min_value: number
+          total_value: number
+        }[]
+      }
       analyze_geographic_intelligence: {
         Args: { p_analysis_window?: unknown; p_poll_id: string }
         Returns: Json
@@ -1970,6 +2270,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      cleanup_inactive_sessions: { Args: never; Returns: number }
       detect_bot_behavior:
         | { Args: { p_user_id: string }; Returns: Json }
         | {
