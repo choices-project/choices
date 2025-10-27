@@ -16,9 +16,24 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
 import type { 
-  UserPreferences,
-  PollRecommendation 
-} from '../types';
+  UserPreferences
+} from '@/features/civics/lib/types/civics-types';
+
+// Local type definitions
+export interface PollRecommendation {
+  id?: string; // Alias for pollId for compatibility
+  pollId: string;
+  title: string;
+  description?: string;
+  hashtags: string[];
+  tags?: string[]; // Alias for hashtags for compatibility
+  relevanceScore: number;
+  reason: string;
+  totalVotes?: number;
+  engagementScore?: number;
+  created_at?: string;
+  interestMatches?: string[];
+}
 
 // Enhanced hashtag-polls integration types
 export interface HashtagPollIntegration {

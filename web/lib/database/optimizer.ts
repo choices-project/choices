@@ -300,7 +300,7 @@ class DatabaseOptimizer {
    */
   private getQueryType(query: string): string {
     const match = query.match(/^\s*(\w+)/i);
-    return match ? match[1].toUpperCase() : 'UNKNOWN';
+    return match?.[1]?.toUpperCase() ?? 'UNKNOWN';
   }
 
   /**

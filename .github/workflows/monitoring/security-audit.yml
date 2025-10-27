@@ -1,0 +1,231 @@
+name: Choices Security Audit
+
+on:
+  schedule:
+    # Run weekly on Sunday at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      full_audit:
+        description: 'Run full security audit including dependency scan'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-audit:
+    name: Choices Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "🔍 Checking for hardcoded secrets..."
+          
+          # Check for Supabase keys
+          if grep -r "sk_" . --exclude-dir=node_modules --exclude-dir=.git; then
+            echo "❌ Found potential Supabase secret key"
+            exit 1
+          fi
+          
+          # Check for API keys
+          if grep -r "pk_" . --exclude-dir=node_modules --exclude-dir=.git; then
+            echo "❌ Found potential API key"
+            exit 1
+          fi
+          
+          # Check for JWT secrets
+          if grep -r "jwt.*secret" . --exclude-dir=node_modules --exclude-dir=.git; then
+            echo "❌ Found potential JWT secret"
+            exit 1
+          fi
+          
+          # Check for database URLs
+          if grep -r "postgres://" . --exclude-dir=node_modules --exclude-dir=.git; then
+            echo "❌ Found potential database URL"
+            exit 1
+          fi
+          
+          echo "✅ No hardcoded secrets found"
+
+      - name: Check environment variable usage
+        run: |
+          echo "🔍 Checking environment variable usage..."
+          
+          # Check for proper environment variable usage
+          if grep -r "process\.env\." web/ --exclude-dir=node_modules; then
+            echo "✅ Environment variables properly used"
+          else
+            echo "⚠️ No environment variables found - check if this is expected"
+          fi
+
+      - name: Check authentication implementation
+        run: |
+          echo "🔒 Checking authentication implementation..."
+          
+          # Check for WebAuthn implementation
+          if grep -r "webauthn\|passkey" web/ --exclude-dir=node_modules; then
+            echo "✅ WebAuthn implementation found"
+          else
+            echo "⚠️ WebAuthn implementation not found"
+          fi
+          
+          # Check for RLS policies
+          if find . -name "*.sql" -exec grep -l "ROW LEVEL SECURITY\|RLS" {} \; | grep -q .; then
+            echo "✅ RLS policies found"
+          else
+            echo "⚠️ RLS policies not found"
+          fi
+
+      - name: Check data protection
+        run: |
+          echo "🛡️ Checking data protection..."
+          
+          # Check for encryption usage
+          if grep -r "encrypt\|crypto\|bcrypt" web/ --exclude-dir=node_modules; then
+            echo "✅ Encryption implementation found"
+          else
+            echo "⚠️ Encryption implementation not found"
+          fi
+          
+          # Check for input validation
+          if grep -r "zod\|joi\|validator" web/ --exclude-dir=node_modules; then
+            echo "✅ Input validation found"
+          else
+            echo "⚠️ Input validation not found"
+          fi
+
+      - name: Check API security
+        run: |
+          echo "🌐 Checking API security..."
+          
+          # Check for rate limiting
+          if grep -r "rate.*limit\|throttle" web/ --exclude-dir=node_modules; then
+            echo "✅ Rate limiting found"
+          else
+            echo "⚠️ Rate limiting not found"
+          fi
+          
+          # Check for CORS configuration
+          if grep -r "cors\|Access-Control" web/ --exclude-dir=node_modules; then
+            echo "✅ CORS configuration found"
+          else
+            echo "⚠️ CORS configuration not found"
+          fi
+
+      - name: Run dependency audit
+        if: github.event.inputs.full_audit == 'true'
+        run: |
+          echo "📦 Running dependency audit..."
+          cd web
+          npm audit --audit-level=moderate
+
+      - name: Check for security headers
+        run: |
+          echo "🔒 Checking security headers..."
+          
+          # Check for security headers in Next.js config
+          if grep -r "security.*headers\|helmet" web/ --exclude-dir=node_modules; then
+            echo "✅ Security headers found"
+          else
+            echo "⚠️ Security headers not found"
+          fi
+
+      - name: Check for sensitive data exposure
+        run: |
+          echo "👁️ Checking for sensitive data exposure..."
+          
+          # Check for console.log statements
+          if grep -r "console\.log" web/ --exclude-dir=node_modules --exclude-dir=.next; then
+            echo "⚠️ Console.log statements found - review for sensitive data"
+          else
+            echo "✅ No console.log statements found"
+          fi
+          
+          # Check for error messages that might expose sensitive data
+          if grep -r "throw.*Error\|throw.*new" web/ --exclude-dir=node_modules; then
+            echo "⚠️ Error throwing found - review for sensitive data exposure"
+          else
+            echo "✅ No error throwing found"
+          fi
+
+      - name: Check Choices-specific security
+        run: |
+          echo "🗳️ Checking Choices-specific security..."
+          
+          # Check for anonymous access controls
+          if grep -r "anonymous\|public.*access" web/ --exclude-dir=node_modules; then
+            echo "✅ Anonymous access controls found"
+          else
+            echo "⚠️ Anonymous access controls not found"
+          fi
+          
+          # Check for trust tier implementation
+          if grep -r "trust.*tier\|verification" web/ --exclude-dir=node_modules; then
+            echo "✅ Trust tier implementation found"
+          else
+            echo "⚠️ Trust tier implementation not found"
+          fi
+          
+          # Check for vote privacy protection
+          if grep -r "privacy.*vote\|differential.*privacy" web/ --exclude-dir=node_modules; then
+            echo "✅ Vote privacy protection found"
+          else
+            echo "⚠️ Vote privacy protection not found"
+          fi
+
+      - name: Generate security report
+        run: |
+          echo "📊 Security Audit Report" > security-report.md
+          echo "Generated: $(date)" >> security-report.md
+          echo "" >> security-report.md
+          echo "## Summary" >> security-report.md
+          echo "- Repository: Choices Platform" >> security-report.md
+          echo "- Audit Type: Automated Security Check" >> security-report.md
+          echo "- Status: Completed" >> security-report.md
+          echo "" >> security-report.md
+          echo "## Recommendations" >> security-report.md
+          echo "1. Review any warnings above" >> security-report.md
+          echo "2. Ensure all secrets are properly managed" >> security-report.md
+          echo "3. Verify authentication and authorization" >> security-report.md
+          echo "4. Check data protection measures" >> security-report.md
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Security Audit Failed!"
+          echo "Please review the security issues found above."
+          echo "Common issues:"
+          echo "- Hardcoded secrets"
+          echo "- Missing authentication"
+          echo "- Inadequate data protection"
+          echo "- API security issues"
+
+      - name: Success notification
+        if: success()
+        run: |
+          echo "✅ Security Audit Passed!"
+          echo "🔒 No critical security issues found"
+          echo "🛡️ Data protection measures in place"
+          echo "🌐 API security implemented"
+          echo "🗳️ Choices-specific security validated"

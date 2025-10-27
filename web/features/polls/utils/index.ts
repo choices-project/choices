@@ -79,11 +79,14 @@ export function validatePollOptions(options: string[]): { isValid: boolean; erro
  * Validate poll settings
  */
 export function validatePollSettings(settings: Partial<PollSettings>): { isValid: boolean; error?: string } {
-  if (settings.maxSelections !== undefined && settings.maxSelections < 1) {
-    return { isValid: false, error: 'Max selections must be at least 1' };
+  if (settings.max_votes_per_option !== undefined && settings.max_votes_per_option < 1) {
+    return { isValid: false, error: 'Max votes per option must be at least 1' };
   }
-  if (settings.maxVotes !== undefined && settings.maxVotes < 1) {
-    return { isValid: false, error: 'Max votes must be at least 1' };
+  if (settings.max_votes_per_user !== undefined && settings.max_votes_per_user < 1) {
+    return { isValid: false, error: 'Max votes per user must be at least 1' };
+  }
+  if (settings.min_votes_per_user !== undefined && settings.min_votes_per_user < 0) {
+    return { isValid: false, error: 'Min votes per user cannot be negative' };
   }
   return { isValid: true };
 }
@@ -126,10 +129,6 @@ export function getPollStatusText(status: Poll['status']): string {
       return 'Closed';
     case 'archived':
       return 'Archived';
-    case 'locked':
-      return 'Locked';
-    case 'post-close':
-      return 'Post-Close';
     default:
       return 'Unknown';
   }
@@ -142,16 +141,16 @@ export function getVotingMethodText(method: VotingMethod): string {
   switch (method) {
     case 'single':
       return 'Single Choice';
-    case 'approval':
-      return 'Approval Voting';
+    case 'multiple':
+      return 'Multiple Choice';
     case 'ranked':
       return 'Ranked Choice';
+    case 'approval':
+      return 'Approval Voting';
     case 'range':
       return 'Range Voting';
     case 'quadratic':
       return 'Quadratic Voting';
-    case 'multiple':
-      return 'Multiple Choice';
     default:
       return 'Unknown';
   }
@@ -176,7 +175,7 @@ export function calculateOptionPercentage(votes: number, totalVotes: number): nu
  * Sort poll options by vote count
  */
 export function sortOptionsByVotes(options: PollOption[]): PollOption[] {
-  return [...options].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  return [...options].sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0));
 }
 
 /**
@@ -233,8 +232,8 @@ export function sanitizePollTitleForUrl(title: string): string {
  */
 export function generatePollSummary(poll: Poll): string {
   const status = getPollStatusText(poll.status);
-  const method = getVotingMethodText(poll.votingMethod);
-  const participation = `${poll.participationRate}% participation`;
+  const method = getVotingMethodText(poll.voting_method);
+  const votes = `${poll.total_votes} votes`;
   
-  return `${status} • ${method} • ${participation}`;
+  return `${status} • ${method} • ${votes}`;
 }

@@ -173,7 +173,7 @@ export default function MobileCandidateCard({
     if (representative.enhancedPhotos && representative.enhancedPhotos.length > 1) {
       triggerHaptic('light');
       setActivePhotoIndex(prev => 
-        prev < representative.enhancedPhotos.length - 1 ? prev + 1 : 0
+        prev < (representative.enhancedPhotos?.length || 1) - 1 ? prev + 1 : 0
       );
     }
   }, [representative.enhancedPhotos, triggerHaptic]);
@@ -182,7 +182,7 @@ export default function MobileCandidateCard({
     if (representative.enhancedPhotos && representative.enhancedPhotos.length > 1) {
       triggerHaptic('light');
       setActivePhotoIndex(prev => 
-        prev > 0 ? prev - 1 : representative.enhancedPhotos.length - 1
+        prev > 0 ? prev - 1 : (representative.enhancedPhotos?.length || 1) - 1
       );
     }
   }, [representative.enhancedPhotos, triggerHaptic]);
@@ -313,10 +313,10 @@ export default function MobileCandidateCard({
             )}
 
             {/* Quality score badge - smaller on mobile */}
-            <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality.overallConfidence)}`}>
+            <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality?.overallConfidence || 0)}`}>
               <div className="flex items-center space-x-1">
                 <CheckCircleIcon className="w-3 h-3" />
-                <span>{representative.dataQuality.overallConfidence}%</span>
+                <span>{representative.dataQuality?.overallConfidence || 0}%</span>
               </div>
             </div>
 

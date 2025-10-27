@@ -1,0 +1,24 @@
+938815361bb97737fcc85c9e768de0a0
+// lib/react/useEvent.ts
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "useEvent", {
+    enumerable: true,
+    get: function() {
+        return useEvent;
+    }
+});
+const _react = require("react");
+function useEvent(fn) {
+    const ref = (0, _react.useRef)(fn);
+    (0, _react.useEffect)(()=>{
+        ref.current = fn;
+    }, [
+        fn
+    ]);
+    return (0, _react.useCallback)((...args)=>ref.current(...args), []);
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9saWIvdXRpbHMvdXNlRXZlbnQudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gbGliL3JlYWN0L3VzZUV2ZW50LnRzXG5pbXBvcnQgeyB1c2VSZWYsIHVzZUVmZmVjdCwgdXNlQ2FsbGJhY2sgfSBmcm9tICdyZWFjdCc7XG5leHBvcnQgZnVuY3Rpb24gdXNlRXZlbnQ8VCBleHRlbmRzICguLi5hcmdzOiBhbnlbXSkgPT4gYW55PihmbjogVCkge1xuICBjb25zdCByZWYgPSB1c2VSZWYoZm4pO1xuICB1c2VFZmZlY3QoKCkgPT4geyByZWYuY3VycmVudCA9IGZuOyB9LCBbZm5dKTtcbiAgcmV0dXJuIHVzZUNhbGxiYWNrKCguLi5hcmdzOiBQYXJhbWV0ZXJzPFQ+KSA9PiByZWYuY3VycmVudCguLi5hcmdzKSwgW10pO1xufVxuIl0sIm5hbWVzIjpbInVzZUV2ZW50IiwiZm4iLCJyZWYiLCJ1c2VSZWYiLCJ1c2VFZmZlY3QiLCJjdXJyZW50IiwidXNlQ2FsbGJhY2siLCJhcmdzIl0sIm1hcHBpbmdzIjoiQUFBQSx3QkFBd0I7Ozs7OytCQUVSQTs7O2VBQUFBOzs7dUJBRCtCO0FBQ3hDLFNBQVNBLFNBQTRDQyxFQUFLO0lBQy9ELE1BQU1DLE1BQU1DLElBQUFBLGFBQU0sRUFBQ0Y7SUFDbkJHLElBQUFBLGdCQUFTLEVBQUM7UUFBUUYsSUFBSUcsT0FBTyxHQUFHSjtJQUFJLEdBQUc7UUFBQ0E7S0FBRztJQUMzQyxPQUFPSyxJQUFBQSxrQkFBVyxFQUFDLENBQUMsR0FBR0MsT0FBd0JMLElBQUlHLE9BQU8sSUFBSUUsT0FBTyxFQUFFO0FBQ3pFIn0=

@@ -211,7 +211,7 @@ export default function HashtagIntegrationPage() {
                             <span className="text-sm text-gray-500">{suggestion.reason}</span>
                           </div>
                           <span className="text-sm text-gray-400">
-                            {Math.round(suggestion.confidence_score * 100)}% match
+                            {Math.round((suggestion.confidence_score || 0) * 100)}% match
                           </span>
                         </div>
                       ))}
@@ -254,17 +254,12 @@ export default function HashtagIntegrationPage() {
                 <div className="space-y-4">
                   {userHashtags.map((userHashtag) => (
                     <div
-                      key={userHashtag.id}
+                      key={`${userHashtag.user_id}-${userHashtag.hashtag_id}`}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
                         <Hash className="h-4 w-4 text-gray-400" />
                         <span className="font-medium">#{userHashtag.hashtag.name}</span>
-                        {userHashtag.is_primary && (
-                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                            Primary
-                          </span>
-                        )}
                       </div>
                       <button
                         onClick={() => handleUnfollowHashtag(userHashtag.hashtag_id)}

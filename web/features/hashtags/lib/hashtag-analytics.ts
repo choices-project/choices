@@ -78,7 +78,15 @@ export async function calculateHashtagAnalytics(
     return {
       hashtag_id: hashtagId,
       period,
-      metrics,
+      total_usage: metrics.usage_count,
+      unique_users: metrics.unique_users,
+      engagement_rate: metrics.engagement_rate,
+      trend_score: metrics.growth_rate, // Using growth_rate as trend_score
+      demographics: {
+        age_groups: metrics.demographic_distribution,
+        locations: {},
+        interests: {}
+      },
       generated_at: new Date().toISOString()
     };
   } catch (error) {
@@ -167,16 +175,8 @@ export async function calculateTrendingHashtags(
         hashtag,
         trend_score: trendScore,
         growth_rate: growthRate,
-        usage_count_24h: metrics.usageCount,
-        usage_count_7d: await getUsageCount(hashtag.id, 7),
-        peak_position: await calculatePeakPosition(hashtag.id),
-        current_position: await calculateCurrentPosition(hashtag.id),
-        related_hashtags: await getRelatedHashtags(hashtag.id),
-        trending_since: metrics.recentUsage.length > 0 ? 
-          new Date(Math.min(...metrics.recentUsage.map((_, i) => 
-            new Date(now.getTime() - i * 60 * 60 * 1000).getTime()
-          ))).toISOString() : hashtag.created_at,
-        category_trends: await getCategoryTrends(hashtag.category) as Record<string, number>
+        peak_usage: metrics.peakUsage,
+        time_period: '24h'
       });
     }
 
@@ -206,27 +206,27 @@ export async function getHashtagPerformanceInsights(hashtagId: string): Promise<
 }> {
   try {
     const analytics = await calculateHashtagAnalytics(hashtagId, '7d');
-    const performance = getHashtagPerformanceLevel(analytics.metrics.engagement_rate);
+    const performance = getHashtagPerformanceLevel(analytics.engagement_rate);
     
     const insights: string[] = [];
     const recommendations: string[] = [];
 
     // Generate insights based on performance
-    if (analytics.metrics.engagement_rate > 0.1) {
+    if (analytics.engagement_rate > 0.1) {
       insights.push('High engagement rate indicates strong user interest');
-    } else if (analytics.metrics.engagement_rate < 0.01) {
+    } else if (analytics.engagement_rate < 0.01) {
       insights.push('Low engagement suggests need for content optimization');
     }
 
-    if (analytics.metrics.growth_rate > 50) {
+    if (analytics.trend_score > 50) {
       insights.push('Rapid growth indicates trending potential');
-    } else if (analytics.metrics.growth_rate < 0) {
+    } else if (analytics.trend_score < 0) {
       insights.push('Declining usage may indicate waning interest');
     }
 
-    if (analytics.metrics.unique_users > 100) {
+    if (analytics.unique_users > 100) {
       insights.push('Broad user base suggests good reach');
-    } else if (analytics.metrics.unique_users < 10) {
+    } else if (analytics.unique_users < 10) {
       insights.push('Limited user base may need promotion');
     }
 

@@ -1,8 +1,18 @@
-# Cursor Configuration - Choices Platform
+# 🤖 Cursor Configuration - Choices Platform
 
-**Created:** January 27, 2025  
-**Updated:** January 27, 2025  
-**Purpose:** Streamlined configuration for AI agents working on the Choices Platform
+**AI-Powered Development Environment for Democratic Engagement Platform**
+
+---
+
+## 📋 Overview
+
+This directory contains optimized Cursor AI configuration for the Choices platform - a democratic engagement platform focused on civic participation, polling, and representative engagement.
+
+**Last Updated**: October 27, 2025  
+**Status**: Production Ready  
+**Purpose**: Streamlined AI development for Choices platform
+
+---
 
 ## 🚀 Quick Start
 
@@ -13,6 +23,11 @@ npm run auto-fix
 
 # Verify everything is working
 npm run types:strict && npm run lint:gradual && npm run test:all
+
+# Choices-specific testing
+npm run test:user-journey-complete
+npm run test:admin-journey-complete
+npm run test:platform-journey-modern
 ```
 
 ### **Development Workflow**
@@ -23,51 +38,87 @@ npm run test:jest -- --watch
 
 # Before committing
 npm run auto-fix:test
+npm run test:both-journeys-complete
 ```
 
-## 📁 Configuration Files
+---
 
-### **Agent Guidance**
-- `AGENT_GUIDE.md` - Essential guide for agents
-- `AGENT_COMMANDS.md` - Essential commands for agents
-- `AGENT_RULES.md` - Core rules and principles
-- `AGENT_CHECKLIST.md` - Step-by-step checklist
-- `QUICK_START.md` - 30-second setup guide
+## 📁 Configuration Structure
+
+### **📚 Documentation** (`docs/`)
+- **AGENT_GUIDE.md** - Comprehensive guide for AI agents
+- **DEVELOPMENT_WORKFLOW.md** - Step-by-step development process
+- **CHOICES_SPECIFICS.md** - Platform-specific guidance
+- **TROUBLESHOOTING.md** - Common issues and solutions
+
+### **⚡ Commands** (`commands/`)
+- **essential-commands.md** - Core development commands
+- **testing-commands.md** - Testing and validation commands
+- **deployment-commands.md** - Build and deployment commands
+- **maintenance-commands.md** - Maintenance and cleanup commands
+
+### **🔧 Rules** (`rules/`)
+- **CORE_RULES.md** - Essential development rules
+- **QUALITY_STANDARDS.md** - Code quality requirements
+- **SECURITY_RULES.md** - Security best practices
+- **CHOICES_RULES.md** - Platform-specific rules
+
+### **🎯 Hooks** (`hooks/`)
+- **pre-commit.md** - Pre-commit validation
+- **post-commit.md** - Post-commit actions
+- **pre-push.md** - Pre-push validation
+
+### **⚙️ Configs** (`configs/`)
+- **cursor-settings.json** - Cursor IDE configuration
+- **ai-prompts.json** - Optimized AI prompts
+- **workspace-settings.json** - Workspace-specific settings
+
+---
 
 ## 🎯 Key Features
 
-### **Automated Error Fixing**
+### **✅ Choices Platform Optimized**
+- **Platform-specific testing**: User journey, admin journey, civics backend
+- **Democratic engagement focus**: Polling, voting, representative lookup
+- **Security-first**: WebAuthn, RLS, trust tiers, anonymous access
+- **AI integration**: Ollama, Hugging Face, analytics
+
+### **✅ Automated Error Fixing**
 The platform includes a sophisticated auto-fix system that:
 - Fixes 90% of common errors automatically
 - Uses testing infrastructure for verification
 - Handles TypeScript, ESLint, and test errors
 - Provides iterative improvement
 
-### **Quality Gates**
+### **✅ Quality Gates**
 - TypeScript strict mode enforcement
 - ESLint with comprehensive rules
 - Comprehensive test coverage
 - Security and performance testing
 - Automated verification pipeline
 
-### **Development Tools**
+### **✅ Development Tools**
 - Hot reload development server
 - Test watchers for continuous feedback
 - Automated error fixing
 - Quality verification commands
 
+---
+
 ## 🔧 Usage
 
-### **For New Agents**
-1. Read `QUICK_START.md` for 30-second setup
-2. Follow `AGENT_CHECKLIST.md` for step-by-step guidance
-3. Use `AGENT_COMMANDS.md` for essential commands
-4. Follow `AGENT_RULES.md` for best practices
+### **For New AI Agents**
+1. Read `docs/QUICK_START.md` for 30-second setup
+2. Follow `docs/DEVELOPMENT_WORKFLOW.md` for step-by-step guidance
+3. Use `commands/essential-commands.md` for core commands
+4. Follow `rules/CORE_RULES.md` for best practices
 
 ### **For Experienced Agents**
-1. Use `AGENT_COMMANDS.md` for quick reference
-2. Follow `AGENT_RULES.md` for quality standards
-3. Use `AGENT_CHECKLIST.md` for verification
+1. Use `commands/essential-commands.md` for quick reference
+2. Follow `rules/CORE_RULES.md` for quality standards
+3. Use `docs/CHOICES_SPECIFICS.md` for platform-specific guidance
+
+---
 
 ## 🚨 Emergency Procedures
 
@@ -88,15 +139,24 @@ npm run auto-fix
 npm run types:strict
 ```
 
+### **When Civics Backend Issues**
+```bash
+npm run test:real-database-activity
+npm run test:platform-journey-modern
+```
+
+---
+
 ## 📊 Success Metrics
 
 ### **Green Status (Good)**
 - ✅ Auto-fix completes successfully
-- ✅ All tests pass
+- ✅ All tests pass (including Choices-specific)
 - ✅ TypeScript strict mode passes
 - ✅ ESLint shows minimal warnings
 - ✅ Security tests pass
 - ✅ Performance tests pass
+- ✅ Civics backend health checks pass
 
 ### **Red Status (Fix Required)**
 - ❌ Auto-fix fails
@@ -105,6 +165,9 @@ npm run types:strict
 - ❌ ESLint errors
 - ❌ Security vulnerabilities
 - ❌ Performance regressions
+- ❌ Civics backend issues
+
+---
 
 ## 🔄 Workflow Templates
 
@@ -116,36 +179,45 @@ npm run auto-fix
 # 2. Develop with tests
 npm run test:jest -- --watch
 
-# 3. Test E2E
-npm run test:playwright
+# 3. Test Choices-specific functionality
+npm run test:user-journey-complete
+npm run test:admin-journey-complete
 
 # 4. Final verification
-npm run auto-fix:test
+npm run test:both-journeys-complete
 ```
 
-### **Bug Fixing**
+### **Civics Backend Development**
 ```bash
 # 1. Auto-fix common issues
 npm run auto-fix
 
-# 2. Test specific functionality
-npm run test:jest -- --testNamePattern="bug-description"
+# 2. Test database connectivity
+npm run test:real-database-activity
 
-# 3. Verify fix
-npm run test:all
+# 3. Test platform journey
+npm run test:platform-journey-modern
+
+# 4. Verify civics functionality
+npm run test:civics-backend-health
 ```
 
-### **Code Review**
+### **Security Development**
 ```bash
 # 1. Quality check
-npm run check
-
-# 2. Security review
 npm run test:security
 
-# 3. Performance check
-npm run test:performance
+# 2. Authentication testing
+npm run test:auth-security
+
+# 3. RLS policy testing
+npm run test:rls-policies
+
+# 4. Trust tier validation
+npm run test:trust-tiers
 ```
+
+---
 
 ## 💡 Pro Tips
 
@@ -156,13 +228,40 @@ The `npm run auto-fix` command uses the testing infrastructure to automatically 
 Use `npm run test:jest -- --watch` to catch issues immediately while developing.
 
 ### **Verify Before Committing**
-Run `npm run auto-fix:test` before committing to ensure everything is working.
+Run `npm run test:both-journeys-complete` before committing to ensure all Choices platform functionality works.
 
 ### **When in Doubt**
 ```bash
 npm run auto-fix && npm run test:all
 ```
 
+### **Choices-Specific Testing**
+Always test the core platform functionality:
+- User journey (polling, voting, sharing)
+- Admin journey (moderation, analytics, management)
+- Civics backend (representative lookup, data ingestion)
+- Security (authentication, RLS, trust tiers)
+
 ---
 
-**Remember:** The auto-fix system is your best friend. It handles most errors automatically, so you can focus on the important stuff!
+## 🎯 Focus Areas
+
+### **High Priority**
+1. **Error-Free Code**: Use auto-fix and testing infrastructure
+2. **Type Safety**: Strict TypeScript, no `any` types
+3. **Test Coverage**: All features must be tested
+4. **Security**: All security tests must pass
+5. **Performance**: No performance regressions
+6. **Choices Functionality**: Core platform features must work
+
+### **Code Quality**
+- Use meaningful variable names
+- Write self-documenting code
+- Follow established patterns
+- Keep functions small and focused
+- Add proper error handling
+- Consider democratic engagement context
+
+---
+
+**Remember:** The auto-fix system is your best friend. It handles most errors automatically, so you can focus on building democratic engagement features!

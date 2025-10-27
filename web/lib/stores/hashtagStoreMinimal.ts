@@ -140,7 +140,11 @@ export const useHashtagActions = () => {
   return {
     getTrendingHashtags: store.getTrendingHashtags,
     searchHashtags: store.searchHashtags,
-    clearError: store.clearError
+    clearError: store.clearError,
+    setCategory: store.setCategory,
+    setSortBy: store.setSortBy,
+    setTimeRange: store.setTimeRange,
+    setSearchQuery: store.setSearchQuery
   };
 };
 

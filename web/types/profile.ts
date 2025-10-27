@@ -1,64 +1,239 @@
 /**
  * Profile Types
  * 
- * Type definitions for user profile functionality
+ * Type definitions for user profile functionality based on actual database schema
+ * Generated from Supabase user_profiles table
  * 
  * Created: October 26, 2025
- * Status: MINIMAL IMPLEMENTATION
+ * Status: ✅ ACTIVE
  */
 
+import type { Database } from './database';
+
+// Base types from database
+export type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
+export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
+export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
+
+// Extended profile types for UI
+export interface UserProfile extends UserProfileRow {
+  // Additional computed fields
+  initials?: string;
+  fullName?: string;
+  isComplete?: boolean;
+  completionPercentage?: number;
+}
+
+// Profile editing types
+export interface ProfileUpdateData {
+  display_name?: string;
+  bio?: string;
+  username?: string;
+  primary_concerns?: string[];
+  community_focus?: string[];
+  participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
+  privacy_settings?: {
+    profile_visibility?: 'public' | 'private' | 'friends';
+    show_email?: boolean;
+    show_activity?: boolean;
+    allow_messages?: boolean;
+    share_demographics?: boolean;
+    allow_analytics?: boolean;
+  };
+  demographics?: Record<string, any>;
+}
+
+// Profile preferences
 export interface ProfilePreferences {
   theme: 'light' | 'dark' | 'system';
   language: string;
-  notifications: {
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  };
-  privacy: {
-    showEmail: boolean;
-    showPhone: boolean;
-    showLocation: boolean;
-  };
+  timezone: string;
+  notifications: NotificationPreferences;
+  privacy: PrivacySettings;
+  feed: FeedPreferences;
+  voting: VotingPreferences;
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  inApp: boolean;
+  mentions: boolean;
+  votes: boolean;
+  comments: boolean;
+  follows: boolean;
+}
+
+export interface PrivacySettings {
+  profile_visibility: 'public' | 'private' | 'friends';
+  show_email: boolean;
+  show_activity: boolean;
+  allow_messages: boolean;
+  share_demographics: boolean;
+  allow_analytics: boolean;
+}
+
+export interface FeedPreferences {
+  showTrending: boolean;
+  showFollowing: boolean;
+  showRecommended: boolean;
+  autoRefresh: boolean;
+  itemsPerPage: number;
+}
+
+export interface VotingPreferences {
+  defaultMethod: 'single' | 'multiple' | 'ranked' | 'approval' | 'quadratic' | 'range';
+  showResults: boolean;
+  allowComments: boolean;
+  requireVerification: boolean;
+}
+
+// Profile action results
+export interface ProfileActionResult {
+  success: boolean;
+  data?: UserProfile;
+  error?: string;
+}
+
+export interface ProfileValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+  warnings: Record<string, string>;
+}
+
+export interface AvatarUploadResult {
+  success: boolean;
+  url?: string;
+  error?: string;
+}
+
+export interface AvatarValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface ProfileExportData {
+  profile: UserProfile;
   preferences: ProfilePreferences;
-  createdAt: Date;
-  updatedAt: Date;
+  activity: any[];
+  votes: any[];
+  comments: any[];
 }
 
-export default {
-  ProfilePreferences,
-  UserProfile
-};
+export interface ExportOptions {
+  includeActivity: boolean;
+  includeVotes: boolean;
+  includeComments: boolean;
+  format: 'json' | 'csv';
+}
 
-// Profile Constants
+// Component props
+export interface ProfilePageProps {
+  user: UserProfile;
+  isOwnProfile?: boolean;
+  canEdit?: boolean;
+}
+
+export interface ProfileEditProps {
+  profile: UserProfile;
+  onSave: (data: ProfileUpdateData) => Promise<void>;
+  onCancel: () => void;
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+export interface ProfileAvatarProps {
+  avatar_url?: string | null;
+  display_name?: string | null;
+  onUpload?: (file: File) => void;
+  onRemove?: () => void;
+  isLoading?: boolean;
+  maxSize?: number;
+  allowedTypes?: string[];
+}
+
+export interface ProfilePreferencesProps {
+  preferences: ProfilePreferences;
+  onUpdate: (preferences: Partial<ProfilePreferences>) => void;
+}
+
+export interface ProfilePrivacyProps {
+  settings: PrivacySettings;
+  onUpdate: (settings: Partial<PrivacySettings>) => void;
+}
+
+// Service interfaces
+export interface ProfileService {
+  getProfile(userId: string): Promise<UserProfile>;
+  updateProfile(userId: string, data: ProfileUpdateData): Promise<ProfileActionResult>;
+  uploadAvatar(userId: string, file: File): Promise<AvatarUploadResult>;
+  validateProfile(data: ProfileUpdateData): ProfileValidationResult;
+  exportProfile(userId: string, options: ExportOptions): Promise<ProfileExportData>;
+}
+
+export interface ProfileCache {
+  get(userId: string): UserProfile | null;
+  set(userId: string, profile: UserProfile): void;
+  invalidate(userId: string): void;
+  clear(): void;
+}
+
+// Hook return types
+export interface UseProfileReturn {
+  profile: UserProfile | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export interface UseProfileUpdateReturn {
+  updateProfile: (data: ProfileUpdateData) => Promise<ProfileActionResult>;
+  isUpdating: boolean;
+  error: string | null;
+}
+
+export interface UseProfileAvatarReturn {
+  uploadAvatar: (file: File) => Promise<AvatarUploadResult>;
+  isUploading: boolean;
+  error: string | null;
+}
+
+export interface UseProfileExportReturn {
+  exportProfile: (options: ExportOptions) => Promise<ProfileExportData>;
+  isExporting: boolean;
+  error: string | null;
+}
+
+// Legacy compatibility (for existing components)
+export type ProfileUser = UserProfile;
+
+// Constants and defaults
 export const PROFILE_CONSTANTS = {
-  MAX_NAME_LENGTH: 100,
+  MAX_DISPLAY_NAME_LENGTH: 100,
+  MAX_USERNAME_LENGTH: 50,
   MAX_BIO_LENGTH: 500,
-  MAX_LOCATION_LENGTH: 100,
-  ALLOWED_THEMES: ['light', 'dark', 'system'],
-  ALLOWED_LANGUAGES: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'zh', 'ja', 'ko'],
-  MAX_NOTIFICATION_SETTINGS: 10,
-  PRIVACY_LEVELS: ['public', 'friends', 'private']
+  MAX_AVATAR_SIZE: 5 * 1024 * 1024, // 5MB
+  ALLOWED_AVATAR_TYPES: ['image/jpeg', 'image/png', 'image/webp'] as const,
+  TRUST_TIERS: ['T0', 'T1', 'T2', 'T3'] as const,
+  PARTICIPATION_STYLES: ['observer', 'participant', 'leader', 'organizer'] as const,
+  PROFILE_VISIBILITY: ['public', 'private', 'friends'] as const,
 } as const;
 
-// Profile Defaults
-export const PROFILE_DEFAULTS: ProfilePreferences = {
-  theme: 'system',
-  language: 'en',
-  notifications: {
-    email: true,
-    push: true,
-    sms: false
+export const PROFILE_DEFAULTS = {
+  trust_tier: 'T0',
+  is_active: true,
+  is_admin: false,
+  participation_style: 'observer' as const,
+  primary_concerns: [] as string[],
+  community_focus: [] as string[],
+  demographics: {} as Record<string, any>,
+  privacy_settings: {
+    profile_visibility: 'public' as const,
+    show_email: false,
+    show_activity: true,
+    allow_messages: true,
+    share_demographics: false,
+    allow_analytics: true,
   },
-  privacy: {
-    showEmail: false,
-    showPhone: false,
-    showLocation: false
-  }
 } as const;

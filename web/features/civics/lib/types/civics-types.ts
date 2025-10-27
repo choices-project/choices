@@ -23,14 +23,18 @@ export interface FeedItemData {
     bookmarks: number;
   };
   isPublic: boolean;
+  hashtags?: string[];
   metadata: Record<string, any>;
 }
 
 export interface UserPreferences {
   state?: string;
   district?: string;
+  region?: string;
   interests?: string[];
   followedRepresentatives?: string[];
+  followed_hashtags?: string[];
+  demographics?: Record<string, any>;
   feedPreferences?: {
     showVotes: boolean;
     showBills: boolean;

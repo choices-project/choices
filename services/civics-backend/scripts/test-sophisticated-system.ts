@@ -7,13 +7,17 @@
  * Verifies all components work correctly together
  */
 
+import dotenv from 'dotenv';
 import { createCivicsPipeline, createSupabaseClient, defaultConfig } from '../lib/index.js';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 async function testDatabaseConnection() {
   console.log('🔍 Testing database connection...');
   
   try {
-    const supabase = createSupabaseClient();
+    const supabase = await createSupabaseClient();
     const { data, error } = await supabase
       .from('representatives_core')
       .select('count')
@@ -85,7 +89,7 @@ async function testDataQuality() {
   console.log('🔍 Testing data quality...');
   
   try {
-    const supabase = createSupabaseClient();
+    const supabase = await createSupabaseClient();
     
     // Check representatives_core table
     const { data: reps, error: repsError } = await supabase
@@ -118,7 +122,7 @@ async function testCrosswalkData() {
   console.log('🔍 Testing crosswalk data...');
   
   try {
-    const supabase = createSupabaseClient();
+    const supabase = await createSupabaseClient();
     
     const { data: crosswalk, error: crosswalkError } = await supabase
       .from('id_crosswalk')
@@ -147,7 +151,7 @@ async function testNormalizedTables() {
   console.log('🔍 Testing normalized tables...');
   
   try {
-    const supabase = createSupabaseClient();
+    const supabase = await createSupabaseClient();
     
     const tables = [
       'representative_contacts',
@@ -223,7 +227,7 @@ async function runAllTests() {
 }
 
 // Run tests
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   runAllTests()
     .then(success => {
       process.exit(success ? 0 : 1);

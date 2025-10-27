@@ -12,6 +12,6 @@
 export { default as PersonalDashboard } from './components/PersonalDashboard';
 
 // Dashboard Types - Now using centralized types
-export type { PersonalAnalytics } from '@/types/dashboard-PersonalAnalytics';
-export type { ElectedOfficial } from '@/types/dashboard-ElectedOfficial';
+export type { PersonalAnalytics } from '@/types/features/dashboard/personal';
+export type { ElectedOfficial } from '@/types/features/dashboard/officials';
 

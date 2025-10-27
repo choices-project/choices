@@ -28,7 +28,7 @@ import {
 import Image from 'next/image';
 import React, { useState, useRef, useCallback, memo } from 'react';
 
-import type { FeedItemData } from '../types';
+import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
 
 interface FeedItemProps {
   item: FeedItemData;

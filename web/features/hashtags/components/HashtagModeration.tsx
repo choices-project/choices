@@ -37,10 +37,33 @@ import {
 import { logger } from '@/lib/utils/logger';
 
 import type { 
-  HashtagModeration, 
-  HashtagFlag, 
   Hashtag 
 } from '../types';
+
+// Local type definitions
+interface HashtagModeration {
+  id: string;
+  hashtag_id: string;
+  moderator_id: string;
+  action: 'approve' | 'reject' | 'flag' | 'suspend';
+  reason?: string;
+  moderation_reason?: string;
+  status?: 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged';
+  human_review_required?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HashtagFlag {
+  id: string;
+  hashtag_id: string;
+  user_id: string;
+  reason: string;
+  flag_type?: 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other';
+  status: 'pending' | 'reviewed' | 'resolved';
+  created_at: string;
+  updated_at: string;
+}
 
 // ============================================================================
 // TYPES
@@ -130,6 +153,7 @@ export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) 
           reason: reason.trim(),
           user_id: 'current-user', // This should come from auth context
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           status: 'pending'
         });
       }
@@ -282,7 +306,7 @@ export function ModerationStatus({
     <div className={`flex items-center gap-2 ${className}`}>
       {getStatusIcon()}
       <Badge className={getStatusColor()}>
-        {moderation.status.charAt(0).toUpperCase() + moderation.status.slice(1)}
+        {(moderation.status || 'pending').charAt(0).toUpperCase() + (moderation.status || 'pending').slice(1)}
       </Badge>
       {moderation.human_review_required && (
         <Badge variant="outline" className="text-xs">

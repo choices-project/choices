@@ -9,9 +9,17 @@
 
 import type { 
   Hashtag, 
-  HashtagCategory, 
-  HashtagValidation
+  HashtagCategory
 } from '../types';
+
+// Local type definition
+interface HashtagValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  suggestions: string[];
+  normalizedName: string;
+}
 
 // ============================================================================
 // HASHTAG VALIDATION UTILITIES
@@ -63,17 +71,11 @@ export function validateHashtagName(name: string): HashtagValidation {
   }
 
   return {
-    name: normalizedName,
-    is_valid: errors.length === 0,
+    isValid: errors.length === 0,
     errors,
     warnings,
     suggestions,
-    normalized_name: normalizedName,
-    availability: {
-      is_available: errors.length === 0,
-      similar_hashtags: [],
-      conflict_reason: errors.length > 0 ? errors[0] : undefined
-    }
+    normalizedName
   };
 }
 
@@ -123,15 +125,7 @@ export function getHashtagCategoryColor(category: HashtagCategory): string {
     global: 'bg-blue-100 text-blue-700 border-blue-200',
     activism: 'bg-red-100 text-red-700 border-red-200',
     community: 'bg-green-100 text-green-700 border-green-200',
-    business: 'bg-purple-100 text-purple-700 border-purple-200',
-    science: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    art: 'bg-pink-100 text-pink-700 border-pink-200',
-    music: 'bg-violet-100 text-violet-700 border-violet-200',
-    food: 'bg-orange-100 text-orange-700 border-orange-200',
-    travel: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    fashion: 'bg-rose-100 text-rose-700 border-rose-200',
-    lifestyle: 'bg-amber-100 text-amber-700 border-amber-200',
-    other: 'bg-gray-100 text-gray-700 border-gray-200'
+    business: 'bg-purple-100 text-purple-700 border-purple-200'
   };
   
   return colors[category] || colors.custom;
@@ -161,15 +155,7 @@ export function getHashtagCategoryIcon(category: HashtagCategory): string {
     global: '🌐',
     activism: '✊',
     community: '🤝',
-    business: '💼',
-    science: '🔬',
-    art: '🎨',
-    music: '🎵',
-    food: '🍽️',
-    travel: '✈️',
-    fashion: '👗',
-    lifestyle: '🌟',
-    other: '📝'
+    business: '💼'
   };
   
   return icons[category] || icons.custom;
@@ -497,7 +483,7 @@ export function exportHashtagsToCSV(hashtags: Hashtag[]): string {
     h.display_name,
     h.category || '',
     h.usage_count.toString(),
-    (h.engagement_rate || 0).toString(),
+    '0', // engagement_rate not available in Hashtag interface
     (h.trend_score || 0).toString(),
     h.created_at
   ]);

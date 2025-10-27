@@ -1,0 +1,64 @@
+f020f658ffd0d12845152a9e98e1ed09
+/**
+ * Simplified Logger Module
+ * 
+ * Provides devLog for development logging and basic console logging for production.
+ * Replaces complex logger system with simple, effective logging.
+ */ // Simple devLog function for development
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: Object.getOwnPropertyDescriptor(all, name).get
+    });
+}
+_export(exports, {
+    get default () {
+        return devLog;
+    },
+    get devLog () {
+        return devLog;
+    },
+    get logError () {
+        return logError;
+    },
+    get logInfo () {
+        return logInfo;
+    },
+    get logWarn () {
+        return logWarn;
+    },
+    get logger () {
+        return logger;
+    }
+});
+const devLog = (...args)=>{
+    if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.debug('[DEV]', ...args);
+    }
+};
+const logInfo = (...args)=>{
+    // eslint-disable-next-line no-console
+    console.info(...args);
+};
+const logWarn = (...args)=>{
+    // eslint-disable-next-line no-console
+    console.warn(...args);
+};
+const logError = (...args)=>{
+    // eslint-disable-next-line no-console
+    console.error(...args);
+};
+const logger = {
+    debug: devLog,
+    info: logInfo,
+    warn: logWarn,
+    error: logError,
+    performance: logInfo
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9saWIvbG9nZ2VyLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogU2ltcGxpZmllZCBMb2dnZXIgTW9kdWxlXG4gKiBcbiAqIFByb3ZpZGVzIGRldkxvZyBmb3IgZGV2ZWxvcG1lbnQgbG9nZ2luZyBhbmQgYmFzaWMgY29uc29sZSBsb2dnaW5nIGZvciBwcm9kdWN0aW9uLlxuICogUmVwbGFjZXMgY29tcGxleCBsb2dnZXIgc3lzdGVtIHdpdGggc2ltcGxlLCBlZmZlY3RpdmUgbG9nZ2luZy5cbiAqL1xuXG4vLyBTaW1wbGUgZGV2TG9nIGZ1bmN0aW9uIGZvciBkZXZlbG9wbWVudFxuZXhwb3J0IGNvbnN0IGRldkxvZyA9ICguLi5hcmdzOiB1bmtub3duW10pID0+IHtcbiAgaWYgKHByb2Nlc3MuZW52Lk5PREVfRU5WID09PSAnZGV2ZWxvcG1lbnQnKSB7XG4gICAgLy8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIG5vLWNvbnNvbGVcbiAgICBjb25zb2xlLmRlYnVnKCdbREVWXScsIC4uLmFyZ3MpO1xuICB9XG59O1xuXG4vLyBQcm9kdWN0aW9uIGxvZ2dpbmcgaGVscGVyc1xuZXhwb3J0IGNvbnN0IGxvZ0luZm8gPSAoLi4uYXJnczogdW5rbm93bltdKSA9PiB7XG4gIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSBuby1jb25zb2xlXG4gIGNvbnNvbGUuaW5mbyguLi5hcmdzKTtcbn07XG5cbmV4cG9ydCBjb25zdCBsb2dXYXJuID0gKC4uLmFyZ3M6IHVua25vd25bXSkgPT4ge1xuICAvLyBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgbm8tY29uc29sZVxuICBjb25zb2xlLndhcm4oLi4uYXJncyk7XG59O1xuXG5leHBvcnQgY29uc3QgbG9nRXJyb3IgPSAoLi4uYXJnczogdW5rbm93bltdKSA9PiB7XG4gIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSBuby1jb25zb2xlXG4gIGNvbnNvbGUuZXJyb3IoLi4uYXJncyk7XG59O1xuXG4vLyBCYWNrd2FyZCBjb21wYXRpYmlsaXR5IC0gbG9nZ2VyIG9iamVjdCBmb3IgZXhpc3RpbmcgaW1wb3J0c1xuZXhwb3J0IGNvbnN0IGxvZ2dlciA9IHtcbiAgZGVidWc6IGRldkxvZyxcbiAgaW5mbzogbG9nSW5mbyxcbiAgd2FybjogbG9nV2FybixcbiAgZXJyb3I6IGxvZ0Vycm9yLFxuICBwZXJmb3JtYW5jZTogbG9nSW5mbywgLy8gUGVyZm9ybWFuY2UgbG9ncyB1c2UgaW5mbyBsZXZlbFxufTtcblxuLy8gTGVnYWN5IGV4cG9ydHMgZm9yIGNvbXBhdGliaWxpdHlcbmV4cG9ydCB7IGRldkxvZyBhcyBkZWZhdWx0IH07Il0sIm5hbWVzIjpbImRlZmF1bHQiLCJkZXZMb2ciLCJsb2dFcnJvciIsImxvZ0luZm8iLCJsb2dXYXJuIiwibG9nZ2VyIiwiYXJncyIsInByb2Nlc3MiLCJlbnYiLCJOT0RFX0VOViIsImNvbnNvbGUiLCJkZWJ1ZyIsImluZm8iLCJ3YXJuIiwiZXJyb3IiLCJwZXJmb3JtYW5jZSJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7O0NBS0MsR0FFRCx5Q0FBeUM7Ozs7Ozs7Ozs7OztRQWtDdEJBO2VBQVZDOztRQWpDSUE7ZUFBQUE7O1FBa0JBQztlQUFBQTs7UUFWQUM7ZUFBQUE7O1FBS0FDO2VBQUFBOztRQVdBQztlQUFBQTs7O0FBeEJOLE1BQU1KLFNBQVMsQ0FBQyxHQUFHSztJQUN4QixJQUFJQyxRQUFRQyxHQUFHLENBQUNDLFFBQVEsS0FBSyxlQUFlO1FBQzFDLHNDQUFzQztRQUN0Q0MsUUFBUUMsS0FBSyxDQUFDLFlBQVlMO0lBQzVCO0FBQ0Y7QUFHTyxNQUFNSCxVQUFVLENBQUMsR0FBR0c7SUFDekIsc0NBQXNDO0lBQ3RDSSxRQUFRRSxJQUFJLElBQUlOO0FBQ2xCO0FBRU8sTUFBTUYsVUFBVSxDQUFDLEdBQUdFO0lBQ3pCLHNDQUFzQztJQUN0Q0ksUUFBUUcsSUFBSSxJQUFJUDtBQUNsQjtBQUVPLE1BQU1KLFdBQVcsQ0FBQyxHQUFHSTtJQUMxQixzQ0FBc0M7SUFDdENJLFFBQVFJLEtBQUssSUFBSVI7QUFDbkI7QUFHTyxNQUFNRCxTQUFTO0lBQ3BCTSxPQUFPVjtJQUNQVyxNQUFNVDtJQUNOVSxNQUFNVDtJQUNOVSxPQUFPWjtJQUNQYSxhQUFhWjtBQUNmIn0=

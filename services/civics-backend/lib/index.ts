@@ -56,11 +56,11 @@ export type {
 export { default as config } from '../config/default.js';
 
 // Utility Functions
-export const createSupabaseClient = () => {
-  const { createClient } = require('@supabase/supabase-js');
+export const createSupabaseClient = async () => {
+  const { createClient } = await import('@supabase/supabase-js');
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
   );
 };
@@ -91,7 +91,7 @@ export const defaultConfig: SuperiorPipelineConfig = {
   fecRateLimit: 1000,
   googleCivicRateLimit: 100000,
   cacheResults: true,
-  openStatesPeoplePath: './data/openstates',
+  openStatesPeoplePath: './data/openstates-people/data',
   enableStateProcessing: true,
   enableMunicipalProcessing: false
 };

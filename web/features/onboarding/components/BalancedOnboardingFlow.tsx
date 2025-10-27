@@ -75,7 +75,7 @@ const WelcomeStep: React.FC<{
         <div className="space-y-4">
           <button
             onClick={onNext}
-            data-testid={T.welcomeNext}
+            data-testid="welcome-next"
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
             Get Started
@@ -210,7 +210,7 @@ const PrivacyStep: React.FC<{
           </button>
           <button
             onClick={onNext}
-            data-testid={T.privacyNext}
+            data-testid="privacy-next"
             className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             aria-label="Continue to next step"
           >
@@ -437,7 +437,7 @@ const DemographicsStep: React.FC<{
             </button>
             <button
               onClick={onNext}
-              data-testid={T.FORMS.FORM_SUBMIT_BUTTON}
+              data-testid="form-submit-button"
               className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               Continue
@@ -531,7 +531,7 @@ const AuthStep: React.FC<{
             </div>
 
             <FeatureWrapper feature="WEBAUTHN">
-              <div data-testid={T.onboardingPasskeySetup}>
+              <div data-testid="onboarding-passkey-setup">
                 <PasskeyRegister
                   onSuccess={handlePasskeySuccess}
                   onError={handlePasskeyError}
@@ -597,7 +597,7 @@ const AuthStep: React.FC<{
             <button
               onClick={() => handleAuthMethodSelect('passkey')}
               disabled={isLoading}
-              data-testid={T.authPasskeyOption}
+              data-testid="auth-passkey-option"
               className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
             >
               <span className="text-3xl">🔐</span>
@@ -611,7 +611,7 @@ const AuthStep: React.FC<{
           <button
             onClick={handleEmailAuth}
             disabled={isLoading}
-            data-testid={T.authEmailOption}
+            data-testid="auth-email-option"
             className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
             <span className="text-3xl">📧</span>
@@ -624,7 +624,7 @@ const AuthStep: React.FC<{
           <button
             onClick={handleGoogleAuth}
             disabled={isLoading}
-            data-testid={T.authGoogleOption}
+            data-testid="auth-google-option"
             className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
             <span className="text-3xl">📱</span>
@@ -860,7 +860,7 @@ const CompleteStep: React.FC<{
         <div className="space-y-4 mb-8">
           <button
             onClick={handleFindRepresentatives}
-            data-testid={T.completeOnboarding}
+            data-testid="complete-onboarding"
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
             Find My Representatives
@@ -979,10 +979,10 @@ const BalancedOnboardingFlow: React.FC = () => {
         const { error } = await supabase
           .from('user_profiles')
           .update({ 
-            demographics: formData.demographics,
-            primary_concerns: formData.primaryConcerns,
-            community_focus: formData.communityFocus,
-            participation_style: formData.participationStyle,
+            demographics: {},
+            primary_concerns: onboardingData?.valuesData?.primaryInterests || [],
+            community_focus: onboardingData?.valuesData?.priorities || [],
+            participation_style: 'observer',
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
@@ -1019,10 +1019,10 @@ const BalancedOnboardingFlow: React.FC = () => {
     <div className="balanced-onboarding" data-testid="balanced-onboarding">
       {/* E2E Test Compatibility: Hidden buttons for test automation */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        <button data-testid={T.tourNext} onClick={handleNext}>Tour Next</button>
-        <button data-testid={T.dataUsageNext} onClick={handleNext}>Data Usage Next</button>
-        <button data-testid={T.interestsNext} onClick={handleNext}>Interests Next</button>
-        <button data-testid={T.experienceNext} onClick={handleNext}>Experience Next</button>
+        <button data-testid="tour-next" onClick={handleNext}>Tour Next</button>
+        <button data-testid="data-usage-next" onClick={handleNext}>Data Usage Next</button>
+        <button data-testid="interests-next" onClick={handleNext}>Interests Next</button>
+        <button data-testid="experience-next" onClick={handleNext}>Experience Next</button>
       </div>
 
       <nav role="navigation" aria-label="Onboarding progress">

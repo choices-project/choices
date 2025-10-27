@@ -10,6 +10,8 @@
 
 'use client';
 
+import { useState } from 'react';
+
 import { 
   User, 
   Camera, 
@@ -22,7 +24,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,7 +45,7 @@ import {
 } from '@/lib/stores';
 
 import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
-import type { ProfileEditProps, ProfileUpdateData } from '../types';
+import type { ProfileEditProps, ProfileUpdateData } from '../index';
 
 // Constants for form options
 const COMMUNITY_FOCUS_OPTIONS = [
@@ -112,8 +114,8 @@ export default function ProfileEdit({
       username: profile.username || '',
       primaryconcerns: profile.primary_concerns || [],
       communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style || 'observer'),
-      privacysettings: profile.privacy_settings || {
+      participationstyle: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
+      privacysettings: (profile.privacy_settings as any) || {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,
@@ -162,7 +164,7 @@ export default function ProfileEdit({
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;
 
-    setUploadingAvatar(true);
+      setUploadingAvatar(true);
     try {
       const result = await uploadAvatar(avatarFile);
       if (result.success) {
@@ -218,8 +220,8 @@ export default function ProfileEdit({
       username: profile.username || '',
       primaryconcerns: profile.primary_concerns || [],
       communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style || 'observer'),
-      privacysettings: profile.privacy_settings || {
+      participationstyle: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
+      privacysettings: (profile.privacy_settings as any) || {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,

@@ -178,6 +178,6 @@ class ScreenReaderManager implements ScreenReaderSupport {
 const screenReaderSupport = new ScreenReaderManager();
 
 // Export the instance and interface
-export { ScreenReaderSupport, ScreenReaderManager };
+export { ScreenReaderManager };
 export default screenReaderSupport;
 

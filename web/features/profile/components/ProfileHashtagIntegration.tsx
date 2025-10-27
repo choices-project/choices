@@ -24,9 +24,8 @@ import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/store
 import { cn } from '@/lib/utils';
 
 import type { 
-  ProfileHashtagIntegration,
   UserProfile 
-} from '../types';
+} from '../index';
 
 interface ProfileHashtagIntegrationProps {
   profile: UserProfile;
@@ -41,7 +40,7 @@ export default function ProfileHashtagIntegration({
 }: ProfileHashtagIntegrationProps) {
   const [activeTab, setActiveTab] = useState('interests');
   const [isEditing, setIsEditing] = useState(false);
-  const [hashtagIntegration, setHashtagIntegration] = useState<ProfileHashtagIntegration | null>(
+  const [hashtagIntegration, setHashtagIntegration] = useState<any | null>(
     profile.hashtags || null
   );
 

@@ -22,12 +22,9 @@ import {
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 
-import type { UserPreferences } from '@/features/feeds/types';
+import type { UserPreferences } from '@/features/civics/lib/types/civics-types';
 import { 
-  useFeeds, 
-  useFeedsActions, 
-  useFeedsLoading,
-  useNotificationStore
+  useFeedsStore
 } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -68,9 +65,7 @@ export default function EnhancedSocialFeed({
 }: EnhancedSocialFeedProps) {
   // ✅ MIGRATED: Use existing stores instead of useState
   // Feeds state from Feeds Store
-  const feeds = useFeeds();
-  const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
-  const isLoading = useFeedsLoading();
+  const { feeds, isLoading, loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsStore();
   
   // Global UI state from App Store
   
@@ -78,8 +73,10 @@ export default function EnhancedSocialFeed({
   
   // User state from User Store
   
-  // Notification state from Notification Store
-  const addNotification = useNotificationStore((state: any) => state.addNotification);
+  // Notification state - using console for now
+  const addNotification = (message: string) => {
+    console.log('Notification:', message);
+  };
   
   // ✅ Keep local state for component-specific concerns
   const [personalizationScore, setPersonalizationScore] = useState(0);
@@ -105,21 +102,11 @@ export default function EnhancedSocialFeed({
       setLastUpdate(new Date());
       
       // Add notification for user feedback
-      addNotification({
-        type: 'success',
-        title: 'Feed Updated',
-        message: isRefresh ? 'Feed refreshed!' : 'New posts loaded!',
-        duration: 3000
-      });
+      addNotification(isRefresh ? 'Feed refreshed!' : 'New posts loaded!');
     } catch (error) {
       // Error handling - could be logged to monitoring service
       console.error('Error loading feed:', error);
-      addNotification({
-        type: 'error',
-        title: 'Feed Load Failed',
-        message: 'Failed to load feed. Please try again.',
-        duration: 5000
-      });
+      addNotification('Failed to load feed. Please try again.');
     }
   }, [isLoading, loadFeeds, refreshFeeds, addNotification]);
 

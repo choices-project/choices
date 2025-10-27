@@ -25,7 +25,7 @@ export * from './external/index';
 export * from './utils/index';
 
 // Database types (generated)
-export * from './database.types';
+export * from './database';
 
 // Global types
 export * from './global.d.ts';

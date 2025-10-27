@@ -20,7 +20,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
-import { createRateLimitMiddleware, combineMiddleware } from '@/lib/security/rate-limit';
+import { createRateLimitMiddleware as createRateLimit, combineMiddleware as combine } from '@/lib/security/rate-limit';
 
 export interface AuthenticatedUser {
   id: string;
@@ -78,14 +78,14 @@ export async function getUser(request: NextRequest): Promise<AuthenticatedUser |
  * Create rate limit middleware
  */
 export function createRateLimitMiddleware(limiterName: 'auth' | 'api' | 'contact' | 'pollCreation' | 'voting') {
-  return createRateLimitMiddleware(limiterName);
+  return createRateLimit(limiterName);
 }
 
 /**
  * Combine multiple middleware functions
  */
 export function combineMiddleware(...middlewares: Array<(req: any, res: any, next: any) => void>) {
-  return combineMiddleware(...middlewares);
+  return combine(...middlewares);
 }
 
 /**
@@ -116,7 +116,7 @@ export async function withAuth(
       user,
       isAuthenticated: true,
       isAdmin: user.isAdmin,
-      ip: request.ip,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || undefined
     };
 
@@ -158,7 +158,7 @@ export async function withAdmin(
       user,
       isAuthenticated: true,
       isAdmin: true,
-      ip: request.ip,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || undefined
     };
 
@@ -186,7 +186,7 @@ export async function withOptionalAuth(
       user: user || undefined,
       isAuthenticated: !!user,
       isAdmin: user?.isAdmin || false,
-      ip: request.ip,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       userAgent: request.headers.get('user-agent') || undefined
     };
 
@@ -210,8 +210,10 @@ export function createMiddlewareChain(...middlewares: Array<(req: NextRequest, h
     // Apply middlewares in reverse order
     for (let i = middlewares.length - 1; i >= 0; i--) {
       const middleware = middlewares[i];
-      const nextHandler = currentHandler;
-      currentHandler = (req: NextRequest, context: MiddlewareContext) => middleware(req, nextHandler);
+      if (middleware) {
+        const nextHandler = currentHandler;
+        currentHandler = (req: NextRequest, context: MiddlewareContext) => middleware(req, nextHandler!);
+      }
     }
     
     return await currentHandler(request, {} as MiddlewareContext);
@@ -219,7 +221,6 @@ export function createMiddlewareChain(...middlewares: Array<(req: NextRequest, h
 }
 
 // Export types and utilities
-export { MiddlewareContext, AuthenticatedUser };
 export default {
   getUser,
   withAuth,

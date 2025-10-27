@@ -126,7 +126,7 @@ export async function getAutoCompleteSuggestions(
         reason: 'related',
         confidence,
         confidence_score: confidence,
-        source: 'search' as const,
+        source: 'similar' as const,
         metadata: {
           trending_score: Number(hashtag.trend_score),
           related_hashtags: [],
@@ -142,7 +142,7 @@ export async function getAutoCompleteSuggestions(
       .sort((a, b) => {
         const confidenceDiff = b.confidence - a.confidence;
         if (Math.abs(confidenceDiff) > 0.1) return confidenceDiff;
-        return (b.usage_count ?? 0) - (a.usage_count ?? 0);
+        return (b.confidence ?? 0) - (a.confidence ?? 0);
       })
       .slice(0, limit);
     
@@ -201,14 +201,7 @@ export async function getRelatedHashtags(
         reason: 'related',
         confidence: 0.7,
         confidence_score: 0.7,
-        source: 'category' as const,
-        metadata: {
-          trending_score: relatedHashtag.trend_score,
-          related_hashtags: [],
-          category_match: true,
-          user_history: false,
-          social_proof: relatedHashtag.usage_count || 0
-        }
+        source: 'similar' as const
       });
     });
     
@@ -221,11 +214,7 @@ export async function getRelatedHashtags(
           reason: 'related',
           confidence: Math.min(0.9, coOccur.co_occurrence_count / 100),
           confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 100),
-          source: 'related' as const,
-          category: hashtag.category,
-          usage_count: hashtag.usage_count || 0,
-          is_trending: hashtag.is_trending || false,
-          is_verified: hashtag.is_verified || false
+          source: 'similar' as const
         });
       }
     });
@@ -322,14 +311,7 @@ async function getContentBasedSuggestions(
         reason: 'related',
         confidence: 0.6,
         confidence_score: 0.6,
-        source: 'related' as const,
-        metadata: {
-          trending_score: hashtag.trend_score,
-          related_hashtags: [],
-          category_match: false,
-          user_history: false,
-          social_proof: hashtag.usage_count || 0
-        }
+        source: 'similar' as const
       });
     });
   }
@@ -357,14 +339,7 @@ async function getCategoryBasedSuggestions(
     reason: 'popular',
     confidence: 0.7,
     confidence_score: 0.7,
-    source: 'category' as const,
-    metadata: {
-      trending_score: hashtag.trend_score,
-      related_hashtags: [],
-      category_match: true,
-      user_history: false,
-      social_proof: hashtag.usage_count || 0
-    }
+    source: 'popular' as const
   }));
 }
 
@@ -392,14 +367,7 @@ async function getRelatedSuggestions(
       reason: 'personal',
       confidence: Math.min(0.9, coOccur.co_occurrence_count / 50),
       confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 50),
-      source: 'personalized' as const,
-      metadata: {
-        trending_score: hashtag.trend_score,
-        related_hashtags: [],
-        category_match: false,
-        user_history: true,
-        social_proof: hashtag.usage_count || 0
-      }
+      source: 'similar' as const
     };
   });
 }
@@ -444,14 +412,7 @@ async function getBehaviorBasedSuggestions(
         reason: 'personal',
         confidence: Math.min(0.8, engagementCount / 10),
         confidence_score: Math.min(0.8, engagementCount / 10),
-        source: 'personalized' as const,
-        metadata: {
-          trending_score: hashtag.trending_score,
-          related_hashtags: hashtag.related_hashtags,
-          category_match: false,
-          user_history: true,
-          social_proof: hashtag.usage_count || 0
-        }
+        source: 'similar' as const
       });
     }
   }
@@ -539,14 +500,14 @@ function rankSuggestions(
     if (Math.abs(confidenceDiff) > 0.1) return confidenceDiff;
     
     // Secondary: usage count
-    const usageDiff = (b.usage_count || 0) - (a.usage_count || 0);
+    const usageDiff = (b.hashtag.usage_count || 0) - (a.hashtag.usage_count || 0);
     if (Math.abs(usageDiff) > 100) return usageDiff;
     
     // Tertiary: trending status
-    if (a.is_trending !== b.is_trending) return a.is_trending ? -1 : 1;
+    if (a.hashtag.is_trending !== b.hashtag.is_trending) return a.hashtag.is_trending ? -1 : 1;
     
     // Quaternary: verified status
-    if (a.is_verified !== b.is_verified) return a.is_verified ? -1 : 1;
+    if (a.hashtag.is_verified !== b.hashtag.is_verified) return a.hashtag.is_verified ? -1 : 1;
     
     return 0;
   });

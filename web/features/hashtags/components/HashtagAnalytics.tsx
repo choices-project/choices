@@ -3,7 +3,22 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, BarChart3, Hash } from 'lucide-react';
 import { getHashtagStats, getTrendingHashtags } from '../lib/hashtag-service';
-import type { HashtagStatsResponse, TrendingHashtag } from '../types';
+import type { TrendingHashtag } from '../types';
+
+// Local type definition
+interface HashtagStatsResponse {
+  totalHashtags: number;
+  trendingHashtags: TrendingHashtag[];
+  categoryBreakdown: Record<string, number>;
+  userEngagement: Record<string, number>;
+  viralPotential: TrendingHashtag[];
+  verified_count?: number;
+  system_health?: {
+    api_response_time: number;
+    cache_hit_rate: number;
+    error_rate: number;
+  };
+}
 
 interface HashtagAnalyticsProps {
   className?: string;
@@ -109,7 +124,7 @@ export function HashtagAnalytics({
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Hashtags</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total_hashtags.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalHashtags.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -121,7 +136,7 @@ export function HashtagAnalytics({
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Trending</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.trending_count.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.trendingHashtags.length.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -133,7 +148,7 @@ export function HashtagAnalytics({
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Verified</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.verified_count.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{(stats.verified_count || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -195,19 +210,19 @@ export function HashtagAnalytics({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {stats.system_health.api_response_time}ms
+                {stats.system_health?.api_response_time || 0}ms
               </div>
               <div className="text-sm text-gray-600">API Response Time</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.system_health.database_performance}%
+                {stats.system_health?.cache_hit_rate || 0}%
               </div>
               <div className="text-sm text-gray-600">Database Performance</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {stats.system_health.cache_hit_rate}%
+                {stats.system_health?.error_rate || 0}%
               </div>
               <div className="text-sm text-gray-600">Cache Hit Rate</div>
             </div>

@@ -21,15 +21,33 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
+import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 
-import type { 
-  FeedItemData, 
-  FeedHashtagIntegration, 
-  HashtagFilter,
-  HashtagSort 
-} from '../types';
+// Local type definitions
+export interface FeedHashtagIntegration {
+  id: string;
+  hashtagId: string;
+  feedItemId: string;
+  relevanceScore: number;
+  createdAt: Date;
+}
+
+export interface HashtagFilter {
+  hashtag: string;
+  enabled: boolean;
+  type?: string;
+  active?: boolean;
+  value?: string;
+  label?: string;
+}
+
+export interface HashtagSort {
+  field: 'trending' | 'recent' | 'popularity' | 'relevance' | 'created';
+  direction: 'asc' | 'desc';
+  label: string;
+}
 
 interface FeedHashtagIntegrationProps {
   feedItems: FeedItemData[];
@@ -48,7 +66,7 @@ export default function FeedHashtagIntegration({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<HashtagFilter[]>([]);
   const [selectedSort, setSelectedSort] = useState<HashtagSort>({
-    option: 'relevance',
+    field: 'relevance',
     direction: 'desc',
     label: 'Most Relevant'
   });
@@ -141,10 +159,26 @@ export default function FeedHashtagIntegration({
   // Get search result hashtags
   const searchResultHashtags = searchResults ?? [];
 
+  // Convert MinimalHashtag[] to Hashtag[] for HashtagDisplay
+  const convertedSearchResults = searchResultHashtags.map(h => ({
+    ...h,
+    is_verified: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: (h.category || 'general') as any
+  }));
+
   // Get followed hashtag objects
-  const followedHashtagObjects = followedHashtags.map(hashtagId => 
-    hashtags.find(h => h.id === hashtagId)
-  ).filter(Boolean) as Hashtag[];
+  const followedHashtagObjects = followedHashtags;
+
+  // Convert followed hashtags to Hashtag[] for HashtagDisplay
+  const convertedFollowedHashtags = followedHashtagObjects.map(h => ({
+    ...h,
+    is_verified: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: (h.category || 'general') as any
+  }));
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -182,10 +216,10 @@ export default function FeedHashtagIntegration({
           
           <div className="flex gap-2">
             <Button
-              variant={selectedSort.option === 'relevance' ? 'default' : 'outline'}
+              variant={selectedSort.field === 'relevance' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleSortChange({
-                option: 'relevance',
+                field: 'relevance',
                 direction: 'desc',
                 label: 'Most Relevant'
               })}
@@ -193,10 +227,10 @@ export default function FeedHashtagIntegration({
               Relevance
             </Button>
             <Button
-              variant={selectedSort.option === 'trending' ? 'default' : 'outline'}
+              variant={selectedSort.field === 'trending' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleSortChange({
-                option: 'trending',
+                field: 'trending',
                 direction: 'desc',
                 label: 'Trending'
               })}
@@ -204,10 +238,10 @@ export default function FeedHashtagIntegration({
               Trending
             </Button>
             <Button
-              variant={selectedSort.option === 'created' ? 'default' : 'outline'}
+              variant={selectedSort.field === 'created' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleSortChange({
-                option: 'created',
+                field: 'created',
                 direction: 'desc',
                 label: 'Newest'
               })}
@@ -355,7 +389,7 @@ export default function FeedHashtagIntegration({
               ) : (
                 <div className="space-y-4">
                   <HashtagDisplay
-                    hashtags={searchResultHashtags}
+                    hashtags={convertedSearchResults}
                     showCount={true}
                     showCategory={true}
                     clickable={true}
@@ -393,7 +427,7 @@ export default function FeedHashtagIntegration({
               ) : (
                 <div className="space-y-4">
                   <HashtagDisplay
-                    hashtags={followedHashtagObjects}
+                    hashtags={convertedFollowedHashtags}
                     showCount={true}
                     showCategory={true}
                     clickable={true}

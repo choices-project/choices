@@ -1,0 +1,207 @@
+2dbd7df193781a3717643309cf9e37f2
+/**
+ * @jest-environment jsdom
+ */ "use strict";
+// Mock the SSR-safe utility
+jest.mock('@/lib/utils/ssr-safe', ()=>({
+        safeWindow: jest.fn(()=>null)
+    }));
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+const _jsxruntime = require("react/jsx-runtime");
+const _react = require("@testing-library/react");
+const _MultipleChoiceVoting = /*#__PURE__*/ _interop_require_default(require("../../../../../features/voting/components/MultipleChoiceVoting"));
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+const mockOptions = [
+    {
+        id: '1',
+        text: 'Option 1',
+        description: 'First option'
+    },
+    {
+        id: '2',
+        text: 'Option 2',
+        description: 'Second option'
+    },
+    {
+        id: '3',
+        text: 'Option 3',
+        description: 'Third option'
+    }
+];
+const defaultProps = {
+    pollId: 'test-poll-123',
+    title: 'Test Multiple Choice Poll',
+    description: 'Choose all options you support',
+    options: mockOptions,
+    onVote: jest.fn(),
+    isVoting: false,
+    hasVoted: false,
+    maxSelections: 2
+};
+describe('MultipleChoiceVoting', ()=>{
+    beforeEach(()=>{
+        jest.clearAllMocks();
+    });
+    it('renders poll title and description', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        expect(_react.screen.getByText('Test Multiple Choice Poll')).toBeInTheDocument();
+        expect(_react.screen.getByText('Choose all options you support')).toBeInTheDocument();
+    });
+    it('renders all poll options', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        expect(_react.screen.getByText('Option 1')).toBeInTheDocument();
+        expect(_react.screen.getByText('Option 2')).toBeInTheDocument();
+        expect(_react.screen.getByText('Option 3')).toBeInTheDocument();
+    });
+    it('allows selecting multiple options', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        const option2 = _react.screen.getByTestId('option-2-checkbox');
+        _react.fireEvent.click(option1);
+        _react.fireEvent.click(option2);
+        // Both options should be selected
+        expect(option1).toHaveClass('border-green-500');
+        expect(option2).toHaveClass('border-green-500');
+    });
+    it('allows deselecting options', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        // Select then deselect
+        _react.fireEvent.click(option1);
+        expect(option1).toHaveClass('border-green-500');
+        _react.fireEvent.click(option1);
+        expect(option1).not.toHaveClass('border-green-500');
+    });
+    it('enforces maximum selections limit', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps,
+            maxSelections: 2
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        const option2 = _react.screen.getByTestId('option-2-checkbox');
+        const option3 = _react.screen.getByTestId('option-3-checkbox');
+        // Select first two options
+        _react.fireEvent.click(option1);
+        _react.fireEvent.click(option2);
+        // Try to select third option (should be blocked)
+        _react.fireEvent.click(option3);
+        expect(_react.screen.getByText('You can select up to 2 options')).toBeInTheDocument();
+        expect(option3).not.toHaveClass('border-green-500');
+    });
+    it('shows selection summary', async ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps,
+            maxSelections: undefined
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        const option2 = _react.screen.getByTestId('option-2-checkbox');
+        _react.fireEvent.click(option1);
+        _react.fireEvent.click(option2);
+        // Check that options are selected by verifying the styling
+        expect(option1).toHaveClass('border-green-500');
+        expect(option2).toHaveClass('border-green-500');
+        // Check for selection summary
+        await (0, _react.waitFor)(()=>{
+            expect(_react.screen.getByText(/Selected 2 options:/)).toBeInTheDocument();
+        });
+    });
+    it('submits vote with selected options', async ()=>{
+        const mockOnVote = jest.fn().mockResolvedValue({
+            ok: true
+        });
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps,
+            onVote: mockOnVote
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        const option2 = _react.screen.getByTestId('option-2-checkbox');
+        const submitButton = _react.screen.getByTestId('submit-vote-button');
+        _react.fireEvent.click(option1);
+        _react.fireEvent.click(option2);
+        _react.fireEvent.click(submitButton);
+        await (0, _react.waitFor)(()=>{
+            expect(mockOnVote).toHaveBeenCalledWith([
+                0,
+                1
+            ]);
+        });
+    });
+    it('prevents submission with no selections', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        const submitButton = _react.screen.getByTestId('submit-vote-button');
+        expect(submitButton).toBeDisabled();
+    });
+    it('prevents clicking submit button when no selections', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        const submitButton = _react.screen.getByTestId('submit-vote-button');
+        // Button should be disabled when no options are selected
+        expect(submitButton).toBeDisabled();
+        // Select an option
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        _react.fireEvent.click(option1);
+        // Button should now be enabled
+        expect(submitButton).not.toBeDisabled();
+        // Deselect the option
+        _react.fireEvent.click(option1);
+        // Button should be disabled again
+        expect(submitButton).toBeDisabled();
+    });
+    it('displays voted state correctly', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps,
+            hasVoted: true
+        }));
+        expect(_react.screen.getByTestId('vote-confirmation')).toBeInTheDocument();
+        expect(_react.screen.getByText('Vote submitted successfully!')).toBeInTheDocument();
+    });
+    it('displays user\'s previous vote', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps,
+            userVote: [
+                0,
+                2
+            ]
+        }));
+        const option1 = _react.screen.getByTestId('option-1-checkbox');
+        const option3 = _react.screen.getByTestId('option-3-checkbox');
+        expect(option1).toHaveClass('border-green-500');
+        expect(option3).toHaveClass('border-green-500');
+    });
+    it('shows voting method badge', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        expect(_react.screen.getByText('🎯 Multiple Choice Voting')).toBeInTheDocument();
+        expect(_react.screen.getByText(/Select all options you support/)).toBeInTheDocument();
+    });
+    it('shows explanation when info button is clicked', ()=>{
+        (0, _react.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_MultipleChoiceVoting.default, {
+            ...defaultProps
+        }));
+        const infoButton = _react.screen.getByText('How it works');
+        _react.fireEvent.click(infoButton);
+        expect(_react.screen.getByText('How Multiple Choice Voting Works')).toBeInTheDocument();
+        expect(_react.screen.getByText('Select multiple options:')).toBeInTheDocument();
+        expect(_react.screen.getByText('Choose all options you support')).toBeInTheDocument();
+    });
+});
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi90ZXN0cy9qZXN0L3VuaXQvZmVhdHVyZXMvdm90aW5nL011bHRpcGxlQ2hvaWNlVm90aW5nLnRlc3QudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogQGplc3QtZW52aXJvbm1lbnQganNkb21cbiAqL1xuaW1wb3J0IHsgcmVuZGVyLCBzY3JlZW4sIGZpcmVFdmVudCwgd2FpdEZvciB9IGZyb20gJ0B0ZXN0aW5nLWxpYnJhcnkvcmVhY3QnXG5pbXBvcnQgTXVsdGlwbGVDaG9pY2VWb3RpbmcgZnJvbSAnQC9mZWF0dXJlcy92b3RpbmcvY29tcG9uZW50cy9NdWx0aXBsZUNob2ljZVZvdGluZydcblxuLy8gTW9jayB0aGUgU1NSLXNhZmUgdXRpbGl0eVxuamVzdC5tb2NrKCdAL2xpYi91dGlscy9zc3Itc2FmZScsICgpID0+ICh7XG4gIHNhZmVXaW5kb3c6IGplc3QuZm4oKCkgPT4gbnVsbClcbn0pKVxuXG5jb25zdCBtb2NrT3B0aW9ucyA9IFtcbiAgeyBpZDogJzEnLCB0ZXh0OiAnT3B0aW9uIDEnLCBkZXNjcmlwdGlvbjogJ0ZpcnN0IG9wdGlvbicgfSxcbiAgeyBpZDogJzInLCB0ZXh0OiAnT3B0aW9uIDInLCBkZXNjcmlwdGlvbjogJ1NlY29uZCBvcHRpb24nIH0sXG4gIHsgaWQ6ICczJywgdGV4dDogJ09wdGlvbiAzJywgZGVzY3JpcHRpb246ICdUaGlyZCBvcHRpb24nIH1cbl1cblxuY29uc3QgZGVmYXVsdFByb3BzID0ge1xuICBwb2xsSWQ6ICd0ZXN0LXBvbGwtMTIzJyxcbiAgdGl0bGU6ICdUZXN0IE11bHRpcGxlIENob2ljZSBQb2xsJyxcbiAgZGVzY3JpcHRpb246ICdDaG9vc2UgYWxsIG9wdGlvbnMgeW91IHN1cHBvcnQnLFxuICBvcHRpb25zOiBtb2NrT3B0aW9ucyxcbiAgb25Wb3RlOiBqZXN0LmZuKCksXG4gIGlzVm90aW5nOiBmYWxzZSxcbiAgaGFzVm90ZWQ6IGZhbHNlLFxuICBtYXhTZWxlY3Rpb25zOiAyXG59XG5cbmRlc2NyaWJlKCdNdWx0aXBsZUNob2ljZVZvdGluZycsICgpID0+IHtcbiAgYmVmb3JlRWFjaCgoKSA9PiB7XG4gICAgamVzdC5jbGVhckFsbE1vY2tzKClcbiAgfSlcblxuICBpdCgncmVuZGVycyBwb2xsIHRpdGxlIGFuZCBkZXNjcmlwdGlvbicsICgpID0+IHtcbiAgICByZW5kZXIoPE11bHRpcGxlQ2hvaWNlVm90aW5nIHsuLi5kZWZhdWx0UHJvcHN9IC8+KVxuICAgIFxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCdUZXN0IE11bHRpcGxlIENob2ljZSBQb2xsJykpLnRvQmVJblRoZURvY3VtZW50KClcbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgnQ2hvb3NlIGFsbCBvcHRpb25zIHlvdSBzdXBwb3J0JykpLnRvQmVJblRoZURvY3VtZW50KClcbiAgfSlcblxuICBpdCgncmVuZGVycyBhbGwgcG9sbCBvcHRpb25zJywgKCkgPT4ge1xuICAgIHJlbmRlcig8TXVsdGlwbGVDaG9pY2VWb3Rpbmcgey4uLmRlZmF1bHRQcm9wc30gLz4pXG4gICAgXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ09wdGlvbiAxJykpLnRvQmVJblRoZURvY3VtZW50KClcbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgnT3B0aW9uIDInKSkudG9CZUluVGhlRG9jdW1lbnQoKVxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCdPcHRpb24gMycpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gIH0pXG5cbiAgaXQoJ2FsbG93cyBzZWxlY3RpbmcgbXVsdGlwbGUgb3B0aW9ucycsICgpID0+IHtcbiAgICByZW5kZXIoPE11bHRpcGxlQ2hvaWNlVm90aW5nIHsuLi5kZWZhdWx0UHJvcHN9IC8+KVxuICAgIFxuICAgIGNvbnN0IG9wdGlvbjEgPSBzY3JlZW4uZ2V0QnlUZXN0SWQoJ29wdGlvbi0xLWNoZWNrYm94JylcbiAgICBjb25zdCBvcHRpb24yID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMi1jaGVja2JveCcpXG4gICAgXG4gICAgZmlyZUV2ZW50LmNsaWNrKG9wdGlvbjEpXG4gICAgZmlyZUV2ZW50LmNsaWNrKG9wdGlvbjIpXG4gICAgXG4gICAgLy8gQm90aCBvcHRpb25zIHNob3VsZCBiZSBzZWxlY3RlZFxuICAgIGV4cGVjdChvcHRpb24xKS50b0hhdmVDbGFzcygnYm9yZGVyLWdyZWVuLTUwMCcpXG4gICAgZXhwZWN0KG9wdGlvbjIpLnRvSGF2ZUNsYXNzKCdib3JkZXItZ3JlZW4tNTAwJylcbiAgfSlcblxuICBpdCgnYWxsb3dzIGRlc2VsZWN0aW5nIG9wdGlvbnMnLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxNdWx0aXBsZUNob2ljZVZvdGluZyB7Li4uZGVmYXVsdFByb3BzfSAvPilcbiAgICBcbiAgICBjb25zdCBvcHRpb24xID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMS1jaGVja2JveCcpXG4gICAgXG4gICAgLy8gU2VsZWN0IHRoZW4gZGVzZWxlY3RcbiAgICBmaXJlRXZlbnQuY2xpY2sob3B0aW9uMSlcbiAgICBleHBlY3Qob3B0aW9uMSkudG9IYXZlQ2xhc3MoJ2JvcmRlci1ncmVlbi01MDAnKVxuICAgIFxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24xKVxuICAgIGV4cGVjdChvcHRpb24xKS5ub3QudG9IYXZlQ2xhc3MoJ2JvcmRlci1ncmVlbi01MDAnKVxuICB9KVxuXG4gIGl0KCdlbmZvcmNlcyBtYXhpbXVtIHNlbGVjdGlvbnMgbGltaXQnLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxNdWx0aXBsZUNob2ljZVZvdGluZyB7Li4uZGVmYXVsdFByb3BzfSBtYXhTZWxlY3Rpb25zPXsyfSAvPilcbiAgICBcbiAgICBjb25zdCBvcHRpb24xID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMS1jaGVja2JveCcpXG4gICAgY29uc3Qgb3B0aW9uMiA9IHNjcmVlbi5nZXRCeVRlc3RJZCgnb3B0aW9uLTItY2hlY2tib3gnKVxuICAgIGNvbnN0IG9wdGlvbjMgPSBzY3JlZW4uZ2V0QnlUZXN0SWQoJ29wdGlvbi0zLWNoZWNrYm94JylcbiAgICBcbiAgICAvLyBTZWxlY3QgZmlyc3QgdHdvIG9wdGlvbnNcbiAgICBmaXJlRXZlbnQuY2xpY2sob3B0aW9uMSlcbiAgICBmaXJlRXZlbnQuY2xpY2sob3B0aW9uMilcbiAgICBcbiAgICAvLyBUcnkgdG8gc2VsZWN0IHRoaXJkIG9wdGlvbiAoc2hvdWxkIGJlIGJsb2NrZWQpXG4gICAgZmlyZUV2ZW50LmNsaWNrKG9wdGlvbjMpXG4gICAgXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ1lvdSBjYW4gc2VsZWN0IHVwIHRvIDIgb3B0aW9ucycpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gICAgZXhwZWN0KG9wdGlvbjMpLm5vdC50b0hhdmVDbGFzcygnYm9yZGVyLWdyZWVuLTUwMCcpXG4gIH0pXG5cbiAgaXQoJ3Nob3dzIHNlbGVjdGlvbiBzdW1tYXJ5JywgYXN5bmMgKCkgPT4ge1xuICAgIHJlbmRlcig8TXVsdGlwbGVDaG9pY2VWb3Rpbmcgey4uLmRlZmF1bHRQcm9wc30gbWF4U2VsZWN0aW9ucz17dW5kZWZpbmVkfSAvPilcbiAgICBcbiAgICBjb25zdCBvcHRpb24xID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMS1jaGVja2JveCcpXG4gICAgY29uc3Qgb3B0aW9uMiA9IHNjcmVlbi5nZXRCeVRlc3RJZCgnb3B0aW9uLTItY2hlY2tib3gnKVxuICAgIFxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24xKVxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24yKVxuICAgIFxuICAgIC8vIENoZWNrIHRoYXQgb3B0aW9ucyBhcmUgc2VsZWN0ZWQgYnkgdmVyaWZ5aW5nIHRoZSBzdHlsaW5nXG4gICAgZXhwZWN0KG9wdGlvbjEpLnRvSGF2ZUNsYXNzKCdib3JkZXItZ3JlZW4tNTAwJylcbiAgICBleHBlY3Qob3B0aW9uMikudG9IYXZlQ2xhc3MoJ2JvcmRlci1ncmVlbi01MDAnKVxuICAgIFxuICAgIC8vIENoZWNrIGZvciBzZWxlY3Rpb24gc3VtbWFyeVxuICAgIGF3YWl0IHdhaXRGb3IoKCkgPT4ge1xuICAgICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoL1NlbGVjdGVkIDIgb3B0aW9uczovKSkudG9CZUluVGhlRG9jdW1lbnQoKVxuICAgIH0pXG4gIH0pXG5cbiAgaXQoJ3N1Ym1pdHMgdm90ZSB3aXRoIHNlbGVjdGVkIG9wdGlvbnMnLCBhc3luYyAoKSA9PiB7XG4gICAgY29uc3QgbW9ja09uVm90ZSA9IGplc3QuZm4oKS5tb2NrUmVzb2x2ZWRWYWx1ZSh7IG9rOiB0cnVlIH0pXG4gICAgcmVuZGVyKDxNdWx0aXBsZUNob2ljZVZvdGluZyB7Li4uZGVmYXVsdFByb3BzfSBvblZvdGU9e21vY2tPblZvdGV9IC8+KVxuICAgIFxuICAgIGNvbnN0IG9wdGlvbjEgPSBzY3JlZW4uZ2V0QnlUZXN0SWQoJ29wdGlvbi0xLWNoZWNrYm94JylcbiAgICBjb25zdCBvcHRpb24yID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMi1jaGVja2JveCcpXG4gICAgY29uc3Qgc3VibWl0QnV0dG9uID0gc2NyZWVuLmdldEJ5VGVzdElkKCdzdWJtaXQtdm90ZS1idXR0b24nKVxuICAgIFxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24xKVxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24yKVxuICAgIGZpcmVFdmVudC5jbGljayhzdWJtaXRCdXR0b24pXG4gICAgXG4gICAgYXdhaXQgd2FpdEZvcigoKSA9PiB7XG4gICAgICBleHBlY3QobW9ja09uVm90ZSkudG9IYXZlQmVlbkNhbGxlZFdpdGgoWzAsIDFdKVxuICAgIH0pXG4gIH0pXG5cbiAgaXQoJ3ByZXZlbnRzIHN1Ym1pc3Npb24gd2l0aCBubyBzZWxlY3Rpb25zJywgKCkgPT4ge1xuICAgIHJlbmRlcig8TXVsdGlwbGVDaG9pY2VWb3Rpbmcgey4uLmRlZmF1bHRQcm9wc30gLz4pXG4gICAgXG4gICAgY29uc3Qgc3VibWl0QnV0dG9uID0gc2NyZWVuLmdldEJ5VGVzdElkKCdzdWJtaXQtdm90ZS1idXR0b24nKVxuICAgIGV4cGVjdChzdWJtaXRCdXR0b24pLnRvQmVEaXNhYmxlZCgpXG4gIH0pXG5cbiAgaXQoJ3ByZXZlbnRzIGNsaWNraW5nIHN1Ym1pdCBidXR0b24gd2hlbiBubyBzZWxlY3Rpb25zJywgKCkgPT4ge1xuICAgIHJlbmRlcig8TXVsdGlwbGVDaG9pY2VWb3Rpbmcgey4uLmRlZmF1bHRQcm9wc30gLz4pXG4gICAgXG4gICAgY29uc3Qgc3VibWl0QnV0dG9uID0gc2NyZWVuLmdldEJ5VGVzdElkKCdzdWJtaXQtdm90ZS1idXR0b24nKVxuICAgIFxuICAgIC8vIEJ1dHRvbiBzaG91bGQgYmUgZGlzYWJsZWQgd2hlbiBubyBvcHRpb25zIGFyZSBzZWxlY3RlZFxuICAgIGV4cGVjdChzdWJtaXRCdXR0b24pLnRvQmVEaXNhYmxlZCgpXG4gICAgXG4gICAgLy8gU2VsZWN0IGFuIG9wdGlvblxuICAgIGNvbnN0IG9wdGlvbjEgPSBzY3JlZW4uZ2V0QnlUZXN0SWQoJ29wdGlvbi0xLWNoZWNrYm94JylcbiAgICBmaXJlRXZlbnQuY2xpY2sob3B0aW9uMSlcbiAgICBcbiAgICAvLyBCdXR0b24gc2hvdWxkIG5vdyBiZSBlbmFibGVkXG4gICAgZXhwZWN0KHN1Ym1pdEJ1dHRvbikubm90LnRvQmVEaXNhYmxlZCgpXG4gICAgXG4gICAgLy8gRGVzZWxlY3QgdGhlIG9wdGlvblxuICAgIGZpcmVFdmVudC5jbGljayhvcHRpb24xKVxuICAgIFxuICAgIC8vIEJ1dHRvbiBzaG91bGQgYmUgZGlzYWJsZWQgYWdhaW5cbiAgICBleHBlY3Qoc3VibWl0QnV0dG9uKS50b0JlRGlzYWJsZWQoKVxuICB9KVxuXG4gIGl0KCdkaXNwbGF5cyB2b3RlZCBzdGF0ZSBjb3JyZWN0bHknLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxNdWx0aXBsZUNob2ljZVZvdGluZyB7Li4uZGVmYXVsdFByb3BzfSBoYXNWb3RlZD17dHJ1ZX0gLz4pXG4gICAgXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRlc3RJZCgndm90ZS1jb25maXJtYXRpb24nKSkudG9CZUluVGhlRG9jdW1lbnQoKVxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCdWb3RlIHN1Ym1pdHRlZCBzdWNjZXNzZnVsbHkhJykpLnRvQmVJblRoZURvY3VtZW50KClcbiAgfSlcblxuICBpdCgnZGlzcGxheXMgdXNlclxcJ3MgcHJldmlvdXMgdm90ZScsICgpID0+IHtcbiAgICByZW5kZXIoPE11bHRpcGxlQ2hvaWNlVm90aW5nIHsuLi5kZWZhdWx0UHJvcHN9IHVzZXJWb3RlPXtbMCwgMl19IC8+KVxuICAgIFxuICAgIGNvbnN0IG9wdGlvbjEgPSBzY3JlZW4uZ2V0QnlUZXN0SWQoJ29wdGlvbi0xLWNoZWNrYm94JylcbiAgICBjb25zdCBvcHRpb24zID0gc2NyZWVuLmdldEJ5VGVzdElkKCdvcHRpb24tMy1jaGVja2JveCcpXG4gICAgXG4gICAgZXhwZWN0KG9wdGlvbjEpLnRvSGF2ZUNsYXNzKCdib3JkZXItZ3JlZW4tNTAwJylcbiAgICBleHBlY3Qob3B0aW9uMykudG9IYXZlQ2xhc3MoJ2JvcmRlci1ncmVlbi01MDAnKVxuICB9KVxuXG4gIGl0KCdzaG93cyB2b3RpbmcgbWV0aG9kIGJhZGdlJywgKCkgPT4ge1xuICAgIHJlbmRlcig8TXVsdGlwbGVDaG9pY2VWb3Rpbmcgey4uLmRlZmF1bHRQcm9wc30gLz4pXG4gICAgXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ/Cfjq8gTXVsdGlwbGUgQ2hvaWNlIFZvdGluZycpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoL1NlbGVjdCBhbGwgb3B0aW9ucyB5b3Ugc3VwcG9ydC8pKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gIH0pXG5cbiAgaXQoJ3Nob3dzIGV4cGxhbmF0aW9uIHdoZW4gaW5mbyBidXR0b24gaXMgY2xpY2tlZCcsICgpID0+IHtcbiAgICByZW5kZXIoPE11bHRpcGxlQ2hvaWNlVm90aW5nIHsuLi5kZWZhdWx0UHJvcHN9IC8+KVxuICAgIFxuICAgIGNvbnN0IGluZm9CdXR0b24gPSBzY3JlZW4uZ2V0QnlUZXh0KCdIb3cgaXQgd29ya3MnKVxuICAgIGZpcmVFdmVudC5jbGljayhpbmZvQnV0dG9uKVxuICAgIFxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCdIb3cgTXVsdGlwbGUgQ2hvaWNlIFZvdGluZyBXb3JrcycpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ1NlbGVjdCBtdWx0aXBsZSBvcHRpb25zOicpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ0Nob29zZSBhbGwgb3B0aW9ucyB5b3Ugc3VwcG9ydCcpKS50b0JlSW5UaGVEb2N1bWVudCgpXG4gIH0pXG59KVxuIl0sIm5hbWVzIjpbImplc3QiLCJtb2NrIiwic2FmZVdpbmRvdyIsImZuIiwibW9ja09wdGlvbnMiLCJpZCIsInRleHQiLCJkZXNjcmlwdGlvbiIsImRlZmF1bHRQcm9wcyIsInBvbGxJZCIsInRpdGxlIiwib3B0aW9ucyIsIm9uVm90ZSIsImlzVm90aW5nIiwiaGFzVm90ZWQiLCJtYXhTZWxlY3Rpb25zIiwiZGVzY3JpYmUiLCJiZWZvcmVFYWNoIiwiY2xlYXJBbGxNb2NrcyIsIml0IiwicmVuZGVyIiwiTXVsdGlwbGVDaG9pY2VWb3RpbmciLCJleHBlY3QiLCJzY3JlZW4iLCJnZXRCeVRleHQiLCJ0b0JlSW5UaGVEb2N1bWVudCIsIm9wdGlvbjEiLCJnZXRCeVRlc3RJZCIsIm9wdGlvbjIiLCJmaXJlRXZlbnQiLCJjbGljayIsInRvSGF2ZUNsYXNzIiwibm90Iiwib3B0aW9uMyIsInVuZGVmaW5lZCIsIndhaXRGb3IiLCJtb2NrT25Wb3RlIiwibW9ja1Jlc29sdmVkVmFsdWUiLCJvayIsInN1Ym1pdEJ1dHRvbiIsInRvSGF2ZUJlZW5DYWxsZWRXaXRoIiwidG9CZURp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

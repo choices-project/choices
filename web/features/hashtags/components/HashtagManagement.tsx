@@ -55,9 +55,7 @@ export function HashtagManagement({
         const result = await searchHashtags({ 
           query: '',
           limit: 100,
-          filters: {
-            category: selectedCategory === 'all' ? undefined : selectedCategory
-          }
+          category: selectedCategory === 'all' ? undefined : selectedCategory
         });
         
         if (result.success && result.data) {
@@ -144,7 +142,7 @@ export function HashtagManagement({
 
   const filteredHashtags = hashtags.filter(hashtag =>
     hashtag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hashtag.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+    (hashtag.display_name && hashtag.display_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

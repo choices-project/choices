@@ -128,7 +128,7 @@ export interface VoteResult {
   metadata?: Record<string, unknown>;
 }
 
-export type VotingMethod = 'single' | 'single-choice' | 'approval' | 'ranked' | 'ranked-choice' | 'quadratic' | 'range';
+export type VotingMethod = 'single' | 'multiple' | 'ranked' | 'approval' | 'quadratic' | 'range';
 
 export interface PollResults {
   winner?: string;

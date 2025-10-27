@@ -9,9 +9,15 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/utils/logger';
 
-import type {
-  GeographicLookup
-} from './types';
+export interface GeographicLookup {
+  address: string;
+  latitude: number;
+  longitude: number;
+  district?: string;
+  state?: string;
+  county?: string;
+  zipCode?: string;
+}
 
 export interface DistrictInfo {
   district_number: string;

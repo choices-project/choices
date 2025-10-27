@@ -121,7 +121,7 @@ export default function HashtagPollsFeed({
         filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
         break;
       case 'engagement':
-        filtered.sort((a, b) => b.totalVotes - a.totalVotes);
+        filtered.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0));
         break;
       case 'relevance':
       default:
@@ -368,7 +368,7 @@ export default function HashtagPollsFeed({
                           </div>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
-                            {new Date(poll.created_at).toLocaleDateString()}
+                            {poll.created_at ? new Date(poll.created_at).toLocaleDateString() : 'Unknown date'}
                           </div>
                           <div className="flex items-center">
                             <BarChart3 className="h-4 w-4 mr-1" />
@@ -380,10 +380,10 @@ export default function HashtagPollsFeed({
 
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-600">
-                        {poll.interestMatches.length > 0 ? `Matches: ${poll.interestMatches.join(', ')}` : 'Recommended poll'}
+                        {poll.interestMatches && poll.interestMatches.length > 0 ? `Matches: ${poll.interestMatches.join(', ')}` : 'Recommended poll'}
                       </div>
                       <Button
-                        onClick={() => handlePollSelect(poll.id)}
+                        onClick={() => handlePollSelect(poll.id || poll.pollId)}
                         className="ml-4"
                       >
                         View Poll

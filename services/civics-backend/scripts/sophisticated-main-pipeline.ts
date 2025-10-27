@@ -7,8 +7,12 @@
  * This is the production-ready pipeline for the civics backend system
  */
 
+import dotenv from 'dotenv';
 import { createCivicsPipeline, defaultConfig, type SuperiorPipelineConfig } from '../lib/index.js';
 import { createSupabaseClient } from '../lib/index.js';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 // Enhanced configuration for production
 const productionConfig: SuperiorPipelineConfig = {
@@ -31,7 +35,7 @@ const productionConfig: SuperiorPipelineConfig = {
   fecRateLimit: 800,
   googleCivicRateLimit: 80000,
   cacheResults: true,
-  openStatesPeoplePath: './data/openstates',
+  openStatesPeoplePath: './data/openstates-people/data',
   enableStateProcessing: true,
   enableMunicipalProcessing: false
 };
@@ -42,7 +46,7 @@ async function main() {
   
   try {
     // Initialize Supabase client
-    const supabase = createSupabaseClient();
+    const supabase = await createSupabaseClient();
     console.log('✅ Supabase client initialized');
     
     // Test database connection
@@ -65,7 +69,13 @@ async function main() {
     const args = process.argv.slice(2);
     const mode = args[0] || 'federal';
     const state = args[1];
-    const limit = parseInt(args[2]) || 100;
+    
+    // Parse limit from --limit argument or default to 100
+    let limit = 100;
+    const limitIndex = args.indexOf('--limit');
+    if (limitIndex !== -1 && args[limitIndex + 1]) {
+      limit = parseInt(args[limitIndex + 1]) || 100;
+    }
     
     console.log(`📊 Processing mode: ${mode}`);
     if (state) console.log(`📍 State filter: ${state}`);
@@ -133,6 +143,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Run the main function
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }

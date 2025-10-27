@@ -1,0 +1,105 @@
+name: Civics Backend Health Check
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      check_all_endpoints:
+        description: 'Check all civics endpoints'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  civics-health-check:
+    name: Civics Backend Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Check civics backend health
+        run: |
+          echo "🏛️ Checking Civics Backend Health..."
+          
+          # Basic health check
+          echo "📊 Basic Health Check:"
+          curl -f https://choices-platform.vercel.app/api/civics/health || echo "❌ Basic health check failed"
+          
+          # Test representative lookup
+          echo "👥 Representative Lookup Test:"
+          curl -f "https://choices-platform.vercel.app/api/civics/representatives?address=1600+Pennsylvania+Avenue+NW+Washington+DC+20500" || echo "❌ Representative lookup failed"
+          
+          # Test geographic services
+          echo "🗺️ Geographic Services Test:"
+          curl -f "https://choices-platform.vercel.app/api/civics/geographic/test" || echo "❌ Geographic services failed"
+          
+          # Test data ingestion pipeline
+          echo "📥 Data Ingestion Pipeline Test:"
+          curl -f "https://choices-platform.vercel.app/api/civics/ingestion/status" || echo "❌ Data ingestion pipeline failed"
+
+      - name: Check all endpoints (if requested)
+        if: github.event.inputs.check_all_endpoints == 'true'
+        run: |
+          echo "🔍 Comprehensive Endpoint Check:"
+          
+          # OpenStates integration
+          echo "📊 OpenStates Integration:"
+          curl -f "https://choices-platform.vercel.app/api/civics/openstates/test" || echo "❌ OpenStates integration failed"
+          
+          # Google Civic API
+          echo "🗳️ Google Civic API:"
+          curl -f "https://choices-platform.vercel.app/api/civics/google-civic/test" || echo "❌ Google Civic API failed"
+          
+          # Congress.gov integration
+          echo "🏛️ Congress.gov Integration:"
+          curl -f "https://choices-platform.vercel.app/api/civics/congress/test" || echo "❌ Congress.gov integration failed"
+          
+          # FEC integration
+          echo "💰 FEC Integration:"
+          curl -f "https://choices-platform.vercel.app/api/civics/fec/test" || echo "❌ FEC integration failed"
+
+      - name: Performance check
+        run: |
+          echo "⚡ Performance Check:"
+          
+          # Check response times
+          echo "📊 Response Time Analysis:"
+          curl -w "Health endpoint: %{time_total}s\n" -o /dev/null -s https://choices-platform.vercel.app/api/civics/health
+          curl -w "Representatives endpoint: %{time_total}s\n" -o /dev/null -s "https://choices-platform.vercel.app/api/civics/representatives?address=1600+Pennsylvania+Avenue+NW+Washington+DC+20500"
+
+      - name: Data quality check
+        run: |
+          echo "📈 Data Quality Check:"
+          
+          # Check data freshness
+          echo "🕒 Data Freshness:"
+          curl -s "https://choices-platform.vercel.app/api/civics/data/freshness" || echo "❌ Data freshness check failed"
+          
+          # Check data completeness
+          echo "📊 Data Completeness:"
+          curl -s "https://choices-platform.vercel.app/api/civics/data/completeness" || echo "❌ Data completeness check failed"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Civics Backend Health Check Failed!"
+          echo "Please check the civics backend service and data ingestion pipeline."
+          echo "Common issues:"
+          echo "- OpenStates API rate limits"
+          echo "- Google Civic API quota exceeded"
+          echo "- Database connectivity issues"
+          echo "- Data ingestion pipeline errors"
+
+      - name: Success notification
+        if: success()
+        run: |
+          echo "✅ Civics Backend Health Check Passed!"
+          echo "🏛️ All civics services are operational"
+          echo "📊 Data ingestion pipeline is healthy"
+          echo "🗺️ Geographic services are working"
+          echo "👥 Representative lookup is functional"

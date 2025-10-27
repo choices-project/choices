@@ -1,12 +1,21 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Block new legacy files
-if git diff --cached --name-only --diff-filter=A | grep -E '^web/components/(polls|voting|admin/layout)/'; then
-  echo "❌ New legacy files under web/components/* blocked. Use canonical paths."; exit 1;
+# Type validation pre-commit hook
+echo "🔍 Validating types..."
+
+# Check if database types are current
+if ! node scripts/update-database-types.js validate; then
+  echo "❌ Database types are out of date."
+  echo "Please run: node scripts/update-database-types.js update"
+  exit 1
 fi
 
-# Type & lint in UTC
-export TZ=UTC
-cd /Users/alaughingkitsune/src/Choices/web && npm run types:strict
-cd /Users/alaughingkitsune/src/Choices/web && npm run lint
+# Check for type conflicts
+if ! node scripts/validate-types.js; then
+  echo "❌ Type validation failed."
+  echo "Please fix type conflicts before committing."
+  exit 1
+fi
+
+echo "✅ All types are current and valid"

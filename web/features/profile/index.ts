@@ -127,7 +127,7 @@ export type {
   UseProfileUpdateReturn,
   UseProfileAvatarReturn,
   UseProfileExportReturn,
-} from './types';
+} from '@/types/profile';
 
 // ============================================================================
 // UTILITY EXPORTS

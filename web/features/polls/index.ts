@@ -16,7 +16,7 @@
 export { default as PollCard } from './components/PollCard';
 
 /** Poll results component */
-export { default as PollResults } from './components/PollResults';
+export { default as PollResultsComponent } from './components/PollResults';
 
 /** Private poll results component */
 export { default as PrivatePollResults } from './components/PrivatePollResults';
@@ -31,7 +31,7 @@ export { default as CommunityPollSelection } from './components/CommunityPollSel
 export { default as PostCloseBanner } from './components/PostCloseBanner';
 
 /** Poll hashtag integration component */
-export { default as PollHashtagIntegration } from './components/PollHashtagIntegration';
+export { default as PollHashtagIntegrationComponent } from './components/PollHashtagIntegration';
 
 // ============================================================================
 // HOOK EXPORTS
@@ -63,27 +63,30 @@ export type {
   PollCategory,
   PollStatus,
   PollTemplate,
-  PollTemplateCategory,
+  TemplateCategory,
   
   // Voting types
   VotingMethod,
   
   // Poll creation types
+  PollCreationData,
+  PollUpdateData,
+  PollWizardData,
+  PollWizardState,
   
   // Poll results types
-  PollResultsProps,
-  OptimizedPollResultsProps,
-  PrivatePollResultsProps,
+  PollResults,
+  PollOptionResult,
+  PollDemographics,
   
-  // Interest-based feed types
-  UserInterests,
-  PersonalizedPollFeed,
-  PollRecommendation,
-  InterestMatch,
+  // Integration types
+  PollHashtagIntegration,
   
-  // Hashtag integration types
-  PollHashtagIntegration as PollHashtagIntegrationType,
-  HashtagContent
+  // Vote types
+  Vote,
+  
+  // Template types
+  TemplateSettings
 } from './types';
 
 // ============================================================================

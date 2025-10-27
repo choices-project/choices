@@ -28,9 +28,7 @@ import Image from 'next/image';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { 
-  useFeeds, 
-  useFeedsActions, 
-  useFeedsLoading 
+  useFeedsStore
 } from '@/lib/stores';
 
 // Using store's FeedItem type from feedsStore
@@ -69,9 +67,7 @@ export default function SocialFeed({
   className = ''
 }: SocialFeedProps) {
   // Use Zustand store instead of local state
-  const feeds = useFeeds();
-  const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
-  const isLoading = useFeedsLoading();
+  const { feeds, isLoading, loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsStore();
   
   // Keep local state for UI-specific concerns
   const [hasMore, setHasMore] = useState(true);

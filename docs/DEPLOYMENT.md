@@ -1,17 +1,26 @@
-# 🚀 CHOICES PLATFORM - DEPLOYMENT GUIDE
+# 🚀 Deployment Guide
 
-**Repository:** https://github.com/choices-project/choices  
-**Live Site:** https://choices-platform.vercel.app  
-**License:** MIT  
-**Status:** PRODUCTION DEPLOYMENT READY 🚀
+**Complete Deployment Guide for Choices Platform**
 
-## 🎯 **DEPLOYMENT OVERVIEW**
+---
 
-**Last Updated:** October 26, 2025  
-**Deployment Status:** 100% Production Ready  
-**Infrastructure:** Vercel + Supabase
+## 🎯 **Overview**
 
-## 🚀 **QUICK DEPLOYMENT**
+This guide covers everything you need to deploy the Choices platform to production using Vercel and Supabase.
+
+**Last Updated**: October 27, 2025  
+**Status**: Production Ready  
+**Platform**: Vercel + Supabase
+
+---
+
+## 🚀 **Quick Start**
+
+### **Prerequisites**
+- **Vercel Account**: [vercel.com](https://vercel.com)
+- **Supabase Account**: [supabase.com](https://supabase.com)
+- **GitHub Repository**: Connected to Vercel
+- **Environment Variables**: Configured in Vercel
 
 ### **One-Click Deployment**
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/choices-project/choices)
@@ -20,248 +29,384 @@
 ```bash
 # Clone repository
 git clone https://github.com/choices-project/choices.git
-cd choices
+cd choices/web
 
 # Install dependencies
-cd web && npm install
+npm install
 
 # Deploy to Vercel
 npx vercel --prod
 ```
 
-## 🔧 **ENVIRONMENT SETUP**
+---
+
+## 🔧 **Environment Setup**
 
 ### **Required Environment Variables**
+
+#### **Supabase Configuration**
 ```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# AI Analytics (Optional)
-COLAB_AI_ANALYTICS_URL=your_colab_ai_url
-HUGGING_FACE_TOKEN=your_hugging_face_token
-
-# Google Civic API (Optional)
-GOOGLE_CIVIC_API_KEY=your_google_civic_api_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### **Database Setup**
+#### **Application Configuration**
 ```bash
-# Run database functions
-node scripts/deploy-database-functions.js
-
-# Verify deployment
-node scripts/test-rls-trust-system.js
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+NEXTAUTH_SECRET=your_nextauth_secret_key
+NEXTAUTH_URL=https://your-domain.vercel.app
 ```
 
-## 🏗️ **PRODUCTION ARCHITECTURE**
-
-### **Frontend (Vercel)**
-- **Next.js 15**: React framework with App Router
-- **Static Generation**: Optimized performance
-- **Edge Functions**: Global distribution
-- **CDN**: Fast content delivery
-
-### **Backend (Supabase)**
-- **PostgreSQL**: Advanced database
-- **Row Level Security**: Data protection
-- **Real-time**: Live updates
-- **Authentication**: Secure user management
-
-### **AI Services (Google Colab)**
-- **Hugging Face Models**: Open-source AI
-- **Scalable Processing**: Cloud-based analytics
-- **Public APIs**: Transparent AI services
-- **Privacy-First**: No corporate dependencies
-
-## 📊 **DEPLOYMENT CHECKLIST**
-
-### **Pre-Deployment**
-- [ ] Environment variables configured
-- [ ] Database functions deployed
-- [ ] API endpoints tested
-- [ ] Frontend components verified
-- [ ] Security policies implemented
-
-### **Deployment**
-- [ ] Vercel deployment successful
-- [ ] Supabase connection verified
-- [ ] Database functions working
-- [ ] API endpoints responding
-- [ ] Frontend loading correctly
-
-### **Post-Deployment**
-- [ ] Health checks passing
-- [ ] Performance metrics normal
-- [ ] Error monitoring active
-- [ ] User analytics tracking
-- [ ] Security monitoring enabled
-
-## 🔍 **DEPLOYMENT VERIFICATION**
-
-### **Health Checks**
+#### **Optional: AI Services**
 ```bash
-# Check API endpoints
-curl https://choices-platform.vercel.app/api/health
-
-# Check database connection
-node scripts/verify-remote-database.js
-
-# Check RLS policies
-node scripts/test-rls-trust-system.js
+OLLAMA_API_URL=http://localhost:11434
+HUGGING_FACE_API_KEY=your_hugging_face_api_key
 ```
 
-### **Performance Testing**
-```bash
-# Run performance tests
-npm run test:performance
-
-# Check bundle size
-npm run analyze
-
-# Verify PWA functionality
-npm run test:pwa
-```
-
-## 🛡️ **SECURITY DEPLOYMENT**
-
-### **Security Checklist**
-- [ ] HTTPS enabled
-- [ ] Security headers configured
-- [ ] CORS policies set
-- [ ] Rate limiting enabled
-- [ ] Input validation active
-- [ ] SQL injection protection
-- [ ] XSS protection enabled
-
-### **Authentication Setup**
-- [ ] WebAuthn configured
-- [ ] Social login enabled
-- [ ] Trust tier system active
-- [ ] Anonymous access configured
-- [ ] Session management working
-
-## 📈 **MONITORING & OBSERVABILITY**
-
-### **Performance Monitoring**
-- **Vercel Analytics**: Frontend performance
-- **Supabase Monitoring**: Database performance
-- **Custom Metrics**: Application-specific metrics
-- **Error Tracking**: Comprehensive error monitoring
-
-### **Health Monitoring**
-- **API Health**: Endpoint availability
-- **Database Health**: Connection status
-- **AI Services**: Analytics service status
-- **User Experience**: Engagement metrics
-
-## 🔄 **CONTINUOUS DEPLOYMENT**
-
-### **GitHub Actions**
-```yaml
-# Automated deployment on push to main
-name: Deploy to Production
-on:
-  push:
-    branches: [main]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: npm ci
-      - run: npm run build
-      - run: npx vercel --prod
-```
-
-### **Database Migrations**
-```bash
-# Run database migrations
-node scripts/deploy-database-functions.js
-
-# Verify migrations
-node scripts/check-existing-functions.js
-```
-
-## 🚨 **TROUBLESHOOTING**
-
-### **Common Issues**
-1. **Environment Variables**: Check all required variables are set
-2. **Database Connection**: Verify Supabase configuration
-3. **API Endpoints**: Check Next.js server is running
-4. **Authentication**: Verify WebAuthn configuration
-5. **Analytics**: Check AI service availability
-
-### **Debug Commands**
-```bash
-# Check environment
-node scripts/check-environment.js
-
-# Test database
-node scripts/verify-remote-database.js
-
-# Test APIs
-node scripts/test-api-endpoints.js
-
-# Check logs
-vercel logs
-```
-
-## 📊 **DEPLOYMENT METRICS**
-
-### **Performance Targets**
-- **Page Load Time**: < 2 seconds
-- **API Response Time**: < 500ms
-- **Database Query Time**: < 100ms
-- **Uptime**: > 99.9%
-
-### **Security Targets**
-- **HTTPS**: 100% encrypted traffic
-- **Authentication**: Secure user management
-- **Data Protection**: GDPR compliant
-- **Audit Logging**: Complete activity tracking
-
-## 🎯 **DEPLOYMENT BEST PRACTICES**
-
-### **✅ Security**
-- Use environment variables for secrets
-- Enable HTTPS everywhere
-- Implement proper CORS policies
-- Use rate limiting
-- Validate all inputs
-
-### **✅ Performance**
-- Optimize bundle size
-- Use CDN for static assets
-- Implement caching strategies
-- Monitor performance metrics
-- Use lazy loading
-
-### **✅ Reliability**
-- Implement health checks
-- Use error boundaries
-- Monitor system health
-- Implement retry logic
-- Use circuit breakers
-
-## 🚀 **SCALING DEPLOYMENT**
-
-### **Horizontal Scaling**
-- **Multiple Regions**: Global deployment
-- **Load Balancing**: Traffic distribution
-- **Database Replication**: Data redundancy
-- **CDN Distribution**: Content delivery
-
-### **Vertical Scaling**
-- **Resource Optimization**: Efficient resource usage
-- **Database Tuning**: Query optimization
-- **Caching Strategy**: Performance optimization
-- **Monitoring**: Resource tracking
+### **Vercel Environment Setup**
+1. **Go to Vercel Dashboard**
+2. **Select your project**
+3. **Go to Settings > Environment Variables**
+4. **Add all required variables**
+5. **Set environment scope** (Production, Preview, Development)
 
 ---
 
-*Deployment Guide Updated: October 26, 2025*  
-*Status: PRODUCTION READY*  
-*Infrastructure: ENTERPRISE-GRADE*
+## 🗄️ **Database Setup**
+
+### **Supabase Project Setup**
+1. **Create Supabase Project**
+   - Go to [supabase.com](https://supabase.com)
+   - Create new project
+   - Choose region closest to your users
+
+2. **Configure Database**
+   ```bash
+   # Install Supabase CLI
+   npm install -g supabase
+   
+   # Login to Supabase
+   supabase login
+   
+   # Link to your project
+   supabase link --project-ref your-project-ref
+   
+   # Run migrations
+   supabase db push
+   ```
+
+3. **Set up Authentication**
+   - Enable WebAuthn in Supabase dashboard
+   - Configure OAuth providers (Google, GitHub)
+   - Set up email templates
+
+4. **Configure Row Level Security**
+   - Enable RLS on all tables
+   - Set up policies for user data access
+   - Configure admin permissions
+
+### **Database Schema**
+```sql
+-- Core Tables
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  trust_tier TEXT DEFAULT 'new',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE polls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  options JSONB NOT NULL,
+  privacy_level TEXT DEFAULT 'public',
+  poll_type TEXT DEFAULT 'single_choice',
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  status TEXT DEFAULT 'active'
+);
+
+CREATE TABLE votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  poll_id UUID REFERENCES polls(id),
+  user_id UUID REFERENCES users(id),
+  option_id TEXT NOT NULL,
+  anonymous BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+---
+
+## 🌐 **Domain Configuration**
+
+### **Custom Domain Setup**
+1. **Add Domain in Vercel**
+   - Go to Project Settings > Domains
+   - Add your custom domain
+   - Configure DNS records
+
+2. **DNS Configuration**
+   ```
+   Type: CNAME
+   Name: www
+   Value: cname.vercel-dns.com
+   
+   Type: A
+   Name: @
+   Value: 76.76.19.61
+   ```
+
+3. **SSL Certificate**
+   - Automatically provisioned by Vercel
+   - HTTPS redirect enabled by default
+   - HSTS headers configured
+
+### **Environment-Specific URLs**
+- **Production**: `https://choices-platform.vercel.app`
+- **Preview**: `https://choices-platform-git-branch.vercel.app`
+- **Development**: `http://localhost:3000`
+
+---
+
+## 🔄 **Deployment Process**
+
+### **Automatic Deployment**
+```bash
+# Push to main branch triggers production deployment
+git add .
+git commit -m "Deploy new feature"
+git push origin main
+```
+
+### **Manual Deployment**
+```bash
+# Deploy to preview
+npx vercel
+
+# Deploy to production
+npx vercel --prod
+
+# Deploy specific branch
+npx vercel --prod --target production
+```
+
+### **Deployment Pipeline**
+1. **Code Push** → GitHub webhook
+2. **Vercel Build** → Next.js build process
+3. **Environment Setup** → Environment variables
+4. **Database Migration** → Supabase schema updates
+5. **Health Check** → Verify deployment success
+6. **DNS Update** → Route traffic to new deployment
+
+---
+
+## 📊 **Monitoring & Analytics**
+
+### **Vercel Analytics**
+- **Performance Metrics**: Core Web Vitals
+- **Usage Analytics**: Page views, user sessions
+- **Error Tracking**: JavaScript errors
+- **Real User Monitoring**: Actual user experience
+
+### **Supabase Monitoring**
+- **Database Performance**: Query performance, connection pools
+- **Authentication Metrics**: Login success rates, user growth
+- **API Usage**: Request volume, response times
+- **Storage Usage**: File uploads, bandwidth
+
+### **Custom Monitoring**
+```bash
+# Health check endpoint
+curl https://your-domain.vercel.app/api/health
+
+# Expected response
+{
+  "status": "healthy",
+  "timestamp": "2025-10-27T12:00:00Z",
+  "services": {
+    "database": "healthy",
+    "ai_services": "healthy",
+    "auth": "healthy"
+  }
+}
+```
+
+---
+
+## 🔐 **Security Configuration**
+
+### **Vercel Security**
+- **HTTPS Only**: All traffic encrypted
+- **Security Headers**: CSP, HSTS, X-Frame-Options
+- **DDoS Protection**: Built-in protection
+- **Edge Security**: Global security policies
+
+### **Supabase Security**
+- **Row Level Security**: Database-level access control
+- **API Keys**: Secure key management
+- **Authentication**: WebAuthn, OAuth, email/password
+- **Data Encryption**: All data encrypted at rest
+
+### **Application Security**
+```javascript
+// Security headers in next.config.js
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on'
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload'
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN'
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff'
+  }
+];
+```
+
+---
+
+## 🚨 **Troubleshooting**
+
+### **Common Deployment Issues**
+
+#### **Build Failures**
+```bash
+# Check build logs
+vercel logs your-deployment-url
+
+# Common fixes
+npm run type-check  # Fix TypeScript errors
+npm run lint:fix    # Fix linting issues
+npm run build       # Test build locally
+```
+
+#### **Environment Variable Issues**
+```bash
+# Verify environment variables
+vercel env ls
+
+# Add missing variables
+vercel env add VARIABLE_NAME
+```
+
+#### **Database Connection Issues**
+```bash
+# Test database connection
+curl -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+     "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/users?select=count"
+
+# Check Supabase status
+curl https://status.supabase.com/api/v2/status.json
+```
+
+### **Performance Issues**
+- **Check Vercel Analytics**: Identify slow pages
+- **Optimize Images**: Use Next.js Image component
+- **Database Queries**: Check query performance in Supabase
+- **Bundle Size**: Analyze bundle with `npm run build`
+
+---
+
+## 🔄 **Rollback Strategy**
+
+### **Automatic Rollback**
+- **Vercel**: Automatic rollback on deployment failure
+- **Health Checks**: Rollback if health checks fail
+- **Error Thresholds**: Rollback if error rate exceeds threshold
+
+### **Manual Rollback**
+```bash
+# Rollback to previous deployment
+vercel rollback
+
+# Rollback to specific deployment
+vercel rollback deployment-url
+```
+
+### **Database Rollback**
+```bash
+# Rollback database migrations
+supabase db reset
+
+# Restore from backup
+supabase db restore backup-file.sql
+```
+
+---
+
+## 📈 **Scaling Strategy**
+
+### **Vercel Scaling**
+- **Automatic Scaling**: Handles traffic spikes
+- **Edge Functions**: Global edge computing
+- **CDN**: Global content delivery
+- **Bandwidth**: Unlimited bandwidth
+
+### **Supabase Scaling**
+- **Database Scaling**: Automatic scaling
+- **Connection Pooling**: Efficient connections
+- **Caching**: Query result caching
+- **Storage**: Unlimited storage
+
+### **Performance Optimization**
+- **Code Splitting**: Dynamic imports
+- **Image Optimization**: Next.js Image component
+- **Caching**: Multi-level caching strategy
+- **CDN**: Global content delivery
+
+---
+
+## 🎯 **Best Practices**
+
+### **Deployment Best Practices**
+- **Test Locally**: Always test before deploying
+- **Environment Parity**: Keep environments consistent
+- **Incremental Deployments**: Deploy small changes
+- **Monitor Deployments**: Watch for issues
+
+### **Security Best Practices**
+- **Environment Variables**: Never commit secrets
+- **HTTPS Only**: Always use HTTPS
+- **Regular Updates**: Keep dependencies updated
+- **Security Headers**: Configure proper headers
+
+### **Performance Best Practices**
+- **Optimize Images**: Use appropriate formats
+- **Minimize Bundle**: Remove unused code
+- **Database Queries**: Optimize queries
+- **Caching**: Implement proper caching
+
+---
+
+## 📞 **Support**
+
+### **Vercel Support**
+- **Documentation**: [vercel.com/docs](https://vercel.com/docs)
+- **Community**: [github.com/vercel/vercel/discussions](https://github.com/vercel/vercel/discussions)
+- **Status Page**: [vercel-status.com](https://vercel-status.com)
+
+### **Supabase Support**
+- **Documentation**: [supabase.com/docs](https://supabase.com/docs)
+- **Community**: [github.com/supabase/supabase/discussions](https://github.com/supabase/supabase/discussions)
+- **Status Page**: [status.supabase.com](https://status.supabase.com)
+
+---
+
+**Deployment Guide Version**: 1.0.0  
+**Last Updated**: October 27, 2025  
+**Status**: ✅ Production Ready
+
+---
+
+*This deployment guide provides everything you need to deploy the Choices platform to production.*

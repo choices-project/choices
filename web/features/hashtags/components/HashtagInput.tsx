@@ -226,7 +226,7 @@ export function HashtagInput({
                   {suggestion.reason} • {suggestion.hashtag.usage_count} uses
                 </span>
                 <span className="text-xs text-gray-400">
-                  {Math.round(suggestion.confidence_score * 100)}% match
+                  {Math.round((suggestion.confidence_score || 0) * 100)}% match
                 </span>
               </div>
             </div>

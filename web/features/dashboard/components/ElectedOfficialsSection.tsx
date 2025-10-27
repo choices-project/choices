@@ -92,7 +92,7 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
   };
 
   return (
-    <Card data-testid={T.dashboard.electedOfficials}>
+    <Card data-testid="elected-officials-section">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
@@ -111,7 +111,7 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
                 <div 
                   key={official.id} 
                   className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
-                  data-testid={T.dashboard.officialCard(official.id)}
+                  data-testid={`official-card-${official.id}`}
                 >
                   {/* Header */}
                   <div className="p-4">
@@ -126,10 +126,10 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-gray-900 text-sm" data-testid={T.dashboard.officialName(official.id)}>
+                            <h3 className="font-semibold text-gray-900 text-sm" data-testid={`official-name-${official.id}`}>
                               {official.name}
                             </h3>
-                            <p className="text-xs text-gray-600 mt-1" data-testid={T.dashboard.officialTitle(official.id)}>
+                            <p className="text-xs text-gray-600 mt-1" data-testid={`official-title-${official.id}`}>
                               {official.title}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
@@ -175,7 +175,7 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
                               variant="outline"
                               onClick={() => handleContact('email', official.contact.email!)}
                               className="h-7 px-3 text-xs"
-                              data-testid={T.dashboard.officialEmail(official.id)}
+                              data-testid={`official-email-${official.id}`}
                             >
                               Email
                             </Button>
@@ -193,7 +193,7 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
                               variant="outline"
                               onClick={() => handleContact('phone', official.contact.phone!)}
                               className="h-7 px-3 text-xs"
-                              data-testid={T.dashboard.officialPhone(official.id)}
+                              data-testid={`official-phone-${official.id}`}
                             >
                               Call
                             </Button>

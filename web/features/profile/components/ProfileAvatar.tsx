@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 import { useProfileAvatar } from '../hooks/use-profile';
-import type { ProfileAvatarProps } from '../types';
+import type { ProfileAvatarProps } from '../index';
 
 export default function ProfileAvatar({
   avatar_url,

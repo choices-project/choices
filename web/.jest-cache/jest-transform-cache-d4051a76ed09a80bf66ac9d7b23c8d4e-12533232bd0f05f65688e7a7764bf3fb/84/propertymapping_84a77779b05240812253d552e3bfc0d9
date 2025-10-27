@@ -1,0 +1,18 @@
+d2359945c10fbca8f23587925548fa7b
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "mapLegacyToUnified", {
+    enumerable: true,
+    get: function() {
+        return mapLegacyToUnified;
+    }
+});
+function mapLegacyToUnified(obj, mapping) {
+    const out = {};
+    for (const [k, v] of Object.entries(obj))out[mapping[k] ?? k] = v;
+    return out;
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9saWIvdXRpbHMvcHJvcGVydHktbWFwcGluZy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gbWFwTGVnYWN5VG9VbmlmaWVkPFQgZXh0ZW5kcyBSZWNvcmQ8c3RyaW5nLCBhbnk+PihcbiAgb2JqOiBULFxuICBtYXBwaW5nOiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmc+XG4pIHtcbiAgY29uc3Qgb3V0OiBhbnkgPSB7fTtcbiAgZm9yIChjb25zdCBbaywgdl0gb2YgT2JqZWN0LmVudHJpZXMob2JqKSkgb3V0W21hcHBpbmdba10gPz8ga10gPSB2O1xuICByZXR1cm4gb3V0O1xufSJdLCJuYW1lcyI6WyJtYXBMZWdhY3lUb1VuaWZpZWQiLCJvYmoiLCJtYXBwaW5nIiwib3V0IiwiayIsInYiLCJPYmplY3QiLCJlbnRyaWVzIl0sIm1hcHBpbmdzIjoiOzs7OytCQUFnQkE7OztlQUFBQTs7O0FBQVQsU0FBU0EsbUJBQ2RDLEdBQU0sRUFDTkMsT0FBK0I7SUFFL0IsTUFBTUMsTUFBVyxDQUFDO0lBQ2xCLEtBQUssTUFBTSxDQUFDQyxHQUFHQyxFQUFFLElBQUlDLE9BQU9DLE9BQU8sQ0FBQ04sS0FBTUUsR0FBRyxDQUFDRCxPQUFPLENBQUNFLEVBQUUsSUFBSUEsRUFBRSxHQUFHQztJQUNqRSxPQUFPRjtBQUNUIn0=

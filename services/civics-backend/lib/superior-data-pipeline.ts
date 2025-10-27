@@ -365,8 +365,19 @@ export class SuperiorDataPipeline {
     const startTime = Date.now();
     
     try {
-      // TODO: Implement actual federal representative fetching
-      const representatives = []; // Placeholder
+      // Fetch federal representatives from Congress.gov API
+      const representatives = await this.fetchFederalRepresentatives(limit);
+      console.log(`📊 Found ${representatives.length} federal representatives to process`);
+      
+      if (representatives.length === 0) {
+        console.log('⚠️ No federal representatives found to process');
+        return {
+          totalProcessed: 0,
+          successful: 0,
+          failed: 0,
+          processingTime: Date.now() - startTime
+        };
+      }
       
       const results = await this.processRepresentatives(representatives);
       
@@ -405,8 +416,19 @@ export class SuperiorDataPipeline {
     const startTime = Date.now();
     
     try {
-      // TODO: Implement actual state representative fetching
-      const representatives = []; // Placeholder
+      // Fetch state representatives from OpenStates
+      const representatives = await this.fetchStateRepresentatives(limit, state);
+      console.log(`📊 Found ${representatives.length} state representatives to process`);
+      
+      if (representatives.length === 0) {
+        console.log('⚠️ No state representatives found to process');
+        return {
+          totalProcessed: 0,
+          successful: 0,
+          failed: 0,
+          processingTime: Date.now() - startTime
+        };
+      }
       
       const results = await this.processRepresentatives(representatives);
       
@@ -495,6 +517,26 @@ export class SuperiorDataPipeline {
   }> {
     // Process representatives through the superior data pipeline
     
+    console.log(`🔄 Processing ${representatives.length} representatives...`);
+    
+    // Debug: Check the structure of incoming data
+    if (representatives.length > 0) {
+      console.log(`🔍 Sample representative data:`, {
+        name: representatives[0].name,
+        state: representatives[0].state,
+        level: representatives[0].level,
+        office: representatives[0].office,
+        id: representatives[0].id,
+        source: representatives[0].source
+      });
+      
+      // Check if name is undefined
+      if (!representatives[0].name) {
+        console.log(`❌ WARNING: First representative has undefined name!`);
+        console.log(`Full representative object:`, JSON.stringify(representatives[0], null, 2));
+      }
+    }
+    
     const startTime = new Date();
     const results = {
       totalProcessed: 0,
@@ -549,13 +591,32 @@ export class SuperiorDataPipeline {
         if (this.config.enableOpenStatesPeople) {
           try {
             // This will only work server-side (in API routes)
-            const openStatesData = await this.openStatesIntegration.getCurrentRepresentatives(rep.state);
+            // Convert state name to state code for OpenStates integration
+            const stateCodeMap = {
+              'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+              'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+              'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+              'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+              'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+              'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+              'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+              'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+              'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+              'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+              'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+              'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+              'Wisconsin': 'WI', 'Wyoming': 'WY'
+            };
+            
+            const stateCode = stateCodeMap[rep.state as keyof typeof stateCodeMap] || rep.state;
+            const openStatesData = await this.openStatesIntegration.getCurrentRepresentatives(stateCode);
             if (openStatesData && openStatesData.length > 0) {
               secondaryData = {
                 secondaryData: {
                   openStatesPerson: openStatesData.find(person => 
-                    person.name.toLowerCase().includes(rep.name.toLowerCase()) ||
-                    rep.name.toLowerCase().includes(person.name.toLowerCase())
+                    person.name && rep.name &&
+                    (person.name.toLowerCase().includes(rep.name.toLowerCase()) ||
+                    rep.name.toLowerCase().includes(person.name.toLowerCase()))
                   )
                 }
               };
@@ -2213,6 +2274,223 @@ export class SuperiorDataPipeline {
         crosswalkEntries: []
       };
     }
+  }
+
+  /**
+   * Fetch federal representatives from Congress.gov API
+   */
+  private async fetchFederalRepresentatives(limit: number): Promise<any[]> {
+    try {
+      if (!this.config.enableCongressGov || !process.env.CONGRESS_GOV_API_KEY) {
+        console.log('⚠️ Congress.gov API not enabled or API key not configured');
+        return [];
+      }
+
+      const apiKey = process.env.CONGRESS_GOV_API_KEY;
+      const url = `https://api.congress.gov/v3/member?limit=${limit}&api_key=${apiKey}`;
+      
+      console.log(`🔍 Fetching federal representatives from Congress.gov...`);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Congress.gov API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const members = data.members || [];
+      
+      console.log(`📊 Retrieved ${members.length} federal representatives from Congress.gov`);
+      
+      // Transform to our format
+      return members.map((member: any) => {
+        // Parse the name from "Last, First" format
+        let firstName = '';
+        let lastName = '';
+        let fullName = member.name || 'Unknown Name';
+        
+        if (member.name && member.name.includes(',')) {
+          const nameParts = member.name.split(',');
+          lastName = nameParts[0]?.trim() || '';
+          firstName = nameParts[1]?.trim() || '';
+          fullName = `${firstName} ${lastName}`.trim();
+        }
+        
+        return {
+          id: member.bioguideId,
+          name: fullName,
+          firstName: firstName,
+          lastName: lastName,
+          office: member.chamber === 'House of Representatives' ? 'Representative' : 'Senator',
+          level: 'federal',
+          state: member.state,
+          district: member.district,
+          party: member.partyName,
+          chamber: member.chamber,
+          bioguideId: member.bioguideId,
+          source: 'congress-gov'
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching federal representatives:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch state representatives from OpenStates
+   */
+  private async fetchStateRepresentatives(limit: number, state?: string): Promise<any[]> {
+    try {
+      if (!this.config.enableOpenStatesPeople) {
+        console.log('⚠️ OpenStates People integration not enabled');
+        return [];
+      }
+
+      console.log(`🔍 Fetching state representatives from OpenStates (limit: ${limit})...`);
+      console.log(`⚠️ Note: OpenStates integration will process all representatives first, then limit to ${limit}`);
+      
+      // Use OpenStates integration to get representatives
+      const openStatesIntegration = new OpenStatesIntegration({
+        dataPath: this.config.openStatesPeoplePath || './data/openstates-people/data',
+        currentDate: new Date()
+      });
+      
+      if (state) {
+        // Convert state name to state code for OpenStates integration
+        const stateCodeMap = {
+          'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+          'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+          'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+          'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+          'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+          'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+          'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+          'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+          'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+          'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+          'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+          'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+          'Wisconsin': 'WI', 'Wyoming': 'WY'
+        };
+        
+        const stateCode = stateCodeMap[state as keyof typeof stateCodeMap] || state;
+        console.log(`🔍 Converting state "${state}" to code "${stateCode}"`);
+        
+        // Fetch for specific state with limit
+        const representatives = await openStatesIntegration.getCurrentRepresentatives(stateCode, limit);
+        console.log(`📊 Retrieved ${representatives.length} representatives for ${state} from OpenStates (limited to ${limit})`);
+        
+        // Transform to our format (already limited by OpenStates integration)
+        const transformed = representatives.map((rep: any, index: number) => {
+          console.log(`🔍 Processing rep ${index + 1}:`, {
+            id: rep.id,
+            name: rep.name,
+            given_name: rep.given_name,
+            family_name: rep.family_name,
+            party: rep.party,
+            roles: rep.roles?.length || 0
+          });
+          
+          // Construct name from given_name and family_name since OpenStates doesn't have a single name field
+          const fullName = rep.given_name && rep.family_name 
+            ? `${rep.given_name} ${rep.family_name}` 
+            : rep.name || 'Unknown Name';
+            
+          const transformedRep = {
+            id: rep.id,
+            name: fullName,
+            firstName: rep.given_name,
+            lastName: rep.family_name,
+            office: this.getOfficeFromRoles(rep.roles),
+            level: 'state',
+            state: state,
+            district: this.getDistrictFromRoles(rep.roles),
+            party: rep.party,
+            openstates_id: rep.id,
+            source: 'open-states'
+          };
+          
+          console.log(`🔍 Transformed rep ${index + 1}:`, {
+            name: transformedRep.name,
+            state: transformedRep.state,
+            office: transformedRep.office,
+            level: transformedRep.level
+          });
+          
+          return transformedRep;
+        });
+        
+        console.log(`📊 Transformed ${transformed.length} representatives for processing`);
+        return transformed;
+      } else {
+        // Fetch for all states (limited)
+        const allRepresentatives: any[] = [];
+        const states = ['CA', 'NY', 'TX', 'FL', 'IL']; // Sample states for testing
+        
+        for (const stateCode of states) {
+          if (allRepresentatives.length >= limit) break;
+          
+          const stateReps = await openStatesIntegration.getCurrentRepresentatives(stateCode);
+          const remaining = limit - allRepresentatives.length;
+          const limitedReps = stateReps.slice(0, remaining);
+          
+          const transformedReps = limitedReps.map((rep: any) => {
+            // Construct name from given_name and family_name since OpenStates doesn't have a single name field
+            const fullName = rep.given_name && rep.family_name 
+              ? `${rep.given_name} ${rep.family_name}` 
+              : rep.name || `${rep.given_name || ''} ${rep.family_name || ''}`.trim() || 'Unknown Name';
+              
+            return {
+              id: rep.id,
+              name: fullName,
+              firstName: rep.given_name,
+              lastName: rep.family_name,
+              office: this.getOfficeFromRoles(rep.roles),
+              level: 'state',
+              state: stateCode,
+              district: this.getDistrictFromRoles(rep.roles),
+              party: rep.party,
+              openstates_id: rep.id,
+              source: 'open-states'
+            };
+          });
+          
+          allRepresentatives.push(...transformedReps);
+        }
+        
+        console.log(`📊 Retrieved ${allRepresentatives.length} state representatives from OpenStates`);
+        return allRepresentatives;
+      }
+    } catch (error) {
+      console.error('Error fetching state representatives:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Extract office from OpenStates roles
+   */
+  private getOfficeFromRoles(roles: any[]): string {
+    if (!roles || roles.length === 0) return 'Representative';
+    
+    const currentRole = roles.find(role => role.current === true);
+    if (currentRole) {
+      if (currentRole.type === 'upper') return 'Senator';
+      if (currentRole.type === 'lower') return 'Representative';
+      if (currentRole.type === 'executive') return 'Governor';
+    }
+    
+    return 'Representative';
+  }
+
+  /**
+   * Extract district from OpenStates roles
+   */
+  private getDistrictFromRoles(roles: any[]): string | null {
+    if (!roles || roles.length === 0) return null;
+    
+    const currentRole = roles.find(role => role.current === true);
+    return currentRole?.district || null;
   }
 }
 

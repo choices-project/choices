@@ -1,0 +1,31 @@
+{
+  "cursor.ai.enabled": true,
+  "cursor.ai.model": "claude-4.5-sonnet",
+  "cursor.ai.contextLength": 200000,
+  "cursor.ai.includeCodeContext": true,
+  "cursor.ai.includeFileContext": true,
+  "cursor.ai.includeGitContext": true,
+  "cursor.ai.includeDocsContext": true,
+  "cursor.ai.customInstructions": "You are working on the Choices platform - a democratic engagement platform focused on civic participation, polling, and representative engagement. Always test core functionality (user journey, admin journey, civics backend) before considering work complete. Use npm run auto-fix first, then npm run test:both-journeys-complete. Focus on security, privacy, and democratic engagement.",
+  "cursor.ai.excludePatterns": [
+    "node_modules/**",
+    ".next/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "*.log"
+  ],
+  "cursor.ai.includePatterns": [
+    "web/**/*.{ts,tsx,js,jsx}",
+    "services/**/*.{ts,js}",
+    "scripts/**/*.{ts,js}",
+    "docs/**/*.md",
+    ".github/**/*.yml"
+  ],
+  "cursor.ai.promptTemplates": {
+    "choices-platform": "You are working on the Choices platform. Focus on democratic engagement, civic participation, and polling. Always test core functionality.",
+    "security-review": "Review this code for security issues, especially authentication, RLS policies, and data protection.",
+    "civics-backend": "This is civics backend code. Focus on representative lookup, data ingestion, and geographic services.",
+    "polling-system": "This is polling system code. Focus on voting, results, sharing, and hashtag integration."
+  }
+}

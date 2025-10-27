@@ -127,7 +127,7 @@ export default class OpenStatesIntegration {
   /**
    * Process state data and return only current representatives with comprehensive data
    */
-  async processStateData(stateCode: string): Promise<OpenStatesPerson[]> {
+  async processStateData(stateCode: string, limit?: number): Promise<OpenStatesPerson[]> {
     logger.info(`🔍 Processing OpenStates People Database for ${stateCode}...`);
     logger.info(`   System Date: ${this.currentDate.toISOString()}`);
     logger.info(`   Data Path: ${this.dataPath}`);
@@ -197,13 +197,17 @@ export default class OpenStatesIntegration {
         logger.info(`   No legislature directory found at: ${legislaturePath}`);
       }
       
-      // Process committee data if available
-      const committeePath = path.join(statePath, 'committees');
-      if (fs.existsSync(committeePath)) {
-        logger.info(`   📋 Processing committee data for ${stateCode}...`);
-        const committeeFiles = fs.readdirSync(committeePath);
-        logger.info(`   📋 Found ${committeeFiles.length} committee files`);
-        logger.info(`   📋 Current people count before committee processing: ${currentPeople.length}`);
+      // Skip committee processing for small limits to improve performance
+      if (limit && limit > 0 && limit < 50) {
+        logger.info(`   ⚡ Skipping committee processing for efficiency (limit: ${limit})`);
+      } else {
+        // Process committee data if available
+        const committeePath = path.join(statePath, 'committees');
+        if (fs.existsSync(committeePath)) {
+          logger.info(`   📋 Processing committee data for ${stateCode}...`);
+          const committeeFiles = fs.readdirSync(committeePath);
+          logger.info(`   📋 Found ${committeeFiles.length} committee files`);
+          logger.info(`   📋 Current people count before committee processing: ${currentPeople.length}`);
         
         // Process committee files to extract member information
         for (const file of committeeFiles) {
@@ -265,8 +269,9 @@ export default class OpenStatesIntegration {
             }
           }
         }
-      } else {
-        logger.info(`   📋 No committee directory found at: ${committeePath}`);
+        } else {
+          logger.info(`   📋 No committee directory found at: ${committeePath}`);
+        }
       }
       
       logger.info(`📋 Committee processing completed for ${stateCode}`);
@@ -280,6 +285,14 @@ export default class OpenStatesIntegration {
       }
       
       logger.info(`✅ Processed ${enhancedPeople.length} current representatives for ${stateCode}`);
+      
+      // Apply limit if specified
+      if (limit && limit > 0) {
+        const limitedPeople = enhancedPeople.slice(0, limit);
+        logger.info(`🔢 Limited to ${limitedPeople.length} representatives (requested: ${limit})`);
+        return limitedPeople;
+      }
+      
       return enhancedPeople;
     } catch (error) {
       console.error('❌ Error in OpenStates People Database integration:', error);
@@ -407,8 +420,8 @@ export default class OpenStatesIntegration {
   /**
    * Get all current representatives for a state
    */
-  async getCurrentRepresentatives(stateCode: string): Promise<OpenStatesPerson[]> {
-    return this.processStateData(stateCode);
+  async getCurrentRepresentatives(stateCode: string, limit?: number): Promise<OpenStatesPerson[]> {
+    return this.processStateData(stateCode, limit);
   }
 
   /**

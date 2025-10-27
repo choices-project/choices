@@ -567,9 +567,9 @@ export class VoteEngine {
         minOptions: 2,
         resultType: 'highest_votes'
       },
-      'single-choice': {
-        name: 'Single Choice Voting',
-        allowsMultipleSelections: false,
+      'multiple': {
+        name: 'Multiple Choice Voting',
+        allowsMultipleSelections: true,
         minOptions: 2,
         resultType: 'highest_votes'
       },
@@ -580,12 +580,6 @@ export class VoteEngine {
         resultType: 'highest_votes'
       },
       'ranked': {
-        name: 'Ranked Choice Voting',
-        allowsMultipleSelections: false,
-        minOptions: 2,
-        resultType: 'instant_runoff'
-      },
-      'ranked-choice': {
         name: 'Ranked Choice Voting',
         allowsMultipleSelections: false,
         minOptions: 2,

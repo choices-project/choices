@@ -15,36 +15,21 @@
  * Provides clean API for consuming feed components and services
  */
 
-// Types
-export type {
+// Types - using civics types
+export type { 
   FeedItemData,
   UserPreferences,
   EngagementData,
   TouchPoint,
-  TouchState,
-  HashtagUsage,
-  TrendingHashtag,
-  HashtagAnalytics as FeedHashtagAnalytics,
-  UserInterests,
-  PersonalizedPollFeed,
-  PollRecommendation,
-  InterestMatch,
-  SocialFeedProps,
-  EnhancedSocialFeedProps,
-  FeedItemProps,
-  InfiniteScrollProps,
-  FeedApiResponse,
-  HashtagApiResponse,
-  GenerateFeedOptions,
-  FeedServiceConfig,
-  
-  // Hashtag integration types
+  TouchState
+} from '@/features/civics/lib/types/civics-types';
+
+// Local types from components
+export type { 
   FeedHashtagIntegration as FeedHashtagIntegrationType,
-  HashtagContent,
-  HashtagFeed,
   HashtagFilter,
   HashtagSort
-} from './types';
+} from './components/FeedHashtagIntegration';
 
 // Lib utilities
 export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/TrendingHashtags';

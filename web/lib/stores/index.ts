@@ -1,4 +1,21 @@
-export { useUserStore } from './userStore';
+export { 
+  useUserStore,
+  useUserCurrentAddress,
+  useUserCurrentState,
+  useUserRepresentatives,
+  useUserShowAddressForm,
+  useUserNewAddress,
+  useUserAddressLoading,
+  useUserSavedSuccessfully,
+  useUserActions,
+  useUser,
+  useUserLoading,
+  useIsAuthenticated,
+  useUserProfileEditData,
+  useUserAvatarFile,
+  useUserAvatarPreview,
+  useUserIsUploadingAvatar
+} from './userStore';
 export { usePollsStore, usePollsActions } from './pollsStore';
 export { useHashtagStore, useHashtagActions, useHashtagStats } from './hashtagStoreMinimal';
 export { useProfileStore } from './profileStore';
@@ -43,6 +60,7 @@ export {
   usePerformanceActions
 } from './performanceStore';
 export { useAppStore } from './appStore';
+export { useNotificationStore } from './notificationStore';
 export { 
   usePollWizardStore,
   usePollWizardData,
@@ -81,11 +99,3 @@ export {
 } from './analyticsStore';
 export { usePWAStore } from './pwaStore';
 export { useHashtagModerationStore } from './hashtagModerationStore';
-
-// Additional exports for compatibility
-export { 
-  useUser, 
-  useUserActions, 
-  useUserLoading, 
-  useIsAuthenticated 
-} from './userStore';

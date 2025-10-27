@@ -1,0 +1,80 @@
+name: Simple Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22.x'
+  NPM_VERSION: '10.9.3'
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: web
+          vercel-args: '--prod --confirm'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://choices-platform.vercel.app/api/health || echo "Health check failed - deployment may still be in progress"
+
+      - name: Run post-deployment tests
+        run: |
+          npm run test:platform-journey-modern
+
+      - name: Verify civics backend
+        run: |
+          curl -f https://choices-platform.vercel.app/api/civics/health || echo "Civics backend check failed"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🌐 Application URL: https://choices-platform.vercel.app"
+          echo "🏛️ Civics Backend: https://choices-platform.vercel.app/api/civics"

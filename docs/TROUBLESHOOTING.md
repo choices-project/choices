@@ -1,216 +1,609 @@
-# 🔧 TROUBLESHOOTING GUIDE
+# 🔧 Troubleshooting Guide
 
-**Last Updated:** 2025-10-26  
-**Support Status:** COMPREHENSIVE SUPPORT  
-**Resolution Rate:** 95%+
+**Complete Troubleshooting Documentation for Choices Platform**
 
-## 🎯 **TROUBLESHOOTING OVERVIEW**
+---
 
-This guide helps resolve common issues with the Choices platform.
+## 🎯 **Overview**
 
-## 🚨 **COMMON ISSUES**
+This guide helps resolve common issues with the Choices platform, providing solutions for development, deployment, and production problems.
+
+**Last Updated**: October 27, 2025  
+**Status**: Production Ready  
+**Coverage**: Comprehensive Issue Resolution
+
+---
+
+## 🚨 **Common Issues**
 
 ### **Authentication Issues**
 
 #### **WebAuthn Not Working**
-```bash
-# Check browser compatibility
-navigator.credentials
+**Symptoms:**
+- WebAuthn registration fails
+- Authentication prompts don't appear
+- "Not supported" error messages
 
-# Verify HTTPS
-location.protocol === 'https:'
-
-# Check device support
-navigator.credentials.create
+**Diagnosis:**
+```javascript
+// Check browser compatibility
+console.log('WebAuthn supported:', !!navigator.credentials);
+console.log('HTTPS enabled:', location.protocol === 'https:');
+console.log('Platform authenticator:', await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
 ```
 
 **Solutions:**
-- Ensure HTTPS is enabled
-- Use supported browser
-- Check device compatibility
-- Clear browser cache
+1. **Enable HTTPS**: WebAuthn requires HTTPS in production
+2. **Browser Compatibility**: Use Chrome 67+, Firefox 60+, Safari 14+
+3. **Device Support**: Ensure device has biometric or security key
+4. **Fallback Options**: Implement email/password fallback
 
-#### **Login Failures**
-```bash
-# Check environment variables
-echo $NEXT_PUBLIC_SUPABASE_URL
-echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-# Test Supabase connection
-node scripts/verify-remote-database.js
+**Code Fix:**
+```typescript
+// Add fallback authentication
+const authenticateUser = async (method: 'webauthn' | 'password') => {
+  try {
+    if (method === 'webauthn') {
+      return await authenticateWithWebAuthn();
+    } else {
+      return await authenticateWithPassword();
+    }
+  } catch (error) {
+    console.error('Authentication failed:', error);
+    // Fallback to password authentication
+    return await authenticateWithPassword();
+  }
+};
 ```
 
+#### **Session Expiration Issues**
+**Symptoms:**
+- Users logged out unexpectedly
+- "Session expired" errors
+- Authentication loops
+
 **Solutions:**
-- Verify environment variables
-- Check Supabase configuration
-- Test database connection
-- Review authentication logs
+1. **Check Session Configuration**:
+```typescript
+// Verify session settings
+const sessionConfig = {
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const
+};
+```
+
+2. **Implement Session Refresh**:
+```typescript
+// Auto-refresh session
+const refreshSession = async () => {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error) {
+    // Redirect to login
+    window.location.href = '/auth';
+  }
+};
+
+// Set up periodic refresh
+setInterval(refreshSession, 30 * 60 * 1000); // Every 30 minutes
+```
 
 ### **Database Issues**
 
-#### **RLS Policies Not Working**
-```bash
-# Check RLS status
-node scripts/check-rls-policies.js
+#### **Connection Errors**
+**Symptoms:**
+- "Connection refused" errors
+- Database timeout errors
+- RLS policy errors
 
-# Test database functions
-node scripts/test-rls-trust-system.js
+**Diagnosis:**
+```bash
+# Check Supabase connection
+curl -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+     "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/users?select=count"
 ```
 
 **Solutions:**
-- Verify RLS policies are enabled
-- Check user permissions
-- Test database functions
-- Review policy configuration
-
-#### **Database Connection Errors**
+1. **Verify Environment Variables**:
 ```bash
-# Test connection
-node scripts/verify-remote-database.js
+# Check required variables
+echo $NEXT_PUBLIC_SUPABASE_URL
+echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
+echo $SUPABASE_SERVICE_ROLE_KEY
+```
 
-# Check environment
-node scripts/check-environment.js
+2. **Check RLS Policies**:
+```sql
+-- Verify RLS is enabled
+SELECT schemaname, tablename, rowsecurity 
+FROM pg_tables 
+WHERE schemaname = 'public';
+
+-- Check policies
+SELECT * FROM pg_policies WHERE schemaname = 'public';
+```
+
+3. **Connection Pooling**:
+```typescript
+// Configure connection pooling
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    db: {
+      schema: 'public'
+    },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
+);
+```
+
+#### **Query Performance Issues**
+**Symptoms:**
+- Slow page loads
+- Database timeout errors
+- High response times
+
+**Solutions:**
+1. **Add Database Indexes**:
+```sql
+-- Add indexes for common queries
+CREATE INDEX idx_polls_status ON polls(status);
+CREATE INDEX idx_polls_privacy ON polls(privacy_level);
+CREATE INDEX idx_votes_poll_user ON votes(poll_id, user_id);
+CREATE INDEX idx_users_trust_tier ON users(trust_tier);
+```
+
+2. **Optimize Queries**:
+```typescript
+// Use select to limit fields
+const { data } = await supabase
+  .from('polls')
+  .select('id, title, total_votes')
+  .eq('status', 'active')
+  .limit(20);
+
+// Use pagination
+const { data } = await supabase
+  .from('polls')
+  .select('*')
+  .range(offset, offset + limit - 1);
+```
+
+### **Build and Deployment Issues**
+
+#### **Build Failures**
+**Symptoms:**
+- TypeScript compilation errors
+- ESLint errors
+- Build timeout errors
+
+**Diagnosis:**
+```bash
+# Check TypeScript errors
+npm run type-check
+
+# Check ESLint errors
+npm run lint
+
+# Check build locally
+npm run build
 ```
 
 **Solutions:**
-- Verify Supabase URL and keys
-- Check network connectivity
-- Review firewall settings
-- Test from different location
+1. **Fix TypeScript Errors**:
+```typescript
+// Add proper type annotations
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  trust_tier: TrustTier;
+}
+
+// Use proper type assertions
+const user = data as User;
+```
+
+2. **Fix ESLint Errors**:
+```typescript
+// Fix unused variables
+const { data, error } = await supabase.from('users').select('*');
+if (error) {
+  console.error('Error:', error);
+  return;
+}
+// Use data...
+
+// Fix missing dependencies
+useEffect(() => {
+  fetchData();
+}, [dependency]); // Add missing dependency
+```
+
+3. **Environment Variable Issues**:
+```bash
+# Check environment variables
+vercel env ls
+
+# Add missing variables
+vercel env add VARIABLE_NAME
+```
+
+#### **Deployment Issues**
+**Symptoms:**
+- Vercel deployment failures
+- Environment variable errors
+- Runtime errors in production
+
+**Solutions:**
+1. **Check Vercel Logs**:
+```bash
+# View deployment logs
+vercel logs [deployment-url]
+
+# Check function logs
+vercel logs [function-url]
+```
+
+2. **Verify Environment Variables**:
+```bash
+# List environment variables
+vercel env ls
+
+# Add missing variables
+vercel env add NEXT_PUBLIC_SUPABASE_URL
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+3. **Check Build Output**:
+```bash
+# Build locally to test
+npm run build
+
+# Check build output
+ls -la .next/
+```
+
+### **Performance Issues**
+
+#### **Slow Page Loads**
+**Symptoms:**
+- Pages take long to load
+- Poor Core Web Vitals scores
+- High bounce rates
+
+**Diagnosis:**
+```bash
+# Check bundle size
+npm run build
+npx @next/bundle-analyzer
+
+# Check performance
+npm run lighthouse
+```
+
+**Solutions:**
+1. **Optimize Images**:
+```typescript
+// Use Next.js Image component
+import Image from 'next/image';
+
+<Image
+  src="/representative-photo.jpg"
+  alt="Representative Photo"
+  width={200}
+  height={200}
+  priority={false}
+/>
+```
+
+2. **Code Splitting**:
+```typescript
+// Dynamic imports for heavy components
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <div>Loading...</div>
+});
+```
+
+3. **Database Optimization**:
+```typescript
+// Use efficient queries
+const { data } = await supabase
+  .from('polls')
+  .select('id, title, total_votes')
+  .eq('status', 'active')
+  .order('total_votes', { ascending: false })
+  .limit(10);
+```
+
+#### **Memory Leaks**
+**Symptoms:**
+- Increasing memory usage
+- Browser slowdown
+- Crashes after extended use
+
+**Solutions:**
+1. **Clean Up Event Listeners**:
+```typescript
+useEffect(() => {
+  const handleResize = () => {
+    // Handle resize
+  };
+  
+  window.addEventListener('resize', handleResize);
+  
+  return () => {
+    window.removeEventListener('resize', handleResize);
+  };
+}, []);
+```
+
+2. **Clean Up Subscriptions**:
+```typescript
+useEffect(() => {
+  const subscription = supabase
+    .channel('polls')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'polls' }, 
+        (payload) => {
+          // Handle changes
+        })
+    .subscribe();
+    
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+```
 
 ### **API Issues**
 
-#### **API Endpoints Not Responding**
-```bash
-# Check server status
-curl https://choices-platform.vercel.app/api/health
-
-# Test specific endpoints
-node scripts/test-api-endpoints.js
-```
+#### **Rate Limiting**
+**Symptoms:**
+- "Rate limit exceeded" errors
+- API requests failing
+- Slow response times
 
 **Solutions:**
-- Verify Next.js server is running
-- Check API route configuration
-- Review error logs
-- Test endpoint functionality
-
-#### **CORS Errors**
-```bash
-# Check CORS configuration
-curl -H "Origin: https://choices-platform.vercel.app" \
-     -H "Access-Control-Request-Method: GET" \
-     -H "Access-Control-Request-Headers: X-Requested-With" \
-     -X OPTIONS \
-     https://choices-platform.vercel.app/api/health
+1. **Implement Client-Side Rate Limiting**:
+```typescript
+class RateLimiter {
+  private requests: Map<string, number[]> = new Map();
+  
+  canMakeRequest(key: string, limit: number, window: number): boolean {
+    const now = Date.now();
+    const requests = this.requests.get(key) || [];
+    
+    // Remove old requests
+    const validRequests = requests.filter(time => now - time < window);
+    
+    if (validRequests.length >= limit) {
+      return false;
+    }
+    
+    validRequests.push(now);
+    this.requests.set(key, validRequests);
+    return true;
+  }
+}
 ```
+
+2. **Add Retry Logic**:
+```typescript
+const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      
+      if (response.status === 429) {
+        // Rate limited, wait and retry
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        continue;
+      }
+      
+      throw new Error(`HTTP ${response.status}`);
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+    }
+  }
+};
+```
+
+#### **CORS Issues**
+**Symptoms:**
+- "CORS policy" errors
+- API requests blocked
+- Cross-origin issues
 
 **Solutions:**
-- Verify CORS configuration
-- Check allowed origins
-- Review preflight requests
-- Test cross-origin requests
-
-### **Analytics Issues**
-
-#### **AI Analytics Not Working**
-```bash
-# Check Colab service
-curl $COLAB_AI_ANALYTICS_URL/health
-
-# Test Hugging Face token
-node scripts/test-hugging-face-token.js
+1. **Configure CORS Headers**:
+```typescript
+// API route CORS configuration
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
 ```
 
-**Solutions:**
-- Verify Colab service is running
-- Check Hugging Face token
-- Review AI service configuration
-- Test analytics endpoints
-
-#### **Real-time Updates Not Working**
-```bash
-# Check Supabase real-time
-node scripts/test-realtime-connection.js
-
-# Verify WebSocket connection
-# Check browser developer tools
+2. **Next.js CORS Configuration**:
+```javascript
+// next.config.js
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
+      },
+    ];
+  },
+};
 ```
-
-**Solutions:**
-- Verify Supabase real-time is enabled
-- Check WebSocket connection
-- Review subscription configuration
-- Test real-time functionality
-
-## 🔍 **DEBUGGING TOOLS**
-
-### **Development Tools**
-```bash
-# Check system status
-node scripts/comprehensive-system-test.js
-
-# Validate documentation
-node scripts/validate-docs.js
-
-# Test complete system
-node scripts/test-complete-rls-trust-system.js
-```
-
-### **Browser Developer Tools**
-- **Console**: Check for JavaScript errors
-- **Network**: Monitor API requests
-- **Application**: Check storage and cookies
-- **Security**: Verify HTTPS and certificates
-
-### **Server Logs**
-```bash
-# Vercel logs
-vercel logs
-
-# Supabase logs
-# Check Supabase dashboard
-
-# Application logs
-# Check browser console
-```
-
-## 📞 **GETTING HELP**
-
-### **Support Channels**
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: Community support
-- **Email**: support@choices-platform.com
-- **Documentation**: Comprehensive guides
-
-### **Before Asking for Help**
-1. Check this troubleshooting guide
-2. Search existing issues
-3. Review documentation
-4. Test with minimal reproduction
-
-### **When Reporting Issues**
-- Include error messages
-- Provide steps to reproduce
-- Share relevant logs
-- Describe expected behavior
-
-## 🎯 **PREVENTION**
-
-### **Best Practices**
-- Keep dependencies updated
-- Use proper error handling
-- Implement comprehensive testing
-- Follow security guidelines
-
-### **Monitoring**
-- Set up health checks
-- Monitor performance metrics
-- Track error rates
-- Review user feedback
 
 ---
 
-*Troubleshooting Guide Updated: 2025-10-26*  
-*Status: COMPREHENSIVE SUPPORT*  
-*Resolution Rate: 95%+*
+## 🔍 **Debugging Tools**
+
+### **Browser DevTools**
+```javascript
+// Console debugging
+console.log('Debug info:', { user, poll, error });
+
+// Network debugging
+console.log('API Response:', response);
+
+// Performance debugging
+console.time('API Call');
+await fetchData();
+console.timeEnd('API Call');
+```
+
+### **Supabase Debugging**
+```typescript
+// Enable debug mode
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      debug: process.env.NODE_ENV === 'development'
+    }
+  }
+);
+
+// Check auth state
+const { data: { session } } = await supabase.auth.getSession();
+console.log('Current session:', session);
+```
+
+### **Vercel Debugging**
+```bash
+# Check deployment status
+vercel ls
+
+# View function logs
+vercel logs [function-url]
+
+# Check environment variables
+vercel env ls
+```
+
+---
+
+## 📊 **Monitoring and Alerts**
+
+### **Error Monitoring**
+```typescript
+// Error boundary for React components
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    // Send to error monitoring service
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong.</div>;
+    }
+    
+    return this.props.children;
+  }
+}
+```
+
+### **Performance Monitoring**
+```typescript
+// Performance monitoring
+const measurePerformance = (name: string, fn: () => Promise<any>) => {
+  return async (...args: any[]) => {
+    const start = performance.now();
+    try {
+      const result = await fn(...args);
+      const duration = performance.now() - start;
+      console.log(`${name} took ${duration}ms`);
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      console.error(`${name} failed after ${duration}ms:`, error);
+      throw error;
+    }
+  };
+};
+```
+
+---
+
+## 🆘 **Getting Help**
+
+### **Self-Service Resources**
+1. **Check Documentation**: Review relevant documentation
+2. **Search Issues**: Look for similar issues in GitHub
+3. **Check Logs**: Review application and server logs
+4. **Test Locally**: Reproduce issue locally
+
+### **Community Support**
+1. **GitHub Issues**: Report bugs and request features
+2. **GitHub Discussions**: Ask questions and get help
+3. **Documentation**: Comprehensive guides and references
+
+### **Emergency Contacts**
+- **Critical Issues**: Create GitHub issue with "urgent" label
+- **Security Issues**: Use private security reporting
+- **Production Issues**: Check Vercel status page
+
+---
+
+## 📋 **Issue Resolution Checklist**
+
+### **Before Reporting an Issue**
+- [ ] Check this troubleshooting guide
+- [ ] Search existing GitHub issues
+- [ ] Reproduce the issue locally
+- [ ] Check application logs
+- [ ] Verify environment variables
+- [ ] Test with different browsers/devices
+
+### **When Reporting an Issue**
+- [ ] Provide clear description
+- [ ] Include steps to reproduce
+- [ ] Share relevant logs/errors
+- [ ] Specify environment details
+- [ ] Include screenshots if applicable
+- [ ] Test with latest version
+
+---
+
+**Troubleshooting Guide Version**: 1.0.0  
+**Last Updated**: October 27, 2025  
+**Status**: ✅ Production Ready
+
+---
+
+*This troubleshooting guide provides comprehensive solutions for common Choices platform issues.*

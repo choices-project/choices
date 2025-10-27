@@ -1,0 +1,77 @@
+name: Basic CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: basic-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.x'
+  NPM_VERSION: '10.9.3'
+
+jobs:
+  ci:
+    name: Basic CI Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Verify lockfile unchanged
+        run: git diff --exit-code package-lock.json
+
+      - name: Type check
+        run: npm run types:strict -- --exclude "**/quarantine/**" --exclude "**/*.disabled"
+
+      - name: Lint
+        run: npm run lint -- --max-warnings=100 --ignore-pattern "**/quarantine/**" --ignore-pattern "**/*.disabled"
+
+      - name: Build
+        run: npm run build
+
+      - name: Security audit
+        run: npm run audit:high
+
+      - name: Run Choices-specific tests
+        run: |
+          npm run test:user-journey-complete
+          npm run test:admin-journey-complete
+
+      - name: Check database connectivity
+        run: |
+          npm run test:real-database-activity
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: web/.next/
+          retention-days: 1

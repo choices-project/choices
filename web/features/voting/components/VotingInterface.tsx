@@ -278,7 +278,7 @@ export default function VotingInterface({
             userVote={userRankedVote ?? undefined}
           />
         );
-      case 'multiple_choice':
+      case 'multiple':
         return (
           <MultipleChoiceVoting
             pollId={poll.id}

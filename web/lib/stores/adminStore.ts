@@ -24,7 +24,7 @@ import type {
 } from '../../features/admin/types';
 import { logger } from '../logger';
 import { getSupabaseClient } from '../../utils/supabase/client';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/types/database';
 
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 
@@ -243,6 +243,7 @@ export const useAdminStore = create<AdminStore>()(
               name: user.display_name ?? 'Unknown User',
               role: user.is_admin ? 'admin' : 'user',
               status: user.is_active ? 'active' : 'inactive',
+              is_admin: user.is_admin ?? false,
               created_at: user.created_at ?? '',
               last_login: user.updated_at ?? undefined
             })) ?? [];

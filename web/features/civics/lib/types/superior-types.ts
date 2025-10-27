@@ -39,7 +39,7 @@ export interface SuperiorRepresentativeData {
   facebook?: string;
   enhancedSocialMedia?: Array<{
     platform: string;
-    handle: string;
+    handle?: string;
     url?: string;
     followersCount?: number;
     verified?: boolean;
@@ -54,13 +54,6 @@ export interface SuperiorRepresentativeData {
     source: string;
     isPrimary: boolean;
     isVerified: boolean;
-  }>;
-  
-  enhancedSocialMedia?: Array<{
-    platform: string;
-    url: string;
-    followersCount?: number;
-    verified?: boolean;
   }>;
   
   enhancedPhotos?: Array<{
@@ -89,8 +82,10 @@ export interface SuperiorRepresentativeData {
   dataQualityScore?: number;
   dataQuality?: {
     overallConfidence: number;
-    sourceReliability: number;
     completenessScore: number;
+    accuracyScore: number;
+    freshnessScore: number;
+    sourceReliability: number;
   };
   isCurrentElectorate?: boolean;
   lastVerified?: string;
@@ -98,15 +93,6 @@ export interface SuperiorRepresentativeData {
   
   // Additional metadata
   metadata?: Record<string, any>;
-  
-  // Data quality and verification
-  dataQuality?: {
-    overallConfidence: number;
-    completenessScore: number;
-    accuracyScore: number;
-    freshnessScore: number;
-    sourceReliability: number;
-  };
   
   verificationStatus?: 'verified' | 'unverified' | 'pending';
 }

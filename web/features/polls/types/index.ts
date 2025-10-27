@@ -34,8 +34,9 @@ export type PollType =
   | 'range'
 
 export type VotingMethod = 
-  | 'first_past_post'
-  | 'instant_runoff'
+  | 'single'
+  | 'multiple'
+  | 'ranked'
   | 'approval'
   | 'quadratic'
   | 'range'

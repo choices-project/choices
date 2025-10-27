@@ -43,7 +43,7 @@ import { logger } from '@/lib/utils/logger';
 
 import type { 
   UserPreferences
-} from '../types';
+} from '@/features/civics/lib/types/civics-types';
 import FeedItem from './FeedItem';
 import { useSocialSharing } from '@/hooks/useSocialSharing';
 

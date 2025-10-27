@@ -160,13 +160,8 @@ export function createSecureServerAction<TInput, TOutput>(
       }
     }, options.idempotency || { namespace: 'server-action' })
     
-    if (result.success && result.data) {
+    if (result.data) {
       return result.data
-    }
-    
-    // If the result has an error, throw it with the original message
-    if (result.error) {
-      throw new Error(result.error)
     }
     
     // If we get here, it's a generic failure

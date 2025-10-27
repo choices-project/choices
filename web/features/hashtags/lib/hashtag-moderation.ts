@@ -99,17 +99,19 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       flag_type: 'other' as const, // Default type since hashtag_flags doesn't have flag_type
       reason: flag.reason,
       created_at: flag.created_at || new Date().toISOString(),
+      updated_at: flag.updated_at || new Date().toISOString(),
       status: flag.status === 'approved' ? 'resolved' : 
-              flag.status === 'rejected' ? 'dismissed' : 'pending'
+              flag.status === 'rejected' ? 'rejected' : 'pending'
     }));
 
     const moderationData: HashtagModeration = {
+      id: `moderation_${hashtagId}`,
       hashtag_id: hashtagId,
       status: moderationStatus,
-      moderated_at: flags[0]?.updated_at || new Date().toISOString(),
-      flags: transformedFlags,
-      auto_moderation_score: 0.5, // Default score
-      human_review_required: pendingFlags.length > 0
+      created_at: flags[0]?.created_at || new Date().toISOString(),
+      updated_at: flags[0]?.updated_at || new Date().toISOString(),
+      human_review_required: pendingFlags.length > 0,
+      moderation_reason: pendingFlags.length > 0 ? 'Pending review' : undefined
     };
 
     return {
@@ -193,7 +195,8 @@ export async function flagHashtag(
       flag_type: 'other', // Default since hashtag_flags doesn't have flag_type
       reason: data.reason,
       created_at: data.created_at || new Date().toISOString(),
-      status: data.status as 'pending' | 'resolved' | 'dismissed'
+      updated_at: data.updated_at || new Date().toISOString(),
+      status: data.status as 'pending' | 'resolved' | 'rejected'
     };
 
     return {

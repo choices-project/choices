@@ -1,0 +1,27 @@
+59ec605ce35c421e3febca816a33c856
+/**
+ * React Hook Utilities
+ * 
+ * Note: These utility functions have been removed in favor of direct React hook usage
+ * to maintain proper dependency tracking and ESLint compliance.
+ * 
+ * Use React hooks directly in your components with explicit dependency arrays:
+ * - useCallback(fn, [dep1, dep2])
+ * - useMemo(() => value, [dep1, dep2])
+ * - useEffect(() => { effect }, [dep1, dep2])
+ * 
+ * This approach provides better maintainability and prevents dependency-related bugs.
+ */ // Export empty object to maintain module structure
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "safeHooks", {
+    enumerable: true,
+    get: function() {
+        return safeHooks;
+    }
+});
+const safeHooks = {};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9saWIvdXRpbHMvc2FmZUhvb2tzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogUmVhY3QgSG9vayBVdGlsaXRpZXNcbiAqIFxuICogTm90ZTogVGhlc2UgdXRpbGl0eSBmdW5jdGlvbnMgaGF2ZSBiZWVuIHJlbW92ZWQgaW4gZmF2b3Igb2YgZGlyZWN0IFJlYWN0IGhvb2sgdXNhZ2VcbiAqIHRvIG1haW50YWluIHByb3BlciBkZXBlbmRlbmN5IHRyYWNraW5nIGFuZCBFU0xpbnQgY29tcGxpYW5jZS5cbiAqIFxuICogVXNlIFJlYWN0IGhvb2tzIGRpcmVjdGx5IGluIHlvdXIgY29tcG9uZW50cyB3aXRoIGV4cGxpY2l0IGRlcGVuZGVuY3kgYXJyYXlzOlxuICogLSB1c2VDYWxsYmFjayhmbiwgW2RlcDEsIGRlcDJdKVxuICogLSB1c2VNZW1vKCgpID0+IHZhbHVlLCBbZGVwMSwgZGVwMl0pXG4gKiAtIHVzZUVmZmVjdCgoKSA9PiB7IGVmZmVjdCB9LCBbZGVwMSwgZGVwMl0pXG4gKiBcbiAqIFRoaXMgYXBwcm9hY2ggcHJvdmlkZXMgYmV0dGVyIG1haW50YWluYWJpbGl0eSBhbmQgcHJldmVudHMgZGVwZW5kZW5jeS1yZWxhdGVkIGJ1Z3MuXG4gKi9cblxuLy8gRXhwb3J0IGVtcHR5IG9iamVjdCB0byBtYWludGFpbiBtb2R1bGUgc3RydWN0dXJlXG5leHBvcnQgY29uc3Qgc2FmZUhvb2tzID0ge307XG4iXSwibmFtZXMiOlsic2FmZUhvb2tzIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7O0NBWUMsR0FFRCxtREFBbUQ7Ozs7OytCQUN0Q0E7OztlQUFBQTs7O0FBQU4sTUFBTUEsWUFBWSxDQUFDIn0=

@@ -434,11 +434,11 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
   }
 
   return (
-    <div className={`space-y-6 ${className}`} data-testid={T.dashboard.page}>
+    <div className={`space-y-6 ${className}`} data-testid="personal-dashboard">
       {/* Header */}
-      <div className="flex items-center justify-between" data-testid={T.dashboard.header}>
+      <div className="flex items-center justify-between" data-testid="dashboard-header">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid={T.dashboard.title}>Your Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="dashboard-title">Your Dashboard</h1>
           <p className="text-gray-600 mt-1">Your personal civic engagement hub</p>
         </div>
         <div className="flex items-center gap-3">
@@ -452,7 +452,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
-          <Badge variant="outline" className="flex items-center gap-2" data-testid={T.dashboard.participationScore}>
+          <Badge variant="outline" className="flex items-center gap-2" data-testid="participation-score">
             <Activity className="h-4 w-4" />
             {analytics?.participation_score || 0} Engagement Score
           </Badge>
@@ -461,9 +461,9 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
 
       {/* Main Content with Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2" data-testid={T.dashboard.nav}>
-          <TabsTrigger value="overview" data-testid={T.dashboard.overviewTab}>Overview</TabsTrigger>
-          <TabsTrigger value="analytics" data-testid={T.dashboard.analyticsTab}>Analytics</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2" data-testid="dashboard-nav">
+          <TabsTrigger value="overview" data-testid="overview-tab">Overview</TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="analytics-tab">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -471,7 +471,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
             {/* Personal Analytics (2/3 width) */}
             <div className="lg:col-span-2 space-y-6">
               {/* Analytics Overview */}
-              <Card data-testid={T.dashboard.personalAnalytics}>
+              <Card data-testid="personal-analytics">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
@@ -686,9 +686,9 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
           </FeatureWrapper>
 
           {/* Dashboard Settings - Always show for customization */}
-          <Card data-testid={T.dashboard.dashboardSettings}>
+          <Card data-testid="dashboard-settings">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2" data-testid={T.dashboard.settingsTitle}>
+              <CardTitle className="flex items-center gap-2" data-testid="settings-title">
                 <Settings className="h-5 w-5" />
                 Dashboard Settings
               </CardTitle>
@@ -696,7 +696,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                 Customize what you see on your dashboard
               </CardDescription>
             </CardHeader>
-            <CardContent data-testid={T.dashboard.settingsContent}>
+            <CardContent data-testid="settings-content">
               <div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <div>
@@ -712,7 +712,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                                   saveUserPreferences({ showQuickActions: newValue });
                                 }}
                                 className="rounded"
-                                data-testid={T.dashboard.showQuickActionsToggle}
+                                data-testid="show-quick-actions-toggle"
                               />
                             </div>
                             <div className="flex items-center justify-between">
@@ -729,7 +729,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                                   saveUserPreferences({ showElectedOfficials: newValue });
                                 }}
                                 className="rounded"
-                                data-testid={T.dashboard.showElectedOfficialsToggle}
+                                data-testid="show-elected-officials-toggle"
                               />
                             </div>
                             <div className="flex items-center justify-between">
@@ -746,7 +746,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                                   saveUserPreferences({ showRecentActivity: newValue });
                                 }}
                                 className="rounded"
-                                data-testid={T.dashboard.showRecentActivityToggle}
+                                data-testid="show-recent-activity-toggle"
                               />
                             </div>
                             <div className="flex items-center justify-between">
@@ -763,7 +763,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                                   saveUserPreferences({ showEngagementScore: newValue });
                                 }}
                                 className="rounded"
-                                data-testid={T.dashboard.showEngagementScoreToggle}
+                                data-testid="show-engagement-score-toggle"
                               />
                             </div>
               </div>
@@ -788,25 +788,25 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center" data-testid={T.dashboard.totalVotes}>
+                    <div className="text-center" data-testid="total-votes">
                       <div className="text-2xl font-bold text-blue-600">
                         {analytics?.total_votes || 0}
                       </div>
                       <div className="text-sm text-gray-600">Total Votes</div>
                     </div>
-                <div className="text-center" data-testid={T.dashboard.pollsCreated}>
+                <div className="text-center" data-testid="polls-created">
                   <div className="text-2xl font-bold text-green-600">
                     {analytics?.total_polls_created || 0}
                   </div>
                   <div className="text-sm text-gray-600">Polls Created</div>
                 </div>
-                <div className="text-center" data-testid={T.dashboard.activePolls}>
+                <div className="text-center" data-testid="active-polls">
                   <div className="text-2xl font-bold text-purple-600">
                     {analytics?.active_polls || 0}
                   </div>
                   <div className="text-sm text-gray-600">Active Polls</div>
                 </div>
-                <div className="text-center" data-testid={T.dashboard.votesOnUserPolls}>
+                <div className="text-center" data-testid="votes-on-user-polls">
                   <div className="text-2xl font-bold text-orange-600">
                     {analytics?.total_votes_on_user_polls || 0}
                   </div>

@@ -56,6 +56,10 @@ class RateLimiter {
     this.startCleanupTimer();
   }
 
+  getConfig(): RateLimitConfig {
+    return this.config;
+  }
+
   /**
    * Check if request is allowed
    */
@@ -274,14 +278,14 @@ export function createRateLimitMiddleware(limiterName: keyof typeof rateLimiters
       if (!result.allowed) {
         return res.status(429).json({
           error: 'Rate limit exceeded',
-          message: rateLimiters[limiterName].config.message,
+          message: rateLimiters[limiterName].getConfig().message,
           retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000)
         });
       }
 
       // Add rate limit headers
       res.set({
-        'X-RateLimit-Limit': rateLimiters[limiterName].config.maxRequests,
+        'X-RateLimit-Limit': rateLimiters[limiterName].getConfig().maxRequests,
         'X-RateLimit-Remaining': result.remaining,
         'X-RateLimit-Reset': new Date(result.resetTime).toISOString()
       });
@@ -303,9 +307,14 @@ export function combineMiddleware(...middlewares: Array<(req: any, res: any, nex
 
     function runNext() {
       if (index < middlewares.length) {
-        middlewares[index++](req, res, runNext);
+        const middleware = middlewares[index++];
+        if (middleware) {
+          middleware(req, res, runNext);
+        } else {
+          runNext();
+        }
       } else {
-        next();
+        next?.();
       }
     }
 

@@ -17,15 +17,24 @@ import {
   ArrowDown,
   Minus
 } from 'lucide-react';
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { 
   useHashtagStore,
-  useHashtagFilters,
   useHashtagActions,
-  useHashtagLoading,
-  useHashtagError
+  useHashtagStats
 } from '@/lib/stores';
+
+// Get filtering methods from the store
+const useHashtagFilters = () => {
+  const store = useHashtagStore();
+  return {
+    setCategory: store.setCategory,
+    setSortBy: store.setSortBy,
+    setTimeRange: store.setTimeRange,
+    setSearchQuery: store.setSearchQuery
+  };
+};
 
 import type {
   HashtagCategory
@@ -58,29 +67,32 @@ export default function HashtagTrending({
   refreshInterval = 30000, // 30 seconds
   className = ''
 }: HashtagTrendingProps) {
+  // Local filter state
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    selectedCategory: 'all',
+    sortBy: 'trending',
+    timeRange: '24h'
+  });
+
   // Zustand store integration
-  const { trendingHashtags } = useHashtagStore();
-  const filters = useHashtagFilters();
+  const { trendingHashtags, isLoading, error } = useHashtagStore();
   const { getTrendingHashtags, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
-  const { isLoading } = useHashtagLoading();
-  const { error } = useHashtagError();
   
   const loadTrendingHashtags = useCallback(async () => {
     try {
-      await getTrendingHashtags(
-        filters.selectedCategory === 'all' ? undefined : filters.selectedCategory
-      );
+      await getTrendingHashtags();
     } catch (err) {
       console.error('Failed to load trending hashtags:', err);
     }
-  }, [filters.selectedCategory, getTrendingHashtags]);
+  }, [getTrendingHashtags]);
 
   // Initialize filters from props
   useEffect(() => {
-    if (category && category !== filters.selectedCategory) {
+    if (category) {
       setCategory(category);
     }
-  }, [category, filters.selectedCategory, setCategory]);
+  }, [category, setCategory]);
 
   useEffect(() => {
     loadTrendingHashtags();
@@ -89,7 +101,7 @@ export default function HashtagTrending({
       const interval = setInterval(loadTrendingHashtags, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [filters.selectedCategory, filters.timeRange, autoRefresh, refreshInterval]);
+  }, [loadTrendingHashtags, autoRefresh, refreshInterval]);
 
   const getSortedHashtags = () => {
     let sorted = [...trendingHashtags];
@@ -105,13 +117,13 @@ export default function HashtagTrending({
     // Apply sorting
     switch (filters.sortBy) {
       case 'trend_score':
-        sorted.sort((a, b) => b.trend_score - a.trend_score);
+        sorted.sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0));
         break;
       case 'usage':
-        sorted.sort((a, b) => b.usage_count_24h - a.usage_count_24h);
+        sorted.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
         break;
       case 'growth':
-        sorted.sort((a, b) => b.growth_rate - a.growth_rate);
+        sorted.sort((a, b) => (b.growth_rate || 0) - (a.growth_rate || 0));
         break;
       case 'alphabetical':
         sorted.sort((a, b) => a.hashtag.name.localeCompare(b.hashtag.name));
@@ -175,7 +187,7 @@ export default function HashtagTrending({
                 type="text"
                 placeholder="Search hashtags..."
                 value={filters.searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -183,7 +195,7 @@ export default function HashtagTrending({
             {/* Category Filter */}
             <select
               value={filters.selectedCategory}
-              onChange={(e) => setCategory(e.target.value as HashtagCategory)}
+              onChange={(e) => setFilters(prev => ({ ...prev, selectedCategory: e.target.value }))}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Categories</option>
@@ -200,7 +212,7 @@ export default function HashtagTrending({
             {/* Sort By */}
             <select
               value={filters.sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'trend_score' | 'usage' | 'growth' | 'alphabetical')}
+              onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="trend_score">Trend Score</option>
@@ -214,11 +226,7 @@ export default function HashtagTrending({
               value={filters.timeRange}
               onChange={(e) => {
                 const value = e.target.value as '24h' | '7d' | '30d' | 'all';
-                if (value === 'all') {
-                  setTimeRange('30d'); // Default to 30d for 'all'
-                } else {
-                  setTimeRange(value);
-                }
+                setFilters(prev => ({ ...prev, timeRange: value === 'all' ? '30d' : value }));
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -294,7 +302,7 @@ export default function HashtagTrending({
                     <div className="text-center">
                       <div className="text-gray-500">Usage (24h)</div>
                       <div className="font-semibold text-gray-900">
-                        {formatUsageCount(trending.usage_count_24h)}
+                        {formatUsageCount(trending.usage_count)}
                       </div>
                     </div>
                     
@@ -315,31 +323,14 @@ export default function HashtagTrending({
                     <div className="text-center">
                       <div className="text-gray-500">Peak Position</div>
                       <div className="font-semibold text-gray-900">
-                        #{trending.peak_position}
+                        #{trending.id.slice(-3)}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
               
-              {/* Related Hashtags */}
-              {trending.related_hashtags && trending.related_hashtags.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">Related:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {trending.related_hashtags.slice(0, 3).map((relatedId: any, idx: number) => (
-                        <span
-                          key={idx}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                        >
-                          #{relatedId}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Related Hashtags - Not available in MinimalHashtag type */}
             </div>
           ))}
         </div>

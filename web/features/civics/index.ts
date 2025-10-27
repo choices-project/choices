@@ -32,8 +32,6 @@ export { default as AddressLookupForm } from './components/AddressLookupForm'
 /** Attribution footer for data source credits and licensing */
 export { default as AttributionFooter } from './components/AttributionFooter'
 
-/** Comprehensive candidate accountability and performance tracking */
-export { default as CandidateAccountabilityCard } from './components/CandidateAccountabilityCard'
 
 /** Marketing component to encourage civics engagement */
 export { default as CivicsLure } from './components/CivicsLure'
@@ -69,20 +67,6 @@ export type {
   TouchPoint, 
   TouchState 
 } from './lib/types/civics-types'
-
-/** Core civics data types */
-export type {
-  EntityType,
-  DataSource,
-  Party,
-  Chamber,
-  Level,
-  Candidate,
-  Election,
-  CampaignFinance,
-  Contribution,
-  VotingRecord
-} from './lib/civics/types'
 
 /** Superior data pipeline types */
 export type { SuperiorRepresentativeData } from './lib/types/superior-types'

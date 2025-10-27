@@ -11,7 +11,7 @@ import {
 } from '../lib/hashtag-service';
 import type { 
   Hashtag, 
-  HashtagSearchResult, 
+  HashtagSearchResponse, 
   TrendingHashtag, 
   UserHashtag, 
   HashtagSuggestion,
@@ -216,7 +216,7 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
   const { debounceMs = 300, minQueryLength = 2 } = options;
   
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<HashtagSearchResult | null>(null);
+  const [results, setResults] = useState<HashtagSearchResponse | null>(null);
   const [suggestions, setSuggestions] = useState<HashtagSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -236,7 +236,6 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
 
         const searchQuery: HashtagSearchQuery = {
           query,
-          filters: {},
           limit: 20,
           offset: 0
         };

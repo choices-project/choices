@@ -1,0 +1,89 @@
+d055cd806864524ce999b9cd3fdac815
+/**
+ * Lucide React Mock for Jest
+ * 
+ * Mocks all Lucide React icons to prevent ESM import issues
+ * 
+ * Created: January 27, 2025
+ * Status: ✅ PRODUCTION READY
+ */ "use strict";
+const React = require('react');
+// Mock all Lucide React icons
+const createMockIcon = (name)=>{
+    return function MockIcon(props) {
+        return React.createElement('svg', {
+            ...props,
+            'data-testid': `lucide-${name}`,
+            'aria-label': name,
+            role: 'img'
+        }, React.createElement('path', {
+            d: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+        }));
+    };
+};
+// Common icons used in the app
+const commonIcons = [
+    'Bell',
+    'Fingerprint',
+    'Shield',
+    'Lock',
+    'Unlock',
+    'Eye',
+    'EyeOff',
+    'User',
+    'Mail',
+    'Key',
+    'Check',
+    'X',
+    'Plus',
+    'Minus',
+    'Edit',
+    'Trash',
+    'Save',
+    'Download',
+    'Upload',
+    'Search',
+    'Filter',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'ChevronLeft',
+    'ChevronRight',
+    'ChevronUp',
+    'ChevronDown',
+    'Menu',
+    'Close',
+    'Home',
+    'Settings',
+    'Help',
+    'Info',
+    'Alert',
+    'Warning',
+    'Error',
+    'Success',
+    'Loading',
+    'Refresh',
+    'Play',
+    'Pause',
+    'Stop',
+    'Vote',
+    'BarChart3',
+    'LogOut',
+    'CheckCircle',
+    'AlertCircle'
+];
+// Create mocks for all common icons
+const iconMocks = {};
+commonIcons.forEach((iconName)=>{
+    iconMocks[iconName] = createMockIcon(iconName);
+});
+// Export all mocked icons
+// eslint-disable-next-line no-undef
+module.exports = {
+    ...iconMocks,
+    // Default export for dynamic imports
+    default: createMockIcon('Icon')
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9fX21vY2tzX18vbHVjaWRlLXJlYWN0LmpzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogTHVjaWRlIFJlYWN0IE1vY2sgZm9yIEplc3RcbiAqIFxuICogTW9ja3MgYWxsIEx1Y2lkZSBSZWFjdCBpY29ucyB0byBwcmV2ZW50IEVTTSBpbXBvcnQgaXNzdWVzXG4gKiBcbiAqIENyZWF0ZWQ6IEphbnVhcnkgMjcsIDIwMjVcbiAqIFN0YXR1czog4pyFIFBST0RVQ1RJT04gUkVBRFlcbiAqL1xuXG5jb25zdCBSZWFjdCA9IHJlcXVpcmUoJ3JlYWN0Jyk7XG5cbi8vIE1vY2sgYWxsIEx1Y2lkZSBSZWFjdCBpY29uc1xuY29uc3QgY3JlYXRlTW9ja0ljb24gPSAobmFtZSkgPT4ge1xuICByZXR1cm4gZnVuY3Rpb24gTW9ja0ljb24ocHJvcHMpIHtcbiAgICByZXR1cm4gUmVhY3QuY3JlYXRlRWxlbWVudCgnc3ZnJywge1xuICAgICAgLi4ucHJvcHMsXG4gICAgICAnZGF0YS10ZXN0aWQnOiBgbHVjaWRlLSR7bmFtZX1gLFxuICAgICAgJ2FyaWEtbGFiZWwnOiBuYW1lLFxuICAgICAgcm9sZTogJ2ltZydcbiAgICB9LCBSZWFjdC5jcmVhdGVFbGVtZW50KCdwYXRoJywge1xuICAgICAgZDogJ00xMiAybDMuMDkgNi4yNkwyMiA5LjI3bC01IDQuODcgMS4xOCA2Ljg4TDEyIDE3Ljc3bC02LjE4IDMuMjVMNyAxNC4xNCAyIDkuMjdsNi45MS0xLjAxTDEyIDJ6J1xuICAgIH0pKTtcbiAgfTtcbn07XG5cbi8vIENvbW1vbiBpY29ucyB1c2VkIGluIHRoZSBhcHBcbmNvbnN0IGNvbW1vbkljb25zID0gW1xuICAnQmVsbCcsICdGaW5nZXJwcmludCcsICdTaGllbGQnLCAnTG9jaycsICdVbmxvY2snLCAnRXllJywgJ0V5ZU9mZicsXG4gICdVc2VyJywgJ01haWwnLCAnS2V5JywgJ0NoZWNrJywgJ1gnLCAnUGx1cycsICdNaW51cycsICdFZGl0JyxcbiAgJ1RyYXNoJywgJ1NhdmUnLCAnRG93bmxvYWQnLCAnVXBsb2FkJywgJ1NlYXJjaCcsICdGaWx0ZXInLFxuICAnQXJyb3dMZWZ0JywgJ0Fycm93UmlnaHQnLCAnQXJyb3dVcCcsICdBcnJvd0Rvd24nLCAnQ2hldnJvbkxlZnQnLFxuICAnQ2hldnJvblJpZ2h0JywgJ0NoZXZyb25VcCcsICdDaGV2cm9uRG93bicsICdNZW51JywgJ0Nsb3NlJyxcbiAgJ0hvbWUnLCAnU2V0dGluZ3MnLCAnSGVscCcsICdJbmZvJywgJ0FsZXJ0JywgJ1dhcm5pbmcnLCAnRXJyb3InLFxuICAnU3VjY2VzcycsICdMb2FkaW5nJywgJ1JlZnJlc2gnLCAnUGxheScsICdQYXVzZScsICdTdG9wJyxcbiAgJ1ZvdGUnLCAnQmFyQ2hhcnQzJywgJ0xvZ091dCcsICdDaGVja0NpcmNsZScsICdBbGVydENpcmNsZSdcbl07XG5cbi8vIENyZWF0ZSBtb2NrcyBmb3IgYWxsIGNvbW1vbiBpY29uc1xuY29uc3QgaWNvbk1vY2tzID0ge307XG5jb21tb25JY29ucy5mb3JFYWNoKGljb25OYW1lID0+IHtcbiAgaWNvbk1vY2tzW2ljb25OYW1lXSA9IGNyZWF0ZU1vY2tJY29uKGljb25OYW1lKTtcbn0pO1xuXG4vLyBFeHBvcnQgYWxsIG1vY2tlZCBpY29uc1xuLy8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIG5vLXVuZGVmXG5tb2R1bGUuZXhwb3J0cyA9IHtcbiAgLi4uaWNvbk1vY2tzLFxuICAvLyBEZWZhdWx0IGV4cG9ydCBmb3IgZHluYW1pYyBpbXBvcnRzXG4gIGRlZmF1bHQ6IGNyZWF0ZU1vY2tJY29uKCdJY29uJylcbn07Il0sIm5hbWVzIjpbIlJlYWN0IiwicmVxdWlyZSIsImNyZWF0ZU1vY2tJY29uIiwibmFtZSIsIk1vY2tJY29uIiwicHJvcHMiLCJjcmVhdGVFbGVtZW50Iiwicm9sZSIsImQiLCJjb21tb25JY29ucyIsImljb25Nb2NrcyIsImZvckVhY2giLCJpY29uTmFtZSIsIm1vZHVsZSIsImV4cG9ydHMiLCJkZWZhdWx0Il0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7OztDQU9DO0FBRUQsTUFBTUEsUUFBUUMsUUFBUTtBQUV0Qiw4QkFBOEI7QUFDOUIsTUFBTUMsaUJBQWlCLENBQUNDO0lBQ3RCLE9BQU8sU0FBU0MsU0FBU0MsS0FBSztRQUM1QixPQUFPTCxNQUFNTSxhQUFhLENBQUMsT0FBTztZQUNoQyxHQUFHRCxLQUFLO1lBQ1IsZUFBZSxDQUFDLE9BQU8sRUFBRUYsTUFBTTtZQUMvQixjQUFjQTtZQUNkSSxNQUFNO1FBQ1IsR0FBR1AsTUFBTU0sYUFBYSxDQUFDLFFBQVE7WUFDN0JFLEdBQUc7UUFDTDtJQUNGO0FBQ0Y7QUFFQSwrQkFBK0I7QUFDL0IsTUFBTUMsY0FBYztJQUNsQjtJQUFRO0lBQWU7SUFBVTtJQUFRO0lBQVU7SUFBTztJQUMxRDtJQUFRO0lBQVE7SUFBTztJQUFTO0lBQUs7SUFBUTtJQUFTO0lBQ3REO0lBQVM7SUFBUTtJQUFZO0lBQVU7SUFBVTtJQUNqRDtJQUFhO0lBQWM7SUFBVztJQUFhO0lBQ25EO0lBQWdCO0lBQWE7SUFBZTtJQUFRO0lBQ3BEO0lBQVE7SUFBWTtJQUFRO0lBQVE7SUFBUztJQUFXO0lBQ3hEO0lBQVc7SUFBVztJQUFXO0lBQVE7SUFBUztJQUNsRDtJQUFRO0lBQWE7SUFBVTtJQUFlO0NBQy9DO0FBRUQsb0NBQW9DO0FBQ3BDLE1BQU1DLFlBQVksQ0FBQztBQUNuQkQsWUFBWUUsT0FBTyxDQUFDQyxDQUFBQTtJQUNsQkYsU0FBUyxDQUFDRSxTQUFTLEdBQUdWLGVBQWVVO0FBQ3ZDO0FBRUEsMEJBQTBCO0FBQzFCLG9DQUFvQztBQUNwQ0MsT0FBT0MsT0FBTyxHQUFHO0lBQ2YsR0FBR0osU0FBUztJQUNaLHFDQUFxQztJQUNyQ0ssU0FBU2IsZUFBZTtBQUMxQiJ9

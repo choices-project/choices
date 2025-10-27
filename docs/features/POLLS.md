@@ -1,631 +1,703 @@
-# Polls Feature Documentation
+# 🗳️ Polls System
 
-**Created:** October 10, 2025  
-**Updated:** January 24, 2025  
-**Status:** 🎉 **ENHANCED - FULL HASHTAG INTEGRATION & TRENDING ACHIEVED**  
-**Audit Status:** ✅ COMPLETED  
-**Zustand Integration:** ✅ **MIGRATION COMPLETE**  
-**API Integration:** ✅ **ENHANCED** - Polls API with hashtag filtering, trending, analytics  
-**Database Schema:** ✅ **VERIFIED** - 220 polls in production database  
-**RLS Policies:** ✅ **ACTIVE** - Row Level Security enabled with proper policies  
-**Hashtag Integration:** ✅ **COMPLETE** - Full trending, analytics, and engagement tracking  
-
-## 🎯 OVERVIEW
-
-The Polls feature is a comprehensive voting and polling system that enables users to create, participate in, and analyze polls with advanced features including privacy protection, performance optimization, and interest-based personalization.
-
-### **Core Capabilities:**
-- **Poll Creation:** Multi-step wizard with templates and validation
-- **Voting Methods:** Single choice, approval, ranked choice, range, and quadratic voting
-- **Results Display:** Optimized, private, and public result views
-- **Sharing & Embedding:** Social media integration, QR codes, and embeddable widgets
-- **Interest-Based Feeds:** Personalized poll recommendations
-- **Privacy Protection:** Differential privacy and k-anonymity
-- **Performance Optimization:** Caching, metrics, and materialized views
-- **🎉 NEW: Hashtag Integration:** Full trending hashtag system with analytics and engagement tracking
-- **🎉 NEW: Trending System:** Advanced trending algorithms with position tracking
-- **🎉 NEW: Enhanced Filtering:** Hashtag-based filtering, search, and categorization
-
-## 🏗️ **Zustand Integration**
-
-### **Migration Status:**
-- **Current State:** Local poll state and manual voting management
-- **Target State:** PollsStore integration
-- **Migration Guide:** [POLLS Migration Guide](../ZUSTAND_POLLS_MIGRATION_GUIDE.md)
-- **Status:** ✅ **MIGRATION COMPLETE**
-
-### **Zustand Store Integration:**
-```typescript
-// Import PollsStore for poll management
-import { 
-  usePolls,
-  useFilteredPolls,
-  usePollComments,
-  usePollSearch,
-  useSelectedPoll,
-  usePollPreferences,
-  usePollFilters,
-  usePollsLoading,
-  usePollsError,
-  usePollsActions,
-  usePollsStats,
-  useUserVotedPolls,
-  useActivePolls,
-  usePollComments as usePollCommentsByPoll
-} from '@/lib/stores';
-
-// Replace local poll state with PollsStore
-function PollsList() {
-  const polls = usePolls();
-  const filteredPolls = useFilteredPolls();
-  const { loadPolls, voteOnPoll } = usePollsActions();
-  const isLoading = usePollsLoading();
-  const error = usePollsError();
-  
-  useEffect(() => {
-    loadPolls();
-  }, []);
-  
-  const handleVote = async (pollId, optionId) => {
-    await voteOnPoll(pollId, optionId);
-  };
-  
-  return (
-    <div>
-      <h1>Polls</h1>
-      {filteredPolls.map(poll => (
-        <PollCard key={poll.id} poll={poll} onVote={handleVote} />
-      ))}
-    </div>
-  );
-}
-```
-
-### **Benefits of Migration:**
-- **Centralized Poll State:** All poll data in one store
-- **Performance:** Optimized re-renders with selective subscriptions
-- **Persistence:** Automatic state persistence across sessions
-- **Type Safety:** Comprehensive TypeScript support
-- **Consistency:** Same patterns as other features
-
-## 🗄️ DATABASE SCHEMA & RLS POLICIES
-
-### **Database Status:**
-- **Table:** `public.polls`
-- **Row Level Security:** ✅ **ENABLED**
-- **Total Records:** 220 polls in production
-- **Schema Status:** ✅ **VERIFIED** - Complete schema with all required fields
-
-### **Database Schema:**
-The polls table has a comprehensive schema with 50+ columns including:
-
-**Core Fields:**
-- `id` (uuid, primary key, auto-generated)
-- `title` (text, required)
-- `description` (text, optional)
-- `options` (jsonb, required)
-- `voting_method` (text, required)
-- `privacy_level` (text, default: 'public')
-- `status` (text, default: 'active')
-- `created_by` (uuid, required, foreign key to auth.users)
-- `created_at` (timestamp with time zone, auto-generated)
-
-**Advanced Fields:**
-- `category`, `tags`, `hashtags`, `primary_hashtag`
-- `total_votes`, `participation`, `participation_rate`
-- `settings`, `poll_settings` (jsonb)
-- `end_date`, `start_date`, `closed_at`, `reopened_at`
-- `is_public`, `allow_anonymous`, `max_votes_per_user`
-- `engagement_score`, `trending_score`, `is_trending`, `is_featured`
-- `moderation_status`, `verification_status`
-- `lock_*` fields for poll locking functionality
-
-### **Row Level Security (RLS) Policies:**
-
-The polls table has **5 active RLS policies** that control data access:
-
-#### **1. INSERT Policy: "Users can create polls"**
-- **Command:** `INSERT`
-- **Roles:** `{public}` (authenticated users)`
-- **With Check:** `(auth.uid() = created_by)`
-- **Purpose:** Allows users to create polls only if they set themselves as the creator
-
-#### **2. DELETE Policy: "Users can delete their own polls"**
-- **Command:** `DELETE`
-- **Roles:** `{public}`
-- **Qualification:** `(auth.uid() = created_by)`
-- **Purpose:** Users can only delete polls they created
-
-#### **3. UPDATE Policy: "Users can update their own polls"**
-- **Command:** `UPDATE`
-- **Roles:** `{public}`
-- **Qualification:** `(auth.uid() = created_by)`
-- **Purpose:** Users can only update polls they created
-
-#### **4. SELECT Policy: "Users can view public polls"**
-- **Command:** `SELECT`
-- **Roles:** `{public}`
-- **Qualification:** `(privacy_level = 'public'::text)`
-- **Purpose:** Users can view polls marked as public
-
-#### **5. SELECT Policy: "Users can view their own polls"**
-- **Command:** `SELECT`
-- **Roles:** `{public}`
-- **Qualification:** `(auth.uid() = created_by)`
-- **Purpose:** Users can view polls they created (regardless of privacy level)
-
-### **Database Access Patterns:**
-
-**For Public Polls:**
-```sql
--- Users can see public polls
-SELECT * FROM polls WHERE privacy_level = 'public';
-```
-
-**For User's Own Polls:**
-```sql
--- Users can see their own polls (any privacy level)
-SELECT * FROM polls WHERE created_by = auth.uid();
-```
-
-**For Poll Creation:**
-```sql
--- Users can create polls (must set created_by to their user ID)
-INSERT INTO polls (title, description, created_by, privacy_level, ...)
-VALUES ('Poll Title', 'Description', auth.uid(), 'public', ...);
-```
-
-### **Service Role Access:**
-- **Service Role Key:** Should bypass RLS for administrative operations
-- **Current Status:** ⚠️ **INVESTIGATING** - Service role queries returning empty results
-- **Issue:** RLS policies may be blocking service role access despite proper credentials
-
-### **Database Access Troubleshooting:**
-
-**Current Issue:** All database queries return empty results despite:
-- ✅ Service role key is properly configured
-- ✅ Database connection is successful
-- ✅ 220 polls exist in production database
-- ✅ RLS policies are correctly configured
-
-**Investigation Results:**
-1. **Authentication:** Service role key authentication works (no auth errors)
-2. **Connection:** Database connection successful (no connection errors)
-3. **RLS Bypass:** Service role should bypass RLS but queries return `{ data: [], error: null }`
-4. **Data Exists:** 220 polls confirmed in Supabase dashboard
-5. **Schema Match:** Database schema matches expected structure
-
-**Possible Causes:**
-- Service role key may not have proper RLS bypass permissions
-- Database configuration may require additional setup
-- RLS policies may need adjustment for service role access
-- Authentication context may not be properly set for service role
-
-**Next Steps:**
-- Verify service role key permissions in Supabase dashboard
-- Check if RLS bypass is properly configured for service role
-- Test with different authentication methods
-- Review Supabase project settings for RLS configuration
-
-## 🏗️ ARCHITECTURE
-
-### **Feature Structure:**
-```
-features/polls/
-├── components/          # React components for poll UI
-├── hooks/              # React hooks for poll state management
-├── lib/                # Core business logic and services
-├── types/              # TypeScript type definitions
-└── utils/              # Utility functions (ready for future use)
-```
-
-### **Component Architecture:**
-- **PollCard:** Display poll information and actions
-- **PollResults:** Standard poll results with charts and analytics
-- **OptimizedPollResults:** Performance-optimized results with caching
-- **PrivatePollResults:** Privacy-protected results with differential privacy
-- **PollShare:** Social sharing, QR codes, and embedding
-- **PostCloseBanner:** Status indicators for closed/locked polls
-- **CommunityPollSelection:** Community-driven poll suggestions
-
-### **Service Architecture:**
-- **InterestBasedPollFeed:** Personalized poll recommendations
-- **OptimizedPollService:** Performance optimization and caching
-- **PollWizard:** Multi-step poll creation workflow
-
-## 📁 FILE ORGANIZATION
-
-### **Components (7 files):**
-- `CommunityPollSelection.tsx` - Community poll suggestions and analytics
-- `PollCard.tsx` - Poll display card with metadata and actions
-- `PollResults.tsx` - Standard poll results with charts
-- `OptimizedPollResults.tsx` - Performance-optimized results
-- `PrivatePollResults.tsx` - Privacy-protected results
-- `PollShare.tsx` - Social sharing and embedding
-- `PostCloseBanner.tsx` - Poll status indicators
-
-### **Hooks (1 file):**
-- `usePollWizard.ts` - Poll creation wizard state management
-
-### **Libraries (2 files):**
-- `interest-based-feed.ts` - Personalized poll feed generation
-- `optimized-poll-service.ts` - Performance optimization service
-
-### **Types (3 files):**
-- `index.ts` - Consolidated type definitions (200+ lines)
-- `poll-templates.ts` - Poll template types
-- `voting.ts` - Voting method type mappings
-
-## 🔧 TECHNICAL IMPLEMENTATION
-
-### **Type System:**
-The polls feature uses a comprehensive type system with over 200 lines of type definitions:
-
-```typescript
-// Core poll structure
-export type Poll = {
-  id: string;
-  title: string;
-  description: string;
-  options: PollOption[];
-  status: 'draft' | 'active' | 'closed' | 'archived' | 'locked' | 'post-close';
-  // ... additional properties
-}
-
-// Voting method mapping
-export type DbVotingMethod = 'single' | 'approval' | 'ranked' | 'range' | 'quadratic' | 'multiple';
-export type UiVotingMethod = 'single_choice' | 'approval' | 'ranked_choice' | 'range' | 'quadratic';
-```
-
-### **Voting Methods:**
-- **Single Choice:** Traditional single-option selection
-- **Approval:** Multiple options can be selected
-- **Ranked Choice:** Options ranked in order of preference
-- **Range:** Numerical rating system
-- **Quadratic:** Quadratic voting for proportional representation
-
-### **Privacy Protection:**
-- **Differential Privacy:** Mathematical privacy guarantees
-- **K-Anonymity:** Minimum participant thresholds
-- **Privacy Budget:** Daily limits on privacy consumption
-- **Noise Addition:** Calibrated noise for result protection
-
-### **Performance Optimization:**
-- **Caching:** In-memory cache for poll results
-- **Materialized Views:** Pre-computed aggregations
-- **Lazy Loading:** On-demand data fetching
-- **Metrics Tracking:** Performance monitoring
-
-## 🚀 USAGE EXAMPLES
-
-### **Creating a Poll:**
-```typescript
-import { usePollWizard } from '@/features/polls/hooks/usePollWizard';
-
-const { wizardState, updateData, nextStep, submitPoll } = usePollWizard();
-
-// Update poll data
-updateData({
-  title: 'What is your favorite programming language?',
-  description: 'Help us understand developer preferences',
-  options: ['JavaScript', 'Python', 'TypeScript', 'Rust'],
-  category: 'technology'
-});
-
-// Submit poll
-const result = await submitPoll();
-```
-
-### **Displaying Poll Results:**
-```typescript
-import OptimizedPollResults from '@/features/polls/components/OptimizedPollResults';
-
-<OptimizedPollResults
-  pollId="poll-123"
-  userId={userId}
-  includePrivate={true}
-  showPerformanceMetrics={true}
-  onResultsLoaded={() => console.log('Results loaded')}
-/>
-```
-
-### **Sharing a Poll:**
-```typescript
-import PollShare from '@/features/polls/components/PollShare';
-
-<PollShare
-  pollId="poll-123"
-  poll={pollData}
-/>
-```
-
-## 🔌 API INTEGRATION
-
-### **Poll Creation API:**
-```typescript
-// POST /api/polls
-{
-  title: string;
-  description?: string;
-  options: string[];
-  votingMethod: VotingMethod;
-  privacyLevel: 'public' | 'private' | 'anonymous';
-  category: PollCategory;
-  tags: string[];
-}
-```
-
-### **Voting API:**
-```typescript
-// POST /api/polls/[id]/vote
-{
-  selections: string[];
-  userId?: string;
-  privacyBudget?: number;
-}
-```
-
-### **Results API:**
-```typescript
-// GET /api/polls/[id]/results
-{
-  results: OptionResult[];
-  totalVotes: number;
-  privacyGuarantee: string;
-  kAnonymitySatisfied: boolean;
-}
-```
-
-## 🎨 UI COMPONENTS
-
-### **PollCard Component:**
-- Displays poll metadata (title, description, creator, dates)
-- Shows voting method and status badges
-- Provides action buttons (View, Vote)
-- Responsive design with hover effects
-
-### **PollResults Component:**
-- Interactive charts (bar, pie, line)
-- Detailed result breakdowns
-- Demographic analytics
-- Export and sharing options
-
-### **OptimizedPollResults Component:**
-- Performance metrics display
-- Cache statistics
-- Privacy status indicators
-- Real-time result updates
-
-### **PrivatePollResults Component:**
-- Privacy protection status
-- Budget consumption tracking
-- Confidence intervals
-- Noise level indicators
-
-## 🔒 SECURITY & PRIVACY
-
-### **Input Validation:**
-- Server-side validation with Zod schemas
-- Input sanitization for XSS prevention
-- Rate limiting on poll creation
-- CSRF protection
-
-### **Privacy Features:**
-- **Differential Privacy:** Mathematical privacy guarantees
-- **K-Anonymity:** Minimum participant thresholds
-- **Privacy Budget:** Daily consumption limits
-- **Noise Addition:** Calibrated result protection
-
-### **Authentication:**
-- WebAuthn integration for secure authentication
-- Session management with secure cookies
-- User permission validation
-- Audit logging for security events
-
-## 📊 ANALYTICS & MONITORING
-
-### **Performance Metrics:**
-- Response time tracking
-- Cache hit rates
-- Error rate monitoring
-- Memory usage statistics
-
-### **User Analytics:**
-- Poll creation rates
-- Voting participation
-- Sharing engagement
-- Interest-based recommendations
-
-### **Privacy Analytics:**
-- Privacy budget consumption
-- K-anonymity satisfaction rates
-- Noise level effectiveness
-- Confidence interval accuracy
-
-## 🧪 TESTING STRATEGY
-
-### **Unit Tests:**
-- ✅ Component rendering tests
-- ✅ Hook behavior validation
-- ✅ Type safety verification
-- ✅ Utility function testing
-
-### **Integration Tests:**
-- ✅ API endpoint testing
-- ⚠️ Database interaction validation (RLS access issue)
-- ✅ Privacy mechanism verification
-- ✅ Performance optimization testing
-
-### **End-to-End Tests:**
-- ✅ Complete poll creation workflow
-- ✅ Voting process validation
-- ✅ Results display verification
-- ✅ Sharing functionality testing
-
-### **Database Integration Testing:**
-- **Status:** ⚠️ **IN PROGRESS** - RLS access investigation
-- **Test Coverage:** Database seeding, poll creation, voting, results
-- **Current Issue:** Service role queries returning empty results
-- **Test Files:** 
-  - `database-seeding.test.ts` - Poll seeding and cleanup
-  - `simple-poll-insert.test.ts` - Basic poll insertion
-  - `query-existing-data.test.ts` - Data retrieval testing
-  - `test-supabase-config.test.ts` - Authentication configuration
-
-## 🚀 DEPLOYMENT
-
-### **Production Readiness:**
-- ✅ Zero TypeScript errors
-- ✅ Zero linting warnings
-- ✅ Comprehensive type safety
-- ✅ Professional code quality
-- ✅ Complete documentation
-
-### **Performance Optimization:**
-- Caching layer implementation
-- Database query optimization
-- Materialized view refresh
-- CDN integration for static assets
-
-### **Monitoring:**
-- Error tracking and alerting
-- Performance metrics collection
-- User behavior analytics
-- Privacy compliance monitoring
-
-## 🔌 API ENDPOINTS
-
-### **Core Poll APIs:**
-- **`/api/polls`** - Create and retrieve polls (GET, POST)
-- **`/api/polls/[id]`** - Get specific poll details (GET)
-- **`/api/polls/[id]/vote`** - Submit vote for poll (POST)
-- **`/api/polls/[id]/results`** - Get poll results (GET)
-- **`/api/polls/[id]/close`** - Close poll (POST)
-- **`/api/polls/[id]/lock`** - Lock poll (POST)
-- **`/api/polls/[id]/post-close`** - Post-close poll actions (POST)
-- **`/api/polls/trending`** - Get trending polls (GET)
-
-### **API Response Format:**
-```typescript
-interface PollAPIResponse<T> {
-  success: boolean;
-  data: T;
-  metadata: {
-    source: 'database' | 'cache' | 'validation';
-    last_updated: string;
-    data_quality_score: number;
-    total_polls?: number;
-  };
-}
-```
-
-### **Poll Creation Example:**
-```typescript
-// POST /api/polls
-{
-  "title": "What's your favorite programming language?",
-  "options": ["JavaScript", "Python", "TypeScript", "Rust"],
-  "votingMethod": "single",
-  "description": "Choose your preferred language for web development",
-  "category": "technology",
-  "privacyLevel": "public",
-  "allowMultipleVotes": false,
-  "showResults": true,
-  "allowComments": true,
-  "endTime": "2025-10-24T15:48:58.092ZZ",
-  "hashtags": ["programming", "webdev"],
-  "primaryHashtag": "programming"
-}
-```
-
-### **Poll Response Example:**
-```typescript
-// GET /api/polls/uuid
-{
-  "success": true,
-  "data": {
-    "id": "uuid",
-    "title": "What's your favorite programming language?",
-    "options": [
-      { "id": "opt1", "text": "JavaScript", "votes": 45 },
-      { "id": "opt2", "text": "Python", "votes": 32 },
-      { "id": "opt3", "text": "TypeScript", "votes": 28 },
-      { "id": "opt4", "text": "Rust", "votes": 15 }
-    ],
-    "votingMethod": "single",
-    "status": "active",
-    "createdBy": "user-uuid",
-    "createdAt": "2025-10-24T15:48:58.092ZZ",
-    "endTime": "2025-10-24T15:48:58.092ZZ",
-    "hashtags": ["programming", "webdev"],
-    "primaryHashtag": "programming",
-    "totalVotes": 120,
-    "allowComments": true,
-    "showResults": true
-  },
-  "metadata": {
-    "source": "database",
-    "last_updated": "2025-10-24T15:48:58.092ZZ",
-    "data_quality_score": 95
-  }
-}
-```
-
-### **Vote Submission Example:**
-```typescript
-// POST /api/polls/uuid/vote
-{
-  "optionId": "opt1",
-  "votingMethod": "single",
-  "metadata": {
-    "device": "mobile",
-    "location": "san-francisco"
-  }
-}
-```
-
-## 🔄 MAINTENANCE
-
-### **Regular Tasks:**
-- Cache performance monitoring
-- Privacy budget analysis
-- User feedback collection
-- Performance optimization
-
-### **Updates:**
-- Voting method enhancements
-- Privacy algorithm improvements
-- UI/UX refinements
-- Performance optimizations
-
-## 📚 RELATED DOCUMENTATION
-
-- [Auth Feature Documentation](../features/AUTH.md)
-- [PWA Feature Documentation](../features/PWA.md)
-- [Feature Audit Roadmap](../FEATURE_AUDIT_ROADMAP.md)
-- [Polls Audit Report](../FEATURE_AUDITS/POLLS_AUDIT.md)
-
-## 🤝 CONTRIBUTING
-
-### **Development Guidelines:**
-- Follow TypeScript best practices
-- Maintain comprehensive type definitions
-- Implement proper error handling
-- Add JSDoc comments for complex logic
-- Write meaningful tests
-
-### **Code Standards:**
-- Use absolute imports for external dependencies
-- Use relative imports within the feature
-- Maintain consistent naming conventions
-- Follow React best practices
-- Implement proper accessibility
+**Complete Polls Documentation for Choices Platform**
 
 ---
 
-**Last updated:** January 27, 2025  
-**Status:** Production Ready  
-**Audit Status:** ✅ COMPLETED  
-**Database Status:** ✅ **VERIFIED** - 220 polls in production  
-**RLS Status:** ✅ **ACTIVE** - 5 policies configured  
-**Integration Testing:** ⚠️ **IN PROGRESS** - RLS access investigation
+## 🎯 **Overview**
+
+The Choices platform features a comprehensive polling system that enables users to create, participate in, and analyze polls with advanced features including privacy protection, hashtag integration, and sophisticated analytics.
+
+**Last Updated**: October 27, 2025  
+**Status**: Production Ready  
+**Features**: Advanced Polling with AI Analytics
+
+---
+
+## 🏗️ **Core Features**
+
+### **Poll Creation**
+- **Multi-Step Wizard**: Guided poll creation process
+- **Poll Types**: Single choice, multiple choice, ranked choice
+- **Privacy Levels**: Public, private, unlisted polls
+- **Expiration**: Optional poll expiration dates
+- **Templates**: Pre-built poll templates for common topics
+
+### **Voting System**
+- **Secure Voting**: Anonymous and authenticated voting options
+- **Vote Validation**: Prevents duplicate voting
+- **Real-Time Updates**: Live vote count updates
+- **Vote History**: User voting history tracking
+- **Trust Tier Integration**: Voting permissions by trust tier
+
+### **Results & Analytics**
+- **Real-Time Results**: Live poll results display
+- **Analytics Dashboard**: Comprehensive poll analytics
+- **Demographic Breakdown**: Results by user demographics
+- **Trust Tier Analysis**: Voting patterns by trust tier
+- **AI Insights**: AI-powered poll analysis
+
+### **Sharing & Discovery**
+- **Social Sharing**: Share polls on social media
+- **QR Codes**: Generate QR codes for easy sharing
+- **Embeddable Widgets**: Embed polls in external sites
+- **Hashtag System**: Categorize and discover polls
+- **Trending Polls**: Popular and trending poll discovery
+
+---
+
+## 🔧 **Implementation Details**
+
+### **Poll Data Structure**
+```typescript
+interface Poll {
+  id: string;
+  title: string;
+  description?: string;
+  options: PollOption[];
+  privacy_level: 'public' | 'private' | 'unlisted';
+  poll_type: 'single_choice' | 'multiple_choice' | 'ranked_choice';
+  expires_at?: string;
+  created_at: string;
+  updated_at: string;
+  status: 'active' | 'closed' | 'archived';
+  created_by: string;
+  total_votes: number;
+  hashtags?: string[];
+}
+
+interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  percentage?: number;
+}
+```
+
+### **Poll Creation Flow**
+```typescript
+// Poll Creation API
+const createPoll = async (pollData: CreatePollData) => {
+  // Validate input
+  const validatedData = createPollSchema.parse(pollData);
+  
+  // Create poll
+  const { data: poll, error } = await supabase
+    .from('polls')
+    .insert({
+      title: validatedData.title,
+      description: validatedData.description,
+      options: validatedData.options,
+      privacy_level: validatedData.privacy_level,
+      poll_type: validatedData.poll_type,
+      expires_at: validatedData.expires_at,
+      created_by: validatedData.user_id
+    })
+    .select()
+    .single();
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  // Add hashtags if provided
+  if (validatedData.hashtags?.length > 0) {
+    await addPollHashtags(poll.id, validatedData.hashtags);
+  }
+  
+  return poll;
+};
+
+// Poll Creation Schema
+const createPollSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().max(1000).optional(),
+  options: z.array(z.object({
+    text: z.string().min(1).max(100)
+  })).min(2).max(10),
+  privacy_level: z.enum(['public', 'private', 'unlisted']),
+  poll_type: z.enum(['single_choice', 'multiple_choice', 'ranked_choice']),
+  expires_at: z.string().datetime().optional(),
+  hashtags: z.array(z.string()).optional()
+});
+```
+
+### **Voting System**
+```typescript
+// Vote on Poll
+const voteOnPoll = async (pollId: string, optionId: string, userId?: string) => {
+  // Check if poll exists and is active
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .select('*')
+    .eq('id', pollId)
+    .eq('status', 'active')
+    .single();
+    
+  if (pollError || !poll) {
+    throw new Error('Poll not found or inactive');
+  }
+  
+  // Check if user already voted (if authenticated)
+  if (userId) {
+    const { data: existingVote } = await supabase
+      .from('votes')
+      .select('id')
+      .eq('poll_id', pollId)
+      .eq('user_id', userId)
+      .single();
+      
+    if (existingVote) {
+      throw new Error('User already voted on this poll');
+    }
+  }
+  
+  // Create vote
+  const { data: vote, error: voteError } = await supabase
+    .from('votes')
+    .insert({
+      poll_id: pollId,
+      user_id: userId,
+      option_id: optionId,
+      anonymous: !userId
+    })
+    .select()
+    .single();
+    
+  if (voteError) {
+    throw new Error(voteError.message);
+  }
+  
+  // Update poll vote count (triggered by database trigger)
+  await supabase
+    .from('polls')
+    .update({ total_votes: poll.total_votes + 1 })
+    .eq('id', pollId);
+    
+  return vote;
+};
+```
+
+### **Results & Analytics**
+```typescript
+// Get Poll Results
+const getPollResults = async (pollId: string) => {
+  // Get poll data
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .select('*')
+    .eq('id', pollId)
+    .single();
+    
+  if (pollError || !poll) {
+    throw new Error('Poll not found');
+  }
+  
+  // Get vote breakdown
+  const { data: votes, error: votesError } = await supabase
+    .from('votes')
+    .select('option_id, user_id, anonymous, created_at')
+    .eq('poll_id', pollId);
+    
+  if (votesError) {
+    throw new Error(votesError.message);
+  }
+  
+  // Calculate results
+  const results = calculatePollResults(poll.options, votes);
+  
+  return {
+    poll,
+    results,
+    total_votes: votes.length,
+    breakdown: {
+      by_trust_tier: calculateTrustTierBreakdown(votes),
+      by_demographics: calculateDemographicBreakdown(votes),
+      by_time: calculateTimeBreakdown(votes)
+    }
+  };
+};
+
+// Calculate Poll Results
+const calculatePollResults = (options: PollOption[], votes: Vote[]) => {
+  const optionVotes = new Map<string, number>();
+  
+  votes.forEach(vote => {
+    const current = optionVotes.get(vote.option_id) || 0;
+    optionVotes.set(vote.option_id, current + 1);
+  });
+  
+  const totalVotes = votes.length;
+  
+  return options.map(option => ({
+    ...option,
+    votes: optionVotes.get(option.id) || 0,
+    percentage: totalVotes > 0 ? 
+      Math.round((optionVotes.get(option.id) || 0) / totalVotes * 100 * 100) / 100 : 0
+  }));
+};
+```
+
+---
+
+## 🏷️ **Hashtag System**
+
+### **Hashtag Integration**
+```typescript
+// Add Hashtags to Poll
+const addPollHashtags = async (pollId: string, hashtags: string[]) => {
+  const hashtagData = hashtags.map(tag => ({
+    poll_id: pollId,
+    hashtag: tag.toLowerCase().replace('#', ''),
+    created_at: new Date().toISOString()
+  }));
+  
+  const { error } = await supabase
+    .from('poll_hashtags')
+    .insert(hashtagData);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  // Update hashtag trending scores
+  await updateHashtagTrendingScores(hashtags);
+};
+
+// Get Trending Hashtags
+const getTrendingHashtags = async (limit: number = 10) => {
+  const { data, error } = await supabase
+    .from('hashtags')
+    .select('hashtag, trend_score, poll_count, vote_count')
+    .order('trend_score', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data;
+};
+
+// Update Hashtag Trending Scores
+const updateHashtagTrendingScores = async (hashtags: string[]) => {
+  for (const hashtag of hashtags) {
+    // Calculate trending score based on recent activity
+    const { data: recentActivity } = await supabase
+      .from('poll_hashtags')
+      .select('created_at')
+      .eq('hashtag', hashtag)
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      
+    const trendScore = recentActivity?.length || 0;
+    
+    // Update hashtag record
+    await supabase
+      .from('hashtags')
+      .upsert({
+        hashtag,
+        trend_score: trendScore,
+        updated_at: new Date().toISOString()
+      });
+  }
+};
+```
+
+### **Poll Discovery**
+```typescript
+// Search Polls by Hashtag
+const searchPollsByHashtag = async (hashtag: string, limit: number = 20) => {
+  const { data, error } = await supabase
+    .from('poll_hashtags')
+    .select(`
+      poll_id,
+      polls (
+        id,
+        title,
+        description,
+        total_votes,
+        created_at,
+        status
+      )
+    `)
+    .eq('hashtag', hashtag.toLowerCase())
+    .eq('polls.status', 'active')
+    .order('polls.created_at', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data.map(item => item.polls);
+};
+
+// Get Polls by Category
+const getPollsByCategory = async (category: string) => {
+  const categoryHashtags = {
+    politics: ['politics', 'election', 'government', 'policy'],
+    technology: ['tech', 'ai', 'software', 'innovation'],
+    society: ['social', 'community', 'culture', 'lifestyle'],
+    environment: ['climate', 'environment', 'sustainability', 'green']
+  };
+  
+  const hashtags = categoryHashtags[category] || [];
+  
+  if (hashtags.length === 0) {
+    return [];
+  }
+  
+  const { data, error } = await supabase
+    .from('poll_hashtags')
+    .select(`
+      poll_id,
+      polls (
+        id,
+        title,
+        description,
+        total_votes,
+        created_at
+      )
+    `)
+    .in('hashtag', hashtags)
+    .eq('polls.status', 'active')
+    .order('polls.total_votes', { ascending: false })
+    .limit(20);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data.map(item => item.polls);
+};
+```
+
+---
+
+## 📊 **Analytics & Insights**
+
+### **Poll Analytics**
+```typescript
+// Get Poll Analytics
+const getPollAnalytics = async (pollId: string) => {
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('*')
+    .eq('id', pollId)
+    .single();
+    
+  const { data: votes } = await supabase
+    .from('votes')
+    .select('*, users(trust_tier)')
+    .eq('poll_id', pollId);
+    
+  const analytics = {
+    total_votes: votes.length,
+    unique_voters: new Set(votes.map(v => v.user_id)).size,
+    anonymous_votes: votes.filter(v => v.anonymous).length,
+    trust_tier_breakdown: calculateTrustTierBreakdown(votes),
+    time_series: calculateTimeSeries(votes),
+    demographic_breakdown: calculateDemographicBreakdown(votes),
+    engagement_metrics: calculateEngagementMetrics(poll, votes)
+  };
+  
+  return analytics;
+};
+
+// AI-Powered Insights
+const getAIPollInsights = async (pollId: string) => {
+  const analytics = await getPollAnalytics(pollId);
+  
+  // Send to AI service for analysis
+  const insights = await fetch('/api/analytics/unified/insights', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      poll_id: pollId,
+      analytics,
+      method: 'poll_insights'
+    })
+  });
+  
+  return insights.json();
+};
+```
+
+### **Trending System**
+```typescript
+// Calculate Poll Trending Score
+const calculatePollTrendingScore = async (pollId: string) => {
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('total_votes, created_at')
+    .eq('id', pollId)
+    .single();
+    
+  const { data: recentVotes } = await supabase
+    .from('votes')
+    .select('created_at')
+    .eq('poll_id', pollId)
+    .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    
+  // Calculate trending score based on recent activity
+  const recentVoteCount = recentVotes.length;
+  const timeDecay = Math.exp(-0.1 * (Date.now() - new Date(poll.created_at).getTime()) / (24 * 60 * 60 * 1000));
+  const trendingScore = recentVoteCount * timeDecay;
+  
+  // Update poll trending score
+  await supabase
+    .from('polls')
+    .update({ trending_score: trendingScore })
+    .eq('id', pollId);
+    
+  return trendingScore;
+};
+
+// Get Trending Polls
+const getTrendingPolls = async (limit: number = 20) => {
+  const { data, error } = await supabase
+    .from('polls')
+    .select('*')
+    .eq('status', 'active')
+    .eq('privacy_level', 'public')
+    .order('trending_score', { ascending: false })
+    .limit(limit);
+    
+  if (error) {
+    throw new Error(error.message);
+  }
+  
+  return data;
+};
+```
+
+---
+
+## 🔐 **Privacy & Security**
+
+### **Privacy Protection**
+```typescript
+// Differential Privacy for Results
+const applyDifferentialPrivacy = (results: PollResult[], epsilon: number = 1.0) => {
+  return results.map(result => ({
+    ...result,
+    votes: result.votes + Math.round(laplaceNoise(epsilon)),
+    percentage: Math.max(0, Math.min(100, 
+      (result.votes + Math.round(laplaceNoise(epsilon))) / 
+      results.reduce((sum, r) => sum + r.votes, 0) * 100
+    ))
+  }));
+};
+
+// K-Anonymity Check
+const checkKAnonymity = (votes: Vote[], k: number = 5) => {
+  const optionCounts = new Map<string, number>();
+  
+  votes.forEach(vote => {
+    const current = optionCounts.get(vote.option_id) || 0;
+    optionCounts.set(vote.option_id, current + 1);
+  });
+  
+  return Array.from(optionCounts.values()).every(count => count >= k);
+};
+```
+
+### **Access Control**
+```typescript
+// Poll Access Control
+const checkPollAccess = async (pollId: string, userId?: string) => {
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('privacy_level, created_by, status')
+    .eq('id', pollId)
+    .single();
+    
+  if (!poll) {
+    return { access: false, reason: 'Poll not found' };
+  }
+  
+  if (poll.status !== 'active') {
+    return { access: false, reason: 'Poll is not active' };
+  }
+  
+  // Public polls are accessible to all
+  if (poll.privacy_level === 'public') {
+    return { access: true };
+  }
+  
+  // Private polls require authentication
+  if (!userId) {
+    return { access: false, reason: 'Authentication required' };
+  }
+  
+  // Private polls are only accessible to creator
+  if (poll.privacy_level === 'private' && poll.created_by !== userId) {
+    return { access: false, reason: 'Access denied' };
+  }
+  
+  return { access: true };
+};
+```
+
+---
+
+## 🛠️ **API Endpoints**
+
+### **Poll Management**
+```typescript
+// POST /api/polls
+const createPollEndpoint = {
+  method: 'POST',
+  path: '/api/polls',
+  body: {
+    title: string,
+    description?: string,
+    options: Array<{ text: string }>,
+    privacy_level: 'public' | 'private' | 'unlisted',
+    poll_type: 'single_choice' | 'multiple_choice' | 'ranked_choice',
+    expires_at?: string,
+    hashtags?: string[]
+  },
+  response: {
+    poll: Poll
+  }
+};
+
+// GET /api/polls/{id}
+const getPollEndpoint = {
+  method: 'GET',
+  path: '/api/polls/{id}',
+  response: {
+    poll: Poll,
+    results?: PollResults
+  }
+};
+
+// POST /api/polls/{id}/vote
+const voteEndpoint = {
+  method: 'POST',
+  path: '/api/polls/{id}/vote',
+  body: {
+    option_id: string,
+    anonymous?: boolean
+  },
+  response: {
+    success: boolean,
+    vote_id: string
+  }
+};
+```
+
+### **Analytics Endpoints**
+```typescript
+// GET /api/polls/{id}/results
+const getResultsEndpoint = {
+  method: 'GET',
+  path: '/api/polls/{id}/results',
+  response: {
+    poll_id: string,
+    total_votes: number,
+    results: Array<{
+      option_id: string,
+      text: string,
+      votes: number,
+      percentage: number
+    }>,
+    breakdown: {
+      by_trust_tier: Record<string, any>,
+      by_demographics: Record<string, any>
+    }
+  }
+};
+
+// GET /api/polls/{id}/analytics
+const getAnalyticsEndpoint = {
+  method: 'GET',
+  path: '/api/polls/{id}/analytics',
+  response: {
+    analytics: PollAnalytics,
+    insights?: AIInsights
+  }
+};
+```
+
+---
+
+## 🔍 **Testing**
+
+### **Poll Creation Tests**
+```typescript
+describe('Poll Creation', () => {
+  it('should create a public poll', async () => {
+    const pollData = {
+      title: 'Test Poll',
+      description: 'A test poll',
+      options: [
+        { text: 'Option A' },
+        { text: 'Option B' }
+      ],
+      privacy_level: 'public',
+      poll_type: 'single_choice'
+    };
+    
+    const response = await request(app)
+      .post('/api/polls')
+      .send(pollData)
+      .expect(201);
+      
+    expect(response.body.poll.title).toBe('Test Poll');
+    expect(response.body.poll.options).toHaveLength(2);
+  });
+});
+```
+
+### **Voting Tests**
+```typescript
+describe('Voting System', () => {
+  it('should allow anonymous voting', async () => {
+    const poll = await createTestPoll();
+    
+    const response = await request(app)
+      .post(`/api/polls/${poll.id}/vote`)
+      .send({
+        option_id: poll.options[0].id,
+        anonymous: true
+      })
+      .expect(200);
+      
+    expect(response.body.success).toBe(true);
+  });
+});
+```
+
+---
+
+## 🎯 **Best Practices**
+
+### **Poll Design**
+- **Clear Questions**: Use clear, unambiguous questions
+- **Balanced Options**: Provide balanced answer options
+- **Appropriate Privacy**: Choose appropriate privacy levels
+- **Relevant Hashtags**: Use relevant hashtags for discovery
+
+### **Voting Experience**
+- **Fast Loading**: Optimize poll loading performance
+- **Clear Results**: Display results clearly and accurately
+- **Privacy Respect**: Respect user privacy preferences
+- **Mobile Friendly**: Ensure mobile-friendly voting experience
+
+### **Analytics Usage**
+- **Privacy First**: Protect user privacy in analytics
+- **Actionable Insights**: Provide actionable insights
+- **Transparent Methods**: Be transparent about analysis methods
+- **User Control**: Give users control over their data
+
+---
+
+**Polls Documentation Version**: 1.0.0  
+**Last Updated**: October 27, 2025  
+**Status**: ✅ Production Ready
+
+---
+
+*This polls documentation provides complete coverage of the Choices platform polling system.*

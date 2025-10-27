@@ -5,25 +5,25 @@
  * the drift between DB schema and code expectations.
  */
 
-export type DbVotingMethod = 'single'|'approval'|'ranked'|'range'|'quadratic'|'multiple';
-export type UiVotingMethod = 'single_choice'|'multiple_choice'|'approval'|'ranked_choice'|'range'|'quadratic';
+export type DbVotingMethod = 'single'|'multiple'|'approval'|'ranked'|'range'|'quadratic';
+export type UiVotingMethod = 'single'|'multiple'|'approval'|'ranked'|'range'|'quadratic';
 
 export const mapDbToUi: Record<DbVotingMethod, UiVotingMethod> = {
-  single: 'single_choice',
+  single: 'single',
+  multiple: 'multiple',
   approval: 'approval',
-  ranked: 'ranked_choice',
+  ranked: 'ranked',
   range: 'range',
-  quadratic: 'quadratic',
-  multiple: 'multiple_choice',
+  quadratic: 'quadratic'
 };
 
 export const mapUiToDb: Record<UiVotingMethod, DbVotingMethod> = {
-  single_choice: 'single',
-  multiple_choice: 'multiple',
+  single: 'single',
+  multiple: 'multiple',
   approval: 'approval',
-  ranked_choice: 'ranked',
+  ranked: 'ranked',
   range: 'range',
-  quadratic: 'quadratic',
+  quadratic: 'quadratic'
 };
 
 /**
