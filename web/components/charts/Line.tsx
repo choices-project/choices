@@ -15,3 +15,4 @@ const RechartsLine = dynamic(() => import('./RechartsLineImpl'), {
 export default function Line(props: any) {
   return <RechartsLine {...props} />
 }
+

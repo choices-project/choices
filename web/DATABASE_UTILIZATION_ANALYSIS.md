@@ -277,3 +277,5 @@ Our database has **37 sophisticated tables** but our application code is only us
 ---
 
 **Conclusion**: Our database is incredibly sophisticated and we're massively underutilizing it. We have the foundation for a world-class civic engagement platform.
+
+

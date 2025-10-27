@@ -626,3 +626,4 @@ export const getCriticalPaths = (): CriticalPath[] => {
 };
 
 export default getUserJourneyMapper;
+

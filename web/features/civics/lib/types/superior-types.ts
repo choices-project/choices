@@ -34,14 +34,18 @@ export interface SuperiorRepresentativeData {
   congress_gov_id?: string;
   govinfo_id?: string;
   
-  // Contact information
-  email?: string;
-  phone?: string;
-  website?: string;
+  // Social media information
   twitter?: string;
   facebook?: string;
+  enhancedSocialMedia?: Array<{
+    platform: string;
+    handle: string;
+    url?: string;
+    followersCount?: number;
+    verified?: boolean;
+  }>;
   
-  // Physical information
+  // Additional metadata
   photo?: string;
   photoUrl?: string;
   enhancedContacts?: Array<{
@@ -52,11 +56,27 @@ export interface SuperiorRepresentativeData {
     isVerified: boolean;
   }>;
   
+  enhancedSocialMedia?: Array<{
+    platform: string;
+    url: string;
+    followersCount?: number;
+    verified?: boolean;
+  }>;
+  
   enhancedPhotos?: Array<{
     url: string;
     type: 'primary' | 'secondary' | 'thumbnail';
     width?: number;
     height?: number;
+  }>;
+  
+  enhancedActivity?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    date: string;
+    source: string;
+    url?: string;
   }>;
   
   // Term information

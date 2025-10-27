@@ -7,8 +7,6 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
-import { useCivicsActions, useCivicsLoading } from '@/lib/stores';
-
 interface CivicsNavigationProps {
   onRepresentativesClick: () => void;
   onAddressUpdate: (address: string) => void;
@@ -22,19 +20,18 @@ export default function CivicsNavigation({
 }: CivicsNavigationProps) {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState('');
-  const { loadRepresentatives } = useCivicsActions();
-  const addressLoading = useCivicsLoading();
+  const [addressLoading, setAddressLoading] = useState(false);
 
   const handleAddressUpdate = async () => {
     try {
-      // Use CivicsStore to load representatives
-      await loadRepresentatives(newAddress);
-      
+      setAddressLoading(true);
       onAddressUpdate(newAddress);
       setShowAddressForm(false);
       setNewAddress('');
     } catch (error) {
       console.error('Address update failed:', error);
+    } finally {
+      setAddressLoading(false);
     }
   };
 

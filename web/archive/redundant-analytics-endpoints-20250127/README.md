@@ -138,3 +138,4 @@ The unified endpoint returns a comprehensive response with:
 - Migration should be straightforward with the examples above
 - The unified endpoint includes all functionality from the archived endpoints
 - Future analytics features should be added to the unified endpoint
+

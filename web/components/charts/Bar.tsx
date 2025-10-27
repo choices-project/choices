@@ -15,3 +15,4 @@ const RechartsBar = dynamic(() => import('./RechartsBarImpl'), {
 export default function Bar(props: any) {
   return <RechartsBar {...props} />
 }
+

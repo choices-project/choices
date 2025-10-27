@@ -15,3 +15,4 @@ const RechartsPie = dynamic(() => import('./RechartsPieImpl'), {
 export default function Pie(props: any) {
   return <RechartsPie {...props} />
 }
+

@@ -142,12 +142,12 @@ export default function EnhancedCandidateCard({
         if (deltaX > 0) {
           // Swipe right - previous photo
           setActivePhotoIndex(prev => 
-            prev > 0 ? prev - 1 : representative.enhancedPhotos.length - 1
+            prev > 0 ? prev - 1 : (representative.enhancedPhotos?.length || 1) - 1
           );
         } else {
           // Swipe left - next photo
           setActivePhotoIndex(prev => 
-            prev < representative.enhancedPhotos.length - 1 ? prev + 1 : 0
+            prev < (representative.enhancedPhotos?.length || 1) - 1 ? prev + 1 : 0
           );
         }
       }
@@ -412,10 +412,10 @@ export default function EnhancedCandidateCard({
           )}
 
           {/* Quality score badge */}
-          <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality.overallConfidence)}`}>
+          <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality?.overallConfidence || 0)}`}>
             <div className="flex items-center space-x-1">
               <CheckCircleIcon className="w-3 h-3" />
-              <span>{representative.dataQuality.overallConfidence}% Complete</span>
+              <span>{representative.dataQuality?.overallConfidence || 0}% Complete</span>
             </div>
           </div>
 

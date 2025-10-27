@@ -133,7 +133,7 @@ export function PasskeyButton({
   return (
     <div className={className}>
       <button
-        data-testid={mode === 'register' ? T.webauthn.register : T.webauthn.login}
+        data-testid={mode === 'register' ? T.WEBAUTHN.WEBAUTHN_REGISTER : T.WEBAUTHN.WEBAUTHN_AUTHENTICATE}
         onClick={handleClick}
         disabled={loading || disabled}
         className={`
@@ -159,7 +159,7 @@ export function PasskeyButton({
       )}
 
       {showPrompt && (
-        <div className="mt-4" data-testid={T.webauthn.prompt}>
+        <div className="mt-4" data-testid={T.WEBAUTHN.authPrompt}>
           <WebAuthnPrompt
             mode={mode}
             onComplete={handlePromptComplete}

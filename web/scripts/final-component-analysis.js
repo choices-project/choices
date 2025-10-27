@@ -223,3 +223,4 @@ const analyzer = new NextJSAwareAnalyzer();
 const results = analyzer.generateFinalReport();
 
 console.log('\n✅ Final analysis complete!');
+

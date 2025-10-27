@@ -453,3 +453,4 @@ export function createSecurityTester(page: Page, config?: Partial<SecurityTestCo
   return new SecurityTester(page, config);
 }
 
+

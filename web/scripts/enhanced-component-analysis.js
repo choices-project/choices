@@ -181,3 +181,4 @@ const analyzer = new EnhancedComponentAnalyzer();
 const results = analyzer.generateReport();
 
 console.log('\n✅ Enhanced analysis complete!');
+

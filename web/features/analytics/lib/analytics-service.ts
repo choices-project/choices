@@ -8,7 +8,7 @@ import type {
   AnalyticsSummary,
   PollAnalytics,
   UserAnalytics
-} from '@/types/analytics'
+} from '@/types/features/analytics'
 
 // Use database types for actual schema
 import type { Database } from '@/types/database'

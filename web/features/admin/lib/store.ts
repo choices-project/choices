@@ -407,13 +407,13 @@ export const useAdminStore = create<AdminStore>()(
       
       importFeatureFlagConfig: (config: FeatureFlagConfig) => {
         try {
-          featureFlagManager.importConfig(config);
+          featureFlagManager.importConfig(config as any);
           set((state: any) => ({
             featureFlags: {
               ...state.featureFlags,
-              flags: { ...config.flags },
-              enabledFlags: Object.keys(config.flags).filter(key => config.flags[key]),
-              disabledFlags: Object.keys(config.flags).filter(key => !config.flags[key])
+              flags: config.flags || [],
+              enabledFlags: (config.flags || []).filter(flag => flag.enabled).map(flag => flag.id),
+              disabledFlags: (config.flags || []).filter(flag => !flag.enabled).map(flag => flag.id)
             }
           }));
           

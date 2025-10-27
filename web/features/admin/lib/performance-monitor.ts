@@ -122,7 +122,7 @@ class PerformanceMonitor {
 
     const totalOperations = recentMetrics.length;
     const averageResponseTime = totalOperations > 0 
-      ? recentMetrics.reduce((sum, m) => sum + m.duration, 0) / totalOperations 
+      ? recentMetrics.reduce((sum, m) => sum + (m.duration || 0), 0) / totalOperations 
       : 0;
     
     const errorRate = totalOperations > 0 
@@ -130,7 +130,7 @@ class PerformanceMonitor {
       : 0;
 
     const slowestOperations = recentMetrics
-      .sort((a, b) => b.duration - a.duration)
+      .sort((a, b) => (b.duration || 0) - (a.duration || 0))
       .slice(0, 10);
 
     const recommendations = this.generateRecommendations(recentMetrics, recentAlerts);
@@ -152,10 +152,10 @@ class PerformanceMonitor {
     const recommendations: string[] = [];
 
     // Check for slow operations
-    const slowOperations = metrics.filter(m => m.duration > 1000);
+    const slowOperations = metrics.filter(m => (m.duration || 0) > 1000);
     if (slowOperations.length > 0) {
       const operationCounts = slowOperations.reduce((acc, m) => {
-        acc[m.operation] = (acc[m.operation] || 0) + 1;
+        acc[m.operation || 'unknown'] = (acc[m.operation || 'unknown'] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
@@ -240,7 +240,7 @@ class PerformanceMonitor {
     if (recentMetrics.length === 0) return 100;
 
     const errorRate = recentMetrics.filter(m => !m.success).length / recentMetrics.length;
-    const averageResponseTime = recentMetrics.reduce((sum, m) => sum + m.duration, 0) / recentMetrics.length;
+    const averageResponseTime = recentMetrics.reduce((sum, m) => sum + (m.duration || 0), 0) / recentMetrics.length;
     
     let score = 100;
     

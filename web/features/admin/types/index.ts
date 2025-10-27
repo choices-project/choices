@@ -19,20 +19,52 @@ export interface PerformanceMetric {
 
 export interface SystemPerformanceAlert {
   id: string;
-  alert_type: string;
+  type: string;
   severity: string;
   message: string;
   timestamp: string;
   resolved: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface PerformanceReport {
-  id: string;
-  report_name: string;
+  id?: string;
+  report_name?: string;
   generated_at: string;
-  metrics: PerformanceMetric[];
+  metrics?: PerformanceMetric[];
   alerts: SystemPerformanceAlert[];
   totalOperations: number;
+  period: string;
+  averageResponseTime: number;
+  errorRate: number;
+  slowestOperations: PerformanceMetric[];
+  recommendations: string[];
+}
+
+export interface ActivityItem {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  user_id?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface AdminStore {
+  // Store interface properties
+  [key: string]: any;
+}
+
+export interface FeatureFlagConfig {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description: string;
+  flags?: FeatureFlag[];
+  categories?: string[];
+  environment?: string;
+  version?: string;
 }
 
 export interface TrendingTopic {
@@ -70,6 +102,11 @@ export interface SystemMetrics {
   disk_usage?: number;
   system_health: string;
   last_updated: string;
+  performance_metrics?: {
+    response_time_avg: number;
+    error_rate: number;
+    throughput: number;
+  };
 }
 
 export interface BreakingNewsStory {
