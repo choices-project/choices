@@ -752,17 +752,6 @@ class PWAAnalytics {
   }
 }
 
-// Create singleton instance
-let pwaAnalyticsInstance: PWAAnalytics | null = null;
-
-export function getPWAAnalytics(analyticsEngine?: AnalyticsEngine): PWAAnalytics {
-  if (!pwaAnalyticsInstance) {
-    if (!analyticsEngine) {
-      throw new Error('AnalyticsEngine is required for PWA Analytics');
-    }
-    pwaAnalyticsInstance = new PWAAnalytics(analyticsEngine);
-  }
-  return pwaAnalyticsInstance;
-}
+// Singleton instance removed - function was unused
 
 export default PWAAnalytics;

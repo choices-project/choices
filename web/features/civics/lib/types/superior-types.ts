@@ -44,11 +44,20 @@ export interface SuperiorRepresentativeData {
   // Physical information
   photo?: string;
   photoUrl?: string;
-  enhancedPhotos?: {
-    primary?: string;
-    secondary?: string;
-    thumbnail?: string;
-  };
+  enhancedContacts?: Array<{
+    type: string;
+    value: string;
+    source: string;
+    isPrimary: boolean;
+    isVerified: boolean;
+  }>;
+  
+  enhancedPhotos?: Array<{
+    url: string;
+    type: 'primary' | 'secondary' | 'thumbnail';
+    width?: number;
+    height?: number;
+  }>;
   
   // Term information
   termStart?: string;
@@ -58,12 +67,28 @@ export interface SuperiorRepresentativeData {
   
   // Data quality and verification
   dataQualityScore?: number;
+  dataQuality?: {
+    overallConfidence: number;
+    sourceReliability: number;
+    completenessScore: number;
+  };
   isCurrentElectorate?: boolean;
   lastVerified?: string;
   dataSource?: string[];
   
   // Additional metadata
   metadata?: Record<string, any>;
+  
+  // Data quality and verification
+  dataQuality?: {
+    overallConfidence: number;
+    completenessScore: number;
+    accuracyScore: number;
+    freshnessScore: number;
+    sourceReliability: number;
+  };
+  
+  verificationStatus?: 'verified' | 'unverified' | 'pending';
 }
 
 /**

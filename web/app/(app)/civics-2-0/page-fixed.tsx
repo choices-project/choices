@@ -355,7 +355,7 @@ export default function Civics2Page() {
                       </div>
 
                       {/* Contact Information */}
-                      {representative.enhancedContacts?.length > 0 && (
+                      {representative.enhancedContacts && representative.enhancedContacts.length > 0 && (
                         <div className="p-6 border-t border-gray-100">
                           <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                             <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -461,11 +461,11 @@ export default function Civics2Page() {
                             </div>
                             <div className="flex items-center space-x-2">
                               <span className="text-sm text-gray-600">Quality:</span>
-                              <span className="text-sm font-bold text-blue-600">{representative.dataQuality.overallConfidence}/100</span>
+                              <span className="text-sm font-bold text-blue-600">{representative.dataQuality?.overallConfidence || 0}/100</span>
                             </div>
                           </div>
                           <div className="text-xs text-gray-500">
-                            Sources: {representative.dataSources?.join(', ')}
+                            Sources: {representative.dataSource?.join(', ')}
                           </div>
                         </div>
                       </div>

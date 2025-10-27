@@ -54,7 +54,7 @@ class PerformanceMonitor {
   // Check for performance issues and create alerts
   private checkPerformanceIssues(metric: PerformanceMetric) {
     // Check for slow queries
-    if (metric.duration > this.alertThresholds.slowQuery) {
+    if (metric.duration && metric.duration > this.alertThresholds.slowQuery) {
       this.createAlert({
         type: 'slow_query',
         severity: metric.duration > 5000 ? 'critical' : 'high',
