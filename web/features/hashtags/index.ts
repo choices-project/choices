@@ -23,7 +23,6 @@ export * from './lib/hashtag-analytics';
 export * from './lib/hashtag-moderation';
 
 // Types
-export * from './types';
 
 // Pages
 export { default as HashtagIntegrationPage } from './pages/HashtagIntegrationPage';

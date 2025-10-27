@@ -38,7 +38,7 @@ import Image from 'next/image';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 // Import types from the pipeline
-import type { SuperiorRepresentativeData } from '../lib/civics-superior/superior-data-pipeline';
+import type { SuperiorRepresentativeData } from '../lib/types/superior-types';
 import ContactModal from '@/features/contact/components/ContactModal';
 import { useAuth } from '@/hooks/useAuth';
 

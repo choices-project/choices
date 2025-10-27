@@ -42,6 +42,8 @@ export default function PollHashtagIntegration({
   const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegration | null>(
     poll.hashtags ? {
       poll_id: poll.id,
+      hashtag_id: poll.id, // Add required property
+      created_at: new Date().toISOString(), // Add required property
       hashtags: poll.hashtags,
       primary_hashtag: poll.primary_hashtag ?? '',
       hashtag_engagement: poll.hashtag_engagement ?? {
@@ -141,8 +143,8 @@ export default function PollHashtagIntegration({
   };
 
   // Get hashtag objects for display
-  const pollHashtagObjects = hashtagIntegration?.hashtags?.map(hashtagName => 
-    hashtags.find(h => h.name === hashtagName)
+  const pollHashtagObjects = hashtagIntegration?.hashtags?.map((hashtagName: any) => 
+    hashtags.find((h: any) => h.name === hashtagName)
   ).filter(Boolean) as Hashtag[] ?? [];
 
   // Get trending hashtags for suggestions
@@ -241,7 +243,7 @@ export default function PollHashtagIntegration({
                       <div>
                         <p className="text-sm font-medium mb-2">Primary Hashtag:</p>
                         <div className="flex flex-wrap gap-2">
-                          {hashtagIntegration.hashtags.map((hashtag, index) => (
+                          {hashtagIntegration.hashtags.map((hashtag: any, index: number) => (
                             <Button
                               key={`primary-${hashtag}-${index}`}
                               variant={hashtag === hashtagIntegration.primary_hashtag ? "default" : "outline"}
@@ -262,7 +264,7 @@ export default function PollHashtagIntegration({
                       <div>
                         <p className="text-sm font-medium mb-2">All Hashtags:</p>
                         <div className="flex flex-wrap gap-2">
-                          {hashtagIntegration.hashtags.map((hashtag, index) => (
+                          {hashtagIntegration.hashtags.map((hashtag: any, index: number) => (
                             <Badge key={`all-${hashtag}-${index}`} variant="secondary" className="flex items-center gap-1">
                               <Hash className="h-3 w-3" />
                               {hashtag}
@@ -428,7 +430,7 @@ export default function PollHashtagIntegration({
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Hashtag Performance</p>
                     <div className="space-y-1">
-                      {hashtagIntegration.hashtags.map((hashtag, index) => (
+                      {hashtagIntegration.hashtags.map((hashtag: any, index: number) => (
                         <div key={`performance-${hashtag}-${index}`} className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1">
                             <Hash className="h-3 w-3" />

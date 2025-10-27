@@ -1,4 +1,14 @@
 /**
+ * FEEDS Feature Exports
+ * 
+ * Feature exports for feeds functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
+/**
  * Feeds Feature - Clean Exports
  * 
  * Centralized exports for all feed-related functionality

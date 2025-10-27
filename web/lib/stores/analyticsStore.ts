@@ -400,7 +400,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             setError(null);
             
             const state = get();
-            const response = await fetch('/api/analytics/events', {
+            const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -444,7 +444,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/analytics/report', {
+            const response = await fetch('/api/analytics/unified/report?methods=comprehensive&ai-provider=rule-based', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ startDate, endDate }),

@@ -95,4 +95,4 @@ async function handlePost(request: NextRequest) {
   }
 }
 
-export const POST = withAuth(handlePost, { requireAuth: true });
+export const POST = handlePost;

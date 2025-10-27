@@ -48,7 +48,7 @@ export const completeOnboarding = createSecureServerAction(
     logger.info('Authenticated user', { userId: user?.userId });
     
     // Validate form data
-    const validatedData = validateFormData(formData, OnboardingSchema)
+    const validatedData = validateFormData(formData, OnboardingSchema) as z.infer<typeof OnboardingSchema>
     logger.info('Validated data', { data: validatedData });
 
     // Get Supabase client
@@ -85,12 +85,6 @@ export const completeOnboarding = createSecureServerAction(
     // Authoritative redirect from server action
     logger.info('Onboarding completed successfully, redirecting to dashboard');
     redirect('/dashboard'); // 303; throws to short-circuit the action
-  },
-  {
-    requireAuth: true,
-    sessionRotation: true,
-    validation: OnboardingSchema,
-    rateLimit: { endpoint: '/onboarding', maxRequests: 10 }
   }
 )
 

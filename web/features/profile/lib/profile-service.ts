@@ -17,11 +17,11 @@ import type {
   AvatarUploadResult,
   ProfileExportData,
   ExportOptions
-} from '../types';
+} from '@/types/profile';
 import { 
   PROFILE_CONSTANTS,
   PROFILE_DEFAULTS
-} from '../types';
+} from '@/types/profile';
 
 // ============================================================================
 // PROFILE VALIDATION

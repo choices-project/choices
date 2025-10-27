@@ -255,7 +255,8 @@ export default function PollTemplatesPage() {
                          template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || 
+      (typeof selectedCategory === 'object' ? template.category === selectedCategory.id : template.category === selectedCategory);
     
     return matchesSearch && matchesCategory;
   });
@@ -268,10 +269,12 @@ export default function PollTemplatesPage() {
         comparison = b.usageCount - a.usageCount;
         break;
       case 'recent':
-        comparison = b.createdAt.getTime() - a.createdAt.getTime();
+        const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt).getTime();
+        const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt).getTime();
+        comparison = bTime - aTime;
         break;
       case 'rating':
-        comparison = b.rating - a.rating;
+        comparison = (b.rating || 0) - (a.rating || 0);
         break;
       case 'name':
         comparison = a.name.localeCompare(b.name);
@@ -321,8 +324,16 @@ export default function PollTemplatesPage() {
             </div>
             <div className="flex gap-2">
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as PollCategory | 'all')}
+                value={selectedCategory === 'all' ? 'all' : selectedCategory.id}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'all') {
+                    setSelectedCategory('all');
+                  } else {
+                    const category = TEMPLATECATEGORIES.find(cat => cat.id === value);
+                    setSelectedCategory(category || 'all');
+                  }
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Categories</option>
@@ -401,7 +412,7 @@ export default function PollTemplatesPage() {
                       {template.description}
                     </CardDescription>
                   </div>
-                  <Badge className={getDifficultyColor(template.difficulty)}>
+                  <Badge className={getDifficultyColor(template.difficulty || 'beginner')}>
                     {template.difficulty}
                   </Badge>
                 </div>

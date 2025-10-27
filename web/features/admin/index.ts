@@ -1,3 +1,13 @@
+/**
+ * ADMIN Feature Exports
+ * 
+ * Feature exports for admin functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
 // Admin Components
 export { default as ComprehensiveAdminDashboard } from './components/ComprehensiveAdminDashboard';
 export { default as AdminDashboard } from './components/AdminDashboard';
@@ -11,5 +21,4 @@ export * from './lib/hooks';
 export * from './lib/store';
 
 // Admin Types
-export * from './types';
 

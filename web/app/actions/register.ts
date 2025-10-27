@@ -8,8 +8,8 @@ import { logSecurityEvent } from '../../lib/core/auth/server-actions';
 
 // Import the existing ServerActionContext type
 import type { ServerActionContext } from '../../lib/core/auth/server-actions';
-import { TypeGuardError } from '../../lib/core/types/guards';
-import { logger } from '../../lib/logger';
+import { TypeGuardError } from '@/lib/core/types/guards';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient, getSupabaseAdminClient } from '../../utils/supabase/server';
 
 /**

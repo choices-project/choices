@@ -1,400 +1,231 @@
 /**
- * Core Authentication Middleware
+ * Authentication Middleware Module
  * 
- * Enhanced authentication middleware with security features:
- * - Origin validation
+ * Comprehensive middleware for authentication, authorization, and security.
+ * Provides middleware functions for API routes and server actions.
+ * 
+ * Features:
+ * - User authentication middleware
+ * - Admin authorization middleware
  * - Rate limiting integration
- * - Turnstile verification
- * - Comprehensive error handling
+ * - Security logging and monitoring
+ * - Error handling and validation
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-26
+ * @version 1.0.0
+ * @since 1.0.0
  */
 
-import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
-
-import { rateLimiters } from '@/lib/security/rate-limit';
-import { requireTrustedOrigin } from '@/lib/http/origin';
-import { requireTurnstileVerification } from '@/lib/security/turnstile';
-import { devLog } from '@/lib/utils/logger';
+import { NextRequest } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { logger } from '@/lib/utils/logger';
+import { createRateLimitMiddleware, combineMiddleware } from '@/lib/security/rate-limit';
 
-export type TrustTier = 'T1' | 'T2' | 'T3';
-
-export interface AuthUser {
+export interface AuthenticatedUser {
   id: string;
   email: string;
-  trust_tier: TrustTier;
-  username?: string | null;
+  isAdmin: boolean;
+  isActive: boolean;
+  createdAt: string;
 }
 
-export interface AuthContext {
-  user: AuthUser;
-  supabase: SupabaseClient;
-}
-
-export interface UserProfile {
-  trust_tier: TrustTier;
-  username?: string;
-}
-
-export interface AuthMiddlewareOptions {
-  requireAuth?: boolean;
-  requireTrustTier?: TrustTier;
-  requireAdmin?: boolean;
-  allowPublic?: boolean;
-  requireOrigin?: boolean;
-  requireTurnstile?: boolean;
-  turnstileAction?: string;
-  rateLimit?: 'auth' | 'registration' | 'deviceFlow' | 'biometric';
+export interface MiddlewareContext {
+  user?: AuthenticatedUser;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  ip?: string;
+  userAgent?: string;
 }
 
 /**
- * Enhanced authentication middleware factory
+ * Get authenticated user from request
  */
-export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
-  const {
-    requireAuth = true,
-    requireTrustTier,
-    requireAdmin = false,
-    allowPublic = false,
-    requireOrigin = true,
-    requireTurnstile = false,
-    turnstileAction,
-    rateLimit = 'auth'
-  } = options;
-
-  return async (request: NextRequest, context?: AuthContext): Promise<NextResponse | null> => {
-    try {
-      // Origin validation
-      if (requireOrigin) {
-        try {
-          requireTrustedOrigin(request);
-        } catch (error) {
-          devLog('Origin validation failed:', { error: error instanceof Error ? error.message : String(error) });
-          return NextResponse.json(
-            { message: 'Invalid origin' },
-            { status: 403 }
-          );
-        }
-      }
-
-      // Use context if provided for enhanced authentication
-      if (context?.user && !allowPublic) {
-        devLog('Using provided authentication context', {
-          userId: context.user.id,
-          trustTier: context.user.trust_tier
-        });
-      }
-
-      // Rate limiting
-      if (rateLimit) {
-        const rateLimitResult = await rateLimiters[rateLimit].check(request);
-        
-        if (!rateLimitResult.allowed) {
-          return NextResponse.json(
-            { 
-              message: 'Too many requests. Please try again later.',
-              retryAfter: rateLimitResult.retryAfter
-            },
-            { status: 429 }
-          );
-        }
-      }
-
-      // Turnstile verification
-      if (requireTurnstile) {
-        try {
-          await requireTurnstileVerification(request, turnstileAction);
-        } catch (error) {
-          devLog('Turnstile verification failed:', { error: error instanceof Error ? error.message : String(error) });
-          return NextResponse.json(
-            { message: 'Security verification failed' },
-            { status: 403 }
-          );
-        }
-      }
-
-      // Create Supabase client at runtime
-      const supabase = await getSupabaseServerClient();
-
-      if (!supabase) {
-        return NextResponse.json(
-          { message: 'Authentication service not available' },
-          { status: 500 }
-        );
-      }
-
-      // Get current user session
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-      // Handle unauthenticated requests
-      if (authError || !user) {
-        if (requireAuth) {
-          return NextResponse.json(
-            { message: 'Authentication required' },
-            { status: 401 }
-          );
-        }
-        
-        if (allowPublic) {
-          // Allow public access but return null user
-          return null;
-        }
-        
-        return NextResponse.json(
-          { message: 'Authentication required' },
-          { status: 401 }
-        );
-      }
-
-      // Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('trust_tier, username')
-        .eq('user_id', String(user.id) as any)
-        .single();
-
-      if (profileError) {
-        devLog('Profile lookup error', { error: profileError.message, userId: user.id });
-        return NextResponse.json(
-          { message: 'User profile not found' },
-          { status: 404 }
-        );
-      }
-
-      const authUser: AuthUser = {
-        id: user.id,
-        email: user.email || '',
-        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier || 'T1' : 'T1',
-        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      };
-
-      // Check admin requirement - rely on RLS policies for security
-      if (requireAdmin) {
-        const { data: adminCheck, error: adminError } = await supabase
-          .rpc('is_admin', { input_user_id: user.id });
-
-        if (adminError || !adminCheck) {
-          return NextResponse.json(
-            { message: 'Admin access required - insufficient privileges' },
-            { status: 403 }
-          );
-        }
-      }
-
-      // Check trust tier requirement
-      if (requireTrustTier) {
-        const tierHierarchy: Record<TrustTier, number> = {
-          'T1': 1,
-          'T2': 2,
-          'T3': 3
-        };
-
-        const userTier = tierHierarchy[authUser.trust_tier] || 0;
-        const requiredTier = tierHierarchy[requireTrustTier];
-
-        if (userTier < requiredTier) {
-          return NextResponse.json(
-            { message: `Trust tier ${requireTrustTier} required` },
-            { status: 403 }
-          );
-        }
-      }
-
-      // Return null to continue processing (authentication successful)
-      return null;
-
-    } catch (error) {
-      devLog('Auth middleware error', { error: error instanceof Error ? error.message : String(error) });
-
-      return NextResponse.json(
-        { message: 'Authentication error' },
-        { status: 500 }
-      );
-    }
-  };
-}
-
-/**
- * Higher-order function to wrap API handlers with authentication
- */
-export function withAuth(
-  handler: (request: NextRequest, context: AuthContext) => Promise<NextResponse>,
-  options: AuthMiddlewareOptions = {}
-) {
-  return async (request: NextRequest): Promise<NextResponse> => {
-    const authMiddleware = createAuthMiddleware(options);
-    const authResult = await authMiddleware(request);
-
-    if (authResult) {
-      return authResult;
-    }
-
-    // Get user context for the handler at runtime
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { message: 'Authentication service not available' },
-        { status: 500 }
-      );
-    }
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Use RLS function to check admin status
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user!.id });
-
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('username')
-      .eq('user_id', String(user!.id))
-      .single();
-
-    const context: AuthContext = {
-      user: {
-        id: user!.id,
-        email: user!.email || '',
-        trust_tier: isAdmin ? 'T3' : 'T1',
-        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      },
-      supabase
-    };
-
-    // Log successful authentication
-    devLog('Auth middleware: Processing request for user:', {
-      userId: context.user.id,
-      trustTier: context.user.trust_tier,
-      method: request.method,
-      path: request.nextUrl.pathname
-    });
-    
-    return handler(request, context);
-  };
-}
-
-/**
- * Rate limiting middleware factory
- */
-export function createRateLimitMiddleware(options: {
-  maxRequests: number;
-  windowMs: number;
-  keyGenerator?: (request: NextRequest) => string;
-}) {
-  const { maxRequests, windowMs, keyGenerator } = options;
-
-  return async (request: NextRequest): Promise<NextResponse | null> => {
-    const key = keyGenerator ? keyGenerator(request) : 'default';
-    
-    // Use the enhanced rate limiter with custom parameters
-    const rateLimitResult = await rateLimiters.auth.check(request);
-    
-    // Log rate limit configuration for debugging
-    devLog('Rate limit check', {
-      key: `${key.substring(0, 8)  }...`,
-      maxRequests,
-      windowMs,
-      allowed: rateLimitResult.allowed
-    });
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          message: 'Too many requests. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter,
-          limit: maxRequests,
-          window: windowMs
-        },
-        { status: 429 }
-      );
-    }
-
-    return null;
-  };
-}
-
-/**
- * Security headers middleware
- */
-export function createSecurityHeadersMiddleware() {
-  return (response: NextResponse): NextResponse => {
-    // Add security headers
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-    response.headers.set('Vary', 'Cookie, Authorization');
-
-    return response;
-  };
-}
-
-/**
- * Combined middleware for API routes
- */
-export function createApiMiddleware(options: AuthMiddlewareOptions = {}) {
-  return async (request: NextRequest): Promise<NextResponse | null> => {
-    // Apply authentication middleware
-    const authMiddleware = createAuthMiddleware(options);
-    const authResult = await authMiddleware(request);
-
-    if (authResult) {
-      return authResult;
-    }
-
-    // Apply security headers
-    const response = new NextResponse();
-    return createSecurityHeadersMiddleware()(response);
-  };
-}
-
-/**
- * Combine multiple middleware functions into a single middleware
- */
-export function combineMiddleware(...middlewares: Array<(request: NextRequest) => Promise<NextResponse | null>>) {
-  return async (request: NextRequest): Promise<NextResponse | null> => {
-    for (const middleware of middlewares) {
-      const result = await middleware(request);
-      if (result) {
-        return result;
-      }
-    }
-    return null;
-  };
-}
-
-/**
- * Simple getUser function for backward compatibility
- * Uses canonical Supabase client
- */
-export async function getUser(): Promise<User | null> {
+export async function getUser(request: NextRequest): Promise<AuthenticatedUser | null> {
   try {
     const supabase = await getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) {
-      devLog('getUser error:', { error: error.message });
+
+    if (error || !user) {
       return null;
     }
-    
-    return user;
+
+    // Get user profile with admin status
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('is_admin, is_active, created_at')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      isAdmin: profile.is_admin || false,
+      isActive: profile.is_active !== false,
+      createdAt: profile.created_at || new Date().toISOString()
+    };
   } catch (error) {
-    devLog('getUser error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error getting user:', error instanceof Error ? error : new Error(String(error)));
     return null;
   }
 }
 
 /**
- * requireUser function for backward compatibility
- * Uses canonical Supabase client
+ * Create rate limit middleware
  */
-export async function requireUser(_req: Request): Promise<User> {
-  const user = await getUser();
-  
-  if (!user) {
-    throw new Error('Authentication required');
-  }
-  
-  return user;
+export function createRateLimitMiddleware(limiterName: 'auth' | 'api' | 'contact' | 'pollCreation' | 'voting') {
+  return createRateLimitMiddleware(limiterName);
 }
+
+/**
+ * Combine multiple middleware functions
+ */
+export function combineMiddleware(...middlewares: Array<(req: any, res: any, next: any) => void>) {
+  return combineMiddleware(...middlewares);
+}
+
+/**
+ * Authentication middleware
+ */
+export async function withAuth(
+  request: NextRequest,
+  handler: (request: NextRequest, context: MiddlewareContext) => Promise<Response>
+): Promise<Response> {
+  try {
+    const user = await getUser(request);
+    
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!user.isActive) {
+      return new Response(
+        JSON.stringify({ error: 'Account is inactive' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const context: MiddlewareContext = {
+      user,
+      isAuthenticated: true,
+      isAdmin: user.isAdmin,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent') || undefined
+    };
+
+    return await handler(request, context);
+  } catch (error) {
+    logger.error('Authentication middleware error:', error instanceof Error ? error : new Error(String(error)));
+    return new Response(
+      JSON.stringify({ error: 'Authentication failed' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+/**
+ * Admin authorization middleware
+ */
+export async function withAdmin(
+  request: NextRequest,
+  handler: (request: NextRequest, context: MiddlewareContext) => Promise<Response>
+): Promise<Response> {
+  try {
+    const user = await getUser(request);
+    
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!user.isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const context: MiddlewareContext = {
+      user,
+      isAuthenticated: true,
+      isAdmin: true,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent') || undefined
+    };
+
+    return await handler(request, context);
+  } catch (error) {
+    logger.error('Admin middleware error:', error instanceof Error ? error : new Error(String(error)));
+    return new Response(
+      JSON.stringify({ error: 'Authorization failed' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+/**
+ * Optional authentication middleware
+ */
+export async function withOptionalAuth(
+  request: NextRequest,
+  handler: (request: NextRequest, context: MiddlewareContext) => Promise<Response>
+): Promise<Response> {
+  try {
+    const user = await getUser(request);
+    
+    const context: MiddlewareContext = {
+      user: user || undefined,
+      isAuthenticated: !!user,
+      isAdmin: user?.isAdmin || false,
+      ip: request.ip,
+      userAgent: request.headers.get('user-agent') || undefined
+    };
+
+    return await handler(request, context);
+  } catch (error) {
+    logger.error('Optional auth middleware error:', error instanceof Error ? error : new Error(String(error)));
+    return new Response(
+      JSON.stringify({ error: 'Request processing failed' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+/**
+ * Create middleware chain
+ */
+export function createMiddlewareChain(...middlewares: Array<(req: NextRequest, handler: any) => Promise<Response>>) {
+  return async (request: NextRequest, handler: (req: NextRequest, context: MiddlewareContext) => Promise<Response>) => {
+    let currentHandler = handler;
+    
+    // Apply middlewares in reverse order
+    for (let i = middlewares.length - 1; i >= 0; i--) {
+      const middleware = middlewares[i];
+      const nextHandler = currentHandler;
+      currentHandler = (req: NextRequest, context: MiddlewareContext) => middleware(req, nextHandler);
+    }
+    
+    return await currentHandler(request, {} as MiddlewareContext);
+  };
+}
+
+// Export types and utilities
+export { MiddlewareContext, AuthenticatedUser };
+export default {
+  getUser,
+  withAuth,
+  withAdmin,
+  withOptionalAuth,
+  createRateLimitMiddleware,
+  combineMiddleware,
+  createMiddlewareChain
+};

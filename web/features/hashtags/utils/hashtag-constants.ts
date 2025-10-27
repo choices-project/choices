@@ -7,7 +7,7 @@
  * Status: ✅ ACTIVE
  */
 
-import type { HashtagCategory } from '@/lib/types/hashtag';
+import type { HashtagCategory } from '@/types/features/hashtags/hashtags';
 
 // ============================================================================
 // HASHTAG SYSTEM CONSTANTS

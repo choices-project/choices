@@ -104,9 +104,9 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         selectedUserIds.forEach(userId => updateUserStatus(userId, 'suspended'));
         break;
       case 'delete':
-        selectedUserIds.forEach(id => {
-          deleteUser(id);
-          onUserDelete?.(id);
+        selectedUserIds.forEach((id: any) => {
+          deleteUser(id as string);
+          onUserDelete?.(id as string);
         });
         break;
     }

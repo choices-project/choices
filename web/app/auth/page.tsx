@@ -93,7 +93,11 @@ export default function AuthPage() {
         const context = {
           ipAddress: undefined,
           userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-          userId: undefined
+          userId: undefined,
+          isAuthenticated: false,
+          user: undefined,
+          error: undefined,
+          adminId: undefined
         };
 
         const result = await register(formDataObj, context);

@@ -48,7 +48,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      poll_id: params.id,
+      poll_id: id,
       trust_tier_filter: trustTier ? parseInt(trustTier) : null,
       results: results || [],
       total_votes: results?.reduce((sum: number, r: any) => sum + r.vote_count, 0) || 0

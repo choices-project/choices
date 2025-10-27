@@ -32,7 +32,7 @@ export const vote = createSecureServerAction(
     const user = await getAuthenticatedUser(context)
     
     // Validate form data
-    const validatedData = validateFormData(formData, VoteSchema)
+    const validatedData = validateFormData(formData, VoteSchema) as z.infer<typeof VoteSchema>
 
     if (!supabase) {
       throw new Error('Supabase client not available')
@@ -75,7 +75,7 @@ export const vote = createSecureServerAction(
     
     // For now, we'll validate that the option IDs are valid
     // This assumes optionIds are the actual option values from the array
-    const validOptions = validatedData.optionIds.every(optionId => 
+    const validOptions = validatedData.optionIds.every((optionId: string) => 
       ((poll as any).options as string[]).includes(optionId)
     )
     
@@ -84,7 +84,7 @@ export const vote = createSecureServerAction(
     }
 
     // Create vote records using the actual database schema
-    const voteData = validatedData.optionIds.map(optionId => ({
+    const voteData = validatedData.optionIds.map((optionId: string) => ({
       id: uuidv4(),
       poll_id: validatedData.pollId,
       user_id: validatedData.anonymous ? 'anonymous' : user.userId as any,
@@ -109,10 +109,5 @@ export const vote = createSecureServerAction(
     }, context)
 
     return { success: true, voteCount: voteData.length }
-  },
-  {
-    requireAuth: true,
-    validation: VoteSchema,
-    rateLimit: { endpoint: '/vote', maxRequests: 50 }
   }
 )

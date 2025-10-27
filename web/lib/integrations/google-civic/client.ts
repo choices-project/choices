@@ -15,7 +15,7 @@
 import { logger } from '@/lib/utils/logger';
 
 import { ApplicationError } from '../../errors/base';
-import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
+import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '@/types/external/google-civic';
 
 
 // Processed address lookup result type

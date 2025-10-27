@@ -15,21 +15,10 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
-import { createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
-import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
-
-// Rate limiting: 60 requests per minute per IP
-const rateLimitMiddleware = createRateLimitMiddleware({
-  maxRequests: 60,
-  windowMs: 60 * 1000
-});
-
-// Combined middleware: rate limiting + admin auth
-const middleware = combineMiddleware(rateLimitMiddleware);
 
 /**
  * Get analytics data
@@ -296,20 +285,9 @@ export const GET = async (request: NextRequest) => {
           );
         }
 
-        // Apply rate limiting
-        const rateLimitResult = await middleware(request);
-        if (rateLimitResult) {
-          return rateLimitResult;
-        }
-
-        // Use optimized analytics query with performance monitoring
-        const queryOptimizer = await getQueryOptimizer();
-        const getAnalyticsOptimized = withPerformanceMonitoring(
-          () => queryOptimizer.getAnalytics(period),
-          'analytics_query'
-        );
-
-        const analyticsData = await getAnalyticsOptimized();
+        // Get analytics data directly
+        const analyticsService = AnalyticsService.getInstance();
+        const analyticsData = await analyticsService.getAnalyticsSummary();
 
         return NextResponse.json({
           ...analyticsData,

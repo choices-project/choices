@@ -15,7 +15,7 @@ import { useAdminStore } from '@/features/admin/lib/store';
 export const Header: React.FC = () => {
   const { notifications, markNotificationRead, toggleSidebar } = useAdminStore();
 
-  const unreadNotifications = notifications.filter(n => !n.read);
+  const unreadNotifications = notifications.filter((n: any) => !n.read);
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">

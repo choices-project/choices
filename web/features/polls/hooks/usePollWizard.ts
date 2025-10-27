@@ -7,7 +7,7 @@
 
 import { useState, useCallback } from 'react';
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../../../lib/logger';
 
 import type { 
   PollWizardData, 
@@ -21,23 +21,11 @@ const INITIAL_WIZARD_DATA: PollWizardData = {
   options: ['', ''],
   tags: [],
   privacyLevel: 'public',
-  allowMultipleVotes: false,
-  showResults: true,
-  isTemplate: false,
   settings: {
-    allowMultipleVotes: false,
-    allowAnonymousVotes: true,
-    requireAuthentication: false,
-    requireEmail: false,
-    showResults: true,
-    allowWriteIns: false,
-    allowComments: true,
-    enableNotifications: true,
-    maxSelections: 1,
     votingMethod: 'single',
-    privacyLevel: 'public',
-    moderationEnabled: false,
-    autoClose: false
+    allowMultipleVotes: false,
+    showResults: true,
+    allowComments: true
   }
 };
 
@@ -45,11 +33,10 @@ const INITIAL_WIZARD_STATE: PollWizardState = {
   currentStep: 0,
   totalSteps: 4,
   data: INITIAL_WIZARD_DATA,
-  isLoading: false,
   errors: {},
-  progress: 0,
-  canGoBack: false,
+  isLoading: false,
   canProceed: false,
+  canGoBack: false,
   isComplete: false
 };
 
@@ -71,7 +58,7 @@ export function usePollWizard() {
         break;
       
       case 1: // Options
-        const step1ValidOptions = data.options.filter(option => option.trim().length > 0);
+        const step1ValidOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (step1ValidOptions.length < 2) {
           errors.options = 'At least 2 options are required';
         }
@@ -85,13 +72,13 @@ export function usePollWizard() {
       
       case 3: // Review
         // Final validation - comprehensive check
-        const validOptions = data.options.filter(option => option.trim().length > 0);
+        const validOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (validOptions.length < 2) {
           errors.options = 'At least 2 valid options are required';
         }
         
         // Check for duplicate options
-        const uniqueOptions = new Set(validOptions.map(opt => opt.toLowerCase().trim()));
+        const uniqueOptions = new Set(validOptions.map((opt: string) => opt.toLowerCase().trim()));
         if (uniqueOptions.size !== validOptions.length) {
           errors.options = 'Duplicate options are not allowed';
         }
@@ -123,7 +110,7 @@ export function usePollWizard() {
 
   // Navigation functions
   const nextStep = useCallback(() => {
-    setWizardState(prev => {
+    setWizardState((prev: any) => {
       const errors = validateStep(prev.currentStep, prev.data);
       if (Object.keys(errors).length > 0) {
         return Object.assign({}, prev, { errors });
@@ -153,7 +140,7 @@ export function usePollWizard() {
 
   // Data update functions
   const updateData = useCallback((updates: Partial<PollWizardData>) => {
-    setWizardState(prev => {
+    setWizardState((prev: any) => {
       const newData = Object.assign({}, prev.data, updates);
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
@@ -184,8 +171,8 @@ export function usePollWizard() {
   }, []);
 
   const removeOption = useCallback((index: number) => {
-    setWizardState(prev => {
-      const newOptions = prev.data.options.filter((_, i) => i !== index);
+    setWizardState((prev: any) => {
+      const newOptions = prev.data.options.filter((_: string, i: number) => i !== index);
       return Object.assign({}, prev, {
         data: Object.assign({}, prev.data, {
           options: newOptions
@@ -197,7 +184,7 @@ export function usePollWizard() {
   const updateOption = useCallback((index: number, value: string) => {
     setWizardState(prev => Object.assign({}, prev, {
       data: Object.assign({}, prev.data, {
-        options: prev.data.options.map((option, i) => i === index ? value : option)
+        options: prev.data.options.map((option: string, i: number) => i === index ? value : option)
       })
     }));
   }, []);
@@ -211,8 +198,8 @@ export function usePollWizard() {
   }, []);
 
   const removeTag = useCallback((tagToRemove: string) => {
-    setWizardState(prev => {
-      const newTags = prev.data.tags.filter(tag => tag !== tagToRemove);
+    setWizardState((prev: any) => {
+      const newTags = prev.data.tags.filter((tag: string) => tag !== tagToRemove);
       return Object.assign({}, prev, {
         data: Object.assign({}, prev.data, {
           tags: newTags
@@ -250,15 +237,14 @@ export function usePollWizard() {
       const pollData = {
         title: wizardState.data.title.trim(),
         description: wizardState.data.description.trim(),
-        options: wizardState.data.options.filter(option => option.trim().length > 0),
+        options: wizardState.data.options.filter((option: string) => option.trim().length > 0),
         voting_method: wizardState.data.settings.votingMethod,
         privacy_level: wizardState.data.privacyLevel,
         category: wizardState.data.category,
         allowMultipleVotes: wizardState.data.settings.allowMultipleVotes,
         showResults: wizardState.data.settings.showResults,
         allowComments: wizardState.data.settings.allowComments,
-        tags: wizardState.data.tags,
-        isTemplate: wizardState.data.isTemplate
+        tags: wizardState.data.tags
       };
 
       // Submit to API

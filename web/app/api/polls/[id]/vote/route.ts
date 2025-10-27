@@ -10,8 +10,9 @@ import {
   NotFoundError, 
   handleError, 
   getUserMessage, 
-  getHttpStatus 
-} from '@/lib/error-handler'
+  getHttpStatus,
+  createErrorResponse
+} from '@/lib/utils/error-handler'
 import { devLog } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -39,7 +40,7 @@ export async function POST(
     // Always require real authentication
     let user;
     try {
-      user = await getUser();
+      user = await getUser(request);
     } catch (error) {
       console.error('Authentication error during vote:', error);
       throw new AuthenticationError('Authentication required to vote')
@@ -256,7 +257,7 @@ export async function GET(
     }
 
     // Always require real authentication - no E2E bypasses
-    const user = await getUser()
+    const user = await getUser(request)
     
     if (!user) {
       return NextResponse.json(
@@ -282,13 +283,6 @@ export async function GET(
     })
 
   } catch (error) {
-    const appError = handleError(error as Error)
-    const userMessage = getUserMessage(appError)
-    const statusCode = getHttpStatus(appError)
-    
-    return NextResponse.json(
-      { error: userMessage },
-      { status: statusCode }
-    )
+    return createErrorResponse(error);
   }
 }

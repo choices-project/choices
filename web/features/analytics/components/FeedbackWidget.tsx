@@ -19,7 +19,13 @@ import {
 } from 'lucide-react'
 import React, { useState, useRef, useEffect } from 'react'
 
-import { motion, AnimatePresence } from '@/components/motion/Motion'
+// import { motion, AnimatePresence } from '@/components/motion/Motion'
+// Temporary fallback for motion components
+const motion = {
+  button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  div: ({ children, ...props }: any) => <div {...props}>{children}</div>
+};
+const AnimatePresence = ({ children }: any) => <>{children}</>;
 import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { 
@@ -107,14 +113,23 @@ const EnhancedFeedbackWidget: React.FC = () => {
     // Track analytics using store
     trackUserAction('feedback_widget_opened', 'engagement', 'Feedback Widget')
     trackEvent({
+      event_type: 'user_action',
       type: 'user_action',
       category: 'engagement',
       action: 'feedback_widget_opened',
       label: 'Feedback Widget',
-      metadata: {
-        page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
-        sessionId: feedback.userJourney?.sessionId || 'unknown'
-      }
+      event_data: {
+        type: 'user_action',
+        category: 'engagement',
+        action: 'feedback_widget_opened',
+        label: 'Feedback Widget',
+        metadata: {
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+          sessionId: feedback.userJourney?.sessionId || 'unknown'
+        }
+      },
+      created_at: new Date().toISOString(),
+      session_id: feedback.userJourney?.sessionId || 'anonymous'
     })
   }
 
@@ -228,15 +243,24 @@ const EnhancedFeedbackWidget: React.FC = () => {
         // Track successful submission using analytics store
         trackUserAction('feedback_submitted', 'engagement', 'Feedback Submission')
         trackEvent({
+          event_type: 'user_action',
           type: 'user_action',
           category: 'engagement',
           action: 'feedback_submitted',
           label: 'Feedback Submission',
-          metadata: {
-            feedbackType: feedback.type,
-            sentiment: feedback.sentiment,
-            page: feedback.userJourney?.currentPage || 'unknown'
-          }
+          event_data: {
+            type: 'user_action',
+            category: 'engagement',
+            action: 'feedback_submitted',
+            label: 'Feedback Submission',
+            metadata: {
+              feedbackType: feedback.type,
+              sentiment: feedback.sentiment,
+              page: feedback.userJourney?.currentPage || 'unknown'
+            }
+          },
+          created_at: new Date().toISOString(),
+          session_id: feedback.userJourney?.sessionId || 'anonymous'
         })
 
         // Auto-close after 3 seconds
@@ -259,14 +283,23 @@ const EnhancedFeedbackWidget: React.FC = () => {
       
       // Track error event
       trackEvent({
+        event_type: 'error',
         type: 'error',
         category: 'feedback',
         action: 'feedback_submission_failed',
         label: errorMessage,
-        metadata: {
-          feedbackType: feedback.type,
-          sentiment: feedback.sentiment
-        }
+        event_data: {
+          type: 'error',
+          category: 'feedback',
+          action: 'feedback_submission_failed',
+          label: errorMessage,
+          metadata: {
+            feedbackType: feedback.type,
+            sentiment: feedback.sentiment
+          }
+        },
+        created_at: new Date().toISOString(),
+        session_id: feedback.userJourney?.sessionId || 'anonymous'
       })
     } finally {
       setLoading(false)
@@ -295,11 +328,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
       <motion.button
         onClick={handleOpen}
         className="fixed bottom-6 right-6 z-40 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0 }}
       >
         <MessageCircle className="w-6 h-6" />
       </motion.button>
@@ -309,16 +337,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
         {isOpen && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             onClick={handleClose}
           >
             <motion.div
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Header */}
@@ -342,13 +364,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
 
               {/* Content */}
               <div className="p-6">
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {step === 'type' && (
                     <motion.div
                       key="type"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
                       <h4 className="text-lg font-semibold text-gray-900">What type of feedback?</h4>
@@ -370,9 +389,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'details' && (
                     <motion.div
                       key="details"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
                       <h4 className="text-lg font-semibold text-gray-900">Tell us more</h4>
@@ -407,9 +423,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'sentiment' && (
                     <motion.div
                       key="sentiment"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
                       <h4 className="text-lg font-semibold text-gray-900">How do you feel?</h4>
@@ -446,9 +459,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'screenshot' && (
                     <motion.div
                       key="screenshot"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
                       <h4 className="text-lg font-semibold text-gray-900">Add a screenshot?</h4>
@@ -496,14 +506,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'success' && (
                     <motion.div
                       key="success"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-8"
                     >
                       {showSuccess && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
                           className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
                         >
                           <div className="flex items-center justify-center gap-2 text-green-700">
@@ -513,9 +519,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         </motion.div>
                       )}
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                         className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
                       >
                         <CheckCircle className="w-8 h-8 text-green-600" />

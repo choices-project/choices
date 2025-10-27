@@ -1,111 +1,83 @@
 /**
- * CSRF-Aware Fetch Helper
+ * CSRF Fetch Utility
  * 
- * Automatically handles CSRF token acquisition and inclusion for state-changing requests.
- * This fixes the critical issue where authentication was completely broken due to
- * missing X-CSRF-Token headers.
+ * Fetch utility with CSRF protection
  * 
- * Created: January 25, 2025
- * Updated: January 25, 2025
+ * Created: October 26, 2025
+ * Status: ACTIVE
  */
-
-import { createCsrfHeaders } from '@/lib/security/csrf-client';
 
 /**
- * CSRF-aware fetch wrapper that automatically includes CSRF tokens
- * for state-changing HTTP methods (POST, PUT, PATCH, DELETE).
- * 
- * @param url - The URL to fetch
- * @param options - Fetch options (method, body, headers, etc.)
- * @returns Promise<Response> - The fetch response
+ * Fetch with CSRF token
  */
-export async function csrfFetch(
-  url: string | URL,
-  options: RequestInit = {}
-): Promise<Response> {
-  const method = options.method?.toUpperCase() || 'GET';
+export async function csrfFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
   
-  // Only add CSRF protection for state-changing methods
-  const stateChangingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-  
-  if (stateChangingMethods.includes(method)) {
-    // Get CSRF headers (this will fetch token if needed)
-    const csrfHeaders = await createCsrfHeaders();
-    
-    // Merge with existing headers
-    const headers = new Headers(options.headers);
-    Object.entries(csrfHeaders).forEach(([key, value]) => {
-      headers.set(key, value);
-    });
-    
-    return fetch(url, Object.assign({}, options, {
-      headers,
-    }));
+  const headers = new Headers(options.headers);
+  if (csrfToken) {
+    headers.set('X-CSRF-Token', csrfToken);
   }
   
-  // For safe methods (GET, HEAD, OPTIONS), use regular fetch
-  return fetch(url, options);
+  return fetch(url, {
+    ...options,
+    headers
+  });
 }
 
 /**
- * Convenience method for POST requests with JSON body
+ * GET request with CSRF protection
  */
-export async function csrfPost(
-  url: string | URL,
-  data: unknown,
-  options: Omit<RequestInit, 'method' | 'body'> = {}
-): Promise<Response> {
-  return csrfFetch(url, Object.assign({}, options, {
+export async function csrfGet(url: string, options: RequestInit = {}): Promise<Response> {
+  return csrfFetch(url, {
+    ...options,
+    method: 'GET'
+  });
+}
+
+/**
+ * POST request with CSRF protection
+ */
+export async function csrfPost(url: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('Content-Type', 'application/json');
+  
+  return csrfFetch(url, {
+    ...options,
     method: 'POST',
-    headers: Object.assign({
-      'Content-Type': 'application/json',
-    }, options.headers),
-    body: JSON.stringify(data),
-  }));
+    headers,
+    body: data ? JSON.stringify(data) : undefined
+  });
 }
 
 /**
- * Convenience method for PUT requests with JSON body
+ * PUT request with CSRF protection
  */
-export async function csrfPut(
-  url: string | URL,
-  data: unknown,
-  options: Omit<RequestInit, 'method' | 'body'> = {}
-): Promise<Response> {
-  return csrfFetch(url, Object.assign({}, options, {
+export async function csrfPut(url: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  headers.set('Content-Type', 'application/json');
+  
+  return csrfFetch(url, {
+    ...options,
     method: 'PUT',
-    headers: Object.assign({
-      'Content-Type': 'application/json',
-    }, options.headers),
-    body: JSON.stringify(data),
-  }));
+    headers,
+    body: data ? JSON.stringify(data) : undefined
+  });
 }
 
 /**
- * Convenience method for PATCH requests with JSON body
+ * DELETE request with CSRF protection
  */
-export async function csrfPatch(
-  url: string | URL,
-  data: unknown,
-  options: Omit<RequestInit, 'method' | 'body'> = {}
-): Promise<Response> {
-  return csrfFetch(url, Object.assign({}, options, {
-    method: 'PATCH',
-    headers: Object.assign({
-      'Content-Type': 'application/json',
-    }, options.headers),
-    body: JSON.stringify(data),
-  }));
+export async function csrfDelete(url: string, options: RequestInit = {}): Promise<Response> {
+  return csrfFetch(url, {
+    ...options,
+    method: 'DELETE'
+  });
 }
 
-/**
- * Convenience method for DELETE requests
- */
-export async function csrfDelete(
-  url: string | URL,
-  options: Omit<RequestInit, 'method'> = {}
-): Promise<Response> {
-  return csrfFetch(url, Object.assign({}, options, {
-    method: 'DELETE',
-  }));
-}
+export default {
+  csrfFetch,
+  csrfGet,
+  csrfPost,
+  csrfPut,
+  csrfDelete
+};

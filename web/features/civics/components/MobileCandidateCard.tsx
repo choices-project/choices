@@ -34,7 +34,7 @@ import React, { useState, useRef, useCallback } from 'react';
 // Import types from the pipeline
 import ProgressiveDisclosure from '@/features/civics/components/ProgressiveDisclosure';
 import TouchInteractions from '@/features/civics/components/TouchInteractions';
-import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import type { SuperiorRepresentativeData } from '../lib/types/superior-types';
 
 interface MobileCandidateCardProps {
   representative: SuperiorRepresentativeData;

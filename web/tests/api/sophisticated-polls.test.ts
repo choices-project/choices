@@ -87,7 +87,7 @@ describe('Sophisticated Polls API', () => {
 
     it('should track poll creation analytics', async () => {
       // Check if analytics event was created
-      const analyticsResponse = await fetch('/api/analytics/events', {
+      const analyticsResponse = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer test-token-${testUserId}`
@@ -171,7 +171,7 @@ describe('Sophisticated Polls API', () => {
 
   describe('Analytics Platform Integration', () => {
     it('should track comprehensive analytics events', async () => {
-      const analyticsResponse = await fetch('/api/analytics/events', {
+      const analyticsResponse = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer test-token-${testUserId}`

@@ -311,7 +311,7 @@ export const useAdminStore = create<AdminStore>()(
       enableFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.enable(flagId);
         if (success) {
-          set((state) => {
+          set((state: any) => {
             const newFlags = { ...state.featureFlags.flags, [flagId]: true };
             const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
             const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
@@ -334,7 +334,7 @@ export const useAdminStore = create<AdminStore>()(
       disableFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.disable(flagId);
         if (success) {
-          set((state) => {
+          set((state: any) => {
             const newFlags = { ...state.featureFlags.flags, [flagId]: false };
             const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
             const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
@@ -357,7 +357,7 @@ export const useAdminStore = create<AdminStore>()(
       toggleFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.toggle(flagId);
         if (success) {
-          set((state) => {
+          set((state: any) => {
             const newFlags = { ...state.featureFlags.flags, [flagId]: !state.featureFlags.flags[flagId] };
             const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
             const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
@@ -408,7 +408,7 @@ export const useAdminStore = create<AdminStore>()(
       importFeatureFlagConfig: (config: FeatureFlagConfig) => {
         try {
           featureFlagManager.importConfig(config);
-          set((state) => ({
+          set((state: any) => ({
             featureFlags: {
               ...state.featureFlags,
               flags: { ...config.flags },
@@ -427,7 +427,7 @@ export const useAdminStore = create<AdminStore>()(
       
       resetFeatureFlags: () => {
         featureFlagManager.reset();
-        set((state) => ({
+        set((state: any) => ({
           featureFlags: {
             ...state.featureFlags,
             flags: { ...FEATURE_FLAGS },
@@ -440,13 +440,13 @@ export const useAdminStore = create<AdminStore>()(
       },
       
       setFeatureFlagLoading: (loading: boolean) => {
-        set((state) => ({
+        set((state: any) => ({
           featureFlags: { ...state.featureFlags, isLoading: loading }
         }));
       },
       
       setFeatureFlagError: (error: string | null) => {
-        set((state) => ({
+        set((state: any) => ({
           featureFlags: { ...state.featureFlags, error }
         }));
       }

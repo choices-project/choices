@@ -20,12 +20,22 @@ interface MinimalHashtag {
   display_name: string;
   usage_count: number;
   is_trending: boolean;
+  category?: string;
+  hashtag?: any;
+  hashtags?: any[];
+  is_featured?: boolean;
+  follower_count?: number;
+  trend_score?: number;
+  growth_rate?: number;
+  current_position?: number;
 }
 
 // Minimal hashtag store state
 type MinimalHashtagStore = {
   hashtags: MinimalHashtag[];
   trendingHashtags: MinimalHashtag[];
+  searchResults: MinimalHashtag[];
+  followedHashtags: MinimalHashtag[];
   isLoading: boolean;
   error: string | null;
   
@@ -33,6 +43,10 @@ type MinimalHashtagStore = {
   getTrendingHashtags: () => Promise<void>;
   searchHashtags: (query: any) => Promise<void>;
   clearError: () => void;
+  setCategory: (category: string) => void;
+  setSortBy: (sortBy: string) => void;
+  setTimeRange: (timeRange: string) => void;
+  setSearchQuery: (query: string) => void;
 };
 
 // Create minimal hashtag store
@@ -42,6 +56,8 @@ export const useHashtagStore = create<MinimalHashtagStore>()(
       // Initial state
       hashtags: [],
       trendingHashtags: [],
+      searchResults: [],
+      followedHashtags: [],
       isLoading: false,
       error: null,
       
@@ -92,7 +108,27 @@ export const useHashtagStore = create<MinimalHashtagStore>()(
         }
       },
       
-      clearError: () => set({ error: null })
+      clearError: () => set({ error: null }),
+      
+      setCategory: (category: string) => {
+        // Mock implementation
+        console.log('Setting category:', category);
+      },
+      
+      setSortBy: (sortBy: string) => {
+        // Mock implementation
+        console.log('Setting sort by:', sortBy);
+      },
+      
+      setTimeRange: (timeRange: string) => {
+        // Mock implementation
+        console.log('Setting time range:', timeRange);
+      },
+      
+      setSearchQuery: (query: string) => {
+        // Mock implementation
+        console.log('Setting search query:', query);
+      }
     }),
     { name: 'minimal-hashtag-store' }
   )
@@ -111,7 +147,8 @@ export const useHashtagActions = () => {
 export const useHashtagStats = () => {
   const store = useHashtagStore();
   return {
-    trendingCount: store.trendingHashtags.length
+    trendingCount: store.trendingHashtags.length,
+    followedCount: store.followedHashtags.length
   };
 };
 

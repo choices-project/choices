@@ -10,7 +10,7 @@ import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import { initializePWA } from '@/lib/pwa/init'
 import { logger } from '@/lib/utils/logger'
 import PWABackground from '@/features/pwa/components/PWABackground'
-// import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
+import EnhancedFeedbackWidget from '@/features/analytics/components/FeedbackWidget'
 
 export default function AppLayout({
   children,
@@ -65,7 +65,7 @@ export default function AppLayout({
           <PWABackground />
           
           {/* Enhanced Feedback Widget - Only render on client side */}
-          {/* <EnhancedFeedbackWidget /> */}
+          <EnhancedFeedbackWidget />
         </UserStoreProvider>
       </QueryClientProvider>
     </FontProvider>

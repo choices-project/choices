@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-import { DifferentialPrivacyManager } from '@/lib/privacy/dp'
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../../../lib/logger';
+
+import { DifferentialPrivacyManager } from '../../../lib/privacy/dp';
 
 // Create instance of differential privacy manager
 const differentialPrivacy = new DifferentialPrivacyManager();
@@ -106,8 +107,8 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
         kAnonymitySatisfied: kAnonymityResult.shouldShow,
         privacyGuarantee: `(ε=${epsilon}, δ=1e-5)`,
         epsilonUsed: epsilon,
-        noiseAdded: dpResults.reduce((sum, result) => sum + Math.abs(result.noisyCount - result.originalCount), 0),
-        confidenceInterval: [Math.min(...dpResults.map(r => r.noisyCount)), Math.max(...dpResults.map(r => r.noisyCount))]
+        noiseAdded: dpResults.reduce((sum: any, result: any) => sum + Math.abs(result.noisyCount - result.originalCount), 0),
+        confidenceInterval: [Math.min(...dpResults.map((r: any) => r.noisyCount)), Math.max(...dpResults.map((r: any) => r.noisyCount))]
       }
       
       setResults(privateResults)

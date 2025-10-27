@@ -180,7 +180,7 @@ export default function SocialFeed({
     
     // Native sharing if available
     if (navigator.share) {
-      const item = feeds.find(item => item.id === itemId);
+      const item = feeds.find((item: any) => item.id === itemId);
       if (item) {
         void navigator.share({
           title: item.title,
@@ -269,7 +269,7 @@ export default function SocialFeed({
 
       {/* Feed items */}
       <div className="space-y-4 p-4">
-        {feeds.map((item, _index) => (
+        {feeds.map((item: any, _index: number) => (
           <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-gray-100">

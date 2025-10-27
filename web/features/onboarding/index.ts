@@ -1,3 +1,13 @@
+/**
+ * ONBOARDING Feature Exports
+ * 
+ * Feature exports for onboarding functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
 // Onboarding Feature - Clean Exports
 // This file provides clean, organized exports for the onboarding feature
 

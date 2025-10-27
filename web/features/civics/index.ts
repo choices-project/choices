@@ -1,4 +1,14 @@
 /**
+ * CIVICS Feature Exports
+ * 
+ * Feature exports for civics functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
+/**
  * Civics Feature - Main Export Module
  * 
  * Provides clean, organized exports for the civics feature including:
@@ -75,4 +85,4 @@ export type {
 } from './lib/civics/types'
 
 /** Superior data pipeline types */
-export type { SuperiorRepresentativeData } from './lib/civics-superior/superior-data-pipeline'
+export type { SuperiorRepresentativeData } from './lib/types/superior-types'

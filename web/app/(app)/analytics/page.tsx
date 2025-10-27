@@ -103,10 +103,19 @@ export default function AnalyticsPage() {
   // Track page view when component mounts
   useEffect(() => {
     trackEvent({
+      event_type: 'page_view',
       type: 'page_view',
       category: 'analytics',
       action: 'view_analytics_page',
-      label: 'Analytics Dashboard'
+      label: 'Analytics Dashboard',
+      event_data: {
+        type: 'page_view',
+        category: 'analytics',
+        action: 'view_analytics_page',
+        label: 'Analytics Dashboard'
+      },
+      created_at: new Date().toISOString(),
+      session_id: 'analytics-page'
     });
   }, [trackEvent]);
 
@@ -181,7 +190,19 @@ export default function AnalyticsPage() {
                 </span>
               </div>
               <button
-                onClick={() => trackEvent({ type: 'user_action', category: 'analytics', action: 'toggle_auto_refresh' })}
+                onClick={() => trackEvent({ 
+                  event_type: 'user_action', 
+                  type: 'user_action', 
+                  category: 'analytics', 
+                  action: 'toggle_auto_refresh',
+                  event_data: {
+                    type: 'user_action', 
+                    category: 'analytics', 
+                    action: 'toggle_auto_refresh'
+                  },
+                  created_at: new Date().toISOString(),
+                  session_id: 'analytics-page'
+                })}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Enable Auto-refresh

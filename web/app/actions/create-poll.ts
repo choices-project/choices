@@ -54,7 +54,7 @@ export const createPoll = createSecureServerAction(
     const user = await getAuthenticatedUser(context)
     
     // Validate form data
-    const validatedData = validateFormData(formData, CreatePollSchema)
+    const validatedData = validateFormData(formData, CreatePollSchema) as z.infer<typeof CreatePollSchema>
 
     if (!supabase) {
       throw new Error('Supabase client not available')
@@ -63,7 +63,7 @@ export const createPoll = createSecureServerAction(
     // Sanitize inputs
     const sanitizedTitle = sanitizeInput(validatedData.title)
     const sanitizedDescription = validatedData.description ? sanitizeInput(validatedData.description) : null
-    const sanitizedOptions = validatedData.options.map(option => sanitizeInput(option))
+    const sanitizedOptions = validatedData.options.map((option: string) => sanitizeInput(option))
 
     // Create poll
     const { data: pollData, error: pollError } = await supabase
@@ -119,10 +119,5 @@ export const createPoll = createSecureServerAction(
     }, context)
 
     return { pollId, success: true }
-  },
-  {
-    requireAuth: true,
-    validation: CreatePollSchema,
-    rateLimit: { endpoint: '/create-poll', maxRequests: 20 }
   }
 )

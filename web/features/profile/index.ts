@@ -1,4 +1,14 @@
 /**
+ * PROFILE Feature Exports
+ * 
+ * Feature exports for profile functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
+/**
  * Profile Feature - Main Export Module
  * 
  * Provides clean, organized exports for the profile feature including:

@@ -141,7 +141,7 @@ export class TrendingHashtagsTracker {
     const analytics = this.getHashtagAnalytics();
     
     // Find hashtags that are trending and related to user interests
-    const relatedTrending = analytics.trendingHashtags.filter(hashtag => {
+    const relatedTrending = analytics.trendingHashtags.filter((hashtag: any) => {
       return userInterests.some(interest => 
         hashtag.hashtag.includes(interest) || 
         interest.includes(hashtag.hashtag) ||
@@ -151,12 +151,12 @@ export class TrendingHashtagsTracker {
 
     // Add some viral potential hashtags
     const viralSuggestions = analytics.viralPotential
-      .filter(hashtag => !userInterests.includes(hashtag.hashtag))
+      .filter((hashtag: any) => !userInterests.includes(hashtag.hashtag))
       .slice(0, 5);
 
     return [
-      ...relatedTrending.map(h => h.hashtag),
-      ...viralSuggestions.map(h => h.hashtag)
+      ...relatedTrending.map((h: any) => h.hashtag),
+      ...viralSuggestions.map((h: any) => h.hashtag)
     ].slice(0, limit);
   }
 

@@ -101,16 +101,16 @@ export default function FeedHashtagIntegration({
         return selectedFilters.every(filter => {
           switch (filter.type) {
             case 'category':
-              return item.hashtags?.some(tag => 
-                hashtags.find(h => h.name === tag)?.category === filter.value
+              return item.hashtags?.some((tag: any) => 
+                hashtags.find((h: any) => h.name === tag)?.category === filter.value
               );
             case 'trending':
-              return item.hashtags?.some(tag => 
-                trendingHashtags.some(th => th.hashtag.name === tag)
+              return item.hashtags?.some((tag: any) => 
+                trendingHashtags.some((th: any) => th.hashtag.name === tag)
               );
             case 'usage_count':
-              return item.hashtags?.some(tag => {
-                const hashtag = hashtags.find(h => h.name === tag);
+              return item.hashtags?.some((tag: any) => {
+                const hashtag = hashtags.find((h: any) => h.name === tag);
                 const filterValue = typeof filter.value === 'number' ? filter.value : 0;
                 return hashtag && hashtag.usage_count >= filterValue;
               });
@@ -126,7 +126,7 @@ export default function FeedHashtagIntegration({
       filtered = filtered.filter(item => 
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.hashtags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        item.hashtags?.some((tag: any) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -139,7 +139,7 @@ export default function FeedHashtagIntegration({
   const trendingHashtagObjects = trendingHashtags.map(th => th.hashtag);
 
   // Get search result hashtags
-  const searchResultHashtags = searchResults?.hashtags ?? [];
+  const searchResultHashtags = searchResults ?? [];
 
   // Get followed hashtag objects
   const followedHashtagObjects = followedHashtags.map(hashtagId => 
@@ -457,7 +457,7 @@ export default function FeedHashtagIntegration({
                         </div>
                         {item.hashtags && item.hashtags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
-                            {item.hashtags.slice(0, 3).map((hashtag, index) => (
+                            {item.hashtags.slice(0, 3).map((hashtag: any, index: number) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 #{hashtag}
                               </Badge>

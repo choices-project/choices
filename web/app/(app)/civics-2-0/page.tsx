@@ -29,7 +29,7 @@ const UnifiedFeed = dynamic(() => import('@/features/feeds/components/UnifiedFee
   ssr: false
 });
 
-import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 import {
   useAppStore
 } from '@/lib/stores';

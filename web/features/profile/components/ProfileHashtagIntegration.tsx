@@ -372,7 +372,7 @@ export default function ProfileHashtagIntegration({
                             size="sm"
                             className="h-4 w-4 p-0 ml-1"
                             onClick={() => {
-                              const newCustom = (hashtagIntegration?.custom_hashtags || []).filter((_, i) => i !== index);
+                              const newCustom = (hashtagIntegration?.custom_hashtags || []).filter((_: any, i: number) => i !== index);
                               handleCustomInterestsUpdate(newCustom);
                             }}
                           >

@@ -106,7 +106,7 @@ export default function ComprehensiveReimport() {
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">State Results</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {progress.stateResults.map((result, index) => (
+            {progress.stateResults.map((result: any, index: number) => (
               <div
                 key={index}
                 className={`p-2 rounded text-center text-sm font-medium ${
@@ -130,7 +130,7 @@ export default function ComprehensiveReimport() {
         <div className="bg-red-50 rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold text-red-800 mb-4">Errors ({progress.errors.length})</h3>
           <div className="space-y-2">
-            {progress.errors.map((error, index) => (
+            {progress.errors.map((error: any, index: number) => (
               <div key={index} className="text-sm text-red-700 bg-red-100 p-2 rounded">
                 {error}
               </div>
@@ -147,7 +147,7 @@ export default function ComprehensiveReimport() {
             <div className="text-gray-400 text-sm">No logs yet. Click &quot;Start Comprehensive Reimport&quot; to begin.</div>
           ) : (
             <div className="space-y-1">
-              {logs.map((log, index) => (
+              {logs.map((log: any, index: number) => (
                 <div key={index} className="text-green-400 text-sm font-mono">
                   {log}
                 </div>

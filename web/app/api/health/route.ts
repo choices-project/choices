@@ -32,15 +32,7 @@ import { createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/mi
 import { getQueryOptimizer } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-
-// Rate limiting: 30 requests per minute per IP
-const rateLimitMiddleware = createRateLimitMiddleware({
-  maxRequests: 30,
-  windowMs: 60 * 1000
-});
-
-// Combined middleware: rate limiting + optional auth
-const middleware = combineMiddleware(rateLimitMiddleware);
+import { rateLimiters } from '@/lib/security/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,9 +41,13 @@ export async function GET(request: NextRequest) {
     
     // Apply rate limiting for database and all checks
     if (type === 'database' || type === 'all') {
-      const rateLimitResult = await middleware(request);
-      if (rateLimitResult) {
-        return rateLimitResult;
+      const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+      const rateLimitResult = await rateLimiters.api.checkLimit(`health:${ip}`);
+      if (!rateLimitResult.allowed) {
+        return NextResponse.json(
+          { error: 'Rate limit exceeded' },
+          { status: 429 }
+        );
       }
     }
 
@@ -74,7 +70,7 @@ export async function GET(request: NextRequest) {
       try {
         // Use optimized health check
         const queryOptimizer = await getQueryOptimizer();
-        const getHealthOptimized = () => queryOptimizer.getDatabaseHealth();
+        const getHealthOptimized = () => queryOptimizer.getMetrics();
 
         const healthData = await getHealthOptimized();
 
@@ -108,9 +104,9 @@ export async function GET(request: NextRequest) {
 
         // Basic health response without admin info
 
-        // Return appropriate status code based on health
-        const statusCode = healthData.status === 'healthy' ? 200 : 
-                          healthData.status === 'degraded' ? 200 : 503;
+        // Determine status based on metrics
+        const isHealthy = healthData.averageResponseTime < 1000 && healthData.cacheHitRate > 0.5;
+        const statusCode = isHealthy ? 200 : 503;
 
         return NextResponse.json(response, { status: statusCode });
 
@@ -391,7 +387,7 @@ export async function GET(request: NextRequest) {
           (async () => {
             try {
               const queryOptimizer = await getQueryOptimizer();
-              const healthData = await queryOptimizer.getDatabaseHealth();
+              const healthData = await queryOptimizer.getMetrics();
               return { ...healthData, type: 'database' };
             } catch (error) {
               return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error', type: 'database' };

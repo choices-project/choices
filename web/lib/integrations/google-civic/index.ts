@@ -23,7 +23,7 @@ export {
 } from './error-handling';
 
 // Import types from the types file
-export type { GoogleCivicErrorDetails } from '@/lib/types/google-civic';
+export type { GoogleCivicErrorDetails } from '@/types/external/google-civic';
 
 // Re-export types from client for convenience
 export type {

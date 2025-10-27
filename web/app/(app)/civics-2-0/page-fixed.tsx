@@ -20,7 +20,7 @@ import {
 import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 import { logger } from '@/lib/utils/logger';
 
 export default function Civics2Page() {

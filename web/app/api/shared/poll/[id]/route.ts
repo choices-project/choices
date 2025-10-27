@@ -3,13 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    // Await params in Next.js 15
+    const { id } = await params;
 
     // Get poll with options
     const { data: poll, error: pollError } = await supabase
@@ -26,7 +29,7 @@ export async function GET(
           created_at
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('is_public', true)
       .eq('is_shareable', true)
       .single();
@@ -41,7 +44,7 @@ export async function GET(
     // Get current results (equal weight)
     const { data: results } = await supabase
       .rpc('get_poll_results_by_trust_tier', {
-        p_poll_id: params.id,
+        p_poll_id: id,
         p_trust_tier: null // All tiers
       });
 

@@ -409,3 +409,6 @@ export const ExperimentalUIFeature = (props: Omit<FeatureWrapperProps, 'feature'
 export const AIFeaturesFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
   <FeatureWrapper feature="aiFeatures" {...props} />
 );
+
+
+export default FeatureWrapper;

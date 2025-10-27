@@ -79,7 +79,7 @@ export default function EnhancedSocialFeed({
   // User state from User Store
   
   // Notification state from Notification Store
-  const addNotification = useNotificationStore(state => state.addNotification);
+  const addNotification = useNotificationStore((state: any) => state.addNotification);
   
   // ✅ Keep local state for component-specific concerns
   const [personalizationScore, setPersonalizationScore] = useState(0);

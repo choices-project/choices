@@ -347,7 +347,7 @@ export default function HashtagPollsFeed({
                         {/* Poll hashtags */}
                         {poll.tags && poll.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {poll.tags.map(hashtag => (
+                            {poll.tags.map((hashtag: any) => (
                               <Badge
                                 key={hashtag}
                                 variant="outline"

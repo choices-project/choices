@@ -14,7 +14,7 @@
 // - Privacy-aware data aggregation
 // - Budget allocation and monitoring
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../logger';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation

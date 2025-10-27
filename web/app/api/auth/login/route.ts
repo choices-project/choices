@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 // Define the profile type based on the selected fields
 type UserProfile = Pick<Database['public']['Tables']['user_profiles']['Row'], 
-  'username' | 'trust_tier' | 'display_name' | 'avatar_url' | 'bio' | 'is_active'
+  'user_id' | 'display_name' | 'bio' | 'created_at' | 'updated_at'
 >;
 
 import { rateLimiters } from '@/lib/security/rate-limit'
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     // For now, we'll skip CSRF validation in test environment
 
     // Rate limiting: 10 login attempts per 15 minutes per IP
-    const rateLimitResult = await rateLimiters.auth.check(request)
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const rateLimitResult = await rateLimiters.auth.checkLimit(`login:${ip}`);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -72,19 +73,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is active
-    if (!profile.is_active) {
-      logger.warn('Inactive user attempted login', { userId: authData.user.id })
-      return NextResponse.json(
-        { message: 'Account is deactivated' },
-        { status: 403 }
-      )
-    }
+    // User profile loaded successfully
+    logger.info('User profile loaded', { userId: authData.user.id, displayName: profile.display_name })
 
     logger.info('User logged in successfully', { 
       userId: authData.user.id, 
       email: authData.user.email,
-      username: profile.username 
+      displayName: profile.display_name 
     })
 
     // Create response with user data
@@ -93,12 +88,11 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        username: profile.username,
-        trust_tier: profile.trust_tier,
+        user_id: profile.user_id,
         display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
         bio: profile.bio,
-        is_active: profile.is_active
+        created_at: profile.created_at,
+        updated_at: profile.updated_at
       },
       session: authData.session,
       token: authData.session?.access_token

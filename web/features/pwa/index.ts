@@ -1,4 +1,14 @@
 /**
+ * PWA Feature Exports
+ * 
+ * Feature exports for pwa functionality
+ * Types are now centralized in /web/types/
+ * 
+ * Updated: October 26, 2025
+ * Status: ✅ REFACTORED
+ */
+
+/**
  * PWA Feature Module
  * 
  * This module provides a graceful wrapper for PWA functionality,

@@ -49,7 +49,7 @@ describe('Sophisticated Analytics Platform', () => {
         }
       };
 
-      const response = await fetch('/api/analytics/events', {
+      const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -82,7 +82,7 @@ describe('Sophisticated Analytics Platform', () => {
         }
       };
 
-      const response = await fetch('/api/analytics/events', {
+      const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -113,7 +113,7 @@ describe('Sophisticated Analytics Platform', () => {
         }
       };
 
-      const response = await fetch('/api/analytics/events', {
+      const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -144,7 +144,7 @@ describe('Sophisticated Analytics Platform', () => {
         }
       };
 
-      const response = await fetch('/api/analytics/events', {
+      const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -267,7 +267,7 @@ describe('Sophisticated Analytics Platform', () => {
 
   describe('Analytics Data Retrieval', () => {
     it('should retrieve analytics events with filtering', async () => {
-      const response = await fetch('/api/analytics/events?event_type=poll_created&limit=10', {
+      const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based&event_type=poll_created&limit=10', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer test-token-${testUserId}`

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 
-import { logger } from '@/lib/utils/logger';
+import { devLog } from '@/lib/utils/logger';
 
 interface SiteMessage {
   id: string

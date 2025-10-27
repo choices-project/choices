@@ -19,7 +19,7 @@ import { z } from 'zod'
 import { 
   withIdempotency, 
   generateIdempotencyKey,
-  type IdempotencyOptions 
+  type IdempotencyOptions
 } from './idempotency'
 import { getSecurityConfig } from '../../security/config'
 import { logger } from '../../logger'

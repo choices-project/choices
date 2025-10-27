@@ -232,7 +232,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               </h3>
               
               <div className="space-y-3">
-                {representatives.slice(0, 5).map((rep, index) => (
+                {representatives.slice(0, 5).map((rep: any, index: number) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
                     {rep.photo ? (
                       <Image 

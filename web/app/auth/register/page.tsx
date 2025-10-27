@@ -38,7 +38,11 @@ export default function RegisterPage() {
     }
 
     // Call server action - it will redirect on success
-    const result = await serverRegister(fd, { ipAddress: '', userAgent: '', userId: '' })
+    const result = await serverRegister(fd, { 
+      ipAddress: '', 
+      userAgent: '', 
+      userId: ''
+    })
     if (!result.ok) {
       setError(result.error || 'Registration failed')
       return

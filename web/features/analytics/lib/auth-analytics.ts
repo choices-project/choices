@@ -493,7 +493,7 @@ export class AuthAnalytics {
     
     // Send to external analytics service
     try {
-      await fetch('/api/analytics/auth', {
+      await fetch('/api/analytics/unified/auth-events?methods=comprehensive&ai-provider=rule-based', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event)

@@ -1082,3 +1082,5 @@ const BalancedOnboardingFlow: React.FC = () => {
     </div>
   );
 };
+
+export default BalancedOnboardingFlow;

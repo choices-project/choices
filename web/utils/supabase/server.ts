@@ -1,7 +1,7 @@
 import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
-import type { Database } from '../../types/database'
+import type { Database } from '@/types/database.types'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 // Re-export the Database type for use in other modules

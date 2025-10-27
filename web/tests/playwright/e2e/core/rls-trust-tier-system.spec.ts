@@ -76,20 +76,20 @@ test.describe('RLS & Trust Tier System', () => {
     console.log('🔌 Phase 2: Testing API Endpoints');
     DatabaseTracker.trackQuery('api_endpoints', 'select', 'endpoint_testing');
 
-    // Test analytics endpoints
-    const analyticsEndpoints = [
-      '/api/analytics/sentiment',
-      '/api/analytics/bot-detection',
-      '/api/analytics/real-time',
-      '/api/analytics/trust-tier-results'
+    // Test unified analytics endpoint with different methods
+    const analyticsMethods = [
+      'sentiment',
+      'bot-detection', 
+      'temporal',
+      'trust-tier'
     ];
 
-    for (const endpoint of analyticsEndpoints) {
-      console.log(`🧪 Testing analytics endpoint: ${endpoint}`);
-      DatabaseTracker.trackQuery('analytics_endpoint', 'select', endpoint);
+    for (const method of analyticsMethods) {
+      console.log(`🧪 Testing analytics method: ${method}`);
+      DatabaseTracker.trackQuery('analytics_method', 'select', method);
       
-      // Test endpoint exists (would test actual calls in real scenario)
-      expect(endpoint).toBeTruthy();
+      // Test method exists (would test actual calls in real scenario)
+      expect(method).toBeTruthy();
     }
 
     // Test user endpoints

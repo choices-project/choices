@@ -21,7 +21,7 @@ export * from './congress-gov';
 // Resolve export conflicts by re-exporting with specific names
 export type {
   GoogleCivicErrorDetails
-} from '@/lib/types/google-civic';
+} from '@/types/external/google-civic';
 
 export {
   executeWithRetry as executeWithGoogleCivicRetry

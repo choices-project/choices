@@ -13,7 +13,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '../../../../utils/supabase/server';
 import cache, { CacheKeys, CacheTTL } from '../../../../lib/cache/redis-cache';
-import queryOptimizer from '../../../../lib/database/query-optimizer';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,7 +132,7 @@ export async function GET(request: NextRequest) {
     }
 
     const adminId = user.id;
-    const cacheKey = CacheKeys.ADMIN_DASHBOARD(adminId);
+    const cacheKey = CacheKeys.ADMIN_DASHBOARD();
 
     // Check cache first
     if (useCache) {
@@ -226,51 +225,19 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
   }
 
   try {
-    // Use query optimizer for maximum performance
+    // Load data in parallel
     const [usersResult, pollsResult, votesResult, activePollsResult] = await Promise.all([
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_total_users',
-        async () => {
-          const result = await supabase.from('user_profiles').select('id', { count: 'exact', head: true });
-          return { data: result.count, error: result.error };
-        },
-        600000 // 10 minutes
-      ),
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_total_polls',
-        async () => {
-          const result = await supabase.from('polls').select('id', { count: 'exact', head: true });
-          return { data: result.count, error: result.error };
-        },
-        600000 // 10 minutes
-      ),
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_total_votes',
-        async () => {
-          const result = await supabase.from('votes').select('id', { count: 'exact', head: true });
-          return { data: result.count, error: result.error };
-        },
-        600000 // 10 minutes
-      ),
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_active_polls',
-        async () => {
-          const result = await supabase.from('polls').select('id', { count: 'exact', head: true }).eq('is_active', true);
-          return { data: result.count, error: result.error };
-        },
-        300000 // 5 minutes
-      )
+      supabase.from('user_profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('polls').select('id', { count: 'exact', head: true }),
+      supabase.from('votes').select('id', { count: 'exact', head: true }),
+      supabase.from('polls').select('id', { count: 'exact', head: true }).eq('is_active', true)
     ]);
 
     const result = {
-      total_users: usersResult.data || 0,
-      total_polls: pollsResult.data || 0,
-      total_votes: votesResult.data || 0,
-      active_polls: activePollsResult.data || 0,
+      total_users: usersResult.count || 0,
+      total_polls: pollsResult.count || 0,
+      total_votes: votesResult.count || 0,
+      active_polls: activePollsResult.count || 0,
       new_users_last_7_days: 0, // Would need separate query
       engagement_rate: 0 // Would need calculation
     };
@@ -401,45 +368,21 @@ async function loadRecentActivity(supabase: any) {
   try {
     // Load recent data in parallel
     const [newUsersResult, recentPollsResult, recentVotesResult] = await Promise.all([
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_recent_users',
-        async () => {
-          const result = await supabase
-            .from('user_profiles')
-            .select('id, email, created_at')
-            .order('created_at', { ascending: false })
-            .limit(10);
-          return { data: result.data, error: result.error };
-        },
-        300000 // 5 minutes
-      ),
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_recent_polls',
-        async () => {
-          const result = await supabase
-            .from('polls')
-            .select('id, title, created_by, created_at, total_votes')
-            .order('created_at', { ascending: false })
-            .limit(10);
-          return { data: result.data, error: result.error };
-        },
-        300000 // 5 minutes
-      ),
-      queryOptimizer.executeQuery(
-        supabase,
-        'admin_recent_votes',
-        async () => {
-          const result = await supabase
-            .from('votes')
-            .select('id, poll_id, user_id, created_at')
-            .order('created_at', { ascending: false })
-            .limit(20);
-          return { data: result.data, error: result.error };
-        },
-        300000 // 5 minutes
-      )
+      supabase
+        .from('user_profiles')
+        .select('id, email, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase
+        .from('polls')
+        .select('id, title, created_by, created_at, total_votes')
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase
+        .from('votes')
+        .select('id, poll_id, user_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20)
     ]);
 
     const result = {

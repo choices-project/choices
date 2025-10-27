@@ -57,13 +57,14 @@ export async function POST(request: NextRequest) {
   
   try {
     // Rate limiting: 10 messages per minute per user
-    const rateLimitResult = await rateLimiters.contact.check(request);
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const rateLimitResult = await rateLimiters.contact.checkLimit(`contact:${ip}`);
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { 
           success: false, 
           error: 'Too many messages. Please wait before sending another message.',
-          retryAfter: rateLimitResult.retryAfter
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
         },
         { status: 429 }
       );

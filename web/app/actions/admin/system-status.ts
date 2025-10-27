@@ -28,7 +28,7 @@ export const systemStatus = createSecureServerAction(
     const admin = await requireAdmin(context)
     
     // Validate form data
-    const validatedData = validateFormData(formData, SystemStatusSchema)
+    const validatedData = validateFormData(formData, SystemStatusSchema) as z.infer<typeof SystemStatusSchema>
 
     try {
       const supabaseClient = await supabase
@@ -164,11 +164,5 @@ export const systemStatus = createSecureServerAction(
 
       throw error
     }
-  },
-  {
-    requireAuth: true,
-    requireAdmin: true,
-    validation: SystemStatusSchema,
-    rateLimit: { endpoint: '/admin/system-status', maxRequests: 100 }
   }
 )

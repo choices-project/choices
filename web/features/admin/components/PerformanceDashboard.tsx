@@ -65,9 +65,9 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
 
   // Calculate performance insights
   const performanceInsights = {
-    avgQueryTime: performanceStats.find(s => s.metricName.includes('query_time'))?.avgValue || 0,
-    maxQueryTime: performanceStats.find(s => s.metricName.includes('query_time'))?.maxValue || 0,
-    totalQueries: performanceStats.find(s => s.metricName.includes('query_time'))?.countMeasurements || 0,
+    avgQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.avgValue || 0,
+    maxQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.maxValue || 0,
+    totalQueries: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.countMeasurements || 0,
     cacheHitRate: cacheStats?.hitRate || 0
   }
 
@@ -297,7 +297,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {performanceStats.map((metric) => (
+              {performanceStats.map((metric: any) => (
                 <tr key={metric.metricName}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {metric.metricName}

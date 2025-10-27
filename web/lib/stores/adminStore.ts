@@ -24,7 +24,7 @@ import type {
 } from '../../features/admin/types';
 import { logger } from '../logger';
 import { getSupabaseClient } from '../../utils/supabase/client';
-import type { Database } from '../../types/database';
+import type { Database } from '@/types/database.types';
 
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 

@@ -333,7 +333,7 @@ class DatabaseQueryOptimizer {
     const avgDuration = totalQueries > 0 ? totalDuration / totalQueries : 0;
     const cachedQueries = this.performanceLog.filter(log => log.cached).length;
     const cacheHitRate = totalQueries > 0 ? (cachedQueries / totalQueries) * 100 : 0;
-
+    
     return {
       totalQueries,
       avgDuration: Math.round(avgDuration),

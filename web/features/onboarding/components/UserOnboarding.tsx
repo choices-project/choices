@@ -45,7 +45,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const setAddressLoading = useUserStore(state => state.setAddressLoading);
   
   // Notification store for user feedback
-  const addNotification = useNotificationStore(state => state.addNotification);
+  const addNotification = useNotificationStore((state: any) => state.addNotification);
   
   // ✅ Keep local state for component-specific concerns
   const [selectedState] = useState('CA'); // Default state selection

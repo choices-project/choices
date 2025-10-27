@@ -70,3 +70,6 @@ export { Tabs, TabsList, TabsTrigger, TabsContent }
 
 
 
+
+
+export default Tabs;

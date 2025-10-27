@@ -300,15 +300,15 @@ export default function HashtagTrending({
                     
                     <div className="text-center">
                       <div className="text-gray-500">Growth</div>
-                      <div className={`font-semibold ${getTrendColor(trending.growth_rate)}`}>
-                        {formatGrowthRate(trending.growth_rate)}
+                      <div className={`font-semibold ${getTrendColor(trending.growth_rate || 0)}`}>
+                        {formatGrowthRate(trending.growth_rate || 0)}
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <div className="text-gray-500">Trend Score</div>
                       <div className="font-semibold text-blue-600">
-                        {formatTrendingScore(trending.trend_score)}
+                        {formatTrendingScore(trending.trend_score || 0)}
                       </div>
                     </div>
                     
@@ -328,7 +328,7 @@ export default function HashtagTrending({
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500">Related:</span>
                     <div className="flex flex-wrap gap-1">
-                      {trending.related_hashtags.slice(0, 3).map((relatedId, idx) => (
+                      {trending.related_hashtags.slice(0, 3).map((relatedId: any, idx: number) => (
                         <span
                           key={idx}
                           className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"

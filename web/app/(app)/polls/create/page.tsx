@@ -9,7 +9,7 @@ import {
   usePollWizardCanProceed,
   usePollWizardActions
 } from '@/lib/stores';
-import { usePollsActions } from '@/lib/stores/pollsStore';
+import { createPoll } from '@/app/actions/create-poll';
 import { logger } from '@/lib/utils/logger';
 
 const CATEGORIES = [
@@ -50,8 +50,6 @@ export default function CreatePollPage() {
     resetWizard: storeResetWizard
   } = usePollWizardActions();
   
-  // Get polls store actions
-  const { createPoll, setLoading, setError, clearError } = usePollsActions();
   
   const [newTag, setNewTag] = useState('');
   const totalSteps = 5;
@@ -113,9 +111,6 @@ export default function CreatePollPage() {
   
   const submitPoll = async () => {
     try {
-      setLoading(true);
-      clearError();
-      
       const newErrors: Record<string, string> = {};
       
       // Final validation for all steps
@@ -163,7 +158,6 @@ export default function CreatePollPage() {
       
       if (Object.keys(newErrors).length > 0) {
         // Set validation errors in store
-        setError('Please fix the validation errors');
         return;
       }
       
@@ -204,7 +198,24 @@ export default function CreatePollPage() {
         }
       };
       
-      await createPoll(pollData);
+      // Convert pollData to FormData for the server action
+      const formData = new FormData();
+      formData.append('title', data.title.trim());
+      formData.append('description', data.description.trim());
+      formData.append('category', data.category);
+      formData.append('privacyLevel', data.privacyLevel);
+      formData.append('votingMethod', data.settings.votingMethod);
+      formData.append('allowMultipleVotes', data.settings.allowMultipleVotes.toString());
+      formData.append('showResults', data.settings.showResults.toString());
+      formData.append('allowComments', data.settings.allowComments.toString());
+      validOptions.forEach((option, index) => {
+        formData.append(`options[${index}]`, option);
+      });
+      data.tags.forEach((tag, index) => {
+        formData.append(`tags[${index}]`, tag);
+      });
+      
+      await createPoll(formData);
       
       // Reset wizard after successful creation
       storeResetWizard();
@@ -216,10 +227,7 @@ export default function CreatePollPage() {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
-      setError(errorMessage);
       logger.error('Failed to create poll:', error instanceof Error ? error : new Error(errorMessage));
-    } finally {
-      setLoading(false);
     }
   };
 
