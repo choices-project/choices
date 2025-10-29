@@ -9,8 +9,8 @@ import { jest } from '@jest/globals';
 export function createTypedMock<T extends Record<string, any>>(defaults: Partial<T> = {}): T {
   return new Proxy({} as T, {
     get(target, prop) {
-      if (prop in target) return target[prop];
-      if (prop in defaults) return defaults[prop];
+      if (typeof prop === 'string' && prop in target) return target[prop];
+      if (typeof prop === 'string' && prop in defaults) return defaults[prop];
       return jest.fn() as any;
     }
   });
@@ -22,9 +22,9 @@ export const mockFeatureFlags = () => createTypedMock({
   isLoading: false,
   error: null,
   flags: {},
-  fetchFlags: jest.fn().mockResolvedValue(undefined),
-  setFeatureFlag: jest.fn().mockResolvedValue(undefined),
-  toggleFeatureFlag: jest.fn().mockResolvedValue(undefined),
+  fetchFlags: jest.fn().mockResolvedValue({}),
+  setFeatureFlag: jest.fn().mockResolvedValue({}),
+  toggleFeatureFlag: jest.fn().mockResolvedValue({}),
   clearError: jest.fn(),
   getAllFlags: jest.fn().mockReturnValue(new Map()),
   getEnabledFlags: jest.fn().mockReturnValue([]),

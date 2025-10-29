@@ -27,7 +27,7 @@ jest.mock('@/lib/utils/logger', () => ({
 jest.mock('@/lib/utils/rate-limit', () => ({
   checkRateLimit: jest.fn().mockImplementation((key) => {
     // Mock rate limiting behavior based on test context
-    if (key && key.includes('rate-limit-test')) {
+    if (key && typeof key === 'string' && key.includes('rate-limit-test')) {
       return Promise.resolve({ allowed: false, remaining: 0 })
     }
     return Promise.resolve({ allowed: true, remaining: 10 })
@@ -101,8 +101,8 @@ describe('Authentication System', () => {
     mockOptions = {
       requireAuth: true,
       rateLimit: {
-        maxRequests: 10,
-        windowMs: 60000
+        endpoint: '/api/test',
+        maxRequests: 10
       },
       csrfProtection: true
     }

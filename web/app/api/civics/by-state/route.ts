@@ -88,7 +88,9 @@ interface RepresentativeData {
 // TODO: Set up proper RLS policies to allow anon key access
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'sb_secret_rTjGRn1LynM_ZgMVnRYsCw_ufgj-FrN',
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? (() => {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+  })(),
   { auth: { persistSession: false } }
 );
 

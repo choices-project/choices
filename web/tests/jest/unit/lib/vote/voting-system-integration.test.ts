@@ -1,6 +1,6 @@
 /**
  * Voting System Integration Tests
- * 
+ *
  * Tests the complete voting system with real business logic
  * Focuses on actual functionality rather than heavy mocking
  */
@@ -83,7 +83,7 @@ describe('Voting System Integration', () => {
 
     it('should reject votes for closed polls', async () => {
       const closedPoll = { ...poll, status: 'closed' as const }
-      
+
       const voteRequest: VoteRequest = {
         pollId: 'test-poll-id',
         userId: 'user-1',
@@ -109,7 +109,6 @@ describe('Voting System Integration', () => {
         userId: 'user-1',
         voteData: {
           choice: 999, // Invalid choice
-          selectedOptions: ['invalid-candidate'],
           ranking: null,
           weights: null
         },
@@ -129,7 +128,7 @@ describe('Voting System Integration', () => {
   describe('Ranked Choice Voting', () => {
     it('should process ranked choice votes correctly', async () => {
       const rankedPoll = { ...poll, votingMethod: 'ranked-choice' as VotingMethod }
-      
+
       const voteRequest: VoteRequest = {
         pollId: 'test-poll-id',
         userId: 'user-1',
@@ -153,16 +152,16 @@ describe('Voting System Integration', () => {
 
     it('should calculate IRV results correctly', () => {
       const calculator = new IRVCalculator('test-poll', candidates)
-      
+
       const userRankings = [
-        { userId: 'user-1', ranking: ['candidate-1', 'candidate-2', 'candidate-3'] },
-        { userId: 'user-2', ranking: ['candidate-1', 'candidate-2', 'candidate-3'] },
-        { userId: 'user-3', ranking: ['candidate-2', 'candidate-1', 'candidate-3'] },
-        { userId: 'user-4', ranking: ['candidate-2', 'candidate-1', 'candidate-3'] }
+        { userId: 'user-1', pollId: 'test-poll-id', ranking: ['candidate-1', 'candidate-2', 'candidate-3'], createdAt: new Date() },
+        { userId: 'user-2', pollId: 'test-poll-id', ranking: ['candidate-1', 'candidate-2', 'candidate-3'], createdAt: new Date() },
+        { userId: 'user-3', pollId: 'test-poll-id', ranking: ['candidate-2', 'candidate-1', 'candidate-3'], createdAt: new Date() },
+        { userId: 'user-4', pollId: 'test-poll-id', ranking: ['candidate-2', 'candidate-1', 'candidate-3'], createdAt: new Date() }
       ]
 
       const results = calculator.calculateResults(userRankings)
-      
+
       expect(results.totalVotes).toBe(4)
       expect(results.winner).toBe('candidate-1')
       expect(results.rounds).toHaveLength(2) // IRV correctly takes 2 rounds to determine winner
@@ -170,14 +169,14 @@ describe('Voting System Integration', () => {
 
     it('should handle tie scenarios in IRV', () => {
       const calculator = new IRVCalculator('test-poll', candidates)
-      
+
       const userRankings = [
-        { userId: 'user-1', ranking: ['candidate-1', 'candidate-2', 'candidate-3'] },
-        { userId: 'user-2', ranking: ['candidate-2', 'candidate-1', 'candidate-3'] }
+        { userId: 'user-1', pollId: 'test-poll-id', ranking: ['candidate-1', 'candidate-2', 'candidate-3'], createdAt: new Date() },
+        { userId: 'user-2', pollId: 'test-poll-id', ranking: ['candidate-2', 'candidate-1', 'candidate-3'], createdAt: new Date() }
       ]
 
       const results = calculator.calculateResults(userRankings)
-      
+
       expect(results.totalVotes).toBe(2)
       expect(results.rounds.length).toBeGreaterThan(1)
     })
@@ -186,7 +185,7 @@ describe('Voting System Integration', () => {
   describe('Approval Voting', () => {
     it('should process approval votes correctly', async () => {
       const approvalPoll = { ...poll, votingMethod: 'approval' as VotingMethod }
-      
+
       const voteRequest: VoteRequest = {
         pollId: 'test-poll-id',
         userId: 'user-1',
@@ -213,7 +212,7 @@ describe('Voting System Integration', () => {
   describe('Quadratic Voting', () => {
     it('should process quadratic votes correctly', async () => {
       const quadraticPoll = { ...poll, votingMethod: 'quadratic' as VotingMethod }
-      
+
       const voteRequest: VoteRequest = {
         pollId: 'test-poll-id',
         userId: 'user-1',
@@ -302,14 +301,14 @@ describe('Voting System Integration', () => {
       ]
 
       const results = await engine.calculateResults(poll, votes)
-      
+
       expect(results.totalVotes).toBe(3)
       expect(results.results.winner).toBe('candidate-1') // Winner is the candidate ID
     })
 
     it('should handle empty vote sets', async () => {
       const results = await engine.calculateResults(poll, [])
-      
+
       expect(results.totalVotes).toBe(0)
       expect(results.results.winner).toBeNull()
     })
@@ -329,7 +328,7 @@ describe('Voting System Integration', () => {
       } as any
 
       const response = await engine.processVote(malformedRequest, poll)
-      
+
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
     })
@@ -350,7 +349,7 @@ describe('Voting System Integration', () => {
       }
 
       const response = await engine.processVote(voteRequest, null as any)
-      
+
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
     })
@@ -375,7 +374,7 @@ describe('Voting System Integration', () => {
       const startTime = performance.now()
       await engine.processVote(voteRequest, poll)
       const endTime = performance.now()
-      
+
       const processingTime = endTime - startTime
       expect(processingTime).toBeLessThan(100) // Should process within 100ms
     })
@@ -394,7 +393,7 @@ describe('Voting System Integration', () => {
       const startTime = performance.now()
       const results = await engine.calculateResults(poll, largeVoteSet)
       const endTime = performance.now()
-      
+
       expect(results).toBeDefined()
       expect(results.totalVotes).toBe(1000)
       expect(endTime - startTime).toBeLessThan(1000) // Should process within 1 second

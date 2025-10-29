@@ -13,7 +13,7 @@ test('minimal polls page test', async ({ page }) => {
   await page.waitForTimeout(10000);
   
   // Check console for errors
-  const consoleErrors = [];
+  const consoleErrors: string[] = [];
   page.on('console', msg => {
     if (msg.type() === 'error') {
       consoleErrors.push(msg.text());

@@ -63,20 +63,20 @@
   },
   "suites": [
     {
-      "title": "security/authentication-security.spec.ts",
-      "file": "security/authentication-security.spec.ts",
+      "title": "core/critical-user-journeys.spec.ts",
+      "file": "core/critical-user-journeys.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Authentication Security Tests",
-          "file": "security/authentication-security.spec.ts",
-          "line": 17,
+          "title": "Critical User Journeys",
+          "file": "core/critical-user-journeys.spec.ts",
+          "line": 12,
           "column": 6,
           "specs": [
             {
-              "title": "should block unauthenticated access to dashboard",
+              "title": "Home page loads successfully",
               "ok": true,
               "tags": [],
               "tests": [
@@ -91,19 +91,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3195,
+                      "duration": 1385,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "🚨 SECURITY TEST: Testing dashboard access without authentication\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Dashboard properly protected - unauthenticated users redirected to login\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:06.316Z",
+                      "startTime": "2025-10-29T17:26:26.851Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -111,13 +104,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-e3f11c9969fa120b5003",
-              "file": "security/authentication-security.spec.ts",
-              "line": 18,
+              "id": "3414f4be5d7d5426047b-73b6ace01ab0192eab40",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 25,
               "column": 7
             },
             {
-              "title": "should block unauthenticated access to profile",
+              "title": "Authentication flow works",
               "ok": true,
               "tags": [],
               "tests": [
@@ -132,19 +125,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2060,
+                      "duration": 8218,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "🚨 SECURITY TEST: Testing profile access without authentication\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Profile properly protected - unauthenticated users redirected to login\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:09.749Z",
+                      "startTime": "2025-10-29T17:26:28.805Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -152,13 +138,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-b435b0d0fe0c426340cb",
-              "file": "security/authentication-security.spec.ts",
-              "line": 44,
+              "id": "3414f4be5d7d5426047b-a05a57ef218c8bddd32c",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 34,
               "column": 7
             },
             {
-              "title": "should block unauthenticated access to admin routes",
+              "title": "Polls page loads (public access)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -173,19 +159,19 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1955,
+                      "duration": 5981,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "🚨 SECURITY TEST: Testing admin access without authentication\n"
+                          "text": "Console error: The result of getServerSnapshot should be cached to avoid an infinite loop\n"
                         },
                         {
-                          "text": "✅ SECURITY: Admin routes properly protected - unauthenticated users redirected to login\n"
+                          "text": "Page error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:11.827Z",
+                      "startTime": "2025-10-29T17:26:37.051Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -193,14 +179,14 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-8dbe40ecbdf7151e3f25",
-              "file": "security/authentication-security.spec.ts",
-              "line": 66,
+              "id": "3414f4be5d7d5426047b-50dbeb6580a79c647bd2",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 55,
               "column": 7
             },
             {
-              "title": "should block unauthenticated access to polls creation",
-              "ok": true,
+              "title": "Protected routes redirect to auth",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -213,34 +199,74 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2185,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 4233,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts:70:24",
+                        "location": {
+                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
+                          "column": 24,
+                          "line": 70
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 68 |\u001b[39m     \n \u001b[90m 69 |\u001b[39m     \u001b[90m// Should redirect to auth page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 70 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 71 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 72 |\u001b[39m\n \u001b[90m 73 |\u001b[39m   test(\u001b[32m'API endpoints respond correctly'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
+                            "column": 24,
+                            "line": 70
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\n\n\u001b[0m \u001b[90m 68 |\u001b[39m     \n \u001b[90m 69 |\u001b[39m     \u001b[90m// Should redirect to auth page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 70 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 71 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 72 |\u001b[39m\n \u001b[90m 73 |\u001b[39m   test(\u001b[32m'API endpoints respond correctly'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts:70:24\u001b[22m"
+                        }
+                      ],
                       "stdout": [
                         {
-                          "text": "🚨 SECURITY TEST: Testing polls creation access without authentication\n"
+                          "text": "Console error: The result of getServerSnapshot should be cached to avoid an infinite loop\n"
                         },
                         {
-                          "text": "✅ SECURITY: Polls creation properly protected - unauthenticated users redirected to login\n"
+                          "text": "Page error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:13.797Z",
+                      "startTime": "2025-10-29T17:26:43.070Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
+                        "column": 24,
+                        "line": 70
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-c4592b17a396a548a158",
-              "file": "security/authentication-security.spec.ts",
-              "line": 88,
+              "id": "3414f4be5d7d5426047b-df41bcdd11430fbd6456",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 64,
               "column": 7
             },
             {
-              "title": "should block unauthenticated API access to dashboard",
+              "title": "API endpoints respond correctly",
               "ok": true,
               "tags": [],
               "tests": [
@@ -252,22 +278,15 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1154,
+                      "duration": 1325,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "🚨 SECURITY TEST: Testing dashboard API access without authentication\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Dashboard API properly protected - returns 401 for unauthenticated requests\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:15.999Z",
+                      "startTime": "2025-10-29T17:26:48.860Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -275,13 +294,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-afc1981eec69bf6048de",
-              "file": "security/authentication-security.spec.ts",
-              "line": 110,
+              "id": "3414f4be5d7d5426047b-22a465d51f3ac344572b",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 73,
               "column": 7
             },
             {
-              "title": "should block unauthenticated API access to profile",
+              "title": "404 pages handled gracefully",
               "ok": true,
               "tags": [],
               "tests": [
@@ -293,22 +312,19 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1169,
+                      "duration": 1260,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "🚨 SECURITY TEST: Testing profile API access without authentication\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Profile API properly protected - returns 401 for unauthenticated requests\n"
+                          "text": "Console error: Failed to load resource: the server responded with a status of 404 (Not Found)\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:17.171Z",
+                      "startTime": "2025-10-29T17:26:50.567Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -316,13 +332,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-b1727134ba08718ef261",
-              "file": "security/authentication-security.spec.ts",
-              "line": 130,
+              "id": "3414f4be5d7d5426047b-670d53e34522b0e63823",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 82,
               "column": 7
             },
             {
-              "title": "should allow public access to landing page",
+              "title": "CSS and JavaScript load properly",
               "ok": true,
               "tags": [],
               "tests": [
@@ -334,22 +350,15 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1598,
+                      "duration": 1595,
                       "errors": [],
-                      "stdout": [
-                        {
-                          "text": "🔓 SECURITY TEST: Testing public access to landing page\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Landing page properly accessible to public users\n"
-                        }
-                      ],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T05:50:18.352Z",
+                      "startTime": "2025-10-29T17:26:51.854Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -357,50 +366,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "f13e45fc719b5844c87c-7665eb420b35e63db214",
-              "file": "security/authentication-security.spec.ts",
-              "line": 147,
-              "column": 7
-            },
-            {
-              "title": "should allow public access to auth page",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1743,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "🔓 SECURITY TEST: Testing public access to auth page\n"
-                        },
-                        {
-                          "text": "✅ SECURITY: Auth page properly accessible to public users\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-29T05:50:19.962Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "f13e45fc719b5844c87c-d75fc323958b893050dc",
-              "file": "security/authentication-security.spec.ts",
-              "line": 167,
+              "id": "3414f4be5d7d5426047b-6fdb82fdbf26ceb9db26",
+              "file": "core/critical-user-journeys.spec.ts",
+              "line": 89,
               "column": 7
             }
           ]
@@ -410,11 +378,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-10-29T05:50:05.082Z",
-    "duration": 16687.563,
-    "expected": 8,
+    "startTime": "2025-10-29T17:26:25.509Z",
+    "duration": 28131.21,
+    "expected": 6,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

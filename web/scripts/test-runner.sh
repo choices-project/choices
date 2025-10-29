@@ -43,7 +43,7 @@ start_dev_server() {
     print_status "Starting development server..."
     npm run dev &
     DEV_PID=$!
-    
+
     # Wait for server to start
     print_status "Waiting for server to start..."
     for i in {1..30}; do
@@ -53,7 +53,7 @@ start_dev_server() {
         fi
         sleep 2
     done
-    
+
     print_error "Failed to start development server"
     kill $DEV_PID 2>/dev/null || true
     exit 1
@@ -62,44 +62,44 @@ start_dev_server() {
 # Function to run E2E tests
 run_e2e_tests() {
     print_status "Running E2E tests..."
-    
+
     if ! check_dev_server; then
         print_warning "Development server not running. Starting it..."
         start_dev_server
     fi
-    
-    # Run the critical user journeys test
-    npx playwright test tests/playwright/e2e/core/critical-user-journeys.spec.ts --reporter=list
-    
+
+    # Run the critical user journeys test with proper config
+    npx playwright test tests/playwright/e2e/core/critical-user-journeys.spec.ts --config=tests/playwright/configs/playwright.config.chrome-only.ts
+
     print_success "E2E tests completed!"
 }
 
 # Function to run unit tests
 run_unit_tests() {
     print_status "Running unit tests (business logic only)..."
-    
+
     # Run only the remaining business logic tests
     npm run test:jest:unit
-    
+
     print_success "Unit tests completed!"
 }
 
 # Function to run all tests
 run_all_tests() {
     print_status "Running all tests..."
-    
+
     run_unit_tests
     run_e2e_tests
-    
+
     print_success "All tests completed!"
 }
 
 # Function to check TypeScript errors
 check_typescript() {
     print_status "Checking TypeScript errors..."
-    
+
     local error_count=$(npx tsc --noEmit --project tsconfig.json 2>&1 | grep -E "error TS" | grep -v "tests/archive" | wc -l)
-    
+
     if [ "$error_count" -eq 0 ]; then
         print_success "No TypeScript errors found!"
     else
