@@ -12,7 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export const REAL_TEST_USER = {
   email: 'real-test-user@example.com',
-  password: 'RealTestUser123!',
+  password: process.env.TEST_USER_PASSWORD || 'TestUser123!',
   username: 'realtestuser',
   displayName: 'Real Test User',
   location: 'San Francisco, CA'
@@ -20,7 +20,7 @@ export const REAL_TEST_USER = {
 
 export const REAL_ADMIN_USER = {
   email: 'real-admin-user@example.com',
-  password: 'RealAdminUser123!',
+  password: process.env.TEST_ADMIN_PASSWORD || 'TestAdmin123!',
   username: 'realadminuser',
   displayName: 'Real Admin User',
   location: 'San Francisco, CA'

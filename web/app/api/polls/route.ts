@@ -61,12 +61,7 @@ export async function GET(request: NextRequest) {
       created_at,
       end_date,
       tags,
-      created_by,
-      user_profiles!created_by(
-        username,
-        display_name,
-        is_admin
-      )
+      created_by
     `;
 
     // Add hashtag fields if requested
@@ -128,6 +123,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch polls' }, { status: 500 });
     }
 
+    // Fetch user profiles for polls that have created_by
+    let userProfiles: Record<string, any> = {};
+    if (polls && polls.length > 0) {
+      const userIds = [...new Set(polls.map(poll => poll.created_by).filter(Boolean))];
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id, username, display_name, is_admin')
+          .in('user_id', userIds);
+        
+        if (!profilesError && profiles) {
+          userProfiles = profiles.reduce((acc, profile) => {
+            acc[profile.user_id] = profile;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+    }
+
     // Get trending hashtags for analytics if needed (temporarily disabled)
     let trendingHashtags: any[] = [];
     if (sort === 'trending' || status === 'trending' || includeAnalytics) {
@@ -150,8 +164,8 @@ export async function GET(request: NextRequest) {
         description: poll.description,
         category: poll.category,
         author: {
-          name: poll.user_profiles?.display_name || poll.user_profiles?.username || 'Anonymous',
-          verified: poll.user_profiles?.is_admin || false
+          name: userProfiles[poll.created_by]?.display_name || userProfiles[poll.created_by]?.username || 'Anonymous',
+          verified: userProfiles[poll.created_by]?.is_admin || false
         },
         status: poll.status,
         totalVotes: poll.total_votes || 0,

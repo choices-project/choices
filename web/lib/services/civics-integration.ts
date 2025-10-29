@@ -1,9 +1,9 @@
 /**
  * Civics Backend Integration Service
- * 
+ *
  * Bridges the civics backend data with the web application
  * Handles data transformation, caching, and real-time updates
- * 
+ *
  * Created: October 28, 2025
  * Status: ✅ PRODUCTION
  */
@@ -93,7 +93,7 @@ export class CivicsIntegrationService {
       const crosswalkData = await this.getCrosswalkData(representativeIds);
 
       // Transform data to match our interface
-      const transformedRepresentatives = (representatives || []).map(rep => 
+      const transformedRepresentatives = (representatives || []).map(rep =>
         this.transformRepresentative(rep, committees, crosswalkData)
       );
 
@@ -152,7 +152,7 @@ export class CivicsIntegrationService {
 
       // Group committees by representative ID
       const committeeMap = new Map<number, RepresentativeCommittee[]>();
-      
+
       for (const committee of committees || []) {
         const repId = committee.openstates_people_data?.[0]?.id;
         if (!repId) continue;
@@ -216,7 +216,7 @@ export class CivicsIntegrationService {
       // Group crosswalk data by representative ID using canonical_id mapping
       const crosswalkMap = new Map<number, any[]>();
       const canonicalToRepId = new Map(reps.map(rep => [rep.canonical_id, rep.id]));
-      
+
       for (const item of crosswalk || []) {
         const repId = canonicalToRepId.get(item.canonical_id);
         if (!repId) continue;
@@ -239,7 +239,7 @@ export class CivicsIntegrationService {
    * Transform database representative to our interface
    */
   private transformRepresentative(
-    rep: any, 
+    rep: any,
     committees: Map<number, RepresentativeCommittee[]>,
     crosswalk: Map<number, any[]>
   ): Representative {
@@ -251,42 +251,42 @@ export class CivicsIntegrationService {
       level: rep.level,
       state: rep.state,
       district: rep.district,
-      
+
       // Contact Information
       primary_email: rep.primary_email,
       primary_phone: rep.primary_phone,
       primary_website: rep.primary_website,
-      
+
       // Social Media
       twitter_handle: rep.twitter_handle,
       facebook_url: rep.facebook_url,
       instagram_handle: rep.instagram_handle,
       linkedin_url: rep.linkedin_url,
       youtube_channel: rep.youtube_channel,
-      
+
       // External IDs
       bioguide_id: rep.bioguide_id,
       openstates_id: rep.openstates_id,
       fec_id: rep.fec_id,
       google_civic_id: rep.google_civic_id,
       congress_gov_id: rep.congress_gov_id,
-      
+
       // Additional Info
       primary_photo_url: rep.primary_photo_url,
       term_start_date: rep.term_start_date,
       term_end_date: rep.term_end_date,
       next_election_date: rep.next_election_date,
-      
+
       // Data Quality
       data_quality_score: rep.data_quality_score || 0,
       verification_status: rep.verification_status || 'pending',
       data_sources: rep.data_sources || [],
-      
+
       // Timestamps
       created_at: rep.created_at,
       updated_at: rep.updated_at,
       last_verified: rep.last_verified,
-      
+
       // Related Data
       photos: rep.representative_photos?.map((photo: any) => ({
         id: photo.id,
@@ -301,7 +301,7 @@ export class CivicsIntegrationService {
         created_at: photo.created_at,
         updated_at: photo.updated_at
       })) || [],
-      
+
       activities: rep.representative_activity?.map((activity: any) => ({
         id: activity.id,
         representative_id: activity.representative_id,
@@ -316,9 +316,9 @@ export class CivicsIntegrationService {
         created_at: activity.created_at,
         updated_at: activity.updated_at
       })) || [],
-      
+
       committees: committees.get(rep.id) || [],
-      
+
       crosswalk: crosswalk.get(rep.id)?.map((item: any) => ({
         id: item.id,
         entity_type: item.entity_type,

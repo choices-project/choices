@@ -91,12 +91,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1385,
+                      "duration": 1674,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:26.851Z",
+                      "startTime": "2025-10-29T17:50:26.044Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -125,12 +125,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8218,
+                      "duration": 4124,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:28.805Z",
+                      "startTime": "2025-10-29T17:50:28.220Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -159,7 +159,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5981,
+                      "duration": 4931,
                       "errors": [],
                       "stdout": [
                         {
@@ -171,7 +171,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:37.051Z",
+                      "startTime": "2025-10-29T17:50:32.365Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -186,7 +186,7 @@
             },
             {
               "title": "Protected routes redirect to auth",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -199,65 +199,18 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 4233,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts:70:24",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
-                          "column": 24,
-                          "line": 70
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 68 |\u001b[39m     \n \u001b[90m 69 |\u001b[39m     \u001b[90m// Should redirect to auth page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 70 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 71 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 72 |\u001b[39m\n \u001b[90m 73 |\u001b[39m   test(\u001b[32m'API endpoints respond correctly'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
-                            "column": 24,
-                            "line": 70
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"/auth\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3000/dashboard\"\u001b[39m\n\n\u001b[0m \u001b[90m 68 |\u001b[39m     \n \u001b[90m 69 |\u001b[39m     \u001b[90m// Should redirect to auth page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 70 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 71 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 72 |\u001b[39m\n \u001b[90m 73 |\u001b[39m   test(\u001b[32m'API endpoints respond correctly'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts:70:24\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "Console error: The result of getServerSnapshot should be cached to avoid an infinite loop\n"
-                        },
-                        {
-                          "text": "Page error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.\n"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 4297,
+                      "errors": [],
+                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:43.070Z",
+                      "startTime": "2025-10-29T17:50:37.308Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-critical-user-journey-5ee38-ted-routes-redirect-to-auth-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/critical-user-journeys.spec.ts",
-                        "column": 24,
-                        "line": 70
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "3414f4be5d7d5426047b-df41bcdd11430fbd6456",
@@ -278,15 +231,15 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1325,
+                      "duration": 998,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:48.860Z",
+                      "startTime": "2025-10-29T17:50:41.617Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -296,7 +249,7 @@
               ],
               "id": "3414f4be5d7d5426047b-22a465d51f3ac344572b",
               "file": "core/critical-user-journeys.spec.ts",
-              "line": 73,
+              "line": 78,
               "column": 7
             },
             {
@@ -312,10 +265,10 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1260,
+                      "duration": 1095,
                       "errors": [],
                       "stdout": [
                         {
@@ -324,7 +277,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:50.567Z",
+                      "startTime": "2025-10-29T17:50:42.633Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -334,7 +287,7 @@
               ],
               "id": "3414f4be5d7d5426047b-670d53e34522b0e63823",
               "file": "core/critical-user-journeys.spec.ts",
-              "line": 82,
+              "line": 87,
               "column": 7
             },
             {
@@ -350,15 +303,15 @@
                   "projectName": "chromium-inline",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1595,
+                      "duration": 1123,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-29T17:26:51.854Z",
+                      "startTime": "2025-10-29T17:50:43.744Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -368,7 +321,7 @@
               ],
               "id": "3414f4be5d7d5426047b-6fdb82fdbf26ceb9db26",
               "file": "core/critical-user-journeys.spec.ts",
-              "line": 89,
+              "line": 94,
               "column": 7
             }
           ]
@@ -378,11 +331,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-10-29T17:26:25.509Z",
-    "duration": 28131.21,
-    "expected": 6,
+    "startTime": "2025-10-29T17:50:24.572Z",
+    "duration": 20361.303,
+    "expected": 7,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

@@ -62,6 +62,11 @@ test.describe('Critical User Journeys', () => {
   });
 
   test('Protected routes redirect to auth', async ({ page }) => {
+    // Set up E2E bypass to test the actual redirect behavior
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0' // Disable bypass to test real auth behavior
+    });
+    
     // Try to access dashboard without authentication
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
