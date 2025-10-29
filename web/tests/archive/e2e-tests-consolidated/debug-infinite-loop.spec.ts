@@ -82,7 +82,7 @@ test.describe('Infinite Loop Debug Dashboard', () => {
     }
     
     // Calculate render rate
-    const totalRenders = renderCounts[renderCounts.length - 1];
+    const totalRenders = renderCounts[renderCounts.length - 1] ?? 0;
     const renderRate = totalRenders / 10; // renders per second
     
     console.log(`📈 Average render rate: ${renderRate.toFixed(2)} renders/second`);
@@ -92,10 +92,10 @@ test.describe('Infinite Loop Debug Dashboard', () => {
     
     // Check if render count is increasing linearly (indicating infinite loop)
     const isIncreasing = renderCounts.every((count, index) => 
-      index === 0 || count >= renderCounts[index - 1]
+      index === 0 || count >= (renderCounts[index - 1] ?? 0)
     );
     
-    if (isIncreasing && totalRenders > 20) {
+    if (isIncreasing && (totalRenders ?? 0) > 20) {
       console.log('🚨 WARNING: Render count is continuously increasing - possible infinite loop');
     }
   });

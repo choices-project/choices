@@ -84,12 +84,12 @@ interface RepresentativeData {
   }>;
 }
 
-// Use service role for public representative data APIs
-// TODO: Set up proper RLS policies to allow anon key access
+// Use anonymous key for public representative data APIs
+// RLS policies should allow public read access to representative data
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? (() => {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? (() => {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required');
   })(),
   { auth: { persistSession: false } }
 );

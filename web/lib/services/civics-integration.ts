@@ -16,11 +16,12 @@ import type {
   RepresentativeCommittee
 } from '@/types/representative';
 
-// Initialize Supabase client with service role for full access
+// Initialize Supabase client with anonymous key for public data access
+// RLS policies should allow public read access to representative data
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || (() => {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required');
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required');
   })(),
   { auth: { persistSession: false } }
 );
