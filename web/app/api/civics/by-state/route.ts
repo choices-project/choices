@@ -1,17 +1,17 @@
 /**
  * Civics Data Retrieval API
  * Returns representatives by state with enhanced data
- * 
+ *
  * Created: October 6, 2025
  * Updated: October 6, 2025
  */
 
 /**
  * Civics State Representatives API Route
- * 
+ *
  * Provides state-based representative lookup with normalized table data
  * including contacts, photos, social media, and activity records.
- * 
+ *
  * @fileoverview State-based representative lookup API with normalized data
  * @version 2.0.0
  * @since 2024-10-09
@@ -96,28 +96,28 @@ const supabase = createClient(
 
 /**
  * GET /api/civics/by-state
- * 
+ *
  * Retrieves representatives for a specific state with optional filtering
  * by level (federal/state) and chamber (house/senate). Returns normalized data.
- * 
+ *
  * @param request - NextRequest with state query parameter and optional filters
  * @returns NextResponse with representative data or error
- * 
+ *
  * @example
  * GET /api/civics/by-state?state=CA&level=federal&chamber=house
- * 
+ *
  * @throws {400} When state parameter is missing or invalid
  * @throws {500} When database query fails
  */
 export async function GET(request: NextRequest) {
   const logger = createApiLogger('/api/civics/by-state', 'GET');
-  
+
   try {
     // Rate limiting check
-  const clientIP = request.headers.get('x-forwarded-for') ?? 
-                   request.headers.get('x-real-ip') ?? 
+  const clientIP = request.headers.get('x-forwarded-for') ??
+                   request.headers.get('x-real-ip') ??
                    '127.0.0.1';
-    
+
     const rateLimitResult = await apiRateLimiter.checkLimit(
       clientIP,
       '/api/civics/by-state',
@@ -126,12 +126,12 @@ export async function GET(request: NextRequest) {
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': rateLimitResult.retryAfter?.toString() ?? '900',
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') ?? '200');
 
     if (!state) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: false,
         error: 'State parameter required',
         metadata: {
@@ -237,7 +237,7 @@ export async function GET(request: NextRequest) {
         'state_upper': ['State Senate', 'Senator'],
         'state_lower': ['State House', 'State Assembly', 'Representative']
       };
-      
+
       const chamberTerms = chamberMapping[chamber] ?? [];
       if (chamberTerms.length > 0) {
         query = query.or(chamberTerms.map(term => `office.ilike.%${term}%`).join(','));
@@ -316,13 +316,13 @@ export async function GET(request: NextRequest) {
       CivicsCache.cacheStateLookup(state, level ?? undefined, chamber ?? undefined, processedData);
     }
 
-    logger.success('Successfully fetched representatives by state', 200, { 
-      state, 
-      count: processedData.length 
+    logger.success('Successfully fetched representatives by state', 200, {
+      state,
+      count: processedData.length
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data: {
         state,
         level: level ?? 'all',
@@ -338,7 +338,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('API error during state lookup', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: false,
       error: 'Service temporarily unavailable',
       metadata: {

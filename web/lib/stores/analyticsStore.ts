@@ -14,6 +14,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
 
 import { logger } from '../logger';
 

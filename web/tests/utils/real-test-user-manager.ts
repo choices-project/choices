@@ -1,9 +1,9 @@
 /**
  * Real Test User Manager
- * 
+ *
  * Creates test users that bypass email verification and create real database activity.
  * Uses Supabase Admin API to create users directly with email_confirm: true
- * 
+ *
  * Created: January 27, 2025
  * Status: ✅ BYPASSING EMAIL VERIFICATION BLOCK
  * Updated: October 29, 2025 - Removed hardcoded credentials for security
@@ -62,7 +62,7 @@ export class RealTestUserManager {
 
       // Check if user already exists
       const { data: existingUser } = await this.supabase.auth.admin.getUserByEmail(REAL_TEST_USER.email);
-      
+
       if (existingUser.user) {
         this.userCreated = true;
         return { user: existingUser.user, error: null };
@@ -108,7 +108,7 @@ export class RealTestUserManager {
 
       // Check if admin already exists
       const { data: existingAdmin } = await this.supabase.auth.admin.getUserByEmail(REAL_ADMIN_USER.email);
-      
+
       if (existingAdmin.user) {
         this.adminCreated = true;
         return { user: existingAdmin.user, error: null };

@@ -10,7 +10,7 @@ const customJestConfig = {
     '<rootDir>/../../setup/jest.setup.js'
   ],
   testEnvironment: 'jest-environment-jsdom',
-  
+
   // Test patterns
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
@@ -23,12 +23,12 @@ const customJestConfig = {
     '<rootDir>/tests/e2e/archive-old/',
     '<rootDir>/archive-unused-files/',
   ],
-  
+
   testMatch: [
     '<rootDir>/tests/jest/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/tests/jest/**/*.spec.{js,jsx,ts,tsx}',
   ],
-  
+
   // Coverage configuration
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
@@ -46,7 +46,7 @@ const customJestConfig = {
     '!**/tests/e2e/archive-old/**',
     '!**/archive-unused-files/**',
   ],
-  
+
   coverageThreshold: {
     global: {
       branches: 70,
@@ -55,23 +55,23 @@ const customJestConfig = {
       statements: 70,
     },
   },
-  
+
   // Performance optimizations
   maxWorkers: '50%',
   cache: true,
   cacheDirectory: '<rootDir>/.jest-cache',
-  
+
   // Transform ignore patterns for ESM modules
   transformIgnorePatterns: [
     'node_modules/(?!(lucide-react|@radix-ui|@headlessui|@floating-ui|@tanstack|@supabase|framer-motion|recharts|uuid|clsx|tailwind-merge)/)',
   ],
-  
+
   // Transform configuration for ESM modules
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
     '^.+\\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
   },
-  
+
   // Module name mapping
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -87,35 +87,35 @@ const customJestConfig = {
     '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
     '^lucide-react/(.*)$': '<rootDir>/__mocks__/lucide-react.js',
   },
-  
+
   // Transform configuration
   transform: {
     '^.+\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
     '^.+\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
   },
-  
+
   // Test timeout
   testTimeout: 15000,
-  
+
   // Verbose output
   verbose: false,
-  
+
   // Clear mocks between tests
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  
+
   // Global setup - removed non-existent files
   // globalSetup: '<rootDir>/jest.global-setup.js',
   // globalTeardown: '<rootDir>/jest.global-teardown.js',
-  
+
   // Test results processor - removed non-existent files
   // testResultsProcessor: '<rootDir>/jest.results-processor.js',
-  
+
   // Coverage reporters
   coverageReporters: ['text', 'lcov', 'html', 'json'],
   coverageDirectory: '<rootDir>/coverage',
-  
+
   // Coverage path ignore patterns
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -130,21 +130,21 @@ const customJestConfig = {
     '/tests/e2e/archive-old/',
     '/archive-unused-files/',
   ],
-  
+
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  
+
   // Test environment options
   testEnvironmentOptions: {
     customExportConditions: ['node', 'node-addons'],
   },
-  
+
   // Snapshot serializers
   snapshotSerializers: ['@testing-library/jest-dom'],
-  
+
   // Setup files - removed non-existent files
   // setupFiles: ['<rootDir>/jest.env.setup.js'],
-  
+
   // Globals for TypeScript
   globals: {
     'ts-jest': {

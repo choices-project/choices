@@ -1,6 +1,6 @@
 /**
  * Root Jest Configuration
- * 
+ *
  * Points to the main Jest configuration in the testing suite directory.
  * This maintains consistency with Playwright configs being in tests/playwright/configs/
  */

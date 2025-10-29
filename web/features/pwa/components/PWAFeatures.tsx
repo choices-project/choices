@@ -30,14 +30,14 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
   const _loading = usePWALoading();
   const _error = usePWAError();
   const pwaActions = usePWAActions();
-  const pwa = pwaActions as unknown as {
+  const pwa = useMemo(() => pwaActions as unknown as {
     setOnlineStatus: (online: boolean) => void;
     installPWA: () => Promise<void>;
     updatePWA: () => Promise<void>;
     checkForUpdates: () => Promise<boolean>;
     processOfflineActions: () => Promise<void>;
     clearCache: () => Promise<void>;
-  };
+  }, [pwaActions]);
 
   // Use useCallback to prevent infinite loops
   const handleOnline = useCallback(() => {
