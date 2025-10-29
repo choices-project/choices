@@ -61,7 +61,6 @@ describe('Voting System Integration', () => {
         userId: 'user-1',
         voteData: {
           choice: 0, // First candidate
-          selectedOptions: ['candidate-1'],
           ranking: null,
           weights: null
         },
@@ -89,7 +88,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: ['candidate-1'],
           ranking: null,
           weights: null
         },
@@ -136,7 +134,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: [],
           rankings: [0, 1, 2], // Indices of candidates in order of preference
           weights: null
         },
@@ -194,7 +191,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: ['candidate-1', 'candidate-2'],
           approvals: [0, 1], // Approve first two candidates
           ranking: null,
           weights: null
@@ -222,7 +218,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: [],
           ranking: null,
           allocations: { '0': 2, '1': 1 } // Allocate credits to first two candidates
         },
@@ -251,7 +246,6 @@ describe('Voting System Integration', () => {
         userId: 'user-1',
         voteData: {
           choice: 0, // First candidate
-          selectedOptions: ['candidate-1'],
           ranking: null,
           weights: null
         },
@@ -345,7 +339,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: ['candidate-1'],
           ranking: null,
           weights: null
         },
@@ -369,7 +362,6 @@ describe('Voting System Integration', () => {
         pollId: 'test-poll-id',
         userId: 'user-1',
         voteData: {
-          selectedOptions: ['candidate-1'],
           ranking: null,
           weights: null
         },
