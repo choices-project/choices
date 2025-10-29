@@ -107,7 +107,7 @@ function UnifiedFeed({
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   
-  const loadFeeds = async () => {
+  const loadFeeds = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/feeds');
@@ -124,17 +124,17 @@ function UnifiedFeed({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty dependency array since it doesn't depend on any props/state
   
-  const likeFeed = () => Promise.resolve();
-  const bookmarkFeed = () => Promise.resolve();
-  const refreshFeeds = () => loadFeeds();
+  const likeFeed = useCallback(() => Promise.resolve(), []);
+  const bookmarkFeed = useCallback(() => Promise.resolve(), []);
+  const refreshFeeds = useCallback(() => loadFeeds(), [loadFeeds]);
   const pwaStore = { isOnline: true };
   const user = { id: 'test-user' };
-  const addNotification = () => {};
+  const addNotification = useCallback(() => {}, []);
   const hashtags = [];
   const trendingHashtags: string[] = [];
-  const getTrendingHashtags = () => Promise.resolve();
+  const getTrendingHashtags = useCallback(() => Promise.resolve(), []);
   const trendingCount = 0;
 
   // Local state
@@ -323,7 +323,7 @@ function UnifiedFeed({
       setError('Failed to load feed data');
       console.log('[UnifiedFeed] Error state set:', error);
     }
-  }, [loadFeeds, loadHashtagPollsFeed, setError]);
+  }, [loadFeeds, loadHashtagPollsFeed]); // Removed setError as it's a stable state setter
 
   // Initialize feed data with cleanup - simplified to prevent timeout
   useEffect(() => {
@@ -615,7 +615,7 @@ function UnifiedFeed({
     } finally {
       setIsRefreshing(false);
     }
-  }, [refreshFeeds, loadHashtagPollsFeed, announceToScreenReader, setError]);
+  }, [refreshFeeds, loadHashtagPollsFeed, announceToScreenReader]); // Removed setError as it's a stable state setter
 
   // Real-time updates with WebSocket (from EnhancedSocialFeed.tsx) - temporarily disabled to fix infinite loop
   // useEffect(() => {

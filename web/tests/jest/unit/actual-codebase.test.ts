@@ -216,8 +216,8 @@ describe('Business Logic', () => {
     const invalidResult = createPoll(invalidPollData);
 
     expect(validResult.success).toBe(true);
-    expect(validResult.poll.title).toBe('Test Poll');
-    expect(validResult.poll.options).toHaveLength(2);
+    expect(validResult.poll?.title).toBe('Test Poll');
+    expect(validResult.poll?.options).toHaveLength(2);
     
     expect(invalidResult.success).toBe(false);
     expect(invalidResult.error).toBe('Title is required');
@@ -266,8 +266,8 @@ describe('Business Logic', () => {
     const invalidResult = processVote(invalidVote, poll);
 
     expect(validResult.success).toBe(true);
-    expect(validResult.vote.pollId).toBe('poll-123');
-    expect(validResult.vote.optionId).toBe('opt-1');
+    expect(validResult.vote?.pollId).toBe('poll-123');
+    expect(validResult.vote?.optionId).toBe('opt-1');
     
     expect(invalidResult.success).toBe(false);
     expect(invalidResult.error).toBe('Invalid option ID');
@@ -317,17 +317,18 @@ describe('Error Handling', () => {
       
       for (const [field, rule] of Object.entries(rules)) {
         const value = data[field];
+        const ruleObj = rule as any;
         
-        if (rule.required && (!value || value.toString().trim() === '')) {
+        if (ruleObj.required && (!value || value.toString().trim() === '')) {
           errors.push(`${field} is required`);
         }
         
-        if (rule.minLength && value && value.toString().length < rule.minLength) {
-          errors.push(`${field} must be at least ${rule.minLength} characters`);
+        if (ruleObj.minLength && value && value.toString().length < ruleObj.minLength) {
+          errors.push(`${field} must be at least ${ruleObj.minLength} characters`);
         }
         
-        if (rule.maxLength && value && value.toString().length > rule.maxLength) {
-          errors.push(`${field} must be no more than ${rule.maxLength} characters`);
+        if (ruleObj.maxLength && value && value.toString().length > ruleObj.maxLength) {
+          errors.push(`${field} must be no more than ${ruleObj.maxLength} characters`);
         }
       }
       

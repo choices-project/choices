@@ -119,7 +119,7 @@ describe('Integration Tests - API + Database', () => {
       expect(queryError).toBeNull();
       
       // Handle the response format - data might be nested
-      const pollsData = Array.isArray(allPolls) ? allPolls : (allPolls?.data || []);
+      const pollsData = Array.isArray(allPolls) ? allPolls : ((allPolls as any)?.data || []);
       expect(pollsData).toBeDefined();
       expect(pollsData.length).toBeGreaterThan(0);
       expect(pollsData[0].title).toBe('Integration Test Poll');

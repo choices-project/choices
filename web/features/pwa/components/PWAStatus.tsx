@@ -19,7 +19,7 @@ import {
   usePWALoading,
   usePWAError,
   usePWAStore
-} from '@/lib/stores';
+} from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 interface PWAStatusProps {

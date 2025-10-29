@@ -8,7 +8,7 @@ import {
   usePWALoading,
   usePWAError,
   usePWAActions
-} from '@/lib/stores'
+} from '@/lib/stores/pwaStore'
 import { T } from '@/tests/registry/testIds'
 import { logger } from '@/lib/utils/logger'
 
@@ -29,7 +29,15 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
   const offline = usePWAOffline();
   const _loading = usePWALoading();
   const _error = usePWAError();
-  const pwa = usePWAActions();
+  const pwaActions = usePWAActions();
+  const pwa = pwaActions as unknown as {
+    setOnlineStatus: (online: boolean) => void;
+    installPWA: () => Promise<void>;
+    updatePWA: () => Promise<void>;
+    checkForUpdates: () => Promise<boolean>;
+    processOfflineActions: () => Promise<void>;
+    clearCache: () => Promise<void>;
+  };
 
   // Use useCallback to prevent infinite loops
   const handleOnline = useCallback(() => {
@@ -115,7 +123,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-medium text-gray-800 mb-2">PWA Installation</h3>
         <button
-          data-testid={T.pwa.installButton}
+          data-testid="pwa-install-button"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           aria-label="Install PWA"
           onClick={() => {
@@ -126,7 +134,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
           Install PWA
         </button>
         <button
-          data-testid={T.pwa.syncButton}
+          data-testid="pwa-sync-button"
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ml-2"
           aria-label="Sync offline data"
           onClick={async () => {
@@ -148,7 +156,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
           Sync Data
         </button>
         <button
-          data-testid={T.pwa.clearButton}
+          data-testid="pwa-clear-button"
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2"
           aria-label="Clear offline data"
           onClick={async () => {
@@ -169,7 +177,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-800 mb-2">Notification Controls</h3>
           <button
-            data-testid={T.pwa.requestPermissionButton}
+            data-testid="pwa-request-permission-button"
             className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
             onClick={() => {
               // Call the mocked request permission function if available
@@ -182,7 +190,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
             Request Permission
           </button>
           <button
-            data-testid={T.pwa.testNotificationButton}
+            data-testid="pwa-test-notification-button"
             className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 ml-2"
             onClick={() => {
               // Show test notification
@@ -199,25 +207,25 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         </div>
 
         {/* Notification Permission Component */}
-        <div data-testid={T.pwa.notificationPermission} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div data-testid="pwa-notification-permission" className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-blue-800 mb-2">Notification Permission</h3>
           <p className="text-xs text-blue-700">Manage notification permissions</p>
         </div>
 
         {/* Notification Preferences Component */}
-        <div data-testid={T.pwa.notificationPreferences} className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div data-testid="pwa-notification-preferences" className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-green-800 mb-2">Notification Preferences</h3>
           <p className="text-xs text-green-700">Customize your notification settings</p>
         </div>
 
         {/* Offline Queue Component */}
-        <div data-testid={T.pwa.offlineQueue} className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <div data-testid="pwa-offline-queue" className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-orange-800 mb-2">Offline Queue</h3>
           <p className="text-xs text-orange-700">Actions queued for when you're back online</p>
         </div>
 
         {/* Offline Sync Component */}
-        <div data-testid={T.pwa.offlineSync} className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+        <div data-testid="pwa-offline-sync" className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-cyan-800 mb-2">Offline Sync</h3>
           <p className="text-xs text-cyan-700">Sync your offline data when online</p>
         </div>
@@ -226,32 +234,32 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       {/* Status Indicators */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-medium text-gray-800 mb-2">Status Indicators</h3>
-        <div data-testid={T.pwa.installingIndicator} className="text-blue-600">
+        <div data-testid="pwa-installing-indicator" className="text-blue-600">
           Installing...
         </div>
-        <div data-testid={T.pwa.installedIndicator} className="text-green-600">
+        <div data-testid="pwa-installed-indicator" className="text-green-600">
           PWA Installed
         </div>
       </div>
 
       {/* Focusable Elements */}
-      <div data-testid={T.pwa.firstFocusable} tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-first-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         First Focusable Element
       </div>
-      <div data-testid={T.pwa.secondFocusable} tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-second-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         Second Focusable Element
       </div>
 
       {/* Error States */}
-      <div data-testid={T.pwa.syncError} className="text-red-600 hidden">
+      <div data-testid="pwa-sync-error" className="text-red-600 hidden">
         Sync failed
       </div>
-      <div data-testid={T.pwa.installError} className="text-red-600 hidden">
+      <div data-testid="pwa-install-error" className="text-red-600 hidden">
         Installation failed
       </div>
 
       {/* State Announcements */}
-      <div data-testid={T.pwa.stateAnnouncement} className="sr-only" aria-live="polite">
+      <div data-testid="pwa-state-announcement" className="sr-only" aria-live="polite">
         State changed
       </div>
 

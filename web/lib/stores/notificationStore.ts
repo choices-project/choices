@@ -53,7 +53,7 @@ type NotificationStore = {
   clearByType: (type: Notification['type']) => void;
   
   // Actions - Admin Notifications
-  addAdminNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp' | 'read'>) => void;
+  addAdminNotification: (notification: Omit<AdminNotification, 'id' | 'created_at' | 'read'>) => void;
   removeAdminNotification: (id: string) => void;
   markAdminNotificationAsRead: (id: string) => void;
   markAllAdminNotificationsAsRead: () => void;
@@ -213,9 +213,9 @@ export const useNotificationStore = create<NotificationStore>()(
         const newAdminNotification: AdminNotification = {
           ...notification,
           id: `admin_notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date().toISOString(),
+          created_at: new Date().toISOString(),
           read: false,
-        } as AdminNotification;
+        };
         
         // Add to admin notifications array
         if (state.settings.enableStacking) {
@@ -563,8 +563,8 @@ export const notificationStoreUtils = {
         warning: notifications.filter(n => n.type === 'warning').length,
         info: notifications.filter(n => n.type === 'info').length,
       },
-      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.timestamp : null,
-      newest: notifications.length > 0 ? notifications[0]?.timestamp : null,
+      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.created_at : null,
+      newest: notifications.length > 0 ? notifications[0]?.created_at : null,
     };
   }
 };

@@ -1,5 +1,6 @@
-export * from './auth'
-export * from '../security'
+// Explicit exports to avoid conflicts
+export { checkRateLimit as checkRateLimitAuth } from './auth'
+export { checkRateLimit as checkRateLimitSecurity } from '../security'
 export * from '../services'
 export * from './feature-flags'
 

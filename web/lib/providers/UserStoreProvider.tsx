@@ -63,20 +63,24 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Listen for auth changes
+        // Listen for auth changes - BATCHED STATE UPDATES to prevent infinite loops
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event: string, session) => {
             if (mounted) {
               console.log('🔄 UserStoreProvider: Auth state change:', { event, hasUser: !!session?.user })
-              setSession(session)
-              setUser(session?.user ?? null)
-              setAuthenticated(!!session?.user)
-              setLoading(false)
+              
+              // Batch all state updates into a single operation to prevent cascading re-renders
+              useUserStore.setState({
+                session,
+                user: session?.user ?? null,
+                isAuthenticated: !!session?.user,
+                isLoading: false
+              })
               
               // Force a re-render if we have a session but the state wasn't updated
               if (session?.user && !useUserStore.getState().isAuthenticated) {
                 console.log('🔄 UserStoreProvider: Forcing authentication state update')
-                setAuthenticated(true)
+                useUserStore.setState({ isAuthenticated: true })
               }
             }
           }
@@ -92,43 +96,43 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-        // Additional periodic authentication check for E2E tests
-        const periodicAuthCheck = setInterval(async () => {
-          if (mounted) {
-            try {
-              const response = await fetch('/api/profile', {
-                credentials: 'include',
-              })
-              if (response.ok) {
-                const profileData = await response.json()
-                if (profileData.profile && !useUserStore.getState().isAuthenticated) {
-                  console.log('🔄 UserStoreProvider: Periodic check found authenticated user, updating state')
-                  setAuthenticated(true)
-                  // Also try to get the session from Supabase
-                  const supabase = await getSupabaseBrowserClient()
-                  const { data: { session } } = await supabase.auth.getSession()
-                  if (session) {
-                    setSession(session)
-                    setUser(session.user)
-                    setAuthenticated(true)
-                    console.log('✅ UserStoreProvider: Session and user state updated')
-                  }
-                }
-              }
-            } catch (error) {
-              // Silent fail for periodic checks
-            }
-          }
-        }, 5000) // Check every 5 seconds (reduced frequency to prevent React errors)
+        // TEMPORARILY DISABLED: Periodic authentication check causing infinite loops
+        // const periodicAuthCheck = setInterval(async () => {
+        //   if (mounted) {
+        //     try {
+        //       const response = await fetch('/api/profile', {
+        //         credentials: 'include',
+        //       })
+        //       if (response.ok) {
+        //         const profileData = await response.json()
+        //         if (profileData.profile && !useUserStore.getState().isAuthenticated) {
+        //           console.log('🔄 UserStoreProvider: Periodic check found authenticated user, updating state')
+        //           setAuthenticated(true)
+        //           // Also try to get the session from Supabase
+        //           const supabase = await getSupabaseBrowserClient()
+        //           const { data: { session } } = await supabase.auth.getSession()
+        //           if (session) {
+        //             setSession(session)
+        //             setUser(session.user)
+        //             setAuthenticated(true)
+        //             console.log('✅ UserStoreProvider: Session and user state updated')
+        //           }
+        //         }
+        //       }
+        //     } catch (error) {
+        //       // Silent fail for periodic checks
+        //     }
+        //   }
+        // }, 5000) // Check every 5 seconds (reduced frequency to prevent React errors)
 
     const cleanup = initializeAuth()
 
     return () => {
       mounted = false
-      clearInterval(periodicAuthCheck)
+      // clearInterval(periodicAuthCheck) // Disabled with periodic check
       cleanup.then(cleanupFn => cleanupFn?.())
     }
-  }, [setUser, setSession, setAuthenticated, setLoading, setError])
+  }, []) // Removed state setters from dependencies as they're stable
 
   return <>{children}</>
 }

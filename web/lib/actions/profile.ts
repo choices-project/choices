@@ -13,9 +13,10 @@
 import { revalidatePath } from 'next/cache';
 
 import { 
-  requireProfileUser, 
-  validateProfileData 
+  requireProfileUser
 } from '@/lib/core/auth/profile-auth';
+import { validateProfileData } from '@/features/profile/lib/profile-service';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/utils/logger';
 
 // Types for superior implementation - matches documented superior implementation
@@ -69,7 +70,7 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       logger.info('[getCurrentProfile] Auth error:', { error: authResult.error });
       return {
         success: false,
-        error: authResult.error,
+        error: authResult.error instanceof Error ? authResult.error.message : String(authResult.error),
       };
     }
 
@@ -99,7 +100,7 @@ export async function updateCurrentProfile(updates: ProfileUpdateData): Promise<
     if ('error' in authResult) {
       return {
         success: false,
-        error: authResult.error,
+        error: authResult.error instanceof Error ? authResult.error.message : String(authResult.error),
       };
     }
 
@@ -108,12 +109,13 @@ export async function updateCurrentProfile(updates: ProfileUpdateData): Promise<
     if (!validation.isValid) {
       return {
         success: false,
-        error: validation.errors.join(', '),
+        error: Object.values(validation.errors).join(', '),
       };
     }
 
     // Update profile in database
-    const { error } = await authResult.supabase
+    const supabase = await getSupabaseServerClient();
+    const { error } = await supabase
       .from('user_profiles')
       .update({
         ...(updates || {}),
@@ -159,7 +161,7 @@ export async function updateProfileAvatar(formData: FormData): Promise<ProfileAc
     if ('error' in authResult) {
       return {
         success: false,
-        error: authResult.error,
+        error: authResult.error instanceof Error ? authResult.error.message : String(authResult.error),
       };
     }
 
@@ -188,7 +190,8 @@ export async function updateProfileAvatar(formData: FormData): Promise<ProfileAc
     }
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await authResult.supabase.storage
+    const supabase = await getSupabaseServerClient();
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(`${authResult.user.id}/${Date.now()}-${file.name}`, file);
 
@@ -200,12 +203,12 @@ export async function updateProfileAvatar(formData: FormData): Promise<ProfileAc
     }
 
     // Get public URL
-    const { data: urlData } = authResult.supabase.storage
+    const { data: urlData } = supabase.storage
       .from('avatars')
       .getPublicUrl(uploadData.path);
 
     // Update profile with new avatar URL
-    const { error } = await authResult.supabase
+    const { error } = await supabase
       .from('user_profiles')
       .update({ avatar_url: urlData.publicUrl })
       .eq('user_id', authResult.user.id)
@@ -248,12 +251,13 @@ export async function exportUserData(): Promise<ProfileActionResult> {
     if ('error' in authResult) {
       return {
         success: false,
-        error: authResult.error,
+        error: authResult.error instanceof Error ? authResult.error.message : String(authResult.error),
       };
     }
 
     // Get comprehensive user data
-    const { data: profile, error: profileError } = await authResult.supabase
+    const supabase = await getSupabaseServerClient();
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', authResult.user.id)
@@ -267,7 +271,7 @@ export async function exportUserData(): Promise<ProfileActionResult> {
     }
 
     // Get user votes
-    const { data: votes, error: votesError } = await authResult.supabase
+    const { data: votes, error: votesError } = await supabase
       .from('votes')
       .select('*')
       .eq('user_id', authResult.user.id);
@@ -277,7 +281,7 @@ export async function exportUserData(): Promise<ProfileActionResult> {
     }
 
     // Get user polls
-    const { data: polls, error: pollsError } = await authResult.supabase
+    const { data: polls, error: pollsError } = await supabase
       .from('polls')
       .select('*')
       .eq('created_by', authResult.user.id);

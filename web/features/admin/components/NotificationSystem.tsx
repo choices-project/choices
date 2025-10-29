@@ -23,12 +23,18 @@ import {
 export function useNotifications() {
   const notifications = useAdminNotifications();
   const unreadCount = useAdminUnreadCount();
+  const notificationActions = useNotificationActions();
   const { 
     addAdminNotification, 
     removeAdminNotification, 
     clearAllAdminNotifications, 
     markAdminNotificationAsRead 
-  } = useNotificationActions();
+  } = notificationActions as {
+    addAdminNotification: (notification: any) => void;
+    removeAdminNotification: (id: string) => void;
+    clearAllAdminNotifications: () => void;
+    markAdminNotificationAsRead: (id: string) => void;
+  };
   
   return {
     notifications,

@@ -10,8 +10,6 @@ export type { CoreTrustTier, CoreUser } from './core'
 // export type { PollContext as CorePollContext } from './core'
 // export type { PollContext as AdminPollContext } from './admin'
 
-export type { DeviceFingerprint as CoreDeviceFingerprint } from './core'
-
 // Export everything else normally (excluding the conflicting exports above)
 // We need to be selective to avoid conflicts - only export from core for now
 export * from './core'

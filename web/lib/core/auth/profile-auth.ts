@@ -14,7 +14,7 @@ import { redirect } from 'next/navigation';
  * Require a profile user (authenticated user with profile)
  */
 export async function requireProfileUser() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   

@@ -6,21 +6,8 @@
  */
 
 export { GoogleCivicClient, createGoogleCivicClient, GoogleCivicApiError } from './client';
-export { 
-  transformAddressLookup,
-  transformRepresentatives,
-  transformToCandidateCard,
-  validateTransformedData,
-  cleanRepresentativeData,
-  type TransformedRepresentative,
-  type TransformedCandidateCard
-} from './transformers';
-export { 
-  GoogleCivicErrorHandler,
-  googleCivicErrorHandler,
-  handleGoogleCivicError,
-  executeWithRetry,
-} from './error-handling';
+// Re-export error classes with explicit names to avoid conflicts
+// Note: Error handling classes are defined in client.ts
 
 // Import types from the types file
 export type { GoogleCivicErrorDetails } from '@/types/external/google-civic';

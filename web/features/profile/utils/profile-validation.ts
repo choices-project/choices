@@ -13,10 +13,13 @@ import { isValidEmail } from '@/lib/utils/format-utils';
 import type { 
   ProfileUpdateData, 
   ProfileValidationResult
-} from '../types';
+} from '../index';
 import { 
-  PROFILE_CONSTANTS 
-} from '../types';
+  PROFILE_LIMITS,
+  PARTICIPATION_STYLES,
+  PRIVACY_LEVELS,
+  AVATAR_RESTRICTIONS
+} from './profile-constants';
 
 
 // ============================================================================
@@ -32,10 +35,10 @@ export function validateDisplayName(displayName: string): { isValid: boolean; er
     return { isValid: false, error: 'Display name is required' };
   }
 
-  if (displayName.length > PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH) {
+  if (displayName.length > PROFILE_LIMITS.MAX_DISPLAY_NAME_LENGTH) {
     return { 
       isValid: false, 
-      error: `Display name must be ${PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH} characters or less` 
+      error: `Display name must be ${PROFILE_LIMITS.MAX_DISPLAY_NAME_LENGTH} characters or less` 
     };
   }
 
@@ -55,10 +58,10 @@ export function validateUsername(username: string): { isValid: boolean; error?: 
     return { isValid: false, error: 'Username is required' };
   }
 
-  if (username.length > PROFILE_CONSTANTS.MAX_USERNAME_LENGTH) {
+  if (username.length > PROFILE_LIMITS.MAX_USERNAME_LENGTH) {
     return { 
       isValid: false, 
-      error: `Username must be ${PROFILE_CONSTANTS.MAX_USERNAME_LENGTH} characters or less` 
+      error: `Username must be ${PROFILE_LIMITS.MAX_USERNAME_LENGTH} characters or less` 
     };
   }
 
@@ -88,10 +91,10 @@ export function validateUsername(username: string): { isValid: boolean; error?: 
  * Checks length and content restrictions
  */
 export function validateBio(bio: string): { isValid: boolean; error?: string } {
-  if (bio && bio.length > PROFILE_CONSTANTS.MAX_BIO_LENGTH) {
+  if (bio && bio.length > PROFILE_LIMITS.MAX_BIO_LENGTH) {
     return { 
       isValid: false, 
-      error: `Bio must be ${PROFILE_CONSTANTS.MAX_BIO_LENGTH} characters or less` 
+      error: `Bio must be ${PROFILE_LIMITS.MAX_BIO_LENGTH} characters or less` 
     };
   }
 
@@ -127,8 +130,8 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   const warnings: string[] = [];
 
   // Display name validation
-  if (data.displayname || data.display_name) {
-    const displayName = data.displayname || data.display_name || '';
+  if (data.display_name) {
+    const displayName = data.display_name || '';
     const validation = validateDisplayName(displayName);
     if (!validation.isValid) {
       errors.push(validation.error!);
@@ -151,37 +154,35 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
     }
   }
 
-  // Trust tier validation
-  if (data.trust_tier && !PROFILE_CONSTANTS.TRUST_TIERS.includes(data.trust_tier as any)) {
-    errors.push(`Trust tier must be one of: ${PROFILE_CONSTANTS.TRUST_TIERS.join(', ')}`);
-  }
+  // Trust tier validation (read-only, not updatable)
+  // Note: trust_tier is not part of ProfileUpdateData as it's managed by the system
 
   // Participation style validation
-  if (data.participationstyle || data.participation_style) {
-    const style = data.participationstyle || data.participation_style;
-    if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style as any)) {
-      errors.push(`Participation style must be one of: ${PROFILE_CONSTANTS.PARTICIPATION_STYLES.join(', ')}`);
+  if (data.participation_style) {
+    const style = data.participation_style;
+    if (style && !Object.keys(PARTICIPATION_STYLES).includes(style as any)) {
+      errors.push(`Participation style must be one of: ${Object.keys(PARTICIPATION_STYLES).join(', ')}`);
     }
   }
 
   // Privacy settings validation
-  if (data.privacysettings || data.privacy_settings) {
-    const settings = data.privacysettings || data.privacy_settings;
-    if (settings?.profile_visibility && !PROFILE_CONSTANTS.PROFILE_VISIBILITY.includes(settings.profile_visibility as any)) {
-      errors.push(`Profile visibility must be one of: ${PROFILE_CONSTANTS.PROFILE_VISIBILITY.join(', ')}`);
+  if (data.privacy_settings) {
+    const settings = data.privacy_settings;
+    if (settings?.profile_visibility && !Object.keys(PRIVACY_LEVELS).includes(settings.profile_visibility as any)) {
+      errors.push(`Profile visibility must be one of: ${Object.keys(PRIVACY_LEVELS).join(', ')}`);
     }
   }
 
   // Array field validation
-  if (data.primaryconcerns || data.primary_concerns) {
-    const concerns = data.primaryconcerns || data.primary_concerns || [];
+  if (data.primary_concerns) {
+    const concerns = data.primary_concerns || [];
     if (concerns.length > 10) {
       warnings.push('You can select up to 10 primary concerns');
     }
   }
 
-  if (data.communityfocus || data.community_focus) {
-    const focus = data.communityfocus || data.community_focus || [];
+  if (data.community_focus) {
+    const focus = data.community_focus || [];
     if (focus.length > 10) {
       warnings.push('You can select up to 10 community focus areas');
     }
@@ -189,8 +190,8 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
 
   return {
     isValid: errors.length === 0,
-    errors,
-    warnings
+    errors: errors.reduce((acc, error, index) => ({ ...acc, [`error_${index}`]: error }), {} as Record<string, string>),
+    warnings: warnings.reduce((acc, warning, index) => ({ ...acc, [`warning_${index}`]: warning }), {} as Record<string, string>)
   };
 }
 
@@ -235,17 +236,17 @@ export function validateAvatarFile(file: File): { isValid: boolean; error?: stri
     return { isValid: false, error: 'No file selected' };
   }
 
-  if (file.size > PROFILE_CONSTANTS.MAX_AVATAR_SIZE) {
-    return { 
-      isValid: false, 
-      error: `File size must be less than ${Math.round(PROFILE_CONSTANTS.MAX_AVATAR_SIZE / (1024 * 1024))}MB` 
+  if (file.size > AVATAR_RESTRICTIONS.MAX_SIZE) {
+    return {
+      isValid: false,
+      error: `File size must be less than ${Math.round(AVATAR_RESTRICTIONS.MAX_SIZE / (1024 * 1024))}MB` 
     };
   }
 
-  if (!PROFILE_CONSTANTS.ALLOWED_AVATAR_TYPES.includes(file.type as 'image/jpeg' | 'image/png' | 'image/webp')) {
-    return { 
-      isValid: false, 
-      error: `File type must be one of: ${PROFILE_CONSTANTS.ALLOWED_AVATAR_TYPES.join(', ')}` 
+  if (!AVATAR_RESTRICTIONS.ALLOWED_TYPES.includes(file.type as 'image/jpeg' | 'image/png' | 'image/webp')) {
+    return {
+      isValid: false,
+      error: `File type must be one of: ${AVATAR_RESTRICTIONS.ALLOWED_TYPES.join(', ')}` 
     };
   }
 
@@ -261,10 +262,10 @@ export function validatePrivacySettings(settings: any): { isValid: boolean; erro
     return { isValid: true }; // Privacy settings are optional
   }
 
-  if (settings.profile_visibility && !PROFILE_CONSTANTS.PROFILE_VISIBILITY.includes(settings.profile_visibility)) {
-    return { 
-      isValid: false, 
-      error: `Profile visibility must be one of: ${PROFILE_CONSTANTS.PROFILE_VISIBILITY.join(', ')}` 
+  if (settings.profile_visibility && !Object.keys(PRIVACY_LEVELS).includes(settings.profile_visibility)) {
+    return {
+      isValid: false,
+      error: `Profile visibility must be one of: ${Object.keys(PRIVACY_LEVELS).join(', ')}`
     };
   }
 
@@ -283,9 +284,6 @@ export function sanitizeProfileData(data: ProfileUpdateData): ProfileUpdateData 
   const sanitized = { ...data };
 
   // Sanitize text fields
-  if (sanitized.displayname) {
-    sanitized.displayname = sanitized.displayname.trim();
-  }
   if (sanitized.display_name) {
     sanitized.display_name = sanitized.display_name.trim();
   }
@@ -297,17 +295,11 @@ export function sanitizeProfileData(data: ProfileUpdateData): ProfileUpdateData 
   }
 
   // Sanitize arrays
-  if (sanitized.primaryconcerns) {
-    sanitized.primaryconcerns = sanitized.primaryconcerns.map(concern => concern.trim());
-  }
   if (sanitized.primary_concerns) {
-    sanitized.primary_concerns = sanitized.primary_concerns.map(concern => concern.trim());
-  }
-  if (sanitized.communityfocus) {
-    sanitized.communityfocus = sanitized.communityfocus.map(focus => focus.trim());
+    sanitized.primary_concerns = sanitized.primary_concerns.map((concern: string) => concern.trim());
   }
   if (sanitized.community_focus) {
-    sanitized.community_focus = sanitized.community_focus.map(focus => focus.trim());
+    sanitized.community_focus = sanitized.community_focus.map((focus: string) => focus.trim());
   }
 
   return sanitized;
@@ -319,11 +311,12 @@ export function sanitizeProfileData(data: ProfileUpdateData): ProfileUpdateData 
  */
 export function getValidationSummary(validation: ProfileValidationResult): string {
   if (validation.isValid) {
-    if (validation.warnings.length > 0) {
-      return `Valid with ${validation.warnings.length} warning(s)`;
+    const warningCount = Object.keys(validation.warnings).length;
+    if (warningCount > 0) {
+      return `Valid with ${warningCount} warning(s)`;
     }
     return 'Valid';
   }
   
-  return `Invalid: ${validation.errors.join(', ')}`;
+  return `Invalid: ${Object.values(validation.errors).join(', ')}`;
 }

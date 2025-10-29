@@ -33,7 +33,12 @@ export default function AnalyticsPage() {
   const analyticsData = useAnalyticsDashboard();
   const loading = useAnalyticsLoading();
   const error = useAnalyticsError();
-  const { trackEvent, sendAnalytics, exportAnalytics } = useAnalyticsActions();
+  const analyticsActions = useAnalyticsActions();
+  const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions as {
+    trackEvent: (event: any) => void;
+    sendAnalytics: () => Promise<void>;
+    exportAnalytics: () => Promise<any[]>;
+  };
   
   // Feature flags - these would come from app store in a real implementation
   const analyticsEnabled = true;

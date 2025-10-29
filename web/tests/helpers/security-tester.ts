@@ -14,7 +14,8 @@
  * @requires @playwright/test
  */
 
-import { Page, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { TestIds } from '../registry/testIds';
 
 /**
@@ -158,7 +159,7 @@ export class SecurityTester {
     for (const test of tests) {
       try {
         const result = await test.test();
-        this.addResult(test.name, result, test.severity, test.description);
+        this.addResult(test.name, result || false, test.severity, test.description);
       } catch (error) {
         this.addResult(test.name, false, test.severity, test.description, undefined, { error: error instanceof Error ? error.message : 'Unknown error' });
       }

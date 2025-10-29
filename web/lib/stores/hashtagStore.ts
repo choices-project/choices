@@ -19,17 +19,54 @@ import type {
   TrendingHashtag,
   HashtagSearchQuery,
   HashtagSearchResult,
+  HashtagSearchResponse,
   HashtagSuggestion,
   HashtagAnalytics,
-  HashtagValidation,
-  HashtagCategory,
-  HashtagUserPreferences,
-  ProfileHashtagIntegration,
-  PollHashtagIntegration,
-  FeedHashtagIntegration
+  HashtagCategory
 } from '@/features/hashtags/types';
 
 import type { BaseStore } from './types';
+
+// Additional type definitions for hashtag store
+interface HashtagUserPreferences {
+  defaultCategory: HashtagCategory;
+  autoFollowTrending: boolean;
+  notificationSettings: {
+    newTrending: boolean;
+    mentions: boolean;
+    follows: boolean;
+  };
+}
+
+interface ProfileHashtagIntegration {
+  id: string;
+  profile_id: string;
+  hashtag_id: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+interface PollHashtagIntegration {
+  id: string;
+  poll_id: string;
+  hashtag_id: string;
+  relevance_score: number;
+  created_at: string;
+}
+
+interface FeedHashtagIntegration {
+  id: string;
+  feed_id: string;
+  hashtag_id: string;
+  weight: number;
+  created_at: string;
+}
+
+interface HashtagValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
 
 
 // Hashtag store state interface
@@ -40,7 +77,7 @@ type HashtagStore = {
   trendingHashtags: TrendingHashtag[];
   
   // Search and discovery
-  searchResults: HashtagSearchResult | null;
+  searchResults: HashtagSearchResponse | null;
   suggestions: HashtagSuggestion[];
   recentSearches: string[];
   
@@ -420,7 +457,7 @@ export const useHashtagStore = create<HashtagStore>()(
               set((state) => {
                 state.userHashtags = result.data || [];
                 state.followedHashtags = (result.data || []).map(uh => uh.hashtag_id);
-                state.primaryHashtags = (result.data || []).filter(uh => uh.is_primary).map(uh => uh.hashtag_id);
+                state.primaryHashtags = (result.data || []).filter(uh => (uh as any).is_primary).map(uh => uh.hashtag_id);
                 state.isLoading = false;
               });
             } else {
@@ -717,7 +754,7 @@ export const useHashtagStore = create<HashtagStore>()(
           const state = get();
           return state.suggestions.filter(s => 
             s.hashtag.name.toLowerCase().includes(input.toLowerCase()) ||
-            s.hashtag.display_name.toLowerCase().includes(input.toLowerCase())
+            (s.hashtag.display_name || s.hashtag.name).toLowerCase().includes(input.toLowerCase())
           );
         },
         
@@ -950,8 +987,8 @@ export const hashtagStoreSubscriptions = {
   },
   
   // Subscribe to search results changes
-  onSearchResultsChange: (callback: (searchResults: HashtagSearchResult | null) => void) => {
-    let previousSearchResults: HashtagSearchResult | null = null;
+  onSearchResultsChange: (callback: (searchResults: HashtagSearchResponse | null) => void) => {
+    let previousSearchResults: HashtagSearchResponse | null = null;
     return useHashtagStore.subscribe((state) => {
       if (state.searchResults !== previousSearchResults) {
         previousSearchResults = state.searchResults;

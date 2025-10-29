@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       end_date,
       tags,
       created_by,
-      user_profiles!polls_created_by_fkey(
+      user_profiles!created_by(
         username,
         display_name,
         is_admin

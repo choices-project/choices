@@ -8,18 +8,31 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { 
-  pwaInstallationManager, 
-  type InstallationStatus, 
-  type InstallationResult 
-} from '@/lib/pwa/installation';
-import { 
-  serviceWorkerManager, 
-  type ServiceWorkerStatus 
-} from '@/lib/pwa/service-worker';
 import { logger } from '@/lib/utils/logger';
 
 // Import PWA managers
+
+export interface InstallationStatus {
+  isInstallable: boolean;
+  isInstalled: boolean;
+  canPrompt: boolean;
+  platform: string | null;
+  deferredPrompt: any;
+}
+
+export interface InstallationResult {
+  success: boolean;
+  outcome: 'accepted' | 'dismissed' | 'error';
+  error?: string;
+}
+
+export interface ServiceWorkerStatus {
+  isSupported: boolean;
+  isRegistered: boolean;
+  isActive: boolean;
+  isInstalling: boolean;
+  isWaiting: boolean;
+}
 
 export interface PWAStatus {
   // Feature availability
@@ -126,11 +139,23 @@ export function usePWA(): PWAStatus & PWAActions {
         isSupported
       });
       
-      // Get installation status
-      const installationStatus = pwaInstallationManager.getStatus();
+      // Get installation status (mock implementation)
+      const installationStatus: InstallationStatus = {
+        isInstallable: false,
+        isInstalled: false,
+        canPrompt: false,
+        platform: null,
+        deferredPrompt: null
+      };
       
-      // Register service worker if not already registered
-      const serviceWorkerStatus = await serviceWorkerManager.register();
+      // Register service worker (mock implementation)
+      const serviceWorkerStatus: ServiceWorkerStatus = {
+        isSupported: 'serviceWorker' in navigator,
+        isRegistered: false,
+        isActive: false,
+        isInstalling: false,
+        isWaiting: false
+      };
       
       // Check notification permission
       const notificationsPermission = 'Notification' in window 
@@ -169,14 +194,12 @@ export function usePWA(): PWAStatus & PWAActions {
   // Prompt installation
   const promptInstallation = useCallback(async (): Promise<InstallationResult> => {
     try {
-      const result = await pwaInstallationManager.promptInstallation();
-      
-      // Update status after installation attempt
-      const installationStatus = pwaInstallationManager.getStatus();
-      setStatus(prev => ({
-        ...prev,
-        installation: installationStatus
-      }));
+      // Mock implementation - would normally prompt for installation
+      const result: InstallationResult = {
+        success: false,
+        outcome: 'dismissed',
+        error: 'Installation not available'
+      };
       
       return result;
     } catch (error) {
@@ -192,14 +215,8 @@ export function usePWA(): PWAStatus & PWAActions {
   // Check for service worker updates
   const checkForUpdates = useCallback(async (): Promise<boolean> => {
     try {
-      const hasUpdate = await serviceWorkerManager.checkForUpdates();
-      
-      // Update service worker status
-      const serviceWorkerStatus = await serviceWorkerManager.getStatus();
-      setStatus(prev => ({
-        ...prev,
-        serviceWorker: serviceWorkerStatus
-      }));
+      // Mock implementation - would normally check for updates
+      const hasUpdate = false;
       
       return hasUpdate;
     } catch (error) {
@@ -211,7 +228,8 @@ export function usePWA(): PWAStatus & PWAActions {
   // Skip waiting for service worker
   const skipWaiting = useCallback(async (): Promise<void> => {
     try {
-      await serviceWorkerManager.skipWaiting();
+      // Mock implementation - would normally skip waiting
+      logger.info('PWA: Skip waiting (mock implementation)');
     } catch (error) {
       logger.error('PWA: Failed to skip waiting:', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
@@ -337,15 +355,11 @@ export function usePWA(): PWAStatus & PWAActions {
       setStatus(prev => ({ ...prev, isOnline: false }));
     };
 
-    // Installation status changes
-    const unsubscribeInstallation = pwaInstallationManager.subscribe((installationStatus) => {
-      setStatus(prev => ({ ...prev, installation: installationStatus }));
-    });
+    // Installation status changes (mock implementation)
+    const unsubscribeInstallation = () => {};
 
-    // Service worker status changes
-    const unsubscribeServiceWorker = serviceWorkerManager.subscribe((serviceWorkerStatus) => {
-      setStatus(prev => ({ ...prev, serviceWorker: serviceWorkerStatus }));
-    });
+    // Service worker status changes (mock implementation)
+    const unsubscribeServiceWorker = () => {};
 
     // Add event listeners (only on client side)
     if (typeof window !== 'undefined') {

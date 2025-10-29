@@ -563,7 +563,7 @@ export async function GET(request: NextRequest) {
         const { hashtagPollsIntegrationServiceClient } = await import('./hashtag-polls-integration-client');
         
         // Generate hashtag-based poll recommendations
-        const locationData = userProfile.location_data as LocationData | null;
+        const locationData = (userProfile.demographics as any)?.location_data as LocationData | null;
         const demographics = userProfile.demographics as Demographics | null;
         
         hashtagPollsFeed = await hashtagPollsIntegrationServiceClient.generateHashtagPollFeed(
@@ -571,7 +571,7 @@ export async function GET(request: NextRequest) {
           {
             state: locationData?.state,
             region: locationData?.region,
-            followed_hashtags: userProfile.followed_hashtags || [],
+            followed_hashtags: [], // TODO: Get from hashtag store or user preferences
             demographics: demographics || {}
           },
           10 // Limit hashtag-based recommendations
@@ -584,15 +584,15 @@ export async function GET(request: NextRequest) {
     // Generate personalized feed with enhanced district-based civic filtering
     const personalizedFeed = await feedService.generatePersonalizedFeed(
       userId,
-      userProfile.followed_hashtags || [],
-      userProfile.location_data ? JSON.stringify(userProfile.location_data) : '',
+      [], // TODO: Get from hashtag store
+      (userProfile.demographics as any)?.location_data ? JSON.stringify((userProfile.demographics as any).location_data) : '',
       userProfile.demographics || {}
     );
 
     // Add district-based civic recommendations if location data is available
     let civicRecommendations = null;
-    if (userProfile.location_data) {
-      civicRecommendations = await feedService.getCivicRecommendations(userId, userProfile.location_data);
+    if ((userProfile.demographics as any)?.location_data) {
+      civicRecommendations = await feedService.getCivicRecommendations(userId, (userProfile.demographics as any).location_data);
     }
 
     return NextResponse.json({

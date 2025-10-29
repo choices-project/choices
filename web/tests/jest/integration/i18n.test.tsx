@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useI18n } from '@/hooks/useI18n';
 import { useAppStore } from '@/lib/stores/appStore';
@@ -6,9 +6,9 @@ import LanguageSelector from '@/components/shared/LanguageSelector';
 import TranslatedText from '@/components/shared/TranslatedText';
 
 // Mock the i18n module
-vi.mock('@/lib/i18n', () => ({
-  loadTranslations: vi.fn(),
-  t: vi.fn((key: string, replacements?: Record<string, string>) => {
+jest.mock('@/lib/i18n', () => ({
+  loadTranslations: jest.fn(),
+  t: jest.fn((key: string, replacements?: Record<string, string>) => {
     const translations: Record<string, Record<string, string>> = {
       en: {
         'common.welcome': 'Welcome to Choices!',
@@ -106,13 +106,8 @@ describe('Internationalization (i18n) System', () => {
       },
       settings: {
         language: 'en',
-        theme: 'system',
         timezone: 'UTC',
-        notifications: true,
-        analytics: true,
-        privacy: 'standard',
-        accessibility: true,
-        performance: 'auto',
+        animations: true,
         haptics: true,
         sound: true,
         autoSave: true,
@@ -128,9 +123,9 @@ describe('Internationalization (i18n) System', () => {
     it('should provide translation function and language state', () => {
       render(<TestI18nComponent />);
       
-      expect(screen.getByTestId('welcome')).toHaveTextContent('Welcome to Choices!');
-      expect(screen.getByTestId('hello')).toHaveTextContent('Hello');
-      expect(screen.getByTestId('current-lang')).toHaveTextContent('Current: en');
+      expect(screen.getByTestId('welcome')).toContain('Welcome to Choices!');
+      expect(screen.getByTestId('hello')).toContain('Hello');
+      expect(screen.getByTestId('current-lang')).toContain('Current: en');
     });
 
     it('should change language when setLanguage is called', async () => {
@@ -140,9 +135,9 @@ describe('Internationalization (i18n) System', () => {
       fireEvent.click(screen.getByTestId('change-to-es'));
       
       await waitFor(() => {
-        expect(screen.getByTestId('welcome')).toHaveTextContent('¡Bienvenido a Choices!');
-        expect(screen.getByTestId('hello')).toHaveTextContent('Hola');
-        expect(screen.getByTestId('current-lang')).toHaveTextContent('Current: es');
+        expect(screen.getByTestId('welcome')).toContain('¡Bienvenido a Choices!');
+        expect(screen.getByTestId('hello')).toContain('Hola');
+        expect(screen.getByTestId('current-lang')).toContain('Current: es');
       });
     });
 
@@ -153,24 +148,24 @@ describe('Internationalization (i18n) System', () => {
       fireEvent.click(screen.getByTestId('change-to-fr'));
       
       await waitFor(() => {
-        expect(screen.getByTestId('welcome')).toHaveTextContent('Bienvenue sur Choices !');
-        expect(screen.getByTestId('hello')).toHaveTextContent('Bonjour');
+        expect(screen.getByTestId('welcome')).toContain('Bienvenue sur Choices !');
+        expect(screen.getByTestId('hello')).toContain('Bonjour');
       });
 
       // Change to German
       fireEvent.click(screen.getByTestId('change-to-de'));
       
       await waitFor(() => {
-        expect(screen.getByTestId('welcome')).toHaveTextContent('Willkommen bei Choices');
-        expect(screen.getByTestId('hello')).toHaveTextContent('Hallo');
+        expect(screen.getByTestId('welcome')).toContain('Willkommen bei Choices');
+        expect(screen.getByTestId('hello')).toContain('Hallo');
       });
 
       // Change to Italian
       fireEvent.click(screen.getByTestId('change-to-it'));
       
       await waitFor(() => {
-        expect(screen.getByTestId('welcome')).toHaveTextContent('Benvenuto in Choices');
-        expect(screen.getByTestId('hello')).toHaveTextContent('Ciao');
+        expect(screen.getByTestId('welcome')).toContain('Benvenuto in Choices');
+        expect(screen.getByTestId('hello')).toContain('Ciao');
       });
     });
   });
@@ -180,7 +175,7 @@ describe('Internationalization (i18n) System', () => {
       render(<LanguageSelector />);
       
       // Should show current language (English by default)
-      expect(screen.getByRole('combobox')).toHaveValue('en');
+      expect(screen.getByRole('combobox')).toHaveProperty('value', 'en');
     });
 
     it('should change language when selection changes', async () => {
@@ -203,25 +198,24 @@ describe('Internationalization (i18n) System', () => {
       render(
         <TranslatedText 
           textKey="common.welcome" 
-          data-testid="translated-welcome"
+          {...({ 'data-testid': 'translated-welcome' } as any)}
         />
       );
       
-      expect(screen.getByTestId('translated-welcome')).toHaveTextContent('Welcome to Choices!');
+      expect(screen.getByTestId('translated-welcome')).toContain('Welcome to Choices!');
     });
 
     it('should render with custom HTML element', () => {
       render(
         <TranslatedText 
           textKey="common.welcome" 
-          as="h1"
-          data-testid="translated-welcome"
+          {...({ as: 'h1', 'data-testid': 'translated-welcome' } as any)}
         />
       );
       
       const element = screen.getByTestId('translated-welcome');
       expect(element.tagName).toBe('H1');
-      expect(element).toHaveTextContent('Welcome to Choices!');
+      expect(element).toContain('Welcome to Choices!');
     });
 
     it('should handle replacements in translations', () => {
@@ -229,11 +223,11 @@ describe('Internationalization (i18n) System', () => {
         <TranslatedText 
           textKey="dashboard.welcome_message" 
           replacements={{ username: 'John' }}
-          data-testid="welcome-message"
+          {...({ 'data-testid': 'welcome-message' } as any)}
         />
       );
       
-      expect(screen.getByTestId('welcome-message')).toHaveTextContent('Welcome back, John!');
+      expect(screen.getByTestId('welcome-message')).toContain('Welcome back, John!');
     });
 
     it('should show loading state when translations are loading', () => {
@@ -249,11 +243,11 @@ describe('Internationalization (i18n) System', () => {
       render(
         <TranslatedText 
           textKey="common.welcome" 
-          data-testid="translated-welcome"
+          {...({ 'data-testid': 'translated-welcome' } as any)}
         />
       );
       
-      expect(screen.getByTestId('translated-welcome')).toHaveTextContent('Loading translation...');
+      expect(screen.getByTestId('translated-welcome')).toContain('Loading translation...');
     });
 
     it('should show error state when translations fail to load', () => {
@@ -269,11 +263,11 @@ describe('Internationalization (i18n) System', () => {
       render(
         <TranslatedText 
           textKey="common.welcome" 
-          data-testid="translated-welcome"
+          {...({ 'data-testid': 'translated-welcome' } as any)}
         />
       );
       
-      expect(screen.getByTestId('translated-welcome')).toHaveTextContent('Error: Failed to load translations');
+      expect(screen.getByTestId('translated-welcome')).toContain('Error: Failed to load translations');
     });
   });
 
@@ -372,14 +366,14 @@ describe('Internationalization (i18n) System', () => {
       fireEvent.click(screen.getByTestId('change-to-fr'));
       
       await waitFor(() => {
-        expect(screen.getByTestId('current-lang')).toHaveTextContent('Current: fr');
+        expect(screen.getByTestId('current-lang')).toContain('Current: fr');
       });
 
       // Re-render component
       rerender(<TestI18nComponent />);
       
       // Language should be maintained
-      expect(screen.getByTestId('current-lang')).toHaveTextContent('Current: fr');
+      expect(screen.getByTestId('current-lang')).toContain('Current: fr');
     });
   });
 
@@ -402,11 +396,11 @@ describe('Internationalization (i18n) System', () => {
       render(
         <TranslatedText 
           textKey="common.welcome" 
-          data-testid="translated-welcome"
+          {...({ 'data-testid': 'translated-welcome' } as any)}
         />
       );
       
-      expect(screen.getByTestId('translated-welcome')).toHaveTextContent('Error: Translation loading failed');
+      expect(screen.getByTestId('translated-welcome')).toContain('Error: Translation loading failed');
     });
   });
 });

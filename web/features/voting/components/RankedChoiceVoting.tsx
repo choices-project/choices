@@ -2,13 +2,7 @@
 
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { useState, useEffect } from 'react'
-
-
-interface PollOption {
-  id: string
-  text: string
-  description?: string
-}
+import type { PollOption } from '../types'
 
 interface RankedChoiceVotingProps {
   pollId: string
@@ -246,8 +240,8 @@ export default function RankedChoiceVoting({
               {/* Option Content */}
               <div className="pr-8">
                 <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.description && (
-                  <p className="text-sm text-gray-600">{option.description}</p>
+                {option.option_text && (
+                  <p className="text-sm text-gray-600">{option.option_text}</p>
                 )}
               </div>
 

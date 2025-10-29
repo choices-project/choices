@@ -24,7 +24,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,7 +37,6 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { 
-  useUserProfileEditData,
   useUserAvatarFile,
   useUserAvatarPreview,
   useUserIsUploadingAvatar,
@@ -45,7 +44,26 @@ import {
 } from '@/lib/stores';
 
 import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
-import type { ProfileEditProps, ProfileUpdateData } from '../index';
+import type { ProfileEditProps } from '../index';
+
+// Local ProfileUpdateData type with correct naming convention
+interface ProfileUpdateData {
+  display_name?: string;
+  bio?: string;
+  username?: string;
+  primary_concerns?: string[];
+  community_focus?: string[];
+  participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
+  privacy_settings?: {
+    profile_visibility?: 'public' | 'private' | 'friends';
+    show_email?: boolean;
+    show_activity?: boolean;
+    allow_messages?: boolean;
+    share_demographics?: boolean;
+    allow_analytics?: boolean;
+  };
+  demographics?: Record<string, any>;
+}
 
 // Constants for form options
 const COMMUNITY_FOCUS_OPTIONS = [
@@ -86,8 +104,24 @@ export default function ProfileEdit({
   const { uploadAvatar, isUploading: _isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
   
-  // Get state from userStore
-  const formData = useUserProfileEditData();
+  // Local form data state
+  const [formData, setFormData] = useState<ProfileUpdateData>({
+    display_name: '',
+    bio: '',
+    username: '',
+    primary_concerns: [],
+    community_focus: [],
+    participation_style: 'observer',
+    privacy_settings: {
+      profile_visibility: 'public',
+      show_email: false,
+      show_activity: true,
+      allow_messages: true,
+      share_demographics: false,
+      allow_analytics: true
+    },
+    demographics: {}
+  });
   const avatarFile = useUserAvatarFile();
   const avatarPreview = useUserAvatarPreview();
   const isUploadingAvatar = useUserIsUploadingAvatar();
@@ -106,25 +140,26 @@ export default function ProfileEdit({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Initialize form data in store
+  // Initialize form data
   React.useEffect(() => {
-    setProfileEditData({
-      displayname: profile.display_name || '',
+    setFormData({
+      display_name: profile.display_name || '',
       bio: profile.bio || '',
       username: profile.username || '',
-      primaryconcerns: profile.primary_concerns || [],
-      communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
-      privacysettings: (profile.privacy_settings as any) || {
+      primary_concerns: profile.primary_concerns || [],
+      community_focus: profile.community_focus || [],
+      participation_style: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
+      privacy_settings: (profile.privacy_settings as any) || {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,
         allow_messages: true,
         share_demographics: false,
         allow_analytics: true
-      }
+      },
+      demographics: (profile.demographics as Record<string, any>) || {}
     });
-  }, [profile, setProfileEditData]);
+  }, [profile]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
@@ -143,8 +178,13 @@ export default function ProfileEdit({
   };
 
   // Handle array field changes (concerns, focus)
-  const handleArrayFieldChange = (field: 'primaryconcerns' | 'communityfocus', value: string) => {
-    updateArrayField(field, value);
+  const handleArrayFieldChange = (field: 'primary_concerns' | 'community_focus', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field]?.includes(value) 
+        ? prev[field]?.filter(item => item !== value)
+        : [...(prev[field] || []), value]
+    }));
   };
 
   // Handle avatar file selection
@@ -190,18 +230,13 @@ export default function ProfileEdit({
     try {
       // Convert userStore ProfileUpdateData to profile types ProfileUpdateData
       const profileUpdateData: ProfileUpdateData = {
-        displayname: formData.displayname,
-        display_name: formData.displayname,
+        display_name: formData.display_name,
         bio: formData.bio,
         username: formData.username,
-        primaryconcerns: formData.primaryconcerns,
-        primary_concerns: formData.primaryconcerns,
-        communityfocus: formData.communityfocus,
-        community_focus: formData.communityfocus,
-        participationstyle: formData.participationstyle,
-        participation_style: formData.participationstyle,
-        privacysettings: formData.privacysettings,
-        privacy_settings: formData.privacysettings
+        primary_concerns: formData.primary_concerns,
+        community_focus: formData.community_focus,
+        participation_style: formData.participation_style,
+        privacy_settings: formData.privacy_settings
       };
       
       await updateProfile(profileUpdateData);
@@ -214,21 +249,22 @@ export default function ProfileEdit({
 
   // Handle cancel
   const handleCancel = () => {
-    setProfileEditData({
-      displayname: profile.display_name || '',
+    setFormData({
+      display_name: profile.display_name || '',
       bio: profile.bio || '',
       username: profile.username || '',
-      primaryconcerns: profile.primary_concerns || [],
-      communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
-      privacysettings: (profile.privacy_settings as any) || {
+      primary_concerns: profile.primary_concerns || [],
+      community_focus: profile.community_focus || [],
+      participation_style: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
+      privacy_settings: (profile.privacy_settings as any) || {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,
         allow_messages: true,
         share_demographics: false,
         allow_analytics: true
-      }
+      },
+      demographics: (profile.demographics as Record<string, any>) || {}
     });
     setError(null);
     setSuccess(null);
@@ -336,11 +372,11 @@ export default function ProfileEdit({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="displayname">Display Name</Label>
+                <Label htmlFor="display_name">Display Name</Label>
                 <Input
-                  id="displayname"
-                  value={formData.displayname}
-                  onChange={(e) => handleFieldChange('displayname', e.target.value)}
+                  id="display_name"
+                  value={formData.display_name}
+                  onChange={(e) => handleFieldChange('display_name', e.target.value)}
                   placeholder="Enter your display name"
                   maxLength={100}
                 />
@@ -392,9 +428,9 @@ export default function ProfileEdit({
                   <Button
                     key={concern}
                     type="button"
-                    variant={formData.primaryconcerns?.includes(concern) ? "default" : "outline"}
+                    variant={formData.primary_concerns?.includes(concern) ? "default" : "outline"}
                     size="sm"
-                    onClick={() => handleArrayFieldChange('primaryconcerns', concern)}
+                    onClick={() => handleArrayFieldChange('primary_concerns', concern)}
                   >
                     {concern}
                   </Button>
@@ -408,9 +444,9 @@ export default function ProfileEdit({
                   <Button
                     key={focus}
                     type="button"
-                    variant={formData.communityfocus?.includes(focus) ? "default" : "outline"}
+                    variant={formData.community_focus?.includes(focus) ? "default" : "outline"}
                     size="sm"
-                    onClick={() => handleArrayFieldChange('communityfocus', focus)}
+                    onClick={() => handleArrayFieldChange('community_focus', focus)}
                   >
                     {focus}
                   </Button>
@@ -418,10 +454,10 @@ export default function ProfileEdit({
               </div>
             </div>
             <div>
-              <Label htmlFor="participationstyle">Participation Style</Label>
+              <Label htmlFor="participation_style">Participation Style</Label>
               <Select
-                value={formData.participationstyle || ''}
-                onValueChange={(value) => handleFieldChange('participationstyle', value)}
+                value={formData.participation_style || ''}
+                onValueChange={(value) => handleFieldChange('participation_style', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your participation style" />
@@ -455,10 +491,10 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-email"
-                checked={formData.privacysettings?.show_email || false}
+                checked={formData.privacy_settings?.show_email || false}
                 onChange={(e) => 
-                  handleFieldChange('privacysettings', {
-                    ...formData.privacysettings,
+                  handleFieldChange('privacy_settings', {
+                    ...formData.privacy_settings,
                     show_email: e.target.checked
                   })
                 }
@@ -471,10 +507,10 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-activity"
-                checked={formData.privacysettings?.show_activity || false}
+                checked={formData.privacy_settings?.show_activity || false}
                 onChange={(e) => 
-                  handleFieldChange('privacysettings', {
-                    ...formData.privacysettings,
+                  handleFieldChange('privacy_settings', {
+                    ...formData.privacy_settings,
                     show_activity: e.target.checked
                   })
                 }
@@ -487,10 +523,10 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="allow-messages"
-                checked={formData.privacysettings?.allow_messages || false}
+                checked={formData.privacy_settings?.allow_messages || false}
                 onChange={(e) => 
-                  handleFieldChange('privacysettings', {
-                    ...formData.privacysettings,
+                  handleFieldChange('privacy_settings', {
+                    ...formData.privacy_settings,
                     allow_messages: e.target.checked
                   })
                 }

@@ -157,10 +157,10 @@ export default function FeedHashtagIntegration({
   const trendingHashtagObjects = trendingHashtags.map(th => th.hashtag);
 
   // Get search result hashtags
-  const searchResultHashtags = searchResults ?? [];
+  const searchResultHashtags = Array.isArray(searchResults) ? searchResults : [];
 
   // Convert MinimalHashtag[] to Hashtag[] for HashtagDisplay
-  const convertedSearchResults = searchResultHashtags.map(h => ({
+  const convertedSearchResults = searchResultHashtags.map((h: any) => ({
     ...h,
     is_verified: false,
     created_at: new Date().toISOString(),
@@ -172,7 +172,7 @@ export default function FeedHashtagIntegration({
   const followedHashtagObjects = followedHashtags;
 
   // Convert followed hashtags to Hashtag[] for HashtagDisplay
-  const convertedFollowedHashtags = followedHashtagObjects.map(h => ({
+  const convertedFollowedHashtags = followedHashtagObjects.map((h: any) => ({
     ...h,
     is_verified: false,
     created_at: new Date().toISOString(),

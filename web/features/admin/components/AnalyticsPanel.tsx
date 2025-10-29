@@ -1,8 +1,8 @@
 /**
- * Analytics Panel Component - Simplified Version
+ * Analytics Panel Component - Store-Integrated Version
  * 
- * This component provides analytics functionality without heavy chart dependencies.
- * Optimized for performance and reliability.
+ * This component uses the analytics store for better state management
+ * and integration with the enhanced analytics system.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/utils/logger';
+import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 
 interface AnalyticsData {
   userGrowth: Array<{ date: string; users: number }>;
@@ -30,42 +31,56 @@ export default function AnalyticsPanel({
   refreshInterval = 30000 
 }: AnalyticsPanelProps) {
   const [selectedMetric, setSelectedMetric] = useState<'users' | 'polls' | 'votes' | 'performance'>('users');
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load analytics data
-  const loadAnalyticsData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Use existing analytics API with admin auth
-      const response = await fetch('/api/analytics?type=general');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setAnalyticsData(data);
-      logger.info('Analytics data loaded successfully');
-    } catch (error) {
-      logger.error('Error loading analytics data:', error as Error);
-      setError('Failed to load analytics data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use analytics store instead of local state
+  const {
+    dashboard,
+    performanceMetrics,
+    userBehavior,
+    isLoading: storeLoading,
+    error: storeError,
+    setDashboard,
+    setPerformanceMetrics,
+    updateUserBehavior
+  } = useAnalyticsStore();
 
+  // Fetch data when component mounts or metric changes
   useEffect(() => {
-    loadAnalyticsData();
-    
-    // Set up refresh interval
-    const interval = setInterval(loadAnalyticsData, refreshInterval);
-    return () => clearInterval(interval);
-  }, [refreshInterval]);
+    const fetchData = async () => {
+      try {
+        // Fetch analytics data and update store
+        const response = await fetch('/api/analytics?type=general');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update store with fetched data
+        if (data.dashboard) {
+          setDashboard(data.dashboard);
+        }
+        if (data.performanceMetrics) {
+          setPerformanceMetrics(data.performanceMetrics);
+        }
+        if (data.userBehavior) {
+          updateUserBehavior(data.userBehavior);
+        }
+        
+        logger.info('Analytics data loaded and stored successfully');
+      } catch (err) {
+        logger.error('Analytics fetch error:', err);
+      }
+    };
 
-  if (isLoading) {
+    fetchData();
+
+    // Set up refresh interval
+    const interval = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(interval);
+  }, [selectedMetric, refreshInterval, setDashboard, setPerformanceMetrics, updateUserBehavior]);
+
+  if (storeLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
@@ -77,7 +92,7 @@ export default function AnalyticsPanel({
     );
   }
 
-  if (error) {
+  if (storeError) {
     return (
       <div className="p-6">
         <Card>
@@ -88,8 +103,20 @@ export default function AnalyticsPanel({
               </svg>
             </div>
             <h3 className="text-lg font-semibold mb-2">Error Loading Analytics</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button onClick={loadAnalyticsData}>Try Again</Button>
+            <p className="text-gray-600 mb-4">{storeError}</p>
+            <Button onClick={async () => {
+              try {
+                const response = await fetch('/api/analytics?type=general');
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.dashboard) setDashboard(data.dashboard);
+                  if (data.performanceMetrics) setPerformanceMetrics(data.performanceMetrics);
+                  if (data.userBehavior) updateUserBehavior(data.userBehavior);
+                }
+              } catch (err) {
+                logger.error('Retry fetch error:', err);
+              }
+            }}>Try Again</Button>
           </CardContent>
         </Card>
       </div>
@@ -135,7 +162,7 @@ export default function AnalyticsPanel({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-600">
-              {analyticsData?.userGrowth?.length || 0}
+              {dashboard?.uniqueUsers || 0}
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Total user registrations
@@ -151,7 +178,7 @@ export default function AnalyticsPanel({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {analyticsData?.pollActivity?.length || 0}
+              {dashboard?.topPages?.length || 0}
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Active polls
@@ -170,19 +197,19 @@ export default function AnalyticsPanel({
               <div className="flex justify-between">
                 <span className="text-sm">Response Time:</span>
                 <span className="text-sm font-medium">
-                  {analyticsData?.systemPerformance?.averageResponseTime || 0}ms
+                  {performanceMetrics?.pageLoadTime || 0}ms
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Uptime:</span>
                 <span className="text-sm font-medium">
-                  {analyticsData?.systemPerformance?.uptime || 0}%
+                  {performanceMetrics?.timeToInteractive || 0}ms
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Error Rate:</span>
                 <span className="text-sm font-medium">
-                  {analyticsData?.systemPerformance?.errorRate || 0}%
+                  {performanceMetrics?.cumulativeLayoutShift || 0}
                 </span>
               </div>
             </div>
@@ -192,7 +219,19 @@ export default function AnalyticsPanel({
 
       {/* Refresh Button */}
       <div className="flex justify-end">
-        <Button onClick={loadAnalyticsData} variant="outline">
+        <Button onClick={async () => {
+          try {
+            const response = await fetch('/api/analytics?type=general');
+            if (response.ok) {
+              const data = await response.json();
+              if (data.dashboard) setDashboard(data.dashboard);
+              if (data.performanceMetrics) setPerformanceMetrics(data.performanceMetrics);
+              if (data.userBehavior) updateUserBehavior(data.userBehavior);
+            }
+          } catch (err) {
+            logger.error('Refresh fetch error:', err);
+          }
+        }} variant="outline">
           Refresh Data
         </Button>
       </div>

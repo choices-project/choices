@@ -8,8 +8,9 @@ import {
   buildCSPHeader as buildCSPHeaderFromConfig, 
   isBlockedUserAgent, 
   anonymizeIP 
-} from '@/lib/security/config'
-import { logger } from '@/lib/utils/logger'
+} from './lib/security/config'
+import { logger } from './lib/utils/logger'
+import { rateLimitMonitor } from './lib/monitoring/rate-limit-monitor'
 
 /**
  * Security Middleware
@@ -39,8 +40,8 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const E2E_HEADER = 'x-e2e-bypass';
   const E2E_COOKIE = 'E2E';
   
-  // Environment-based bypass
-  const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
+  // Environment-based bypass - only for explicit E2E flag, not just test mode
+  const bypass = process.env.E2E === '1'
   
   // Multiple bypass methods for browser compatibility
   const byHeader = req.headers.get(E2E_HEADER) === '1';
@@ -52,10 +53,8 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const isLocal = forwardedFor === '127.0.0.1' || forwardedFor === '::1' || forwardedFor?.endsWith(':127.0.0.1')
   const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))
   
-  const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
-  
-  return Boolean(!rateLimitEnabled ||
-         bypass ||
+  // Only bypass for explicit E2E indicators, not rate limiting status
+  return Boolean(bypass ||
          byHeader ||
          byQuery ||
          byCookie ||
@@ -67,15 +66,25 @@ function shouldBypassForE2E(req: NextRequest): boolean {
  */
 function checkRateLimit(ip: string, path: string, req: NextRequest): boolean {
   // Bypass rate limiting for E2E tests
-  if (shouldBypassForE2E(req)) return true
+  if (shouldBypassForE2E(req)) {
+    return true
+  }
   
   const now = Date.now()
   const key = `${ip}:${path}`
   const record = rateLimitStore.get(key)
   
-  // Get rate limit for this endpoint
-  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints)[path] || 
-                     SECURITY_CONFIG.rateLimit.maxRequests
+  // Get rate limit for this endpoint - find matching endpoint prefix
+  const matchingEndpoint = Object.keys(SECURITY_CONFIG.rateLimit.sensitiveEndpoints)
+    .find(endpoint => path.startsWith(endpoint))
+  const maxRequests = matchingEndpoint ? 
+    (SECURITY_CONFIG.rateLimit.sensitiveEndpoints[matchingEndpoint] || SECURITY_CONFIG.rateLimit.maxRequests) : 
+    SECURITY_CONFIG.rateLimit.maxRequests
+  
+  // Debug logging for civics endpoints (uncomment for debugging)
+  // if (path.startsWith('/api/civics')) {
+  //   console.log(`🔍 RATE LIMIT DEBUG: ${path} - Matching endpoint: ${matchingEndpoint}, Max: ${maxRequests}, Current: ${record?.count || 0}`)
+  // }
   
   if (!record || now > record.resetTime) {
     // Reset or create new record
@@ -150,6 +159,9 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
+  // Debug logging to verify middleware is running
+  // console.log(`🔍 MIDDLEWARE: Processing request for ${pathname}`);
+  
   // MAINTENANCE MODE CHECK - This must be first!
   if (process.env.NEXT_PUBLIC_MAINTENANCE === "1") {
     return new NextResponse(
@@ -179,6 +191,12 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   if (isProtectedRoute) {
+    // E2E TEST BYPASS: Allow E2E tests to bypass authentication
+    if (shouldBypassForE2E(request)) {
+      console.log(`🧪 E2E: Bypassing authentication for protected route: ${pathname}`);
+      return NextResponse.next();
+    }
+    
     // Check for Supabase session cookies - Supabase uses project-specific cookie names
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const projectId = supabaseUrl?.split('//')[1]?.split('.')[0];
@@ -188,7 +206,10 @@ export function middleware(request: NextRequest) {
     
     if (!authToken) {
       console.log(`🚨 SECURITY: Unauthenticated access attempt to protected route: ${pathname}`);
-      return NextResponse.redirect(new URL('/auth', request.url));
+      console.log(`🔍 DEBUG: Redirecting to: ${new URL('/auth', request.url).toString()}`);
+      const redirectResponse = NextResponse.redirect(new URL('/auth', request.url));
+      console.log(`🔍 DEBUG: Redirect response status: ${redirectResponse.status}`);
+      return redirectResponse;
     }
     
     // For now, if the token exists, allow access
@@ -196,7 +217,7 @@ export function middleware(request: NextRequest) {
     console.log(`✅ Authentication token found for protected route: ${pathname}`);
   }
   
-  // Skip middleware for static files and API routes that don't need security headers
+  // Skip middleware for static files only (API routes need rate limiting)
   if (
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
@@ -229,6 +250,17 @@ export function middleware(request: NextRequest) {
   if (SECURITY_CONFIG.rateLimit.enabled && isSensitiveEndpoint && !checkRateLimit(clientIP, pathname, request)) {
     console.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
     
+    // Record violation for monitoring (async, but don't await to avoid blocking)
+    rateLimitMonitor.recordViolation({
+      ip: clientIP,
+      endpoint: pathname,
+      count: 50, // Assuming we hit the limit
+      maxRequests: 50,
+      userAgent: request.headers.get('user-agent') || undefined
+    }).catch(error => {
+      console.warn('Failed to record rate limit violation:', error);
+    })
+    
     return new NextResponse('Too Many Requests', { 
       status: 429,
       headers: {
@@ -242,7 +274,7 @@ export function middleware(request: NextRequest) {
   
   // Add security headers
   Object.entries(SECURITY_CONFIG.headers).forEach(([header, value]) => {
-    response.headers.set(header, value)
+    response.headers.set(header, String(value))
   })
   
   // Add CSP header

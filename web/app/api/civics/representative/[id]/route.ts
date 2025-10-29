@@ -18,8 +18,7 @@ import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
 
-// SECURITY: Use regular Supabase client with user authentication, not service role
-// Users should access data through Supabase with RLS, not service role APIs
+// Use anon key with proper RLS policies
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -79,7 +78,7 @@ export async function GET(
         data: cachedData,
         metadata: {
           source: 'cache',
-          last_updated: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           data_quality_score: 95
         }
       });
@@ -171,7 +170,7 @@ export async function GET(
           verified: social.is_verified,
           official_account: true,
           is_primary: social.is_primary,
-          last_updated: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })) || [],
         summary: {
           total_platforms: socialMedia?.length || 0,
@@ -188,7 +187,7 @@ export async function GET(
           date: act.date,
           source: act.source
         })) || [],
-        last_updated: new Date().toISOString()
+        updated_at: new Date().toISOString()
       } : null,
       
       // Voting Behavior (only if civics voting records are enabled)
@@ -199,7 +198,7 @@ export async function GET(
           date: act.date,
           source: act.source
         })) || [],
-        last_updated: new Date().toISOString()
+        updated_at: new Date().toISOString()
       } : null,
       
       // Recent Votes
@@ -237,7 +236,7 @@ export async function GET(
       },
       
       // Metadata
-      last_updated: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       data_sources: [
         'openstates',
         'civic_engagement',
@@ -259,7 +258,7 @@ export async function GET(
       data: transformedData,
       metadata: {
         source: 'database',
-        last_updated: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         data_quality_score: 95
       }
     });

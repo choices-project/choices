@@ -8,13 +8,7 @@
  * Status: ✅ ACTIVE
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import type { Json } from '../../database';
 
 export interface HashtagsDatabase {
   public: {
@@ -149,14 +143,4 @@ export interface HashtagsDatabase {
 }
 
 // Re-export specific table types for convenience
-export type Hashtag = HashtagsDatabase['public']['Tables']['hashtags']['Row']
-export type HashtagInsert = HashtagsDatabase['public']['Tables']['hashtags']['Insert']
-export type HashtagUpdate = HashtagsDatabase['public']['Tables']['hashtags']['Update']
-
-export type HashtagFlag = HashtagsDatabase['public']['Tables']['hashtag_flags']['Row']
-export type HashtagFlagInsert = HashtagsDatabase['public']['Tables']['hashtag_flags']['Insert']
-export type HashtagFlagUpdate = HashtagsDatabase['public']['Tables']['hashtag_flags']['Update']
-
-export type HashtagUsage = HashtagsDatabase['public']['Tables']['hashtag_usage']['Row']
-export type HashtagUsageInsert = HashtagsDatabase['public']['Tables']['hashtag_usage']['Insert']
-export type HashtagUsageUpdate = HashtagsDatabase['public']['Tables']['hashtag_usage']['Update']
+// Database types only - interface types are exported from hashtags.ts

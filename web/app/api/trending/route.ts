@@ -235,7 +235,7 @@ async function getTrendingTopics(limit: number) {
       );
     }
 
-    // Fetch trending topics
+    // Fetch trending topics from the proper table
     const supabaseClient = await supabase;
     const { data: trendingTopics, error: trendingError } = await supabaseClient
       .from('trending_topics')

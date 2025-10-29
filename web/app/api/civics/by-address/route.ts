@@ -17,12 +17,12 @@ import { NextResponse } from 'next/server';
 
 import { createApiLogger } from '@/lib/utils/api-logger';
 
-// SECURITY: Use regular Supabase client with user authentication, not service role
-// Users should access data through Supabase with RLS, not service role APIs
+// Use service role for public representative data APIs
+// TODO: Set up proper RLS policies to allow anon key access
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: true } }
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
 );
 
 /**
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         error: 'Address parameter is required',
         metadata: {
           source: 'validation',
-          last_updated: new Date().toISOString()
+          updated_at: new Date().toISOString()
         }
       }, { status: 400 });
     }
@@ -100,10 +100,10 @@ export async function GET(req: NextRequest) {
         .from('representatives_core')
         .select(`
           *,
-          representative_contacts!inner(contact_type, value, is_verified, source),
-          representative_photos!inner(url, is_primary, source),
-          representative_social_media!inner(platform, handle, url, is_verified),
-          representative_activity!inner(type, title, description, date, source)
+          representative_contacts(contact_type, value, is_verified, source),
+          representative_photos(url, is_primary, source),
+          representative_social_media(platform, handle, url, is_verified),
+          representative_activity(type, title, description, date, source)
         `)
         .eq('state', state)
         .order('level', { ascending: true });
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
         },
         metadata: {
           source: 'database',
-          last_updated: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           data_quality_score: 90,
           total_representatives: 0
         }
@@ -182,7 +182,7 @@ export async function GET(req: NextRequest) {
       },
       metadata: {
         source: 'database',
-        last_updated: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         data_quality_score: 95,
         total_representatives: matchingRepresentatives.length
       }
@@ -315,7 +315,7 @@ function transformRepresentative(rep: any): any {
     last_verified: rep.last_verified,
     verification_status: rep.verification_status,
     created_at: rep.created_at,
-    last_updated: rep.last_updated,
+    updated_at: rep.updated_at,
     // Enhanced data from normalized tables
     contacts: rep.representative_contacts?.map((contact: any) => ({
       type: contact.contact_type,

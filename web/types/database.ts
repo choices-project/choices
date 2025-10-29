@@ -12,8 +12,66 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown
+          timestamp: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          timestamp?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          timestamp?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       analytics_event_data: {
         Row: {
           created_at: string | null
@@ -330,6 +388,98 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_interactions: {
+        Row: {
+          created_at: string | null
+          feed_id: string
+          id: string
+          interaction_type: string
+          item_id: string
+          metadata: Json | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feed_id: string
+          id?: string
+          interaction_type: string
+          item_id: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feed_id?: string
+          id?: string
+          interaction_type?: string
+          item_id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_interactions_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "feeds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_items: {
+        Row: {
+          created_at: string | null
+          feed_id: string
+          id: string
+          is_featured: boolean | null
+          item_data: Json | null
+          item_type: string
+          poll_id: string | null
+          position: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feed_id: string
+          id?: string
+          is_featured?: boolean | null
+          item_data?: Json | null
+          item_type: string
+          poll_id?: string | null
+          position?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feed_id?: string
+          id?: string
+          is_featured?: boolean | null
+          item_data?: Json | null
+          item_type?: string
+          poll_id?: string | null
+          position?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_items_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_items_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           ai_analysis: Json | null
@@ -410,6 +560,80 @@ export type Database = {
           user_journey?: Json | null
         }
         Relationships: []
+      }
+      feeds: {
+        Row: {
+          content_filters: Json | null
+          created_at: string | null
+          feed_name: string
+          feed_type: string
+          hashtag_filters: Json | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content_filters?: Json | null
+          created_at?: string | null
+          feed_name: string
+          feed_type: string
+          hashtag_filters?: Json | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content_filters?: Json | null
+          created_at?: string | null
+          feed_name?: string
+          feed_type?: string
+          hashtag_filters?: Json | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hashtag_engagement: {
+        Row: {
+          created_at: string | null
+          engagement_type: string
+          hashtag_id: string
+          id: string
+          metadata: Json | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          engagement_type: string
+          hashtag_id: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          engagement_type?: string
+          hashtag_id?: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hashtag_engagement_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hashtag_flags: {
         Row: {
@@ -507,14 +731,48 @@ export type Database = {
           },
         ]
       }
+      hashtag_user_preferences: {
+        Row: {
+          created_at: string | null
+          followed_hashtags: Json | null
+          hashtag_filters: Json | null
+          id: string
+          notification_preferences: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          followed_hashtags?: Json | null
+          hashtag_filters?: Json | null
+          id?: string
+          notification_preferences?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          followed_hashtags?: Json | null
+          hashtag_filters?: Json | null
+          id?: string
+          notification_preferences?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hashtags: {
         Row: {
           category: string | null
           created_at: string | null
+          created_by: string | null
           description: string | null
+          follower_count: number | null
           id: string
+          is_featured: boolean | null
           is_trending: boolean | null
           is_verified: boolean | null
+          metadata: Json | null
           name: string
           trending_score: number | null
           updated_at: string | null
@@ -523,10 +781,14 @@ export type Database = {
         Insert: {
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
+          follower_count?: number | null
           id?: string
+          is_featured?: boolean | null
           is_trending?: boolean | null
           is_verified?: boolean | null
+          metadata?: Json | null
           name: string
           trending_score?: number | null
           updated_at?: string | null
@@ -535,10 +797,14 @@ export type Database = {
         Update: {
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
+          follower_count?: number | null
           id?: string
+          is_featured?: boolean | null
           is_trending?: boolean | null
           is_verified?: boolean | null
+          metadata?: Json | null
           name?: string
           trending_score?: number | null
           updated_at?: string | null
@@ -1252,6 +1518,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          request_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          expires_at?: string | null
+          id?: string
+          ip_address: unknown
+          request_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          request_count?: number | null
+        }
+        Relationships: []
+      }
       representative_activity: {
         Row: {
           created_at: string | null
@@ -1265,6 +1558,7 @@ export type Database = {
           title: string
           type: string
           updated_at: string | null
+          url: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1278,6 +1572,7 @@ export type Database = {
           title: string
           type: string
           updated_at?: string | null
+          url?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1291,10 +1586,55 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string | null
+          url?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "representative_activity_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_campaign_finance: {
+        Row: {
+          cash_on_hand: number | null
+          created_at: string | null
+          id: number
+          last_filing_date: string | null
+          representative_id: number | null
+          source: string
+          total_raised: number | null
+          total_spent: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cash_on_hand?: number | null
+          created_at?: string | null
+          id?: number
+          last_filing_date?: string | null
+          representative_id?: number | null
+          source: string
+          total_raised?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cash_on_hand?: number | null
+          created_at?: string | null
+          id?: number
+          last_filing_date?: string | null
+          representative_id?: number | null
+          source?: string
+          total_raised?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_campaign_finance_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
             referencedRelation: "representatives_core"
@@ -1390,6 +1730,147 @@ export type Database = {
           },
         ]
       }
+      representative_crosswalk_enhanced: {
+        Row: {
+          canonical_id: string
+          created_at: string | null
+          id: number
+          last_verified: string | null
+          representative_id: number | null
+          source_confidence: string | null
+          source_id: string
+          source_system: string
+          updated_at: string | null
+        }
+        Insert: {
+          canonical_id: string
+          created_at?: string | null
+          id?: number
+          last_verified?: string | null
+          representative_id?: number | null
+          source_confidence?: string | null
+          source_id: string
+          source_system: string
+          updated_at?: string | null
+        }
+        Update: {
+          canonical_id?: string
+          created_at?: string | null
+          id?: number
+          last_verified?: string | null
+          representative_id?: number | null
+          source_confidence?: string | null
+          source_id?: string
+          source_system?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_crosswalk_enhanced_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_data_quality: {
+        Row: {
+          created_at: string | null
+          data_completeness: number | null
+          id: number
+          last_validated: string | null
+          overall_confidence: number | null
+          primary_source_score: number | null
+          representative_id: number | null
+          secondary_source_score: number | null
+          source_reliability: number | null
+          updated_at: string | null
+          validation_method: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_completeness?: number | null
+          id?: number
+          last_validated?: string | null
+          overall_confidence?: number | null
+          primary_source_score?: number | null
+          representative_id?: number | null
+          secondary_source_score?: number | null
+          source_reliability?: number | null
+          updated_at?: string | null
+          validation_method?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_completeness?: number | null
+          id?: number
+          last_validated?: string | null
+          overall_confidence?: number | null
+          primary_source_score?: number | null
+          representative_id?: number | null
+          secondary_source_score?: number | null
+          source_reliability?: number | null
+          updated_at?: string | null
+          validation_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_data_quality_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_data_sources: {
+        Row: {
+          confidence: string
+          created_at: string | null
+          id: number
+          last_updated: string | null
+          raw_data: Json | null
+          representative_id: number | null
+          source_name: string
+          source_type: string
+          updated_at: string | null
+          validation_status: string | null
+        }
+        Insert: {
+          confidence: string
+          created_at?: string | null
+          id?: number
+          last_updated?: string | null
+          raw_data?: Json | null
+          representative_id?: number | null
+          source_name: string
+          source_type: string
+          updated_at?: string | null
+          validation_status?: string | null
+        }
+        Update: {
+          confidence?: string
+          created_at?: string | null
+          id?: number
+          last_updated?: string | null
+          raw_data?: Json | null
+          representative_id?: number | null
+          source_name?: string
+          source_type?: string
+          updated_at?: string | null
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_data_sources_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       representative_photos: {
         Row: {
           alt_text: string | null
@@ -1443,6 +1924,7 @@ export type Database = {
       representative_social_media: {
         Row: {
           created_at: string | null
+          followers_count: number | null
           handle: string
           id: number
           is_primary: boolean | null
@@ -1451,9 +1933,11 @@ export type Database = {
           representative_id: number
           updated_at: string | null
           url: string | null
+          verified: boolean | null
         }
         Insert: {
           created_at?: string | null
+          followers_count?: number | null
           handle: string
           id?: number
           is_primary?: boolean | null
@@ -1462,9 +1946,11 @@ export type Database = {
           representative_id: number
           updated_at?: string | null
           url?: string | null
+          verified?: boolean | null
         }
         Update: {
           created_at?: string | null
+          followers_count?: number | null
           handle?: string
           id?: number
           is_primary?: boolean | null
@@ -1473,6 +1959,7 @@ export type Database = {
           representative_id?: number
           updated_at?: string | null
           url?: string | null
+          verified?: boolean | null
         }
         Relationships: [
           {
@@ -1486,58 +1973,118 @@ export type Database = {
       }
       representatives_core: {
         Row: {
+          ballotpedia_url: string | null
           bioguide_id: string | null
           canonical_id: string | null
+          congress_gov_id: string | null
           created_at: string | null
           data_quality_score: number | null
+          data_sources: Json | null
           district: string | null
+          facebook_url: string | null
+          fec_id: string | null
+          google_civic_id: string | null
+          govinfo_id: string | null
           id: number
+          instagram_handle: string | null
           is_active: boolean | null
           last_verified: string | null
+          legiscan_id: string | null
           level: string
+          linkedin_url: string | null
           name: string
+          next_election_date: string | null
           office: string
           openstates_id: string | null
           party: string | null
+          primary_email: string | null
+          primary_phone: string | null
+          primary_photo_url: string | null
+          primary_website: string | null
           state: string
+          term_end_date: string | null
+          term_start_date: string | null
+          twitter_handle: string | null
           updated_at: string | null
           verification_status: string | null
+          wikipedia_url: string | null
+          youtube_channel: string | null
         }
         Insert: {
+          ballotpedia_url?: string | null
           bioguide_id?: string | null
           canonical_id?: string | null
+          congress_gov_id?: string | null
           created_at?: string | null
           data_quality_score?: number | null
+          data_sources?: Json | null
           district?: string | null
+          facebook_url?: string | null
+          fec_id?: string | null
+          google_civic_id?: string | null
+          govinfo_id?: string | null
           id?: number
+          instagram_handle?: string | null
           is_active?: boolean | null
           last_verified?: string | null
+          legiscan_id?: string | null
           level: string
+          linkedin_url?: string | null
           name: string
+          next_election_date?: string | null
           office: string
           openstates_id?: string | null
           party?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
+          primary_photo_url?: string | null
+          primary_website?: string | null
           state: string
+          term_end_date?: string | null
+          term_start_date?: string | null
+          twitter_handle?: string | null
           updated_at?: string | null
           verification_status?: string | null
+          wikipedia_url?: string | null
+          youtube_channel?: string | null
         }
         Update: {
+          ballotpedia_url?: string | null
           bioguide_id?: string | null
           canonical_id?: string | null
+          congress_gov_id?: string | null
           created_at?: string | null
           data_quality_score?: number | null
+          data_sources?: Json | null
           district?: string | null
+          facebook_url?: string | null
+          fec_id?: string | null
+          google_civic_id?: string | null
+          govinfo_id?: string | null
           id?: number
+          instagram_handle?: string | null
           is_active?: boolean | null
           last_verified?: string | null
+          legiscan_id?: string | null
           level?: string
+          linkedin_url?: string | null
           name?: string
+          next_election_date?: string | null
           office?: string
           openstates_id?: string | null
           party?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
+          primary_photo_url?: string | null
+          primary_website?: string | null
           state?: string
+          term_end_date?: string | null
+          term_start_date?: string | null
+          twitter_handle?: string | null
           updated_at?: string | null
           verification_status?: string | null
+          wikipedia_url?: string | null
+          youtube_channel?: string | null
         }
         Relationships: []
       }
@@ -1712,6 +2259,57 @@ export type Database = {
         }
         Relationships: []
       }
+      trending_topics: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          momentum: number | null
+          score: number | null
+          sentiment_score: number | null
+          source_name: string | null
+          title: string | null
+          topic: string
+          trending_score: number | null
+          updated_at: string | null
+          velocity: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          momentum?: number | null
+          score?: number | null
+          sentiment_score?: number | null
+          source_name?: string | null
+          title?: string | null
+          topic: string
+          trending_score?: number | null
+          updated_at?: string | null
+          velocity?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          momentum?: number | null
+          score?: number | null
+          sentiment_score?: number | null
+          source_name?: string | null
+          title?: string | null
+          topic?: string
+          trending_score?: number | null
+          updated_at?: string | null
+          velocity?: number | null
+        }
+        Relationships: []
+      }
       trust_tier_analytics: {
         Row: {
           changed_by: string | null
@@ -1840,20 +2438,35 @@ export type Database = {
       user_hashtags: {
         Row: {
           created_at: string | null
+          followed_at: string | null
           hashtag_id: string
           id: string
+          is_primary: boolean | null
+          last_used_at: string | null
+          preferences: Json | null
+          usage_count: number | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          followed_at?: string | null
           hashtag_id: string
           id?: string
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          preferences?: Json | null
+          usage_count?: number | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          followed_at?: string | null
           hashtag_id?: string
           id?: string
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          preferences?: Json | null
+          usage_count?: number | null
           user_id?: string
         }
         Relationships: [
@@ -2142,6 +2755,8 @@ export type Database = {
           created_at: string | null
           expires_at: string
           id: string
+          metadata: Json | null
+          used_at: string | null
           user_id: string
         }
         Insert: {
@@ -2149,6 +2764,8 @@ export type Database = {
           created_at?: string | null
           expires_at: string
           id?: string
+          metadata?: Json | null
+          used_at?: string | null
           user_id: string
         }
         Update: {
@@ -2156,6 +2773,8 @@ export type Database = {
           created_at?: string | null
           expires_at?: string
           id?: string
+          metadata?: Json | null
+          used_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2165,24 +2784,39 @@ export type Database = {
           counter: number | null
           created_at: string | null
           credential_id: string
+          device_label: string | null
           id: string
+          last_used_at: string | null
+          metadata: Json | null
           public_key: string
+          rp_id: string | null
+          user_handle: string | null
           user_id: string
         }
         Insert: {
           counter?: number | null
           created_at?: string | null
           credential_id: string
+          device_label?: string | null
           id?: string
+          last_used_at?: string | null
+          metadata?: Json | null
           public_key: string
+          rp_id?: string | null
+          user_handle?: string | null
           user_id: string
         }
         Update: {
           counter?: number | null
           created_at?: string | null
           credential_id?: string
+          device_label?: string | null
           id?: string
+          last_used_at?: string | null
+          metadata?: Json | null
           public_key?: string
+          rp_id?: string | null
+          user_handle?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2223,25 +2857,49 @@ export type Database = {
       }
     }
     Functions: {
-      aggregate_platform_metrics: {
-        Args: {
-          end_time: string
-          metric_name_param: string
-          start_time: string
-        }
-        Returns: {
-          avg_value: number
-          count_records: number
-          max_value: number
-          metric_name: string
-          min_value: number
-          total_value: number
-        }[]
-      }
-      analyze_geographic_intelligence: {
-        Args: { p_analysis_window?: unknown; p_poll_id: string }
-        Returns: Json
-      }
+      aggregate_platform_metrics:
+        | {
+            Args: {
+              end_time: string
+              metric_name_param?: string
+              start_time: string
+            }
+            Returns: {
+              metric_name: string
+              metric_value: number
+              period_end: string
+              period_start: string
+            }[]
+          }
+        | {
+            Args: {
+              end_time: string
+              metric_name_param: string
+              start_time: string
+            }
+            Returns: {
+              avg_value: number
+              count_records: number
+              max_value: number
+              metric_name: string
+              min_value: number
+              total_value: number
+            }[]
+          }
+      analyze_geographic_intelligence:
+        | {
+            Args: never
+            Returns: {
+              engagement_score: number
+              poll_count: number
+              region: string
+              user_count: number
+            }[]
+          }
+        | {
+            Args: { p_analysis_window?: unknown; p_poll_id: string }
+            Returns: Json
+          }
       analyze_narrative_divergence: {
         Args: {
           p_analysis_period?: string
@@ -2250,14 +2908,42 @@ export type Database = {
         }
         Returns: Json
       }
-      analyze_poll_sentiment: {
-        Args: { p_poll_id: string; p_time_window?: unknown }
-        Returns: Json
+      analyze_poll_sentiment:
+        | {
+            Args: { p_poll_id: string }
+            Returns: {
+              negative_votes: number
+              neutral_votes: number
+              positive_votes: number
+              sentiment_score: number
+            }[]
+          }
+        | {
+            Args: { p_poll_id: string; p_time_window?: unknown }
+            Returns: Json
+          }
+      analyze_polls_table: {
+        Args: never
+        Returns: {
+          last_analyzed: string
+          table_name: string
+          total_rows: number
+        }[]
       }
-      analyze_temporal_patterns: {
-        Args: { p_analysis_window?: unknown; p_poll_id: string }
-        Returns: Json
-      }
+      analyze_temporal_patterns:
+        | {
+            Args: never
+            Returns: {
+              activity_level: number
+              day_of_week: number
+              hour_of_day: number
+              peak_period: boolean
+            }[]
+          }
+        | {
+            Args: { p_analysis_window?: unknown; p_poll_id: string }
+            Returns: Json
+          }
       calculate_trust_filtered_votes: {
         Args: { p_poll_id: string; p_trust_tier_filter?: number }
         Returns: Json
@@ -2270,6 +2956,15 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      cleanup_expired_data: {
+        Args: never
+        Returns: {
+          cleanup_time: string
+          rows_deleted: number
+          table_name: string
+        }[]
+      }
+      cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_inactive_sessions: { Args: never; Returns: number }
       detect_bot_behavior:
         | { Args: { p_user_id: string }; Returns: Json }
@@ -2287,6 +2982,14 @@ export type Database = {
             Args: { p_poll_id: string; p_trust_tiers?: number[] }
             Returns: Json
           }
+      get_hashtag_trending_history: {
+        Args: { p_hashtag_id: string }
+        Returns: {
+          position_rank: number
+          score: number
+          timestamp_value: string
+        }[]
+      }
       get_personalized_recommendations: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: Json
@@ -2314,6 +3017,20 @@ export type Database = {
         Args: { p_user_id: string; p_voter_session: string }
         Returns: number
       }
+      optimize_database_performance: {
+        Args: never
+        Returns: {
+          details: string
+          execution_time: unknown
+          optimization_type: string
+          status: string
+        }[]
+      }
+      rebuild_poll_indexes: { Args: never; Returns: undefined }
+      refresh_poll_statistics_view: { Args: never; Returns: undefined }
+      update_hashtag_trending_scores: { Args: never; Returns: undefined }
+      update_poll_statistics: { Args: never; Returns: undefined }
+      update_trending_scores: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -2442,6 +3159,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

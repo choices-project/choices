@@ -17,11 +17,11 @@ import type {
   AvatarUploadResult,
   ProfileExportData,
   ExportOptions
-} from '@/types/profile';
+} from '../../../types/profile';
 import { 
   PROFILE_CONSTANTS,
   PROFILE_DEFAULTS
-} from '@/types/profile';
+} from '../../../types/profile';
 
 // ============================================================================
 // PROFILE VALIDATION
@@ -36,8 +36,8 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   const warnings: string[] = [];
 
   // Display name validation
-  if (data.displayname || data.display_name) {
-    const displayName = data.displayname || data.display_name || '';
+  if (data.display_name) {
+    const displayName = data.display_name || '';
     if (displayName.length > PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH) {
       errors.push(`Display name must be ${PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH} characters or less`);
     }
@@ -61,22 +61,20 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
     errors.push(`Bio must be ${PROFILE_CONSTANTS.MAX_BIO_LENGTH} characters or less`);
   }
 
-  // Trust tier validation
-  if (data.trust_tier && !PROFILE_CONSTANTS.TRUST_TIERS.includes(data.trust_tier)) {
-    errors.push(`Trust tier must be one of: ${PROFILE_CONSTANTS.TRUST_TIERS.join(', ')}`);
-  }
+  // Trust tier validation (read-only, not updatable)
+  // Note: trust_tier is not part of ProfileUpdateData as it's managed by the system
 
   // Participation style validation
-  if (data.participationstyle || data.participation_style) {
-    const style = data.participationstyle || data.participation_style;
+  if (data.participation_style) {
+    const style = data.participation_style;
     if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style)) {
       errors.push(`Participation style must be one of: ${PROFILE_CONSTANTS.PARTICIPATION_STYLES.join(', ')}`);
     }
   }
 
   // Privacy settings validation
-  if (data.privacysettings || data.privacy_settings) {
-    const settings = data.privacysettings || data.privacy_settings;
+  if (data.privacy_settings) {
+    const settings = data.privacy_settings;
     if (settings?.profile_visibility && !PROFILE_CONSTANTS.PROFILE_VISIBILITY.includes(settings.profile_visibility)) {
       errors.push(`Profile visibility must be one of: ${PROFILE_CONSTANTS.PROFILE_VISIBILITY.join(', ')}`);
     }
@@ -84,8 +82,8 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
 
   return {
     isValid: errors.length === 0,
-    errors,
-    warnings
+    errors: errors.reduce((acc, error, index) => ({ ...acc, [`error_${index}`]: error }), {} as Record<string, string>),
+    warnings: warnings.reduce((acc, warning, index) => ({ ...acc, [`warning_${index}`]: warning }), {} as Record<string, string>)
   };
 }
 
@@ -114,11 +112,17 @@ export function transformApiResponseToProfile(apiData: any): ProfileUser | null 
     display_name: profile.display_name || profile.displayname,
     bio: profile.bio,
     avatar_url: profile.avatar_url || profile.avatar,
-    trust_tier: profile.trust_tier || PROFILE_DEFAULTS.TRUST_TIER,
+    trust_tier: profile.trust_tier || PROFILE_DEFAULTS.trust_tier,
     is_admin: profile.is_admin || false,
     is_active: profile.is_active !== false,
     created_at: profile.created_at || profile.createdat,
     updated_at: profile.updated_at || profile.updatedat,
+    user_id: profile.user_id || profile.userid || profile.id,
+    primary_concerns: profile.primary_concerns || [],
+    community_focus: profile.community_focus || [],
+    participation_style: profile.participation_style || PROFILE_DEFAULTS.participation_style,
+    demographics: profile.demographics || {},
+    privacy_settings: profile.privacy_settings || PROFILE_DEFAULTS.privacy_settings,
   };
 }
 
@@ -128,14 +132,13 @@ export function transformApiResponseToProfile(apiData: any): ProfileUser | null 
  */
 export function transformProfileUpdateToApi(data: ProfileUpdateData): any {
   return {
-    displayname: data.displayname || data.display_name,
+    display_name: data.display_name,
     bio: data.bio,
     username: data.username,
-    primaryconcerns: data.primaryconcerns || data.primary_concerns,
-    communityfocus: data.communityfocus || data.community_focus,
-    participationstyle: data.participationstyle || data.participation_style,
-    privacysettings: data.privacysettings || data.privacy_settings,
-    preferences: data.preferences,
+    primary_concerns: data.primary_concerns,
+    community_focus: data.community_focus,
+    participation_style: data.participation_style,
+    privacy_settings: data.privacy_settings,
     demographics: data.demographics,
   };
 }
@@ -197,7 +200,7 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     if (!validation.isValid) {
       return {
         success: false,
-        error: validation.errors.join(', '),
+        error: Object.values(validation.errors).join(', '),
       };
     }
 
@@ -229,7 +232,6 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     return {
       success: true,
       data: result.profile,
-      message: result.message || 'Profile updated successfully',
     };
 
   } catch (error) {
@@ -287,7 +289,7 @@ export async function updateProfileAvatar(file: File): Promise<AvatarUploadResul
 
     return {
       success: true,
-      avatar_url: result.avatar_url,
+      url: result.avatar_url,
     };
 
   } catch (error) {
@@ -361,7 +363,6 @@ export async function deleteProfile(): Promise<ProfileActionResult> {
 
     return {
       success: true,
-      message: result.message || 'Profile deleted successfully',
     };
 
   } catch (error) {

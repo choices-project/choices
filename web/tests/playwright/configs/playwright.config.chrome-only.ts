@@ -30,6 +30,10 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 10000,
     navigationTimeout: 30000,
+    // E2E bypass headers for middleware
+    extraHTTPHeaders: {
+      'x-e2e-bypass': '1',
+    },
   },
   
   projects: [

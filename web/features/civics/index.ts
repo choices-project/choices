@@ -39,13 +39,7 @@ export { default as CivicsLure } from './components/CivicsLure'
 /** Privacy status indicator for data protection compliance */
 export { default as PrivacyStatusBadge } from './components/PrivacyStatusBadge'
 
-/** Enhanced candidate card with rich data and interactions */
-export { default as CandidateCard } from './components/CandidateCard'
-
 // Feed components moved to @/features/feeds
-
-/** Mobile-optimized candidate card component */
-export { default as MobileCandidateCard } from './components/MobileCandidateCard'
 
 /** Progressive disclosure for complex information */
 export { default as ProgressiveDisclosure } from './components/ProgressiveDisclosure'

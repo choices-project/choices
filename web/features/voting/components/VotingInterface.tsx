@@ -7,7 +7,7 @@ import {
   useVotingActions,
   useVotingLoading,
   useVotingError
-} from '@/lib/stores'
+} from '@/lib/stores/votingStore'
 import { logger } from '@/lib/utils/logger'
 
 import ApprovalVoting from './ApprovalVoting'
@@ -231,7 +231,16 @@ export default function VotingInterface({
           <ApprovalVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onApproval}
             isVoting={isVoting}
             hasVoted={hasVoted}
@@ -244,7 +253,16 @@ export default function VotingInterface({
           <QuadraticVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onQuadratic}
             isVoting={isVoting}
             hasVoted={hasVoted}
@@ -257,7 +275,16 @@ export default function VotingInterface({
           <RangeVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onRange}
             isVoting={isVoting}
             hasVoted={hasVoted}
@@ -270,7 +297,16 @@ export default function VotingInterface({
           <RankedChoiceVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onRanked}
             isVoting={isVoting}
             hasVoted={hasVoted}
@@ -283,7 +319,16 @@ export default function VotingInterface({
           <MultipleChoiceVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onMultiple}
             isVoting={isVoting}
             hasVoted={hasVoted}
@@ -296,7 +341,16 @@ export default function VotingInterface({
           <SingleChoiceVoting
             pollId={poll.id}
             title={poll.title}
-            options={poll.options}
+            options={poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+              option_text: option.text,
+              poll_id: poll.id,
+              created_at: null,
+              updated_at: null,
+              order_index: null,
+              vote_count: null
+            }))}
             onVote={onSingle}
             isVoting={isVoting}
             hasVoted={hasVoted}

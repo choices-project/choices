@@ -40,7 +40,7 @@ describe('Database Schema Check', () => {
     }
 
     expect(tables).toBeDefined();
-    console.log('📋 Available tables:', tables?.map(t => t.table_name));
+    console.log('📋 Available tables:', tables?.map((t: any) => t.table_name));
   });
 
   it('should check polls table structure', async () => {
@@ -60,7 +60,7 @@ describe('Database Schema Check', () => {
     }
 
     expect(columns).toBeDefined();
-    console.log('📋 Polls table columns:', columns?.map(c => ({
+    console.log('📋 Polls table columns:', columns?.map((c: any) => ({
       name: c.column_name,
       type: c.data_type,
       nullable: c.is_nullable,

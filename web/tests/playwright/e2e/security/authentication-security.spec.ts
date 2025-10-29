@@ -18,6 +18,11 @@ test.describe('Authentication Security Tests', () => {
   test('should block unauthenticated access to dashboard', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing dashboard access without authentication');
     
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
+    
     // Navigate to dashboard without authentication
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -39,6 +44,11 @@ test.describe('Authentication Security Tests', () => {
   test('should block unauthenticated access to profile', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing profile access without authentication');
     
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
+    
     // Navigate to profile without authentication
     await page.goto('/profile');
     await page.waitForLoadState('networkidle');
@@ -55,6 +65,11 @@ test.describe('Authentication Security Tests', () => {
 
   test('should block unauthenticated access to admin routes', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing admin access without authentication');
+    
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
     
     // Navigate to admin dashboard without authentication
     await page.goto('/admin');
@@ -73,6 +88,11 @@ test.describe('Authentication Security Tests', () => {
   test('should block unauthenticated access to polls creation', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing polls creation access without authentication');
     
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
+    
     // Navigate to polls creation without authentication
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
@@ -90,6 +110,11 @@ test.describe('Authentication Security Tests', () => {
   test('should block unauthenticated API access to dashboard', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing dashboard API access without authentication');
     
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
+    
     // Try to access dashboard API without authentication
     const response = await page.request.get('/api/dashboard');
     
@@ -105,6 +130,11 @@ test.describe('Authentication Security Tests', () => {
   test('should block unauthenticated API access to profile', async ({ page }) => {
     console.log('🚨 SECURITY TEST: Testing profile API access without authentication');
     
+    // Remove E2E bypass header for this test to test actual authentication
+    await page.setExtraHTTPHeaders({
+      'x-e2e-bypass': '0'
+    });
+    
     // Try to access profile API without authentication
     const response = await page.request.get('/api/profile');
     
@@ -116,6 +146,9 @@ test.describe('Authentication Security Tests', () => {
 
   test('should allow public access to landing page', async ({ page }) => {
     console.log('🔓 SECURITY TEST: Testing public access to landing page');
+    
+    // Keep E2E bypass header for public access tests
+    // await page.setExtraHTTPHeaders({}); // Commented out - public pages should work with E2E bypass
     
     // Navigate to landing page
     await page.goto('/');
@@ -133,6 +166,9 @@ test.describe('Authentication Security Tests', () => {
 
   test('should allow public access to auth page', async ({ page }) => {
     console.log('🔓 SECURITY TEST: Testing public access to auth page');
+    
+    // Keep E2E bypass header for public access tests
+    // await page.setExtraHTTPHeaders({}); // Commented out - public pages should work with E2E bypass
     
     // Navigate to auth page
     await page.goto('/auth');

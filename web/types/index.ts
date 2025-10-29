@@ -27,5 +27,4 @@ export * from './utils/index';
 // Database types (generated)
 export * from './database';
 
-// Global types
-export * from './global.d.ts';
+// Global types - declaration file, no need to export

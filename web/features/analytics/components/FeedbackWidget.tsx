@@ -17,7 +17,7 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 
 // import { motion, AnimatePresence } from '@/components/motion/Motion'
 // Temporary fallback for motion components
@@ -61,10 +61,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [feedbackTracker, setFeedbackTracker] = useState<any>(null)
   
-  // Get analytics store state and actions
-  const { trackEvent, trackUserAction, setLoading, setError } = useAnalyticsActions()
+  // Get analytics store state and actions with proper memoization
+  const analyticsActions = useAnalyticsActions()
   const isLoading = useAnalyticsLoading()
   const error = useAnalyticsError()
+  
+  // Memoize the actions to prevent unnecessary re-renders
+  const { trackEvent, trackUserAction, setLoading, setError } = useMemo(() => analyticsActions as {
+    trackEvent: (event: any) => void;
+    trackUserAction: (action: string, category: string, label?: string, value?: number) => void;
+    setLoading: (loading: boolean) => void;
+    setError: (error: string | null) => void;
+  }, [analyticsActions])
 
   // Initialize feedback tracker on mount
   useEffect(() => {
@@ -73,12 +81,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
     }
   }, [])
 
-  // Track user journey on mount
+  // Track user journey on mount - fixed to prevent infinite loop
   useEffect(() => {
     if (!feedbackTracker) return
     const userJourney = feedbackTracker.captureUserJourney()
-    setFeedback(prev => ({ ...prev, userJourney }))
-  }, [feedbackTracker])
+    setFeedback(prev => {
+      // Only update if the userJourney has actually changed
+      if (JSON.stringify(prev.userJourney) !== JSON.stringify(userJourney)) {
+        return { ...prev, userJourney }
+      }
+      return prev
+    })
+  }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
 
   // Check feature flag after hooks
   if (!FEATURE_FLAGS.FEEDBACK_WIDGET) {
@@ -104,10 +118,16 @@ const EnhancedFeedbackWidget: React.FC = () => {
     setIsOpen(true)
     setStep('type')
     
-    // Update user journey when widget opens
+    // Update user journey when widget opens - fixed to prevent infinite loop
     if (feedbackTracker) {
       const userJourney = feedbackTracker.captureUserJourney()
-      setFeedback(prev => ({ ...prev, userJourney }))
+      setFeedback(prev => {
+        // Only update if the userJourney has actually changed
+        if (JSON.stringify(prev.userJourney) !== JSON.stringify(userJourney)) {
+          return { ...prev, userJourney }
+        }
+        return prev
+      })
     }
     
     // Track analytics using store

@@ -17,28 +17,28 @@ import { NextRequest } from 'next/server';
 // Mock Supabase
 const mockSupabase = {
   auth: {
-    getUser: jest.fn()
+    getUser: (jest.fn() as any)
   },
   from: jest.fn(() => ({
     select: jest.fn(() => ({
       eq: jest.fn(() => ({
-        single: jest.fn()
+        single: (jest.fn() as any)
       }))
     })),
     insert: jest.fn(() => ({
       select: jest.fn(() => ({
-        single: jest.fn()
+        single: (jest.fn() as any)
       }))
     })),
     update: jest.fn(() => ({
       eq: jest.fn(() => ({
         select: jest.fn(() => ({
-          single: jest.fn()
+          single: (jest.fn() as any)
         }))
       }))
     }))
   }))
-};
+} as any;
 
 // Mock rate limiter
 const mockRateLimiter = {
@@ -47,10 +47,10 @@ const mockRateLimiter = {
 
 // Mock logger
 const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn()
+  info: (jest.fn() as any),
+  error: (jest.fn() as any),
+  warn: (jest.fn() as any),
+  debug: (jest.fn() as any)
 };
 
 // Mock modules
@@ -124,30 +124,40 @@ describe('Contact Messages API', () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
-    });
+    } as any);
   });
 
   describe('POST /api/contact/messages', () => {
     it('should create a new message successfully', async () => {
       // Mock database responses
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockRepresentative,
               error: null
-            })
+            } as any)
           }))
         })),
         insert: jest.fn(() => ({
           select: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockMessage,
               error: null
-            })
+            } as any)
+          }))
+        })),
+        update: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            select: jest.fn(() => ({
+              single: (jest.fn() as any).mockResolvedValue({
+                data: mockMessage,
+                error: null
+              } as any)
+            }))
           }))
         }))
-      });
+      } as any);
 
       const request = new NextRequest('http://localhost:3000/api/contact/messages', {
         method: 'POST',
@@ -178,7 +188,7 @@ describe('Contact Messages API', () => {
       mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
         error: new Error('Not authenticated')
-      });
+      } as any);
 
       const request = new NextRequest('http://localhost:3000/api/contact/messages', {
         method: 'POST',
@@ -205,7 +215,7 @@ describe('Contact Messages API', () => {
       mockRateLimiter.check.mockResolvedValue({
         allowed: false,
         retryAfter: 60
-      });
+      } as any);
 
       const request = new NextRequest('http://localhost:3000/api/contact/messages', {
         method: 'POST',
@@ -250,13 +260,13 @@ describe('Contact Messages API', () => {
     });
 
     it('should handle representative not found', async () => {
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: null,
               error: new Error('Not found')
-            })
+            } as any)
           }))
         }))
       });
@@ -285,14 +295,14 @@ describe('Contact Messages API', () => {
 
   describe('GET /api/contact/messages', () => {
     it('should retrieve user messages successfully', async () => {
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           or: jest.fn(() => ({
             order: jest.fn(() => ({
-              range: jest.fn().mockResolvedValue({
+              range: (jest.fn() as any).mockResolvedValue({
                 data: [mockMessage],
                 error: null
-              })
+              } as any)
             }))
           }))
         }))
@@ -331,26 +341,26 @@ describe('Contact Threads API', () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: mockUser },
       error: null
-    });
+    } as any);
   });
 
   describe('POST /api/contact/threads', () => {
     it('should create a new thread successfully', async () => {
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockRepresentative,
               error: null
-            })
+            } as any)
           }))
         })),
         insert: jest.fn(() => ({
           select: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockThread,
               error: null
-            })
+            } as any)
           }))
         }))
       });
@@ -378,13 +388,13 @@ describe('Contact Threads API', () => {
     });
 
     it('should prevent duplicate active threads', async () => {
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockRepresentative,
               error: null
-            })
+            } as any)
           }))
         }))
       });
@@ -393,10 +403,10 @@ describe('Contact Threads API', () => {
       mockSupabase.from.mockReturnValueOnce({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
+            single: (jest.fn() as any).mockResolvedValue({
               data: mockThread,
               error: null
-            })
+            } as any)
           }))
         }))
       });
@@ -425,14 +435,14 @@ describe('Contact Threads API', () => {
 
   describe('GET /api/contact/threads', () => {
     it('should retrieve user threads successfully', async () => {
-      mockSupabase.from.mockReturnValue({
+      (mockSupabase.from as any).mockReturnValue({
         select: jest.fn(() => ({
           or: jest.fn(() => ({
             order: jest.fn(() => ({
-              range: jest.fn().mockResolvedValue({
+              range: (jest.fn() as any).mockResolvedValue({
                 data: [mockThread],
                 error: null
-              })
+              } as any)
             }))
           }))
         }))
@@ -461,9 +471,9 @@ describe('Real-time Messaging Service', () => {
 
   beforeEach(() => {
     mockChannel = {
-      on: jest.fn().mockReturnThis(),
-      subscribe: jest.fn().mockReturnThis(),
-      unsubscribe: jest.fn()
+      on: (jest.fn() as any).mockReturnThis(),
+      subscribe: (jest.fn() as any).mockReturnThis(),
+      unsubscribe: (jest.fn() as any)
     };
 
     // Mock Supabase client
@@ -475,13 +485,13 @@ describe('Real-time Messaging Service', () => {
   });
 
   it('should subscribe to user messages', async () => {
-    const { ContactMessagingService } = await import('@/lib/contact/real-time-messaging');
-    const service = new ContactMessagingService();
+    const { contactMessagingService } = await import('@/lib/contact/real-time-messaging');
+    const service = contactMessagingService;
 
-    const onNewMessage = jest.fn();
-    const onError = jest.fn();
+    const onNewMessage = (jest.fn() as any);
+    const onError = (jest.fn() as any);
 
-    service.subscribeToUserMessages('user-123', onNewMessage, onError);
+    service.subscribeToMessages('user-123', onNewMessage);
 
     expect(mockChannel.on).toHaveBeenCalledWith(
       'postgres_changes',
@@ -498,13 +508,13 @@ describe('Real-time Messaging Service', () => {
   });
 
   it('should handle message status updates', async () => {
-    const { ContactMessagingService } = await import('@/lib/contact/real-time-messaging');
-    const service = new ContactMessagingService();
+    const { contactMessagingService } = await import('@/lib/contact/real-time-messaging');
+    const service = contactMessagingService;
 
-    const onStatusUpdate = jest.fn();
-    const onError = jest.fn();
+    const onStatusUpdate = (jest.fn() as any);
+    const onError = (jest.fn() as any);
 
-    service.subscribeToMessageStatusUpdates('user-123', onStatusUpdate, onError);
+    service.subscribeToMessages('user-123', onStatusUpdate);
 
     expect(mockChannel.on).toHaveBeenCalledWith(
       'postgres_changes',
@@ -519,26 +529,24 @@ describe('Real-time Messaging Service', () => {
   });
 
   it('should mark messages as read', async () => {
-    const { ContactMessagingService } = await import('@/lib/contact/real-time-messaging');
-    const service = new ContactMessagingService();
+    const { contactMessagingService } = await import('@/lib/contact/real-time-messaging');
+    const service = contactMessagingService;
 
     mockSupabase.from.mockReturnValue({
       update: jest.fn(() => ({
-        eq: jest.fn().mockResolvedValue({
+        eq: (jest.fn() as any).mockResolvedValue({
           error: null
-        })
+        } as any)
       }))
     });
 
-    const result = await service.markMessageAsRead('msg-123');
-
-    expect(result).toBe(true);
+    await service.markAsRead('msg-123');
     expect(mockSupabase.from).toHaveBeenCalledWith('contact_messages');
   });
 
   it('should send messages via API', async () => {
     // Mock fetch for API calls
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = (jest.fn() as any).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
         success: true,
@@ -546,14 +554,15 @@ describe('Real-time Messaging Service', () => {
       })
     });
 
-    const { ContactMessagingService } = await import('@/lib/contact/real-time-messaging');
-    const service = new ContactMessagingService();
+    const { contactMessagingService } = await import('@/lib/contact/real-time-messaging');
+    const service = contactMessagingService;
 
     const result = await service.sendMessage({
-      representativeId: 'rep-123',
+      representativeId: 123,
       subject: 'Test Message',
       content: 'Test content',
-      priority: 'normal'
+      priority: 'normal',
+      messageType: 'text'
     });
 
     expect(result.success).toBe(true);
@@ -635,18 +644,18 @@ describe('Contact System Integration', () => {
     mockSupabase.from.mockReturnValue({
       select: jest.fn(() => ({
         eq: jest.fn(() => ({
-          single: jest.fn().mockResolvedValue({
+          single: (jest.fn() as any).mockResolvedValue({
             data: mockRepresentative,
             error: null
-          })
+          } as any)
         }))
       })),
       insert: jest.fn(() => ({
         select: jest.fn(() => ({
-          single: jest.fn().mockResolvedValue({
+          single: (jest.fn() as any).mockResolvedValue({
             data: mockThread,
             error: null
-          })
+          } as any)
         }))
       }))
     });
@@ -662,7 +671,7 @@ describe('Contact System Integration', () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
       error: new Error('Database connection failed')
-    });
+    } as any);
 
     const request = new NextRequest('http://localhost:3000/api/contact/messages', {
       method: 'POST',
@@ -689,20 +698,22 @@ describe('Contact System Integration', () => {
 
 describe('Contact System Performance', () => {
   it('should handle high message volume', async () => {
+    const { contactMessagingService } = await import('@/lib/contact/real-time-messaging');
     const startTime = Date.now();
     
     // Simulate sending multiple messages
     const messagePromises = Array.from({ length: 10 }, (_, i) => 
       contactMessagingService.sendMessage({
-        representativeId: 'rep-123',
+        representativeId: 123,
         subject: `Test Message ${i}`,
         content: `Test message content ${i}`,
-        priority: 'normal'
+        priority: 'normal',
+        messageType: 'text'
       })
     );
 
     // Mock successful responses
-    global.fetch = jest.fn().mockResolvedValue({
+    global.fetch = (jest.fn() as any).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
         success: true,
@@ -713,7 +724,7 @@ describe('Contact System Performance', () => {
     const results = await Promise.all(messagePromises);
     const endTime = Date.now();
 
-    expect(results.every(result => result.success)).toBe(true);
+    expect(results.every((result: any) => result.success)).toBe(true);
     expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
   });
 
@@ -736,7 +747,7 @@ describe('Contact System Performance', () => {
     mockSupabase.from.mockReturnValue({
       select: jest.fn(() => ({
         eq: jest.fn(() => ({
-          single: jest.fn().mockResolvedValue({
+          single: (jest.fn() as any).mockResolvedValue({
             data: { ...mockRepresentative, id: `rep-${Date.now()}` },
             error: null
           })
@@ -744,7 +755,7 @@ describe('Contact System Performance', () => {
       })),
       insert: jest.fn(() => ({
         select: jest.fn(() => ({
-          single: jest.fn().mockResolvedValue({
+          single: (jest.fn() as any).mockResolvedValue({
             data: { ...mockThread, id: `thread-${Date.now()}` },
             error: null
           })

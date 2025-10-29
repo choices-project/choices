@@ -40,6 +40,8 @@ export type VotingMethod =
   | 'approval'
   | 'quadratic'
   | 'range'
+  | 'single-choice'
+  | 'ranked-choice'
 
 export interface PollOption {
   id: string

@@ -13,7 +13,7 @@ export const performanceUtils = {
     try {
       const result = await fn();
       const end = performance.now();
-      logger.performance(label, end - start);
+      logger.info(`${label} completed`, { duration: end - start });
       return result;
     } catch (error) {
       const end = performance.now();
@@ -27,7 +27,7 @@ export const performanceUtils = {
     try {
       const result = fn();
       const end = performance.now();
-      logger.performance(label, end - start);
+      logger.info(`${label} completed`, { duration: end - start });
       return result;
     } catch (error) {
       const end = performance.now();

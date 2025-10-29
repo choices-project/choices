@@ -62,17 +62,6 @@ export {
 /** Zustand store integration - Centralized */
 export {
   useProfileStore,
-  useProfile,
-  useProfileLoading,
-  useProfileError,
-  useProfileDisplay,
-  useProfileValidation,
-  useProfileActions,
-  useProfileStats,
-  profileSelectors,
-  profileStoreUtils,
-  profileStoreSubscriptions,
-  profileStoreDebug,
 } from '@/lib/stores';
 
 // ============================================================================
@@ -108,7 +97,6 @@ export type {
   NotificationPreferences,
   FeedPreferences,
   VotingPreferences,
-  DataRetentionSettings,
   ProfileUpdateData,
   ProfileActionResult,
   ProfileValidationResult,

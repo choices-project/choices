@@ -114,9 +114,10 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase
         .from('hashtag_flags')
         .insert([{
-          hashtag: body.hashtag,
+          hashtag_id: body.hashtag, // Changed from 'hashtag' to 'hashtag_id'
+          flag_type: 'inappropriate', // Added required field
           reason: body.reason,
-          reporter_id: body.reporter_id,
+          user_id: body.reporter_id, // Changed from 'reporter_id' to 'user_id'
           status: 'pending'
         }])
         .select();

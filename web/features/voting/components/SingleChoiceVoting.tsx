@@ -2,23 +2,7 @@
 
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { useState, useEffect } from 'react'
-
-interface PollOption {
-  id: string
-  text: string
-  description?: string
-}
-
-interface SingleChoiceVotingProps {
-  pollId: string
-  title: string
-  description?: string
-  options: PollOption[]
-  onVote: (choice: number) => Promise<void>
-  isVoting: boolean
-  hasVoted?: boolean
-  userVote?: number
-}
+import type { PollOption, VoteResponse, SingleChoiceVotingProps } from '../types'
 
 export default function SingleChoiceVoting({
   pollId,
@@ -177,8 +161,8 @@ export default function SingleChoiceVoting({
                 {/* Option Content */}
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.description && (
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                  {option.option_text && (
+                    <p className="text-sm text-gray-600">{option.option_text}</p>
                   )}
                 </div>
 
@@ -238,7 +222,7 @@ export default function SingleChoiceVoting({
           <div className="mt-4 text-center">
             <div className="text-sm text-gray-600">
               Selected: <span className="font-medium text-blue-600">
-                {options.find((_, idx) => idx === selectedOption)?.text}
+                {options.find((_: PollOption, idx: number) => idx === selectedOption)?.text}
               </span>
             </div>
           </div>

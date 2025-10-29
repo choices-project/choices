@@ -94,7 +94,12 @@ export interface RetryConfig {
  * Error context for logging and debugging
  * Note: Using the centralized ErrorContext from error-types.ts
  */
-import type { ErrorContext } from './error-types';
+// Error context type definition
+interface ErrorContext {
+  code: string;
+  message: string;
+  details?: any;
+}
 
 // Legacy aliases for backward compatibility
 export type GoogleCivicElectionInfo = GcElectionInfo;

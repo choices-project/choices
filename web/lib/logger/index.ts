@@ -8,13 +8,7 @@
 export {
   logger,
   devLog,
-  logInfo,
-  logWarn,
-  logError,
-  logApiCall,
-  logDbQuery,
-  logUserAction,
-  logPerformance
+  logError
 } from '@/lib/utils/logger';
 
 // Default export for convenience

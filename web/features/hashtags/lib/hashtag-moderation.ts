@@ -94,12 +94,12 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
     // Transform flags to match HashtagFlag type
     const transformedFlags: HashtagFlag[] = flags.map(flag => ({
       id: flag.id,
-      hashtag_id: flag.hashtag,
-      user_id: flag.reporter_id || '',
-      flag_type: 'other' as const, // Default type since hashtag_flags doesn't have flag_type
-      reason: flag.reason,
+      hashtag_id: flag.hashtag_id,
+      user_id: flag.user_id,
+      flag_type: flag.flag_type as any,
+      reason: flag.reason || '',
       created_at: flag.created_at || new Date().toISOString(),
-      updated_at: flag.updated_at || new Date().toISOString(),
+      updated_at: flag.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
       status: flag.status === 'approved' ? 'resolved' : 
               flag.status === 'rejected' ? 'rejected' : 'pending'
     }));
@@ -109,7 +109,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       hashtag_id: hashtagId,
       status: moderationStatus,
       created_at: flags[0]?.created_at || new Date().toISOString(),
-      updated_at: flags[0]?.updated_at || new Date().toISOString(),
+      updated_at: flags[0]?.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
       human_review_required: pendingFlags.length > 0,
       moderation_reason: pendingFlags.length > 0 ? 'Pending review' : undefined
     };
@@ -166,10 +166,12 @@ export async function flagHashtag(
     const result = await supabase
       .from('hashtag_flags')
       .insert({
-        hashtag: hashtagId,
-        reporter_id: user.id,
+        hashtag_id: hashtagId,
+        user_id: user.id,
+        flagged_by: user.id,
         reason,
-        status: 'pending'
+        status: 'pending',
+        flag_type: 'inappropriate'
       })
       .select()
       .single();
@@ -190,12 +192,12 @@ export async function flagHashtag(
     // Transform the returned data to match HashtagFlag type
     const transformedFlag: HashtagFlag = {
       id: data.id,
-      hashtag_id: data.hashtag,
-      user_id: data.reporter_id || '',
-      flag_type: 'other', // Default since hashtag_flags doesn't have flag_type
-      reason: data.reason,
+      hashtag_id: data.hashtag_id,
+      user_id: data.user_id,
+      flag_type: data.flag_type as any,
+      reason: data.reason || '',
       created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.updated_at || new Date().toISOString(),
+      updated_at: data.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
       status: data.status as 'pending' | 'resolved' | 'rejected'
     };
 
@@ -262,13 +264,7 @@ export async function moderateHashtag(
       await supabase
         .from('hashtags')
         .update({ 
-          is_featured: false,
-          is_trending: false,
-          metadata: {
-            ...(hashtagData?.metadata as Record<string, any> || {}),
-            moderation_status: 'rejected',
-            moderation_reason: reason
-          }
+          is_trending: false
         })
         .eq('id', hashtagId);
     }
@@ -481,16 +477,16 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
       ...hashtag,
       description: hashtag.description ?? undefined,
       category: (hashtag.category as HashtagCategory) ?? undefined,
-      created_by: hashtag.created_by ?? undefined,
-      follower_count: hashtag.follower_count ?? 0,
+      created_by: undefined, // Field doesn't exist in hashtags table
+      follower_count: 0, // Field doesn't exist in hashtags table
       usage_count: hashtag.usage_count ?? 0,
-      is_featured: hashtag.is_featured ?? false,
+      is_featured: false, // Field doesn't exist in hashtags table
       is_trending: hashtag.is_trending ?? false,
       is_verified: hashtag.is_verified ?? false,
-      trend_score: hashtag.trend_score ?? 0,
+      trend_score: hashtag.trending_score ?? 0, // Use trending_score instead of trend_score
       created_at: hashtag.created_at ?? new Date().toISOString(),
       updated_at: hashtag.updated_at ?? new Date().toISOString(),
-      metadata: hashtag.metadata as Record<string, any> || undefined
+      metadata: undefined // Field doesn't exist in hashtags table
     }));
 
     return {

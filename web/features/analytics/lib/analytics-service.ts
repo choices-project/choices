@@ -81,22 +81,17 @@ export class AnalyticsService {
 
       // Calculate score using database function
       const { data: scoreResult, error: scoreError } = await supabase
-        .rpc('calculate_trust_tier_score', {
-          p_biometric_verified: biometric_verified,
-          p_phone_verified: phone_verified,
-          p_identity_verified: identity_verified,
-          p_voting_history_count: voting_history_count
-        });
+        .rpc('calculate_user_trust_tier', { p_user_id: userId });
 
       if (scoreError) {
         throw new Error('Failed to calculate trust tier score')
       }
 
-      const score = Array.isArray(scoreResult) && scoreResult.length > 0 ? scoreResult[0]?.trust_score || 0 : 0
+      const score = typeof scoreResult === 'number' ? scoreResult : 0
 
-      // Determine trust tier
+      // Determine trust tier using available function
       const { data: tierResult, error: tierError } = await supabase
-        .rpc('determine_trust_tier', { p_score: score })
+        .rpc('get_trust_tier_progression', { p_user_id: userId })
 
       if (tierError) {
         throw new Error('Failed to determine trust tier')
@@ -351,22 +346,20 @@ export class AnalyticsService {
         return (factors?.confidence_level ?? 0) < 0.5
       }).length ?? 0
 
-      // Get engagement metrics
-      const { data: engagementData } = await supabase
-        .from('analytics_user_engagement')
-        .select('total_sessions, total_page_views, engagement_score')
+      // Get engagement metrics from platform_analytics
+      const { data: platformData } = await supabase
+        .from('platform_analytics')
+        .select('metric_name, metric_value')
+        .in('metric_name', ['unique_users', 'total_sessions', 'total_page_views'])
 
-      const activeUsers = engagementData?.filter(entry => 
-        entry && 'total_sessions' in entry ? (entry.total_sessions ?? 0) > 0 : false
-      ).length ?? 0
+      const metrics = platformData?.reduce((acc, item) => {
+        acc[item.metric_name] = item.metric_value
+        return acc
+      }, {} as Record<string, number>) ?? {}
 
-      const averagePollsParticipated = engagementData && engagementData.length > 0
-        ? engagementData.reduce((sum, entry) => sum + (entry && 'total_sessions' in entry ? entry.total_sessions ?? 0 : 0), 0) / engagementData.length
-        : 0
-
-      const averageVotesCast = engagementData && engagementData.length > 0
-        ? engagementData.reduce((sum, entry) => sum + (entry && 'total_page_views' in entry ? entry.total_page_views ?? 0 : 0), 0) / engagementData.length
-        : 0
+      const activeUsers = metrics.unique_users ?? 0
+      const averagePollsParticipated = metrics.total_sessions ?? 0
+      const averageVotesCast = metrics.total_page_views ?? 0
 
       return {
         total_users: totalUsers ?? 0,
@@ -400,46 +393,47 @@ export class AnalyticsService {
         throw new Error('Database connection not available')
       }
 
-      // Get poll demographic insights
-      const { data: insights, error: insightsError } = await supabase
-        .from('demographic_analytics')
-        .select('*')
-        .eq('poll_id', pollId as any)
+      // Get poll basic info
+      const { data: pollData, error: pollError } = await supabase
+        .from('polls')
+        .select('id, title, question, created_at, total_votes, participation')
+        .eq('id', pollId)
         .single()
 
-      if (insightsError || !insights) {
-        throw new Error('Poll insights not found')
+      if (pollError || !pollData) {
+        throw new Error('Poll not found')
       }
 
-      // Get analytics data
-      const { data: analytics, error: analyticsError } = await supabase
-        .from('trust_tier_analytics')
-        .select('*')
-        .eq('poll_id', pollId as any)
+      // Get poll analytics from votes table
+      const { data: votesData, error: votesError } = await supabase
+        .from('votes')
+        .select('trust_tier, vote_status, created_at')
+        .eq('poll_id', pollId)
 
-      if (analyticsError) {
-        throw new Error('Failed to get poll analytics')
+      if (votesError) {
+        throw new Error('Failed to get poll votes')
       }
 
-      // Calculate metrics
-      const total_responses = analytics.length ?? 0
-      const data_quality_score = analytics.length > 0
-        ? analytics.reduce((sum, a) => {
-            const factors = (a as any).factors as TrustTierAnalyticsFactors | null
-            return sum + (factors?.data_quality_score ?? 0)
-          }, 0) / analytics.length
+      // Calculate metrics from votes data
+      const total_responses = votesData?.length ?? 0
+      const data_quality_score = votesData && votesData.length > 0
+        ? votesData.reduce((sum, vote) => {
+            const tier = vote.trust_tier ?? 1
+            return sum + (tier >= 3 ? 1 : tier >= 2 ? 0.7 : 0.3)
+          }, 0) / votesData.length
         : 0
-      const confidence_level = analytics.length > 0
-        ? analytics.reduce((sum, a) => {
-            const factors = (a as any).factors as TrustTierAnalyticsFactors | null
-            return sum + (factors?.confidence_level ?? 0)
-          }, 0) / analytics.length
+      const confidence_level = votesData && votesData.length > 0
+        ? votesData.reduce((sum, vote) => {
+            const tier = vote.trust_tier ?? 1
+            return sum + (tier >= 3 ? 0.9 : tier >= 2 ? 0.7 : 0.5)
+          }, 0) / votesData.length
         : 0
 
-      // Calculate trust tier breakdown
-      const trustTierBreakdown = analytics.reduce((acc, item) => {
-        const tier = (item as any).trust_tier as TrustTier
-        acc[tier] = (acc[tier] ?? 0) + 1
+      // Calculate trust tier breakdown from votes
+      const trustTierBreakdown = votesData?.reduce((acc, vote) => {
+        const tier = vote.trust_tier ?? 1
+        const tierKey = `T${tier}` as TrustTier
+        acc[tierKey] = (acc[tierKey] ?? 0) + 1
         return acc
       }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
 
@@ -448,14 +442,14 @@ export class AnalyticsService {
         total_responses,
         trust_tier_breakdown: trustTierBreakdown,
         demographic_insights: {
-          id: (insights as any)?.poll_id ?? '',
-          poll_id: (insights as any)?.poll_id ?? '',
-          total_responses: (insights as any)?.participant_count ?? 0,
+          id: pollData.id,
+          poll_id: pollData.id,
+          total_responses: total_responses,
           trust_tier_breakdown: trustTierBreakdown,
-          age_group_breakdown: (insights as any)?.age_bucket ? { [(insights as any).age_bucket]: (insights as any).participant_count ?? 0 } : {},
-          education_breakdown: (insights as any)?.education_bucket ? { [(insights as any).education_bucket]: (insights as any).participant_count ?? 0 } : {},
-          region_breakdown: (insights as any)?.region_bucket ? { [(insights as any).region_bucket]: (insights as any).participant_count ?? 0 } : {},
-          geographic_breakdown: (insights as any)?.region_bucket ? { [(insights as any).region_bucket]: (insights as any).participant_count ?? 0 } : {},
+          age_group_breakdown: {},
+          education_breakdown: {},
+          region_breakdown: {},
+          geographic_breakdown: {},
           political_breakdown: {},
           income_breakdown: {},
           gender_breakdown: {},
@@ -464,8 +458,8 @@ export class AnalyticsService {
           data_quality_distribution: {},
           verification_method_distribution: {},
           engagement_metrics: {
-            average_choice: (insights as any)?.average_choice ?? 0,
-            choice_variance: (insights as any)?.choice_variance ?? 0
+            average_choice: 0,
+            choice_variance: 0
           },
           response_velocity: 0,
           participation_trends: {}

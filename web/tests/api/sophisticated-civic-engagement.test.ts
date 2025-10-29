@@ -153,8 +153,8 @@ describe('Sophisticated Civic Engagement Platform', () => {
       ];
 
       expect(mockRepresentatives.length).toBeGreaterThan(0);
-      expect(mockRepresentatives[0].trust_score).toBeGreaterThan(filters.minTrustScore);
-      expect(mockRepresentatives[0].contact_frequency).toBeLessThanOrEqual(filters.maxContactFrequency);
+      expect(mockRepresentatives[0]?.trust_score).toBeGreaterThan(filters.minTrustScore);
+      expect(mockRepresentatives[0]?.contact_frequency).toBeLessThanOrEqual(filters.maxContactFrequency);
       
       console.log('✅ Representatives fetched with sophisticated filtering');
     });

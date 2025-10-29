@@ -14,7 +14,8 @@
  * @requires @playwright/test
  */
 
-import { Page, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { TestIds } from '../registry/testIds';
 
 /**

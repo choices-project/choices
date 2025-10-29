@@ -43,19 +43,17 @@ describe('Feature Flags API Integration Tests', () => {
     it('should return all feature flags with system info', async () => {
       // Mock the feature flag manager responses
       const mockFlags = new Map([
-        ['DEMOGRAPHIC_FILTERING', { id: 'DEMOGRAPHIC_FILTERING', enabled: true, category: 'personalization' }],
-        // TRENDING_POLLS removed - functionality already implemented through hashtag system
-        ['ADVANCED_PRIVACY', { id: 'ADVANCED_PRIVACY', enabled: true, category: 'privacy' }]
+        ['DEMOGRAPHIC_FILTERING', { id: 'DEMOGRAPHIC_FILTERING', name: 'Demographic Filtering', enabled: true, category: 'personalization', description: 'Filter content based on demographics' }],
+        ['ADVANCED_PRIVACY', { id: 'ADVANCED_PRIVACY', name: 'Advanced Privacy', enabled: true, category: 'privacy', description: 'Enhanced privacy controls' }]
       ]);
 
       const mockEnabledFlags = [
-        { id: 'DEMOGRAPHIC_FILTERING', enabled: true, category: 'personalization' },
-        // TRENDING_POLLS removed - functionality already implemented through hashtag system
-        { id: 'ADVANCED_PRIVACY', enabled: true, category: 'privacy' }
+        { id: 'DEMOGRAPHIC_FILTERING', name: 'Demographic Filtering', enabled: true, category: 'personalization', description: 'Filter content based on demographics' },
+        { id: 'ADVANCED_PRIVACY', name: 'Advanced Privacy', enabled: true, category: 'privacy', description: 'Enhanced privacy controls' }
       ];
 
       const mockDisabledFlags = [
-        { id: 'AUTOMATED_POLLS', enabled: false, category: 'future' }
+        { id: 'AUTOMATED_POLLS', name: 'Automated Polls', enabled: false, category: 'future', description: 'Automatically generated polls' }
       ];
 
       const mockSystemInfo = {

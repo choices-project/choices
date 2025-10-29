@@ -397,19 +397,19 @@ export class OptimizedPollService {
         logger.info('Successfully refreshed poll statistics view');
       }
 
-      // Refresh poll analytics materialized view (if function exists)
-      const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view');
+      // Note: refresh_poll_analytics_view RPC function doesn't exist, skipping
+      // const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view');
       
-      if (pollAnalyticsError) {
-        logger.error('Failed to refresh poll analytics view:', pollAnalyticsError instanceof Error ? pollAnalyticsError : new Error('Unknown error'));
-        return {
-          success: false,
-          message: 'Failed to refresh poll analytics view',
-          error: pollAnalyticsError.message || 'Unknown error'
-        };
-      } else {
-        logger.info('Successfully refreshed poll analytics view');
-      }
+      // if (pollAnalyticsError) {
+      //   logger.error('Failed to refresh poll analytics view:', pollAnalyticsError instanceof Error ? pollAnalyticsError : new Error('Unknown error'));
+      //   return {
+      //     success: false,
+      //     message: 'Failed to refresh poll analytics view',
+      //     error: pollAnalyticsError.message || 'Unknown error'
+      //   };
+      // } else {
+      //   logger.info('Successfully refreshed poll analytics view');
+      // }
 
       logger.info('Materialized views refreshed successfully');
       return {
@@ -468,7 +468,7 @@ export class OptimizedPollService {
 
       // Update poll statistics for all polls or specific poll
       const targetPollId = pollId || 'all';
-      const { error: statsError } = await supabase.rpc('update_poll_statistics', { poll_id_param: targetPollId });
+      const { error: statsError } = await supabase.rpc('update_poll_statistics');
       if (statsError) {
         logger.warn('Failed to update poll statistics:', { error: statsError.message || 'Unknown error' });
       } else {

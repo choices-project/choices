@@ -29,7 +29,7 @@ async function handlePost(request: NextRequest) {
     // Check if poll exists and is active
     const { data: poll, error: pollError } = await (await supabase)
       .from('polls')
-      .select('id, created_by, voting_method, privacy_level, end_time, options, total_votes, participation')
+      .select('id, created_by, voting_method, privacy_level, end_time, options, total_votes, participation, question')
       .eq('id', validatedData.pollId)
       .single();
 
@@ -50,23 +50,19 @@ async function handlePost(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid option for this poll' }, { status: 400 });
     }
 
-    // Record the vote using existing schema fields (avoid JSONB for performance)
+    // Record the vote using existing schema fields
     const { error: voteError } = await (await supabase)
       .from('votes')
       .insert({
         poll_id: validatedData.pollId,
         user_id: user.id,
-        choice: optionIndex, // Use existing choice field with correct index
-        voting_method: poll.voting_method || 'single_choice',
-        // Use proper columns instead of JSONB for better performance
-        is_active: true,
-        is_verified: false,
-        time_spent_seconds: 0, // Could be calculated from client
-        page_views: 1,
-        // Store only essential option reference in vote_data JSONB
-        vote_data: {
-          option_id: validatedData.optionId
-        }
+        option_id: validatedData.optionId,
+        poll_option_id: validatedData.optionId, // Duplicate for compatibility
+        poll_question: poll.question,
+        vote_status: 'active',
+        trust_tier: 1, // Default trust tier
+        voter_session: request.headers.get('x-session-id') || null,
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
       });
 
     if (voteError) {

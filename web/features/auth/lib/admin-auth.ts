@@ -15,10 +15,14 @@ export async function isAdmin(): Promise<boolean> {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return false;
 
-    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { input_user_id: user.id });
-    if (adminError) return false;
-
-    return isAdminUser === true;
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (profileError || !profile) return false;
+    return profile.is_admin === true;
   } catch (error) {
     console.error('Admin check error:', error);
     return false;
@@ -31,10 +35,14 @@ export async function getAdminUser(): Promise<{ id: string; email?: string } | n
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { input_user_id: user.id });
-  if (error || !isAdminUser) return null;
-
-  return user;
+  const { data: profile, error } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single();
+  
+  if (error || !profile) return null;
+  return profile.is_admin ? user : null;
 }
 
 /** Throwing variant: great for imperative flows & tests that expect throws */
@@ -43,8 +51,13 @@ export async function requireAdminUser(): Promise<any> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { input_user_id: user.id });
-  if (error || !isAdminUser) throw new Error('Admin access required');
+  const { data: profile, error } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single();
+  
+  if (error || !profile || !profile.is_admin) throw new Error('Admin access required');
 
   return user;
 }

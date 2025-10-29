@@ -1,0 +1,420 @@
+{
+  "config": {
+    "configFile": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/configs/playwright.config.chrome-only.ts",
+    "rootDir": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results-chrome-only.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/alaughingkitsune/src/Choices/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-inline",
+        "name": "chromium-inline",
+        "testDir": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "security/authentication-security.spec.ts",
+      "file": "security/authentication-security.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication Security Tests",
+          "file": "security/authentication-security.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should block unauthenticated access to dashboard",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3195,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing dashboard access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Dashboard properly protected - unauthenticated users redirected to login\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:06.316Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-e3f11c9969fa120b5003",
+              "file": "security/authentication-security.spec.ts",
+              "line": 18,
+              "column": 7
+            },
+            {
+              "title": "should block unauthenticated access to profile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2060,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing profile access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Profile properly protected - unauthenticated users redirected to login\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:09.749Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-b435b0d0fe0c426340cb",
+              "file": "security/authentication-security.spec.ts",
+              "line": 44,
+              "column": 7
+            },
+            {
+              "title": "should block unauthenticated access to admin routes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1955,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing admin access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Admin routes properly protected - unauthenticated users redirected to login\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:11.827Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-8dbe40ecbdf7151e3f25",
+              "file": "security/authentication-security.spec.ts",
+              "line": 66,
+              "column": 7
+            },
+            {
+              "title": "should block unauthenticated access to polls creation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2185,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing polls creation access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Polls creation properly protected - unauthenticated users redirected to login\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:13.797Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-c4592b17a396a548a158",
+              "file": "security/authentication-security.spec.ts",
+              "line": 88,
+              "column": 7
+            },
+            {
+              "title": "should block unauthenticated API access to dashboard",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1154,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing dashboard API access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Dashboard API properly protected - returns 401 for unauthenticated requests\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:15.999Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-afc1981eec69bf6048de",
+              "file": "security/authentication-security.spec.ts",
+              "line": 110,
+              "column": 7
+            },
+            {
+              "title": "should block unauthenticated API access to profile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1169,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚨 SECURITY TEST: Testing profile API access without authentication\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Profile API properly protected - returns 401 for unauthenticated requests\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:17.171Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-b1727134ba08718ef261",
+              "file": "security/authentication-security.spec.ts",
+              "line": 130,
+              "column": 7
+            },
+            {
+              "title": "should allow public access to landing page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1598,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🔓 SECURITY TEST: Testing public access to landing page\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Landing page properly accessible to public users\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:18.352Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-7665eb420b35e63db214",
+              "file": "security/authentication-security.spec.ts",
+              "line": 147,
+              "column": 7
+            },
+            {
+              "title": "should allow public access to auth page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1743,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🔓 SECURITY TEST: Testing public access to auth page\n"
+                        },
+                        {
+                          "text": "✅ SECURITY: Auth page properly accessible to public users\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-29T05:50:19.962Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f13e45fc719b5844c87c-d75fc323958b893050dc",
+              "file": "security/authentication-security.spec.ts",
+              "line": 167,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-29T05:50:05.082Z",
+    "duration": 16687.563,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

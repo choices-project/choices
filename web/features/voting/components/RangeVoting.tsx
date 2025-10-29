@@ -2,13 +2,7 @@
 
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
-
-
-interface PollOption {
-  id: string
-  text: string
-  description?: string
-}
+import type { PollOption } from '../types'
 
 interface RangeVotingProps {
   pollId: string
@@ -184,8 +178,8 @@ export default function RangeVoting({
             <div key={option.id} className="border border-gray-200 rounded-lg p-4">
               <div className="mb-3">
                 <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.description && (
-                  <p className="text-sm text-gray-600">{option.description}</p>
+                {option.option_text && (
+                  <p className="text-sm text-gray-600">{option.option_text}</p>
                 )}
               </div>
 

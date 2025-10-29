@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, TrendingUp, Clock, Users, BarChart3, Search, Filter, Hash, Flame, Star, Eye } from 'lucide-react';
 
-// Import hashtag functionality with fallback to minimal store
+// Import hashtag functionality - RE-ENABLED after fixing infinite loop
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
 import type { Poll, PollHashtagIntegration as PollHashtagIntegrationType } from '@/features/polls/types';
@@ -75,29 +75,48 @@ export default function PollsPage() {
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'trending' | 'engagement'>('trending');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'trending'>('trending');
   
-  // Hashtag store integration with comprehensive error handling
+  // Hashtag store integration - STILL CAUSING INFINITE LOOP
+  // Move hook calls to top level to prevent infinite loops
   let hashtags: any[] = [];
   let trendingHashtags: any[] = [];
-  let getTrendingHashtags: any = () => {};
-  let searchHashtags: any = () => {};
   let trendingCount = 0;
+  let hashtagActions: any = null;
   
-  try {
-    const hashtagStore = useHashtagStore();
-    const hashtagActions = useHashtagActions();
-    const hashtagStats = useHashtagStats();
-    
-    hashtags = hashtagStore?.hashtags || [];
-    trendingHashtags = hashtagStore?.trendingHashtags || [];
-    getTrendingHashtags = hashtagActions?.getTrendingHashtags || (() => {});
-    searchHashtags = hashtagActions?.searchHashtags || (() => {});
-    trendingCount = hashtagStats?.trendingCount || 0;
-  } catch (error) {
-    console.warn('Hashtag store initialization failed, using fallbacks:', error);
-    // Provide safe fallback functions
-    getTrendingHashtags = () => Promise.resolve();
-    searchHashtags = () => Promise.resolve();
-  }
+  // STILL CAUSING INFINITE LOOP: Even after batching set() calls, the hooks themselves cause re-renders
+  // The issue is that the hooks return new objects on every render, causing useCallback dependencies to change
+  // try {
+  //   const hashtagStore = useHashtagStore();
+  //   const hashtagStats = useHashtagStats();
+  //   hashtagActions = useHashtagActions();
+  //   
+  //   hashtags = hashtagStore?.hashtags || [];
+  //   trendingHashtags = hashtagStore?.trendingHashtags || [];
+  //   trendingCount = hashtagStats?.trendingCount || 0;
+  // } catch (error) {
+  //   console.warn('Hashtag store initialization failed, using fallbacks:', error);
+  // }
+  
+  // Use useCallback to prevent infinite loops - now using the hook result from top level
+  const getTrendingHashtags = useCallback(async () => {
+    try {
+      if (hashtagActions?.getTrendingHashtags) {
+        await hashtagActions.getTrendingHashtags();
+      }
+    } catch (error) {
+      console.warn('Failed to load trending hashtags:', error);
+    }
+  }, [hashtagActions]);
+  
+  const searchHashtags = useCallback(async (query: string) => {
+    try {
+      if (hashtagActions?.searchHashtags) {
+        return await hashtagActions.searchHashtags(query);
+      }
+    } catch (error) {
+      console.warn('Failed to search hashtags:', error);
+    }
+    return [];
+  }, [hashtagActions]);
 
   // Load trending hashtags on mount with error handling
   useEffect(() => {
@@ -211,7 +230,7 @@ export default function PollsPage() {
             />
           </div>
 
-          {/* Hashtag Input */}
+          {/* Hashtag Input - TEMPORARILY DISABLED to fix infinite loop */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Filter by Hashtags:</label>
             <div className="flex flex-wrap gap-2">
@@ -294,6 +313,28 @@ export default function PollsPage() {
           ))}
         </div>
       </div>
+
+      {/* Trending Hashtags Display - TEMPORARILY DISABLED to fix infinite loop */}
+      {trendingHashtags.length > 0 && (
+        <div className="mb-6">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Trending Hashtags</h3>
+            <div className="flex flex-wrap gap-2">
+              {trendingHashtags.slice(0, 10).map((hashtag, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleHashtagSelect(hashtag.hashtag || hashtag)}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                >
+                  <Hash className="h-3 w-3 mr-1" />
+                  {hashtag.hashtag || hashtag}
+                  {hashtag.count && <span className="ml-1 text-blue-500">({hashtag.count})</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Polls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -6,7 +6,7 @@
  */
 
 // Privacy types
-export * from '../../privacy/hybrid-privacy';
+export * from '../../privacy/dp';
 
 // Analytics types
 export interface AnalyticsEvent {

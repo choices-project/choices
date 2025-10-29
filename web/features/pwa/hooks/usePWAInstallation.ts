@@ -5,7 +5,7 @@
  * This hook wraps the PWA store's installation functionality.
  */
 
-import { usePWAInstallation as usePWAInstallationStore } from '@/lib/stores';
+import { usePWAInstallation as usePWAInstallationStore } from '@/lib/stores/pwaStore';
 import type { PWAInstallation } from '@/lib/stores/pwaStore';
 
 export function usePWAInstallation(): PWAInstallation {

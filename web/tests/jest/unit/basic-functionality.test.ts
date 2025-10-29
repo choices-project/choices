@@ -94,7 +94,7 @@ describe('Error Handling', () => {
   });
 
   it('should handle empty arrays', () => {
-    const value = [];
+    const value: any[] = [];
     expect(value).toEqual([]);
     expect(value.length).toBe(0);
   });

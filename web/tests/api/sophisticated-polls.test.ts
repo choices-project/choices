@@ -110,7 +110,7 @@ describe('Sophisticated Polls API', () => {
     it('should track vote with sophisticated analytics', async () => {
       const voteData = {
         pollId: testPollId,
-        optionIds: [sophisticatedPollData.options[0].text],
+        optionIds: [sophisticatedPollData.options[0]?.text || 'Option 1'],
         anonymous: false
       };
 

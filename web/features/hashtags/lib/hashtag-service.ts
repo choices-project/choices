@@ -361,7 +361,7 @@ export async function getTrendingHashtags(
     // Transform to trending hashtags with additional metrics
     const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags || []).map(async hashtag => ({
       hashtag: transformHashtagData(hashtag),
-      trend_score: hashtag.trend_score || 0,
+      trend_score: hashtag.trending_score || 0,
       growth_rate: await calculateGrowthRate(transformHashtagData(hashtag)),
       peak_usage: await calculateUsage24h(transformHashtagData(hashtag)),
       time_period: '24h'
@@ -482,9 +482,9 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
       followed_at: data.followed_at || new Date().toISOString(),
       is_primary: data.is_primary || false,
       usage_count: data.usage_count || 0,
-      last_used_at: data.last_used_at || undefined,
-      preferences: data.preferences || undefined
-    } as UserHashtag };
+      last_used_at: data.last_used_at || new Date().toISOString(),
+      preferences: data.preferences || {}
+    } as unknown as UserHashtag };
   } catch (error) {
     return { 
       success: false, 
@@ -565,9 +565,9 @@ export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[
       followed_at: item.followed_at || new Date().toISOString(),
       is_primary: item.is_primary || false,
       usage_count: item.usage_count || 0,
-      last_used_at: item.last_used_at || undefined,
-      preferences: item.preferences || undefined
-    } as UserHashtag)) };
+      last_used_at: item.last_used_at || new Date().toISOString(),
+      preferences: item.preferences || {}
+    } as unknown as UserHashtag)) };
   } catch (error) {
     return { 
       success: false, 
@@ -710,7 +710,7 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
 
     if (userHashtagsError) throw userHashtagsError;
 
-    // Get user's hashtag preferences (fallback to user_profiles if table doesn't exist)
+    // Get user's hashtag preferences from hashtag_user_preferences table
     let preferences, preferencesError;
     try {
       const result = await supabase
@@ -721,26 +721,14 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
       preferences = result.data;
       preferencesError = result.error;
     } catch (tableError) {
-      // Fallback to user_profiles table
-      logger.warn('hashtag_user_preferences table not available, using user_profiles', { tableError });
-      const result = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      const userProfile = result.data as Database['public']['Tables']['user_profiles']['Row'] | null;
-      preferences = userProfile ? {
-        preferences: {
-          followed_hashtags: [],
-          hashtag_filters: []
-        }
-      } : null;
-      preferencesError = result.error;
+      logger.warn('Error fetching user hashtag preferences', { tableError });
+      preferences = null;
+      preferencesError = tableError;
     }
 
     if (preferencesError) throw preferencesError;
 
-    // Get user's hashtag activity (fallback to hashtag_usage if table doesn't exist)
+    // Get user's hashtag activity from hashtag_engagement table
     let activity, activityError;
     try {
       const result = await supabase
@@ -752,16 +740,9 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
       activity = result.data as HashtagActivity[] | null;
       activityError = result.error;
     } catch (tableError) {
-      // Fallback to hashtag_usage table
-      logger.warn('hashtag_engagement table not available, using hashtag_usage', { tableError });
-      const result = await supabase
-        .from('hashtag_usage')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      activity = result.data as HashtagActivity[] | null;
-      activityError = result.error;
+      logger.warn('Error fetching hashtag engagement', { tableError });
+      activity = null;
+      activityError = tableError;
     }
 
     if (activityError) throw activityError;
@@ -862,8 +843,8 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
       primary_hashtag: poll.primary_hashtag || undefined,
       hashtag_engagement: {
         total_views: poll.total_views || 0,
-        hashtag_clicks: (engagement as HashtagEngagement[])?.filter(e => e.action === 'click').length || 0,
-        hashtag_shares: (engagement as HashtagEngagement[])?.filter(e => e.action === 'share').length || 0
+        hashtag_clicks: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'click').length || 0,
+        hashtag_shares: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'share').length || 0
       },
       related_polls: relatedPolls?.map(p => p.id) || [],
       hashtag_trending_score: trendingScore
@@ -921,28 +902,22 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     if (trendingError) throw trendingError;
 
-    // Get hashtag content (fallback to hashtag_usage if table doesn't exist)
+    // Get hashtag content from feed_items table
     let hashtagContent, contentError;
     try {
       const result = await supabase
-        .from('hashtag_content')
+        .from('feed_items')
         .select('*')
         .eq('feed_id', feedId)
+        .eq('item_type', 'hashtag')
         .order('created_at', { ascending: false })
         .limit(20);
       hashtagContent = result.data;
       contentError = result.error;
     } catch (tableError) {
-      // Fallback to hashtag_usage table
-      logger.warn('hashtag_content table not available, using hashtag_usage', { tableError });
-      const result = await supabase
-        .from('hashtag_usage')
-        .select('*')
-        .eq('user_id', feed?.user_id || '')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      hashtagContent = result.data;
-      contentError = result.error;
+      logger.warn('Error fetching feed items', { tableError });
+      hashtagContent = null;
+      contentError = tableError;
     }
 
     if (contentError) throw contentError;
@@ -957,19 +932,9 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     if (personalError) throw personalError;
 
-    // Get hashtag analytics (fallback to basic analytics if table doesn't exist)
+    // Get hashtag analytics using basic analytics (hashtag_analytics table doesn't exist)
     let analytics, analyticsError;
     try {
-      const result = await supabase
-        .from('hashtag_analytics')
-        .select('*')
-        .eq('feed_id', feedId)
-        .single();
-      analytics = result.data;
-      analyticsError = result.error;
-    } catch (tableError) {
-      // Fallback to basic analytics
-      logger.warn('hashtag_analytics table not available, using basic analytics', { tableError });
       analytics = {
         total_hashtags: hashtagContent?.length || 0,
         trending_count: trendingHashtags?.length || 0,
@@ -977,6 +942,10 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
         last_updated: new Date().toISOString()
       };
       analyticsError = null;
+    } catch (tableError) {
+      logger.warn('Error calculating basic analytics', { tableError });
+      analytics = null;
+      analyticsError = tableError;
     }
 
     if (analyticsError) throw analyticsError;
@@ -1213,32 +1182,28 @@ async function getUserCustomHashtags(userId: string): Promise<string[]> {
 async function calculatePeakPosition(hashtagId: string): Promise<number> {
   try {
     // Get historical trending data (fallback to hashtags table if history table doesn't exist)
+    // Get hashtag trending history using RPC function
     let historicalData, error;
     try {
-      const result = await supabase
-        .from('hashtag_trending_history')
-        .select('position')
-        .eq('hashtag_id', hashtagId)
-        .order('created_at', { ascending: false })
-        .limit(30);
+      const result = await supabase.rpc('get_hashtag_trending_history', { p_hashtag_id: hashtagId });
       historicalData = result.data;
       error = result.error;
     } catch (tableError) {
       // Fallback to hashtags table
-      logger.warn('hashtag_trending_history table not available, using hashtags table', { tableError });
+      logger.warn('hashtag_trending_history function not available, using hashtags table', { tableError });
       const result = await supabase
         .from('hashtags')
-        .select('trend_score')
+        .select('trending_score')
         .eq('id', hashtagId)
         .single();
-      historicalData = result.data ? [{ position: Math.max(1, 100 - (result.data.trend_score || 0)) }] : [];
+      historicalData = result.data ? [{ position_rank: Math.max(1, 100 - (result.data.trending_score || 0)) }] : [];
       error = result.error;
     }
 
     if (error || !historicalData?.length) return 1;
 
     // Find the best (lowest) position
-    const positions = historicalData.map((d: any) => d.position || 1);
+    const positions = historicalData.map((d: any) => d.position_rank || 1);
     return Math.min(...positions);
   } catch (error) {
     console.error('Failed to calculate peak position:', error);
@@ -1251,9 +1216,9 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
     // Get current trending ranking
     const { data: currentRanking, error } = await supabase
       .from('hashtags')
-      .select('id, trend_score')
+      .select('id, trending_score')
       .eq('is_trending', true)
-      .order('trend_score', { ascending: false });
+      .order('trending_score', { ascending: false });
 
     if (error || !currentRanking?.length) return 1;
 
@@ -1299,13 +1264,13 @@ async function calculateCategoryTrends(category: string): Promise<Record<string,
     // Get category trending data
     const { data: categoryData, error } = await supabase
       .from('hashtags')
-      .select('trend_score, usage_count')
+      .select('trending_score, usage_count')
       .eq('category', category)
       .eq('is_trending', true);
 
     if (error || !categoryData?.length) return {};
 
-    const totalTrendScore = categoryData.reduce((sum, h) => sum + (h.trend_score || 0), 0);
+    const totalTrendScore = categoryData.reduce((sum, h) => sum + (h.trending_score || 0), 0);
     const totalUsage = categoryData.reduce((sum, h) => sum + (h.usage_count || 0), 0);
 
     return {

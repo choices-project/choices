@@ -123,7 +123,7 @@ describe('Unused Variable Prevention', () => {
         functionMatches.forEach(match => {
           const params = match.match(/function\s+\w+\s*\(([^)]*)\)/)?.[1];
           if (params && params.trim()) {
-            const paramList = params.split(',').map(p => p.trim().split(':')[0].trim()).filter(p => p);
+            const paramList = params.split(',').map(p => p.trim().split(':')[0]?.trim()).filter(p => p);
             paramList.forEach(param => {
               if (param && !content.includes(param)) {
                 problematicFiles.push(`${file}: unused parameter '${param}'`);

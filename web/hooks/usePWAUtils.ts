@@ -6,15 +6,22 @@
 
 import { useState, useEffect } from 'react';
 
-import { getPWAInstallPrompt, getPWACapabilities } from '@/lib/pwa-utils';
+import { pwaManager } from '@/features/pwa/lib/pwa-utils';
 
 export function usePWAUtils() {
   const [capabilities, setCapabilities] = useState<any>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
   useEffect(() => {
-    setCapabilities(getPWACapabilities());
-    setInstallPrompt(getPWAInstallPrompt());
+    // Get PWA capabilities from the manager
+    pwaManager.getPWAStatus().then(status => {
+      setCapabilities(status);
+    });
+    
+    // Check if install prompt is available
+    setInstallPrompt({
+      canInstall: pwaManager.isInstalled()
+    });
   }, []);
 
   return {
@@ -25,8 +32,8 @@ export function usePWAUtils() {
     pwaManager: {
       isSupported: () => true,
       install: () => Promise.resolve(true),
-      storeOfflineVote: (_data?: any) => Promise.resolve(true),
-      isInstalled: () => true
+      storeOfflineVote: (data?: any) => pwaManager.storeOfflineVote(data),
+      isInstalled: () => pwaManager.isInstalled()
     }
   };
 }

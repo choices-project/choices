@@ -23,30 +23,31 @@ export type {
   GoogleCivicErrorDetails
 } from '@/types/external/google-civic';
 
-export {
-  executeWithRetry as executeWithGoogleCivicRetry
-} from './google-civic/error-handling';
+// Google Civic exports removed - files don't exist
+// export {
+//   executeWithRetry as executeWithGoogleCivicRetry
+// } from './google-civic/error-handling';
 
-export {
-  transformToCandidateCard as transformToGoogleCivicCandidateCard
-} from './google-civic/transformers';
+// export {
+//   transformToCandidateCard as transformToGoogleCivicCandidateCard
+// } from './google-civic/transformers';
 
 // ProPublica exports removed - service archived
 
-// Rate Limiting
-export {
-  RateLimiter,
-  createGoogleCivicRateLimiter,
-  // createProPublicaRateLimiter, // ARCHIVED
-  withRateLimit,
-  ApiUsageMonitor,
-  apiUsageMonitor,
-  GOOGLE_CIVIC_RATE_LIMITS,
-  // PROPUBLICA_RATE_LIMITS, // ARCHIVED
-  type RateLimitConfig,
-  type RateLimitStatus,
-  type ApiUsageMetrics
-} from './rate-limiting';
+// Rate Limiting exports removed - files don't exist
+// export {
+//   RateLimiter,
+//   createGoogleCivicRateLimiter,
+//   // createProPublicaRateLimiter, // ARCHIVED
+//   withRateLimit,
+//   ApiUsageMonitor,
+//   apiUsageMonitor,
+//   GOOGLE_CIVIC_RATE_LIMITS,
+//   // PROPUBLICA_RATE_LIMITS, // ARCHIVED
+//   type RateLimitConfig,
+//   type RateLimitStatus,
+//   type ApiUsageMetrics
+// } from './rate-limiting';
 
 // Caching
 export {
@@ -61,12 +62,12 @@ export {
   type CacheMetrics
 } from './caching';
 
-// Monitoring
-export {
-  IntegrationMonitor,
-  integrationMonitor,
-  type IntegrationMetrics,
-  type AlertRule,
-  type Alert,
-  type HealthCheck
-} from './monitoring';
+// Monitoring exports removed - files don't exist
+// export {
+//   IntegrationMonitor,
+//   integrationMonitor,
+//   type IntegrationMetrics,
+//   type AlertRule,
+//   type Alert,
+//   type HealthCheck
+// } from './monitoring';

@@ -317,8 +317,8 @@ describe('Sophisticated Analytics Platform', () => {
       ];
 
       expect(funnelSteps.length).toBe(4);
-      expect(funnelSteps[0].conversion_rate).toBe(1.0);
-      expect(funnelSteps[3].conversion_rate).toBe(0.25);
+      expect(funnelSteps[0]?.conversion_rate).toBe(1.0);
+      expect(funnelSteps[3]?.conversion_rate).toBe(0.25);
       
       console.log('✅ Conversion funnel analysis working');
     });

@@ -136,6 +136,8 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
       '/register': 5,
       '/login': 10,
       '/api/admin': 20,
+      '/api/civics': 50, // Civics APIs - more permissive for public data
+      '/api/representatives': 50, // Representative APIs
     },
     e2eBypassHeader: 'x-e2e-bypass'
   },

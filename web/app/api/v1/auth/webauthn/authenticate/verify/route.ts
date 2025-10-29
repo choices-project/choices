@@ -82,11 +82,11 @@ export async function POST(req: NextRequest) {
     const credentialData = {
       id: cred?.id || '',
       userId: cred?.user_id || '',
-      rpId: cred?.rp_id || '',
+      rpId: cred?.rp_id || rpID, // Use schema field or fallback to request rpID
       credentialId: cred?.credential_id || '',
       publicKey: cred?.public_key || '',
       counter: Number(cred?.counter || 0),
-      userHandle: cred?.user_handle || '',
+      userHandle: cred?.user_handle || cred?.user_id || '', // Use schema field or fallback
       createdAt: new Date(cred?.created_at || Date.now()),
       lastUsedAt: cred?.last_used_at ? new Date(cred.last_used_at) : undefined
     };
@@ -114,13 +114,15 @@ export async function POST(req: NextRequest) {
     // Update counter + last_used
     await supabase.from('webauthn_credentials')
       .update({ 
-        counter: newCounter, 
-        last_used_at: new Date().toISOString() 
+        counter: newCounter,
+        last_used_at: new Date().toISOString()
       })
       .eq('id', cred?.id || '');
 
     await supabase.from('webauthn_challenges')
-      .update({ used_at: new Date().toISOString() })
+      .update({ 
+        used_at: new Date().toISOString()
+      })
       .eq('id', chal.id);
 
     return NextResponse.json({ ok: true });

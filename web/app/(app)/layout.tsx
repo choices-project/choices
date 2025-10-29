@@ -64,7 +64,7 @@ export default function AppLayout({
           {/* PWA Background - Only shows offline indicator when needed */}
           <PWABackground />
           
-          {/* Enhanced Feedback Widget - Only render on client side */}
+          {/* Enhanced Feedback Widget - Fixed infinite loop issue */}
           <EnhancedFeedbackWidget />
         </UserStoreProvider>
       </QueryClientProvider>

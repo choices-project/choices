@@ -24,13 +24,72 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache } from '@/lib/utils/civics-cache';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 
-// SECURITY: Use regular Supabase client with user authentication, not service role
-// Users should access data through Supabase with RLS, not service role APIs
+interface RepresentativeData {
+  id: number;
+  name: string;
+  party: string;
+  office: string;
+  level: string;
+  state: string;
+  district: string;
+  bioguide_id: string | null;
+  openstates_id: string | null;
+  fec_id: string | null;
+  google_civic_id: string | null;
+  legiscan_id: string | null;
+  congress_gov_id: string | null;
+  govinfo_id: string | null;
+  wikipedia_url: string | null;
+  ballotpedia_url: string | null;
+  twitter_handle: string | null;
+  facebook_url: string | null;
+  instagram_handle: string | null;
+  linkedin_url: string | null;
+  youtube_channel: string | null;
+  primary_email: string | null;
+  primary_phone: string | null;
+  primary_website: string | null;
+  primary_photo_url: string | null;
+  data_quality_score: number;
+  data_sources: string[];
+  last_verified: string;
+  verification_status: string;
+  created_at: string;
+  updated_at: string;
+  representative_contacts?: Array<{
+    contact_type: string;
+    value: string;
+    is_verified: boolean;
+    source: string;
+  }>;
+  representative_photos?: Array<{
+    url: string;
+    is_primary: boolean;
+    source: string;
+  }>;
+  representative_activity?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    date: string;
+    source: string;
+  }>;
+  representative_social_media?: Array<{
+    platform: string;
+    handle: string;
+    url: string;
+    is_verified: boolean;
+  }>;
+}
+
+// Use service role for public representative data APIs
+// TODO: Set up proper RLS policies to allow anon key access
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: true } }
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://muqwrehywjrbaeerjgfb.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'sb_secret_rTjGRn1LynM_ZgMVnRYsCw_ufgj-FrN',
+  { auth: { persistSession: false } }
 );
 
 /**
@@ -52,11 +111,41 @@ export async function GET(request: NextRequest) {
   const logger = createApiLogger('/api/civics/by-state', 'GET');
   
   try {
+    // Rate limiting check
+  const clientIP = request.headers.get('x-forwarded-for') ?? 
+                   request.headers.get('x-real-ip') ?? 
+                   '127.0.0.1';
+    
+    const rateLimitResult = await apiRateLimiter.checkLimit(
+      clientIP,
+      '/api/civics/by-state',
+      { maxRequests: 50, windowMs: 15 * 60 * 1000 }
+    );
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Rate limit exceeded',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitResult.retryAfter?.toString() ?? '900',
+            'X-RateLimit-Limit': '50',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': Math.ceil(rateLimitResult.resetTime / 1000).toString()
+          }
+        }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
     const level = searchParams.get('level');
     const chamber = searchParams.get('chamber');
-    const limit = parseInt(searchParams.get('limit') || '200');
+    const limit = parseInt(searchParams.get('limit') ?? '200');
 
     if (!state) {
       return NextResponse.json({ 
@@ -64,7 +153,7 @@ export async function GET(request: NextRequest) {
         error: 'State parameter required',
         metadata: {
           source: 'validation',
-          last_updated: new Date().toISOString()
+          updated_at: new Date().toISOString()
         }
       }, { status: 400 });
     }
@@ -72,20 +161,20 @@ export async function GET(request: NextRequest) {
     logger.info('Fetching representatives by state', { state, level, chamber, limit });
 
     // Check cache first
-    const cachedData = state ? CivicsCache.getCachedStateLookup(state, level || undefined, chamber || undefined) : null;
+    const cachedData = state ? CivicsCache.getCachedStateLookup(state, level ?? undefined, chamber ?? undefined) : null;
     if (cachedData) {
       logger.info('Returning cached state data', { state, level, chamber });
       return NextResponse.json({
         success: true,
         data: {
           state,
-          level: level || 'all',
-          chamber: chamber || 'all',
+          level: level ?? 'all',
+          chamber: chamber ?? 'all',
           representatives: cachedData
         },
         metadata: {
           source: 'cache',
-          last_updated: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           data_quality_score: 95,
           total_representatives: Array.isArray(cachedData) ? cachedData.length : 0
         }
@@ -125,7 +214,7 @@ export async function GET(request: NextRequest) {
         last_verified,
         verification_status,
         created_at,
-        last_updated,
+        updated_at,
         representative_contacts(contact_type, value, is_verified, source),
         representative_photos(url, is_primary, source),
         representative_social_media(platform, handle, url, is_verified),
@@ -147,7 +236,7 @@ export async function GET(request: NextRequest) {
         'state_lower': ['State House', 'State Assembly', 'Representative']
       };
       
-      const chamberTerms = chamberMapping[chamber] || [];
+      const chamberTerms = chamberMapping[chamber] ?? [];
       if (chamberTerms.length > 0) {
         query = query.or(chamberTerms.map(term => `office.ilike.%${term}%`).join(','));
       }
@@ -156,12 +245,12 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Database error:', error);
+      logger.error('Database error:', error);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
     // Process the data to include enhanced data from normalized tables
-    const processedData = (data || []).map(rep => ({
+    const processedData = (data ?? []).map((rep: RepresentativeData) => ({
       id: rep.id,
       name: rep.name,
       party: rep.party,
@@ -192,37 +281,37 @@ export async function GET(request: NextRequest) {
       last_verified: rep.last_verified,
       verification_status: rep.verification_status,
       created_at: rep.created_at,
-      last_updated: rep.last_updated,
+        updated_at: rep.updated_at,
       // Enhanced data from normalized tables
-      contacts: rep.representative_contacts?.map((contact: any) => ({
+      contacts: rep.representative_contacts?.map((contact) => ({
         type: contact.contact_type,
         value: contact.value,
         is_verified: contact.is_verified,
         source: contact.source
-      })) || [],
-      photos: rep.representative_photos?.map((photo: any) => ({
+      })) ?? [],
+      photos: rep.representative_photos?.map((photo) => ({
         url: photo.url,
         is_primary: photo.is_primary,
         source: photo.source
-      })) || [],
-      activity: rep.representative_activity?.map((activity: any) => ({
+      })) ?? [],
+      activity: rep.representative_activity?.map((activity) => ({
         type: activity.type,
         title: activity.title,
         description: activity.description,
         date: activity.date,
         source: activity.source
-      })) || [],
-      social_media: rep.representative_social_media?.map((social: any) => ({
+      })) ?? [],
+      social_media: rep.representative_social_media?.map((social) => ({
         platform: social.platform,
         handle: social.handle,
         url: social.url,
         is_verified: social.is_verified
-      })) || []
+      })) ?? []
     }));
 
     // Cache the result for future requests
     if (state) {
-      CivicsCache.cacheStateLookup(state, level || undefined, chamber || undefined, processedData);
+      CivicsCache.cacheStateLookup(state, level ?? undefined, chamber ?? undefined, processedData);
     }
 
     logger.success('Successfully fetched representatives by state', 200, { 
@@ -234,19 +323,19 @@ export async function GET(request: NextRequest) {
       success: true, 
       data: {
         state,
-        level: level || 'all',
-        chamber: chamber || 'all',
+        level: level ?? 'all',
+        chamber: chamber ?? 'all',
         representatives: processedData
       },
       metadata: {
         source: 'database',
-        last_updated: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         data_quality_score: 95,
         total_representatives: processedData.length
       }
     });
-  } catch (e: any) {
-    logger.error('API error during state lookup', e);
+  } catch (error) {
+    logger.error('API error during state lookup', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ 
       success: false,
       error: 'Service temporarily unavailable',

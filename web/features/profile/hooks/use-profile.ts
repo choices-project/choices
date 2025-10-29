@@ -20,13 +20,13 @@ import {
   exportUserData,
   deleteProfile
 } from '../lib/profile-service';
-import type { UserProfile, ProfileUpdateData, ExportOptions } from '../types';
+import type { UserProfile, ProfileUpdateData, ExportOptions, ProfileActionResult } from '../index';
 import type { 
   UseProfileReturn, 
   UseProfileUpdateReturn, 
   UseProfileAvatarReturn, 
   UseProfileExportReturn 
-} from '../types';
+} from '../index';
 
 // ============================================================================
 // QUERY KEYS
@@ -60,9 +60,10 @@ export function useProfile(): UseProfileReturn {
   return {
     profile: query.data?.data as UserProfile || null,
     isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
-    isStale: query.isStale,
+    error: query.error?.message || null,
+    refetch: async () => {
+      await query.refetch();
+    },
   };
 }
 
@@ -111,12 +112,12 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
   });
 
   return {
-    updateProfile: async (updates: ProfileUpdateData) => {
-      await mutation.mutateAsync(updates);
+    updateProfile: async (updates: ProfileUpdateData): Promise<ProfileActionResult> => {
+      const result = await mutation.mutateAsync(updates);
+      return result as ProfileActionResult;
     },
     isUpdating: mutation.isPending,
-    error: mutation.error,
-    isSuccess: mutation.isSuccess,
+    error: mutation.error?.message || null,
   };
 }
 
@@ -139,16 +140,8 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
     uploadAvatar: async (file: File) => {
       return await mutation.mutateAsync(file);
     },
-    removeAvatar: async () => {
-      // Implement avatar removal logic
-      const result = await updateProfileAvatar(new File([], 'remove', { type: 'image/png' }));
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: profileQueryKeys.current() });
-      }
-      return;
-    },
     isUploading: mutation.isPending,
-    error: mutation.error,
+    error: mutation.error?.message || null,
   };
 }
 
@@ -189,12 +182,11 @@ export function useProfileExport(): UseProfileExportReturn {
   });
 
   return {
-    exportData: async (options?: ExportOptions) => {
+    exportProfile: async (options?: ExportOptions) => {
       return await mutation.mutateAsync(options);
     },
     isExporting: mutation.isPending,
-    error: mutation.error,
-    isSuccess: mutation.isSuccess,
+    error: mutation.error?.message || null,
   };
 }
 
@@ -328,7 +320,7 @@ export function useProfileDisplay() {
   const displayName = profile.display_name || profile.username || profile.email?.split('@')[0] || 'User';
   const initials = displayName
     .split(' ')
-    .map(word => word.charAt(0))
+    .map((word: string) => word.charAt(0))
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -338,7 +330,7 @@ export function useProfileDisplay() {
     'T1': 'Verified User',
     'T2': 'Trusted User',
     'T3': 'VIP User',
-  }[profile.trust_tier] || 'Unknown';
+  }[profile.trust_tier || 'T0'] || 'Unknown';
 
   return {
     displayName,

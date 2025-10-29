@@ -13,19 +13,5 @@ export {
   type OpenStatesVote as OpenStatesClientVote
 } from './client';
 
-// Export transformer types with specific names
-export {
-  transformOpenStatesLegislator,
-  transformOpenStatesBill,
-  transformOpenStatesVote,
-  transformToCandidateCard
-} from './transformers';
 // Re-export error classes with explicit names to avoid conflicts
-export {
-  OpenStatesApiError as OpenStatesClientError,
-  OpenStatesRateLimitError,
-  OpenStatesNotFoundError,
-  OpenStatesAuthenticationError,
-  OpenStatesQuotaExceededError,
-  OpenStatesServerError
-} from './error-handling';
+// Note: Error handling classes are defined in client.ts

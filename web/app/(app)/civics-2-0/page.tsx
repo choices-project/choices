@@ -19,7 +19,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Lazy load heavy components to reduce initial bundle size
-const EnhancedCandidateCard = dynamic(() => import('@/features/civics/components/CandidateCard'), {
+const RepresentativeCard = dynamic(() => import('@/components/representative/RepresentativeCard').then(mod => ({ default: mod.RepresentativeCard })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>,
   ssr: false
 });
@@ -30,6 +30,7 @@ const UnifiedFeed = dynamic(() => import('@/features/feeds/components/UnifiedFee
 });
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
+import type { Representative } from '@/types/representative';
 import {
   useAppStore
 } from '@/lib/stores';
@@ -403,19 +404,44 @@ export default function Civics2Page() {
                         ? 'grid-cols-1 max-w-lg mx-auto' 
                         : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
               }`}>
-                {filteredRepresentatives.map((representative) => (
-                    <EnhancedCandidateCard
+                {filteredRepresentatives.map((representative) => {
+                  // Transform SuperiorRepresentativeData to Representative
+                  const transformedRep: Representative = {
+                    id: parseInt(representative.id) || 0,
+                    name: representative.name,
+                    party: representative.party,
+                    office: representative.office,
+                    level: representative.level,
+                    state: representative.state,
+                    district: representative.district,
+                    primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value,
+                    primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value,
+                    primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value,
+                    twitter_handle: representative.twitter,
+                    facebook_url: representative.facebook,
+                    primary_photo_url: representative.photoUrl || representative.photo,
+                    term_start_date: representative.termStart,
+                    term_end_date: representative.termEnd,
+                    next_election_date: representative.nextElection,
+                    data_quality_score: representative.dataQualityScore || 0,
+                    verification_status: representative.verificationStatus === 'verified' ? 'verified' : 
+                                        representative.verificationStatus === 'pending' ? 'pending' : 'failed',
+                    data_sources: representative.dataSource || [],
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    last_verified: representative.lastVerified || new Date().toISOString()
+                  };
+                  
+                  return (
+                    <RepresentativeCard
                       key={representative.id}
-                      representative={representative}
-                      onLike={handleLike}
-                      onFollow={handleFollow}
-                      onContact={handleContact}
-                      onShare={() => handleShare(representative)}
-                      isLiked={likedRepresentatives.has(representative.id || '')}
-                      isFollowing={followedRepresentatives.has(representative.id || '')}
+                      representative={transformedRep}
+                      onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
+                      onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
                       className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
                     />
-                ))}
+                  );
+                })}
               </div>
                 </div>
               </div>

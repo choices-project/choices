@@ -10,6 +10,35 @@
 
 import { logger } from '@/lib/utils/logger'
 
+// Redis client types
+interface RedisClientInterface {
+  get(key: string): Promise<string | null>
+  set(key: string, value: string, options?: { ex?: number }): Promise<string>
+  del(key: string): Promise<number>
+  exists(key: string): Promise<number>
+  mget(keys: string[]): Promise<(string | null)[]>
+  keys(pattern: string): Promise<string[]>
+  incr(key: string): Promise<number>
+  ttl(key: string): Promise<number>
+  lpush(key: string, value: string): Promise<number>
+  lrange(key: string, start: number, stop: number): Promise<string[]>
+  expire(key: string, seconds: number): Promise<number>
+  flushAll(): Promise<string>
+  quit(): Promise<string>
+  connect(): Promise<void>
+  on(event: string, callback: (...args: unknown[]) => void): void
+  configSet(key: string, value: string): Promise<string>
+  multi(): {
+    set(key: string, value: string): unknown
+    sAdd(key: string, member: string): unknown
+    exec(): Promise<unknown[]>
+  }
+  sMembers(key: string): Promise<string[]>
+  sRem(key: string, member: string): Promise<number>
+  sAdd(key: string, member: string): Promise<number>
+  info(section?: string): Promise<string>
+}
+
 // Redis client configuration interface
 export interface RedisConfig {
   host: string
@@ -30,13 +59,13 @@ export interface RedisConfig {
 }
 
 // Cache entry interface
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   data: T
   expiresAt: number
   createdAt: number
   hitCount: number
   tags: string[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Cache statistics interface
@@ -65,11 +94,11 @@ export interface InvalidationOptions {
  * Manages Redis connections, provides caching operations, and monitors performance.
  */
 export class RedisClient {
-  private client: any = null
+  private client: RedisClientInterface | null = null
   private config: RedisConfig
   private isConnected = false
   private connectionAttempts = 0
-  private maxConnectionAttempts = 5
+  private readonly maxConnectionAttempts = 5
   private stats: CacheStats = {
     hits: 0,
     misses: 0,
@@ -109,7 +138,7 @@ export class RedisClient {
         // Use Upstash REST API
         const { Redis } = await import('@upstash/redis')
         
-        this.client = Redis.fromEnv()
+        this.client = Redis.fromEnv() as unknown as RedisClientInterface
         this.isConnected = true
         
         logger.info('Upstash Redis client connected via REST API', { 
@@ -131,7 +160,7 @@ export class RedisClient {
         },
         password: this.config.password,
         database: this.config.db
-      })
+      }) as unknown as RedisClientInterface
 
       // Set up event listeners
       this.client.on('connect', () => {
@@ -143,7 +172,8 @@ export class RedisClient {
         })
       })
 
-      this.client.on('error', (error: Error) => {
+      this.client.on('error', (...args: unknown[]) => {
+        const error = args[0] as Error
         this.isConnected = false
         this.stats.lastError = error.message
         logger.error('Redis client error', error, { 
@@ -180,6 +210,10 @@ export class RedisClient {
    * Configure Redis settings for optimal performance
    */
   private async configureRedis(): Promise<void> {
+    if (!this.client) {
+      throw new Error('Redis client not initialized')
+    }
+    
     try {
       // Set memory policy
       await this.client.configSet('maxmemory-policy', this.config.maxMemoryPolicy!)
@@ -202,8 +236,8 @@ export class RedisClient {
   /**
    * Get value from cache
    */
-  async get<T = any>(key: string): Promise<T | null> {
-    if (!this.isConnected) {
+  async get<T = unknown>(key: string): Promise<T | null> {
+    if (!this.isConnected || !this.client) {
       this.stats.misses++
       return null
     }
@@ -219,7 +253,7 @@ export class RedisClient {
       // Handle both JSON strings and objects from Upstash Redis
       let entry: CacheEntry<T>;
       if (typeof value === 'string') {
-        entry = JSON.parse(value);
+        entry = JSON.parse(value) as CacheEntry<T>;
       } else {
         entry = value as CacheEntry<T>;
       }
@@ -249,14 +283,14 @@ export class RedisClient {
   /**
    * Set value in cache
    */
-  async set<T = any>(
+  async set<T = unknown>(
     key: string, 
     value: T, 
     ttlSeconds = 300,
     tags: string[] = [],
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<boolean> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return false
     }
 
@@ -288,7 +322,7 @@ export class RedisClient {
    * Delete value from cache
    */
   async del(key: string): Promise<boolean> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return false
     }
 
@@ -309,7 +343,7 @@ export class RedisClient {
    * Check if key exists in cache
    */
   async exists(key: string): Promise<boolean> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return false
     }
 
@@ -325,13 +359,13 @@ export class RedisClient {
   /**
    * Get multiple values from cache
    */
-  async mget<T = any>(keys: string[]): Promise<Array<T | null>> {
-    if (!this.isConnected || keys.length === 0) {
+  async mget<T = unknown>(keys: string[]): Promise<Array<T | null>> {
+    if (!this.isConnected || !this.client || keys.length === 0) {
       return keys.map(() => null)
     }
 
     try {
-      const values = await this.client.mGet(keys)
+      const values = await this.client.mget(keys)
       
       return values.map((value: string | null, index: number) => {
         if (value === null) {
@@ -340,13 +374,13 @@ export class RedisClient {
         }
 
         try {
-          const entry: CacheEntry<T> = JSON.parse(value)
+          const entry: CacheEntry<T> = JSON.parse(value) as CacheEntry<T>
           
           // Check if entry has expired
           if (entry.expiresAt < Date.now()) {
             const key = keys[index]
             if (key) {
-              this.del(key)
+              void this.del(key)
             }
             this.stats.misses++
             return null
@@ -368,10 +402,10 @@ export class RedisClient {
   /**
    * Set multiple values in cache
    */
-  async mset<T = any>(
+  async mset<T = unknown>(
     entries: Array<{ key: string; value: T; ttlSeconds?: number; tags?: string[] }>
   ): Promise<boolean> {
-    if (!this.isConnected || entries.length === 0) {
+    if (!this.isConnected || !this.client || entries.length === 0) {
       return false
     }
 
@@ -387,7 +421,7 @@ export class RedisClient {
           tags
         }
 
-        pipeline.set(key, JSON.stringify(entry), { ex: ttlSeconds })
+        pipeline.set(key, JSON.stringify(entry))
         
         // Store tag mappings
         if (tags.length > 0) {
@@ -409,7 +443,7 @@ export class RedisClient {
    * Invalidate cache by pattern
    */
   async invalidateByPattern(pattern: string): Promise<number> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return 0
     }
 
@@ -420,7 +454,10 @@ export class RedisClient {
         return 0
       }
 
-      const result = await this.client.del(keys)
+      let result = 0
+      for (const key of keys) {
+        result += await this.client.del(key)
+      }
       
       // Clean up tag mappings for deleted keys
       for (const key of keys) {
@@ -439,7 +476,7 @@ export class RedisClient {
    * Invalidate cache by tags
    */
   async invalidateByTags(tags: string[]): Promise<number> {
-    if (!this.isConnected || tags.length === 0) {
+    if (!this.isConnected || !this.client || tags.length === 0) {
       return 0
     }
 
@@ -450,7 +487,10 @@ export class RedisClient {
         const keys = await this.client.sMembers(`tag:${tag}`)
         
         if (keys.length > 0) {
-          const deleted = await this.client.del(keys)
+          let deleted = 0
+          for (const key of keys) {
+            deleted += await this.client.del(key)
+          }
           totalDeleted += deleted
           
           // Clean up tag mappings
@@ -475,6 +515,8 @@ export class RedisClient {
    * Store tag mappings for invalidation
    */
   private async storeTagMappings(key: string, tags: string[]): Promise<void> {
+    if (!this.client) return
+    
     try {
       for (const tag of tags) {
         await this.client.sAdd(`tag:${tag}`, key)
@@ -488,6 +530,8 @@ export class RedisClient {
    * Clean up tag mappings
    */
   private async cleanupTagMappings(key: string): Promise<void> {
+    if (!this.client) return
+    
     try {
       // Get all tags for this key
       const tagKeys = await this.client.keys(`tag:*`)
@@ -512,7 +556,7 @@ export class RedisClient {
    * Get cache statistics
    */
   async getStats(): Promise<CacheStats> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return this.stats
     }
 
@@ -523,20 +567,20 @@ export class RedisClient {
       const server = await this.client.info('server')
       
       // Parse memory usage
-      const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/)
-      this.stats.memoryUsage = memoryMatch ? memoryMatch[1].trim() : '0B'
+      const memoryMatch = info?.match(/used_memory_human:([^\r\n]+)/)
+      this.stats.memoryUsage = memoryMatch?.[1]?.trim() ?? '0B'
       
       // Parse connected clients
-      const clientsMatch = clients.match(/connected_clients:(\d+)/)
-      this.stats.connectedClients = clientsMatch ? parseInt(clientsMatch[1]) : 0
+      const clientsMatch = clients?.match(/connected_clients:(\d+)/)
+      this.stats.connectedClients = clientsMatch?.[1] ? parseInt(clientsMatch[1]) : 0
       
       // Parse uptime
-      const uptimeMatch = server.match(/uptime_in_seconds:(\d+)/)
-      this.stats.uptime = uptimeMatch ? parseInt(uptimeMatch[1]) : 0
+      const uptimeMatch = server?.match(/uptime_in_seconds:(\d+)/)
+      this.stats.uptime = uptimeMatch?.[1] ? parseInt(uptimeMatch[1]) : 0
       
       // Count total keys
-      const dbMatch = keyspace.match(/db\d+:keys=(\d+)/)
-      this.stats.totalKeys = dbMatch ? parseInt(dbMatch[1]) : 0
+      const dbMatch = keyspace?.match(/db\d+:keys=(\d+)/)
+      this.stats.totalKeys = dbMatch?.[1] ? parseInt(dbMatch[1]) : 0
       
       this.updateHitRate()
       
@@ -551,7 +595,7 @@ export class RedisClient {
    * Flush all cache data
    */
   async flushAll(): Promise<boolean> {
-    if (!this.isConnected) {
+    if (!this.isConnected || !this.client) {
       return false
     }
 
@@ -578,6 +622,7 @@ export class RedisClient {
       try {
         await this.client.quit()
         this.isConnected = false
+        this.client = null
         logger.info('Redis client disconnected')
       } catch (error) {
         logger.error('Error disconnecting Redis client', error instanceof Error ? error : new Error('Unknown error'))
@@ -593,6 +638,67 @@ export class RedisClient {
   }
 
   /**
+   * Increment a key by 1
+   */
+  async incr(key: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.incr(key)
+  }
+
+  /**
+   * Get TTL of a key
+   */
+  async ttl(key: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.ttl(key)
+  }
+
+  /**
+   * Push to list
+   */
+  async lpush(key: string, value: string): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.lpush(key, value)
+  }
+
+  /**
+   * Set expiration
+   */
+  async expire(key: string, seconds: number): Promise<number> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.expire(key, seconds)
+  }
+
+  /**
+   * Get keys by pattern
+   */
+  async keys(pattern: string): Promise<string[]> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.keys(pattern)
+  }
+
+  /**
+   * Get range from list
+   */
+  async lrange(key: string, start: number, stop: number): Promise<string[]> {
+    if (!this.isConnected || !this.client) {
+      throw new Error('Redis client not connected')
+    }
+    return await this.client.lrange(key, start, stop)
+  }
+
+
+  /**
    * Get connection status
    */
   getConnectionStatus(): { connected: boolean; host: string; port: number } {
@@ -606,9 +712,9 @@ export class RedisClient {
 
 // Default Redis configuration
 const defaultRedisConfig: RedisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  db: parseInt(process.env.REDIS_DB || '0'),
+  host: process.env.REDIS_HOST ?? 'localhost',
+  port: parseInt(process.env.REDIS_PORT ?? '6379'),
+  db: parseInt(process.env.REDIS_DB ?? '0'),
   maxMemoryPolicy: 'allkeys-lru',
   maxMemory: '256mb',
   password: process.env.REDIS_PASSWORD

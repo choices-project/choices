@@ -120,7 +120,7 @@ export default function HashtagTrending({
         sorted.sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0));
         break;
       case 'usage':
-        sorted.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+        sorted.sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0));
         break;
       case 'growth':
         sorted.sort((a, b) => (b.growth_rate || 0) - (a.growth_rate || 0));
@@ -269,7 +269,7 @@ export default function HashtagTrending({
                   {/* Rank */}
                   <div className="flex items-center space-x-2">
                     <span className="text-lg font-bold text-gray-900">#{index + 1}</span>
-                    {getTrendIcon(index + 1, trending.current_position)}
+                    {getTrendIcon(index + 1, index + 1)}
                   </div>
                   
                   {/* Hashtag Info */}
@@ -302,7 +302,7 @@ export default function HashtagTrending({
                     <div className="text-center">
                       <div className="text-gray-500">Usage (24h)</div>
                       <div className="font-semibold text-gray-900">
-                        {formatUsageCount(trending.usage_count)}
+                        {formatUsageCount(trending.trend_score || 0)}
                       </div>
                     </div>
                     
@@ -323,7 +323,7 @@ export default function HashtagTrending({
                     <div className="text-center">
                       <div className="text-gray-500">Peak Position</div>
                       <div className="font-semibold text-gray-900">
-                        #{trending.id.slice(-3)}
+                        #{trending.hashtag.id.slice(-3)}
                       </div>
                     </div>
                   </div>
