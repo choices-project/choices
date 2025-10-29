@@ -41,9 +41,33 @@ export class CanonicalIdService {
         if (primaryData.bioguide_id) {
           return `person_${primaryData.bioguide_id}`;
         }
+        
+        // Use OpenStates ID if available for unique identification
+        if (primaryData.openstates_id) {
+          return `person_${primaryData.openstates_id}`;
+        }
+        
+        // Use FEC ID if available
+        if (primaryData.fec_id) {
+          return `person_${primaryData.fec_id}`;
+        }
+        
+        // Use Google Civic ID if available
+        if (primaryData.google_civic_id) {
+          return `person_${primaryData.google_civic_id}`;
+        }
+        
+        // Generate from available data with fallback to unique ID
         const nameSlug = primaryData.name?.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'unknown';
         const state = primaryData.state || 'unknown';
         const district = primaryData.district || 'unknown';
+        
+        // If name is "unknown" or similar, use a unique identifier
+        if (nameSlug === 'unknown' || nameSlug === 'unknown_name') {
+          const uniqueId = primaryData.id || Math.random().toString(36).substr(2, 9);
+          return `person_${uniqueId}_${state}_${district}`;
+        }
+        
         return `person_${nameSlug}_${state}_${district}`;
 
       case 'committee':

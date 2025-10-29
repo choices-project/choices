@@ -294,6 +294,34 @@ export class SuperiorDataPipeline {
   }
 
   /**
+   * Convert state name to 2-character state code
+   */
+  private convertStateToCode(stateName: string): string {
+    if (!stateName) return '';
+    
+    // If already a 2-character code, return as is
+    if (stateName.length === 2) return stateName.toUpperCase();
+    
+    const stateCodeMap: Record<string, string> = {
+      'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+      'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+      'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+      'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+      'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+      'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+      'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+      'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+      'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+      'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+      'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+      'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+      'Wisconsin': 'WI', 'Wyoming': 'WY'
+    };
+    
+    return stateCodeMap[stateName] || stateName.substring(0, 2).toUpperCase();
+  }
+
+  /**
    * Record API failure and implement exponential backoff
    */
   private recordApiFailure(apiName: string, statusCode?: number): void {
@@ -383,8 +411,12 @@ export class SuperiorDataPipeline {
       
       return {
         totalProcessed: representatives.length,
-        successful: results.success ? 1 : 0,
-        failed: results.success ? 0 : 1,
+        successful: results.results.successful,
+        failed: results.results.failed,
+        qualityMetrics: {
+          averageScore: results.results.dataQuality.averageScore,
+          highQualityCount: results.results.dataQuality.highQuality
+        },
         processingTime: Date.now() - startTime
       };
     } catch (error) {
@@ -434,8 +466,12 @@ export class SuperiorDataPipeline {
       
       return {
         totalProcessed: representatives.length,
-        successful: results.success ? 1 : 0,
-        failed: results.success ? 0 : 1,
+        successful: results.results.successful,
+        failed: results.results.failed,
+        qualityMetrics: {
+          averageScore: results.results.dataQuality.averageScore,
+          highQualityCount: results.results.dataQuality.highQuality
+        },
         processingTime: Date.now() - startTime
       };
     } catch (error) {
@@ -691,92 +727,117 @@ export class SuperiorDataPipeline {
   }
   
   /**
-   * Collect primary data from live APIs
+   * Collect primary data from live APIs with SOURCE-SPECIFIC logic
    */
   private async collectPrimaryData(rep: any): Promise<any> {
-    // Collect primary data from enabled sources
+    // Enhanced data enrichment with SOURCE-SPECIFIC API calls
+    const primaryData: any = {
+      // Start with the base representative data
+      ...rep,
+      // Initialize source-specific data containers
+      congressGov: null,
+      googleCivic: null,
+      fec: null,
+      openStatesApi: null,
+      wikipedia: null
+    };
+
+    // Determine representative level for API source selection
+    const isFederal = rep.level === 'federal';
+    const isState = rep.level === 'state';
     
-    const primaryData: any = {};
-    
-    // Congress.gov data
-    if (this.config.enableCongressGov && !this.shouldSkipApi('congressGov')) {
-      try {
-        primaryData.congressGov = await this.getCongressGovData(rep);
-        if (primaryData.congressGov) {
-          this.recordApiSuccess('congressGov');
+    logger.info(`🔍 Enriching ${rep.level} representative: ${rep.name}`, {
+      level: rep.level,
+      state: rep.state,
+      hasBioguideId: !!rep.bioguide_id,
+      hasOpenStatesId: !!rep.openstates_id
+    });
+
+    // FEDERAL REPRESENTATIVES: Use federal-specific APIs
+    if (isFederal) {
+      logger.info(`🏛️ Processing FEDERAL representative: ${rep.name}`);
+      
+      // Congress.gov data (PRIMARY SOURCE for federal representatives)
+      if (this.config.enableCongressGov && !this.shouldSkipApi('congressGov')) {
+        try {
+          logger.info(`🔍 DEBUG: Getting Congress.gov data for federal rep: ${rep.name}`);
+          primaryData.congressGov = await this.getCongressGovData(rep);
+          if (primaryData.congressGov) {
+            this.recordApiSuccess('congressGov');
+            logger.info(`✅ Congress.gov data collected for: ${rep.name}`);
+          }
+        } catch (error: any) {
+          devLog('Congress.gov data collection failed:', { error });
+          this.recordApiFailure('congressGov', error.status);
         }
-      } catch (error: any) {
-        devLog('Congress.gov data collection failed:', { error });
-        this.recordApiFailure('congressGov', error.status);
       }
-    } else if (this.shouldSkipApi('congressGov')) {
-      // Congress.gov API skipped due to failures
+      
+      // FEC data (for federal representatives)
+      if (this.config.enableFEC && !this.shouldSkipApi('fec')) {
+        try {
+          logger.info(`🔍 DEBUG: Getting FEC data for federal rep: ${rep.name}`);
+          primaryData.fec = await this.getFECData(rep);
+          if (primaryData.fec) {
+            this.recordApiSuccess('fec');
+            logger.info(`✅ FEC data collected for: ${rep.name}`);
+          }
+        } catch (error: any) {
+          devLog('FEC data collection failed:', { error });
+          this.recordApiFailure('fec', error.status);
+        }
+      }
+      
+      // Google Civic data (for federal representatives - elections info)
+      if (this.config.enableGoogleCivic && !this.shouldSkipApi('googleCivic')) {
+        try {
+          logger.info(`🔍 DEBUG: Getting Google Civic data for federal rep: ${rep.name}`);
+          primaryData.googleCivic = await this.getGoogleCivicData(rep);
+          if (primaryData.googleCivic) {
+            this.recordApiSuccess('googleCivic');
+            logger.info(`✅ Google Civic data collected for: ${rep.name}`);
+          }
+        } catch (error: any) {
+          devLog('Google Civic data collection failed:', { error });
+          this.recordApiFailure('googleCivic', error.status);
+        }
+      }
+      
+      // Wikipedia data (for federal representatives)
+      if (this.config.enableWikipedia && !this.shouldSkipApi('wikipedia')) {
+        try {
+          logger.info(`🔍 DEBUG: Getting Wikipedia data for federal rep: ${rep.name}`);
+          primaryData.wikipedia = await this.getWikipediaData(rep);
+          if (primaryData.wikipedia) {
+            this.recordApiSuccess('wikipedia');
+            logger.info(`✅ Wikipedia data collected for: ${rep.name}`);
+          }
+        } catch (error: any) {
+          devLog('Wikipedia data collection failed:', { error });
+          this.recordApiFailure('wikipedia', error.status);
+        }
+      }
+      
+      // SKIP OpenStates API for federal representatives (rate limit conservation)
+      logger.info(`⏭️ SKIPPING OpenStates API for federal representative: ${rep.name} (rate limit conservation)`);
+      
+    } 
+    // STATE REPRESENTATIVES: Use state-specific APIs
+    else if (isState) {
+      logger.info(`🏛️ Processing STATE representative: ${rep.name}`);
+      
+           // SKIP OpenStates API for state representatives (we already have rich data from OpenStates People database)
+           logger.info(`⏭️ SKIPPING OpenStates API for state representative: ${rep.name} (using OpenStates People database data instead)`);
+      
+           // SKIP Google Civic and Wikipedia for state representatives (we have rich data from OpenStates People database)
+           logger.info(`⏭️ SKIPPING Google Civic and Wikipedia for state representative: ${rep.name} (using OpenStates People database data instead)`);
+      
+      // SKIP Congress.gov and FEC for state representatives (not applicable)
+      logger.info(`⏭️ SKIPPING Congress.gov and FEC for state representative: ${rep.name} (not applicable)`);
+      
     } else {
-      // Congress.gov disabled in config
+      logger.warn(`⚠️ Unknown representative level: ${rep.level} for ${rep.name}`);
     }
-    
-    // Google Civic data (for elections, voter info, and activity data)
-    if (this.config.enableGoogleCivic && !this.shouldSkipApi('googleCivic')) {
-      try {
-        primaryData.googleCivic = await this.getGoogleCivicData(rep);
-        // Google Civic data collection completed
-        if (primaryData.googleCivic) {
-          this.recordApiSuccess('googleCivic');
-        }
-      } catch (error: any) {
-        devLog('Google Civic data collection failed:', { error });
-        this.recordApiFailure('googleCivic', error.status);
-      }
-    } else if (this.shouldSkipApi('googleCivic')) {
-      // Google Civic API skipped due to failures
-    }
-    
-    // FEC data
-    if (this.config.enableFEC && !this.shouldSkipApi('fec')) {
-      try {
-        primaryData.fec = await this.getFECData(rep);
-        // FEC data collection completed
-        if (primaryData.fec) {
-          this.recordApiSuccess('fec');
-        }
-      } catch (error: any) {
-        devLog('FEC data collection failed:', { error });
-        this.recordApiFailure('fec', error.status);
-      }
-    } else if (this.shouldSkipApi('fec')) {
-      // FEC API skipped due to failures
-    }
-    
-    // OpenStates API data
-    if (this.config.enableOpenStatesApi && !this.shouldSkipApi('openStatesApi')) {
-      try {
-        primaryData.openStatesApi = await this.getOpenStatesApiData(rep);
-        if (primaryData.openStatesApi) {
-          this.recordApiSuccess('openStatesApi');
-        }
-      } catch (error: any) {
-        devLog('OpenStates API data collection failed:', { error });
-        this.recordApiFailure('openStatesApi', error.status);
-      }
-    } else if (this.shouldSkipApi('openStatesApi')) {
-      // OpenStates API skipped due to failures
-    }
-    
-    // Wikipedia data
-    if (this.config.enableWikipedia && !this.shouldSkipApi('wikipedia')) {
-      try {
-        primaryData.wikipedia = await this.getWikipediaData(rep);
-        if (primaryData.wikipedia) {
-          this.recordApiSuccess('wikipedia');
-        }
-      } catch (error: any) {
-        devLog('Wikipedia data collection failed:', { error });
-        this.recordApiFailure('wikipedia', error.status);
-      }
-    } else if (this.shouldSkipApi('wikipedia')) {
-      // Wikipedia API skipped due to failures
-    }
-    
+
     return primaryData;
   }
   
@@ -1247,7 +1308,7 @@ export class SuperiorDataPipeline {
           party: enhancedRep.party?.substring(0, 100) || '',
           office: (enhancedRep.office || 'Representative')?.substring(0, 100),
           level: enhancedRep.level?.substring(0, 20) || 'federal',
-          state: enhancedRep.state?.substring(0, 10) || '',
+          state: this.convertStateToCode(enhancedRep.state) || '',
           district: enhancedRep.district ? String(enhancedRep.district).substring(0, 10) : null,
           bioguide_id: enhancedRep.bioguide_id?.substring(0, 20) || null,
           openstates_id: enhancedRep.openstatesId?.substring(0, 100) || null,
@@ -1271,11 +1332,13 @@ export class SuperiorDataPipeline {
           term_end_date: enhancedRep.termEndDate || null,
           next_election_date: enhancedRep.nextElectionDate || null,
           data_quality_score: Math.max(enhancedRep.dataQuality.overallConfidence || 0, 15), // Minimum 15 for federal reps
+          canonical_id: enhancedRep.canonicalId || null,
+          is_active: true,
           data_sources: enhancedRep.dataSources || ['superior-pipeline'],
           last_verified: new Date().toISOString(),
-          verification_status: 'verified',
+          verification_status: enhancedRep.verificationStatus || 'verified',
           created_at: new Date().toISOString(),
-          last_updated: new Date().toISOString()
+          updated_at: new Date().toISOString()
         };
         
         // Enhanced deduplication using canonical ID system
@@ -1404,12 +1467,116 @@ export class SuperiorDataPipeline {
         // Populate normalized tables with enhanced data
         if (repData?.id) {
           await this.populateNormalizedTables(repData.id, enhancedRep);
+          await this.populateEnhancedTables(repData.id, enhancedRep);
         }
       }
       
       devLog(`Successfully stored enhanced data`);
     } catch (error) {
       devLog('Error storing enhanced data:', { error });
+    }
+  }
+
+  /**
+   * Populate enhanced tables with sophisticated data
+   */
+  private async populateEnhancedTables(representativeId: string, enhancedRep: SuperiorRepresentativeData): Promise<void> {
+    try {
+      devLog(`Populating enhanced tables for representative ID: ${representativeId}`);
+
+      // Store detailed data quality metrics
+      if (enhancedRep.dataQuality) {
+        const { error: qualityError } = await this.supabase
+          .from('representative_data_quality')
+          .upsert({
+            representative_id: representativeId,
+            primary_source_score: enhancedRep.dataQuality.primarySourceScore || 0,
+            secondary_source_score: enhancedRep.dataQuality.secondarySourceScore || 0,
+            overall_confidence: enhancedRep.dataQuality.overallConfidence || 0,
+            last_validated: enhancedRep.dataQuality.lastValidated || new Date().toISOString(),
+            validation_method: enhancedRep.dataQuality.validationMethod || 'api-verification',
+            data_completeness: enhancedRep.dataQuality.dataCompleteness || 0,
+            source_reliability: enhancedRep.dataQuality.sourceReliability || 0,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'representative_id'
+          });
+
+        if (qualityError) {
+          devLog('Error storing data quality metrics:', { error: qualityError });
+        }
+      }
+
+      // Store campaign finance data
+      if (enhancedRep.campaignFinance) {
+        const { error: financeError } = await this.supabase
+          .from('representative_campaign_finance')
+          .upsert({
+            representative_id: representativeId,
+            total_raised: enhancedRep.campaignFinance.totalRaised || 0,
+            total_spent: enhancedRep.campaignFinance.totalSpent || 0,
+            cash_on_hand: enhancedRep.campaignFinance.cashOnHand || 0,
+            last_filing_date: enhancedRep.campaignFinance.lastFilingDate || null,
+            source: enhancedRep.campaignFinance.source || 'unknown',
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'representative_id'
+          });
+
+        if (financeError) {
+          devLog('Error storing campaign finance data:', { error: financeError });
+        }
+      }
+
+      // Store data source information
+      if (enhancedRep.dataSources && enhancedRep.dataSources.length > 0) {
+        for (const source of enhancedRep.dataSources) {
+          const { error: sourceError } = await this.supabase
+            .from('representative_data_sources')
+            .upsert({
+              representative_id: representativeId,
+              source_name: source,
+              source_type: 'live-api',
+              confidence: 'high',
+              last_updated: new Date().toISOString(),
+              validation_status: 'verified',
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'representative_id,source_name'
+            });
+
+          if (sourceError) {
+            devLog('Error storing data source:', { error: sourceError });
+          }
+        }
+      }
+
+      // Store enhanced crosswalk data
+      if (enhancedRep.crosswalkEntries && enhancedRep.crosswalkEntries.length > 0) {
+        for (const entry of enhancedRep.crosswalkEntries) {
+          const { error: crosswalkError } = await this.supabase
+            .from('representative_crosswalk_enhanced')
+            .upsert({
+              representative_id: representativeId,
+              canonical_id: enhancedRep.canonicalId || 'unknown',
+              source_system: entry.source || 'unknown',
+              source_id: entry.source_id || 'unknown',
+              source_confidence: entry.confidence || 'medium',
+              last_verified: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'representative_id,source_system,source_id'
+            });
+
+          if (crosswalkError) {
+            devLog('Error storing enhanced crosswalk data:', { error: crosswalkError });
+          }
+        }
+      }
+
+      devLog(`Successfully populated enhanced tables for representative ID: ${representativeId}`);
+    } catch (error) {
+      devLog('Error populating enhanced tables:', { error });
     }
   }
 
@@ -1513,13 +1680,15 @@ export class SuperiorDataPipeline {
     
     // For federal representatives, use the bioguide_id from the initial Congress.gov call
     if (rep.level === 'federal' && rep.bioguide_id) {
-      // Use bioguide_id for federal representative
+      // Use bioguide_id for federal representative (PRIMARY SOURCE)
       try {
+        logger.info(`🔍 DEBUG: Using bioguide_id for federal rep: ${rep.name} (${rep.bioguide_id})`);
         const url = `https://api.congress.gov/v3/member/${rep.bioguide_id}?api_key=${process.env.CONGRESS_GOV_API_KEY}`;
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           if (data.member) {
+            logger.info(`✅ Congress.gov data retrieved for federal rep: ${rep.name}`);
             return {
               bioguideId: data.member.bioguideId,
               fullName: data.member.fullName,
@@ -1539,60 +1708,22 @@ export class SuperiorDataPipeline {
             };
           }
         } else {
-          logger.info('🔍 DEBUG: Congress.gov API FAILED with status:', { status: response.status });
+          logger.warn(`⚠️ Congress.gov API error for ${rep.name}: ${response.status} ${response.statusText}`);
           const error = new Error(`Congress.gov API failed with status ${response.status}`);
           (error as any).status = response.status;
           throw error;
         }
       } catch (error) {
-        console.warn('🔍 DEBUG: Congress.gov individual member API failed:', error);
-      }
-    } else {
-      logger.info('🔍 DEBUG: Skipping Congress.gov API call - not federal or no bioguide_id');
-    }
-    
-    try {
-      // Use bioguide_id if available, otherwise search by name
-      const url = rep.bioguide_id 
-        ? `https://api.congress.gov/v3/member/${rep.bioguide_id}?api_key=${process.env.CONGRESS_GOV_API_KEY}`
-        : `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_GOV_API_KEY}&q=${encodeURIComponent(rep.name)}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.warn('Congress.gov API error:', response.status);
-        const error = new Error(`Congress.gov API failed with status ${response.status}`);
-        (error as any).status = response.status;
+        logger.error(`❌ Congress.gov API error for ${rep.name}:`, error);
         throw error;
       }
-      
-      const data = await response.json();
-      
-      if (data.members && data.members.length > 0) {
-        const member = data.members[0];
-        return {
-          bioguideId: member.bioguideId,
-          fullName: member.fullName,
-          firstName: member.firstName,
-          lastName: member.lastName,
-          party: member.party,
-          state: member.state,
-          district: member.district,
-          chamber: member.chamber,
-          url: member.url,
-          contactForm: member.contactForm,
-          rssUrl: member.rssUrl,
-          roles: member.roles || [],
-          sponsoredLegislation: member.sponsoredLegislation || [],
-          cosponsoredLegislation: member.cosponsoredLegislation || [],
-          source: 'congress-gov-api'
-        };
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Congress.gov API error:', error);
-      return null;
+    } else if (rep.level === 'federal' && !rep.bioguide_id) {
+      logger.warn(`⚠️ Federal representative ${rep.name} missing bioguide_id - skipping Congress.gov API`);
+    } else {
+      logger.info(`🔍 DEBUG: Skipping Congress.gov API call - not federal or no bioguide_id`);
     }
+    
+    return null;
   }
   private async getGoogleCivicData(rep: any): Promise<any> { 
     logger.info('Getting Google Civic data for:', { name: rep.name });
@@ -1666,6 +1797,12 @@ export class SuperiorDataPipeline {
   }
   private async getFECData(rep: any): Promise<any> { 
     logger.info('Getting FEC data for:', { name: rep.name });
+    
+    // Only process federal representatives through FEC API
+    if (rep.level !== 'federal') {
+      logger.info(`⏭️ SKIPPING FEC API for ${rep.level} representative: ${rep.name} (only for federal representatives)`);
+      return null;
+    }
     
     try {
       // First, try to find the candidate by name and state if no FEC ID is available
@@ -1816,6 +1953,12 @@ export class SuperiorDataPipeline {
   private async getOpenStatesApiData(rep: any): Promise<any> {
     logger.info('Getting OpenStates API data for:', { name: rep.name });
     logger.info('🔍 OpenStates API: Starting OPTIMIZED data collection for', { name: rep.name });
+    
+    // Only process state representatives through OpenStates API
+    if (rep.level !== 'state') {
+      logger.info(`⏭️ SKIPPING OpenStates API for ${rep.level} representative: ${rep.name} (only for state representatives)`);
+      return null;
+    }
     
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
@@ -2303,10 +2446,16 @@ export class SuperiorDataPipeline {
       
       // Transform to our format
       return members.map((member: any) => {
+        // Skip members with no name data
+        if (!member.name || member.name.trim() === '') {
+          logger.warn(`⚠️ Skipping federal representative with no name data: ${member.bioguideId}`);
+          return null;
+        }
+        
         // Parse the name from "Last, First" format
         let firstName = '';
         let lastName = '';
-        let fullName = member.name || 'Unknown Name';
+        let fullName = member.name;
         
         if (member.name && member.name.includes(',')) {
           const nameParts = member.name.split(',');
@@ -2329,7 +2478,7 @@ export class SuperiorDataPipeline {
           bioguideId: member.bioguideId,
           source: 'congress-gov'
         };
-      });
+      }).filter(rep => rep !== null); // Filter out null entries
     } catch (error) {
       console.error('Error fetching federal representatives:', error);
       return [];
@@ -2387,25 +2536,53 @@ export class SuperiorDataPipeline {
             name: rep.name,
             given_name: rep.given_name,
             family_name: rep.family_name,
-            party: rep.party,
+            party: rep.party_affiliation || rep.party,
+            current_role: rep.current_role?.type,
             roles: rep.roles?.length || 0
           });
           
           // Construct name from given_name and family_name since OpenStates doesn't have a single name field
-          const fullName = rep.given_name && rep.family_name 
-            ? `${rep.given_name} ${rep.family_name}` 
-            : rep.name || 'Unknown Name';
+          let fullName = '';
+          if (rep.given_name && rep.family_name) {
+            fullName = `${rep.given_name} ${rep.family_name}`;
+          } else if (rep.name) {
+            fullName = rep.name;
+          } else if (rep.given_name || rep.family_name) {
+            fullName = `${rep.given_name || ''} ${rep.family_name || ''}`.trim();
+          } else {
+            // Skip records with no name data - these are likely data artifacts, not real representatives
+            logger.warn(`⚠️ Skipping representative with no name data: ${rep.id}`);
+            return null;
+          }
+          
+          // Extract office from current_role or roles
+          let office = 'Representative';
+          if (rep.current_role?.title) {
+            office = rep.current_role.title;
+          } else if (rep.current_role?.type) {
+            office = this.getOfficeFromRoleType(rep.current_role.type);
+          } else if (rep.roles && rep.roles.length > 0) {
+            office = this.getOfficeFromRoles(rep.roles);
+          }
+          
+          // Extract district from current_role or roles
+          let district = null;
+          if (rep.current_role?.district) {
+            district = rep.current_role.district;
+          } else if (rep.roles && rep.roles.length > 0) {
+            district = this.getDistrictFromRoles(rep.roles);
+          }
             
           const transformedRep = {
             id: rep.id,
             name: fullName,
             firstName: rep.given_name,
             lastName: rep.family_name,
-            office: this.getOfficeFromRoles(rep.roles),
+            office: office,
             level: 'state',
             state: state,
-            district: this.getDistrictFromRoles(rep.roles),
-            party: rep.party,
+            district: district,
+            party: rep.party_affiliation || rep.party,
             openstates_id: rep.id,
             source: 'open-states'
           };
@@ -2434,26 +2611,35 @@ export class SuperiorDataPipeline {
           const remaining = limit - allRepresentatives.length;
           const limitedReps = stateReps.slice(0, remaining);
           
-          const transformedReps = limitedReps.map((rep: any) => {
-            // Construct name from given_name and family_name since OpenStates doesn't have a single name field
-            const fullName = rep.given_name && rep.family_name 
-              ? `${rep.given_name} ${rep.family_name}` 
-              : rep.name || `${rep.given_name || ''} ${rep.family_name || ''}`.trim() || 'Unknown Name';
-              
-            return {
-              id: rep.id,
-              name: fullName,
-              firstName: rep.given_name,
-              lastName: rep.family_name,
-              office: this.getOfficeFromRoles(rep.roles),
-              level: 'state',
-              state: stateCode,
-              district: this.getDistrictFromRoles(rep.roles),
-              party: rep.party,
-              openstates_id: rep.id,
-              source: 'open-states'
-            };
-          });
+      const transformedReps = limitedReps.map((rep: any) => {
+        // Construct name from given_name and family_name since OpenStates doesn't have a single name field
+        let fullName = '';
+        if (rep.given_name && rep.family_name) {
+          fullName = `${rep.given_name} ${rep.family_name}`;
+        } else if (rep.name) {
+          fullName = rep.name;
+        } else if (rep.given_name || rep.family_name) {
+          fullName = `${rep.given_name || ''} ${rep.family_name || ''}`.trim();
+        } else {
+          // Skip records with no name data - these are likely data artifacts, not real representatives
+          logger.warn(`⚠️ Skipping representative with no name data: ${rep.id}`);
+          return null;
+        }
+          
+        return {
+          id: rep.id,
+          name: fullName,
+          firstName: rep.given_name,
+          lastName: rep.family_name,
+          office: this.getOfficeFromRoles(rep.roles),
+          level: 'state',
+          state: stateCode,
+          district: this.getDistrictFromRoles(rep.roles),
+          party: rep.party,
+          openstates_id: rep.id,
+          source: 'open-states'
+        };
+      }).filter(rep => rep !== null); // Filter out null entries
           
           allRepresentatives.push(...transformedReps);
         }
@@ -2491,6 +2677,44 @@ export class SuperiorDataPipeline {
     
     const currentRole = roles.find(role => role.current === true);
     return currentRole?.district || null;
+  }
+
+  /**
+   * Get full state name from state code
+   */
+  private getStateName(stateCode: string): string {
+    const stateNames: Record<string, string> = {
+      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+      'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+      'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+      'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+      'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+      'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+      'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+      'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+      'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+      'DC': 'District of Columbia'
+    };
+    
+    return stateNames[stateCode] || stateCode;
+  }
+
+  /**
+   * Get office title from role type
+   */
+  private getOfficeFromRoleType(roleType: string): string {
+    const roleMap: Record<string, string> = {
+      'upper': 'Senator',
+      'lower': 'Assembly Member',
+      'legislature': 'Legislator',
+      'executive': 'Governor',
+      'mayor': 'Mayor',
+      'councilmember': 'Council Member',
+      'commissioner': 'Commissioner',
+      'judge': 'Judge'
+    };
+    return roleMap[roleType] || 'Representative';
   }
 }
 

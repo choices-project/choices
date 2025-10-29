@@ -28,7 +28,7 @@
       "@/components/CreatePoll*": ["./web/features/polls/components/CreatePollForm"],
       "@/components/admin/layout/*": ["./web/app/(app)/admin/layout/*"]
     },
-    "types": ["node"],
+    "types": ["node", "@testing-library/jest-dom"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

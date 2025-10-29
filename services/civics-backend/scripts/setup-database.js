@@ -7,8 +7,10 @@
  * for the civics backend system.
  */
 
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
 
 async function setupDatabase() {
   console.log('🔧 Setting up database...');
@@ -167,15 +169,13 @@ async function setupDatabase() {
 }
 
 // Run setup
-if (require.main === module) {
-  setupDatabase()
-    .then(success => {
-      process.exit(success ? 0 : 1);
-    })
-    .catch(error => {
-      console.error('❌ Setup script failed:', error);
-      process.exit(1);
-    });
-}
+setupDatabase()
+  .then(success => {
+    process.exit(success ? 0 : 1);
+  })
+  .catch(error => {
+    console.error('❌ Setup script failed:', error);
+    process.exit(1);
+  });
 
-module.exports = { setupDatabase };
+export { setupDatabase };

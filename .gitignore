@@ -123,4 +123,4 @@ supabase/.temp
 settings_exporter/
 tests/test_exporter.py
 export_bundle.zip
-claude_memory/
+claude_memory/web/tests/utils/real-test-user-manager.ts

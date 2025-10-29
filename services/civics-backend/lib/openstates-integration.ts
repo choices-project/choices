@@ -90,6 +90,26 @@ export default class OpenStatesIntegration {
   }
 
   /**
+   * Map role type to appropriate title
+   */
+  private getRoleTitle(roleType: string): string {
+    const titleMap: Record<string, string> = {
+      'upper': 'Senator',
+      'lower': 'Assembly Member',
+      'executive': 'Governor',
+      'mayor': 'Mayor',
+      'councilmember': 'Council Member',
+      'commissioner': 'Commissioner',
+      'judge': 'Judge',
+      'committee_member': 'Committee Member',
+      'committee_chair': 'Committee Chair',
+      'committee_vice_chair': 'Committee Vice Chair'
+    };
+    
+    return titleMap[roleType] || roleType;
+  }
+
+  /**
    * Check if a person is currently in office
    */
   private isCurrentPerson(person: OpenStatesPerson): boolean {
@@ -125,6 +145,121 @@ export default class OpenStatesIntegration {
   }
 
   /**
+   * Store YAML data in the database for later use
+   */
+  private async storeYamlDataInDatabase(stateCode: string): Promise<void> {
+    logger.info(`🗄️  Storing OpenStates YAML data in database for ${stateCode}...`);
+    
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const yaml = await import('js-yaml');
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      // Initialize Supabase client
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+      );
+      
+      const stateCodeLower = stateCode.toLowerCase();
+      const statePath = path.join(this.dataPath, stateCodeLower);
+      
+      if (!fs.existsSync(statePath)) {
+        logger.info(`⚠️  OpenStates People Database path not found: ${statePath}`);
+        return;
+      }
+      
+      // Process legislature data (main legislators)
+      const legislaturePath = path.join(statePath, 'legislature');
+      if (fs.existsSync(legislaturePath)) {
+        const files = fs.readdirSync(legislaturePath);
+        logger.info(`   📁 Found ${files.length} legislature files to store`);
+        
+        for (const file of files) {
+          if (file.endsWith('.yml')) {
+            try {
+              const filePath = path.join(legislaturePath, file);
+              const content = fs.readFileSync(filePath, 'utf8');
+              const person = yaml.load(content) as OpenStatesPerson;
+              
+              if (!person?.id || !person?.name) {
+                logger.info(`   ⚠️  Skipping invalid person data in ${file}`);
+                continue;
+              }
+              
+              // Store person data
+              const { data: personData, error: personError } = await supabase
+                .from('openstates_people_data')
+                .upsert({
+                  openstates_id: person.id,
+                  name: person.name,
+                  given_name: person.given_name,
+                  family_name: person.family_name,
+                  middle_name: person.middle_name,
+                  suffix: person.suffix,
+                  nickname: person.nickname,
+                  birth_date: person.birth_date,
+                  death_date: person.death_date,
+                  image_url: person.image,
+                  gender: person.gender,
+                  biography: person.biography,
+                  party: person.party?.[0]?.name || person.party,
+                  current_party: true, // Boolean field indicating if this is current party
+                  extras: person.extras || {},
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }, { onConflict: 'openstates_id' })
+                .select('id')
+                .single();
+              
+              if (personError) {
+                logger.error(`   ❌ Error storing person ${person.name}:`, personError.message);
+                continue;
+              }
+              
+              // Store roles data
+              if (person.roles && person.roles.length > 0 && personData?.id) {
+                for (const role of person.roles) {
+                  const { error: roleError } = await supabase
+                    .from('openstates_people_roles')
+                    .insert({
+                      openstates_person_id: personData.id,
+                      role_type: role.type,
+                      title: role.title,
+                      jurisdiction: role.jurisdiction,
+                      start_date: role.start_date,
+                      end_date: role.end_date,
+                      district: role.district,
+                      division: role.division,
+                      is_current: !role.end_date || new Date(role.end_date) > this.currentDate,
+                      created_at: new Date().toISOString()
+                    });
+                  
+                  if (roleError) {
+                    logger.error(`   ❌ Error storing role for ${person.name}:`, roleError.message);
+                  }
+                }
+              }
+              
+              logger.info(`   ✅ Stored: ${person.name} (${person.roles?.[0]?.type || 'Unknown'})`);
+              
+            } catch (error) {
+              logger.error(`   ⚠️  Error processing ${file}:`, error);
+            }
+          }
+        }
+      }
+      
+      logger.info(`✅ Completed storing YAML data for ${stateCode}`);
+      
+    } catch (error) {
+      logger.error('❌ Error storing YAML data:', error);
+    }
+  }
+
+  /**
    * Process state data and return only current representatives with comprehensive data
    */
   async processStateData(stateCode: string, limit?: number): Promise<OpenStatesPerson[]> {
@@ -140,6 +275,9 @@ export default class OpenStatesIntegration {
       logger.info('   This should be called from API routes, not client-side code');
       return [];
     }
+
+    // First, store all YAML data in the database
+    await this.storeYamlDataInDatabase(stateCode);
     
     // Server-side execution - Node.js modules are available
     try {
@@ -304,7 +442,8 @@ export default class OpenStatesIntegration {
 
   private async enhancePersonData(person: OpenStatesPerson, _stateCode: string): Promise<OpenStatesPerson> {
 
-    const enhanced: OpenStatesPerson & Record<string, any> = withOptional(person, []) as OpenStatesPerson & Record<string, any>;
+    // Start with the original person data
+    const enhanced: OpenStatesPerson & Record<string, any> = { ...person } as OpenStatesPerson & Record<string, any>;
     
     // Extract OpenStates ID for efficient API calls
     if (person.id) {
@@ -319,15 +458,18 @@ export default class OpenStatesIntegration {
       );
       
       if (currentRole) {
+        // Map role type to appropriate title
+        const roleTitle = this.getRoleTitle(currentRole.type);
+        
         enhanced.current_role = {
           type: currentRole.type,
-          title: currentRole.title,
+          title: roleTitle,
           jurisdiction: currentRole.jurisdiction,
           district: currentRole.district,
           start_date: currentRole.start_date,
           end_date: currentRole.end_date
         };
-        logger.info(`   🏛️  Current Role: ${currentRole.type} - ${currentRole.title || 'Unknown'}`);
+        logger.info(`   🏛️  Current Role: ${currentRole.type} - ${roleTitle}`);
       }
     }
     
