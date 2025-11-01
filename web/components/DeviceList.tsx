@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useCallback, useMemo } from 'react'
 import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucide-react'
+import React, { useState, useCallback, useMemo } from 'react'
 
 type Device = {
   id: string
@@ -87,7 +87,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         data-testid="device-list"
       >
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
           <span className="ml-2">Loading devices...</span>
         </div>
       </div>
@@ -190,7 +190,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                   Last used: {new Date(device.lastUsed).toLocaleDateString()}
                 </p>
                 {device.isActive && (
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
                 )}
               </div>
             </div>

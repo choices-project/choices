@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react';
+
+
+import { devLog } from '@/lib/logger';
 import { has, isRecord } from '@/lib/util/guards'
 
 type WebAuthnAuthProps = {
@@ -286,7 +288,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
 
         {step === 'registering' && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
             <h4 className="text-lg font-medium text-gray-900 mb-2">Setting up your credentials</h4>
             <p className="text-gray-600 text-sm">
               Please use your device&apos;s biometric authentication or security key to complete registration.
@@ -296,7 +298,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
 
         {step === 'logging-in' && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
             <h4 className="text-lg font-medium text-gray-900 mb-2">Authenticating</h4>
             <p className="text-gray-600 text-sm">
               Please use your device&apos;s biometric authentication or security key to sign in.

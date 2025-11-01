@@ -1,9 +1,10 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { requireAdminOr401 } from '@/lib/admin-auth';
+import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
-import { requireAdminOr401 } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') ?? '20');
     const urgency = searchParams.get('urgency');
     const category = searchParams.get('category');
 

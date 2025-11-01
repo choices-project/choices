@@ -8,7 +8,7 @@
  * Created: January 18, 2025
  */
 
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 
 type WebAuthnMode = 'chromium' | 'mock';
 type Fixtures = { webauthnMode: WebAuthnMode };

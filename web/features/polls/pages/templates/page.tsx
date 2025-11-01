@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+
 import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { devLog } from '@/lib/logger';
+import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },

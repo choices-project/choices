@@ -10,7 +10,7 @@
  */
 
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type DPoPKeyPair = {
   publicKey: CryptoKey
@@ -242,7 +242,7 @@ export function validateDPoPTimestamp(iat: number): boolean {
  */
 export async function createDPoPChallenge(
   htu: string,
-  htm: string = 'POST'
+  htm = 'POST'
 ): Promise<{ nonce: string; challenge: string }> {
   const nonce = generateDPoPNonce()
   const challengeData = `${nonce}:${htu}:${htm}`

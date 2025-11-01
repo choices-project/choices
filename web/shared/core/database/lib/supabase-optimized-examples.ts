@@ -3,6 +3,7 @@
 // Use these patterns to avoid warnings and improve performance
 
 import { createClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase client

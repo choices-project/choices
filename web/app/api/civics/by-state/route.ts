@@ -22,11 +22,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache } from '@/lib/utils/civics-cache';
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 
-interface RepresentativeData {
+type RepresentativeData = {
   id: number;
   name: string;
   party: string;
@@ -117,11 +117,12 @@ export async function GET(request: NextRequest) {
   const clientIP = request.headers.get('x-forwarded-for') ??
                    request.headers.get('x-real-ip') ??
                    '127.0.0.1';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
 
     const rateLimitResult = await apiRateLimiter.checkLimit(
       clientIP,
       '/api/civics/by-state',
-      { maxRequests: 50, windowMs: 15 * 60 * 1000 }
+      { maxRequests: 50, windowMs: 15 * 60 * 1000, userAgent }
     );
 
     if (!rateLimitResult.allowed) {

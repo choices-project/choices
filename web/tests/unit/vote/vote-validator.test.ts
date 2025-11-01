@@ -8,20 +8,20 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { VoteValidator } from '@/lib/vote/validator';
+
 import type { 
   VoteData, 
-  PollData, 
-  VoteValidation 
+  PollData 
 } from '@/lib/vote/types';
+import { VoteValidator } from '@/lib/vote/validator';
+
+// Import V2 test setup
+import { getMS } from '../../setup';
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({
   devLog: jest.fn()
 }));
-
-// Import V2 test setup
-import { getMS } from '../../setup';
 const mockSetup = getMS();
 const { when, client: mockSupabaseClient } = mockSetup;
 
@@ -541,7 +541,7 @@ describe('VoteValidator', () => {
       expect(validation.error).toBe('Validation error');
 
       // Restore original method
-      (validator as any).validateBasicVoteData = originalValidateBasicVoteData as any;
+      (validator as any).validateBasicVoteData = originalValidateBasicVoteData;
     });
 
     it('should handle database errors gracefully', async () => {

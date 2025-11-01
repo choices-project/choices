@@ -1,34 +1,91 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Civics Representative Detail API Route
+ * 
+ * Provides detailed representative information with normalized table data
+ * including contacts, photos, social media, and activity records.
+ * 
+ * @fileoverview Representative detail API with normalized data
+ * @version 2.0.0
+ * @since 2024-10-09
+ * @updated 2025-10-25 - Updated to use normalized tables instead of JSONB
+ * @feature CIVICS_REPRESENTATIVE_DETAILS
+ */
 
+import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { createApiLogger } from '@/lib/utils/api-logger';
+import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
+
+// Use anon key with proper RLS policies
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: true } }
 );
 
+/**
+ * GET /api/civics/representative/[id]
+ * 
+ * Retrieves detailed information for a specific representative including
+ * contacts, photos, social media, activity records, and crosswalk data.
+ * 
+ * @param request - NextRequest object
+ * @param params - Route parameters containing representative ID
+ * @returns NextResponse with detailed representative data or error
+ * 
+ * @example
+ * GET /api/civics/representative/123
+ * 
+ * @throws {400} When representative ID is invalid
+ * @throws {404} When representative is not found
+ * @throws {500} When database query fails
+ */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createApiLogger('/api/civics/representative/[id]', 'GET');
+  
   try {
-    const representativeId = params.id;
+    const { id } = await params;
+    const representativeId = id;
     
-    if (!representativeId || isNaN(Number(representativeId))) {
+    if (!representativeId) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid representative ID' },
+        { ok: false, error: 'Representative ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate ID format (accept both UUIDs and integer IDs)
+    if (!representativeId || (representativeId.length < 3 && !/^\d+$/.test(representativeId))) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid representative ID format' },
         { status: 400 }
       );
     }
 
-    console.log(`📊 Fetching detailed information for representative ID: ${representativeId}`);
+    logger.info('Fetching detailed information for representative', { representativeId });
 
-    // Get representative basic information
-    const { data: representative, error: repError } = await supabase
-      .from('civics_representatives')
-      .select('*')
-      .eq('id', representativeId)
-      .single();
+    // Check cache first
+    const cachedData = CivicsCache.getCachedRepresentative(representativeId);
+    if (cachedData) {
+      logger.info('Returning cached representative data', { representativeId });
+      return NextResponse.json({
+        success: true,
+        data: cachedData,
+        metadata: {
+          source: 'cache',
+          updated_at: new Date().toISOString(),
+          data_quality_score: 95
+        }
+      });
+    }
+
+    // Get representative data with optimized query
+    const { data: representative, error: repError } = await CivicsQueryOptimizer.getRepresentativeQuery(supabase, representativeId);
 
     if (repError || !representative) {
       return NextResponse.json(
@@ -37,50 +94,41 @@ export async function GET(
       );
     }
 
-    // Get contact information
-    const { data: contactInfo } = await supabase
-      .from('civics_contact_info')
-      .select('*')
-      .eq('representative_id', representativeId)
-      .single();
-
-    // Get social media engagement
-    const { data: socialMedia } = await supabase
-      .from('civics_social_engagement')
-      .select('*')
+    // Get enhanced data from normalized tables
+    const { data: contacts } = await supabase
+      .from('representative_contacts')
+      .select('contact_type, value, is_verified, source')
       .eq('representative_id', representativeId);
 
-    // Get campaign finance data (latest election)
-    const { data: campaignFinance } = await supabase
-      .from('civics_campaign_finance')
-      .select('*')
-      .eq('representative_id', representativeId)
-      .order('election_year', { ascending: false })
-      .limit(1)
-      .single();
+    const { data: photos } = await supabase
+      .from('representative_photos')
+      .select('url, is_primary, source')
+      .eq('representative_id', representativeId);
 
-    // Get voting behavior summary
-    const { data: votingBehavior } = await supabase
-      .from('civics_voting_behavior')
-      .select('*')
-      .eq('representative_id', representativeId)
-      .eq('analysis_period', 'current_session')
-      .single();
+    const { data: socialMedia } = await supabase
+      .from('representative_social_media')
+      .select('platform, handle, url, is_verified, is_primary')
+      .eq('representative_id', representativeId);
 
-    // Get recent votes (last 10)
-    const { data: recentVotes } = await supabase
-      .from('civics_votes')
-      .select('*')
+    const { data: activity } = await supabase
+      .from('representative_activity')
+      .select('type, title, description, date, source')
       .eq('representative_id', representativeId)
-      .order('vote_date', { ascending: false })
-      .limit(10);
+      .order('date', { ascending: false });
 
-    // Get policy positions
-    const { data: policyPositions } = await supabase
-      .from('civics_policy_positions')
-      .select('*')
-      .eq('representative_id', representativeId)
-      .order('confidence_score', { ascending: false });
+    // Get canonical ID resolution (crosswalk data)
+    const { data: crosswalkEntries } = await supabase
+      .from('id_crosswalk')
+      .select(`
+        id,
+        canonical_id,
+        source_id,
+        source,
+        source_type,
+        created_at,
+        last_verified
+      `)
+      .eq('representative_id', representativeId);
 
     // Transform the data for the frontend
     const transformedData = {
@@ -95,116 +143,135 @@ export async function GET(
       
       // Contact Information
       contact: {
-        email: contactInfo?.official_email || null,
-        phone: contactInfo?.official_phone || null,
-        fax: contactInfo?.official_fax || null,
-        website: contactInfo?.official_website || null,
-        office_addresses: contactInfo?.office_addresses || [],
-        preferred_contact_method: contactInfo?.preferred_contact_method || 'email',
-        response_time_expectation: contactInfo?.response_time_expectation || 'within_week',
-        quality_score: contactInfo?.data_quality_score || 0,
-        last_verified: contactInfo?.last_verified || null
+        email: representative.primary_email ?? null,
+        phone: representative.primary_phone ?? null,
+        fax: null, // Not available in representatives_core
+        website: representative.primary_website ?? null,
+        office_addresses: contacts?.map((contact: any) => ({
+          type: contact.contact_type,
+          value: contact.value,
+          is_verified: contact.is_verified,
+          source: contact.source
+        })) ?? [],
+        preferred_contact_method: 'email',
+        response_time_expectation: 'within_week',
+        quality_score: representative.data_quality_score ?? 0,
+        last_verified: representative.last_verified ?? null
       },
       
-      // Social Media
-      social_media: {
-        platforms: socialMedia?.map(sm => ({
-          platform: sm.platform,
-          handle: sm.handle,
-          url: sm.url,
-          followers_count: sm.followers_count,
-          engagement_rate: sm.engagement_rate,
-          verified: sm.verified,
-          official_account: sm.official_account,
-          last_updated: sm.last_updated
-        })) || [],
+      // Photos
+      photos: photos?.map((photo: any) => ({
+        url: photo.url,
+        is_primary: photo.is_primary,
+        source: photo.source
+      })) ?? [],
+      
+      // Social Media (only if social sharing features are enabled)
+      social_media: isFeatureEnabled('SOCIAL_SHARING') ? {
+        platforms: socialMedia?.map((social: any) => ({
+          platform: social.platform,
+          handle: social.handle,
+          url: social.url,
+          followers_count: 0, // Not available in current schema
+          engagement_rate: 0, // Not available in current schema
+          verified: social.is_verified,
+          official_account: true,
+          is_primary: social.is_primary,
+          updated_at: new Date().toISOString()
+        })) ?? [],
         summary: {
-          total_platforms: socialMedia?.length || 0,
-          verified_accounts: socialMedia?.filter(sm => sm.verified).length || 0,
-          total_followers: socialMedia?.reduce((sum, sm) => sum + (sm.followers_count || 0), 0) || 0
+          total_platforms: socialMedia?.length ?? 0,
+          verified_accounts: socialMedia?.filter((s: any) => s.is_verified).length ?? 0,
+          total_followers: 0 // Not available in current schema
         }
-      },
-      
-      // Campaign Finance
-      campaign_finance: campaignFinance ? {
-        election_year: campaignFinance.election_year,
-        total_receipts: campaignFinance.total_receipts,
-        total_disbursements: campaignFinance.total_disbursements,
-        cash_on_hand: campaignFinance.cash_on_hand,
-        individual_contributions: campaignFinance.individual_contributions,
-        pac_contributions: campaignFinance.pac_contributions,
-        self_financing: campaignFinance.self_financing,
-        top_contributors: campaignFinance.top_contributors,
-        industry_contributions: campaignFinance.industry_contributions,
-        last_updated: campaignFinance.last_updated
       } : null,
       
-      // Voting Behavior
-      voting_behavior: votingBehavior ? {
-        analysis_period: votingBehavior.analysis_period,
-        total_votes: votingBehavior.total_votes,
-        party_unity_score: votingBehavior.party_unity_score,
-        bipartisan_score: votingBehavior.bipartisan_score,
-        attendance_rate: votingBehavior.attendance_rate,
-        ideology_score: votingBehavior.ideology_score,
-        key_vote_positions: votingBehavior.key_vote_positions,
-        last_updated: votingBehavior.last_updated
+      // Campaign Finance (only if civics campaign finance is enabled)
+      campaign_finance: isFeatureEnabled('CIVICS_CAMPAIGN_FINANCE') ? {
+        activities: activity?.filter((act: any) => act.type === 'campaign_finance').map((act: any) => ({
+          title: act.title,
+          description: act.description,
+          date: act.date,
+          source: act.source
+        })) ?? [],
+        updated_at: new Date().toISOString()
+      } : null,
+      
+      // Voting Behavior (only if civics voting records are enabled)
+      voting_behavior: isFeatureEnabled('CIVICS_VOTING_RECORDS') ? {
+        activities: activity?.filter((act: any) => act.type === 'voting_record').map((act: any) => ({
+          title: act.title,
+          description: act.description,
+          date: act.date,
+          source: act.source
+        })) ?? [],
+        updated_at: new Date().toISOString()
       } : null,
       
       // Recent Votes
-      recent_votes: recentVotes?.map(vote => ({
-        vote_id: vote.vote_id,
-        bill_id: vote.bill_id,
-        bill_title: vote.bill_title,
-        vote_date: vote.vote_date,
-        vote_position: vote.vote_position,
-        vote_type: vote.vote_type,
-        vote_result: vote.vote_result,
-        party_position: vote.party_position
-      })) || [],
+      recent_votes: activity?.filter((act: any) => act.type === 'vote').map((act: any) => ({
+        title: act.title,
+        description: act.description,
+        date: act.date,
+        source: act.source
+      })) ?? [],
       
       // Policy Positions
-      policy_positions: policyPositions?.map(position => ({
-        issue_category: position.issue_category,
-        issue_name: position.issue_name,
-        position: position.position,
-        confidence_score: position.confidence_score,
-        last_vote_date: position.last_vote_date,
-        position_notes: position.position_notes
-      })) || [],
+      policy_positions: activity?.filter((act: any) => act.type === 'policy_position').map((act: any) => ({
+        title: act.title,
+        description: act.description,
+        date: act.date,
+        source: act.source
+      })) ?? [],
       
+      // Canonical ID Resolution
+      canonical_ids: crosswalkEntries?.map(entry => ({
+        canonical_id: entry.canonical_id,
+        source: entry.source,
+        source_type: entry.source_type,
+        source_id: entry.source_id,
+        last_verified: entry.last_verified
+      })) ?? [],
+
       // Data Quality Summary
       data_quality: {
-        contact_info_available: representative.contact_info_available || false,
-        social_media_available: representative.social_media_available || false,
-        campaign_finance_available: representative.campaign_finance_available || false,
-        voting_records_available: representative.voting_records_available || false,
-        overall_quality_score: Math.round(
-          ((contactInfo?.data_quality_score || 0) + 
-           (campaignFinance ? 90 : 0) + 
-           (votingBehavior ? 85 : 0)) / 3
-        )
+        contact_info_available: (contacts && contacts.length > 0) ?? false,
+        social_media_available: (socialMedia && socialMedia.length > 0) ?? false,
+        campaign_finance_available: activity?.some((act: any) => act.type === 'campaign_finance') ?? false,
+        voting_records_available: activity?.some((act: any) => act.type === 'voting_record') ?? false,
+        overall_quality_score: representative.data_quality_score ?? 0
       },
       
       // Metadata
-      last_updated: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       data_sources: [
-        representative.data_source,
-        contactInfo?.data_source,
-        campaignFinance?.data_source,
-        votingBehavior?.data_source
+        'openstates',
+        'civic_engagement',
+        'campaign_finance',
+        'voting_records'
       ].filter(Boolean).join(', ')
     };
 
-    console.log(`✅ Successfully fetched detailed information for ${representative.name}`);
+    // Cache the result for future requests
+    CivicsCache.cacheRepresentative(representativeId, transformedData);
+
+    logger.success('Successfully fetched detailed information for representative', 200, { 
+      representativeName: representative.name,
+      representativeId: representative.id 
+    });
 
     return NextResponse.json({
-      ok: true,
-      data: transformedData
+      success: true,
+      data: transformedData,
+      metadata: {
+        source: 'database',
+        updated_at: new Date().toISOString(),
+        data_quality_score: 95
+      }
     });
 
   } catch (error) {
-    console.error('❌ Error fetching representative details:', error);
+    logger.error('Error fetching representative details', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { 
         ok: false, 

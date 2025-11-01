@@ -6,15 +6,6 @@
  */
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { performanceMetrics } from '@/lib/performance/performance-metrics';
-
-// Lazy load heavy chart components
-const _Chart = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const _LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
-const _BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const _PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
-
-// Import chart components directly for proper typing
 import { 
   ResponsiveContainer, 
   LineChart as LineChartType, 
@@ -29,6 +20,16 @@ import {
   Bar,
   Pie
 } from 'recharts';
+
+import { performanceMetrics } from '@/lib/performance/performance-metrics';
+
+// Import chart components directly for proper typing
+
+// Lazy load heavy chart components
+const _Chart = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+const _LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
+const _BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
+const _PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
 
 type AnalyticsData = {
   userGrowth: Array<{ date: string; users: number }>;
@@ -132,17 +133,17 @@ export default function AnalyticsPanel({
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white p-6 rounded-lg shadow">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
+                <div className="h-8 bg-gray-200 rounded w-3/4" />
               </div>
             ))}
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-64 bg-gray-200 rounded" />
           </div>
         </div>
       </div>
@@ -275,7 +276,7 @@ export default function AnalyticsPanel({
         {selectedMetric === 'users' && (
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse"></div>}>
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChartType data={data.userGrowth}>
                   <XAxis dataKey="date" />
@@ -300,7 +301,7 @@ export default function AnalyticsPanel({
         {selectedMetric === 'polls' && (
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Poll Activity</h3>
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse"></div>}>
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChartType data={data.pollActivity}>
                   <XAxis dataKey="date" />
@@ -320,7 +321,7 @@ export default function AnalyticsPanel({
         {selectedMetric === 'votes' && (
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Methods Distribution</h3>
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse"></div>}>
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChartType>
                   <Pie

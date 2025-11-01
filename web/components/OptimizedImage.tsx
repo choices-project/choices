@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
+import React, { useState, useCallback } from 'react'
 
 type OptimizedImageProps = {
   src: string
@@ -61,7 +61,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           style={{ width, height }}
           data-testid="loading-indicator"
         >
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
         </div>
       )}
 

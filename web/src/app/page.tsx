@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, Users } from 'lucide-react';
-import { Vote, ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import Link from 'next/link'
-import { safeNavigate } from '@/lib/ssr-safe'
+import { useRouter } from 'next/navigation'
+import React, { useState } from 'react';
+import { Shield, Vote, Lock, Users, ArrowRight, CheckCircle } from 'lucide-react';
+
+
+
 
 type Feature = {
   icon: React.ComponentType<any>;
@@ -13,6 +15,7 @@ type Feature = {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userStableId, setUserStableId] = useState('')
 
@@ -120,13 +123,13 @@ export default function Home() {
                   <p className="text-gray-600 mb-4">
                     You&apos;re logged in as: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{userStableId}</span>
                   </p>
-                  <button
-                    onClick={() => safeNavigate('/polls')}
+                  <Link
+                    href="/polls"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
                   >
                     <span>View Available Polls</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}
@@ -221,9 +224,9 @@ export default function Home() {
               Privacy-preserving voting for the digital age
             </p>
             <div className="flex justify-center space-x-6 text-sm text-gray-400">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">GitHub</a>
+              <button className="hover:text-white transition-colors">Privacy Policy</button>
+              <button className="hover:text-white transition-colors">Terms of Service</button>
+              <button className="hover:text-white transition-colors">GitHub</button>
             </div>
           </div>
         </div>

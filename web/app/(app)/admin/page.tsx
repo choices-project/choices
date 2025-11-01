@@ -1,11 +1,5 @@
 'use client'
 
-import { useSupabaseAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/logger';
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { T } from '@/lib/testing/testIds'
 import { 
   Shield, 
   Users, 
@@ -21,6 +15,14 @@ import {
   Zap,
   MessageSquare
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState, useCallback } from 'react'
+
+import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { logger } from '@/lib/logger';
+import { T } from '@/lib/testing/testIds'
+
 
 type AdminStats = {
   totalUsers: number
@@ -133,7 +135,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-2 text-gray-600">Loading admin dashboard...</p>
         </div>
       </div>
@@ -241,6 +243,13 @@ export default function AdminDashboard() {
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Analytics
+              </Link>
+              <Link 
+                href="/admin/monitoring"
+                data-testid="admin-monitoring-tab"
+                className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              >
+                Monitoring
               </Link>
               <Link 
                 href="/admin/system"

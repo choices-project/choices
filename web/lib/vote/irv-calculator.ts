@@ -13,8 +13,9 @@
 // ============================================================================
 
 import * as crypto from 'node:crypto';
-import { withOptional } from '../util/objects';
+
 import { isPresent } from '../util/clean';
+import { withOptional } from '../util/objects';
 
 export type UserRanking = {
   pollId: string;

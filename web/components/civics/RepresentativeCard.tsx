@@ -1,3 +1,7 @@
+import React from 'react';
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+
 /**
  * Civics Representative Card Component
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
@@ -6,8 +10,6 @@
  */
 
 'use client';
-
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 type Representative = {
   id: string;
@@ -47,9 +49,32 @@ export function RepresentativeCard({ representative, className = '' }: Represent
     return null;
   }
 
-  const handleContact = (method: 'email' | 'phone' | 'website', value: string) => {
-    // TODO: Implement contact tracking when feature is enabled
-    console.log(`Contact ${method}:`, value);
+  const handleContact = async (method: 'email' | 'phone' | 'website', value: string) => {
+    // Track contact action for analytics
+    try {
+      await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_type: 'representative_contact',
+          platform: method,
+          url: value,
+          placement: 'representative_card',
+        }),
+      });
+    } catch (error) {
+      // Silently fail - contact tracking is non-critical
+      console.debug('Contact tracking failed:', error);
+    }
+    
+    // Perform the contact action
+    if (method === 'email' && value.startsWith('mailto:')) {
+      window.location.href = value;
+    } else if (method === 'phone' && value.startsWith('tel:')) {
+      window.location.href = value;
+    } else if (method === 'website') {
+      window.open(value, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const getLevelColor = (level: string) => {

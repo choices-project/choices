@@ -5,17 +5,19 @@
  * This includes query optimization, connection management, and performance monitoring.
  */
 
-import { logger } from '@/lib/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { smartCache } from '@/lib/database/smart-cache'
+import { logger } from '@/lib/logger'
+import { minimalTelemetry } from '@/lib/telemetry/minimal'
+import { DatabaseSchemas } from '@/lib/validation/schemas'
 import {
   safeParse,
   validateDatabaseResponse
 } from '@/lib/validation/validator'
-import { DatabaseSchemas } from '@/lib/validation/schemas'
-import { isFeatureEnabled } from '@/lib/core/feature-flags'
-import { minimalTelemetry } from '@/lib/telemetry/minimal'
-import { smartCache } from '@/lib/database/smart-cache'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import type {
   UserProfile,
   PollsResponse,
@@ -534,7 +536,7 @@ export class QueryOptimizer {
   // Process time series data
   const processTimeSeries = (data: Array<{ created_at: string }>, dateField: string) => {
     const grouped = data.reduce((acc: Record<string, number>, item) => {
-      const dateValue = item[dateField as keyof typeof item] as string
+      const dateValue = item[dateField as keyof typeof item]
       if (dateValue) {
         const date = new Date(dateValue).toISOString().split('T')[0]
         if (date) {
@@ -546,7 +548,7 @@ export class QueryOptimizer {
 
       return Object.entries(grouped).map(([date, count]) => ({
         date,
-        count: count as number
+        count: count
       }))
     }
 

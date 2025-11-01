@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -12,7 +11,14 @@ import {
   Shield,
   Brain
 } from 'lucide-react';
-import { useAnalytics } from '../../../hooks/useAnalytics';
+import React, { useState, useEffect } from 'react';
+
+import { 
+  useAnalyticsDashboard,
+  useAnalyticsLoading,
+  useAnalyticsError,
+  useAnalyticsActions
+} from '@/lib/stores';
 
 type AnalyticsView = {
   id: string;
@@ -24,21 +30,19 @@ type AnalyticsView = {
 }
 
 export default function AnalyticsPage() {
-  const {
-    data: analyticsData,
-    loading,
-    error,
-    analyticsEnabled,
-    aiFeaturesEnabled,
-    fetchData,
-    refreshData,
-    autoRefresh,
-    setAutoRefresh,
-    exportData
-  } = useAnalytics({
-    autoRefresh: true,
-    refreshInterval: 30000
-  });
+  const analyticsData = useAnalyticsDashboard();
+  const loading = useAnalyticsLoading();
+  const error = useAnalyticsError();
+  const analyticsActions = useAnalyticsActions();
+  const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions as {
+    trackEvent: (event: any) => void;
+    sendAnalytics: () => Promise<void>;
+    exportAnalytics: () => Promise<any[]>;
+  };
+  
+  // Feature flags - these would come from app store in a real implementation
+  const analyticsEnabled = true;
+  const aiFeaturesEnabled = true;
 
   const [selectedView, setSelectedView] = useState<string>('overview');
 
@@ -101,12 +105,24 @@ export default function AnalyticsPage() {
     }
   ];
 
-  // Fetch data when view changes
+  // Track page view when component mounts
   useEffect(() => {
-    if (analyticsEnabled && selectedView !== 'overview') {
-      fetchData(selectedView);
-    }
-  }, [selectedView, analyticsEnabled, fetchData]);
+    trackEvent({
+      event_type: 'page_view',
+      type: 'page_view',
+      category: 'analytics',
+      action: 'view_analytics_page',
+      label: 'Analytics Dashboard',
+      event_data: {
+        type: 'page_view',
+        category: 'analytics',
+        action: 'view_analytics_page',
+        label: 'Analytics Dashboard'
+      },
+      created_at: new Date().toISOString(),
+      session_id: 'analytics-page'
+    });
+  }, [trackEvent]);
 
   if (!analyticsEnabled) {
     return (
@@ -147,7 +163,7 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={refreshData}
+            onClick={() => sendAnalytics()}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retry
@@ -173,19 +189,31 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'text-green-600' : 'text-gray-400'}`} />
+                <RefreshCw className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  {autoRefresh ? 'Auto-refresh on' : 'Auto-refresh off'}
+                  Auto-refresh off
                 </span>
               </div>
               <button
-                onClick={() => setAutoRefresh(!autoRefresh)}
+                onClick={() => trackEvent({ 
+                  event_type: 'user_action', 
+                  type: 'user_action', 
+                  category: 'analytics', 
+                  action: 'toggle_auto_refresh',
+                  event_data: {
+                    type: 'user_action', 
+                    category: 'analytics', 
+                    action: 'toggle_auto_refresh'
+                  },
+                  created_at: new Date().toISOString(),
+                  session_id: 'analytics-page'
+                })}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {autoRefresh ? 'Disable' : 'Enable'} Auto-refresh
+                Enable Auto-refresh
               </button>
               <button
-                onClick={() => exportData('json')}
+                onClick={() => exportAnalytics()}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
                 Export Data
@@ -382,20 +410,23 @@ function DemographicsView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Types</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => (
-              <div key={device} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 capitalize">{device}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => {
+              const percentageValue = typeof percentage === 'number' ? percentage : 0;
+              return (
+                <div key={device} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 capitalize">{device}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
+                        style={{ width: `${percentageValue}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -494,20 +525,23 @@ function EngagementView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Usage</h3>
           <div className="space-y-3">
-            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => (
-              <div key={feature} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 capitalize">{feature}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => {
+              const percentageValue = typeof percentage === 'number' ? percentage : 0;
+              return (
+                <div key={feature} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 capitalize">{feature}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full"
+                        style={{ width: `${percentageValue}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

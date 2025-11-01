@@ -1,20 +1,15 @@
 'use client'
 
-import { useState, useCallback, useEffect, useContext } from 'react'
-import { useRouter } from 'next/navigation'
-import { AuthContext } from '@/contexts/AuthContext'
+import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useEffect } from 'react';
 
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-
-// Icons
-import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-
-// Utilities
-import { devLog } from '@/lib/logger'
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUser, useUserLoading, useUserActions } from '@/lib/stores/userStore';
+import { devLog } from '@/lib/utils/logger';
 
 type UserData = {
   profile: {
@@ -55,11 +50,9 @@ type DeletionStep = {
 
 export default function AccountDeletionPage() {
   const router = useRouter()
-  const authContext = useContext(AuthContext)
-  
-  // Extract user and signOut early to avoid "used before declaration" errors
-  const user = authContext?.user
-  const signOut = authContext?.signOut
+  const user = useUser()
+  const isUserLoading = useUserLoading()
+  const { signOut } = useUserActions()
   
   // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -114,7 +107,7 @@ export default function AccountDeletionPage() {
       const data = await response.json()
       setUserData(data)
     } catch (error) {
-      devLog('Error loading user data:', error)
+      devLog('Error loading user data:', { error })
       setError('Failed to load user data')
     } finally {
       setIsLoading(false)
@@ -140,14 +133,20 @@ export default function AccountDeletionPage() {
 
       if (response.ok) {
         const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.json`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        // Use SSR-safe browser API access
+        const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
+        const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
+        if (url) {
+          const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
+          if (a) {
+            a.href = url;
+            a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.json`;
+            safeDocument(d => d.body?.appendChild?.(a));
+            a.click();
+            safeWindow(w => w.URL?.revokeObjectURL?.(url));
+            safeDocument(d => d.body?.removeChild?.(a));
+          }
+        }
 
         // Mark data export as completed
         setDeletionSteps(prev => 
@@ -159,7 +158,7 @@ export default function AccountDeletionPage() {
         throw new Error('Failed to export user data')
       }
     } catch (error) {
-      devLog('Error exporting user data:', error)
+      devLog('Error exporting user data:', { error })
       setError('Failed to export user data')
     } finally {
       setIsExporting(false)
@@ -214,7 +213,7 @@ export default function AccountDeletionPage() {
         throw new Error('Failed to delete account')
       }
     } catch (error) {
-      devLog('Error deleting account:', error)
+      devLog('Error deleting account:', { error })
       setError('Failed to delete account')
     } finally {
       setIsDeleting(false)
@@ -224,7 +223,7 @@ export default function AccountDeletionPage() {
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
   // Handle case where auth context is not available during pre-rendering
-  if (!authContext || !user || !signOut) {
+  if (!user || !signOut) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -241,11 +240,11 @@ export default function AccountDeletionPage() {
     );
   }
 
-  if (isLoading) {
+  if (isUserLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading your account data...</p>
         </div>
       </div>
@@ -384,7 +383,7 @@ export default function AccountDeletionPage() {
                             className="mt-3"
                           >
                             {isExporting ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2" />
                             ) : (
                               <Download className="h-4 w-4 mr-2" />
                             )}
@@ -442,7 +441,7 @@ export default function AccountDeletionPage() {
                     className="w-full bg-red-600 hover:bg-red-700 text-white"
                   >
                     {isDeleting ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                     ) : (
                       <Trash2 className="h-4 w-4 mr-2" />
                     )}

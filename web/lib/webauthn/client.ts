@@ -1,4 +1,5 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+
 import { errorMessages } from './config';
 
 /**

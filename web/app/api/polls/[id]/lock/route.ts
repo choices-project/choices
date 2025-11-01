@@ -9,34 +9,36 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
-import { devLog } from '@/lib/logger';
+
 import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
+import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/polls/[id]/lock - Lock a poll
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
     }
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
 
-    // Check authentication
-    const user = getCurrentUser(request);
-    if (!user) {
+    // Check authentication using Supabase native sessions
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       throw new AuthenticationError('Authentication required to lock polls');
     }
 
@@ -52,7 +54,7 @@ export async function POST(
     }
 
     // Check if user can lock this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can lock
       throw new ForbiddenError('Only the poll creator can lock this poll');
@@ -81,7 +83,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error locking poll:', updateError);
+      devLog('Error locking poll:', { error: updateError });
       throw new Error('Failed to lock poll');
     }
 
@@ -89,7 +91,7 @@ export async function POST(
     devLog('Poll locked successfully', {
       pollId,
       title: poll.title,
-      lockedBy: user.userId,
+      lockedBy: user.id,
       lockedAt
     });
 
@@ -104,7 +106,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in poll lock API:', error);
+    devLog('Error in poll lock API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(
@@ -144,24 +146,26 @@ export async function POST(
 // DELETE /api/polls/[id]/lock - Unlock a poll
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
     }
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
 
-    // Check authentication
-    const user = getCurrentUser(request);
-    if (!user) {
+    // Check authentication using Supabase native sessions
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       throw new AuthenticationError('Authentication required to unlock polls');
     }
 
@@ -177,7 +181,7 @@ export async function DELETE(
     }
 
     // Check if user can unlock this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can unlock
       throw new ForbiddenError('Only the poll creator can unlock this poll');
@@ -200,7 +204,7 @@ export async function DELETE(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error unlocking poll:', updateError);
+      devLog('Error unlocking poll:', { error: updateError });
       throw new Error('Failed to unlock poll');
     }
 
@@ -208,7 +212,7 @@ export async function DELETE(
     devLog('Poll unlocked successfully', {
       pollId,
       title: poll.title,
-      unlockedBy: user.userId
+      unlockedBy: user.id
     });
 
     return NextResponse.json({
@@ -222,7 +226,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    devLog('Error in poll unlock API:', error);
+    devLog('Error in poll unlock API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

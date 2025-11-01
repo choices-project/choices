@@ -1,18 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
-import VotingInterface from '@/features/voting/components/VotingInterface';
-import PostCloseBanner from '@/components/PostCloseBanner';
-import ModeSwitch from '@/components/ModeSwitch';
-import type { ResultsMode } from '@/components/ModeSwitch';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
 
-type VoteResponse = { ok: boolean; id?: string; error?: string };
+import ModeSwitch from '@/components/shared/ModeSwitch';
+import type { ResultsMode } from '@/components/shared/ModeSwitch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
+import { logger } from '@/lib/utils/logger';
+
+import VotingInterface from '../../../../features/voting/components/VotingInterface';
+
+
+type VoteResponse = { ok: boolean; id?: string; error?: string }
 
 type Poll = {
   id: string;
@@ -29,7 +33,7 @@ type Poll = {
   baselineAt?: string;
   lockedAt?: string;
   allowPostClose?: boolean;
-};
+}
 
 type PollResults = {
   totalVotes: number;
@@ -39,11 +43,11 @@ type PollResults = {
     ageGroups: Record<string, number>;
     locations: Record<string, number>;
   };
-};
+}
 
 type PollClientProps = {
   poll: Poll;
-};
+}
 
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
@@ -66,10 +70,7 @@ export default function PollClient({ poll }: PollClientProps) {
       try {
         const res = await fetch(`/api/polls/${poll.id}/vote`, { 
           method: 'HEAD', 
-          cache: 'no-store',
-          headers: {
-            'x-e2e-bypass': '1' // Add E2E bypass header for client-side requests
-          }
+          cache: 'no-store'
         });
         if (!cancelled) setHasVoted(res.status === 200);
       } catch {
@@ -111,15 +112,14 @@ export default function PollClient({ poll }: PollClientProps) {
       };
     }
 
-    console.log('Submitting vote for poll:', poll.id, 'choice:', choice);
+    logger.info('Submitting vote for poll', { pollId: poll.id, choice });
     setIsVoting(true);
     try {
       // Submit vote to API
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-e2e-bypass': '1' // Add E2E bypass header
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ choice }),
       });
@@ -153,11 +153,17 @@ export default function PollClient({ poll }: PollClientProps) {
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/polls/${pollId}`;
+    // Use SSR-safe browser API access
+    const { safeWindow, safeNavigator } = await import('@/lib/utils/ssr-safe');
+    const origin = safeWindow(w => w.location?.origin, '');
+    const url = `${origin}/polls/${pollId}`;
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const clipboard = safeNavigator(n => n.clipboard);
+      if (clipboard?.writeText) {
+        await clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch (err) {
       console.error('Failed to copy URL:', err);
     }
@@ -322,7 +328,7 @@ export default function PollClient({ poll }: PollClientProps) {
           <Card>
             <CardContent className="text-center py-8">
               <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
                 <span className="text-gray-600">Loading results...</span>
               </div>
             </CardContent>

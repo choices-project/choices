@@ -1,10 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -21,7 +26,9 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   "include": [

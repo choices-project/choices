@@ -1,35 +1,39 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { logger } from '@/lib/logger'
-import { rateLimiters } from '@/lib/core/security/rate-limit'
+
 import { 
+
+
   validateCsrfProtection, 
   createCsrfErrorResponse 
 } from '../_shared'
 
+
 export async function POST(request: NextRequest) {
   try {
     // Validate CSRF protection for state-changing operation
-    if (!validateCsrfProtection(request)) {
+    if (!(await validateCsrfProtection(request))) {
       return createCsrfErrorResponse()
     }
 
     // Rate limiting: 5 registration attempts per 15 minutes per IP
-    // Skip rate limiting for E2E tests
-    const isE2E = request.headers.get('x-e2e-bypass') === '1' || 
-                  process.env.NODE_ENV === 'test' || 
-                  process.env.E2E === '1'
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const userAgent = request.headers.get('user-agent') ?? undefined;
+    const rateLimitResult = await apiRateLimiter.checkLimit(
+      ip,
+      '/api/auth/register',
+      { userAgent }
+    );
     
-    if (!isE2E) {
-      const rateLimitResult = await rateLimiters.auth.check(request)
-      
-      if (!rateLimitResult.allowed) {
-        return NextResponse.json(
-          { message: 'Too many registration attempts. Please try again later.' },
-          { status: 429 }
-        )
-      }
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { message: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     // Validate request
@@ -64,66 +68,15 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseServerClient()
     const supabaseClient = await supabase
 
-    // For E2E tests, mock the response to bypass Supabase validation
-    if (isE2E) {
-      const mockUser = {
-        id: `test-user-${Date.now()}`,
-        email: email.toLowerCase().trim(),
-        user_metadata: {
-          username: username,
-          display_name: display_name || username
-        }
-      };
-      
-      const mockSession = {
-        access_token: `mock-token-${Date.now()}`,
-        refresh_token: `mock-refresh-${Date.now()}`,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: mockUser
-      };
-      
-      // Mock auth data for E2E testing
-      
-      // Create mock profile for E2E
-      const mockProfile = {
-        user_id: mockUser.id,
-        username: username,
-        email: email.toLowerCase().trim(),
-        display_name: display_name || username,
-        trust_tier: 'T0',
-        is_active: true
-      };
-      
-      logger.info('E2E mock registration successful', { 
-        userId: mockUser.id, 
-        email: mockUser.email,
-        username: username 
-      });
-
-      return NextResponse.json({
-        success: true,
-        user: {
-          id: mockUser.id,
-          email: mockUser.email,
-          username: mockProfile.username,
-          trust_tier: mockProfile.trust_tier,
-          display_name: mockProfile.display_name,
-          is_active: mockProfile.is_active
-        },
-        session: mockSession,
-        token: mockSession.access_token,
-        message: 'E2E mock registration successful.'
-      });
-    }
+    // Always use real Supabase authentication - no E2E bypasses
 
     // Sign up with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
       email: email.toLowerCase().trim(),
-      password: password,
+      password,
       options: {
         data: {
-          username: username,
+          username,
           display_name: display_name || username
         }
       }
@@ -143,8 +96,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           message: 'Registration failed. Please try again.',
-          error: authError?.message || 'Unknown error',
-          details: authError?.status || 'No status'
+          error: authError?.message ?? 'Unknown error',
+          details: authError?.status ?? 'No status'
         },
         { status: 400 }
       )
@@ -155,19 +108,18 @@ export async function POST(request: NextRequest) {
       .from('user_profiles')
       .insert({
         user_id: authData.user.id,
-        username: username,
+        username,
         email: email.toLowerCase().trim(),
         display_name: display_name || username,
         trust_tier: 'T0',
         is_active: true
-      })
+      } as any)
       .select()
       .single()
 
     if (profileError) {
-      logger.error('Failed to create user profile', { 
-        error: profileError,
-        user_id: authData.user.id
+      logger.error('Failed to create user profile', profileError, { 
+        user_id: authData.user.id 
       })
       
       // If profile creation fails, log the issue and rely on a secure backend cleanup process
@@ -187,7 +139,7 @@ export async function POST(request: NextRequest) {
     logger.info('User registered successfully', { 
       userId: authData.user.id, 
       email: authData.user.email,
-      username: username 
+      username 
     })
 
     return NextResponse.json({

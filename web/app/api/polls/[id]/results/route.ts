@@ -1,69 +1,63 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-
-// GET /api/polls/[id]/results - Get aggregated poll results only
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
-    const supabaseClient = await getSupabaseServerClient();
+    const { searchParams } = new URL(request.url);
+    const trustTier = searchParams.get('tier');
+    
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    // Fetch poll data and calculate aggregated results
-    const { data: poll, error: pollError } = await supabaseClient
+    // Await params in Next.js 15
+    const { id } = await params;
+
+    // Validate poll exists
+    const { data: poll, error: pollError } = await supabase
       .from('polls')
-      .select('id, title, options, total_votes, participation, status')
-      .eq('id', pollId)
-      .eq('status', 'active')
+      .select('id, is_public')
+      .eq('id', id)
+      .eq('is_public', true)
       .single();
 
-    if (pollError) {
+    if (pollError || !poll) {
       return NextResponse.json(
-        { error: 'Poll not found or not active' },
-        { status: 404 }
-      );
-    }
-    
-    if (!poll) {
-      return NextResponse.json(
-        { error: 'Poll not found or not active' },
+        { error: 'Poll not found' }, 
         { status: 404 }
       );
     }
 
-    // Calculate aggregated results (all zeros for now since no votes exist)
-    const options = poll.options || [];
-    const aggregatedResults = options.reduce((acc: Record<string, number>, _option: unknown, index: number) => {
-      acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
-      return acc;
-    }, {});
+    // Get results with optional trust tier filter
+    const { data: results, error: resultsError } = await supabase
+      .rpc('get_poll_results_by_trust_tier', {
+        p_poll_id: id,
+        p_trust_tier: trustTier ? parseInt(trustTier) : null
+      });
 
-    // Additional security: ensure no sensitive data is returned
-    const sanitizedResults = {
-      id: poll.id,
-      title: poll.title,
-      total_votes: poll.total_votes ?? 0,
-      participation: poll.participation ?? 0,
-      aggregated_results: aggregatedResults,
-      // Only include safe, public fields
-      status: 'active',
-      message: 'Aggregated results only - no individual vote data'
-    };
+    if (resultsError) {
+      console.error('Results query error:', resultsError);
+      return NextResponse.json(
+        { error: 'Failed to get results' }, 
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      success: true,
-      results: sanitizedResults
+      poll_id: id,
+      trust_tier_filter: trustTier ? parseInt(trustTier) : null,
+      results: results || [],
+      total_votes: results?.reduce((sum: number, r: any) => sum + r.vote_count, 0) || 0
     });
 
   } catch (error) {
-    devLog('Error in poll results API:', error);
+    console.error('Poll results error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error' }, 
       { status: 500 }
     );
   }

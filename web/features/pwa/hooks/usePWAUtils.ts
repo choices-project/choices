@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger';
+
+import { devLog } from '@/lib/utils/logger';
 
 // Import types from respective PWA modules
 import type { PWAAuth } from '../lib/pwa-auth-integration';
@@ -37,15 +38,20 @@ export function usePWAUtils() {
           // import('../lib/pwa-analytics') // Archived PWA feature
         ])
         
+        // Import PWA utilities
+        const [pwaUtilsModule] = await Promise.all([
+          import('../lib/pwa-utils')
+        ])
+        
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,
-          pwaManager: {} as PWAManager, // Not implemented yet
+          pwaManager: new pwaUtilsModule.PWAManager(),
           pwaAnalytics: null, // Archived PWA feature
-          pwaWebAuthn: {} as PWAWebAuthn, // Not implemented yet
-          privacyStorage: {} as PrivacyStorage // Not implemented yet
+          pwaWebAuthn: new pwaUtilsModule.PWAWebAuthn(),
+          privacyStorage: new pwaUtilsModule.PrivacyStorage()
         })
       } catch (err) {
-        devLog('Error loading PWA utils:', err)
+        devLog('Error loading PWA utils:', { error: err })
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * Error Boundary for Individual Poll Page
  * 

@@ -545,7 +545,7 @@ export class CommunicationComplianceManager {
   private async validateUnsubscribeToken(token: string): Promise<string | null> {
     // Validate unsubscribe token and return email
     // Implementation would check token validity and return associated email
-    if (!token || !token.startsWith('unsub_')) {
+    if (!token?.startsWith('unsub_')) {
       return null;
     }
     // For now, return a placeholder based on token
@@ -558,7 +558,7 @@ export class CommunicationComplianceManager {
 
   private async getUserIdByEmail(email: string): Promise<string | null> {
     // Get user ID by email address
-    if (!email || !email.includes('@')) {
+    if (!email?.includes('@')) {
       return null;
     }
     const emailHash = email.split('').reduce((a, b) => {
@@ -613,7 +613,7 @@ export class CommunicationComplianceManager {
 
   private async validateParentalConsentToken(token: string): Promise<any> {
     // Validate parental consent token
-    if (!token || !token.startsWith('parental_')) {
+    if (!token?.startsWith('parental_')) {
       return null;
     }
     const tokenHash = token.split('').reduce((a, b) => {

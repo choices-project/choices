@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { Search, MapPin, Zap, Shield, Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 type LocationInputProps = {
   onLocationResolved: (jurisdictionIds: string[]) => void;
@@ -188,7 +188,7 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
               Finding your candidates...
             </div>
           ) : (

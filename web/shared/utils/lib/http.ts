@@ -13,7 +13,7 @@ export function requireTrustedOrigin(req: Request) {
   let origin = '';
   
   try {
-    origin = originHeader || (referer ? new URL(referer).origin : '');
+    origin = originHeader ?? (referer ? new URL(referer).origin : '');
   } catch {
     origin = '';
   }
@@ -62,5 +62,5 @@ export function getClientIP(req: Request): string {
 
 // Helper for getting user agent
 export function getUserAgent(req: Request): string {
-  return req.headers.get('user-agent') || 'unknown';
+  return req.headers.get('user-agent') ?? 'unknown';
 }

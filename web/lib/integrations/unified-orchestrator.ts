@@ -9,13 +9,15 @@
  */
 
 import { dev } from '@/lib/dev.logger';
-import { createGoogleCivicClient } from './google-civic/client';
-import { createCongressGovClient } from './congress-gov/client';
-import { createOpenStatesClient } from './open-states/client';
-import { createFECClient } from './fec/client';
-import { createOpenSecretsClient } from './opensecrets/client';
-import { createGovTrackClient } from './govtrack/client';
 import type { UserLocation, ElectoralRace } from '@/lib/types/electoral-unified';
+
+import { createCongressGovClient } from './congress-gov/client';
+import { createFECClient } from './fec/client';
+import { createGoogleCivicClient } from './google-civic/client';
+import { createGovTrackClient } from './govtrack/client';
+import { createOpenStatesClient } from './open-states/client';
+import { createOpenSecretsClient } from './opensecrets/client';
+
 
 // Unified data types
 export type UnifiedRepresentative = {

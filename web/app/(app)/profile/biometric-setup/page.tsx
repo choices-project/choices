@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+
 import { Fingerprint, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
-import { devLog } from '@/lib/logger'
+import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
+
+import { devLog } from '@/lib/utils/logger'
 
 export default function BiometricSetupPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -22,18 +24,18 @@ export default function BiometricSetupPage() {
       setStep('registering')
       setMessage('Setting up biometric authentication...')
 
-      // Get current user info (you'll need to implement this based on your auth system)
-      const userResponse = await fetch('/api/auth/me')
+      // Get current user info using existing profile API
+      const userResponse = await fetch('/api/profile')
       const userData = await userResponse.json()
 
-      if (!userResponse.ok || !userData.user) {
+      if (!userResponse.ok || !userData.profile) {
         throw new Error('Please log in to set up biometric authentication')
       }
 
-      const { user } = userData
+      const user = userData.profile
 
       // Get registration options
-      const optionsResponse = await fetch('/api/auth/webauthn/register', {
+      const optionsResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +61,7 @@ export default function BiometricSetupPage() {
       // Create credential
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: challenge,
+          challenge,
           rp: optionsData.rp,
           user: {
             id: userId,
@@ -92,7 +94,7 @@ export default function BiometricSetupPage() {
       }
 
       // Register the credential
-      const registerResponse = await fetch('/api/auth/webauthn/register', {
+      const registerResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ export default function BiometricSetupPage() {
 
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      devLog('Biometric setup error:', err)
+      devLog('Biometric setup error:', { error: err })
       setError(err.message || 'Failed to set up biometric authentication')
       setStep('intro')
     } finally {

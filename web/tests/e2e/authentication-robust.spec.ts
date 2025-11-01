@@ -9,7 +9,8 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { waitForHydrationAndForm, waitForHydrationAndFormElements } from '../utils/hydration';
+
+
 import { 
   setupE2ETestData, 
   cleanupE2ETestData, 

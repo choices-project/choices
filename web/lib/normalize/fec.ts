@@ -5,8 +5,8 @@
  * Normalizes external API types into strict internal model types
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { isPresent } from '@/lib/util/clean'
+import { withOptional } from '@/lib/util/objects'
 
 // External API types (permissive)
 export type FECTotalsWire = {

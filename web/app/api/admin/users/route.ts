@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { logger } from '@/lib/logger';
+
 import { requireAdminOr401 } from '@/lib/admin-auth';
+import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
@@ -16,10 +17,10 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const search = searchParams.get('search') || ''
-    const trustTier = searchParams.get('trust_tier') || ''
+    const page = parseInt(searchParams.get('page') ?? '1')
+    const limit = parseInt(searchParams.get('limit') ?? '20')
+    const search = searchParams.get('search') ?? ''
+    const trustTier = searchParams.get('trust_tier') ?? ''
 
     // Build query
     let query = supabase
@@ -67,8 +68,8 @@ export async function GET(request: NextRequest) {
       pagination: {
         page,
         limit,
-        total: count || 0,
-        pages: Math.ceil((count || 0) / limit),
+        total: count ?? 0,
+        pages: Math.ceil((count ?? 0) / limit),
       },
     })
 

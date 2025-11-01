@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import React from 'react';
 import type { ComponentType } from 'react'
 
 // Create a wrapper component for motion

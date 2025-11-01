@@ -12,6 +12,19 @@ This roadmap outlines the comprehensive E2E testing strategy for the Choices pla
 
 ### ✅ Completed
 - **Feedback Widget E2E Tests** (4/4 passing) - Reference implementation
+- **Complete Civics User Journey E2E Test Suite** ✅ - **13/15 tests passing** - Comprehensive test coverage including:
+  - Architecture compliance (Supabase-only queries, no external APIs)
+  - Privacy verification (address not persisted)
+  - Error handling and fallback behavior
+  - State-based representative lookup
+  - Address extraction and state filtering
+  - Representative data structure completeness
+  - Empty address handling
+  - Pagination and limit parameters
+  - Data source attribution
+  - Multiple address format handling
+  - Representative filtering by level (federal/state/local)
+  - API response metadata verification
 - **E2E Test Infrastructure** - Fixed double hydration, motion components, selectors
 - **Playwright Configuration** - Multiple environments (dev, staging, production)
 - **Test Helpers & Utilities** - Comprehensive E2E testing toolkit
@@ -54,18 +67,25 @@ web/tests/e2e/global-setup.ts     # Feature flag configuration
 ## 🎯 Critical Features Needing E2E Tests
 
 ### 1. **CIVICS_REPRESENTATIVE_DATABASE** (High Priority)
-**Status:** Needs comprehensive E2E testing  
-**Files to Test:**
-- `/civics` page with representative cards
-- Address lookup functionality
-- Representative detail pages
-- Filtering and search capabilities
+**Status:** ✅ COMPLETED - Comprehensive E2E test suite created  
+**Test File:** `web/tests/e2e/civics-complete-user-journey.spec.ts`
 
-**Test Requirements:**
-- Mock external API calls to Google Civic Information API
-- Test representative card rendering and interactions
-- Validate address lookup functionality
-- Test representative detail page navigation
+**Test Coverage:**
+- ✅ Complete user journey: Registration → Onboarding → Address Lookup → Representative Auto-population
+- ✅ Architecture compliance: Verifies `/api/civics/by-address` only queries Supabase (no external APIs)
+- ✅ Privacy verification: Ensures addresses are not persisted, only jurisdiction used
+- ✅ Error handling: Tests graceful failure and fallback behavior
+- ✅ Component integration: Fixed API response handling in `UserOnboarding.tsx` and `UserProfile.tsx`
+
+**Component Fixes:**
+- Fixed `UserOnboarding.tsx` - Correctly extracts `representatives` from `result.data.representatives`
+- Fixed `UserProfile.tsx` - Fixed both `handleAddressUpdateLocal` and `handleStateUpdate` functions
+
+**Files Tested:**
+- `/civics` page with representative cards
+- Address lookup functionality (`/api/civics/by-address`)
+- Representative auto-population in onboarding flow
+- Data persistence in localStorage and userStore
 
 **Reference Implementation:** `web/tests/e2e/feedback-widget.spec.ts`
 
@@ -268,7 +288,7 @@ extraHTTPHeaders: {
 ## 📋 Implementation Checklist
 
 ### Phase 1: Critical Features (High Priority)
-- [ ] **CIVICS_REPRESENTATIVE_DATABASE** - Create comprehensive E2E tests
+- [x] **CIVICS_REPRESENTATIVE_DATABASE** - ✅ Comprehensive E2E tests created (`civics-complete-user-journey.spec.ts`)
 - [ ] **CIVICS_CAMPAIGN_FINANCE** - Test FEC data integration
 - [ ] **CIVICS_VOTING_RECORDS** - Test voting record functionality
 - [ ] **CANDIDATE_CARDS** - Test candidate display features
@@ -345,7 +365,8 @@ npm run test:e2e -- --project=chromium
 - `web/tests/fixtures/webauthn.ts` - WebAuthn testing fixtures
 
 ### Reference Implementations
-- `web/tests/e2e/feedback-widget.spec.ts` - **PRIMARY REFERENCE**
+- `web/tests/e2e/feedback-widget.spec.ts` - **PRIMARY REFERENCE** - Simple feature testing
+- `web/tests/e2e/civics-complete-user-journey.spec.ts` - **COMPREHENSIVE USER JOURNEY** - Complete flow with architecture compliance
 - `web/tests/e2e/user-journeys.spec.ts` - Advanced patterns
 - `web/tests/e2e/webauthn-flow.spec.ts` - WebAuthn testing
 

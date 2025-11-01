@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { withOptional } from '@/lib/util/objects'
+import React, { useState, useEffect } from 'react';
 
-type PollOption = {
-  id: string
-  text: string
-  description?: string
-}
+
+import type { PollOption } from '../types'
 
 type QuadraticVotingProps = {
   pollId: string
@@ -75,7 +71,8 @@ export default function QuadraticVoting({
     }
 
     setError(null)
-    setAllocations(prev => withOptional(prev, {
+    setAllocations(prev => ({
+      ...prev,
       [optionId]: Math.max(0, credits)
     }))
   }
@@ -109,9 +106,11 @@ export default function QuadraticVoting({
         throw new Error('Allocations exceed available credits')
       }
       
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           allocations: validAllocations,
           voting_method: 'quadratic',
@@ -220,8 +219,8 @@ export default function QuadraticVoting({
               <div key={option.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="mb-4">
                   <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.description && (
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                  {option.option_text && (
+                    <p className="text-sm text-gray-600">{option.option_text}</p>
                   )}
                 </div>
 

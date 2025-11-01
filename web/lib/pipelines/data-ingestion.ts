@@ -6,13 +6,14 @@
  * real-time user-facing operations.
  */
 
-import { logger } from '@/lib/logger';
 import { createGoogleCivicClient } from '@/lib/integrations/google-civic';
 import { 
   createGoogleCivicRateLimiter, 
   withRateLimit,
   apiUsageMonitor 
 } from '@/lib/integrations/rate-limiting';
+import { logger } from '@/lib/logger';
+
 import { 
   createDataTransformationPipeline,
   PRIORITY_STATES 
@@ -184,7 +185,7 @@ export class DataIngestionPipeline {
     try {
       for (const sourceName of job.sources) {
         const sourceConfig = this.config.sources.find(s => s.name === sourceName);
-        if (!sourceConfig || !sourceConfig.enabled) {
+        if (!sourceConfig?.enabled) {
           logger.warn('Skipping disabled source', { sourceName });
           continue;
         }

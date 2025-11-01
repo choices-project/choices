@@ -1,15 +1,17 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = getSupabaseServerClient();
     
     // Get Supabase client
@@ -32,14 +34,14 @@ export async function PATCH(
     }
 
     // Check admin permissions - only admins can modify feedback status
-    const { data: userProfile, error: profileError } = await supabaseClient
+    const { data: userProfile, error: profileError } = await (supabaseClient as any)
       .from('user_profiles')
       .select('is_admin')
       .eq('user_id', String(user.id))
       .single();
 
     if (profileError) {
-      devLog('Error fetching user profile:', profileError);
+      devLog('Error fetching user profile:', { error: profileError });
       return NextResponse.json(
         { error: 'Failed to verify user permissions' },
         { status: 500 }
@@ -53,7 +55,7 @@ export async function PATCH(
       );
     }
 
-      const feedbackId = String(params.id);
+      const feedbackId = String(id);
     if (!feedbackId) {
       return NextResponse.json(
         { error: 'Feedback ID is required' },
@@ -81,18 +83,18 @@ export async function PATCH(
     }
 
     // Update feedback status
-    const { data: updatedFeedback, error: updateError } = await supabaseClient
+    const { data: updatedFeedback, error: updateError } = await (supabaseClient as any)
       .from('feedback')
       .update({ 
         status: newStatus,
         updated_at: new Date().toISOString()
-      } as any)
-      .eq('id', feedbackId as any)
+      })
+      .eq('id', feedbackId)
       .select()
       .single();
 
     if (updateError) {
-      devLog('Error updating feedback status:', updateError);
+      devLog('Error updating feedback status:', { error: updateError });
       return NextResponse.json(
         { error: 'Failed to update feedback status' },
         { status: 500 }
@@ -119,7 +121,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    devLog('Error in feedback status update API:', error);
+    devLog('Error in feedback status update API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

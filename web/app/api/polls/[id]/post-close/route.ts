@@ -9,20 +9,21 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
-import { devLog } from '@/lib/logger';
+
 import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
+import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/polls/[id]/post-close - Enable post-close voting
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -35,7 +36,14 @@ export async function POST(
     }
 
     // Check authentication
-    const user = getCurrentUser(request);
+    // Use Supabase native sessions
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
+      throw new AuthenticationError('Authentication required to modify post-close settings');
+    }
+    
+    const user = session.user;
     if (!user) {
       throw new AuthenticationError('Authentication required to modify post-close settings');
     }
@@ -52,7 +60,7 @@ export async function POST(
     }
 
     // Check if user can modify this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can modify
       throw new ForbiddenError('Only the poll creator can modify post-close settings');
@@ -80,7 +88,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error enabling post-close voting:', updateError);
+      devLog('Error enabling post-close voting:', { error: updateError });
       throw new Error('Failed to enable post-close voting');
     }
 
@@ -88,7 +96,7 @@ export async function POST(
     devLog('Post-close voting enabled', {
       pollId,
       title: poll.title,
-      enabledBy: user.userId,
+      enabledBy: user.id,
       baselineAt: poll.baseline_at
     });
 
@@ -103,7 +111,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in post-close enable API:', error);
+    devLog('Error in post-close enable API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(
@@ -143,10 +151,11 @@ export async function POST(
 // DELETE /api/polls/[id]/post-close - Disable post-close voting
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -159,7 +168,14 @@ export async function DELETE(
     }
 
     // Check authentication
-    const user = getCurrentUser(request);
+    // Use Supabase native sessions
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
+      throw new AuthenticationError('Authentication required to modify post-close settings');
+    }
+    
+    const user = session.user;
     if (!user) {
       throw new AuthenticationError('Authentication required to modify post-close settings');
     }
@@ -176,7 +192,7 @@ export async function DELETE(
     }
 
     // Check if user can modify this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can modify
       throw new ForbiddenError('Only the poll creator can modify post-close settings');
@@ -199,7 +215,7 @@ export async function DELETE(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error disabling post-close voting:', updateError);
+      devLog('Error disabling post-close voting:', { error: updateError });
       throw new Error('Failed to disable post-close voting');
     }
 
@@ -207,7 +223,7 @@ export async function DELETE(
     devLog('Post-close voting disabled', {
       pollId,
       title: poll.title,
-      disabledBy: user.userId
+      disabledBy: user.id
     });
 
     return NextResponse.json({
@@ -220,7 +236,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    devLog('Error in post-close disable API:', error);
+    devLog('Error in post-close disable API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

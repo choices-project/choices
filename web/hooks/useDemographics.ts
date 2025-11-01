@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+
 import { devLog } from '@/lib/logger';
 
 type DemographicData = {

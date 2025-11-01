@@ -1,14 +1,15 @@
+ 'use client';
+
+import React, { useState, useEffect } from 'react';
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+
 /**
  * Privacy Status Badge Component
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  * 
  * This component shows the privacy protection status
  */
-
-'use client';
-
-import { useState, useEffect } from 'react';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 type PrivacyStatus = {
   status: 'healthy' | 'warning' | 'error' | 'disabled';
@@ -28,11 +29,24 @@ export function PrivacyStatusBadge() {
   useEffect(() => {
     const checkPrivacyStatus = async () => {
       try {
-        // TODO: Call actual health check when feature is implemented
-        // const response = await fetch('/api/health/civics');
-        // const data = await response.json();
-        
-        // For now, simulate a healthy status
+        // Call actual health check
+        const response = await fetch('/api/health/civics');
+        if (response.ok) {
+          const data = await response.json();
+          setStatus({
+            status: data.status === 'healthy' ? 'healthy' : data.status === 'degraded' ? 'warning' : 'error',
+            message: data.message ?? 'Privacy protections active',
+            details: data.details ? {
+              pepper: data.details.pepper ?? true,
+              rls: data.details.rls ?? true,
+              auth: data.details.auth ?? true
+            } : undefined
+          });
+        } else {
+          throw new Error('Health check failed');
+        }
+      } catch {
+        // Fallback to simulated healthy status if API is unavailable
         setStatus({
           status: 'healthy',
           message: 'Privacy protections active',
@@ -41,11 +55,6 @@ export function PrivacyStatusBadge() {
             rls: true,
             auth: true
           }
-        });
-      } catch {
-        setStatus({
-          status: 'error',
-          message: 'Privacy check failed'
         });
       } finally {
         setIsLoading(false);

@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
+
 import { requireUser } from '@/lib/core/auth/middleware';
 import { requireTrustedOrigin } from '@/lib/http';
 

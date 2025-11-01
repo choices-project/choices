@@ -15,6 +15,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+
 import { logger } from '@/lib/logger'
 
 const supabase = createClient(

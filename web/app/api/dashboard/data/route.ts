@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { getCurrentUser } from '@/lib/core/auth/utils';
 import { devLog } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,10 +99,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate metrics
-    const pollsCreated = userPolls?.length || 0;
-    const pollsActive = userPolls?.filter(poll => poll.status === 'active').length || 0;
-    const votesCast = userVotes?.length || 0;
-    const trustScore = userProfile?.trust_score || 0;
+    const pollsCreated = userPolls?.length ?? 0;
+    const pollsActive = userPolls?.filter(poll => poll.status === 'active').length ?? 0;
+    const votesCast = userVotes?.length ?? 0;
+    const trustScore = userProfile?.trust_score ?? 0;
 
     // Calculate participation rate (votes cast / polls available to vote on)
     const { data: allPolls, error: allPollsError } = await supabase
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching active polls for participation calculation:', allPollsError);
     }
 
-    const availablePolls = allPolls?.length || 1; // Avoid division by zero
+    const availablePolls = allPolls?.length ?? 1; // Avoid division by zero
     const participationRate = Math.round((votesCast / availablePolls) * 100);
 
     // Generate mock trend data (last 30 days)

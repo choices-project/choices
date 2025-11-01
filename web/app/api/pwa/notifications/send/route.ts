@@ -6,8 +6,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,11 +58,11 @@ export async function POST(request: NextRequest) {
     const payload = {
       title,
       body: message,
-      icon: icon || '/icons/icon-192x192.png',
-      badge: badge || '/icons/icon-72x72.png',
-      tag: tag || `notification_${Date.now()}`,
+      icon: icon ?? '/icons/icon-192x192.png',
+      badge: badge ?? '/icons/icon-72x72.png',
+      tag: tag ?? `notification_${Date.now()}`,
       data: {
-        url: url || '/',
+        url: url ?? '/',
         timestamp: new Date().toISOString(),
         ...data
       },
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') ?? '10');
 
     // Get notification history
     const history = await getNotificationHistory(userId, limit);
@@ -273,7 +274,7 @@ async function getNotificationHistory(userId?: string | null, limit: number = 10
       message: 'A new poll has been created in your area',
       sentAt: new Date(Date.now() - 3600000).toISOString(),
       status: 'sent',
-      userId: userId || 'user_1'
+      userId: userId ?? 'user_1'
     },
     {
       id: 'notif_2',
@@ -281,7 +282,7 @@ async function getNotificationHistory(userId?: string | null, limit: number = 10
       message: 'Results for "Community Survey" are now available',
       sentAt: new Date(Date.now() - 7200000).toISOString(),
       status: 'sent',
-      userId: userId || 'user_1'
+      userId: userId ?? 'user_1'
     }
   ].slice(0, limit);
 }

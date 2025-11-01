@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
+import React, { useState, useEffect } from 'react';
+
+
 import { T } from '@/lib/testing/testIds';
+import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
 
 type PasskeyButtonProps = {
   mode: 'register' | 'authenticate';

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useMemo } from 'react';
+
 
 import { 
   usePWAInstallation,
@@ -9,7 +10,6 @@ import {
   usePWAError,
   usePWAActions
 } from '@/lib/stores/pwaStore'
-import { T } from '@/tests/registry/testIds'
 import { logger } from '@/lib/utils/logger'
 
 import NotificationPermission from './NotificationPermission'
@@ -19,7 +19,7 @@ import OfflineQueue from './OfflineQueue'
 import OfflineSync from './OfflineSync'
 import OfflineVoting from './OfflineVoting'
 
-interface PWAFeaturesProps {
+type PWAFeaturesProps = {
   className?: string
   showDetails?: boolean
 }

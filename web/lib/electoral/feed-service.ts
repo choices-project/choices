@@ -5,8 +5,9 @@
  * No plaintext address or GPS ever received by server.
  */
 
-import type { JurisdictionID } from '../privacy/location-resolver';
 import { logger } from '@/lib/logger';
+
+import type { JurisdictionID } from '../privacy/location-resolver';
 
 export type ElectoralFeed = {
   jurisdictionId: JurisdictionID;

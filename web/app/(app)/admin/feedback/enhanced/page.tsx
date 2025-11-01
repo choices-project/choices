@@ -1,7 +1,5 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger'
 import { 
   MessageCircle, 
   Bug, 
@@ -23,6 +21,9 @@ import {
   Activity,
   X
 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+
+import { devLog } from '@/lib/utils/logger'
 
 type FeedbackItem = {
   id: string
@@ -34,9 +35,55 @@ type FeedbackItem = {
   priority: 'low' | 'medium' | 'high' | 'urgent'
   createdat: string
   updatedat: string
-  userJourney: any
-  metadata: any
-  aiAnalysis: any
+  userJourney: {
+    currentPage: string
+    currentPath: string
+    pageTitle: string
+    referrer: string
+    userAgent: string
+    screenResolution: string
+    viewportSize: string
+    timeOnPage: number
+    sessionId: string
+    sessionStartTime: string
+    totalPageViews: number
+    activeFeatures: string[]
+    lastAction: string
+    actionSequence: string[]
+    pageLoadTime: number
+    performanceMetrics: {
+      fcp?: number
+      lcp?: number
+      fid?: number
+      cls?: number
+    }
+    errors: Array<{
+      type: string
+      message: string
+      stack?: string
+      timestamp: string
+    }>
+    deviceInfo: {
+      type: 'mobile' | 'tablet' | 'desktop'
+      os: string
+      browser: string
+      language: string
+      timezone: string
+    }
+    isAuthenticated: boolean
+    userRole?: string
+    userId?: string
+  }
+  metadata: Record<string, unknown>
+  aiAnalysis: {
+    intent: string
+    category: string
+    sentiment: number
+    urgency: number
+    complexity: number
+    keywords: string[]
+    suggestedActions: string[]
+  }
   deviceType?: string
   browser?: string
   os?: string
@@ -75,23 +122,28 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
     try {
       setLoading(true)
       const response = await fetch('/api/feedback?limit=100')
-      const data = await response.json()
+      const data = await response.json() as { 
+        success: boolean; 
+        feedback?: FeedbackItem[]; 
+        analytics?: Analytics | null; 
+        error?: string 
+      }
       
       if (data.success) {
-        setFeedback(data.feedback || [])
-        setAnalytics(data.analytics || null)
+        setFeedback(data.feedback ?? [])
+        setAnalytics(data.analytics ?? null)
       } else {
-        devLog('Error fetching feedback:', data.error)
+        devLog('Error fetching feedback:', { error: data.error })
       }
     } catch (error) {
-      devLog('Error fetching feedback:', error)
+      devLog('Error fetching feedback:', { error })
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchFeedback()
+    void fetchFeedback()
   }, [])
 
   const getTypeIcon = (type: string) => {
@@ -166,7 +218,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
               <p className="text-gray-600 mt-2">Comprehensive feedback analysis with user journey tracking</p>
             </div>
             <button
-              onClick={fetchFeedback}
+              onClick={() => void fetchFeedback()}
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
@@ -310,7 +362,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
               <p className="text-gray-600 mt-2">Loading feedback...</p>
             </div>
           ) : filteredFeedback.length === 0 ? (
@@ -326,11 +378,25 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {filteredFeedback.map((item: any) => (
-                <div key={item.id} className="p-6 hover:bg-gray-50 cursor-pointer" onClick={() => {
-                  setSelectedFeedback(item)
-                  setShowDetails(true)
-                }}>
+              {filteredFeedback.map((item: FeedbackItem) => (
+                <div 
+                  key={item.id} 
+                  className="p-6 hover:bg-gray-50 cursor-pointer" 
+                  onClick={() => {
+                    setSelectedFeedback(item)
+                    setShowDetails(true)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setSelectedFeedback(item)
+                      setShowDetails(true)
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View details for ${item.title}`}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -383,7 +449,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex gap-1 mt-2">
-                          {item.tags.slice(0, 5).map((tag: any, index: any) => (
+                          {item.tags.slice(0, 5).map((tag: string, index: number) => (
                             <span key={index} className="px-2 py-1 bg-gray-100 rounded text-xs">
                               {tag}
                             </span>
@@ -468,14 +534,14 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-700">Device</label>
                         <div className="flex items-center gap-2 mt-1">
-                          {getDeviceIcon(selectedFeedback.deviceType || 'unknown')}
+                          {getDeviceIcon(selectedFeedback.deviceType ?? 'unknown')}
                           <span className="text-gray-900 capitalize">{selectedFeedback.deviceType}</span>
                         </div>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-700">Browser</label>
                         <div className="flex items-center gap-2 mt-1">
-                          {getBrowserIcon(selectedFeedback.browser || 'unknown')}
+                          {getBrowserIcon(selectedFeedback.browser ?? 'unknown')}
                           <span className="text-gray-900">{selectedFeedback.browser}</span>
                         </div>
                       </div>
@@ -483,8 +549,8 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-700">Performance</label>
                       <div className="grid grid-cols-2 gap-4 mt-1">
-                        <span className="text-sm text-gray-600">Load: {formatDuration(selectedFeedback.pageLoadTime || 0)}</span>
-                        <span className="text-sm text-gray-600">Time: {formatDuration(selectedFeedback.timeOnPage || 0)}</span>
+                        <span className="text-sm text-gray-600">Load: {formatDuration(selectedFeedback.pageLoadTime ?? 0)}</span>
+                        <span className="text-sm text-gray-600">Time: {formatDuration(selectedFeedback.timeOnPage ?? 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -496,7 +562,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedFeedback.tags.map((tag: any, index: any) => (
+                    {selectedFeedback.tags.map((tag: string, index: number) => (
                       <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                         {tag}
                       </span>

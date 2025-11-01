@@ -1,7 +1,8 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+
+
+'use client'
 
 type ValueCategory = {
   title: string

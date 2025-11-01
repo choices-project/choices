@@ -1,18 +1,20 @@
 // app/civics/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, MapPin, Phone, Mail, Globe, Users, Building2, Home, Database, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+
+import { AddressLookupForm } from '@/components/civics/AddressLookupForm';
+import { CandidateAccountabilityCard } from '@/components/civics/CandidateAccountabilityCard';
+import { PrivacyStatusBadge } from '@/components/civics/PrivacyStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { PrivacyStatusBadge } from '@/components/civics/PrivacyStatusBadge';
-import { CandidateAccountabilityCard } from '@/components/civics/CandidateAccountabilityCard';
-import { AddressLookupForm } from '@/components/civics/AddressLookupForm';
-import { Search, MapPin, Phone, Mail, Globe, Users, Building2, Home, Database, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 type Representative = {
   name: string;
@@ -297,7 +299,7 @@ export default function CivicsPage() {
       {/* Results */}
       {loading && (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-2 text-gray-600">Loading representatives...</p>
         </div>
       )}

@@ -65,7 +65,7 @@ class PerformanceMetricsCollector {
     if ('PerformanceObserver' in window) {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
+        const lastEntry = entries[entries.length - 1];
         this.addMetric('lcp', lastEntry.startTime);
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });

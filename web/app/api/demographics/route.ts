@@ -1,8 +1,9 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
+
 import { devLog } from '@/lib/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

@@ -9,12 +9,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
 import { IRVCalculator } from '@/lib/vote/irv-calculator';
 import type { UserRanking } from '@/lib/vote/irv-calculator';
+
 import { goldenTestCases, runGoldenTestCase, runAllGoldenTests } from './golden-cases';
 
 // Import V2 test setup
-import { getMS } from '../../setup';
 // when not used in this test file
 
 // Define Candidate type locally since it's not exported from the calculator

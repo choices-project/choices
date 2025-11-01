@@ -1,10 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useSupabaseAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
+
 import { 
   Menu, 
   X, 
@@ -15,6 +11,12 @@ import {
   BarChart3,
   Home
 } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { useState } from 'react';
+
+import { Button } from '@/components/ui/button'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

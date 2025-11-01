@@ -22,6 +22,12 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
+// ============================================================================
+// SECURE KEY MANAGER CLASS
+// ============================================================================
+
+import { withOptional } from '../util/objects';
+
 export type SecureKey = {
   id: string;
   key: CryptoKey;
@@ -62,12 +68,6 @@ export type DecryptionResult = {
   algorithm: string;
   timestamp: Date;
 }
-
-// ============================================================================
-// SECURE KEY MANAGER CLASS
-// ============================================================================
-
-import { withOptional } from '../util/objects';
 
 export class SecureKeyManager {
   private keys: Map<string, SecureKey> = new Map();

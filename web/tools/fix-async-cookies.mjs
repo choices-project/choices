@@ -1,4 +1,6 @@
+/* eslint-env node */
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Fix async cookies() usage for Next.js 14
  * Replaces await cookies() with cookies() since Next.js 14 uses synchronous cookies

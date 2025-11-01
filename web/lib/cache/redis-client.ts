@@ -11,7 +11,7 @@
 import { logger } from '@/lib/utils/logger'
 
 // Redis client types
-interface RedisClientInterface {
+type RedisClientInterface = {
   get(key: string): Promise<string | null>
   set(key: string, value: string, options?: { ex?: number }): Promise<string>
   del(key: string): Promise<number>
@@ -40,7 +40,7 @@ interface RedisClientInterface {
 }
 
 // Redis client configuration interface
-export interface RedisConfig {
+export type RedisConfig = {
   host: string
   port: number
   password?: string
@@ -59,7 +59,7 @@ export interface RedisConfig {
 }
 
 // Cache entry interface
-export interface CacheEntry<T = unknown> {
+export type CacheEntry<T = unknown> = {
   data: T
   expiresAt: number
   createdAt: number
@@ -69,7 +69,7 @@ export interface CacheEntry<T = unknown> {
 }
 
 // Cache statistics interface
-export interface CacheStats {
+export type CacheStats = {
   hits: number
   misses: number
   hitRate: number
@@ -81,7 +81,7 @@ export interface CacheStats {
 }
 
 // Cache invalidation options
-export interface InvalidationOptions {
+export type InvalidationOptions = {
   pattern?: string
   tags?: string[]
   keys?: string[]

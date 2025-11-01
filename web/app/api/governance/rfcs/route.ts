@@ -5,22 +5,24 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { RFCManager } from '@/lib/governance/rfcs';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action') || 'list';
+    const action = searchParams.get('action') ?? 'list';
     
     switch (action) {
-      case 'list':
+      case 'list': {
         const rfcs = await RFCManager.getPublicRFCs();
         return NextResponse.json({
           success: true,
           data: rfcs,
           timestamp: new Date().toISOString()
         });
+      }
         
       default:
         return NextResponse.json({
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     const { action, ...data } = body;
     
     switch (action) {
-      case 'create':
+      case 'create': {
         const rfcId = await RFCManager.createRFC(data);
         return NextResponse.json({
           success: true,
@@ -53,8 +55,9 @@ export async function POST(request: NextRequest) {
           message: 'RFC created successfully',
           timestamp: new Date().toISOString()
         });
+      }
         
-      case 'publish':
+      case 'publish': {
         const { rfcId: publishRfcId } = data;
         if (!publishRfcId) {
           return NextResponse.json({
@@ -69,8 +72,9 @@ export async function POST(request: NextRequest) {
           message: 'RFC published successfully',
           timestamp: new Date().toISOString()
         });
+      }
         
-      case 'comment':
+      case 'comment': {
         const { rfcId: commentRfcId, author, content, parentId } = data;
         if (!commentRfcId || !author || !content) {
           return NextResponse.json({
@@ -86,8 +90,9 @@ export async function POST(request: NextRequest) {
           message: 'Comment added successfully',
           timestamp: new Date().toISOString()
         });
+      }
         
-      case 'vote':
+      case 'vote': {
         const { rfcId: voteRfcId, voter, vote, reasoning } = data;
         if (!voteRfcId || !voter || !vote) {
           return NextResponse.json({
@@ -103,6 +108,7 @@ export async function POST(request: NextRequest) {
           message: 'Vote cast successfully',
           timestamp: new Date().toISOString()
         });
+      }
         
       default:
         return NextResponse.json({

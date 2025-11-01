@@ -8,14 +8,15 @@
  * - Comprehensive error handling
  */
 
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTrustedOrigin } from '@/lib/http/origin';
-import { rateLimiters } from '@/lib/core/security/rate-limit';
+import { devLog } from '@/lib/logger';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { withOptional } from '@/lib/util/objects';
-import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 
@@ -87,7 +88,22 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
 
       // Rate limiting
       if (rateLimit) {
-        const rateLimitResult = await rateLimiters[rateLimit].check(request);
+        // Rate limit configuration based on type
+        const rateLimitConfigs: Record<string, { maxRequests: number; windowMs: number }> = {
+          auth: { maxRequests: 10, windowMs: 15 * 60 * 1000 }, // 10 requests per 15 minutes
+          registration: { maxRequests: 5, windowMs: 60 * 60 * 1000 }, // 5 requests per hour
+          deviceFlow: { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 requests per hour
+          biometric: { maxRequests: 20, windowMs: 15 * 60 * 1000 } // 20 requests per 15 minutes
+        };
+        
+        const config = rateLimitConfigs[rateLimit] || rateLimitConfigs.auth;
+        const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
+        const ua = request.headers.get('user-agent') ?? undefined;
+        const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/auth:${rateLimit}`, {
+          maxRequests: config.maxRequests,
+          windowMs: config.windowMs,
+          userAgent: ua
+        });
         
         if (!rateLimitResult.allowed) {
           return NextResponse.json(
@@ -190,7 +206,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
           'T3': 3
         };
 
-        const userTier = tierHierarchy[authUser.trust_tier as TrustTier] || 0;
+        const userTier = tierHierarchy[authUser.trust_tier] || 0;
         const requiredTier = tierHierarchy[requireTrustTier];
 
         if (userTier < requiredTier) {
@@ -288,8 +304,10 @@ export function createRateLimitMiddleware(options: {
   return async (request: NextRequest): Promise<NextResponse | null> => {
     const key = keyGenerator ? keyGenerator(request) : 'default';
     
-    // Use the enhanced rate limiter with custom parameters
-    const rateLimitResult = await rateLimiters.auth.check(request);
+    // Use Upstash-backed limiter via facade
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
+    const ua = request.headers.get('user-agent') ?? undefined;
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/middleware:${key}`, { maxRequests, windowMs, userAgent: ua });
     
     // Log rate limit configuration for debugging
     devLog('Rate limit check', {

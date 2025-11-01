@@ -1,5 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
 import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || '',
+          'Authorization': request.headers.get('Authorization') ?? '',
         },
         body: JSON.stringify(body),
       });
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || '',
+          'Authorization': request.headers.get('Authorization') ?? '',
         },
         body: JSON.stringify(body),
       });

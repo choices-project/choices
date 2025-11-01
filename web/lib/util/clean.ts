@@ -18,7 +18,7 @@ export function stripUndefinedDeep<T>(input: T): T {
     const out: any = {}
     for (const [k, v] of Object.entries(input)) {
       if (v === undefined) continue
-      out[k] = stripUndefinedDeep(v as any)
+      out[k] = stripUndefinedDeep(v)
     }
     return out
   }

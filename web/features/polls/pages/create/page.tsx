@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { usePollWizard } from '@/lib/hooks/usePollWizard';
-import type { PollCategory } from '@/lib/types/poll-templates';
+import { ArrowLeft, ArrowRight, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 // ... existing code ...
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, ArrowRight, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { usePollWizard } from '@/lib/hooks/usePollWizard';
 import { devLog } from '@/lib/logger';
+import type { PollCategory } from '@/lib/types/poll-templates';
 
 const CATEGORIES: Array<{ id: PollCategory; name: string; description: string; icon: string }> = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊' },

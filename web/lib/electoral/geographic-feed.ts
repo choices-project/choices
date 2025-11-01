@@ -9,7 +9,6 @@
  */
 
 import { dev } from '../dev.logger';
-import { withOptional } from '../util/objects';
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
   UserLocation,
@@ -19,6 +18,7 @@ import type {
   CampaignFinance,
   Activity
 } from '../types/electoral-unified';
+import { withOptional } from '../util/objects';
 
 // Geographic and electoral types (using imported types from electoral-types.ts)
 
@@ -235,7 +235,7 @@ export class GeographicElectoralFeed {
               allCandidates: (race.allCandidates as Candidate[]) || [],
               keyIssues: (race.keyIssues as string[]) || [],
               campaignFinance: race.campaignFinance as CampaignFinance || await this.getMockCampaignFinance('unknown'),
-              pollingData: race.pollingData as unknown || null,
+              pollingData: race.pollingData || null,
               voterRegistrationDeadline: race.voterRegistrationDeadline as string || '',
               earlyVotingStart: race.earlyVotingStart as string || '',
               absenteeBallotDeadline: race.absenteeBallotDeadline as string || '',
@@ -658,14 +658,14 @@ export class GeographicElectoralFeed {
     for (const race of activeRaces) {
       // Check if any candidates have positions on this issue
       for (const candidate of race.allCandidates) {
-        if (candidate.platform && candidate.platform.includes(issue.toLowerCase())) {
+        if (candidate.platform?.includes(issue.toLowerCase())) {
           candidates.push(candidate.name);
         }
       }
       
       // Also check challengers
       for (const challenger of race.challengers) {
-        if (challenger.platform && challenger.platform.includes(issue.toLowerCase())) {
+        if (challenger.platform?.includes(issue.toLowerCase())) {
           candidates.push(challenger.name);
         }
       }

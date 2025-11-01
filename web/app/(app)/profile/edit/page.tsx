@@ -1,51 +1,54 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Separator } from '@/components/ui/separator'
+import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
 
-// Icons
-import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+import { devLog } from '@/lib/utils/logger';
 
-// Utilities
-import { devLog } from '@/lib/logger'
-import { useAuth } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils'
-
-// Types
+// Types - Updated to match new database schema
 type UserProfile = {
   id: string
-  userid: string
-  displayname: string
-  bio: string | null
-  primaryconcerns: string[]
-  communityfocus: string[]
-  participationstyle: 'observer' | 'contributor' | 'leader'
-  demographics: any
-  privacysettings: PrivacySettings
-  createdat: string
-  updatedat: string
-  avatar?: string
+  user_id: string
+  username: string
+  email: string
+  display_name?: string
+  bio?: string
+  avatar_url?: string
+  trust_tier: 'T0' | 'T1' | 'T2' | 'T3'
+  is_admin: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  // Enhanced profile fields
+  preferences?: Record<string, any>
+  privacy_settings?: PrivacySettings
+  primary_concerns?: string[]
+  community_focus?: string[]
+  participation_style?: 'observer' | 'contributor' | 'leader'
+  demographics?: Record<string, any>
 }
 
 type PrivacySettings = {
-  profilevisibility: 'public' | 'private' | 'friends'
-  showemail: boolean
-  showactivity: boolean
-  allowmessages: boolean
-  sharedemographics: boolean
-  allowanalytics: boolean
+  profile_visibility: 'public' | 'private' | 'friends'
+  show_email: boolean
+  show_activity: boolean
+  allow_messages: boolean
+  share_demographics: boolean
+  allow_analytics: boolean
 }
 
 type UserProfileUpdate = {
@@ -115,12 +118,12 @@ export default function EditProfilePage() {
     communityfocus: [],
     participationstyle: 'observer',
     privacysettings: {
-      profilevisibility: 'public',
-      showemail: false,
-      showactivity: true,
-      allowmessages: true,
-      sharedemographics: false,
-      allowanalytics: true
+      profile_visibility: 'public',
+      show_email: false,
+      show_activity: true,
+      allow_messages: true,
+      share_demographics: false,
+      allow_analytics: true
     }
   })
 
@@ -159,7 +162,7 @@ export default function EditProfilePage() {
         setError('Failed to load profile')
       }
     } catch (error) {
-      devLog('Error loading profile:', error)
+      devLog('Error loading profile:', { error })
       setError('Failed to load profile')
     } finally {
       setIsLoading(false)
@@ -216,7 +219,7 @@ export default function EditProfilePage() {
         setError('Failed to upload avatar')
       }
     } catch (error) {
-      devLog('Error uploading avatar:', error)
+      devLog('Error uploading avatar:', { error })
       setError('Failed to upload avatar')
     } finally {
       setIsUploadingAvatar(false)
@@ -241,13 +244,13 @@ export default function EditProfilePage() {
           setProfile(data.profile)
           setSuccess('Profile updated successfully')
         } else {
-          setError(data.message || 'Failed to update profile')
+          setError(data.message ?? 'Failed to update profile')
         }
       } else {
         setError('Failed to update profile')
       }
     } catch (error) {
-      devLog('Error updating profile:', error)
+      devLog('Error updating profile:', { error })
       setError('Failed to update profile')
     } finally {
       setIsSaving(false)
@@ -286,7 +289,7 @@ export default function EditProfilePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -323,7 +326,7 @@ export default function EditProfilePage() {
               data-testid="save-changes-button"
             >
               {isSaving ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
@@ -379,7 +382,7 @@ export default function EditProfilePage() {
                   <Textarea
                     id="bio"
                     name="bio"
-                    value={formData.bio || ''}
+                    value={formData.bio ?? ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                     placeholder="Tell us about yourself..."
                     rows={4}
@@ -487,7 +490,7 @@ export default function EditProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-center">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarPreview || formData.avatar || profile?.avatar || ''} />
+                    <AvatarImage src={avatarPreview ?? formData.avatar ?? profile?.avatar_url ?? ''} />
                     <AvatarFallback>
                       <User className="h-12 w-12" />
                     </AvatarFallback>
@@ -551,9 +554,9 @@ export default function EditProfilePage() {
                 <div>
                   <Label htmlFor="profilevisibility">Profile Visibility</Label>
                   <Select
-                    value={formData.privacysettings.profilevisibility}
-                    onValueChange={(value: 'public' | 'private' | 'friends') => 
-                      handlePrivacyChange('profilevisibility', value)
+                    value={formData.privacysettings.profile_visibility}
+                    onValueChange={(value: 'public' | 'private' | 'friends') =>
+                      handlePrivacyChange('profile_visibility', value)
                     }
                   >
                     <SelectTrigger>
@@ -576,8 +579,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Allow others to see your email</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.showemail}
-                      onChange={(e) => handlePrivacyChange('showemail', e.target.checked)}
+                      checked={formData.privacysettings.show_email}
+                      onChange={(e) => handlePrivacyChange('show_email', e.target.checked)}
                     />
                   </div>
 
@@ -587,8 +590,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Show your voting and poll activity</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.showactivity}
-                      onChange={(e) => handlePrivacyChange('showactivity', e.target.checked)}
+                      checked={formData.privacysettings.show_activity}
+                      onChange={(e) => handlePrivacyChange('show_activity', e.target.checked)}
                     />
                   </div>
 
@@ -598,8 +601,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Allow other users to message you</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.allowmessages}
-                      onChange={(e) => handlePrivacyChange('allowmessages', e.target.checked)}
+                      checked={formData.privacysettings.allow_messages}
+                      onChange={(e) => handlePrivacyChange('allow_messages', e.target.checked)}
                     />
                   </div>
 
@@ -609,8 +612,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Share demographic data for analytics</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.sharedemographics}
-                      onChange={(e) => handlePrivacyChange('sharedemographics', e.target.checked)}
+                      checked={formData.privacysettings.share_demographics}
+                      onChange={(e) => handlePrivacyChange('share_demographics', e.target.checked)}
                     />
                   </div>
 
@@ -620,8 +623,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Help improve the platform with usage data</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.allowanalytics}
-                      onChange={(e) => handlePrivacyChange('allowanalytics', e.target.checked)}
+                      checked={formData.privacysettings.allow_analytics}
+                      onChange={(e) => handlePrivacyChange('allow_analytics', e.target.checked)}
                     />
                   </div>
                 </div>

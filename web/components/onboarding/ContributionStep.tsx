@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { 
   Github, 
   Heart, 
@@ -13,9 +12,12 @@ import {
   ArrowLeft,
   CheckCircle
 } from 'lucide-react'
+import React, { useState } from 'react';
+
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 type ContributionStepProps = {
   data: any

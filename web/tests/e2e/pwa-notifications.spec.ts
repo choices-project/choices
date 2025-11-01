@@ -12,7 +12,8 @@
  * Updated: January 21, 2025
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+
 import { 
   setupE2ETestData, 
   cleanupE2ETestData, 
@@ -237,7 +238,7 @@ test.describe('PWA Notifications - V2', () => {
 
     // Simulate notification click
     await page.evaluate(() => {
-      if (window.lastNotification && window.lastNotification.onclick) {
+      if (window.lastNotification?.onclick) {
         window.lastNotification.onclick();
       }
     });

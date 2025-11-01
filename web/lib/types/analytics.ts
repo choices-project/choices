@@ -1,5 +1,3 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
 import type {
   TrustTier,
   TrustTierScore,
@@ -8,6 +6,8 @@ import type {
   PollAnalytics,
   UserAnalytics
 } from '@/lib/core/services/analytics/types/analytics'
+import { devLog } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export class AnalyticsService {
   private static instance: AnalyticsService

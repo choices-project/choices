@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+
 import { withOptional } from './lib/util/objects';
 
 export default defineConfig(withOptional(

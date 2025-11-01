@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
-import { withOptional } from '@/lib/util/objects'
+import React, { useState, useEffect } from 'react';
 
-type PollOption = {
-  id: string
-  text: string
-  description?: string
-}
+
+import type { PollOption } from '../types'
 
 type RangeVotingProps = {
   pollId: string
@@ -58,7 +54,7 @@ export default function RangeVoting({
 
     setError(null)
     setRatings(prev => ({
-      ...withOptional(prev),
+      ...prev,
       [optionId]: Math.max(minRating, Math.min(maxRating, rating))
     }))
   }
@@ -94,9 +90,11 @@ export default function RangeVoting({
         throw new Error('All options must be rated')
       }
       
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           ratings: validRatings,
           voting_method: 'range',
@@ -106,8 +104,8 @@ export default function RangeVoting({
       }
       
       await onVote(pollId, validRatings)
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -116,7 +114,7 @@ export default function RangeVoting({
   const getAverageRating = () => {
     const values = Object.values(ratings)
     if (values.length === 0) return 0
-    return Math.round((values.reduce((sum: any, rating: any) => sum + rating, 0) / values.length) * 10) / 10
+    return Math.round((values.reduce((sum: number, rating: number) => sum + rating, 0) / values.length) * 10) / 10
   }
 
   const isDisabled = hasVoted || isVoting || isSubmitting
@@ -178,12 +176,12 @@ export default function RangeVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-6">
-          {options.map((option: any) => (
+          {options.map((option: PollOption) => (
             <div key={option.id} className="border border-gray-200 rounded-lg p-4">
               <div className="mb-3">
                 <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.description && (
-                  <p className="text-sm text-gray-600">{option.description}</p>
+                {option.option_text && (
+                  <p className="text-sm text-gray-600">{option.option_text}</p>
                 )}
               </div>
 

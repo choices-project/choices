@@ -1,8 +1,10 @@
-'use client'
-
-import { useState } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
+import React, { useState } from 'react';
+
+
 import { useOnboardingContext } from './EnhancedOnboardingFlow'
+
+'use client'
 
 type PrivacyData = {
   privacy?: {
@@ -169,7 +171,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
                   after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
                   after:bg-white after:border-gray-300 after:border after:rounded-full 
                   after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600
-                `}></div>
+                `} />
               </label>
             </div>
           </div>

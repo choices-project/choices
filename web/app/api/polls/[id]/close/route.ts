@@ -9,20 +9,21 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
-import { devLog } from '@/lib/logger';
+
 import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
+import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/polls/[id]/close - Close a poll and set baseline
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -34,14 +35,15 @@ export async function POST(
       throw new Error('Supabase client not available');
     }
 
-    // Check authentication
-    const user = getCurrentUser(request);
-    if (!user) {
+    // Check authentication using Supabase native sessions
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       throw new AuthenticationError('Authentication required to close polls');
     }
 
     // Get poll details
-    const { data: poll, error: pollError } = await supabase
+            const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, title, status, created_by, end_time, baseline_at, allow_post_close')
       .eq('id', pollId)
@@ -52,7 +54,7 @@ export async function POST(
     }
 
     // Check if user can close this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can close
       throw new ForbiddenError('Only the poll creator can close this poll');
@@ -83,7 +85,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error closing poll:', updateError);
+      devLog('Error closing poll:', { error: updateError });
       throw new Error('Failed to close poll');
     }
 
@@ -91,7 +93,7 @@ export async function POST(
     devLog('Poll closed successfully', {
       pollId,
       title: poll.title,
-      closedBy: user.userId,
+      closedBy: user.id,
       baselineAt
     });
 
@@ -107,7 +109,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in poll close API:', error);
+    devLog('Error in poll close API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

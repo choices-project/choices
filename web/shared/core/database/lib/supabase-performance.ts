@@ -11,6 +11,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js'
+
 import { logger } from '@/lib/logger'
 
 // Type definitions for better type safety

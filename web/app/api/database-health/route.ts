@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware'
 import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/core/database/optimizer'
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString()
         });
 
-      case 'get_slow_queries':
+      case 'get_slow_queries': {
         const slowQueries = queryMonitor.getSlowQueries();
         return NextResponse.json({
           status: 'success',
@@ -133,8 +134,9 @@ export async function POST(request: NextRequest) {
           count: slowQueries.length,
           timestamp: new Date().toISOString()
         });
+      }
 
-      case 'get_performance_report':
+      case 'get_performance_report': {
         const stats = queryMonitor.getStats();
         const report = {
           averageQueryTime: stats.averageQueryTime,
@@ -148,6 +150,7 @@ export async function POST(request: NextRequest) {
           report,
           timestamp: new Date().toISOString()
         });
+      }
 
       default:
         return NextResponse.json({

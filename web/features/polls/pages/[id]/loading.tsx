@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * Loading UI for Individual Poll Page
  * 

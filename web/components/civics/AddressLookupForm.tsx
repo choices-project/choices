@@ -7,7 +7,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 type AddressLookupFormProps = {
@@ -96,8 +97,19 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
             type="button"
             className="underline hover:no-underline"
             onClick={() => {
-              // TODO: Implement different address flow
-              console.log('Different voting address clicked');
+              // Different address flow - show prompt for alternate address entry
+              const alternateAddress = window.prompt(
+                'Enter your voting address (not your current location).\n\nThis address will be used to find your representatives. Same privacy rules—nothing is stored.',
+                address
+              );
+              if (alternateAddress && alternateAddress.trim() && alternateAddress !== address) {
+                setAddress(alternateAddress.trim());
+                setError(null);
+                // Optionally trigger lookup immediately
+                if (onLookup) {
+                  onLookup(alternateAddress.trim());
+                }
+              }
             }}
           >
             Voting from a different address?

@@ -1,288 +1,303 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger';
-import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
-type PollResultsProps = {
+
+import { logger } from '@/lib/utils/logger';
+
+import type { OptimizedPollResult } from '../lib/poll-service';
+import { optimizedPollService } from '../lib/poll-service';
+
+
+type OptimizedPollResultsProps = {
   pollId: string
+  userId?: string
+  includePrivate?: boolean
+  onResultsLoaded?: () => void
+  onError?: () => void
+  showPerformanceMetrics?: boolean
 }
 
-type PollResult = {
-  option: string
-  votes: number
-  percentage: number
-  trend: 'up' | 'down' | 'stable'
-}
-
-type PollData = {
-  id: string
-  title: string
-  description?: string
-  votingMethod: string
-  totalVotes: number
-  participationRate: number
-  isActive: boolean
-  results: PollResult[]
-  demographics?: {
-    ageGroups: Record<string, number>
-    locations: Record<string, number>
-  }
-}
-
-export default function PollResults({ pollId }: PollResultsProps) {
-  const [poll, setPoll] = useState<PollData | null>(null)
+export default function OptimizedPollResults({
+  pollId,
+  userId,
+  includePrivate = false,
+  onResultsLoaded,
+  onError,
+  showPerformanceMetrics = false
+}: OptimizedPollResultsProps) {
+  const [results, setResults] = useState<OptimizedPollResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [performanceMetrics, setPerformanceMetrics] = useState<{
+    loadTime: number;
+    cacheHit: boolean;
+    timestamp: string;
+  } | null>(null)
+  const [cacheStats, setCacheStats] = useState<{
+    size: number;
+    hitRate: number;
+    missRate: number;
+    evictions: number;
+    memoryUsage: number;
+    averageAge: number;
+  } | null>(null)
 
+  // Memoized poll results loading function
   const loadPollResults = useCallback(async () => {
+    if (!pollId) return
+
+    setLoading(true)
+    setError(null)
+
     try {
-      setLoading(true)
-      setError(null)
+      const startTime = performance.now()
       
-      // Fetch poll data and results from API
-      const [pollResponse, resultsResponse] = await Promise.all([
-        fetch(`/api/polls/${pollId}`),
-        fetch(`/api/polls/${pollId}/results`)
-      ])
+      const pollResults = await optimizedPollService.getOptimizedPollResults(
+        pollId,
+        userId,
+        includePrivate
+      )
       
-      if (!pollResponse.ok) {
-        throw new Error(`Failed to load poll: ${pollResponse.statusText}`)
-      }
-      
-      const pollData = await pollResponse.json()
-      const resultsData = await resultsResponse.json()
-      
-      // Transform API data to match frontend interface
-      const poll: PollData = {
-        id: pollData.pollid,
-        title: pollData.title,
-        description: pollData.description || '',
-        votingMethod: 'single',
-        totalVotes: pollData.totalvotes || 0,
-        participationRate: pollData.participationrate || 0,
-        isActive: pollData.status === 'active',
-        results: pollData.options?.map((option: string, index: number) => ({
-          option,
-          votes: resultsData.results?.[index] || 0,
-          percentage: pollData.totalvotes > 0 
-            ? Math.round((resultsData.results?.[index] || 0) / pollData.totalvotes * 100 * 10) / 10
-            : 0,
-          trend: 'stable' // Default trend since we don't have historical data
-        })) || [],
-        demographics: {
-          ageGroups: {
-            '18-24': 25,
-            '25-34': 30,
-            '35-44': 25,
-            '45-54': 15,
-            '55+': 5
-          },
-          locations: {
-            'North America': 40,
-            'Europe': 30,
-            'Asia': 20,
-            'Other': 10
-          }
-        }
-      }
-      
-      setPoll(poll)
-    } catch (error) {
-      logger.error('Error loading poll results:', error instanceof Error ? error : new Error(String(error)))
-      setError(error instanceof Error ? error.message : 'Failed to load poll results')
+      const endTime = performance.now()
+      const loadTime = endTime - startTime
+
+      setResults(pollResults)
+      setPerformanceMetrics({
+        loadTime,
+        cacheHit: false, // Will be updated by the service
+        timestamp: new Date().toISOString()
+      })
+
+      onResultsLoaded?.()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load poll results'
+      setError(errorMessage)
+      onError?.()
     } finally {
       setLoading(false)
     }
-  }, [pollId])
+  }, [pollId, userId, includePrivate, onResultsLoaded, onError])
 
+  // Load cache statistics
+  const loadCacheStats = useCallback(() => {
+    try {
+      const stats = optimizedPollService.getCacheStats()
+      setCacheStats(stats)
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err))
+      logger.warn('Failed to load cache stats:', { error: error.message, stack: error.stack })
+    }
+  }, [])
+
+  // Load results on mount and when dependencies change
   useEffect(() => {
-    loadPollResults()
-  }, [pollId, loadPollResults])
+    void loadPollResults()
+    loadCacheStats()
+  }, [loadPollResults, loadCacheStats])
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
+  // Memoized sorted options for performance
+  const sortedOptions = useMemo(() => {
+    if (!results?.results) return []
+    
+    return [...results.results].sort((a, b) => (b.voteCount ?? b.votes) - (a.voteCount ?? a.votes))
+  }, [results?.results])
+
+  // Memoized total votes for performance
+  const totalVotes = useMemo(() => {
+    return results?.totalVotes ?? 0
+  }, [results?.totalVotes])
+
+  // Memoized poll status display
+  const pollStatusDisplay = useMemo(() => {
+    if (!results) return null
+    
+    const statusConfig = {
+      ended: { label: 'Poll Ended', color: 'text-red-600', bgColor: 'bg-red-50' },
+      active: { label: 'Active', color: 'text-green-600', bgColor: 'bg-green-50' },
+      ongoing: { label: 'Ongoing', color: 'text-blue-600', bgColor: 'bg-blue-50' }
+    }
+    
+    const config = statusConfig[results.pollStatus as keyof typeof statusConfig]
+    return config
+  }, [results])
+
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    await loadPollResults()
+    loadCacheStats()
+  }, [loadPollResults, loadCacheStats])
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading results...</p>
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded" />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
 
-  if (error || !poll) {
+  if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600">{error || 'Failed to load results'}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Error loading poll results</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <button
+            onClick={() => void handleRefresh()}
+            className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!results) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No poll results available</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* Results Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-50 rounded-xl p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-5 w-5 text-blue-600" />
+      {/* Performance Metrics (if enabled) */}
+      {showPerformanceMetrics && performanceMetrics && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-blue-800 mb-2">Performance Metrics</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-600">Load Time:</span>
+              <span className="ml-2 font-mono">{performanceMetrics.loadTime.toFixed(2)}ms</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-600">Total Votes</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {poll.totalVotes.toLocaleString()}
-              </p>
+              <span className="text-blue-600">Cache Hit:</span>
+              <span className="ml-2">{performanceMetrics.cacheHit ? 'Yes' : 'No'}</span>
             </div>
+            {cacheStats && (
+              <>
+                <div>
+                  <span className="text-blue-600">Cache Size:</span>
+                  <span className="ml-2">{cacheStats.size} items</span>
+                </div>
+                <div>
+                  <span className="text-blue-600">Hit Rate:</span>
+                  <span className="ml-2">{(cacheStats.hitRate * 100).toFixed(1)}%</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        
-        <div className="bg-green-50 rounded-xl p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <BarChart3 className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-green-600">Participation</p>
-              <p className="text-2xl font-bold text-green-900">{poll.participationRate}%</p>
-            </div>
-          </div>
+      )}
+
+      {/* Poll Header */}
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">{results.pollTitle}</h2>
+        <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <span>Type: {results.pollType}</span>
+          {pollStatusDisplay && (
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${pollStatusDisplay.bgColor} ${pollStatusDisplay.color}`}>
+              {pollStatusDisplay.label}
+            </span>
+          )}
+          <span>{totalVotes} total votes</span>
+          <span>{results.uniqueVoters} unique voters</span>
         </div>
-        
-        <div className="bg-purple-50 rounded-xl p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-purple-600">Leading Option</p>
-              <p className="text-lg font-bold text-purple-900">
-                {poll.results[0]?.option}
-              </p>
-            </div>
+      </div>
+
+      {/* Privacy Status */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-700">Privacy Protection</span>
+          </div>
+          <div className="flex items-center space-x-4 text-sm">
+            <span className={`px-2 py-1 rounded-full ${results.kAnonymitySatisfied ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+              K-Anonymity: {results.kAnonymitySatisfied ? 'Satisfied' : 'Not Met'}
+            </span>
+            {userId && (
+              <span className="text-gray-600">
+                Budget: {results.privacyBudgetRemaining?.toFixed(2) ?? '0.00'} ε
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Results Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Vote Distribution</h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={poll.results}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="option" stroke="#64748b" />
-            <YAxis stroke="#64748b" />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            />
-            <Bar dataKey="votes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Voting Status */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <svg className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium text-blue-700">Voting Status</span>
+          </div>
+          <div className="flex items-center space-x-4 text-sm">
+            <span className={`px-2 py-1 rounded-full ${results.canVote ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+              {results.canVote ? 'Can Vote' : 'Cannot Vote'}
+            </span>
+            <span className={`px-2 py-1 rounded-full ${results.hasVoted ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+              {results.hasVoted ? 'Has Voted' : 'Not Voted'}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Detailed Results */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Detailed Results</h3>
-        <div className="space-y-4">
-          {poll.results.map((result, index: any) => (
-            <div key={index} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">{index + 1}</span>
-                  </div>
-                  <h5 className="text-lg font-semibold text-gray-900">{result.option}</h5>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{result.votes.toLocaleString()}</p>
-                  <p className="text-sm text-gray-500">{result.percentage}%</p>
-                </div>
+      {/* Results */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Results</h3>
+        <div className="space-y-3">
+          {sortedOptions.map((option) => (
+            <div key={option.optionId ?? option.option} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-gray-900">{option.label ?? option.option}</h4>
+                <span className="text-sm text-gray-600">
+                  {option.voteCount ?? option.votes} votes ({(option.votePercentage ?? option.percentage).toFixed(1)}%)
+                </span>
               </div>
-              
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-1000"
-                  style={{ width: `${result.percentage}%` }}
-                ></div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${option.votePercentage ?? option.percentage}%` }}
+                 />
               </div>
-              
-              <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
-                <span>Votes cast</span>
-                <div className="flex items-center gap-2">
-                  <span>Trend:</span>
-                  <div className={`flex items-center gap-1 ${
-                    result.trend === 'up' ? 'text-green-600' : 
-                    result.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                  }`}>
-                    <TrendingUp className={`h-4 w-4 ${
-                      result.trend === 'down' ? 'transform rotate-180' : ''
-                    }`} />
-                    <span className="capitalize">{result.trend}</span>
-                  </div>
-                </div>
+              <div className="mt-2 text-xs text-gray-500">
+                {option.uniqueVoters ?? 0} unique voters
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Demographics (if available) */}
-      {poll.demographics && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Age Distribution */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={Object.entries(poll.demographics.ageGroups).map(([age, count]) => ({ name: age, value: count }))}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {Object.entries(poll.demographics.ageGroups).map((_, index: any) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Geographic Distribution */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Geographic Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={Object.entries(poll.demographics.locations).map(([location, count]) => ({ location, count }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="location" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex justify-center space-x-4">
-        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Share2 className="w-4 h-4" />
-          <span>Share Results</span>
-        </button>
-        <button className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-          <Download className="w-4 h-4" />
-          <span>Export Data</span>
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => void handleRefresh()}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          Refresh Results
         </button>
       </div>
     </div>

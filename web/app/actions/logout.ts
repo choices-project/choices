@@ -2,11 +2,11 @@
 
 import { 
   createSecureServerAction,
-  secureLogout,
   getAuthenticatedUser,
   logSecurityEvent,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Enhanced logout action with security features
 export const logout = createSecureServerAction(
@@ -16,15 +16,16 @@ export const logout = createSecureServerAction(
     
     // Log logout event
     logSecurityEvent('USER_LOGOUT', {
-      userId: user.userId,
-      userRole: user.userRole
+      userId: user?.userId,
+      userRole: user?.userRole
     }, context)
 
-    // Perform secure logout with session cleanup
-    secureLogout()
-  },
-  {
-    requireAuth: true,
-    rateLimit: { endpoint: '/logout', maxRequests: 20 }
+    // Get Supabase client and sign out
+    const supabase = await getSupabaseServerClient()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
+    
+    return { success: true, message: 'Logged out successfully' }
   }
 )

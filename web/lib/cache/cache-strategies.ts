@@ -9,8 +9,8 @@
  */
 
 import { logger } from '../logger'
-import { type RedisClient } from './redis-client'
-import type { CacheStats } from './redis-client'
+
+import type { RedisClient , CacheStats } from './redis-client'
 
 // Cache strategy types
 export type CacheStrategy = 'write-through' | 'write-behind' | 'cache-aside' | 'read-through'

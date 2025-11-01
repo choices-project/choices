@@ -6,20 +6,21 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { logger } from '@/lib/logger';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
 
-// Import PWA managers
-import { 
-  serviceWorkerManager, 
-  type ServiceWorkerStatus 
-} from '@/lib/pwa/service-worker';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/logger';
 import { 
   pwaInstallationManager, 
   type InstallationStatus, 
   type InstallationResult 
 } from '@/lib/pwa/installation';
+import { 
+  serviceWorkerManager, 
+  type ServiceWorkerStatus 
+} from '@/lib/pwa/service-worker';
+import { withOptional } from '@/lib/util/objects';
+
+// Import PWA managers
 
 export type PWAStatus = {
   // Feature availability

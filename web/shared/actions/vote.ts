@@ -1,8 +1,8 @@
 'use server'
 
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
+import { z } from 'zod'
+
 import { 
   createSecureServerAction,
   getAuthenticatedUser,
@@ -10,6 +10,7 @@ import {
   validateFormData,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 
 
@@ -90,7 +91,7 @@ export const vote = createSecureServerAction(
       option_id: optionId,
       payload: {
         timestamp: new Date().toISOString(),
-        anonymous: validatedData.anonymous || false
+        anonymous: validatedData.anonymous ?? false
       },
       created_at: new Date().toISOString()
     }))
@@ -107,7 +108,7 @@ export const vote = createSecureServerAction(
     logSecurityEvent('VOTE_CAST', {
       pollId: validatedData.pollId,
       optionIds: validatedData.optionIds,
-      anonymous: validatedData.anonymous || false,
+      anonymous: validatedData.anonymous ?? false,
       voteCount: voteData.length
     }, context)
 

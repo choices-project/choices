@@ -1,8 +1,5 @@
 'use client';
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BarChart3, 
   Clock, 
@@ -11,6 +8,10 @@ import {
   EyeOff,
   Lock
 } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type ResultsMode = 'live' | 'baseline' | 'drift';
 

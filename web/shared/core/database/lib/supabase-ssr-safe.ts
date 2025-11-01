@@ -6,14 +6,21 @@
  * and providing proper client initialization for both client and server.
  */
 
+import { createBrowserClient , createServerClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js'
-import { createBrowserClient } from '@supabase/ssr'
-import { createServerClient } from '@supabase/ssr'
 import type { cookies } from 'next/headers'
+
 import { logger } from '@/lib/logger'
 import { isBrowser, isServer } from '@/lib/ssr-safe'
-import type { Database, UserProfileInsert, UserProfileUpdate, PollInsert, PollUpdate, VoteInsert } from '@/types/database'
+import type { Database } from '@/types/database'
+
+// Derive types from Database schema
+type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']
+type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update']
+type PollInsert = Database['public']['Tables']['polls']['Insert']
+type PollUpdate = Database['public']['Tables']['polls']['Update']
+type VoteInsert = Database['public']['Tables']['votes']['Insert']
 
 // Environment validation
 const validateEnvironment = () => {

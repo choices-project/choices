@@ -1,10 +1,5 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
-import { devLog } from '@/lib/logger'
-import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
-import { motion, AnimatePresence } from '@/components/motion/Motion'
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { 
   MessageCircle, 
   X, 
@@ -22,6 +17,12 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+
+import { motion, AnimatePresence } from '@/components/motion/Motion'
+import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+import { devLog } from '@/lib/logger'
 
 type FeedbackData = {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'

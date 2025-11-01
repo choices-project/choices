@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Bar, Line, Pie } from '@/components/charts';
 
 // Color palette for charts
@@ -52,7 +53,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
   dataKey,
   title,
   height = 300,
-  color: _color = '#00C49F',
+  color = '#00C49F',
 }) => {
   return (
     <div className="w-full">
@@ -62,6 +63,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
         dataKey={dataKey} 
         xAxisKey="name"
         height={height}
+        fillColor={color}
       />
     </div>
   );
@@ -171,11 +173,11 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
 export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 300 }) => {
   return (
     <div className="w-full">
-      <div className="h-6 bg-gray-200 rounded mb-4 animate-pulse"></div>
+      <div className="h-6 bg-gray-200 rounded mb-4 animate-pulse" />
       <div
         className="bg-gray-200 rounded animate-pulse"
         style={{ height: `${height}px` }}
-      ></div>
+       />
     </div>
   );
 };

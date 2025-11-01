@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+
+import { requireAdminOr401 } from '@/lib/admin-auth';
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { requireAdminOr401 } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 

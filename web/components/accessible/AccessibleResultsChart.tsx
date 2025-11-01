@@ -18,7 +18,8 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
+
+import screenReaderSupport from '../../lib/accessibility/screen-reader';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -110,30 +111,33 @@ export function AccessibleResultsChart({
   // ============================================================================
 
   useEffect(() => {
-    // Check for reduced motion preference
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(reducedMotionQuery.matches);
-    
-    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    
-    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
-    
-    // Check for high contrast preference
-    const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
-    setPrefersHighContrast(highContrastQuery.matches);
-    
-    const handleHighContrastChange = (e: MediaQueryListEvent) => {
-      setPrefersHighContrast(e.matches);
-    };
-    
-    highContrastQuery.addEventListener('change', handleHighContrastChange);
-    
-    return () => {
-      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
-      highContrastQuery.removeEventListener('change', handleHighContrastChange);
-    };
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      // Check for reduced motion preference
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      setPrefersReducedMotion(reducedMotionQuery.matches);
+      
+      const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+        setPrefersReducedMotion(e.matches);
+      };
+      
+      reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+      
+      // Check for high contrast preference
+      const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
+      setPrefersHighContrast(highContrastQuery.matches);
+      
+      const handleHighContrastChange = (e: MediaQueryListEvent) => {
+        setPrefersHighContrast(e.matches);
+      };
+      
+      highContrastQuery.addEventListener('change', handleHighContrastChange);
+      
+      return () => {
+        reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+        highContrastQuery.removeEventListener('change', handleHighContrastChange);
+      };
+    }
   }, []);
 
   // ============================================================================
@@ -176,30 +180,28 @@ export function AccessibleResultsChart({
   // ============================================================================
 
   const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
-    ScreenReaderSupport.handleKeyboardNavigation(event.nativeEvent, {
-      onArrowUp: () => {
+    switch (event.key) {
+      case 'ArrowUp':
         if (index > 0) {
           setFocusedIndex(index - 1);
           const prevData = data[index - 1];
           if (prevData) onDataPointFocus?.(prevData);
         }
-      },
-      onArrowDown: () => {
+        break;
+      case 'ArrowDown':
         if (index < data.length - 1) {
           setFocusedIndex(index + 1);
           const nextData = data[index + 1];
           if (nextData) onDataPointFocus?.(nextData);
         }
-      },
-      onEnter: () => {
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
         const dataPoint = data[index];
         if (dataPoint) onDataPointClick?.(dataPoint);
-      },
-      onSpace: () => {
-        const dataPoint = data[index];
-        if (dataPoint) onDataPointClick?.(dataPoint);
-      }
-    });
+        break;
+    }
   };
 
   // ============================================================================
@@ -230,7 +232,7 @@ export function AccessibleResultsChart({
 
   const announceDataPoint = (item: ChartData): void => {
     const announcement = getDataPointAriaLabel(item);
-    ScreenReaderSupport.announce(announcement, 'polite');
+    screenReaderSupport.announce(announcement, 'polite');
   };
 
   // ============================================================================

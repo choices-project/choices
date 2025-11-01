@@ -7,14 +7,14 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 1, // Sequential for monitoring
   reporter: [
-    ['html', { outputFolder: 'playwright-report-monitoring', open: 'never' }],
+    ['line'],
     ['junit', { outputFile: 'test-results-monitoring/results.xml' }]
   ],
   timeout: 120_000, // Longer timeout for monitoring
   expect: { timeout: 30_000 },
 
   use: {
-    baseURL: process.env.BASE_URL || 'https://choices-platform.vercel.app',
+    baseURL: process.env.BASE_URL ?? 'https://choices-platform.vercel.app',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

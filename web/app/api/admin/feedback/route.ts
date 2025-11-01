@@ -1,8 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { requireAdminOr401, getAdminUser } from '@/lib/admin-auth';
-import { devLog } from '@/lib/logger';
+
+import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
+import { devLog } from '@/lib/utils/logger';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     
     // Get Supabase client
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseAdminClient();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -25,8 +26,8 @@ export async function GET(request: NextRequest) {
     const sentiment = searchParams.get('sentiment');
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
-    const dateRange = searchParams.get('dateRange') || 'all';
-    const search = searchParams.get('search') || '';
+    const dateRange = searchParams.get('dateRange') ?? 'all';
+    const search = searchParams.get('search') ?? '';
 
     // Build query
     let query = supabase
@@ -36,19 +37,19 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (type) {
-      query = query.eq('type', type as any);
+      query = query.eq('type', type);
     }
 
     if (sentiment) {
-      query = query.eq('sentiment', sentiment as any);
+      query = query.eq('sentiment', sentiment);
     }
 
     if (status?.trim()) {
-      query = query.eq('status', status as any);
+      query = query.eq('status', status);
     }
 
     if (priority) {
-      query = query.eq('priority', priority as any);
+      query = query.eq('priority', priority);
     }
 
     // Apply date range filter
@@ -66,10 +67,11 @@ export async function GET(request: NextRequest) {
         case 'month':
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           break;
-        case 'quarter':
+        case 'quarter': {
           const quarter = Math.floor(now.getMonth() / 3);
           startDate = new Date(now.getFullYear(), quarter * 3, 1);
           break;
+        }
         default:
           startDate = new Date(0);
       }
@@ -86,7 +88,7 @@ export async function GET(request: NextRequest) {
     const { data: feedback, error } = await query;
 
     if (error) {
-      devLog('Error fetching feedback:', error);
+      devLog('Error fetching feedback:', { error });
       return NextResponse.json(
         { error: 'Failed to fetch feedback' },
         { status: 500 }
@@ -96,7 +98,7 @@ export async function GET(request: NextRequest) {
     // Apply additional search filtering if needed (for fields not in the database)
     let filteredFeedback = feedback || [];
     if (feedback) {
-      filteredFeedback = feedback.filter(item => {
+      filteredFeedback = feedback.filter((item: any) => {
         const searchLower = search.toLowerCase();
         return (
           (item && 'title' in item ? item.title?.toLowerCase().includes(searchLower) : false) ||
@@ -125,7 +127,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error in admin feedback API:', error);
+    devLog('Error in admin feedback API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

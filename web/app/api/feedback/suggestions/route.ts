@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { feedbackParser } from '@/lib/feedback/FeedbackParser';
 import type { InterestSuggestion } from '@/lib/feedback/FeedbackParser';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,8 +79,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
-    const status = searchParams.get('status') || 'pending';
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const status = searchParams.get('status') ?? 'pending';
+    const limit = parseInt(searchParams.get('limit') ?? '50');
 
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       suggestions: data || [],
-      count: data.length || 0
+      count: data.length ?? 0
     });
 
   } catch (error) {

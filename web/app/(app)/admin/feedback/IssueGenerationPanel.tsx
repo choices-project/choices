@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { logger } from '@/lib/logger';
 import {
   Github,
   Plus,
@@ -13,6 +11,9 @@ import {
   TrendingUp,
   BarChart3
 } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { logger } from '@/lib/utils/logger';
 
 type Feedback = {
   id: string;
@@ -26,15 +27,44 @@ type Feedback = {
     githubIssue?: {
       number: number;
       url: string;
-      analysis: any;
+      analysis: {
+        intent: string;
+        category: string;
+        sentiment: number;
+        urgency: number;
+        complexity: number;
+        keywords: string[];
+        suggestedActions: string[];
+      };
       createdAt: string;
     };
   };
 }
 
+type IssueData = {
+  issueNumber: number;
+  generatedIssue: {
+    title: string;
+    description: string;
+  };
+  issueUrl: string;
+  feedbackId: string;
+  analysis: {
+    intent: string;
+    category: string;
+    sentiment: number;
+    urgency: number;
+    complexity: number;
+    keywords: string[];
+    suggestedActions: string[];
+    impact: number;
+    estimatedEffort: string;
+  };
+}
+
 type IssueGenerationPanelProps = {
   feedback: Feedback[];
-  onIssueGenerated: (_feedbackId: string, _issueData: any) => void;
+  onIssueGenerated: (_feedbackId: string, _issueData: IssueData) => void;
   onBulkGenerate: (_feedbackIds: string[]) => void;
 }
 
@@ -45,7 +75,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
 }) => {
   const [selectedFeedback, setSelectedFeedback] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationResults, setGenerationResults] = useState<any[]>([]);
+  const [generationResults, setGenerationResults] = useState<IssueData[]>([]);
   const [showAnalysis, setShowAnalysis] = useState<string | null>(null);
 
   const feedbackWithoutIssues = feedback.filter(
@@ -81,7 +111,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const result = await response.json() as { data: IssueData };
         onIssueGenerated(feedbackId, result.data);
         setGenerationResults(prev => [...prev, result.data]);
       } else {
@@ -108,7 +138,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const result = await response.json() as { data: { issues: IssueData[] } };
         setGenerationResults(prev => [...prev, ...result.data.issues]);
         setSelectedFeedback([]);
         onBulkGenerate(selectedFeedback);
@@ -235,7 +265,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
               </span>
             </div>
             <button
-              onClick={handleBulkGenerate}
+              onClick={() => void handleBulkGenerate()}
               disabled={selectedFeedback.length === 0 || isGenerating}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -259,7 +289,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
               <p className="text-gray-600">All feedback has been converted to GitHub issues.</p>
             </div>
           ) : (
-            feedbackWithoutIssues.map((item: any) => (
+            feedbackWithoutIssues.map((item: Feedback) => (
               <div key={item.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -279,7 +309,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                       {item.priority}
                     </span>
                     <button
-                      onClick={() => handleGenerateIssue(item.id)}
+                      onClick={() => void handleGenerateIssue(item.id)}
                       disabled={isGenerating}
                       className="flex items-center px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                     >
@@ -302,8 +332,8 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
             <h3 className="text-lg font-medium text-gray-900">Recently Generated Issues</h3>
           </div>
           <div className="divide-y divide-gray-200">
-            {generationResults.slice(-5).map((result: any, index: any) => (
-              <div key={index} className="px-6 py-4">
+            {generationResults.slice(-5).map((result: IssueData) => (
+              <div key={result.feedbackId} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center space-x-2">

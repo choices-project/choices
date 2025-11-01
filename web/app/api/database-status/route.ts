@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET() {
   try {
@@ -45,7 +46,7 @@ export async function GET() {
       },
       connectionTest: {
         success: !error,
-        error: error?.message || null
+        error: error?.message ?? null
       },
       timestamp: new Date().toISOString(),
       environment: {

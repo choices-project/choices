@@ -10,14 +10,14 @@
  */
 
 import { test, expect } from '@playwright/test';
+
 import { 
   setupE2ETestData, 
   cleanupE2ETestData, 
   createTestUser, 
   createTestPoll,
   waitForPageReady,
-  setupExternalAPIMocks,
-  E2E_CONFIG
+  setupExternalAPIMocks
 } from './helpers/e2e-setup';
 
 /**

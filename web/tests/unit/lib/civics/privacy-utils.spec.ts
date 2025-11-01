@@ -1,5 +1,6 @@
-import { describe, test, expect, beforeEach, afterAll, jest } from '@jest/globals';
 import crypto from 'crypto';
+
+import { describe, test, expect, beforeEach, afterAll, jest } from '@jest/globals';
 
 // Mock the env-guard to prevent it from running at module load time
 jest.mock('@/lib/civics/env-guard', () => ({

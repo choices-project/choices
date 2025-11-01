@@ -8,20 +8,20 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 import { VoteProcessor } from '@/lib/vote/processor';
 import type { 
   VoteData, 
-  PollData, 
-  VoteSubmissionResult 
+  PollData 
 } from '@/lib/vote/types';
+
+// Import V2 test setup
+import { getMS } from '../../setup';
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({
   devLog: jest.fn()
 }));
-
-// Import V2 test setup
-import { getMS } from '../../setup';
 const mockSetup = getMS();
 const { when, client: mockSupabaseClient, getMetrics } = mockSetup;
 

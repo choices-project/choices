@@ -1,41 +1,61 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger';
+
 import { Vote, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
+
+import { logger } from '@/lib/utils/logger';
+import { useUser, useIsAuthenticated } from '@/lib/stores/userStore';
+
 import type { Poll } from '../../lib/api';
 import { iaApi, poApi } from '../../lib/api'
 
 export default function PollsPage() {
+  const router = useRouter()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
   const [polls, setPolls] = useState<Poll[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null)
   const [userChoice, setUserChoice] = useState<number | null>(null)
   const [voting, setVoting] = useState(false)
-  const [userStableId] = useState('user123') // In real app, get from auth
+  
+  // Get user ID from authenticated user
+  const userStableId = user?.id ?? null
 
   useEffect(() => {
+    // Redirect to auth if not authenticated
+    if (!isAuthenticated || !userStableId) {
+      logger.warn('User not authenticated, redirecting to auth')
+      router.push('/auth')
+      return
+    }
     fetchPolls()
-  }, [])
+  }, [isAuthenticated, userStableId, router])
 
   const fetchPolls = async () => {
     try {
       const data = await poApi.getPolls()
       setPolls(data)
     } catch (error) {
-      devLog('Failed to fetch polls:', error)
+      logger.error('Failed to fetch polls', error instanceof Error ? error : new Error(String(error)))
     } finally {
       setLoading(false)
     }
   }
 
   const getToken = async (pollId: string) => {
+    if (!userStableId) {
+      logger.error('Cannot get token: user not authenticated')
+      return null
+    }
     try {
       const data = await iaApi.getToken(userStableId, pollId, 'T1')
       return data
     } catch (error) {
-      devLog('Failed to get token:', error)
+      logger.error('Failed to get token', error instanceof Error ? error : new Error(String(error)))
     }
     return null
   }
@@ -53,10 +73,11 @@ export default function PollsPage() {
       const voteData = await poApi.submitVote(pollId, tokenData.token, tokenData.tag, choice)
       
       // Log successful vote submission with vote data
-      devLog('Vote submitted successfully:', {
+      logger.info('Vote submitted successfully', {
         pollId,
         voteData,
-        choice
+        choice,
+        userId: userStableId
       })
       
       alert('Vote submitted successfully!')
@@ -64,7 +85,7 @@ export default function PollsPage() {
       setUserChoice(null)
       fetchPolls() // Refresh polls
     } catch (error) {
-      devLog('Failed to submit vote:', error)
+      logger.error('Failed to submit vote', error instanceof Error ? error : new Error(String(error)))
       alert('Failed to submit vote. Please try again.')
     } finally {
       setVoting(false)
@@ -96,7 +117,7 @@ export default function PollsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     )
   }
@@ -120,7 +141,11 @@ export default function PollsPage() {
               <h1 className="text-xl font-bold text-gray-900">Available Polls</h1>
             </div>
             <div className="text-sm text-gray-600">
-              Logged in as: <span className="font-mono">{userStableId}</span>
+              {userStableId ? (
+                <>Logged in as: <span className="font-mono">{user?.email?.split('@')[0] ?? userStableId.slice(0, 8)}</span></>
+              ) : (
+                <Link href="/auth" className="text-blue-600 hover:text-blue-700">Login</Link>
+              )}
             </div>
           </div>
         </div>

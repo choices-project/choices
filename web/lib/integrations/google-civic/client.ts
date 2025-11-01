@@ -5,8 +5,8 @@
  * error handling, rate limiting, caching, and data validation.
  */
 
-import { logger } from '../../logger';
 import { ApplicationError } from '../../errors/base';
+import { logger } from '../../logger';
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
 

@@ -451,7 +451,7 @@ export class PrivacyThreatAssessmentManager {
    */
   shouldDeleteData(dataType: string, createdAt: Date): boolean {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return false;
     }
 

@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 /**
  * Offline Outbox System for PWA
  * Enables offline voting with automatic background sync
@@ -51,7 +51,7 @@ export class OfflineOutbox {
   /**
    * Add a vote to the offline outbox
    */
-  async addVote(pollId: string, optionIds: string[], anonymous: boolean = false): Promise<string> {
+  async addVote(pollId: string, optionIds: string[], anonymous = false): Promise<string> {
     const vote: OfflineVote = {
       id: this.generateVoteId(),
       pollId,
@@ -77,13 +77,13 @@ export class OfflineOutbox {
   /**
    * Get all votes in the outbox
    */
-  async getOutbox(): Promise<OfflineVote[]> {
+  getOutbox(): Promise<OfflineVote[]> {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY)
-      return stored ? JSON.parse(stored) : []
+      return Promise.resolve(stored ? JSON.parse(stored) : [])
     } catch (error) {
       logger.error('Failed to get offline outbox:', error instanceof Error ? error : new Error(String(error)))
-      return []
+      return Promise.resolve([])
     }
   }
 
@@ -222,7 +222,7 @@ export class OfflineOutbox {
   private scheduleSync(): void {
     setTimeout(() => {
       this.syncVotes().catch(error => {
-        logger.error('Background sync failed:', error)
+        logger.error('Background sync failed:', error instanceof Error ? error : new Error(String(error)))
       })
     }, this.SYNC_INTERVAL)
   }
@@ -237,22 +237,26 @@ export class OfflineOutbox {
   /**
    * Save outbox to localStorage
    */
-  private async saveOutbox(outbox: OfflineVote[]): Promise<void> {
+  private saveOutbox(outbox: OfflineVote[]): Promise<void> {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(outbox))
+      return Promise.resolve()
     } catch (error) {
       logger.error('Failed to save offline outbox:', error instanceof Error ? error : new Error(String(error)))
+      return Promise.resolve()
     }
   }
 
   /**
    * Clear the entire outbox
    */
-  async clearOutbox(): Promise<void> {
+  clearOutbox(): Promise<void> {
     try {
       localStorage.removeItem(this.STORAGE_KEY)
+      return Promise.resolve()
     } catch (error) {
       logger.error('Failed to clear offline outbox:', error instanceof Error ? error : new Error(String(error)))
+      return Promise.resolve()
     }
   }
 
@@ -301,7 +305,7 @@ export function initializeOfflineOutbox(): void {
   // Initial sync check
   if (navigator.onLine) {
     offlineOutbox.syncVotes().catch(error => {
-      logger.error('Initial sync failed:', error)
+      logger.error('Initial sync failed:', error instanceof Error ? error : new Error(String(error)))
     })
   }
 }

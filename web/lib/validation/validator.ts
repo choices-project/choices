@@ -4,7 +4,8 @@
  * Safe parsing utilities with comprehensive error handling for runtime validation
  */
 
-import { type ZodError, type ZodSchema } from 'zod';
+import type { ZodError, ZodSchema } from 'zod';
+
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
 

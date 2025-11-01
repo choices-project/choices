@@ -7,6 +7,7 @@
  * - Analytics API endpoint returns structured data
  */
 import { test, expect } from '@playwright/test';
+
 import { waitForPageReady } from './helpers/e2e-setup';
 
 test.describe('Analytics', () => {

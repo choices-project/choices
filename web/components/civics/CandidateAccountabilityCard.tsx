@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
 import { 
   TrendingUp, 
   CheckCircle, 
@@ -18,6 +16,9 @@ import {
   Mail,
   Twitter
 } from 'lucide-react';
+import Image from 'next/image';
+import React, { useState } from 'react';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 type Promise = {

@@ -84,7 +84,7 @@ export class QuadraticStrategy implements VotingStrategy {
       }
 
       // Check if at least one option has votes
-      const hasVotes = Object.values(allocations).some(credits => (credits as number) > 0);
+      const hasVotes = Object.values(allocations).some(credits => (credits) > 0);
       if (!hasVotes) {
         return {
           isValid: false,
@@ -132,7 +132,7 @@ export class QuadraticStrategy implements VotingStrategy {
       // Calculate total spending for audit
       const allocations = voteData.allocations || {};
       const totalSpent = Object.values(allocations).reduce((sum: number, credits) => {
-        return sum + (credits as number) * (credits as number);
+        return sum + (credits) * (credits);
       }, 0);
 
       // In a real implementation, this would:
@@ -162,7 +162,7 @@ export class QuadraticStrategy implements VotingStrategy {
           allocations,
           totalSpent,
           totalCredits: poll.votingConfig.quadraticCredits || 100,
-          remainingCredits: (poll.votingConfig.quadraticCredits || 100) - (totalSpent as number)
+          remainingCredits: (poll.votingConfig.quadraticCredits || 100) - (totalSpent)
         }
       }, {
         privacyLevel
@@ -211,7 +211,7 @@ export class QuadraticStrategy implements VotingStrategy {
         if (vote.allocations && typeof vote.allocations === 'object') {
           totalVotes++;
           Object.entries(vote.allocations).forEach(([optionIndex, credits]) => {
-            const creditsNum = credits as number;
+            const creditsNum = credits;
             if (creditsNum > 0) {
               const optionIdx = optionIndex.toString();
               // Ensure the option exists in our tracking objects

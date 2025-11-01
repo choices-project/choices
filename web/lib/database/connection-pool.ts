@@ -8,9 +8,10 @@
  * Agent D - Database Specialist
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 import { logger } from '@/lib/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Connection pool configuration
 export type PoolConfig = {

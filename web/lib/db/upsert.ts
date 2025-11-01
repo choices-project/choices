@@ -5,8 +5,8 @@
  * exactOptionalPropertyTypes violations in DB writes
  */
 
-import { stripUndefinedDeep } from '../util/clean'
 import { getSupabaseBrowserClient } from '../../utils/supabase/client'
+import { stripUndefinedDeep } from '../util/clean'
 
 /**
  * Clean upsert operation that strips undefined values before DB write

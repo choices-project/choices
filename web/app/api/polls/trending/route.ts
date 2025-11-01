@@ -1,14 +1,15 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '3')
+    const limit = parseInt(searchParams.get('limit') ?? '3')
     
     const supabase = await getSupabaseServerClient()
     
@@ -44,15 +45,15 @@ export async function GET(request: NextRequest) {
       id: poll.id,
       title: poll.title,
       description: poll.description,
-      category: poll.category || 'General',
-      totalVotes: poll.total_votes || 0,
+      category: poll.category ?? 'General',
+      totalVotes: poll.total_votes ?? 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
       options: poll.options.map(option => ({
         id: option.id,
         text: option.text,
-        votes: option.votes || 0,
-        percentage: poll.total_votes > 0 ? Math.round((option.votes || 0) / poll.total_votes * 100) : 0
+        votes: option.votes ?? 0,
+        percentage: poll.total_votes > 0 ? Math.round((option.votes ?? 0) / poll.total_votes * 100) : 0
       })) || []
     })) || []
     

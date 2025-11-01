@@ -6,9 +6,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 4,
-  reporter: 'html',
+  reporter: 'line',
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000', // Use dev server
+    baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:3000', // Use dev server
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -23,9 +23,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: 'bash -c "npm run build && npm run start"',
     port: 3000,
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
   },
 })

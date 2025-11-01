@@ -1,279 +1,462 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+/**
+ * @fileoverview Polls API
+ * 
+ * Poll management API providing poll creation, retrieval, and management
+ * with features including auto-locking, moderation, and analytics.
+ * 
+ * @author Choices Platform Team
+ * @created 2025-10-24
+ * @version 2.0.0
+ * @since 1.0.0
+ */
+
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { logger } from '@/lib/utils/logger';
+import { getTrendingHashtags } from '@/features/hashtags/lib/hashtag-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getUser } from '@/lib/core/auth/middleware';
 
-export const dynamic = 'force-dynamic';
-
-// GET /api/polls - Get active polls with aggregated results only
+/**
+ * Get polls with filtering and sorting
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} [request.searchParams.status] - Filter by poll status (active, closed, trending)
+ * @param {string} [request.searchParams.category] - Filter by poll category
+ * @param {string} [request.searchParams.hashtags] - Filter by hashtags (comma-separated)
+ * @param {string} [request.searchParams.search] - Search in poll titles and descriptions
+ * @param {string} [request.searchParams.sort] - Sort order (newest, popular, trending, engagement)
+ * @param {number} [request.searchParams.limit] - Number of polls to return (default: 20)
+ * @param {number} [request.searchParams.offset] - Number of polls to skip (default: 0)
+ * @returns {Promise<NextResponse>} Poll data response
+ * 
+ * @example
+ * GET /api/polls?status=trending&category=politics&sort=popular
+ */
 export async function GET(request: NextRequest) {
   try {
-    const supabaseClient = await getSupabaseServerClient();
-
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const _status = searchParams.get('status') || 'active';
-
-    // Fetch active polls from polls table
-    let polls;
-
-    try {
-      devLog('Fetching active polls from polls table...');
-      const { data: directPolls, error: directError } = await supabaseClient
-        .from('polls')
-        .select('id, title, total_votes, options, status')
-        .eq('status', 'active')
-        .limit(limit);
-
-      if (directError) {
-        throw directError;
-      }
-
-      devLog('Found polls:', directPolls.length || 0);
-
-      // Manually aggregate results (temporary solution)
-      polls = (directPolls ?? []).map(poll => ({
-        id: poll.id,
-        title: poll.title,
-        total_votes: poll.total_votes || 0,
-        aggregated_results: Array.isArray(poll.options) ? 
-          poll.options.reduce((acc: Record<string, number>, _option: unknown, _index: number) => {
-            acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
-            return acc;
-          }, {}) : {},
-        status: poll.status
-      }));
-    } catch (fallbackError) {
-      devLog('Error fetching polls:', fallbackError);
-      return NextResponse.json(
-        { error: 'Failed to fetch polls' },
-        { status: 500 }
-      );
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
     }
 
-    // Additional security: ensure no sensitive data is returned
-    const sanitizedPolls = polls.map(poll => ({
-      poll_id: poll.id,
-      title: poll.title,
-      total_votes: poll.total_votes,
-      // Only include safe fields
-      status: 'active', // Always show as active for public view
-      created_at: new Date().toISOString(), // Generic timestamp
-    })) || [];
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const category = searchParams.get('category');
+    const hashtags = searchParams.get('hashtags');
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort') ?? 'newest';
+    const includeHashtagData = searchParams.get('include_hashtag_data') === 'true';
+    const includeAnalytics = searchParams.get('include_analytics') === 'true';
+    const limit = parseInt(searchParams.get('limit') ?? '20');
+    const offset = parseInt(searchParams.get('offset') ?? '0');
+
+    // Build enhanced query with hashtag support
+    let selectFields = `
+      id,
+      title,
+      description,
+      category,
+      status,
+      total_votes,
+      created_at,
+      end_date,
+      tags,
+      created_by
+    `;
+
+    // Add hashtag fields if requested
+    if (includeHashtagData) {
+      selectFields += `,
+        hashtags,
+        primary_hashtag,
+        hashtag_engagement
+      `;
+    }
+
+    let query = supabase
+        .from('polls')
+      .select(selectFields)
+      .range(offset, offset + limit - 1);
+
+    // Apply enhanced filters
+    if (status && status !== 'all') {
+      if (status === 'trending') {
+        // For trending, we'll handle this after getting the data
+        query = query.eq('status', 'active');
+      } else {
+        query = query.eq('status', status);
+      }
+    }
+    if (category && category !== 'all') {
+      query = query.eq('category', category);
+    }
+    if (hashtags) {
+      const hashtagList = hashtags.split(',').map(h => h.trim());
+      query = query.overlaps('hashtags', hashtagList);
+    }
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    // Apply sorting
+    switch (sort) {
+      case 'popular':
+        query = query.order('total_votes', { ascending: false });
+        break;
+      case 'trending':
+        // Will be handled after getting data with hashtag analytics
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'engagement':
+        query = query.order('total_votes', { ascending: false });
+        break;
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
+    }
+
+    const { data: polls, error } = await query;
+
+    if (error) {
+      logger.error('Error fetching polls:', error);
+      return NextResponse.json({ error: 'Failed to fetch polls' }, { status: 500 });
+    }
+
+    // Fetch user profiles for polls that have created_by
+    let userProfiles: Record<string, any> = {};
+    if (polls && polls.length > 0) {
+      const userIds = [...new Set((polls as any[]).map((poll: any) => poll.created_by).filter(Boolean))];
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id, username, display_name, is_admin')
+          .in('user_id', userIds);
+        
+        if (!profilesError && profiles) {
+          userProfiles = profiles.reduce((acc, profile) => {
+            acc[profile.user_id] = profile;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+    }
+
+    // Get trending hashtags for analytics if needed
+    let trendingHashtags: any[] = [];
+    if (sort === 'trending' || status === 'trending' || includeAnalytics) {
+      try {
+        const trendingResult = await getTrendingHashtags(undefined, 10);
+        if (trendingResult.success && trendingResult.data) {
+          trendingHashtags = trendingResult.data.map(th => ({
+            hashtag: th.hashtag,
+            trend_score: th.trend_score,
+            growth_rate: th.growth_rate,
+            peak_usage: th.peak_usage
+          }));
+        }
+      } catch (error) {
+        logger.warn('Failed to get trending hashtags:', { error: error instanceof Error ? error.message : 'Unknown error' });
+        trendingHashtags = [];
+      }
+    }
+
+    // Transform data to match frontend interface with hashtag integration
+    let transformedPolls = polls?.map((poll: any) => {
+      const basePoll = {
+        id: poll.id,
+        title: poll.title,
+        description: poll.description,
+        category: poll.category,
+        author: {
+          name: userProfiles[poll.created_by]?.display_name ?? userProfiles[poll.created_by]?.username ?? 'Anonymous',
+          verified: userProfiles[poll.created_by]?.is_admin ?? false
+        },
+        status: poll.status,
+        totalVotes: poll.total_votes ?? 0,
+        createdAt: poll.created_at,
+        endsAt: poll.end_date,
+        tags: poll.tags ?? []
+      };
+
+      // Add hashtag data if available
+      if (includeHashtagData && poll.hashtags) {
+        (basePoll as any).hashtags = poll.hashtags;
+        (basePoll as any).primary_hashtag = poll.primary_hashtag;
+        (basePoll as any).hashtag_engagement = poll.hashtag_engagement;
+      }
+
+      // Calculate trending position if we have trending hashtags
+      if (trendingHashtags.length > 0 && poll.hashtags) {
+        const pollHashtags = poll.hashtags ?? [];
+        const trendingPositions = pollHashtags
+          .map((hashtag: string) => trendingHashtags.findIndex((th: any) => th.hashtag.name === hashtag) + 1)
+          .filter((pos: number) => pos > 0);
+        
+        if (trendingPositions.length > 0) {
+          (basePoll as any).trending_position = Math.min(...trendingPositions);
+        }
+      }
+
+      return basePoll;
+    }) ?? [];
+
+    // Sort by trending if requested
+    if (sort === 'trending') {
+      transformedPolls = transformedPolls.sort((a, b) => {
+        const aPos = (a as any).trending_position ?? 999;
+        const bPos = (b as any).trending_position ?? 999;
+        return aPos - bPos;
+      });
+    }
+
+    // Filter trending polls if status is trending
+    if (status === 'trending') {
+      transformedPolls = transformedPolls.filter(poll => (poll as any).trending_position && (poll as any).trending_position > 0);
+    }
+
+    logger.info('Polls fetched successfully', { 
+      count: transformedPolls.length, 
+      filters: { status, category, hashtags, search, sort },
+      includeHashtagData,
+      includeAnalytics
+    });
 
     return NextResponse.json({
-      success: true,
-      polls: sanitizedPolls,
-      count: sanitizedPolls.length,
-      message: 'Aggregated poll results only - no individual vote data'
+      polls: transformedPolls,
+      pagination: {
+        limit,
+        offset,
+        total: transformedPolls.length
+      },
+      analytics: includeAnalytics ? {
+        trendingHashtags: trendingHashtags.slice(0, 10),
+        totalHashtags: trendingHashtags.length
+      } : undefined
     });
 
   } catch (error) {
-    devLog('Error in polls API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logger.error('GET /api/polls error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/polls - Create new poll (authenticated users only)
+/**
+ * Create a new poll
+ * 
+ * @param {NextRequest} request - Request object
+ * @param {string} request.body.title - Poll title
+ * @param {string} [request.body.description] - Poll description
+ * @param {string} request.body.question - Poll question
+ * @param {Array<string>} request.body.options - Poll options (minimum 2)
+ * @param {string} [request.body.category] - Poll category (default: 'general')
+ * @param {Array<string>} [request.body.tags] - Poll tags
+ * @param {Object} [request.body.settings] - Poll settings
+ * @returns {Promise<NextResponse>} Created poll data
+ * 
+ * @example
+ * POST /api/polls
+ * {
+ *   "title": "Community Budget Vote",
+ *   "question": "How should we allocate the budget?",
+ *   "options": ["Education", "Healthcare", "Infrastructure"]
+ * }
+ */
 export async function POST(request: NextRequest) {
   try {
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
-    devLog('E2E test detected:', isE2ETest);
-    
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      devLog('Creating service role client for E2E test');
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-      devLog('Service role client created successfully');
-    } else {
-      supabase = await getSupabaseServerClient();
-    }
-    
+    const supabase = await getSupabaseServerClient();
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
     }
 
-    // Check authentication (bypass for E2E tests)
-    let user;
-    try {
-      user = await getUser();
-    } catch (error) {
-      console.error('Authentication error during poll creation:', error);
-      // If getUser fails and this is not an E2E test, return auth error
-      if (!isE2ETest) {
-        return NextResponse.json(
-          { error: 'Authentication required to create polls' },
-          { status: 401 }
-        );
-      }
-      // For E2E tests, continue without user
-      user = null;
-    }
-    
-    if (!user && !isE2ETest) {
-      return NextResponse.json(
-        { error: 'Authentication required to create polls' },
-        { status: 401 }
-      );
-    }
-    
-        // For E2E tests, use an existing test user
-        if (isE2ETest && !user) {
-          // Get the existing test user ID from the database
-          const { data: testUser } = await supabase
-            .from('user_profiles')
-            .select('user_id, email')
-            .eq('email', 'user@example.com')
-            .single();
-          
-          if (testUser) {
-            user = {
-              id: testUser.user_id,
-              email: testUser.email,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              aud: 'authenticated',
-              role: 'authenticated'
-            } as any;
-          } else {
-            // Fallback to a hardcoded UUID if test user not found
-            user = {
-              id: '550e8400-e29b-41d4-a716-446655440000',
-              email: 'e2e-test@example.com',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              aud: 'authenticated',
-              role: 'authenticated'
-            } as any;
-          }
-        }
-
-    // Verify user is active (bypass for E2E tests)
-    if (!isE2ETest && user) {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
-        return NextResponse.json(
-          { error: 'Active account required to create polls' },
-          { status: 403 }
-        );
-      }
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated');
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const body = await request.json();
     const { 
       title, 
-      options, 
-      votingMethod = 'single',
       description,
-      category = 'general',
-      privacyLevel = 'public',
-      allowMultipleVotes = false,
-      showResults = true,
-      allowComments = true,
-      endTime
+      question,
+      options,
+      category,
+      tags,
+      settings,
+      metadata
     } = body;
 
     // Validate required fields
-    if (!title || !options || !Array.isArray(options) || options.length < 2) {
-      return NextResponse.json(
-        { error: 'Title and at least 2 options are required' },
-        { status: 400 }
-      );
+    if (!title || !question || !options || !Array.isArray(options) || options.length < 2) {
+      return NextResponse.json({ 
+        error: 'Title, question, and at least 2 options are required' 
+      }, { status: 400 });
     }
 
-    // Sanitize and validate options
-    const sanitizedOptions = options
-      .filter(option => typeof option === 'string' && option.trim().length > 0)
-      .map(option => option.trim())
-      .slice(0, 10); // Limit to 10 options max
+    // Create sophisticated poll with enhanced features
+    const autoLockAt = settings?.autoLockDuration 
+      ? new Date(Date.now() + settings.autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
+      : null;
 
-    if (sanitizedOptions.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 valid options are required' },
-        { status: 400 }
-      );
-    }
-
-    // Create poll with user as creator
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .insert({
         title: title.trim(),
-        description: description?.trim() || null,
-        options: sanitizedOptions,
-        voting_method: votingMethod,
-        privacy_level: privacyLevel,
-        category: category,
+        description: description?.trim() ?? '',
+        question: question.trim(),
+        category: category ?? 'general',
+        tags: tags ?? [],
+        created_by: user.id,
         status: 'active',
-        created_by: user?.id || '',
-        total_votes: 0,
+        visibility: 'public',
+        
+        // Sophisticated poll features
+        auto_lock_at: autoLockAt,
+        lock_duration: settings?.autoLockDuration ?? null,
+        lock_type: settings?.autoLockDuration ? 'automatic' : null,
+        moderation_status: settings?.requireModeration ? 'pending' : 'approved',
+        privacy_level: settings?.privacyLevel ?? 'public',
+        is_verified: false,
+        is_featured: false,
+        is_trending: false,
+        trending_score: 0,
+        engagement_score: 0,
+        participation_rate: 0,
+        total_views: 0,
         participation: 0,
-        end_time: endTime || null,
+        
+        // Advanced settings
+        poll_settings: {
+          allow_anonymous: settings?.allowAnonymousVotes !== false,
+          require_verification: settings?.requireVerification ?? false,
+          auto_lock_duration: settings?.autoLockDuration ?? null,
+          moderation_required: settings?.requireModeration ?? false,
+          allow_multiple_votes: settings?.allowMultipleVotes ?? false,
+          show_results_before_close: settings?.showResultsBeforeClose ?? false,
+          allow_comments: settings?.allowComments !== false,
+          allow_sharing: settings?.allowSharing !== false,
+          require_authentication: settings?.requireAuthentication ?? false
+        },
         settings: {
-          allowMultipleVotes,
-          showResults,
-          allowComments
-        }
+          allow_multiple_votes: settings?.allowMultipleVotes ?? false,
+          allow_anonymous_votes: settings?.allowAnonymousVotes ?? true,
+          show_results_before_close: settings?.showResultsBeforeClose ?? false,
+          allow_comments: settings?.allowComments ?? true,
+          allow_sharing: settings?.allowSharing !== false,
+          require_authentication: settings?.requireAuthentication ?? false
+        },
+        metadata: metadata ?? {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
 
     if (pollError) {
-      devLog('Error creating poll:', pollError);
-      return NextResponse.json(
-        { error: 'Failed to create poll', details: pollError },
-        { status: 500 }
-      );
+      logger.error('Error creating poll:', pollError);
+      return NextResponse.json({ error: 'Failed to create poll' }, { status: 500 });
     }
 
-    // Return sanitized poll data (no sensitive information)
-    const sanitizedPoll = poll && !('error' in poll) ? {
-      id: poll.id,
-      title: poll.title,
-      description: poll.description,
-      options: poll.options,
-      voting_method: poll.voting_method,
-      privacy_level: poll.privacy_level,
-      category: poll.category,
-      status: poll.status,
-      total_votes: poll.total_votes,
-      participation: poll.participation,
-      end_time: poll.end_time,
-      created_at: poll.created_at
-    } : null;
+    // Create poll options
+    const optionsData = options.map((option: any, index: number) => ({
+      poll_id: poll.id,
+      text: option.text ?? option,
+      description: option.description ?? '',
+      order: index,
+      votes: 0,
+      percentage: 0
+    }));
 
-    return NextResponse.json(sanitizedPoll);
+    const { error: optionsError } = await supabase
+      .from('poll_options')
+      .insert(optionsData);
+
+    if (optionsError) {
+      logger.error('Error creating poll options:', optionsError);
+      // Clean up the poll if options creation fails
+      await supabase.from('polls').delete().eq('id', poll.id);
+      return NextResponse.json({ error: 'Failed to create poll options' }, { status: 500 });
+    }
+
+    // Track poll creation analytics
+    const sessionId = crypto.randomUUID();
+    const { data: analyticsEvent } = await supabase
+      .from('analytics_events')
+      .insert({
+        event_type: 'poll_created',
+        user_id: user.id,
+        session_id: sessionId,
+        event_data: {
+          poll_id: poll.id,
+          poll_title: poll.title,
+          poll_category: poll.category,
+          poll_settings: poll.poll_settings,
+          auto_lock_at: poll.auto_lock_at,
+          moderation_status: poll.moderation_status
+        },
+        ip_address: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'),
+        user_agent: request.headers.get('user-agent'),
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    // Store detailed analytics data
+    if (analyticsEvent) {
+      await supabase
+        .from('analytics_event_data')
+        .insert([
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_category',
+            data_value: poll.category,
+            data_type: 'string'
+          },
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_auto_lock',
+            data_value: poll.auto_lock_at ? 'true' : 'false',
+            data_type: 'boolean'
+          },
+          {
+            event_id: analyticsEvent.id,
+            data_key: 'poll_moderation_required',
+            data_value: poll.moderation_status === 'pending' ? 'true' : 'false',
+            data_type: 'boolean'
+          }
+        ]);
+    }
+
+    logger.info('Poll created successfully with analytics tracking', { 
+      pollId: poll.id, 
+      title: poll.title, 
+      authorId: user.id,
+      analyticsEventId: analyticsEvent?.id
+    });
+
+    return NextResponse.json({
+      poll: {
+        id: poll.id,
+        title: poll.title,
+        description: poll.description,
+        category: poll.category,
+        status: poll.status,
+        autoLockAt: poll.auto_lock_at,
+        moderationStatus: poll.moderation_status,
+        privacyLevel: poll.privacy_level,
+        isVerified: poll.is_verified,
+        isFeatured: poll.is_featured,
+        engagementScore: poll.engagement_score,
+        createdAt: poll.created_at
+      }
+    }, { status: 201 });
 
   } catch (error) {
-    devLog('Error in polls API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logger.error('POST /api/polls error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -5,8 +5,9 @@
  * It should be called early in the application lifecycle.
  */
 
-import { logger } from '@/lib/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/logger';
+
 import { initializeServiceWorker } from './service-worker';
 
 /**

@@ -1,7 +1,8 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,7 @@ export async function GET() {
       logger.error('Error fetching total votes:', votesError)
     }
     
-    const totalVotes = pollsWithVotes?.reduce((sum: number, poll: { total_votes: number | null }) => sum + (poll.total_votes || 0), 0) || 0
+    const totalVotes = pollsWithVotes?.reduce((sum: number, poll: { total_votes: number | null }) => sum + (poll.total_votes ?? 0), 0) ?? 0
     
     // Get active users (users who have voted in the last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -44,9 +45,9 @@ export async function GET() {
     }
     
     return NextResponse.json({
-      totalPolls: totalPolls || 0,
+      totalPolls: totalPolls ?? 0,
       totalVotes: totalVotes,
-      activeUsers: activeUsers || 0
+      activeUsers: activeUsers ?? 0
     })
     
   } catch (error) {

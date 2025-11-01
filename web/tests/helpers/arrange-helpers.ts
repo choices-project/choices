@@ -1,5 +1,6 @@
-import type { State } from './supabase-mock';
 import { getMS } from '../setup';
+
+import type { State } from './supabase-mock';
 
 type Register = (m: (s: State) => boolean, r: () => any) => void;
 

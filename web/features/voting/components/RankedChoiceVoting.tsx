@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
-import { withOptional } from '@/lib/util/objects'
+import React, { useState, useEffect } from 'react';
 
-type PollOption = {
-  id: string
-  text: string
-  description?: string
-}
+
+import type { PollOption } from '../types'
 
 type RankedChoiceVotingProps = {
   pollId: string
@@ -72,7 +68,7 @@ export default function RankedChoiceVoting({
     }
     
     const newRankings = { 
-      ...withOptional(rankings), 
+      ...rankings, 
       [optionId]: newRank 
     }
     setRankings(newRankings)
@@ -120,9 +116,11 @@ export default function RankedChoiceVoting({
         throw new Error('All options must be ranked')
       }
       
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           rankings: validRankings,
           voting_method: 'ranked_choice',
@@ -244,8 +242,8 @@ export default function RankedChoiceVoting({
               {/* Option Content */}
               <div className="pr-8">
                 <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.description && (
-                  <p className="text-sm text-gray-600">{option.description}</p>
+                {option.option_text && (
+                  <p className="text-sm text-gray-600">{option.option_text}</p>
                 )}
               </div>
 

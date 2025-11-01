@@ -1,8 +1,10 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
+
+import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
+
 export const dynamic = 'force-dynamic'
 
 export async function POST() {
@@ -80,11 +82,11 @@ export async function POST() {
       success: true,
       message: 'User synced successfully',
       user: {
-        id: (newUser as any).id,
-        stable_id: (newUser as any).stable_id,
-        email: (newUser as any).email,
-        verification_tier: (newUser as any).verification_tier,
-        is_active: (newUser as any).is_active
+        id: (newUser).id,
+        stable_id: (newUser).stable_id,
+        email: (newUser).email,
+        verification_tier: (newUser).verification_tier,
+        is_active: (newUser).is_active
       }
     })
 

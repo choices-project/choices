@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react';
+
 import type { StepDataMap, OnStepUpdate } from './types';
 
 type PrivacyPhilosophyStepProps = {

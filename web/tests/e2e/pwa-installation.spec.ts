@@ -11,7 +11,8 @@
  * Updated: January 21, 2025
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+
 import { 
   setupE2ETestData, 
   cleanupE2ETestData, 

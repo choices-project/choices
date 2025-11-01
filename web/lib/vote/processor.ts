@@ -8,9 +8,11 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '../logger';
-import { getSupabaseServerClient } from '../../utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { getSupabaseServerClient } from '../../utils/supabase/server';
+import { devLog } from '../logger';
+
 import type { 
   VoteData, 
   PollData, 
@@ -34,7 +36,7 @@ export class VoteProcessor implements IVoteProcessor {
       const c = this.clientFactory();
       this._db = (c instanceof Promise) ? await c : c;
     }
-    return this._db!;
+    return this._db;
   }
 
   /**

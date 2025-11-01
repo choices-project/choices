@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
-import { PrivacyLevelSelector } from '@/shared/components/PrivacyLevelSelector';
+import React, { useState } from 'react';
+
+import { devLog } from '@/lib/logger';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { withOptional } from '@/lib/util/objects';
+import { PrivacyLevelSelector } from '@/shared/components/PrivacyLevelSelector';
 
 type CreatePollFormProps = {
   onSubmit: (pollData: CreatePollData) => Promise<void>;
@@ -428,7 +429,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           >
             {isLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                 Creating...
               </>
             ) : (

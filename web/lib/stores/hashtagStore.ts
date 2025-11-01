@@ -9,17 +9,14 @@
  */
 
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { persist } from 'zustand/middleware';
+import { devtools , persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { shallow } from 'zustand/shallow';
 
 import type { 
   Hashtag,
   UserHashtag,
   TrendingHashtag,
   HashtagSearchQuery,
-  HashtagSearchResult,
   HashtagSearchResponse,
   HashtagSuggestion,
   HashtagAnalytics,
@@ -29,7 +26,7 @@ import type {
 import type { BaseStore } from './types';
 
 // Additional type definitions for hashtag store
-interface HashtagUserPreferences {
+type HashtagUserPreferences = {
   defaultCategory: HashtagCategory;
   autoFollowTrending: boolean;
   notificationSettings: {
@@ -39,7 +36,7 @@ interface HashtagUserPreferences {
   };
 }
 
-interface ProfileHashtagIntegration {
+type ProfileHashtagIntegration = {
   id: string;
   profile_id: string;
   hashtag_id: string;
@@ -47,7 +44,7 @@ interface ProfileHashtagIntegration {
   created_at: string;
 }
 
-interface PollHashtagIntegration {
+type PollHashtagIntegration = {
   id: string;
   poll_id: string;
   hashtag_id: string;
@@ -55,7 +52,7 @@ interface PollHashtagIntegration {
   created_at: string;
 }
 
-interface FeedHashtagIntegration {
+type FeedHashtagIntegration = {
   id: string;
   feed_id: string;
   hashtag_id: string;
@@ -63,7 +60,7 @@ interface FeedHashtagIntegration {
   created_at: string;
 }
 
-interface HashtagValidation {
+type HashtagValidation = {
   isValid: boolean;
   errors: string[];
   warnings: string[];
@@ -859,7 +856,7 @@ export const useHashtags = () => useHashtagStore((state) => ({
   trendingHashtags: state.trendingHashtags,
   followedHashtags: state.followedHashtags,
   primaryHashtags: state.primaryHashtags
-}), shallow);
+}));
 
 export const useHashtagSearch = () => useHashtagStore((state) => ({
   searchResults: state.searchResults,
@@ -867,7 +864,7 @@ export const useHashtagSearch = () => useHashtagStore((state) => ({
   recentSearches: state.recentSearches,
   isSearching: state.isSearching,
   searchError: state.searchError
-}), shallow);
+}));
 
 export const useHashtagLoading = () => useHashtagStore((state) => ({
   isLoading: state.isLoading,
@@ -904,7 +901,7 @@ export const useHashtagActions = () => useHashtagStore((state) => ({
   setSortBy: state.setSortBy,
   setTimeRange: state.setTimeRange,
   setSearchQuery: state.setSearchQuery
-}), shallow);
+}));
 
 // Filter selectors
 export const useHashtagFilters = () => useHashtagStore((state) => state.filters);

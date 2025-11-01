@@ -9,8 +9,9 @@
  * - Proper expiration handling
  */
 
-import { cookies } from 'next/headers'
 import * as jwt from 'jsonwebtoken'
+import { cookies } from 'next/headers'
+
 import { logger } from '@/lib/logger'
 import { withOptional } from '@/lib/util/objects'
 

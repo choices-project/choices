@@ -1,6 +1,5 @@
 'use client'
 
-import { usePWA } from '@/hooks/usePWA';
 import { 
   Smartphone, 
   Wifi, 
@@ -13,6 +12,10 @@ import {
   RefreshCw,
   Settings
 } from 'lucide-react';
+import React from 'react';
+
+
+import { usePWA } from '@/hooks/usePWA';
 
 type PWAStatusProps = {
   showDetails?: boolean;

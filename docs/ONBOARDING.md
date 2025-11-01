@@ -123,9 +123,10 @@ cd web && npm run test:all
 1. **Read this onboarding guide first**
 2. **Check the [Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md)**
 3. **Review the [System Architecture](docs/core/SYSTEM_ARCHITECTURE.md)**
-4. **Use feature flags for new features**
-5. **Write comprehensive E2E tests**
-6. **Update documentation after changes**
+4. **Read the [Supabase Client Usage Guide](docs/DEVELOPER_GUIDE_SUPABASE_CLIENT.md)**
+5. **Use feature flags for new features**
+6. **Write comprehensive E2E tests**
+7. **Update documentation after changes**
 
 ### **Code Standards**
 - TypeScript strict mode
@@ -133,6 +134,7 @@ cd web && npm run test:all
 - Comprehensive E2E testing
 - Feature flag driven development
 - Privacy-first architecture
+- **Supabase Client Usage**: Use `getSupabaseBrowserClient()` for client-side, `getSupabaseServerClient()` for server-side
 
 ### **File Organization**
 - Use `/scratch/` directory for temporary files

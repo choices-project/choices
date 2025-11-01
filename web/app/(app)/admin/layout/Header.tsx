@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-import { useAdminStore } from '@/lib/admin/store';
 import {
   Bell,
   Menu,
@@ -10,11 +8,14 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import React from 'react';
+
+import { useAdminStore } from '@/features/admin/lib/store';
 
 export const Header: React.FC = () => {
   const { notifications, markNotificationRead, toggleSidebar } = useAdminStore();
 
-  const unreadNotifications = notifications.filter(n => !n.read);
+  const unreadNotifications = notifications.filter((n: { read: boolean }) => !n.read);
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
@@ -59,7 +60,7 @@ export const Header: React.FC = () => {
               <div className="p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {notifications.slice(0, 5).map((notification: any) => (
+                  {notifications.slice(0, 5).map((notification: { id: string; title: string; message: string; read: boolean; timestamp: string }) => (
                     <div
                       key={notification.id}
                       className={`p-3 rounded-md cursor-pointer transition-colors ${
@@ -68,6 +69,15 @@ export const Header: React.FC = () => {
                           : 'bg-blue-50 hover:bg-blue-100'
                       }`}
                       onClick={() => markNotificationRead(notification.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          markNotificationRead(notification.id)
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Mark notification "${notification.title}" as read`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -82,7 +92,7 @@ export const Header: React.FC = () => {
                           </p>
                         </div>
                         {!notification.read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2" />
                         )}
                       </div>
                     </div>
@@ -105,28 +115,25 @@ export const Header: React.FC = () => {
           {/* User dropdown */}
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
             <div className="py-1">
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              <button
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
                 <User className="h-4 w-4 mr-3" />
                 Profile
-              </a>
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              </button>
+              <button
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
                 <Settings className="h-4 w-4 mr-3" />
                 Settings
-              </a>
+              </button>
               <hr className="my-1" />
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              <button
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
               >
                 <LogOut className="h-4 w-4 mr-3" />
                 Sign out
-              </a>
+              </button>
             </div>
           </div>
         </div>

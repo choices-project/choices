@@ -1,7 +1,7 @@
 // app/api/v1/civics/representative/[id]/route.ts
 // Versioned API endpoint for single representative with FEC and voting data
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

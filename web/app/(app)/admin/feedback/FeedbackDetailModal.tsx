@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { logger } from '@/lib/logger';
 import { 
   X, 
   MessageSquare, 
@@ -18,6 +16,9 @@ import {
   Smartphone,
   Send
 } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { logger } from '@/lib/utils/logger';
 
 type Feedback = {
   id: string;
@@ -27,12 +28,58 @@ type Feedback = {
   description: string;
   sentiment: string;
   screenshot: string | null;
-  userjourney: any;
+  userjourney: {
+    currentPage: string;
+    currentPath: string;
+    pageTitle: string;
+    referrer: string;
+    userAgent: string;
+    screenResolution: string;
+    viewportSize: string;
+    timeOnPage: number;
+    sessionId: string;
+    sessionStartTime: string;
+    totalPageViews: number;
+    activeFeatures: string[];
+    lastAction: string;
+    actionSequence: string[];
+    pageLoadTime: number;
+    performanceMetrics: {
+      fcp?: number;
+      lcp?: number;
+      fid?: number;
+      cls?: number;
+    };
+    errors: Array<{
+      type: string;
+      message: string;
+      stack?: string;
+      timestamp: string;
+    }>;
+    deviceInfo: {
+      type: 'mobile' | 'tablet' | 'desktop';
+      os: string;
+      browser: string;
+      language: string;
+      timezone: string;
+    };
+    isAuthenticated: boolean;
+    userRole?: string;
+    userId?: string;
+  };
   status: string;
   priority: string;
   tags: string[];
-  aianalysis: any;
-  metadata: any;
+  aianalysis: {
+    intent: string;
+    category: string;
+    sentiment: number;
+    urgency: number;
+    complexity: number;
+    keywords: string[];
+    suggestedActions: string[];
+  };
+  metadata: Record<string, unknown>;
   createdat: string;
   updatedat: string;
 }
@@ -188,9 +235,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {feedback.tags.map((tag: any, index: any) => (
+                {feedback.tags.map((tag) => (
                   <span
-                    key={index}
+                    key={tag}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
                   >
                     <Tag className="w-4 h-4 mr-1" />
@@ -218,31 +265,31 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Technical Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {feedback.metadata.deviceInfo && (
+                {feedback.userjourney.deviceInfo && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Device Information</h4>
                     <div className="space-y-1 text-sm text-gray-600">
                       <div className="flex items-center space-x-2">
                         <Monitor className="h-4 w-4" />
-                        <span>OS: {feedback.metadata.deviceInfo.os}</span>
+                        <span>OS: {feedback.userjourney.deviceInfo.os}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Globe className="h-4 w-4" />
-                        <span>Browser: {feedback.metadata.deviceInfo.browser}</span>
+                        <span>Browser: {feedback.userjourney.deviceInfo.browser}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Smartphone className="h-4 w-4" />
-                        <span>Type: {feedback.metadata.deviceInfo.type}</span>
+                        <span>Type: {feedback.userjourney.deviceInfo.type}</span>
                       </div>
                     </div>
                   </div>
                 )}
-                {feedback.metadata.performanceMetrics && (
+                {feedback.userjourney.performanceMetrics && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
                     <div className="space-y-1 text-sm text-gray-600">
-                      <div>CLS: {feedback.metadata.performanceMetrics.cls}</div>
-                      <div>FCP: {feedback.metadata.performanceMetrics.fcp}ms</div>
+                      <div>CLS: {feedback.userjourney.performanceMetrics.cls}</div>
+                      <div>FCP: {feedback.userjourney.performanceMetrics.fcp}ms</div>
                     </div>
                   </div>
                 )}
@@ -285,7 +332,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                   <option value="closed">Closed</option>
                 </select>
                 <button
-                  onClick={handleSubmitResponse}
+                  onClick={() => void handleSubmitResponse()}
                   disabled={!adminResponse.trim() || isSubmitting}
                   className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Shield, Users } from 'lucide-react'
+import React, { useState } from 'react';
+
+
 import { useOnboardingContext } from './EnhancedOnboardingFlow'
 
 type DemographicsStepProps = {

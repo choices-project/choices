@@ -1,7 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+
 export const dynamic = 'force-dynamic'
 
 // Security configuration for feedback API
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate feedback type
-    if (!['bug', 'feature', 'general', 'performance', 'accessibility', 'security'].includes(type)) {
+    if (!['bug', 'feature', 'general', 'performance', 'accessibility', 'security', 'csp-violation'].includes(type)) {
       return NextResponse.json(
         { error: 'Invalid feedback type' },
         { status: 400 }
@@ -112,27 +114,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Feedback submitted successfully (mock)',
-        feedback_id: 'mock-' + Date.now()
+        feedback_id: `mock-${  Date.now()}`
       })
     }
 
     const supabaseClient = await supabase;
-    
+            
     // Get current user (if authenticated)
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError) {
-      devLog('Could not get user, proceeding with anonymous feedback:', userError.message)
+      devLog('Could not get user, proceeding with anonymous feedback:', { error: userError.message })
     }
 
     // Check daily feedback limit for authenticated users
     if (user?.id) {
       const today = new Date().toISOString().split('T')[0]
-      const { count } = await supabaseClient
-        .from('feedback')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', String(user.id) as any)
-        .gte('created_at', today)
+    const { count } = await supabaseClient
+      .from('feedback')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', String(user.id))
+      .gte('created_at', today)
       
       if (count && count >= 10) {
         return NextResponse.json(
@@ -142,14 +144,73 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Special handling for CSP violations
+    if (type === 'csp-violation') {
+      // CSP violations are always anonymous and high priority
+      const cspData = {
+        user_id: null, // Always anonymous
+        feedback_type: 'csp-violation', // Changed from 'type' to 'feedback_type'
+        title: 'CSP Violation Report',
+        description: `CSP Violation: ${description}`,
+        sentiment: 'negative',
+        screenshot: null,
+        user_journey: {},
+        status: 'open',
+        priority: 'urgent',
+        tags: ['security', 'csp', 'violation'],
+        ai_analysis: {},
+        metadata: {
+          cspReport: body['csp-report'] ?? {},
+          userAgent: request.headers.get('user-agent') ?? 'unknown',
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+          timestamp: new Date().toISOString(),
+          security: {
+            ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+            userAgent: request.headers.get('user-agent') ?? 'unknown',
+            timestamp: new Date().toISOString()
+          }
+        }
+      };
+      
+      devLog('Processing CSP violation report:', cspData);
+      
+      const { data: cspResult, error: cspError } = await supabaseClient
+        .from('feedback')
+        .insert(cspData)
+        .select()
+        .single();
+        
+      if (cspError) {
+        logger.error('Error storing CSP violation:', cspError);
+        return NextResponse.json(
+          { error: 'Failed to store CSP violation report' },
+          { status: 500 }
+        );
+      }
+      
+      logger.warn('CSP Violation Report', {
+        'csp-report': body['csp-report'],
+        feedbackId: cspResult.id,
+        timestamp: new Date().toISOString(),
+        userAgent: request.headers.get('user-agent'),
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+      });
+      
+      return NextResponse.json({
+        success: true,
+        message: 'CSP violation report received',
+        feedback_id: cspResult.id
+      });
+    }
+
     // Prepare enhanced feedback data
     const feedbackData = {
-      user_id: user?.id || null,
-      type,
+      user_id: user?.id ?? null,
+      feedback_type: type, // Changed from 'type' to 'feedback_type'
       title: title.trim(),
       description: description.trim(),
       sentiment,
-      screenshot: screenshot || null,
+      screenshot: screenshot ?? null,
       user_journey: userJourney || {},
       status: 'open',
       priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
@@ -167,8 +228,8 @@ export async function POST(request: NextRequest) {
           totalPageViews: userJourney?.totalPageViews
         },
         security: {
-          ipAddress: request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown',
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+          userAgent: request.headers.get('user-agent') ?? 'unknown',
           timestamp: new Date().toISOString()
         }
       }
@@ -176,7 +237,7 @@ export async function POST(request: NextRequest) {
 
     devLog('Inserting enhanced feedback data:', {
       user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
-      type: feedbackData.type,
+      type: feedbackData.feedback_type,
       sentiment: feedbackData.sentiment,
       sessionId: userJourney?.sessionId,
       currentPage: userJourney?.currentPage,
@@ -186,11 +247,11 @@ export async function POST(request: NextRequest) {
     // Insert feedback into database
     const { data, error } = await supabaseClient
       .from('feedback')
-      .insert([feedbackData] as any)
+      .insert([feedbackData])
       .select()
 
     if (error) {
-      devLog('Database error:', error)
+      devLog('Database error:', { error })
       // If table doesn't exist or schema cache issue, use mock response for testing
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       if (errorMessage.includes('relation "feedback" does not exist') || 
@@ -200,7 +261,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           message: 'Feedback submitted successfully (mock - schema cache issue)',
-          feedback_id: 'mock-' + Date.now(),
+          feedback_id: `mock-${  Date.now()}`,
           context: {
             sessionId: userJourney?.sessionId,
             deviceInfo: userJourney?.deviceInfo,
@@ -229,7 +290,7 @@ export async function POST(request: NextRequest) {
         pageLoadTime: userJourney?.pageLoadTime,
         timeOnPage: userJourney?.timeOnPage
       },
-      errors: userJourney?.errors?.length || 0
+      errors: userJourney?.errors?.length ?? 0
     })
 
     return NextResponse.json({
@@ -244,7 +305,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Enhanced feedback API error:', error)
+    devLog('Enhanced feedback API error:', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -259,8 +320,8 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const type = searchParams.get('type')
     const sentiment = searchParams.get('sentiment')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const limit = parseInt(searchParams.get('limit') ?? '50')
+    const offset = parseInt(searchParams.get('offset') ?? '0')
 
     // Get Supabase client
     const supabase = getSupabaseServerClient()
@@ -283,21 +344,21 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1)
 
     if (status) {
-      query = query.eq('status', status as any)
+      query = query.eq('status', status)
     }
 
     if (type) {
-      query = query.eq('type', type as any)
+      query = query.eq('type', type)
     }
 
     if (sentiment) {
-      query = query.eq('sentiment', sentiment as any)
+      query = query.eq('sentiment', sentiment)
     }
 
     const { data, error } = await query
 
     if (error) {
-      devLog('Database error:', error)
+      devLog('Database error:', { error })
       // If table doesn't exist or schema cache issue, return empty mock response
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       if (errorMessage.includes('relation "feedback" does not exist') || 
@@ -323,13 +384,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Process feedback data for better display
-    const processedFeedback = data && !('error' in data) ? (data as any[]).map(item => ({
+    const processedFeedback = data && !('error' in data) ? data.map((item: any) => ({
       id: item.id,
       user_id: item.user_id,
       type: item.type,
-      content: item.content,
+      content: (item.description ?? item.title) || '',
+      status: item.status || 'open',
       sentiment: item.sentiment,
-      status: item.status,
       created_at: item.created_at,
       updated_at: item.updated_at,
       userJourney: item.user_journey,
@@ -341,7 +402,7 @@ export async function GET(request: NextRequest) {
       os: item.user_journey?.deviceInfo?.os,
       pageLoadTime: item.user_journey?.pageLoadTime,
       timeOnPage: item.user_journey?.timeOnPage,
-      errorCount: item.user_journey?.errors?.length || 0,
+      errorCount: item.user_journey?.errors?.length ?? 0,
       sessionId: item.user_journey?.sessionId
     })) : []
 
@@ -353,7 +414,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Feedback API error:', error)
+    devLog('Feedback API error:', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -477,7 +538,7 @@ function generateAnalytics(feedback: any[]): any {
       validTimeOnPage++
     }
     
-    totalErrors += item.errorCount || 0
+    totalErrors += item.errorCount ?? 0
   })
   
   analytics.byType = typeCount

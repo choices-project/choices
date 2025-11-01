@@ -1,11 +1,33 @@
 'use client';
 
+import React, { useEffect } from 'react';
+
+import { logger } from '@/lib/utils/logger';
+
 export default function PollRouteError({ error }: { error: Error & { digest?: string } }) {
-  // Log error to console for debugging
-  console.error('Poll route error:', error);
+  // Log error to console for debugging (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Poll route error:', error);
+  }
   
-  // Optional: log to server via /api/logs
-  // TODO: Implement server-side error logging
+  // Use existing error logging system
+  useEffect(() => {
+    // Log error using existing logger system
+    logger.error('Poll route error occurred', error, {
+      component: 'PollRouteError',
+      errorBoundary: 'poll-route',
+      category: 'poll',
+      severity: 'high',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      metadata: {
+        errorName: error.name,
+        errorConstructor: error.constructor.name,
+        digest: error.digest,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }, [error]);
   
   return (
     <div data-testid="poll-error" role="alert">

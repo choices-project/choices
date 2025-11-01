@@ -14,12 +14,14 @@ import {
   type AuthenticationResponseJSON,
   type AuthenticatorTransportFuture
 } from '@simplewebauthn/server';
+
+import { devLog } from '@/lib/logger';
+
 import { 
   arrayBufferToBase64url,
   base64urlToArrayBuffer,
   byteaToArrayBuffer
 } from './type-converters';
-import { devLog } from '@/lib/logger';
 
 /**
  * WebAuthn credential data from database

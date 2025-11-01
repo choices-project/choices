@@ -1,6 +1,8 @@
 'use client'
 
 import { CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react';
+import React from 'react';
+
 
 type CompleteStepProps = {
   data: any
@@ -252,7 +254,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         >
           {isLoading ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
               <span>Saving your profile...</span>
             </>
           ) : (

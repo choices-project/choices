@@ -13,9 +13,9 @@
  * Status: Critical security enhancement
  */
 
-import { z } from 'zod'
 import { redirect } from 'next/navigation'
-import { logger } from '@/lib/logger'
+import { z } from 'zod'
+
 import { 
   withIdempotency, 
   generateIdempotencyKey,
@@ -27,6 +27,7 @@ import {
   clearSessionCookie
 } from '@/lib/core/auth/session-cookies'
 import { getSecurityConfig } from '@/lib/core/security/config'
+import { logger } from '@/lib/logger'
 
 // Common validation schemas
 export const BaseActionSchema = z.object({
@@ -217,7 +218,7 @@ export function validateFormData<T>(
     return schema.parse(rawData)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const zodError = error as z.ZodError
+      const zodError = error
       const fieldErrors: Record<string, string> = {}
       
       zodError.issues.forEach((issue) => {

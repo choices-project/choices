@@ -18,6 +18,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+
 import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 
 // ============================================================================
@@ -497,7 +498,7 @@ export class SMSRankingParser {
     
     return ranking
       .map(name => candidateMap.get(name.toLowerCase()))
-      .filter(id => id !== undefined) as string[];
+      .filter(id => id !== undefined);
   }
   
   /**

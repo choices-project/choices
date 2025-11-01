@@ -1,6 +1,6 @@
-'use client'
+import React, { useEffect } from 'react';
 
-import { useEffect } from 'react'
+'use client'
 
 type FontProviderProps = {
   children: React.ReactNode

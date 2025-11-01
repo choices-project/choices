@@ -6,6 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export async function GET(request: NextRequest) {

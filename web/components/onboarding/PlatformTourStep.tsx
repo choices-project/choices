@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { Vote, BarChart3, Users, Settings, ArrowRight, ArrowLeft, Eye, Shield } from 'lucide-react'
+import React, { useState } from 'react';
+
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 type PlatformTourStepProps = {
   data: any

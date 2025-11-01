@@ -1,10 +1,12 @@
 'use client'
 
-import Link from 'next/link'
+
 import { 
   Search, Filter, Eye, Users, Calendar, Vote, 
   ArrowRight, Activity
 } from 'lucide-react'
+import Link from 'next/link'
+import React from 'react';
 
 type Poll = {
   id: string

@@ -1,288 +1,189 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
-import { requireAdminOr401 } from '@/lib/admin-auth'
-import { logger } from '@/lib/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { withOptional } from '@/lib/util/objects'
+import { type NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
-  const authGate = await requireAdminOr401()
-  if (authGate) return authGate
-  
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/admin/site-messages - Get site messages for admin management
+ */
+async function GET(request: NextRequest) {
   try {
-    logger.info('Admin site messages GET request', { 
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
-    })
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') ?? 'all';
+    const priority = searchParams.get('priority') ?? 'all';
+    const limit = parseInt(searchParams.get('limit') ?? '50');
 
-    const { searchParams } = new URL(request.url)
-    const includeInactive = searchParams.get('includeInactive') === 'true'
-
-    const messages = await getSiteMessages(includeInactive)
-    return NextResponse.json(messages)
-  } catch (error) {
-    logger.error('Error fetching site messages', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Failed to fetch site messages' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
-  const authGate = await requireAdminOr401()
-  if (authGate) return authGate
-  
-  try {
-    logger.info('Admin site messages POST request', { 
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
-    })
-
-    const body = await request.json()
-    const { title, message, type, priority, isActive, expiresAt } = body
-
-    // Validate required fields
-    if (!title || !message || !type) {
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
       return NextResponse.json(
-        { error: 'Title, message, and type are required' },
-        { status: 400 }
-      )
+        { error: 'Database connection not available' },
+        { status: 500 }
+      );
     }
 
-    const supabase = await getSupabaseServerClient()
-    const newMessage = await createSiteMessage(supabase, {
-      title,
-      message,
-      type,
-      priority: priority || 'medium',
-      isActive: isActive ?? true,
-      expiresAt
-    })
-
-    return NextResponse.json(newMessage)
-  } catch (error) {
-    logger.error('Error creating site message', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Failed to create site message' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
-  const authGate = await requireAdminOr401()
-  if (authGate) return authGate
-  
-  try {
-    logger.info('Admin site messages PUT request', { 
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
-    })
-
-    const body = await request.json()
-    const { id, title, message, type, priority, isActive, expiresAt } = body
-
-    if (!id) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json(
-        { error: 'Message ID is required' },
-        { status: 400 }
-      )
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    const supabase = await getSupabaseServerClient()
-    const updatedMessage = await updateSiteMessage(supabase, id, {
-      title,
-      message,
-      type,
-      priority,
-      isActive,
-      expiresAt
-    })
-
-    return NextResponse.json(updatedMessage)
-  } catch (error) {
-    logger.error('Error updating site message', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Failed to update site message' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
-  const authGate = await requireAdminOr401()
-  if (authGate) return authGate
-  
-  try {
-    logger.info('Admin site messages DELETE request', { 
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
-    })
-
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Message ID is required' },
-        { status: 400 }
-      )
-    }
-
-    const supabase = await getSupabaseServerClient()
-    await deleteSiteMessage(supabase, id)
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error deleting site message', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Failed to delete site message' },
-      { status: 500 }
-    )
-  }
-}
-
-async function getSiteMessages(includeInactive: boolean = false) {
-  try {
-    // Use REST API directly to bypass PostgREST cache issues
-    let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&order=created_at.desc`
+    // Check if user is admin by querying the user_profiles table
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
     
-    if (!includeInactive) {
-      url += `&is_active=eq.true`
+    const isAdmin = profile?.is_admin ?? false;
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
-    const response = await fetch(url, {
-      headers: {
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json'
+    // Build query for site messages
+    let query = supabase
+      .from('site_messages')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    // Apply filters
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    if (priority !== 'all') {
+      query = query.eq('priority', priority);
+    }
+
+    const { data: messages, error } = await query;
+
+    if (error) {
+      logger.error('Error fetching site messages:', error as Error);
+      return NextResponse.json(
+        { error: 'Failed to fetch site messages' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: messages ?? [],
+      total: messages?.length ?? 0,
+      filters: {
+        status,
+        priority,
+        limit
+      },
+      admin_user: {
+        id: user.id,
+        email: user.email
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const messages = await response.json();
-
-    return {
-      messages: messages || [],
-      count: messages?.length || 0,
-      activeCount: messages?.filter((m: any) => m.is_active).length || 0
-    }
   } catch (error) {
-    logger.error('Error in getSiteMessages', error instanceof Error ? error : new Error(String(error)))
-    throw error
+    logger.error('Admin site-messages API error:', error as Error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
-async function createSiteMessage(supabase: any, messageData: {
-  title: string
-  message: string
-  type: string
-  priority?: string
-  isActive?: boolean
-  expiresAt?: string
-}) {
+/**
+ * POST /api/admin/site-messages - Create a new site message
+ */
+async function POST(request: NextRequest) {
   try {
-    const { data, error } = await supabase
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin by querying the user_profiles table
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isAdmin = profile?.is_admin ?? false;
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { title, message, priority, status, target_audience, start_date, end_date } = body;
+
+    // Validate required fields
+    if (!title || !message) {
+      return NextResponse.json(
+        { error: 'Title and message are required' },
+        { status: 400 }
+      );
+    }
+
+    // Create site message using correct field names
+    const { data: siteMessage, error } = await supabase
       .from('site_messages')
       .insert({
-        title: messageData.title,
-        message: messageData.message,
-        type: messageData.type,
-        priority: messageData.priority || 'medium',
-        is_active: messageData.isActive ?? true,
-        expires_at: messageData.expiresAt,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        title,
+        message,
+        priority: priority ?? 'medium',
+        status: status ?? 'active',
+        target_audience: target_audience ?? null,
+        start_date: start_date ?? null,
+        end_date: end_date ?? null,
+        type: 'announcement',
+        is_active: true,
+        created_by: user.id
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      logger.error('Error creating site message in database', new Error(error.message))
-      throw error
+      logger.error('Error creating site message:', error as Error);
+      return NextResponse.json(
+        { error: 'Failed to create site message' },
+        { status: 500 }
+      );
     }
 
-    logger.info('Site message created successfully', { 
-      id: data.id, 
-      title: data.title,
-      type: data.type 
-    })
+    return NextResponse.json({
+      success: true,
+      data: siteMessage,
+      message: 'Site message created successfully'
+    });
 
-    return data
   } catch (error) {
-    logger.error('Error in createSiteMessage', error instanceof Error ? error : new Error(String(error)))
-    throw error
+    logger.error('Admin site-messages POST API error:', error as Error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
-async function updateSiteMessage(supabase: any, id: string, updateData: {
-  title?: string
-  message?: string
-  type?: string
-  priority?: string
-  isActive?: boolean
-  expiresAt?: string
-}) {
-  try {
-    const updatePayload = withOptional(
-      { updated_at: new Date().toISOString() },
-      {
-        title: updateData.title,
-        message: updateData.message,
-        type: updateData.type,
-        priority: updateData.priority,
-        is_active: updateData.isActive,
-        expires_at: updateData.expiresAt
-      }
-    )
-
-    const { data, error } = await supabase
-      .from('site_messages')
-      .update(updatePayload)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      logger.error('Error updating site message in database', new Error(error.message))
-      throw error
-    }
-
-    logger.info('Site message updated successfully', { 
-      id: data.id, 
-      title: data.title,
-      type: data.type 
-    })
-
-    return data
-  } catch (error) {
-    logger.error('Error in updateSiteMessage', error instanceof Error ? error : new Error(String(error)))
-    throw error
-  }
-}
-
-async function deleteSiteMessage(supabase: any, id: string) {
-  try {
-    const { error } = await supabase
-      .from('site_messages')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      logger.error('Error deleting site message from database', new Error(error.message))
-      throw error
-    }
-
-    logger.info('Site message deleted successfully', { id })
-  } catch (error) {
-    logger.error('Error in deleteSiteMessage', error instanceof Error ? error : new Error(String(error)))
-    throw error
-  }
-}
+export { GET, POST };

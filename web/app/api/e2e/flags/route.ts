@@ -8,6 +8,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { getAllFeatureFlags, setFeatureFlags } from '@/lib/core/feature-flags';
 
 export async function GET() {

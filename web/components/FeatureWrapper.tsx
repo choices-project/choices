@@ -7,6 +7,7 @@
 
 import type { ReactNode } from 'react';
 import React from 'react';
+
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '../hooks/useFeatureFlags';
 
 export type FeatureWrapperProps = {

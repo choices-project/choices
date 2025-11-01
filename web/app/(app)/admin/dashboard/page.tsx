@@ -1,42 +1,32 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
+import React, { Suspense } from 'react';
+
 import { AdminLayout } from '../layout/AdminLayout';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
-
-// Dynamically import the DashboardOverview component to reduce initial bundle size
-const DashboardOverview = dynamic(() => import('./DashboardOverview').then(mod => ({ default: mod.DashboardOverview })), {
+// Dynamically import the ComprehensiveAdminDashboard component with optimizations
+const ComprehensiveAdminDashboard = dynamic(() => import('@/features/admin').then(mod => ({ default: mod.ComprehensiveAdminDashboard })), {
   loading: () => (
     <div className="flex items-center justify-center min-h-96">
-      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
     </div>
   ),
-  ssr: false // Disable SSR for this component to reduce server bundle size
+  ssr: false // Disable SSR due to client-side dependencies (browser APIs, localStorage, etc.)
 });
 
 export default function AdminDashboardPage() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AdminLayout>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-96">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-          </div>
-        }>
-          <DashboardOverview />
-        </Suspense>
-      </AdminLayout>
-    </QueryClientProvider>
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-96">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
+        </div>
+      }>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ComprehensiveAdminDashboard />
+        </div>
+      </Suspense>
+    </AdminLayout>
   );
 }

@@ -6,6 +6,7 @@
  * - Representative API v1 with FEC data include
  */
 import { test, expect } from '@playwright/test';
+
 import { waitForPageReady, setupExternalAPIMocks } from './helpers/e2e-setup';
 
 test.describe('Civics Campaign Finance', () => {

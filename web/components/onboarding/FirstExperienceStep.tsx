@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Vote, BarChart3, Users, ArrowRight, ArrowLeft, CheckCircle, Eye } from 'lucide-react'
+import React, { useState } from 'react';
+
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 

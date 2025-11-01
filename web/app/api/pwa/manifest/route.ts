@@ -6,8 +6,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +23,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const format = searchParams.get('format') || 'json';
+    const format = searchParams.get('format') ?? 'json';
 
     // Get base URL for dynamic manifest generation
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 
                    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
     const manifest = {

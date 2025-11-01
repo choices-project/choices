@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { 
   Vote, 
   Shield, 
@@ -11,6 +9,9 @@ import {
   CheckCircle2,
   Lock
 } from 'lucide-react';
+import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+
 import { devLog } from '@/lib/logger';
 
 type HeroSectionProps = {
@@ -114,7 +115,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <section className="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -240,7 +241,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
                   Live
                 </div>
               </div>
@@ -265,11 +266,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   Array.from({ length: 5 }).map((_, index: any) => (
                     <div key={index} className="animate-pulse">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-8"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                        <div className="h-4 bg-gray-200 rounded w-8" />
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-gray-300 h-2 rounded-full" style={{ width: `${Math.random() * 100}%` }}></div>
+                        <div className="bg-gray-300 h-2 rounded-full" style={{ width: `${Math.random() * 100}%` }} />
                       </div>
                     </div>
                   ))
@@ -305,7 +306,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Live Indicator */}
               <div className="absolute -top-2 -right-2">
                 <div className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium animate-pulse">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="w-2 h-2 bg-white rounded-full" />
                   LIVE
                 </div>
               </div>

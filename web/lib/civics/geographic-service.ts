@@ -6,7 +6,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/logger';
+
 import type {
   GeographicLookup
 } from './types';

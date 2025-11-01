@@ -1,38 +1,31 @@
 'use client';
 
 import * as React from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-// useFormStatus removed - using client-side completion instead
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
-import { devLog } from '@/lib/logger';
+
+
+// useFormStatus removed - using client-side completion instead
+import { useSearchParams, useRouter } from 'next/navigation';
+
 // Server action replaced with client-side fetch to fix boundary violation
 
-import type {
-  StepId,
-  StepDataMap,
-  StepSlug,
-  OnboardingDataHybrid,
-  OnStepUpdate,
-  OnGenericUpdate,
-} from './types';
-
-import {
-  toSlug,
-  DEFAULT_STEP_ORDER,
-} from './types';
-
-// Step components
-import WelcomeStep from './WelcomeStep';
-import PrivacyPhilosophyStep from './PrivacyPhilosophyStep';
-import PlatformTourStep from './PlatformTourStep';
+import AuthSetupStep from './AuthSetupStep';
+import CompleteStep from './CompleteStep';
 import DataUsageStep from './DataUsageStep';
 import DataUsageStepLite from './DataUsageStepLite';
-import AuthSetupStep from './AuthSetupStep';
-import ProfileSetupStep from './ProfileSetupStep';
-import InterestSelectionStep from './InterestSelectionStep';
 import FirstExperienceStep from './FirstExperienceStep';
-import CompleteStep from './CompleteStep';
+import InterestSelectionStep from './InterestSelectionStep';
+import PlatformTourStep from './PlatformTourStep';
+import PrivacyPhilosophyStep from './PrivacyPhilosophyStep';
+import ProfileSetupStep from './ProfileSetupStep';
 import ProgressIndicator from './ProgressIndicator';
+import WelcomeStep from './WelcomeStep';
+import type { StepId, StepDataMap, StepSlug, OnboardingDataHybrid, OnStepUpdate, OnGenericUpdate } from './types';
+import { toSlug, DEFAULT_STEP_ORDER } from './types';
+
+// Step components
+
 
 // Local state navigation with URL sync in background
 function useLocalStepNavigation(): [StepSlug, (s: StepSlug) => void] {
@@ -280,9 +273,9 @@ function EnhancedOnboardingFlowInner() {
         body: JSON.stringify({ step: 'welcome', action: 'start' }),
       });
       if (!response.ok) throw new Error('Failed to start onboarding');
-      devLog('Onboarding started successfully');
+      logger.info('Onboarding started successfully');
     } catch (error) {
-      devLog('Error starting onboarding:', error);
+      logger.error('Error starting onboarding', error instanceof Error ? error : new Error(String(error)));
       setError('Failed to start onboarding');
     }
   }, []);
@@ -307,9 +300,9 @@ function EnhancedOnboardingFlowInner() {
           stepData: { ...prev.stepData, [step]: stepData },
         }));
 
-        devLog(`Onboarding step ${step} updated successfully`);
+        logger.info(`Onboarding step ${step} updated successfully`);
       } catch (error) {
-        devLog('Error updating onboarding step:', error);
+        logger.error('Error updating onboarding step', error instanceof Error ? error : new Error(String(error)));
         setError('Failed to update onboarding progress');
       }
     },
@@ -318,7 +311,7 @@ function EnhancedOnboardingFlowInner() {
 
   const handleComplete = React.useCallback(() => {
     // This will be handled by the form submission
-    devLog('Onboarding completion triggered');
+    logger.debug('Onboarding completion triggered');
   }, []);
 
   // Init: auth + URL step
@@ -353,10 +346,10 @@ function EnhancedOnboardingFlowInner() {
             setData(prev => ({ ...prev, ...progress }));
           }
         } catch (progressError) {
-          devLog('Could not load onboarding progress:', progressError);
+          logger.debug('Could not load onboarding progress', progressError instanceof Error ? progressError : new Error(String(progressError)));
         }
       } catch (e) {
-        devLog('Error initializing onboarding:', e);
+        logger.error('Error initializing onboarding', e instanceof Error ? e : new Error(String(e)));
         setError('Failed to initialize onboarding');
       } finally {
         setIsLoading(false);
@@ -371,14 +364,14 @@ function EnhancedOnboardingFlowInner() {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const nextIndex = Math.min(STEP_ORDER.length - 1, i + 1);
-    return STEP_ORDER[nextIndex] as StepSlug;
+    return STEP_ORDER[nextIndex];
   }
   
   function prevOf(s: StepSlug): StepSlug {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const prevIndex = Math.max(0, i - 1);
-    return STEP_ORDER[prevIndex] as StepSlug;
+    return STEP_ORDER[prevIndex];
   }
 
   // Persist progress, but NEVER block navigation on it
@@ -446,7 +439,7 @@ function EnhancedOnboardingFlowInner() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center" data-testid="onb-loading">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading onboarding...</p>
         </div>
       </div>

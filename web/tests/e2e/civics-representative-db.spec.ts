@@ -8,6 +8,7 @@
  * - Error handling
  */
 import { test, expect } from '@playwright/test';
+
 import { waitForPageReady, E2E_CONFIG, setupExternalAPIMocks } from './helpers/e2e-setup';
 
 test.describe('Civics Representative Database', () => {

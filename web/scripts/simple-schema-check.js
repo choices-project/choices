@@ -6,9 +6,10 @@
  * Uses raw SQL to query the live database schema
  */
 
-const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
+
+const { createClient } = require('@supabase/supabase-js');
 
 // Load environment variables
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') });

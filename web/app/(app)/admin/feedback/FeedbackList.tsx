@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { 
   MessageSquare, 
   Bug, 
@@ -13,6 +12,7 @@ import {
   Tag,
   Calendar
 } from 'lucide-react';
+import React from 'react';
 
 type Feedback = {
   id: string;
@@ -22,12 +22,58 @@ type Feedback = {
   description: string;
   sentiment: string;
   screenshot: string | null;
-  userjourney: any;
+  userjourney: {
+    currentPage: string;
+    currentPath: string;
+    pageTitle: string;
+    referrer: string;
+    userAgent: string;
+    screenResolution: string;
+    viewportSize: string;
+    timeOnPage: number;
+    sessionId: string;
+    sessionStartTime: string;
+    totalPageViews: number;
+    activeFeatures: string[];
+    lastAction: string;
+    actionSequence: string[];
+    pageLoadTime: number;
+    performanceMetrics: {
+      fcp?: number;
+      lcp?: number;
+      fid?: number;
+      cls?: number;
+    };
+    errors: Array<{
+      type: string;
+      message: string;
+      stack?: string;
+      timestamp: string;
+    }>;
+    deviceInfo: {
+      type: 'mobile' | 'tablet' | 'desktop';
+      os: string;
+      browser: string;
+      language: string;
+      timezone: string;
+    };
+    isAuthenticated: boolean;
+    userRole?: string;
+    userId?: string;
+  };
   status: string;
   priority: string;
   tags: string[];
-  aianalysis: any;
-  metadata: any;
+  aianalysis: {
+    intent: string;
+    category: string;
+    sentiment: number;
+    urgency: number;
+    complexity: number;
+    keywords: string[];
+    suggestedActions: string[];
+  };
+  metadata: Record<string, unknown>;
   createdat: string;
   updatedat: string;
 }
@@ -99,15 +145,15 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
     });
   };
 
-  const truncateText = (text: string, maxLength: number = 100) => {
+  const truncateText = (text: string, maxLength = 100) => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+    return `${text.substring(0, maxLength)  }...`;
   };
 
   if (isLoading) {
     return (
       <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
         <p className="text-gray-600 mt-2">Loading feedback...</p>
       </div>
     );
@@ -168,9 +214,9 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                     </p>
                     {item.tags && item.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {item.tags.slice(0, 2).map((tag: any, index: any) => (
+                        {item.tags.slice(0, 2).map((tag) => (
                           <span
-                            key={index}
+                            key={tag}
                             className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                           >
                             <Tag className="w-3 h-3 mr-1" />

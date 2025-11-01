@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
 import { 
   CheckCircle,
   ArrowRight,
   TrendingUp
 } from 'lucide-react';
+import React, { useState } from 'react';
 
 
 type InterestSelectionStepProps = {

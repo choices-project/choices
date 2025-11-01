@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
 import { Search, X } from 'lucide-react';
-import { withOptional } from '@/lib/util/objects';
+import React from 'react';
+
+import { stripUndefinedDeep } from '@/lib/utils/clean';
+
 
 type Filters = {
   type: string;
@@ -23,18 +25,18 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
   onFiltersChange 
 }) => {
   const handleFilterChange = (key: keyof Filters, value: string) => {
-    onFiltersChange(withOptional(filters, { [key]: value }));
+    onFiltersChange(stripUndefinedDeep({ ...stripUndefinedDeep(filters), [key]: value }));
   };
 
   const clearFilters = () => {
-    onFiltersChange({
+    onFiltersChange(stripUndefinedDeep({
       type: '',
       sentiment: '',
       status: '',
       priority: '',
       dateRange: 'all',
       search: ''
-    });
+    }));
   };
 
   const hasActiveFilters = Object.values(filters).some(value => 

@@ -63,8 +63,13 @@ export function detectBrowser(): BrowserInfo {
 /**
  * Determine if browser supports server redirects reliably
  */
-function determineServerRedirectSupport(name: string, version: string, _isMobile: boolean): boolean {
+function determineServerRedirectSupport(name: string, version: string, isMobile: boolean): boolean {
   const versionNum = parseInt(version, 10)
+
+  // Mobile browsers generally have better server redirect support
+  if (isMobile) {
+    return true
+  }
 
   switch (name) {
     case 'safari':
@@ -105,7 +110,7 @@ export function getRedirectStrategy(): 'server' | 'client' | 'hybrid' {
  */
 export function navigateTo(url: string, strategy?: 'server' | 'client' | 'hybrid') {
   const browser = detectBrowser()
-  const redirectStrategy = strategy || getRedirectStrategy()
+  const redirectStrategy = strategy ?? getRedirectStrategy()
 
   logger.info('🔍 Browser navigation:', {
     browser: browser.name,

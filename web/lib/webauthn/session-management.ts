@@ -7,8 +7,9 @@
  */
 
 import { NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+
 import { generateSessionToken } from '@/lib/core/auth/session-cookies';
+import { devLog } from '@/lib/logger';
 
 export type WebAuthnSessionData = {
   userId: string;

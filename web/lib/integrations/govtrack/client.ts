@@ -6,8 +6,8 @@
  * Replaces the discontinued ProPublica Congress API.
  */
 
-import { logger } from '@/lib/logger';
 import { ApplicationError } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 
 export type GovTrackConfig = {
   baseUrl?: string;

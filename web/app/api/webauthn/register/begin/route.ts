@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Base64URL utilities
 export const isoUint8Array = {

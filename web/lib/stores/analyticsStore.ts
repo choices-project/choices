@@ -12,14 +12,12 @@
  */
 
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { persist } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
+import { devtools , persist } from 'zustand/middleware';
 
 import { logger } from '../logger';
 
 // Sophisticated Analytics data types with advanced features
-interface AnalyticsEvent {
+type AnalyticsEvent = {
   id: string;
   event_type: string;
   user_id?: string;
@@ -43,7 +41,7 @@ interface AnalyticsEvent {
 }
 
 // Advanced analytics metrics
-interface AnalyticsMetrics {
+type AnalyticsMetrics = {
   totalEvents: number;
   uniqueUsers: number;
   sessionDuration: number;
@@ -55,7 +53,7 @@ interface AnalyticsMetrics {
 }
 
 // Chart data types for analytics visualization
-interface ChartData {
+type ChartData = {
   name: string;
   value: number;
   color: string;
@@ -63,7 +61,7 @@ interface ChartData {
   previousValue?: number;
 }
 
-interface ChartConfig {
+type ChartConfig = {
   data: ChartData[];
   maxValue: number;
   showTrends: boolean;
@@ -73,7 +71,7 @@ interface ChartConfig {
   type?: 'bar' | 'progress';
 }
 
-interface PerformanceMetrics {
+type PerformanceMetrics = {
   pageLoadTime: number;
   timeToInteractive: number;
   firstContentfulPaint: number;
@@ -85,7 +83,7 @@ interface PerformanceMetrics {
   networkLatency?: number;
 }
 
-interface UserBehaviorData {
+type UserBehaviorData = {
   sessionDuration: number;
   pageViews: number;
   interactions: number;
@@ -99,7 +97,7 @@ interface UserBehaviorData {
   os: string;
 }
 
-interface AnalyticsPreferences {
+type AnalyticsPreferences = {
   trackingEnabled: boolean;
   performanceTracking: boolean;
   errorTracking: boolean;
@@ -110,7 +108,7 @@ interface AnalyticsPreferences {
   shareWithThirdParties: boolean;
 }
 
-interface AnalyticsDashboard {
+type AnalyticsDashboard = {
   totalEvents: number;
   uniqueUsers: number;
   sessionCount: number;
@@ -122,7 +120,7 @@ interface AnalyticsDashboard {
 }
 
 // Analytics store state interface
-interface AnalyticsStore {
+type AnalyticsStore = {
   // Analytics data
   events: AnalyticsEvent[];
   performanceMetrics: PerformanceMetrics | null;

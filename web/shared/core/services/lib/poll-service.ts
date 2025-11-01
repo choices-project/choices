@@ -1,5 +1,4 @@
-import { logger } from '@/lib/logger';
-import { devLog } from '@/lib/logger';
+import { logger , devLog } from '@/lib/logger';
 
 // Types
 export type Poll = {

@@ -6,6 +6,7 @@
  * - Detailed API includes recent votes
  */
 import { test, expect } from '@playwright/test';
+
 import { waitForPageReady, setupExternalAPIMocks } from './helpers/e2e-setup';
 
 test.describe('Civics Voting Records', () => {

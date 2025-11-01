@@ -7,11 +7,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0, // Reduced retries
   workers: process.env.CI ? 1 : 2,
-  reporter: 'html',
+  reporter: 'line',
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
+    baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -32,7 +32,7 @@ export default defineConfig({
       name: 'api-tests',
       testMatch: /.*\.api\.spec\.ts/,
       use: {
-        baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
+        baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:3000',
       },
     },
     {

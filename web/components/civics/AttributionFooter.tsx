@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { ExternalLink, Database, CheckCircle } from 'lucide-react';
+import React from 'react';
 
 type AttributionFooterProps = {
   sources: Array<{

@@ -4,7 +4,9 @@
  */
 
 import React from 'react';
+
 import { logger } from '@/lib/logger';
+
 import { withOptional } from '../../../../lib/util/objects';
 
 export type PerformanceMetric = {

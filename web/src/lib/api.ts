@@ -1,5 +1,6 @@
 // API utility functions for communicating with backend services
 
+import { safeJson } from '../../lib/http/safeFetch';
 import type { 
   WebAuthnCredentialResponse, 
   DashboardData, 
@@ -7,7 +8,6 @@ import type {
   DemographicsData, 
   EngagementData 
 } from '../../types/frontend';
-import { safeJson } from '../../lib/http/safeFetch';
 
 const IA_BASE_URL = 'http://localhost:8081/api'
 const PO_BASE_URL = 'http://localhost:8082/api'

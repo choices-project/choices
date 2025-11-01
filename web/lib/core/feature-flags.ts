@@ -4,6 +4,7 @@
  */
 
 import { withOptional } from '@/lib/util/objects';
+
 export const FEATURE_FLAGS = {
   // ===== CORE MVP FEATURES (Always Enabled) =====
   WEBAUTHN: true,

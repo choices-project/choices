@@ -5,12 +5,13 @@
  * Provides consistent user authentication with proper error handling.
  */
 
-import { type NextRequest } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
-import { validateOrigin } from '@/lib/http/origin';
-import { withOptional } from '@/lib/util/objects';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { NextRequest } from 'next/server';
+
+import { validateOrigin } from '@/lib/http/origin';
+import { devLog } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export type User = {
   id: string;
@@ -156,7 +157,7 @@ export async function requireUser(
       };
 
       const userTier = tierHierarchy[userObj.trust_tier] || 0;
-      const requiredTier = tierHierarchy[requireTrustTier!];
+      const requiredTier = tierHierarchy[requireTrustTier];
 
       if (userTier < (requiredTier || 0)) {
         return {
@@ -270,7 +271,7 @@ export async function requireUserForAction(
     };
 
     const userTier = tierHierarchy[userObj.trust_tier] || 0;
-    const requiredTier = tierHierarchy[options.requireTrustTier!];
+    const requiredTier = tierHierarchy[options.requireTrustTier];
 
     if (userTier < (requiredTier || 0)) {
       return {

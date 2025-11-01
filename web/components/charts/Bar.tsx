@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import React from 'react';
+
 
 // Dynamic import with SSR disabled to keep Recharts out of main bundle
 const RechartsBar = dynamic(() => import('./RechartsBarImpl'), { 
@@ -15,3 +17,4 @@ const RechartsBar = dynamic(() => import('./RechartsBarImpl'), {
 export default function Bar(props: any) {
   return <RechartsBar {...props} />
 }
+

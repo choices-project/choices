@@ -8,12 +8,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 import { 
   EnhancedRateLimiter, 
-  type RateLimitConfig, 
-  type IPReputation, 
-  type DeviceFingerprint,
-  type RiskAssessment 
+  type RateLimitConfig 
 } from '@/lib/core/security/rate-limit';
 
 // Test setup removed - not needed for this test

@@ -1,21 +1,27 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download, RefreshCw, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, useCallback } from 'react';
+
+
+
+
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
 
 // UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Icons
-import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download, RefreshCw, AlertCircle } from 'lucide-react'
 
 // Utilities
-import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 
 type PollAnalytics = {
@@ -155,7 +161,7 @@ export default function PollAnalyticsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading analytics data...</p>
         </div>
       </div>
@@ -211,7 +217,7 @@ export default function PollAnalyticsPage() {
                 className="flex items-center"
               >
                 {isRefreshing ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 ) : (
                   <RefreshCw className="h-4 w-4 mr-2" />
                 )}
@@ -397,7 +403,7 @@ export default function PollAnalyticsPage() {
                             <div 
                               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                               style={{ width: `${option.percentage}%` }}
-                            ></div>
+                             />
                           </div>
                         </div>
                       ))}

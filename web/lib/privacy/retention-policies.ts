@@ -224,7 +224,7 @@ export class DataRetentionManager {
     exceptions: string[] = []
   ): boolean {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return false;
     }
 
@@ -537,7 +537,7 @@ export class DataRetentionManager {
 
   private async countRecordsToDelete(dataType: string): Promise<number> {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return 0;
     }
 

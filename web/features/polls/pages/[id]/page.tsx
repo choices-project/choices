@@ -1,20 +1,25 @@
+import { headers } from 'next/headers';
+import React from 'react';
+
 /**
- * Canonical Individual Poll Page
+ * Poll Detail Page - Canonical Implementation
  * 
- * SSR-safe implementation with E2E bypass support and proper error handling.
- * This replaces the custom implementation in /app/(app)/polls/[id]/page.tsx
+ * This is the canonical implementation that should be used by the app route.
+ * Provides SSR-safe poll loading with proper error handling.
  */
 
-import { headers } from 'next/headers';
-import PollClient from '@/app/(app)/polls/[id]/PollClient';
 
-export default async function PollPage({ params }: { params: { id: string } }) {
-  const h = headers();
+import PollClient from './PollClient';
+
+export default async function PollPage({ params }: { params: Promise<{ id: string }> }) {
+  const h = await headers();
   const e2eHeader = h.get('x-e2e-bypass') === '1' ? { 'x-e2e-bypass': '1' } : {};
+  
+  const { id } = await params;
   
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/polls/${params.id}`, {
+    const res = await fetch(`${baseUrl}/api/polls/${id}`, {
       cache: 'no-store',
       headers: { 
         ...Object.fromEntries(

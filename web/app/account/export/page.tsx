@@ -1,20 +1,14 @@
 'use client'
 
-import { useState, useCallback, useEffect, useContext } from 'react'
-import { useRouter } from 'next/navigation'
-import { AuthContext } from '@/contexts/AuthContext'
+import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, CheckCircle, Database, Clock, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useEffect } from 'react';
 
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
-import { Badge } from '@/components/ui/badge'
-
-// Icons
-import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, CheckCircle, Database, Clock, AlertCircle } from 'lucide-react'
-
-// Utilities
-import { devLog } from '@/lib/logger'
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUser, useUserLoading } from '@/lib/stores/userStore';
+import { devLog } from '@/lib/utils/logger';
 
 type ExportOptions = {
   profile: boolean
@@ -38,10 +32,8 @@ type ExportHistory = {
 
 export default function DataExportPage() {
   const router = useRouter()
-  const authContext = useContext(AuthContext)
-  
-  // Extract user early to avoid "used before declaration" errors
-  const user = authContext?.user
+  const user = useUser()
+  const isLoading = useUserLoading()
   
   // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
@@ -94,14 +86,20 @@ export default function DataExportPage() {
 
       if (response.ok) {
         const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        // Use SSR-safe browser API access
+        const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
+        const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
+        if (url) {
+          const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
+          if (a) {
+            a.href = url;
+            a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`;
+            safeDocument(d => d.body?.appendChild?.(a));
+            a.click();
+            safeWindow(w => w.URL?.revokeObjectURL?.(url));
+            safeDocument(d => d.body?.removeChild?.(a));
+          }
+        }
 
         // Add to export history
         const newExport: ExportHistory = {
@@ -110,14 +108,14 @@ export default function DataExportPage() {
           format: exportOptions.format.toUpperCase(),
           size: `${(blob.size / 1024).toFixed(1)} KB`,
           status: 'completed',
-          downloadurl: url
+          ...(url && { downloadurl: url })
         }
         setExportHistory(prev => [newExport, ...prev])
       } else {
         throw new Error('Failed to export data')
       }
     } catch (error) {
-      devLog('Error exporting data:', error)
+      devLog('Error exporting data:', { error })
       setError('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -134,7 +132,7 @@ export default function DataExportPage() {
         setExportHistory(data.history)
       }
     } catch (error) {
-      devLog('Error loading export history:', error)
+      devLog('Error loading export history:', { error })
     }
   }, [user])
 
@@ -164,8 +162,8 @@ export default function DataExportPage() {
 
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
 
-  // Handle case where auth context is not available during pre-rendering
-  if (!authContext || !user) {
+  // Handle case where user is not available during pre-rendering
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -177,6 +175,17 @@ export default function DataExportPage() {
           >
             Login
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading your data...</p>
         </div>
       </div>
     );
@@ -377,7 +386,7 @@ export default function DataExportPage() {
                     size="lg"
                   >
                     {isExporting ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                     ) : (
                       <Download className="h-5 w-5 mr-2" />
                     )}

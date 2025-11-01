@@ -5,16 +5,17 @@
  * It should ONLY be used in client-side code (components with 'use client')
  */
 
+import { createBrowserClient } from '@supabase/ssr'
+
+import { logger } from '@/lib/logger'
+import type { Database } from '@/types/database'
+
 'use client'
 
 // Hard runtime guard - fail loudly if imported on server
 if (typeof window === 'undefined') {
   throw new Error('createSupabaseClient() was imported on the server. Use createSupabaseServerClient() instead.')
 }
-
-import { createBrowserClient } from '@supabase/ssr'
-import { logger } from '@/lib/logger'
-import type { Database } from '@/types/database'
 
 /**
  * Create a client-side Supabase client

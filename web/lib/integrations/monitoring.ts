@@ -6,8 +6,9 @@
  */
 
 import { logger } from '../logger';
-import type { CacheStats } from './caching';
 import { withOptional } from '../util/objects';
+
+import type { CacheStats } from './caching';
 
 export type IntegrationMetrics = {
   apiName: string;

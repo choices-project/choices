@@ -3,6 +3,7 @@ import '@/lib/ssr-polyfills'
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
 import { 
   getSecurityConfig, 
   buildCSPHeader as buildCSPHeaderFromConfig, 
@@ -72,7 +73,7 @@ function checkRateLimit(ip: string, path: string, req: NextRequest): boolean {
   const record = rateLimitStore.get(key)
   
   // Get rate limit for this endpoint
-  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints as Record<string, number>)[path] || 
+  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints)[path] ?? 
                      SECURITY_CONFIG.rateLimit.maxRequests
   
   if (!record || now > record.resetTime) {
@@ -115,7 +116,7 @@ function getClientIP(request: NextRequest): string {
   }
   
   // Fallback to connection remote address
-  return request.ip || 'unknown'
+  return request.ip ?? 'unknown'
 }
 
 /**

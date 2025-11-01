@@ -1,10 +1,15 @@
-import React from 'react';
-import { devLog } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
+
+import { devLog } from '@/lib/logger';
+
+import { mockActivityFeed } from './mock-data';
+import type { BreakingNewsStory, PollContext } from './mock-data';
+import { realTimeService } from './real-time-service';
 import type { TrendingTopic, GeneratedPoll, SystemMetrics } from './store';
 import { useAdminStore } from './store';
-import { mockActivityFeed } from './mock-data';
-import { realTimeService } from './real-time-service';
+
+// Real-time news service disabled for now - using mock types
 
 // Mock data for fallback
 const mockTrendingTopics: TrendingTopic[] = [
@@ -39,9 +44,6 @@ const mockSystemMetrics: SystemMetrics = {
   system_health: 'healthy',
   last_updated: new Date().toISOString()
 };
-
-// Real-time news service disabled for now - using mock types
-import type { BreakingNewsStory, PollContext } from './mock-data';
 
 // Remove duplicate devLog definition - using imported one from logger
 

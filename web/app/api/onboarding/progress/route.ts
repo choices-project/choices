@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { devLog } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      progress: progress || {
+      progress: progress ?? {
         user_id: user.id,
         current_step: 'welcome',
         completed_steps: [],
@@ -55,7 +56,7 @@ export async function GET() {
         completed_at: null,
         total_time_minutes: null
       },
-      profile: profile || {
+      profile: profile ?? {
         onboarding_completed: false,
         onboarding_step: 'welcome',
         privacy_level: 'medium',

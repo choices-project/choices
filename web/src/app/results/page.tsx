@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger';
+
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import React, { useState, useEffect } from 'react';
+
+import { devLog } from '@/lib/logger';
+
 import type { Poll, Tally, CommitmentLog } from '../../lib/api';
 import { poApi } from '../../lib/api'
 
@@ -72,7 +75,7 @@ export default function ResultsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     )
   }
@@ -95,7 +98,7 @@ export default function ResultsPage() {
               </div>
               <h1 className="text-xl font-bold text-gray-900">Poll Results</h1>
             </div>
-            <div className="w-20"></div> {/* Spacer for centering */}
+            <div className="w-20" /> {/* Spacer for centering */}
           </div>
         </div>
       </header>
@@ -155,7 +158,7 @@ export default function ResultsPage() {
 
                 <div className="space-y-4">
                   {selectedPoll.options.map((option: string, index: number) => {
-                    const votes = (tally[index] as number) || 0
+                    const votes = (tally[index]) || 0
                     const total = getTotalVotes(tally)
                     const percentage = getPercentage(votes, total)
                     
@@ -171,7 +174,7 @@ export default function ResultsPage() {
                           <div
                             className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-500"
                             style={{ width: `${percentage}%` }}
-                          ></div>
+                           />
                         </div>
                       </div>
                     )

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 
 type LineChartProps = {
@@ -34,3 +35,4 @@ export default function RechartsLineImpl({
     </div>
   )
 }
+

@@ -10,11 +10,12 @@
 
 import { devLog } from '../logger';
 import { withOptional } from '../util/objects';
-import { SingleChoiceStrategy } from './strategies/single-choice';
+
 import { ApprovalStrategy } from './strategies/approval';
-import { RankedStrategy } from './strategies/ranked';
 import { QuadraticStrategy } from './strategies/quadratic';
 import { RangeStrategy } from './strategies/range';
+import { RankedStrategy } from './strategies/ranked';
+import { SingleChoiceStrategy } from './strategies/single-choice';
 import type { 
   VoteRequest, 
   VoteResponse, 

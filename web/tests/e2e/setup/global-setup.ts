@@ -1,8 +1,8 @@
-import type { FullConfig } from '@playwright/test';
-import { chromium } from '@playwright/test';
+import fs from 'fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import fs from 'fs';
+
+import { chromium } from '@playwright/test';
 import { config } from 'dotenv';
 
 // Load environment variables

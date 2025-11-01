@@ -1,4 +1,6 @@
+/* eslint-env node */
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Next.js 14 SSR scanner for Choices
  * Focuses on actual Next.js 14 issues, not Next.js 15 breaking changes

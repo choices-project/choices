@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
+
 import { devLog } from '@/lib/logger';
+import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,8 +43,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const type = searchParams.get('type') || 'trending';
+    const limit = parseInt(searchParams.get('limit') ?? '20');
+    const type = searchParams.get('type') ?? 'trending';
 
     let result;
 

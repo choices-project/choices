@@ -1,7 +1,5 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger';
 import { 
   AlertCircle, 
   Info, 
@@ -11,6 +9,9 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+
+import { logger } from '@/lib/logger';
 
 type SiteMessage = {
   id: string

@@ -1,9 +1,11 @@
+// Native WebAuthn implementation to avoid decorator issues
 import { type NextRequest, NextResponse } from 'next/server';
-import { generateRegistrationOptions } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
-import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/lib/webauthn/config';
+
+import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
+import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { base64urlToArrayBuffer } from '@/lib/webauthn/type-converters';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * WebAuthn Registration Options
@@ -14,42 +16,17 @@ import { base64urlToArrayBuffer } from '@/lib/webauthn/type-converters';
 
 export async function POST(req: NextRequest) {
   try {
+    // Disable during build time to prevent static analysis issues
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      return NextResponse.json({ error: 'WebAuthn routes disabled during build' }, { status: 503 });
+    }
+
     const { enabled, rpID } = getRPIDAndOrigins(req);
     if (!enabled) {
       return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
     }
 
-    // Check for E2E bypass
-    const isE2E = req.headers.get('x-e2e-bypass') === '1' || 
-                  process.env.NODE_ENV === 'test' || 
-                  process.env.E2E === '1';
-    
-    if (isE2E) {
-      // Return mock options for E2E tests
-      return NextResponse.json({
-        challenge: 'mock-challenge-for-e2e-testing',
-        rp: {
-          name: 'Choices',
-          id: rpID
-        },
-        user: {
-          id: 'mock-user-id',
-          name: 'test@example.com',
-          displayName: 'Test User'
-        },
-        pubKeyCredParams: [
-          { type: 'public-key', alg: -7 },
-          { type: 'public-key', alg: -257 }
-        ],
-        timeout: 60000,
-        attestation: 'none',
-        authenticatorSelection: {
-          residentKey: 'required',
-          userVerification: 'required',
-          authenticatorAttachment: 'platform'
-        }
-      });
-    }
+    // Always require real WebAuthn - no E2E bypasses for security
 
     const supabase = await getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -68,29 +45,25 @@ export async function POST(req: NextRequest) {
       type: 'public-key' as const,
     }));
 
-    // Discoverable only (resident key), UV required, platform preferred
-    const options = await generateRegistrationOptions({
-      rpName: 'Choices',
+    // Use native implementation
+    const options = generateRegistrationOptions(
+      user.id,
+      user.email ?? user.id,
+      user.email ?? user.id,
       rpID,
-      userID: new Uint8Array(base64urlToArrayBuffer(user.id)),
-      userName: user.email ?? user.id,
-      attestationType: 'none', // Privacy-preserving
-      authenticatorSelection: {
-        residentKey: 'required',
-        userVerification: 'required',
-        authenticatorAttachment: 'platform', // Smoothest UX
-      },
-      supportedAlgorithmIDs: [-7, -257], // ES256, RS256
-      excludeCredentials,
-    });
+      'Choices',
+      excludeCredentials.map(c => c.id)
+    );
 
     // Persist challenge
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
+    const challengeArray = new Uint8Array(options.challenge);
+    
     const { error: chalErr } = await supabase.from('webauthn_challenges').insert({
       user_id: user.id,
       rp_id: rpID,
       kind: 'registration',
-      challenge: Buffer.from(isoBase64URL.toBuffer(options.challenge)),
+      challenge: Buffer.from(challengeArray).toString('base64'),
       expires_at: expiresAt,
     });
 

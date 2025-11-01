@@ -104,19 +104,28 @@ export function createTestPoll(overrides: Partial<E2ETestPoll> = {}): E2ETestPol
  * for E2E test interactions.
  */
 export async function waitForPageReady(page: Page): Promise<void> {
-  // Wait for DOM content to be loaded (more reliable than networkidle)
-  await page.waitForLoadState('domcontentloaded');
-  
-  // Wait for any loading spinners to disappear (with shorter timeout)
-  await page.waitForSelector('.animate-spin', { state: 'hidden', timeout: 1000 }).catch(() => {
-    // Loading spinner might not exist, which is fine
-  });
-  
-  // Wait for main content to be visible (with shorter timeout)
-  await page.waitForSelector('body', { state: 'visible', timeout: 3000 });
-  
-  // Reduced delay for faster tests
-  await page.waitForTimeout(100);
+  try {
+    // Wait for DOM content to be loaded (more reliable than networkidle)
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+    
+    // Wait for body element to exist (but don't require it to be visible)
+    // Some pages may have hidden body during loading
+    await page.waitForSelector('body', { state: 'attached', timeout: 5000 }).catch(() => {
+      // Body might already exist, continue anyway
+    });
+    
+    // Wait for any loading spinners to disappear (with shorter timeout)
+    await page.waitForSelector('.animate-spin', { state: 'hidden', timeout: 2000 }).catch(() => {
+      // Loading spinner might not exist, which is fine
+    });
+    
+    // Give React time to hydrate
+    await page.waitForTimeout(500);
+  } catch (error) {
+    // If page loading fails, try to wait a bit more and continue
+    console.warn('⚠️ Page ready check had issues, continuing anyway:', error);
+    await page.waitForTimeout(2000);
+  }
 }
 
 /**

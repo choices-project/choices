@@ -1,5 +1,6 @@
 import { afterEach } from '@jest/globals';
 import * as JestMock from 'jest-mock';
+
 import { makeMockSupabase } from './helpers/supabase-mock';
 import { makeWhen } from './helpers/supabase-when';
 

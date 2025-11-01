@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import React from 'react';
+
 
 // Dynamic import with SSR disabled to keep Recharts out of main bundle
 const RechartsLine = dynamic(() => import('./RechartsLineImpl'), { 
@@ -15,3 +17,4 @@ const RechartsLine = dynamic(() => import('./RechartsLineImpl'), {
 export default function Line(props: any) {
   return <RechartsLine {...props} />
 }
+

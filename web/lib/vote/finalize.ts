@@ -17,14 +17,18 @@
 // Status: Phase 1 Implementation
 // ============================================================================
 
-import { IRVCalculator } from './irv-calculator';
+import { createHash } from 'crypto';
+
+import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
+
+import { IRVCalculator } from './irv-calculator';
 import type { UserRanking } from './irv-calculator';
-import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
-import { createHash } from 'crypto';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
 import type {
   Poll,
   Ballot,

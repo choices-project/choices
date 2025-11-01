@@ -1,5 +1,7 @@
 'use client'
 
+import React from 'react';
+
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'

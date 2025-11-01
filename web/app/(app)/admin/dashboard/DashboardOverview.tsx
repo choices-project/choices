@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { 
   TrendingUp, 
   BarChart3, 
@@ -11,11 +10,15 @@ import {
   Zap,
   Clock
 } from 'lucide-react';
-import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
+import React from 'react';
+
+
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/lib/admin/hooks';
-import { useAdminStore } from '@/lib/admin/store';
 import { mockChartData } from '@/lib/admin/mock-data';
+import { useAdminStore } from '@/lib/admin/store';
 import { devLog } from '@/lib/logger';
+
+import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 
 export const DashboardOverview: React.FC = () => {
   const { activityFeed } = useAdminStore();
@@ -30,8 +33,8 @@ export const DashboardOverview: React.FC = () => {
 
   // Debug logging
   devLog('DashboardOverview - Data loaded:', {
-    topics: topics?.length || 0,
-    polls: polls?.length || 0,
+    topics: topics?.length ?? 0,
+    polls: polls?.length ?? 0,
     metrics
   });
 
@@ -90,7 +93,7 @@ export const DashboardOverview: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Topics"
-          value={(metrics as any)?.totaltopics || 0}
+          value={metrics?.total_topics ?? 0}
           trend="+12%"
           trendValue={12}
           icon={<TrendingUp className="h-6 w-6" />}
@@ -98,7 +101,7 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="Generated Polls"
-          value={(metrics as any)?.totalpolls || 0}
+          value={metrics?.total_polls ?? 0}
           trend="+8%"
           trendValue={8}
           icon={<BarChart3 className="h-6 w-6" />}
@@ -106,7 +109,7 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="Active Polls"
-          value={(metrics as any)?.activepolls || 0}
+          value={metrics?.active_polls ?? 0}
           trend="+5%"
           trendValue={5}
           icon={<Activity className="h-6 w-6" />}
@@ -114,9 +117,9 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="System Health"
-          value={(metrics as any)?.systemhealth || 'healthy'}
-          icon={getSystemHealthIcon((metrics as any)?.systemhealth || 'healthy')}
-          color={getSystemHealthColor((metrics as any)?.systemhealth || 'healthy')}
+          value={metrics?.system_health ?? 'healthy'}
+          icon={getSystemHealthIcon(metrics?.system_health ?? 'healthy')}
+          color={getSystemHealthColor(metrics?.system_health ?? 'healthy')}
         />
       </div>
 
@@ -163,22 +166,22 @@ export const DashboardOverview: React.FC = () => {
               <p className="text-sm">Activity will appear here as you use the system</p>
             </div>
           ) : (
-            activityFeed.slice(0, 10).map((activity: any) => (
+            activityFeed.slice(0, 10).map((activity) => (
               <div
                 key={activity.id}
                 className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"
               >
                 <div className="flex-shrink-0">
-                  {activity.type === 'topiccreated' && (
+                  {activity.type === 'topic_created' && (
                     <TrendingUp className="h-5 w-5 text-blue-600" />
                   )}
-                  {activity.type === 'pollgenerated' && (
+                  {activity.type === 'poll_created' && (
                     <BarChart3 className="h-5 w-5 text-green-600" />
                   )}
-                  {activity.type === 'pollapproved' && (
+                  {activity.type === 'poll_updated' && (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   )}
-                  {activity.type === 'systemalert' && (
+                  {activity.type === 'system_alert' && (
                     <AlertTriangle className="h-5 w-5 text-yellow-600" />
                   )}
                 </div>

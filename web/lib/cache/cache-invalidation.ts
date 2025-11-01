@@ -9,9 +9,10 @@
  */
 
 import { logger } from '../logger'
-import { type RedisClient } from './redis-client'
-import { type CacheStrategyManager } from './cache-strategies'
 import { withOptional } from '../util/objects'
+
+import type { CacheStrategyManager } from './cache-strategies'
+import type { RedisClient } from './redis-client'
 
 // Invalidation event types
 export type InvalidationEvent = 

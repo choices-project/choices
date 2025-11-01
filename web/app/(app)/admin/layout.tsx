@@ -4,7 +4,10 @@
  * Main layout for all admin pages with server-side admin authentication guard.
  */
 
-import { getAdminUser } from '@/lib/admin-auth';
+import React from 'react';
+
+import { getAdminUser } from '@/features/auth/lib/admin-auth';
+
 import { AdminLayout } from './layout/AdminLayout';
 
 // Force dynamic rendering for admin pages
@@ -16,7 +19,7 @@ export default async function AdminLayoutPage({
   children: React.ReactNode;
 }) {
   // Server-side admin check - this is the authoritative gate
-  const user = await getAdminUser();
+  const user = await getAdminUser() as { id: string; email?: string } | null;
   
   if (!user) {
     // For E2E tests, show access denied page instead of redirecting

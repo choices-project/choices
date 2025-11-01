@@ -1,6 +1,6 @@
-"use client"
+import React, { lazy, Suspense } from 'react';
 
-import { lazy, Suspense } from 'react'
+"use client"
 
 // Lazy load heavy admin components
 const AdminDashboard = lazy(() => import('@/components/lazy/AdminDashboard'))

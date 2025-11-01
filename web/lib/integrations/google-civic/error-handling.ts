@@ -6,9 +6,10 @@
  */
 
 import { logger } from '@/lib/logger';
-import { GoogleCivicApiError } from './client';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
 import { withOptional } from '@/lib/util/objects';
+
+import { GoogleCivicApiError } from './client';
 
 // Types imported from scratch/google-civic-types.ts
 

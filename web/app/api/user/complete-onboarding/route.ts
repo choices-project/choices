@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     
     if (contentType?.includes('application/json')) {
       const body = await req.json()
-      preferences = body.preferences || {}
+      preferences = body.preferences ?? {}
     } else {
       // Handle form data
       const formData = await req.formData()
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       preferences = {
         notifications: formData.get('notifications') === 'true',
         dataSharing: formData.get('dataSharing') === 'true',
-        theme: formData.get('theme') || 'system'
+        theme: formData.get('theme') ?? 'system'
       }
     }
 
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     const dest = new URL('/dashboard', req.url).toString() // absolute
     
     // Use 302 for WebKit/Safari, 303 for others (WebKit redirect quirk workaround)
-    const userAgent = req.headers.get('user-agent') || ''
+    const userAgent = req.headers.get('user-agent') ?? ''
     const isWebKit = userAgent.includes('WebKit') && !userAgent.includes('Chrome')
     const status = isWebKit ? 302 : 303
     

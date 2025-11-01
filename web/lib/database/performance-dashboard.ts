@@ -5,9 +5,9 @@
  * operations, query performance, and cache efficiency.
  */
 
-import { logger } from '@/lib/logger';
-import { smartCache } from '@/lib/database/smart-cache';
 import { queryAnalyzer } from '@/lib/database/query-analyzer';
+import { smartCache } from '@/lib/database/smart-cache';
+import { logger } from '@/lib/logger';
 
 /**
  * Dashboard metrics for real-time monitoring

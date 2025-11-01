@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { withOptional } from '@/lib/util/objects';
 
 type AnalyticsData = {

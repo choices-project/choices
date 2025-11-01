@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * Next.js 15 Dynamic API scanner for Choices
  * - finds `cookies()/headers()/draftMode()` at module scope (illegal)

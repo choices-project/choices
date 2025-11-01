@@ -1,5 +1,5 @@
-import fs from 'fs';
 import { execSync } from 'child_process';
+import fs from 'fs';
 
 try {
   const out = execSync('npm run types:strict', { encoding: 'utf8' });

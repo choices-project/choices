@@ -8,11 +8,11 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 import { VoteEngine, type VoteEngineConfig } from '@/lib/vote/engine';
 import type { VoteRequest, PollData, VoteData, VotingMethod } from '@/lib/vote/types';
 
 // Import V2 test setup
-import { when, expectQueryState } from '../../helpers/supabase-when';
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({

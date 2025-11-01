@@ -6,8 +6,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { logger } from '@/lib/logger';
 import { 
   Settings, 
   Save, 
@@ -23,6 +21,9 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { logger } from '@/lib/utils/logger';
 
 type SystemConfig = {
   general: {
@@ -91,7 +92,7 @@ export default function SystemSettingsPage() {
         setLoading(true);
         
         // Fetch system status from API
-        const response = await fetch('/api/admin/system-status', {
+        const response = await fetch('/api/admin/health?type=status', {
           headers: {
             'Authorization': 'Bearer admin-access', // This should be replaced with real auth
             'Content-Type': 'application/json'
@@ -255,11 +256,11 @@ export default function SystemSettingsPage() {
     return (
       <div className="p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-10 bg-gray-200 rounded mb-6"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
+          <div className="h-10 bg-gray-200 rounded mb-6" />
           <div className="space-y-4">
-            {[...Array(5)].map((_, i: any) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            {[...Array(5)].map((_, i: number) => (
+              <div key={i} className="h-16 bg-gray-200 rounded" />
             ))}
           </div>
         </div>
@@ -339,7 +340,7 @@ export default function SystemSettingsPage() {
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
-            {tabs.map((tab: any) => {
+            {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
@@ -738,7 +739,7 @@ export default function SystemSettingsPage() {
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {config?.database.schemaStatus || 'Unknown'}
+                        {config?.database.schemaStatus ?? 'Unknown'}
                       </span>
                     </div>
                   </div>
@@ -751,7 +752,7 @@ export default function SystemSettingsPage() {
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {config?.database.connectionStatus || 'Unknown'}
+                        {config?.database.connectionStatus ?? 'Unknown'}
                       </span>
                     </div>
                   </div>
@@ -759,21 +760,21 @@ export default function SystemSettingsPage() {
                   <div className="bg-white p-4 rounded-lg border">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">Tables</span>
-                      <span className="text-sm text-gray-900">{config?.database.tableCount || 0}</span>
+                      <span className="text-sm text-gray-900">{config?.database.tableCount ?? 0}</span>
                     </div>
                   </div>
                   
                   <div className="bg-white p-4 rounded-lg border">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">Last Migration</span>
-                      <span className="text-sm text-gray-900">{config?.database.lastMigration || 'Unknown'}</span>
+                      <span className="text-sm text-gray-900">{config?.database.lastMigration ?? 'Unknown'}</span>
                     </div>
                   </div>
                   
                   <div className="bg-white p-4 rounded-lg border">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">Cache Refresh</span>
-                      <span className="text-sm text-gray-900">{config?.database.cacheRefreshTime || 'Unknown'}</span>
+                      <span className="text-sm text-gray-900">{config?.database.cacheRefreshTime ?? 'Unknown'}</span>
                     </div>
                   </div>
                 </div>

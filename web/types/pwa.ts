@@ -1,3 +1,4 @@
+import type React from 'react'
 // PWA Types for Choices Platform
 // Created: 2025-01-16
 // Purpose: Type definitions for PWA components and functionality

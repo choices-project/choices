@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { devLog } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,8 +57,8 @@ export async function GET(request: NextRequest) {
     const sentiment = searchParams.get('sentiment');
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
-    const dateRange = searchParams.get('dateRange') || 'all';
-    const search = searchParams.get('search') || '';
+    const dateRange = searchParams.get('dateRange') ?? 'all';
+    const search = searchParams.get('search') ?? '';
 
     // Build query
     let query = supabaseClient
@@ -97,10 +98,11 @@ export async function GET(request: NextRequest) {
         case 'month':
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           break;
-        case 'quarter':
+        case 'quarter': {
           const quarter = Math.floor(now.getMonth() / 3);
           startDate = new Date(now.getFullYear(), quarter * 3, 1);
           break;
+        }
         default:
           startDate = new Date(0);
       }

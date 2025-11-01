@@ -1,8 +1,8 @@
 // Real-time News Service for Trending Awareness
 // Focuses on gathering reputable data and presenting it as breaking news stories
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================

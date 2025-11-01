@@ -1,18 +1,16 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { z } from 'zod'
+
 import { 
   createSecureServerAction,
   validateFormData,
   getAuthenticatedUser,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { 
-  rotateSessionToken,
-  setSessionCookie 
-} from '@/lib/core/auth/session-cookies'
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema
 const OnboardingSchema = z.object({
@@ -22,97 +20,71 @@ const OnboardingSchema = z.object({
 })
 
 // Simple server action for E2E testing
-export async function completeOnboardingAction(formData: FormData) {
-  console.log('=== COMPLETE ONBOARDING ACTION CALLED ===');
-  console.log('FormData entries:', Object.fromEntries(formData.entries()));
-  console.log('E2E environment:', process.env.E2E);
+export function completeOnboardingAction(formData: FormData) {
+  logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
+  logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+  logger.info('E2E environment', { e2e: process.env.E2E });
   
-  // --- E2E isolation: prove redirect mechanics first
-  if (process.env.E2E === 'true') {
-    console.log('E2E bypass: redirecting to dashboard');
-    redirect('/dashboard'); // 303; throws to short-circuit the action
-  }
+  // Always use real authentication - no E2E bypasses
   
   // For production, we'll add the full implementation here
-  console.log('Production path not implemented yet');
+  logger.info('Production path not implemented yet');
   redirect('/dashboard'); // authoritative redirect
 }
 
 // Enhanced onboarding completion action with security features
 export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
-    console.log('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
-    console.log('FormData entries:', Object.fromEntries(formData.entries()));
-    console.log('E2E environment:', process.env.E2E);
-    console.log('FormData keys:', Array.from(formData.keys()));
-    console.log('FormData values:', Array.from(formData.values()));
+    logger.info('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
+    logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+    logger.info('E2E environment', { e2e: process.env.E2E });
+    logger.info('FormData keys', { keys: Array.from(formData.keys()) });
+    logger.info('FormData values', { values: Array.from(formData.values()) });
     
-    // --- E2E isolation: prove redirect mechanics first
-    if (process.env.E2E === 'true') {
-      console.log('E2E bypass: redirecting to dashboard');
-      redirect('/dashboard'); // 303; throws to short-circuit the action
-    }
-    
-    const supabase = getSupabaseServerClient();
+    // Always use real authentication - no E2E bypasses
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
-    console.log('Authenticated user:', user?.userId);
+    logger.info('Authenticated user', { userId: user?.userId });
     
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)
-    console.log('Validated data:', validatedData);
+    logger.info('Validated data', { data: validatedData });
 
     // Get Supabase client
-    const supabaseClient = await supabase
+    const supabaseClient = await getSupabaseServerClient()
 
     if (!supabaseClient) {
       throw new Error('Supabase client not available')
     }
 
-    // Update or create user profile to mark onboarding as completed
+    // Update or create user profile with onboarding data
+    const updateData = {
+      privacy_settings: {
+        notifications: validatedData.notifications,
+        dataSharing: validatedData.dataSharing,
+        theme: validatedData.theme
+      },
+      updated_at: new Date().toISOString()
+    };
+    
     const { error: updateError } = await supabaseClient
       .from('user_profiles')
-      .upsert({
-        user_id: user.userId,
-        onboarding_completed: true,
-        preferences: {
-          notifications: validatedData.notifications,
-          dataSharing: validatedData.dataSharing,
-          theme: validatedData.theme
-        },
-        updated_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      })
+      .update(updateData)
+      .eq('user_id', user.userId)
 
     if (updateError) {
-      console.log('Profile update error:', updateError);
+      logger.info('Profile update error', { error: updateError });
       throw new Error('Failed to complete onboarding')
     }
 
-    // Rotate session token after privilege change (onboarding completion)
-    const newSessionToken = rotateSessionToken(
-      user.userId,
-      user.userRole,
-      user.userId
-    )
-
-    // Set secure session cookie
-    setSessionCookie(newSessionToken, {
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    // Use Supabase native session management
+    // Supabase handles session cookies automatically
+    // No need for custom JWT session tokens
 
     // Authoritative redirect from server action
-    console.log('Onboarding completed successfully, redirecting to dashboard');
+    logger.info('Onboarding completed successfully, redirecting to dashboard');
     redirect('/dashboard'); // 303; throws to short-circuit the action
-  },
-  {
-    requireAuth: true,
-    sessionRotation: true,
-    validation: OnboardingSchema,
-    rateLimit: { endpoint: '/onboarding', maxRequests: 10 }
   }
 )
 

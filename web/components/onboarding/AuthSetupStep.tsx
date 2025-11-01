@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
 import { Shield, Mail, Key, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Smartphone } from 'lucide-react'
+import React, { useState } from 'react';
+
+
+import { PasskeyButton } from '@/components/PasskeyButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
-import { PasskeyButton } from '@/components/PasskeyButton'
 
 type AuthSetupStepProps = {
   data: any

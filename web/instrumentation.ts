@@ -11,5 +11,16 @@ export function register() {
         writable: true,
       });
     }
+
+    // Initialize Sentry if DSN is configured
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      try {
+        // Sentry is initialized via sentry.server.config.ts and sentry.client.config.ts
+        // This is just a placeholder for any server-side initialization needed
+        console.log('[instrumentation] Sentry DSN detected, monitoring enabled');
+      } catch (error) {
+        console.warn('[instrumentation] Failed to initialize Sentry:', error);
+      }
+    }
   }
 }

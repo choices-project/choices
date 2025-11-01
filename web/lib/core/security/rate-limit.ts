@@ -1,17 +1,6 @@
 /**
- * Enhanced Rate Limiting System
- * Production-ready rate limiting with IP reputation, device fingerprinting, and adaptive limits
- * 
- * Features:
- * - IP-based rate limiting with reputation scoring
- * - Device fingerprinting for additional protection
- * - Adaptive rate limits based on risk signals
- * - Multiple storage backends (memory, Redis)
- * - Comprehensive analytics and monitoring
- * 
- * @author Choices Platform
- * @version 2.0.0
- * @since 2024-12-27
+ * DEPRECATED: Legacy in-memory rate limiting (kept for reference/tests)
+ * Use Upstash-backed limiter in `@/lib/rate-limiting/api-rate-limiter` instead.
  */
 
 import { devLog } from '../../logger'

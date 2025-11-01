@@ -8,7 +8,6 @@
  * Status: ✅ PRODUCTION
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type {
   Representative,
   RepresentativeSearchQuery,
@@ -16,15 +15,10 @@ import type {
   RepresentativeCommittee
 } from '@/types/representative';
 
-// Initialize Supabase client with anonymous key for public data access
-// RLS policies should allow public read access to representative data
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || (() => {
-    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required');
-  })(),
-  { auth: { persistSession: false } }
-);
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+// Note: This service only queries Supabase - it does NOT call external APIs.
+// All external API calls are handled by the backend service at /services/civics-backend.
 
 export class CivicsIntegrationService {
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
@@ -40,6 +34,11 @@ export class CivicsIntegrationService {
       if (cached) return cached;
 
       console.log('🔍 CivicsIntegration: Fetching representatives with query:', query);
+
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        throw new Error('Database connection not available');
+      }
 
       // Build the main query
       let dbQuery = supabase
@@ -127,6 +126,12 @@ export class CivicsIntegrationService {
     if (representativeIds.length === 0) return new Map();
 
     try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        console.warn('Database connection not available for committee data');
+        return new Map();
+      }
+
       const { data: committees, error } = await supabase
         .from('openstates_people_roles')
         .select(`
@@ -189,6 +194,12 @@ export class CivicsIntegrationService {
     if (representativeIds.length === 0) return new Map();
 
     try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        console.warn('Database connection not available for crosswalk data');
+        return new Map();
+      }
+
       // Get representatives to get their canonical_ids
       const { data: reps, error: repsError } = await supabase
         .from('representatives_core')
@@ -351,6 +362,11 @@ export class CivicsIntegrationService {
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        return null;
+      }
+
       const { data: representative, error } = await supabase
         .from('representatives_core')
         .select(`
@@ -383,13 +399,15 @@ export class CivicsIntegrationService {
   }
 
   /**
-   * Search representatives by location using Google Civic API
+   * Search representatives by location
+   * Note: Location-based search should use /api/v1/civics/address-lookup endpoint
+   * which is the sole exception that calls external APIs for address → district mapping.
    */
   async findByLocation(address: string): Promise<RepresentativeSearchResult> {
     try {
-      // This would integrate with Google Civic API
-      // For now, return empty result
-      console.log('Location search not yet implemented:', address);
+      // Location search should query Supabase after getting jurisdiction from address lookup
+      // The /api/v1/civics/address-lookup endpoint handles address → district mapping
+      console.log('Location search should use address lookup endpoint first:', address);
       return {
         representatives: [],
         total: 0,
@@ -419,6 +437,16 @@ export class CivicsIntegrationService {
     byState: Record<string, number>;
   }> {
     try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        return {
+          total: 0,
+          highQuality: 0,
+          averageScore: 0,
+          byState: {}
+        };
+      }
+
       const { data: stats, error } = await supabase
         .from('representatives_core')
         .select('data_quality_score, state')

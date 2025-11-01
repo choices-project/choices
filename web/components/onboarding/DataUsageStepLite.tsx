@@ -1,6 +1,8 @@
 'use client';
 
 import { Settings, Shield, ArrowRight } from 'lucide-react';
+import React from 'react';
+
 
 type Props = { 
   onNext: () => void;
@@ -26,15 +28,15 @@ export default function DataUsageStepLite({ onNext, onShowAdvanced }: Props) {
         <h3 className="font-semibold text-blue-900 mb-3">What we collect:</h3>
         <ul className="space-y-2 text-blue-800">
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
             Basic usage analytics (pages visited, time spent)
           </li>
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
             Account information you provide
           </li>
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mr-3" />
             Security data to protect your account
           </li>
         </ul>
@@ -44,15 +46,15 @@ export default function DataUsageStepLite({ onNext, onShowAdvanced }: Props) {
         <h3 className="font-semibold text-gray-900 mb-3">Your data is:</h3>
         <ul className="space-y-2 text-gray-700">
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-green-600 rounded-full mr-3" />
             Never sold to third parties
           </li>
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-green-600 rounded-full mr-3" />
             Encrypted and securely stored
           </li>
           <li className="flex items-center">
-            <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-green-600 rounded-full mr-3" />
             Used only to improve your experience
           </li>
         </ul>

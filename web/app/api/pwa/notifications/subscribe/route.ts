@@ -6,8 +6,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subscription, userId, preferences } = body;
 
-    if (!subscription || !subscription.endpoint) {
+    if (!subscription?.endpoint) {
       return NextResponse.json({
         success: false,
         error: 'Invalid subscription data'
@@ -97,7 +98,7 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    logger.info(`PWA: Unsubscribing push notifications for user ${userId || subscriptionId}`);
+    logger.info(`PWA: Unsubscribing push notifications for user ${userId ?? subscriptionId}`);
 
     // Remove subscription from database
     const removed = await removeSubscription(userId, subscriptionId);
@@ -223,11 +224,9 @@ export async function PUT(request: NextRequest) {
  */
 async function validateSubscription(subscription: any): Promise<boolean> {
   // Basic validation of subscription object
-  return !!(subscription && 
-           subscription.endpoint && 
+  return !!(subscription?.endpoint && 
            typeof subscription.endpoint === 'string' &&
-           subscription.keys &&
-           subscription.keys.p256dh &&
+           subscription.keys?.p256dh &&
            subscription.keys.auth);
 }
 
@@ -249,7 +248,7 @@ async function storeSubscription(data: any): Promise<string> {
  */
 async function removeSubscription(userId?: string | null, subscriptionId?: string | null): Promise<boolean> {
   // This would typically remove from your database
-  logger.info(`PWA: Removing subscription for user ${userId || subscriptionId}`);
+  logger.info(`PWA: Removing subscription for user ${userId ?? subscriptionId}`);
   
   return true;
 }

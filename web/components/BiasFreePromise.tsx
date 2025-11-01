@@ -1,4 +1,3 @@
-'use client'
 
 import { motion } from 'framer-motion';
 import { 
@@ -6,6 +5,9 @@ import {
   Building2, Globe, Zap, CheckCircle,
   XCircle, Heart
 } from 'lucide-react'
+import React from 'react';
+
+'use client'
 
 type Promise = {
   icon: React.ReactNode;

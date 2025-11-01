@@ -1,6 +1,5 @@
 /* eslint-env node */
 module.exports = {
-  root: true,
   // Works with ESLint v8 + Next 14
   extends: [
     'next/core-web-vitals',

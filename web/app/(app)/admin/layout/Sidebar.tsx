@@ -1,10 +1,5 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAdminStore } from '@/lib/admin/store';
-import { useSystemMetrics } from '@/lib/admin/hooks';
 import {
   LayoutDashboard,
   BarChart3,
@@ -13,7 +8,15 @@ import {
   MessageCircle,
   Activity,
   Users,
+  Zap,
+  Flag,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React from 'react';
+
+import { useSystemMetrics } from '@/features/admin/lib/hooks';
+import { useAdminStore } from '@/features/admin/lib/store';
 
 const navigationItems = [
   {
@@ -37,6 +40,11 @@ const navigationItems = [
     icon: BarChart3,
   },
   {
+    name: 'Performance',
+    href: '/admin/performance',
+    icon: Zap,
+  },
+  {
     name: 'System',
     href: '/admin/system',
     icon: Settings,
@@ -45,6 +53,11 @@ const navigationItems = [
     name: 'Site Messages',
     href: '/admin/site-messages',
     icon: MessageCircle,
+  },
+  {
+    name: 'Feature Flags',
+    href: '/admin/feature-flags',
+    icon: Flag,
   },
 ];
 
@@ -60,6 +73,14 @@ export const Sidebar: React.FC = () => {
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={toggleSidebar}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              toggleSidebar()
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label="Close sidebar"
         />
       )}
 
@@ -83,7 +104,7 @@ export const Sidebar: React.FC = () => {
 
         <nav className="mt-6 px-3">
           <ul className="space-y-2">
-            {navigationItems.map((item: any) => {
+            {navigationItems.map((item: { name: string; href: string; icon: React.ComponentType }) => {
               const isActive = pathname === item.href;
               return (
                 <li key={item.name}>
@@ -95,7 +116,7 @@ export const Sidebar: React.FC = () => {
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    <item.icon className="h-5 w-5 mr-3" />
+                    <item.icon />
                     {!sidebarCollapsed && <span>{item.name}</span>}
                   </Link>
                 </li>
@@ -113,17 +134,17 @@ export const Sidebar: React.FC = () => {
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <BarChart3 className="w-4 h-4" />
                   <span>Topics:</span>
-                  <span className="font-medium">{metrics?.total_topics || 0}</span>
+                  <span className="font-medium">{metrics?.total_topics ?? 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <BarChart3 className="w-4 h-4" />
                   <span>Polls:</span>
-                  <span className="font-medium">{metrics?.total_polls || 0}</span>
+                  <span className="font-medium">{metrics?.total_polls ?? 0}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Activity className="w-4 h-4" />
                   <span>Active:</span>
-                  <span className="font-medium">{metrics?.active_polls || 0}</span>
+                  <span className="font-medium">{metrics?.active_polls ?? 0}</span>
                 </div>
               </div>
             </div>

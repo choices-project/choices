@@ -1,118 +1,30 @@
+/**
+ * TYPES Main Index
+ * 
+ * Centralized type system for Choices platform
+ * Clean, organized, and maintainable type structure
+ * 
+ * Created: October 26, 2025
+ * Status: ✅ ACTIVE
+ */
 
-// Common type definitions
+// Core system types
+export * from './core/index';
 
-// Re-export all type modules for easy importing
-export * from './api';
-export * from './webauthn';
-export * from './google-civic';
-export * from './pwa';
+// Feature-specific types
+export * from './features/analytics/index';
+export * from './features/polls/index';
+export * from './features/dashboard/index';
+export * from './features/auth/index';
+export * from './features/hashtags/index';
 
-// Export poll types (avoiding conflicts with frontend.ts)
-export type {
-  Poll,
-  PollOption,
-  PollSettings,
-  PollResult,
-  OptionResult,
-  ResultMetadata,
-  PollEventHandler,
-  PollListProps,
-  ResultsChartProps
-} from './poll';
+// External service types
+export * from './external/index';
 
-// Export frontend types (excluding duplicates)
-export type {
-  ApiResponse,
-  PaginatedResponse,
-  ApiError,
-  WebAuthnAuthProps,
-  WebAuthnCredentialResponse,
-  DashboardData,
-  GeographicData,
-  DemographicsData,
-  EngagementData
-} from './frontend';
-export type LoginCredentials = {
-  email: string;
-  password: string;
-  twoFactorCode?: string;
-}
+// Type utilities
+export * from './utils/index';
 
-export type RegisterData = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  twoFactorCode?: string;
-}
+// Database types (generated)
+export * from './database';
 
-export type TrendingTopic = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  trend_score: number;
-  trending_score: number;
-  status: string;
-  source: string;
-  created_at: string;
-}
-
-export type ActivityItem = {
-  id: string;
-  title: string;
-  type: string;
-  description: string;
-  timestamp: string;
-  severity?: string;
-  user_id?: string;
-}
-
-export type PollNarrative = {
-  id: string;
-  title: string;
-  description: string;
-  story: string;
-  summary: string;
-  fullStory: string;
-  context: any;
-  verifiedFacts: any[];
-  sources: any[];
-  timeline: any[];
-  stakeholders: any[];
-  communityFacts: any[];
-  controversy: {
-    level: string;
-  };
-  moderation: {
-    status: string;
-  };
-}
-
-export type User = {
-  id: string;
-  email: string;
-  stable_id: string;
-  verification_tier: string;
-  is_active: boolean;
-}
-
-export type UserProfile = {
-  id: string;
-  stable_id: string;
-  email: string;
-  verification_tier: string;
-  is_active: boolean;
-}
-
-export type GeneratedPoll = {
-  id: string;
-  title: string;
-  options: string[];
-  source_topic_id: string;
-  status: string;
-  created_at: string;
-  metrics: {
-    total_votes: number;
-    engagement_rate: number;
-  };
-}
+// Global types - declaration file, no need to export

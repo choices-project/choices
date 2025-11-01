@@ -1,18 +1,23 @@
 'use client';
 
-import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
+
+import { useUser, useUserLoading } from '@/lib/stores';
+
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+
+
 
 type AdminLayoutProps = {
   children: React.ReactNode;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const user = useUser();
+  const loading = useUserLoading();
   const router = useRouter();
 
   // Check if user is admin
@@ -27,7 +32,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading admin panel...</p>
         </div>
       </div>

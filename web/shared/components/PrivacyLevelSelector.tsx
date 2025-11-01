@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
 import { Shield, Info, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+
 import { PrivacyLevel, HybridPrivacyManager, PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
 type PrivacyLevelSelectorProps = {
@@ -29,7 +30,7 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
     ? HybridPrivacyManager.getRecommendedPrivacyLevel({
         title: pollData.title,
         description: pollData.description,
-        category: pollData.category || 'general'
+        category: pollData.category ?? 'general'
       })
     : PrivacyLevel.STANDARD;
 

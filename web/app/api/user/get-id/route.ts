@@ -1,8 +1,9 @@
 // NextRequest import removed - not used
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 

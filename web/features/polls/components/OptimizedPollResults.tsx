@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
+
 import { logger } from '@/lib/logger';
 import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
 
@@ -116,10 +118,10 @@ export default function OptimizedPollResults({
     return (
       <div className="space-y-4">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-16 bg-gray-200 rounded" />
             ))}
           </div>
         </div>
@@ -265,7 +267,7 @@ export default function OptimizedPollResults({
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${option.votePercentage || option.percentage}%` }}
-                ></div>
+                 />
               </div>
               <div className="mt-2 text-xs text-gray-500">
                 {option.uniqueVoters || 0} unique voters

@@ -1,8 +1,9 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
+
+import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
 type PollData = {
   title: string;
@@ -85,7 +86,7 @@ export async function GET() {
         poll.title.toLowerCase().includes('climate') ||
         poll.title.toLowerCase().includes('community') ||
         poll.title.toLowerCase().includes('election')
-      ) || polls[0];
+      ) ?? polls[0];
 
       // Generate dynamic poll options based on topic category
       const options = generateDynamicOptions(topic, matchingPoll);
@@ -97,12 +98,12 @@ export async function GET() {
         trendingScore: topic.trending_score,
         source: topic.source_name,
         category: topic.category,
-        totalVotes: matchingPoll?.total_votes || Math.floor(Math.random() * 5000) + 1000,
-        participationRate: matchingPoll?.participation_rate || Math.floor(Math.random() * 30) + 50,
+        totalVotes: matchingPoll?.total_votes ?? Math.floor(Math.random() * 5000) + 1000,
+        participationRate: matchingPoll?.participation_rate ?? Math.floor(Math.random() * 30) + 50,
         options: options,
         metadata: {
-          engagement: topic.metadata?.engagement || 'medium',
-          controversy: topic.metadata?.controversy || 'low',
+          engagement: topic.metadata?.engagement ?? 'medium',
+          controversy: topic.metadata?.controversy ?? 'low',
           velocity: topic.velocity,
           momentum: topic.momentum,
           sentimentScore: topic.sentiment_score

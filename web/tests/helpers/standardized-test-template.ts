@@ -16,7 +16,8 @@ import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals
 
 // Core test setup
 import { getMS } from '../setup';
-import { arrangeFindById, arrangeInsertOk, arrangeUpdateOk, arrangeVoteProcessing, arrangePollCreation } from './arrange-helpers';
+
+import { arrangeFindById, arrangeVoteProcessing } from './arrange-helpers';
 
 // Mock the logger (if needed)
 jest.mock('@/lib/logger', () => ({

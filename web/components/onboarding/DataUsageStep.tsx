@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { Shield, BarChart3, Eye, Lock, ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react';
+
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 
 type DataUsageStepProps = {

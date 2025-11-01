@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 type PieChartProps = {
@@ -31,7 +32,7 @@ export default function RechartsPieImpl({
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }: { name?: string; percent?: number }) => `${name || 'Unknown'} ${percent ? (percent * 100).toFixed(0) : 0}%`}
             outerRadius={80}
             fill="#8884d8"
             dataKey={dataKey}
@@ -48,3 +49,4 @@ export default function RechartsPieImpl({
     </div>
   )
 }
+

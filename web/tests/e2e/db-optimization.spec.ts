@@ -8,7 +8,7 @@
  * - Error handling for invalid params
  */
 import { test, expect } from '@playwright/test';
-import { E2E_CONFIG } from './helpers/e2e-setup';
+
 
 test.describe('DB Optimization Suite', () => {
   test('performance admin endpoints return data', async ({ page }) => {

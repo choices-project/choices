@@ -8,9 +8,10 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
-import { getSupabaseServerClient } from '../../utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+import { getSupabaseServerClient } from '../../utils/supabase/server'
+import { logger } from '../logger'
 import type { QueryPlan } from '../types/database'
 
 // Query optimization options

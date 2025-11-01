@@ -1,8 +1,14 @@
+import crypto from 'crypto';
+
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { devLog } from '@/lib/logger';
-import crypto from 'crypto';
+import { getRPIDAndOrigins } from '@/lib/webauthn/config';
+import { verifyCredentialRegistration } from '@/lib/webauthn/credential-verification';
+import { arrayBufferToBase64url } from '@/lib/webauthn/type-converters';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { RegistrationResponseJSON } from '@simplewebauthn/server';
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     // If credential is provided, this is a verification request
     if (body.credential) {
-      return await verifyRegistration(body)
+      return await verifyRegistration(body, request)
     }
     
     // Otherwise, this is a request for registration options
@@ -50,17 +56,13 @@ async function getRegistrationOptions(body: any) {
 
     const supabaseClient = await supabase
 
-    // Verify user exists
-    const { data: user, error: userError } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id, email')
-      .eq('stable_id', userId)
-      .single()
-
-    if (userError || !user) {
+    // Verify user exists in auth.users
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    
+    if (userError || !user || user.id !== userId) {
       devLog('User not found for WebAuthn registration:', userId)
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'User not found or user ID mismatch' },
         { status: 404 }
       )
     }
@@ -76,7 +78,7 @@ async function getRegistrationOptions(body: any) {
       challenge: challengeBase64,
       rp: {
         name: 'Choices Platform',
-        id: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('http://', '') || 'localhost'
+        id: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('http://', '') ?? 'localhost'
       },
       user: {
         id: userHandleBase64,
@@ -115,7 +117,7 @@ async function getRegistrationOptions(body: any) {
   }
 }
 
-async function verifyRegistration(body: any) {
+async function verifyRegistration(body: any, request: NextRequest) {
   try {
     const { credential, challenge, userId } = body
 
@@ -137,14 +139,10 @@ async function verifyRegistration(body: any) {
 
     const supabaseClient = await supabase
 
-    // Verify user exists
-    const { data: user, error: userError } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id, email')
-      .eq('stable_id', userId)
-      .single()
-
-    if (userError || !user) {
+    // Verify user exists in auth.users
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    
+    if (userError || !user || user.id !== userId) {
       devLog('User not found for WebAuthn registration verification:', userId)
       return NextResponse.json(
         { error: 'User not found' },
@@ -152,39 +150,69 @@ async function verifyRegistration(body: any) {
       )
     }
 
-    // TODO: Implement proper WebAuthn attestation verification
-    // This would involve:
-    // 1. Verifying the challenge matches
-    // 2. Verifying the attestation statement
-    // 3. Extracting the public key
-    // 4. Storing the credential securely
+    // Implement proper WebAuthn attestation verification
+    const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(request);
     
-    // For now, we'll extract basic information and store it
-    const attestationResponse = credential.response as AuthenticatorAttestationResponse
+    if (!enabled) {
+      return NextResponse.json(
+        { error: 'WebAuthn is not enabled' },
+        { status: 503 }
+      );
+    }
+
+    // Get expected origin from request
+    const origin = request.headers.get('origin') ?? request.headers.get('referer') ?? '';
+    if (!origin || !allowedOrigins.includes(new URL(origin).origin)) {
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
+    // Verify the registration response using proper attestation verification
+    const registrationResponse = credential as unknown as RegistrationResponseJSON;
+    const verificationResult = await verifyCredentialRegistration(
+      registrationResponse,
+      challenge,
+      origin,
+      rpID
+    );
+
+    if (!verificationResult.verified) {
+      devLog('WebAuthn attestation verification failed:', verificationResult.error);
+      return NextResponse.json(
+        { error: verificationResult.error ?? 'Attestation verification failed' },
+        { status: 400 }
+      );
+    }
+
+    // Convert public key to base64url string for storage (BYTEA column)
+    const publicKeyBase64 = arrayBufferToBase64url(verificationResult.publicKey);
     
     // Convert credential data to store in database
+    // Note: public_key is stored as BYTEA in PostgreSQL, but Supabase types expect string
     const credentialData = {
-      credential_id: credential.id,
+      credential_id: verificationResult.credentialId,
       user_id: userId,
-      public_key: Buffer.from(attestationResponse.attestationObject), // This should be the actual public key
-      counter: 0,
-      rp_id: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('http://', '') || 'localhost',
-      transports: ['internal'], // Default to internal
-      backup_eligible: false,
-      backup_state: false
-    }
+      public_key: publicKeyBase64, // Store as base64url string (will be converted to BYTEA by PostgREST)
+      counter: verificationResult.counter,
+      rp_id: rpID,
+      transports: verificationResult.transports ?? ['internal'],
+      backup_eligible: verificationResult.backupEligible ?? false,
+      backup_state: verificationResult.backupState ?? false
+    };
 
     // Store the credential
     const { error: insertError } = await supabaseClient
       .from('webauthn_credentials')
-      .insert(credentialData)
+      .insert(credentialData);
 
     if (insertError) {
-      devLog('Error storing WebAuthn credential:', insertError)
+      devLog('Error storing WebAuthn credential:', insertError);
       return NextResponse.json(
         { error: 'Failed to store biometric credential' },
         { status: 500 }
-      )
+      );
     }
 
     devLog('WebAuthn credential registered successfully for user:', userId)

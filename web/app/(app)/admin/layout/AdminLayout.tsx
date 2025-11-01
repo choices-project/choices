@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Sidebar } from './Sidebar';
+import React from 'react';
+
 import { Header } from './Header';
+import { Sidebar } from './Sidebar';
 
 type AdminLayoutProps = {
   children: React.ReactNode;

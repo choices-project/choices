@@ -1,7 +1,8 @@
 'use client'
 
-import * as React from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import * as React from 'react';
+
 import type { StepSlug } from './types';
 import { DEFAULT_STEP_ORDER, STEP_LABEL } from './types';
 

@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import { Shield, Lock, Globe, Info } from 'lucide-react';
-import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
-import { PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
+import React from 'react';
+
+import { PrivacyLevel , PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
 type PrivacyLevelIndicatorProps = {
   level: PrivacyLevel;
@@ -86,7 +86,7 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
           </div>
           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
             {description.description}
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
           </div>
         </div>
       ) : (

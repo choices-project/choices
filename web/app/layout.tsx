@@ -1,5 +1,7 @@
 
+import React from 'react'
 import type { Metadata } from 'next'
+
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -32,10 +34,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Preload critical resources */}
+        <link rel="preload" href="/icons/icon-192x192.svg" as="image" />
+        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
+        
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
         
-        {/* PWA Icons */}
+        {/* PWA Icons - Optimized loading */}
         <link rel="icon" href="/icons/icon-192x192.svg" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
         <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.svg" />
@@ -59,10 +65,16 @@ export default function RootLayout({
         {/* PWA Theme */}
         <meta name="theme-color" content="#3b82f6" />
         <meta name="background-color" content="#ffffff" />
+        
+        {/* Performance optimizations */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body>
         {/* Minimal root layout - providers moved to route groups */}
         {children}
+        
+        {/* PWA Background is handled in app layout */}
       </body>
     </html>
   )

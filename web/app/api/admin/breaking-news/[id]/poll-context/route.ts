@@ -1,8 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,9 +36,9 @@ export async function POST(
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
     const { data: userProfile, error: _profileError } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
+      .from('user_profiles')
+      .select('trust_tier')
+      .eq('user_id', user.id)
       .single();
 
     if (!userProfile) {
@@ -75,39 +76,12 @@ export async function POST(
       );
     }
 
-    // Store the poll context in the database
-    const { data: contextData, error: contextError } = await supabaseClient
-      .from('poll_contexts')
-      .insert([{
-        story_id: storyId,
-        question: pollContext.question,
-        context: pollContext.context,
-        why_important: pollContext.whyImportant,
-        stakeholders: pollContext.stakeholders,
-        options: pollContext.options,
-        voting_method: pollContext.votingMethod,
-        estimated_controversy: pollContext.estimatedControversy,
-        time_to_live: pollContext.timeToLive,
-        status: 'draft'
-      }] as any)
-      .select()
-      .single();
-
-    if (contextError) {
-      logger.error('Error storing poll context:', contextError);
-      return NextResponse.json(
-        { error: 'Failed to store poll context' },
-        { status: 500 }
-      );
-    }
+    // Poll context storage not implemented - breaking news feature uses in-memory context only
 
     return NextResponse.json({
       success: true,
       pollContext: {
         ...pollContext,
-        id: contextData && 'id' in contextData ? contextData.id : undefined,
-        status: contextData && 'status' in contextData ? contextData.status : undefined,
-        createdAt: contextData && 'created_at' in contextData ? contextData.created_at : undefined
       },
       story: {
         id: story.id,
@@ -157,12 +131,12 @@ export async function GET(
 
     // Check admin permissions
     const { data: userProfile, error: profileError } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
+      .from('user_profiles')
+      .select('trust_tier')
+      .eq('user_id', user.id)
       .single();
 
-    if (profileError) {
+    if (profileError || !userProfile) {
       logger.error('Error fetching user profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to verify user permissions' },
@@ -170,7 +144,7 @@ export async function GET(
       );
     }
 
-    if (!['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!userProfile.trust_tier || !['T2', 'T3'].includes(userProfile.trust_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }
@@ -185,22 +159,7 @@ export async function GET(
       );
     }
 
-    // Get existing poll context
-    const { data: contextData, error: contextError } = await supabaseClient
-      .from('poll_contexts')
-      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
-      .eq('story_id', storyId as any)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (contextError && contextError.code !== 'PGRST116') {
-      logger.error('Error fetching poll context:', contextError);
-      return NextResponse.json(
-        { error: 'Failed to fetch poll context' },
-        { status: 500 }
-      );
-    }
+    // Poll context storage not implemented - breaking news feature uses in-memory context only
 
     // Get the breaking news story
     const service = new RealTimeNewsService();
@@ -208,7 +167,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      pollContext: contextData || null,
+      pollContext: null,
       story: story ? {
         id: story.id,
         headline: story.headline,
@@ -216,7 +175,7 @@ export async function GET(
         urgency: story.urgency,
         sentiment: story.sentiment
       } : null,
-      hasExistingContext: !!contextData
+      hasExistingContext: false
     });
 
   } catch (error) {

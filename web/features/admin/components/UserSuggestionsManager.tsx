@@ -4,9 +4,6 @@
 // This component is for admin functionality and should be feature flagged
 // for MVP deployment
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
 import { 
   CheckCircle, 
   X, 
@@ -15,6 +12,9 @@ import {
   Search,
   RefreshCw
 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 
 type UserSuggestion = {
   id: string;
@@ -65,7 +65,8 @@ export default function UserSuggestionsManager() {
         setSuggestions(data.suggestions || []);
       }
     } catch (error) {
-      console.error('Error loading suggestions:', error);
+      console.error('Failed to load user suggestions:', error);
+      // Error loading suggestions - handled by error boundary
     } finally {
       setLoading(false);
     }
@@ -98,13 +99,14 @@ export default function UserSuggestionsManager() {
         setSuggestions(prev => 
           prev.map(suggestion => 
             suggestion.id === id 
-              ? withOptional(suggestion, { status: status as 'pending' | 'approved' | 'rejected' | 'implemented' })
+              ? { ...suggestion, status: status as 'pending' | 'approved' | 'rejected' | 'implemented' }
               : suggestion
           )
         );
       }
     } catch (error) {
-      console.error('Error updating suggestion status:', error);
+      console.error('Failed to update suggestion status:', error);
+      // Error updating suggestion status - handled by error boundary
     }
   };
 
@@ -149,12 +151,12 @@ export default function UserSuggestionsManager() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6" />
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
               </div>
             ))}
           </div>
@@ -184,7 +186,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               value={filter.type}
-              onChange={(e) => setFilter(prev => withOptional(prev, { type: e.target.value }))}
+              onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Types</option>
@@ -199,7 +201,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={filter.status}
-              onChange={(e) => setFilter(prev => withOptional(prev, { status: e.target.value }))}
+              onChange={(e) => setFilter(prev => ({ ...prev, status: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="pending">Pending</option>
@@ -213,7 +215,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Sentiment</label>
             <select
               value={filter.sentiment}
-              onChange={(e) => setFilter(prev => withOptional(prev, { sentiment: e.target.value }))}
+              onChange={(e) => setFilter(prev => ({ ...prev, sentiment: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Sentiments</option>
@@ -230,7 +232,7 @@ export default function UserSuggestionsManager() {
               <input
                 type="text"
                 value={filter.search}
-              onChange={(e) => setFilter(prev => withOptional(prev, { search: e.target.value }))}
+              onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
                 placeholder="Search suggestions..."
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />

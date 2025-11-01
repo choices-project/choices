@@ -4,8 +4,9 @@
  * Transform raw Congress.gov API responses into normalized data structures
  */
 
-import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 import { withOptional } from '../../util/objects';
+
+import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 
 export type NormalizedRepresentative = {
   id: string;

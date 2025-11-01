@@ -1,6 +1,7 @@
 // Database Configuration and Connection Management
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
+
 import { withOptional } from '../../../../lib/util/objects';
 
 // Environment detection

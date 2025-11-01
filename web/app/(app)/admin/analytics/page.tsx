@@ -6,7 +6,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -22,6 +21,7 @@ import {
   Target,
   Award
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 type AnalyticsData = {
   overview: {
@@ -32,29 +32,29 @@ type AnalyticsData = {
     totalVotes: number;
     averageParticipation: number;
   };
-  trends: {
+  trends: Array<{
     date: string;
     users: number;
     polls: number;
     votes: number;
-  }[];
+  }>;
   demographics: {
-    ageGroups: { age: string; count: number; percentage: number }[];
-    locations: { location: string; count: number; percentage: number }[];
-    devices: { device: string; count: number; percentage: number }[];
+    ageGroups: Array<{ age: string; count: number; percentage: number }>;
+    locations: Array<{ location: string; count: number; percentage: number }>;
+    devices: Array<{ device: string; count: number; percentage: number }>;
   };
-  topPolls: {
+  topPolls: Array<{
     id: string;
     title: string;
     votes: number;
     participants: number;
     category: string;
-  }[];
-  userActivity: {
+  }>;
+  userActivity: Array<{
     timeSlot: string;
     activeUsers: number;
     newRegistrations: number;
-  }[];
+  }>;
 }
 
 export default function AnalyticsPage() {
@@ -138,10 +138,10 @@ export default function AnalyticsPage() {
     return (
       <div className="p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i: number) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            {Array.from({ length: 4 }, (_, i: number) => (
+              <div key={`skeleton-${i}`} className="h-32 bg-gray-200 rounded-lg" />
             ))}
           </div>
         </div>
@@ -253,8 +253,8 @@ export default function AnalyticsPage() {
             <LineChart className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-4">
-            {data?.trends.map((trend, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {data?.trends.map((trend) => (
+              <div key={`trend-${trend.date}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span className="text-sm font-medium text-gray-900">{trend.date}</span>
@@ -300,15 +300,15 @@ export default function AnalyticsPage() {
             <PieChart className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.ageGroups.map((group, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+            {data?.demographics.ageGroups.map((group) => (
+              <div key={`age-group-${group.age}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{group.age}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full" 
                       style={{ width: `${group.percentage}%` }}
-                    ></div>
+                     />
                   </div>
                   <span className="text-sm font-medium text-gray-900">{group.percentage}%</span>
                 </div>
@@ -324,15 +324,15 @@ export default function AnalyticsPage() {
             <Map className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.locations.map((location, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+            {data?.demographics.locations.map((location) => (
+              <div key={`location-${location.location}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{location.location}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-green-600 h-2 rounded-full" 
                       style={{ width: `${location.percentage}%` }}
-                    ></div>
+                     />
                   </div>
                   <span className="text-sm font-medium text-gray-900">{location.percentage}%</span>
                 </div>
@@ -348,15 +348,15 @@ export default function AnalyticsPage() {
             <Activity className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.devices.map((device, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+            {data?.demographics.devices.map((device) => (
+              <div key={`device-${device.device}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{device.device}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-purple-600 h-2 rounded-full" 
                       style={{ width: `${device.percentage}%` }}
-                    ></div>
+                     />
                   </div>
                   <span className="text-sm font-medium text-gray-900">{device.percentage}%</span>
                 </div>
@@ -373,8 +373,8 @@ export default function AnalyticsPage() {
           <Clock className="h-5 w-5 text-gray-400" />
         </div>
         <div className="grid grid-cols-6 gap-4">
-          {data?.userActivity.map((activity, index: number) => (
-            <div key={index} className="text-center">
+          {data?.userActivity.map((activity) => (
+            <div key={`activity-${activity.timeSlot}`} className="text-center">
               <div className="bg-blue-100 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-900">{activity.timeSlot}</p>
                 <p className="text-lg font-bold text-blue-600">{activity.activeUsers}</p>

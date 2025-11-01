@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { BarChart3, Users, TrendingUp, Activity } from 'lucide-react';
+import React from 'react';
 
 export default function Dashboard() {
   return (

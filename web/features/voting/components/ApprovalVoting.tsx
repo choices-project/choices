@@ -1,13 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, CheckSquare } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
 
-type PollOption = {
-  id: string
-  text: string
-  description?: string
-}
+
+import type { PollOption } from '../types'
 
 type ApprovalVotingProps = {
   pollId: string
@@ -74,9 +71,11 @@ export default function ApprovalVoting({
         throw new Error('Some approved options are invalid')
       }
       
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           choices: approvedOptions,
           voting_method: 'approval',
@@ -85,8 +84,8 @@ export default function ApprovalVoting({
       }
       
       await onVote(pollId, validApprovals)
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -151,7 +150,7 @@ export default function ApprovalVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option: any) => (
+          {options.map((option: PollOption) => (
             <div
               key={option.id}
               onClick={() => handleOptionToggle(option.id)}
@@ -179,8 +178,8 @@ export default function ApprovalVoting({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.description && (
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                  {option.option_text && (
+                    <p className="text-sm text-gray-600">{option.option_text}</p>
                   )}
                 </div>
                 {approvedOptions.includes(option.id) && (

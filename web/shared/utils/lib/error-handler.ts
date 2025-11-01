@@ -3,9 +3,10 @@
  * Provides structured error handling and user-friendly error messages
  */
 
+import { withOptional } from '../../../lib/util/objects';
+
 import { devLog } from './logger';
 
-import { withOptional } from '../../../lib/util/objects';
 
 export enum ErrorType {
   VALIDATION = 'VALIDATION',

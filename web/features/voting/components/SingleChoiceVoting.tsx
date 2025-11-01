@@ -1,24 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
 
-type PollOption = {
-  id: string
-  text: string
-  description?: string
-}
 
-type SingleChoiceVotingProps = {
-  pollId: string
-  title: string
-  description?: string
-  options: PollOption[]
-  onVote: (choice: number) => Promise<void>
-  isVoting: boolean
-  hasVoted?: boolean
-  userVote?: number
-}
+import type { PollOption, SingleChoiceVotingProps } from '../types'
 
 export default function SingleChoiceVoting({
   pollId,
@@ -61,9 +47,11 @@ export default function SingleChoiceVoting({
     setError(null)
 
     try {
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           choice: selectedOption,
           voting_method: 'single_choice'
@@ -175,8 +163,8 @@ export default function SingleChoiceVoting({
                 {/* Option Content */}
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.description && (
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                  {option.option_text && (
+                    <p className="text-sm text-gray-600">{option.option_text}</p>
                   )}
                 </div>
 
@@ -236,7 +224,7 @@ export default function SingleChoiceVoting({
           <div className="mt-4 text-center">
             <div className="text-sm text-gray-600">
               Selected: <span className="font-medium text-blue-600">
-                {options.find((_, idx) => idx === selectedOption)?.text}
+                {options.find((_: PollOption, idx: number) => idx === selectedOption)?.text}
               </span>
             </div>
           </div>

@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { devLog } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const { data: credentials, error: credentialsError } = await supabaseClient
       .from('webauthn_credentials')
       .select('id, credential_id, user_id, public_key, counter, transports, created_at')
-      .eq('rp_id', request.headers.get('host') || 'localhost')
+      .eq('rp_id', request.headers.get('host') ?? 'localhost')
 
     if (credentialsError) {
       devLog('Error getting WebAuthn credentials:', credentialsError)
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     devLog('Retrieved WebAuthn credentials for domain', {
       host: request.headers.get('host'),
-      count: credentials.length || 0
+      count: credentials.length ?? 0
     })
 
     return NextResponse.json({

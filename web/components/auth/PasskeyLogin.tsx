@@ -1,9 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Fingerprint, 
   Loader2, 
@@ -14,6 +10,11 @@ import {
   Laptop,
   Key
 } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;

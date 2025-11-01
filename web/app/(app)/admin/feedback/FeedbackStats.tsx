@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { 
   MessageSquare, 
   Clock, 
@@ -9,6 +8,7 @@ import {
   TrendingUp,
   Star
 } from 'lucide-react';
+import React from 'react';
 
 type Feedback = {
   id: string;
@@ -17,11 +17,13 @@ type Feedback = {
   status: string;
   priority: string;
   createdat: string;
+  updatedat: string;
 }
 
 type FeedbackStatsProps = {
   feedback: Feedback[];
 }
+
 
 export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
   const stats = React.useMemo(() => {
@@ -34,17 +36,17 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
     const neutral = feedback.filter(f => f.sentiment === 'neutral').length;
     const highPriority = feedback.filter(f => f.priority === 'high' || f.priority === 'urgent').length;
     
-    // Calculate response time (average time from open to inprogress)
+    // Calculate response time (time from creation to first status change)
     const responseTimes = feedback
-      .filter(f => f.status !== 'open')
+      .filter(f => f.status !== 'open' && f.updatedat && f.updatedat !== f.createdat)
       .map(f => {
-        // For now, use createdat as proxy for response time
-        // In a real implementation, you'd track status change timestamps
-        return new Date(f.createdat).getTime();
+        const createdTime = new Date(f.createdat).getTime();
+        const updatedTime = new Date(f.updatedat).getTime();
+        return updatedTime - createdTime; // Response time in milliseconds
       });
     
     const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((a: any, b: any) => a + b, 0) / responseTimes.length 
+      ? responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length 
       : 0;
 
     return {
@@ -107,10 +109,10 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {statCards.map((stat: any, index: any) => {
+      {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="bg-white rounded-lg shadow p-4">
+          <div key={stat.title} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                 <Icon className={`h-5 w-5 ${stat.color}`} />

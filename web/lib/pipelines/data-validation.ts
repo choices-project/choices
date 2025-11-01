@@ -6,6 +6,7 @@
  */
 
 import { devLog } from '@/lib/logger';
+
 import type { 
   NormalizedRepresentative,
   NormalizedBill 

@@ -1,18 +1,17 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
+
 import { getUser } from '@/lib/core/auth/middleware'
 // import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
-import { AnalyticsService } from '@/lib/core/services/analytics'
+import { AnalyticsService } from '@/lib/services/analytics'
 import { 
   ValidationError, 
   AuthenticationError, 
-  NotFoundError, 
-  handleError, 
-  getUserMessage, 
-  getHttpStatus 
-} from '@/lib/error-handler'
+  NotFoundError,
+  createErrorResponse
+} from '@/lib/utils/error-handler'
+import { devLog } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic';
 
@@ -20,78 +19,50 @@ export const dynamic = 'force-dynamic';
 // POST /api/polls/[id]/vote - Submit a vote (authenticated users only)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    devLog('Vote submission attempt for poll:', params.id)
-    console.log('POST vote API called with pollId:', params.id);
-    
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id;
+    devLog('Vote submission attempt for poll:', { pollId })
+    devLog('POST vote API called with pollId:', { pollId });
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required')
     }
 
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
+    // E2E tests should use real authentication - no bypasses needed
+    const supabase = await getSupabaseServerClient();
     
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-    } else {
-      supabase = await getSupabaseServerClient();
+    // Always require real authentication
+    let user;
+    try {
+      user = await getUser();
+    } catch (error) {
+      console.error('Authentication error during vote:', error);
+      throw new AuthenticationError('Authentication required to vote')
     }
 
-    // Skip authentication for E2E tests
-    let user = null;
-    if (!isE2ETest) {
-      try {
-        user = await getUser();
-      } catch (error) {
-        console.error('Authentication error during vote:', error);
-        throw new AuthenticationError('Authentication required to vote')
-      }
-    } else {
-      // For E2E tests, create a mock user
-      user = {
-        id: '920f13c5-5cac-4e9f-b989-9e225a41b015', // Test user ID from database
-        email: 'user@example.com',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      } as any;
+    // Check if user is authenticated
+    if (!user) {
+      throw new AuthenticationError('Authentication required to vote')
     }
 
     const supabaseClient = supabase;
     
-    // Verify user is active (skip for E2E tests)
-    if (request.headers.get('x-e2e-bypass') !== '1') {
-      const { data: userProfile } = await supabaseClient
-        .from('user_profiles')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .single()
+    // Verify user is active - always check for real users
+    const { data: userProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('is_active')
+      .eq('user_id', user.id)
+      .single()
 
-      if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
-        throw new AuthenticationError('Active account required to vote')
-      }
+    if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
+      throw new AuthenticationError('Active account required to vote')
     }
 
     const body = await request.json()
-    const { choice, approvals, privacy_level = 'public' } = body
+    const { choice, approvals, selections, privacy_level = 'public' } = body
 
 
     // Get poll data to determine voting method
@@ -111,6 +82,10 @@ export async function POST(
       if (!approvals || !Array.isArray(approvals) || approvals.length === 0) {
         throw new ValidationError('At least one approval is required for approval voting')
       }
+    } else if (pollData.voting_method === 'multiple') {
+      if (!selections || !Array.isArray(selections) || selections.length === 0) {
+        throw new ValidationError('At least one selection is required for multiple choice voting')
+      }
     } else {
       if (!choice || typeof choice !== 'number' || choice < 1) {
         throw new ValidationError('Valid choice is required')
@@ -125,14 +100,14 @@ export async function POST(
         .insert({
           poll_id: pollId,
           user_id: user.id,
-          choice: approvals.length, // Number of approvals
+          option_id: approvals[0] || '', // Use first approval as primary option_id
           voting_method: 'approval',
-          vote_data: { approvals: approvals },
+          vote_data: { approvals },
           is_verified: true
         })
 
       if (voteError) {
-        devLog('Error storing approval vote:', voteError)
+        devLog('Error storing approval vote:', { error: voteError.message })
         throw new Error('Failed to submit approval vote')
       }
 
@@ -145,29 +120,54 @@ export async function POST(
         privacyLevel: privacy_level,
         responseTime: Date.now() - Date.now()
       })
+    } else if (pollData.voting_method === 'multiple') {
+      // For multiple choice voting, store the selections in vote_data
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          option_id: selections[0] || '', // Use first selection as primary option_id
+          voting_method: 'multiple',
+          vote_data: { selections },
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing multiple choice vote:', { error: voteError.message })
+        throw new Error('Failed to submit multiple choice vote')
+      }
+
+      // Record analytics for the vote
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        const errorMessage = analyticsError instanceof Error ? analyticsError.message : String(analyticsError);
+        devLog('Analytics recording failed for vote:', { error: errorMessage });
+        // Don't fail the vote if analytics fails
+      }
+
+      // Return success response
+      return NextResponse.json({
+        success: true,
+        message: 'Multiple choice vote submitted successfully',
+        pollId,
+        voteId: 'multiple-choice-vote',
+        privacyLevel: privacy_level,
+        responseTime: Date.now() - Date.now()
+      })
     } else {
-      // Hybrid voting service temporarily disabled
-      throw new Error('Advanced voting methods temporarily disabled')
+      // Advanced voting methods not yet implemented
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Advanced voting methods are not yet available',
+          message: `Voting method '${pollData.voting_method}' is not supported. Supported methods: single, approval, multiple.`
+        },
+        { status: 400 }
+      );
     }
-
-    // Record analytics for the vote
-    try {
-      const analyticsService = AnalyticsService.getInstance()
-      await analyticsService.recordPollAnalytics(user.id, pollId)
-    } catch (analyticsError) {
-      devLog('Analytics recording failed for vote:', analyticsError)
-      // Don't fail the vote if analytics fails
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Vote submitted successfully',
-      poll_id: pollId,
-      privacy_level: privacy_level,
-      response_time: Date.now(),
-      audit_receipt: 'vote-receipt',
-      vote_confirmed: true
-    })
 
   } catch (error) {
     console.error('POST Vote API error:', error);
@@ -188,49 +188,22 @@ export async function POST(
 // HEAD /api/polls/[id]/vote - Check if user has voted (returns boolean only)
 export async function HEAD(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id
 
     if (!pollId) {
       return new NextResponse(null, { status: 204 }) // Not voted
     }
 
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
-    
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-    } else {
-      supabase = await getSupabaseServerClient();
-    }
+    // Always use regular client - no E2E bypasses
+    const supabase = await getSupabaseServerClient();
 
-    // Get user; SSR internal fetch might be unauth'd — default to "no vote"
-    let user = null;
-    if (!isE2ETest) {
-      const { data: auth } = await supabase.auth.getUser()
-      user = auth?.user
-    } else {
-      // For E2E tests, use test user
-      user = {
-        id: '920f13c5-5cac-4e9f-b989-9e225a41b015', // Test user ID from database
-        email: 'user@example.com'
-      } as any;
-    }
+    // Get user - always require real authentication
+    const { data: auth } = await supabase.auth.getUser()
+    const user = auth?.user
     
     if (!user) {
       return new NextResponse(null, { status: 204 }) // unauth => not voted
@@ -261,10 +234,11 @@ export async function HEAD(
 // GET /api/polls/[id]/vote - Check if user has voted (returns boolean only)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required')
@@ -276,34 +250,8 @@ export async function GET(
       throw new Error('Supabase client not available')
     }
 
-    // Check authentication
-    let user = await getUser()
-    
-    // E2E bypass for testing
-    if (!user && request.headers.get('x-e2e-bypass') === '1') {
-      const supabase = await getSupabaseServerClient()
-      // Use service role to bypass RLS
-      const { data: testUser, error: testUserError } = await supabase
-        .from('user_profiles')
-        .select('user_id, email')
-        .eq('email', 'user@example.com')
-        .single()
-        
-      if (testUserError) {
-        console.error('Error fetching test user for E2E bypass:', testUserError);
-      }
-      
-      if (testUser) {
-        user = { 
-          id: testUser.user_id, 
-          email: testUser.email,
-          app_metadata: {},
-          user_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString()
-        } as any
-      }
-    }
+    // Always require real authentication - no E2E bypasses
+    const user = await getUser()
     
     if (!user) {
       return NextResponse.json(
@@ -316,8 +264,8 @@ export async function GET(
     const { data: existingVote, error: voteError } = await supabase
       .from('votes')
       .select('id')
-      .eq('poll_id', pollId as any)
-      .eq('user_id', user.id as any)
+      .eq('poll_id', pollId)
+      .eq('user_id', user.id)
       .maybeSingle()
 
     // If there's an error or no vote found, user hasn't voted
@@ -329,13 +277,6 @@ export async function GET(
     })
 
   } catch (error) {
-    const appError = handleError(error as Error)
-    const userMessage = getUserMessage(appError)
-    const statusCode = getHttpStatus(appError)
-    
-    return NextResponse.json(
-      { error: userMessage },
-      { status: statusCode }
-    )
+    return createErrorResponse(error);
   }
 }

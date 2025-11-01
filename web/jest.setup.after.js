@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // Jest setup that runs after test environment is initialized
 require('@testing-library/jest-dom');
 const _React = require('react');

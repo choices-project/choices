@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
-
 export async function GET() {
   try {
-    // Skip database operations during build
-    if (process.env.NODE_ENV === 'production' && process.env.SUPABASE_SECRET_KEY === 'dev-only-secret') {
-      console.log('🏙️ Skipping database fetch during build...');
-      return NextResponse.json({
-        ok: true,
-        representatives: [],
-        message: 'Build-time placeholder - database operations skipped'
-      });
-    }
-    
     console.log('🏙️ Fetching Los Angeles local representatives...');
+    
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: 'Database connection not available'
+        },
+        { status: 500 }
+      );
+    }
     
     const { data: representatives, error } = await supabase
       .from('civics_representatives')

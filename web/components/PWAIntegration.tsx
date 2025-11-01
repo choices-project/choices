@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+
+
+import PWAInstaller from '@/features/pwa/components/PWAInstaller';
 import { usePWA } from '@/hooks/usePWA';
 import { logger } from '@/lib/logger';
-import PWAInstaller from '@/features/pwa/components/PWAInstaller';
 
 /**
  * PWA Integration Component

@@ -11,7 +11,7 @@ function byteLenFromPrefixed(v: string): number {
   const m = v.match(/^(base64|hex):(.*)$/);
   if (!m) return 0;
   const [, enc, body] = m;
-  return enc === 'hex' ? Buffer.from(body!, 'hex').length : Buffer.from(body!, 'base64').length;
+  return enc === 'hex' ? Buffer.from(body, 'hex').length : Buffer.from(body, 'base64').length;
 }
 
 export function assertPepperConfig() {

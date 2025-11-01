@@ -7,6 +7,7 @@
 
 import { logger } from '../../logger';
 import { withOptional } from '../../util/objects';
+
 import type { 
   GoogleCivicResponse, 
   GoogleCivicRepresentative, 

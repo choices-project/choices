@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { getCurrentUser } from '@/lib/core/auth/utils';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: data || null,
+      user: data ?? null,
       hasProfile: !!data
     });
 
