@@ -110,7 +110,8 @@ Get trending polls
 ## Key Features
 
 - Poll creation wizard (6 steps, Zustand state)
-- Trust-weighted voting (T0-T3 tiers)
+- Equal voting (all votes count equally, no weighting)
+- Trust tier analytics (filter results by T0-T3 for bot detection)
 - Multiple voting methods
 - Analytics tracking (participation, demographics)
 - Hashtag integration

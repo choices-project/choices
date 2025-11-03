@@ -95,12 +95,13 @@ export const vote = createSecureServerAction(
     }
 
     // Create vote records using the actual database schema
+    // Note: All votes count equally (no vote_weight column after Nov 2025 migration)
+    // trust_tier is recorded for analytics filtering only
     const voteData = validatedData.optionIds.map((optionId: string) => ({
       id: uuidv4(),
       poll_id: validatedData.pollId,
       user_id: validatedData.anonymous ? 'anonymous' : user.userId,
-      option_id: optionId,
-      vote_weight: 1
+      option_id: optionId
     }))
 
     const { error: voteError } = await supabase

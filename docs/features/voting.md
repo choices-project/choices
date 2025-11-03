@@ -27,14 +27,11 @@
 ## Database
 
 ### Tables
-- **votes** (12 columns)
+- **votes** (11 columns)
   - `id`, `poll_id`, `user_id`, `option_id`
-  - `trust_tier`, `vote_weight`
+  - `trust_tier` (for analytics filtering only)
   - `vote_status`, `voter_session`
-  
-- **trust_weighted_votes** (9 columns)
-  - Trust-weighted vote calculations
-  - `trust_tier`, `trust_weight`, `weighted_vote`
+  - **No vote_weight column** - all votes equal
 
 ---
 
@@ -65,13 +62,17 @@ if (!poll.allow_multiple_votes) {
 }
 ```
 
-### Trust Weighting
-- T0: Weight 1.0
-- T1: Weight 1.5
-- T2: Weight 2.0
-- T3: Weight 3.0
+### Trust Tier Analytics (Not Weighting)
+**All votes count equally** - no weighting applied to actual results.
 
-**RPC**: `calculate_trust_weighted_votes(p_poll_id)`
+**Analytics Only**: Trust tiers are recorded for post-hoc analysis:
+- Filter votes by tier range (e.g., T2-T3 only)
+- Compare T0-T1 vs T2-T3 to detect bot campaigns
+- Identify propaganda by divergence between tiers
+
+**RPC**: `get_poll_votes_by_trust_tier(poll_id, min_tier, max_tier)`
+
+**Example**: Compare unverified (T0-T1) vs verified (T2-T3) vote patterns to detect coordinated manipulation.
 
 ---
 
