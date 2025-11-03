@@ -1155,8 +1155,8 @@ async function calculateGrowthRate(hashtag: Hashtag): Promise<number> {
 
     if (previousError) throw previousError;
 
-    const recentCount = recentUsage?.length || 0;
-    const previousCount = previousUsage?.length || 0;
+    const recentCount = recentUsage?.length ?? 0;
+    const previousCount = previousUsage?.length ?? 0;
 
     // Calculate growth rate as percentage change
     if (previousCount === 0) {
@@ -1186,7 +1186,7 @@ async function calculateUsage24h(hashtag: Hashtag): Promise<number> {
 
     if (error) throw error;
 
-    return data?.length || 0;
+    return data?.length ?? 0;
   } catch (error) {
     console.error('Failed to calculate 24h usage:', error);
     return 0;
@@ -1208,7 +1208,7 @@ async function calculateUsage7d(hashtag: Hashtag): Promise<number> {
 
     if (error) throw error;
 
-    return data?.length || 0;
+    return data?.length ?? 0;
   } catch (error) {
     console.error('Failed to calculate 7d usage:', error);
     return 0;
@@ -1257,7 +1257,7 @@ async function getUserCustomHashtags(userId: string): Promise<string[]> {
 
     if (error) throw error;
 
-    return data?.map(h => h.name) || [];
+    return data?.map(h => h.name) ?? [];
   } catch (error) {
     console.error('Failed to get user custom hashtags:', error);
     return [];
@@ -1286,7 +1286,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
         .select('trending_score')
         .eq('id', hashtagId)
         .single();
-      historicalData = result.data ? [{ position_rank: Math.max(1, 100 - (result.data.trending_score || 0)) }] : [];
+      historicalData = result.data ? [{ position_rank: Math.max(1, 100 - (result.data.trending_score ?? 0)) }] : [];
       error = result.error;
     }
 
@@ -1439,8 +1439,8 @@ async function getRecentActivity() {
       hashtag_id: usage.hashtag_id,
       hashtag: {
         id: usage.hashtag_id,
-        name: usage.hashtag?.name || '',
-        display_name: usage.hashtag?.name || '',
+        name: usage.hashtag?.name ?? '',
+        display_name: usage.hashtag?.name ?? '',
         usage_count: 0,
         follower_count: 0,
         is_trending: false,
@@ -1457,7 +1457,7 @@ async function getRecentActivity() {
       context: undefined,
       sentiment: 'neutral' as const,
       engagement_score: 0
-    })) || [];
+    })) ?? [];
   } catch (error) {
     console.error('Failed to get recent activity:', error);
     return [];
@@ -1473,7 +1473,7 @@ export async function updateUserPreferences(preferences: Partial<any>): Promise<
     const { data, error } = await supabase
       .from('hashtag_user_preferences')
       .upsert({
-        user_id: preferences.user_id || '',
+        user_id: preferences.user_id ?? '',
         preferences: preferences as unknown as any,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

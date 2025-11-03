@@ -149,7 +149,7 @@ export class DataValidationPipeline {
       },
       fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
         contact: Object.assign({}, rep.contact, {
-          phone: rep.contact.phone?.replace(/[^\d\s\-\(\)]/g, ''),
+          phone: rep.contact.phone?.replace(/[^\d\s\-()]/g, ''),
           email: rep.contact.email?.toLowerCase().trim(),
           website: rep.contact.website?.startsWith('http') ? rep.contact.website : 
                    rep.contact.website ? `https://${rep.contact.website}` : rep.contact.website

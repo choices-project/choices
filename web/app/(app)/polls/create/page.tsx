@@ -507,7 +507,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium block mb-2">Privacy Level</label>
                     <select
                       value={data.settings.privacyLevel}
-                      onChange={(e) => handleUpdateSettings({ privacyLevel: e.target.value as any })}
+                      onChange={(e) => handleUpdateSettings({ privacyLevel: e.target.value as 'public' | 'private' | 'invite-only' })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="public">Public</option>
@@ -520,7 +520,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium block mb-2">Voting Method</label>
                     <select
                       value={data.settings.votingMethod}
-                      onChange={(e) => handleUpdateSettings({ votingMethod: e.target.value as any })}
+                      onChange={(e) => handleUpdateSettings({ votingMethod: e.target.value as 'single' | 'multiple' | 'ranked' | 'approval' })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="single">Single Choice</option>

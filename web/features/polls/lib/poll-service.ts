@@ -11,7 +11,7 @@ import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-type PollRow = Database['public']['Tables']['polls']['Row'];
+type _PollRow = Database['public']['Tables']['polls']['Row'];
 
 export type PerformanceMetrics = {
   metricName: string;

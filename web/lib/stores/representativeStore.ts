@@ -244,11 +244,19 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               throw new Error('Failed to fetch user representatives');
             }
 
-            const data = await response.json();
+            const data = await response.json() as {
+              success: boolean;
+              data?: {
+                representatives?: Array<{
+                  follow: { id: string; created_at: string; updated_at: string };
+                  representative: { id: number };
+                }>;
+              };
+            };
 
-            if (data.success && data.data) {
+            if (data.success && data.data?.representatives) {
               set(state => {
-                state.userRepresentatives = (data.data.representatives ?? []).map((item: any) => ({
+                state.userRepresentatives = data.data.representatives.map((item) => ({
                   id: item.follow.id,
                   user_id: '', // Set from auth context when needed
                   representative_id: item.representative.id,
@@ -257,8 +265,8 @@ const useRepresentativeStore = create<RepresentativeStore>()(
                   updated_at: item.follow.updated_at
                 }));
                 // Update followed list
-                state.followedRepresentatives = (data.data.representatives ?? []).map(
-                  (item: any) => item.representative.id
+                state.followedRepresentatives = data.data.representatives.map(
+                  (item) => item.representative.id
                 );
                 state.loading = false;
               });

@@ -25,8 +25,8 @@ export function HashtagInput({
   maxHashtags = 10,
   showSuggestions = true,
   className = "",
-  maxTags = 10,
-  allowCustom = true
+  maxTags: _maxTags = 10,
+  allowCustom: _allowCustom = true
 }: HashtagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<HashtagSuggestion[]>([]);
@@ -208,7 +208,7 @@ export function HashtagInput({
           ref={suggestionsRef}
           className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
         >
-          {suggestions.map((suggestion, index) => (
+          {suggestions.map((suggestion, _index) => (
             <div
               key={suggestion.hashtag.id}
               onClick={() => handleSuggestionClick(suggestion)}

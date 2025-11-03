@@ -13,8 +13,6 @@
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 
-import type { Database } from '@/types/database';
-
 import type {
   AdminNotification,
   TrendingTopic,

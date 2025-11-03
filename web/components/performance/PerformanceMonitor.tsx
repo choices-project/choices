@@ -64,7 +64,7 @@ export default function PerformanceMonitor({
   }, []);
 
   // Update metrics from performance data
-  const updateMetrics = useCallback((newMetrics: Partial<PerformanceMetrics>) => {
+  const _updateMetrics = useCallback((newMetrics: Partial<PerformanceMetrics>) => {
     setMetrics(prev => ({
       ...prev,
       ...newMetrics

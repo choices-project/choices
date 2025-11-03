@@ -36,6 +36,7 @@ import {
 } from '../utils/hashtag-utils';
 
 // Get filtering methods from the store
+// Note: This helper is currently unused but kept for future hashtag filtering UI
 const useHashtagFilters = () => {
   const store = useHashtagStore();
   return {

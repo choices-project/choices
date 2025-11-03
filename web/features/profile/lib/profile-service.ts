@@ -105,7 +105,7 @@ export function transformApiResponseToProfile(apiData: any): ProfileUser | null 
     return null;
   }
 
-  const profileAny = profile as any
+  const profileAny = profile
   return {
     id: profile.id ?? profile.userid ?? profile.user_id,
     email: profile.email,

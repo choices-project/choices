@@ -344,7 +344,7 @@ export class AdvisoryBoardManager {
    * Get meeting by ID
    */
   async getMeeting(meetingId: string): Promise<MeetingInvite | null> {
-    return this.meetings.get(meetingId) || null;
+    return this.meetings.get(meetingId) ?? null;
   }
 
   /**

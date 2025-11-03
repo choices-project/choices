@@ -8,6 +8,7 @@
  * Status: ✅ FOUNDATION
  */
 
+import { logger } from '@/lib/utils/logger';
 import type {
   Representative,
   RepresentativeSearchQuery,
@@ -17,7 +18,6 @@ import type {
   RepresentativeListResponse
 } from '@/types/representative';
 
-import { logger } from '@/lib/utils/logger';
 
 // Note: We don't import civicsIntegration here because it contains server-only code
 // Client-side code should call API routes instead

@@ -82,7 +82,7 @@ export default function VotingInterface({
 
       if (!response.ok) {
         const errorData = await response.json() as { error?: string };
-        throw new Error(errorData.error || 'Failed to submit vote');
+        throw new Error(errorData.error ?? 'Failed to submit vote');
       }
 
       const _result = await response.json() as { ok: boolean; id?: string };
@@ -146,7 +146,7 @@ export default function VotingInterface({
 
         if (!response.ok) {
           const errorData = await response.json() as { error?: string };
-          throw new Error(errorData.error || 'Failed to submit vote');
+          throw new Error(errorData.error ?? 'Failed to submit vote');
         }
 
         const _result = await response.json() as { ok: boolean; id?: string };

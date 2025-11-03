@@ -9,13 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { logger } from '@/lib/utils/logger'
+import type { CandidatePlatformRow } from '@/types/candidate'
 
 export default function EditPlatformPage() {
   const router = useRouter()
   const params = useParams()
   const platformId = params.id as string
 
-  const [platform, setPlatform] = useState<any>(null)
+  const [platform, setPlatform] = useState<CandidatePlatformRow | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +27,7 @@ export default function EditPlatformPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success && data.platforms) {
-          const found = data.platforms.find((p: any) => p.id === platformId)
+          const found = data.platforms.find((p: CandidatePlatformRow) => p.id === platformId)
           if (found) {
             setPlatform(found)
           } else {

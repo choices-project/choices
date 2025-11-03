@@ -36,7 +36,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
         
         if (data.progress) {
           setProgress(data.progress)
-          setChecklist(data.checklist || [])
+          setChecklist(data.checklist ?? [])
           setNextAction(data.nextAction)
         }
       } catch (error) {
@@ -118,7 +118,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
                     asChild
                   >
                     <a href={nextAction.actionUrl}>
-                      {nextAction.actionLabel || 'Take Action'}
+                      {nextAction.actionLabel ?? 'Take Action'}
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </a>
                   </Button>
@@ -195,7 +195,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
                       asChild
                     >
                       <a href={item.actionUrl}>
-                        {item.actionLabel || 'Take action'}
+                        {item.actionLabel ?? 'Take action'}
                         <ArrowRight className="w-3 h-3 ml-1" />
                       </a>
                     </Button>

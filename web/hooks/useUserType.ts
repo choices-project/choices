@@ -170,15 +170,16 @@ export function useUserType(userId?: string) {
     let totalChecks = 0
 
     switch (userType) {
-      case 'newcomer':
+      case 'newcomer': {
         const newcomerThresholds = DEFAULT_THRESHOLDS.newcomer
         if (behavior.polls_created <= newcomerThresholds.max_polls_created) score++
         if (behavior.votes_cast <= newcomerThresholds.max_votes_cast) score++
         if (behavior.sessions <= newcomerThresholds.max_sessions) score++
         totalChecks = 3
         break
+      }
 
-      case 'active':
+      case 'active': {
         const activeThresholds = DEFAULT_THRESHOLDS.active
         if (behavior.polls_created >= activeThresholds.min_polls_created) score++
         if (behavior.votes_cast >= activeThresholds.min_votes_cast) score++
@@ -186,8 +187,9 @@ export function useUserType(userId?: string) {
         if (behavior.polls_created <= activeThresholds.max_polls_created) score++
         totalChecks = 4
         break
+      }
 
-      case 'power_user':
+      case 'power_user': {
         const powerUserThresholds = DEFAULT_THRESHOLDS.power_user
         if (behavior.polls_created >= powerUserThresholds.min_polls_created) score++
         if (behavior.votes_cast >= powerUserThresholds.min_votes_cast) score++
@@ -195,8 +197,9 @@ export function useUserType(userId?: string) {
         if (Object.keys(behavior.feature_usage).length >= powerUserThresholds.min_feature_usage) score++
         totalChecks = 4
         break
+      }
 
-      case 'influencer':
+      case 'influencer': {
         const influencerThresholds = DEFAULT_THRESHOLDS.influencer
         if (behavior.polls_created >= influencerThresholds.min_polls_created) score++
         if (behavior.votes_cast >= influencerThresholds.min_votes_cast) score++

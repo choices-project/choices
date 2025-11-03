@@ -108,9 +108,9 @@ type UserStore = {
   // Actions - Profile Editing
   setProfileEditData: (data: ProfileUpdateData) => void;
   updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
-  updateProfileField: (field: keyof ProfileUpdateData, value: any) => void;
+  updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => void;
   updateArrayField: (field: 'primaryconcerns' | 'communityfocus', value: string) => void;
-  updatePrivacySetting: (setting: keyof ProfileUpdateData['privacysettings'], value: any) => void;
+  updatePrivacySetting: (setting: keyof ProfileUpdateData['privacysettings'], value: ProfileUpdateData['privacysettings'][keyof ProfileUpdateData['privacysettings']]) => void;
   setProfileEditing: (editing: boolean) => void;
   setProfileEditError: (field: string, error: string) => void;
   clearProfileEditError: (field: string) => void;

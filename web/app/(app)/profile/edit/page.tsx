@@ -34,12 +34,12 @@ type UserProfile = {
   created_at: string
   updated_at: string
   // Enhanced profile fields
-  preferences?: Record<string, any>
+  preferences?: Record<string, unknown>
   privacy_settings?: PrivacySettings
   primary_concerns?: string[]
   community_focus?: string[]
   participation_style?: 'observer' | 'contributor' | 'leader'
-  demographics?: Record<string, any>
+  demographics?: Record<string, unknown>
 }
 
 type PrivacySettings = {
@@ -275,7 +275,7 @@ export default function EditProfilePage() {
     }))
   }, [])
 
-  const handlePrivacyChange = useCallback((key: keyof PrivacySettings, value: any) => {
+  const handlePrivacyChange = useCallback((key: keyof PrivacySettings, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       privacysettings: {

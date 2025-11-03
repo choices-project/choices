@@ -106,7 +106,7 @@ export function useDeviceDetection() {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       try {
         const estimate = await navigator.storage.estimate()
-        capabilities.storage_quota = estimate.quota || 0
+        capabilities.storage_quota = estimate.quota ?? 0
       } catch (error) {
         devLog('Error checking storage quota:', error)
       }
@@ -116,7 +116,7 @@ export function useDeviceDetection() {
     if ('connection' in navigator) {
       const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
       if (connection) {
-        capabilities.connection_type = connection.effectiveType || 'unknown'
+        capabilities.connection_type = connection.effectiveType ?? 'unknown'
         capabilities.network_speed = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 
                                    connection.effectiveType === '3g' ? 'medium' : 'fast'
       }

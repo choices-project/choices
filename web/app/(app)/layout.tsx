@@ -3,10 +3,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { useState, useEffect } from 'react';
 
+import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
-import EnhancedFeedbackWidget from '@/features/analytics/components/FeedbackWidget';
 import PWABackground from '@/features/pwa/components/PWABackground';
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import { initializePWA } from '@/lib/pwa/init'

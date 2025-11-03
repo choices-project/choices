@@ -99,7 +99,7 @@ export default function CivicsPage() {
   const filteredRepresentatives = representatives.filter(rep =>
     rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     rep.office.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (rep.party && rep.party.toLowerCase().includes(searchTerm.toLowerCase()))
+    rep.party?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getLevelIcon = (level: string) => {

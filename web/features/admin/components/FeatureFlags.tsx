@@ -61,7 +61,7 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
           onFlagChange?.(flagId, !featureFlags.flags[flagId]);
         }
       } else {
-        setFeatureFlagError(data.error || `Failed to toggle flag: ${flagId}`);
+        setFeatureFlagError(data.error ?? `Failed to toggle flag: ${flagId}`);
       }
     } catch (error) {
       setFeatureFlagError(`Error toggling flag: ${error instanceof Error ? error.message : String(error)}`);
@@ -102,7 +102,7 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
             } else {
               setFeatureFlagError('Invalid configuration format');
             }
-          } catch (parseError) {
+          } catch {
             setFeatureFlagError('Invalid JSON format');
           }
         } else {

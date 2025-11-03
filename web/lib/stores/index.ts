@@ -17,7 +17,7 @@ export {
   useUserIsUploadingAvatar
 } from './userStore';
 export { usePollsStore, usePollsActions } from './pollsStore';
-export { useHashtagStore, useHashtagActions, useHashtagStats } from './hashtagStoreMinimal';
+export { useHashtagStore, useHashtagActions, useHashtagStats } from './hashtagStore';
 export { useProfileStore } from './profileStore';
 export { 
   useAdminStore,

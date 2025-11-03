@@ -17,12 +17,57 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/logger'
+import { 
+  useAnalyticsActions,
+  useAnalyticsLoading,
+  useAnalyticsError
+} from '@/lib/stores/analyticsStore'
+
+type UserJourney = {
+  currentPage?: string
+  currentPath?: string
+  pageTitle?: string
+  referrer?: string
+  userAgent?: string
+  screenResolution?: string
+  viewportSize?: string
+  timeOnPage?: number
+  sessionId?: string
+  sessionStartTime?: string
+  totalPageViews?: number
+  activeFeatures?: string[]
+  lastAction?: string
+  actionSequence?: string[]
+  pageLoadTime?: number
+  performanceMetrics?: {
+    fcp?: number
+    lcp?: number
+    fid?: number
+    cls?: number
+  }
+  errors?: Array<{
+    type: string
+    message: string
+    stack?: string
+    timestamp: string
+  }>
+  deviceInfo?: {
+    type: 'mobile' | 'tablet' | 'desktop'
+    os: string
+    browser: string
+    language: string
+    timezone: string
+  }
+  isAuthenticated?: boolean
+  userRole?: string
+  userId?: string
+}
 
 type FeedbackData = {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
@@ -30,7 +75,7 @@ type FeedbackData = {
   description: string
   sentiment: 'positive' | 'negative' | 'neutral' | 'mixed'
   screenshot?: string
-  userJourney: any
+  userJourney: UserJourney
 }
 
 const EnhancedFeedbackWidget: React.FC = () => {
@@ -47,7 +92,29 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [capturingScreenshot, setCapturingScreenshot] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [feedbackTracker, setFeedbackTracker] = useState<any>(null)
+  const [feedbackTracker, setFeedbackTracker] = useState<ReturnType<typeof getFeedbackTracker> | null>(null)
+
+  // Get analytics store state and actions with proper memoization
+  const analyticsActions = useAnalyticsActions()
+  const _isLoadingAnalytics = useAnalyticsLoading()
+  const error = useAnalyticsError()
+  
+  // Memoize the actions to prevent unnecessary re-renders
+  const { trackEvent, trackUserAction, setLoading: _setAnalyticsLoading, setError: setAnalyticsError } = useMemo(() => analyticsActions as {
+    trackEvent: (event: {
+      event_type: string
+      type: string
+      category: string
+      action: string
+      label: string
+      event_data: Record<string, unknown>
+      created_at: string
+      session_id: string
+    }) => void
+    trackUserAction: (action: string, category: string, label?: string, value?: number) => void
+    setLoading: (loading: boolean) => void
+    setError: (error: string | null) => void
+  }, [analyticsActions])
 
   // Initialize feedback tracker on mount
   useEffect(() => {
@@ -56,41 +123,76 @@ const EnhancedFeedbackWidget: React.FC = () => {
     }
   }, [])
 
-  // Track user journey on mount
+  // Track user journey on mount - fixed to prevent infinite loop
   useEffect(() => {
     if (!feedbackTracker) return
     const userJourney = feedbackTracker.captureUserJourney()
-    setFeedback(prev => ({
-      ...prev,
-      userJourney
-    }))
-  }, [feedbackTracker])
+    setFeedback(prev => {
+      // Only update if the userJourney has actually changed
+      if (JSON.stringify(prev.userJourney) !== JSON.stringify(userJourney)) {
+        return { ...prev, userJourney }
+      }
+      return prev
+    })
+  }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
 
   // Check feature flag after hooks
   if (!FEATURE_FLAGS.FEEDBACK_WIDGET) {
     return null
   }
 
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-sm">
+          <div className="flex items-center">
+            <div className="text-red-600 text-sm">
+              <strong>Error:</strong> {error}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const handleOpen = () => {
     setIsOpen(true)
     setStep('type')
     
-    // Update user journey when widget opens
+    // Update user journey when widget opens - fixed to prevent infinite loop
     if (feedbackTracker) {
       const userJourney = feedbackTracker.captureUserJourney()
-      setFeedback(prev => ({
-        ...prev,
-        userJourney
-      }))
-    }
-    
-    // Track analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedbackwidgetopened', {
-        page: window.location.pathname,
-        sessionid: feedback.userJourney?.sessionId || 'unknown'
+      setFeedback(prev => {
+        // Only update if the userJourney has actually changed
+        if (JSON.stringify(prev.userJourney) !== JSON.stringify(userJourney)) {
+          return { ...prev, userJourney }
+        }
+        return prev
       })
     }
+    
+    // Track analytics using store
+    trackUserAction('feedback_widget_opened', 'engagement', 'Feedback Widget')
+    trackEvent({
+      event_type: 'user_action',
+      type: 'user_action',
+      category: 'engagement',
+      action: 'feedback_widget_opened',
+      label: 'Feedback Widget',
+      event_data: {
+        type: 'user_action',
+        category: 'engagement',
+        action: 'feedback_widget_opened',
+        label: 'Feedback Widget',
+        metadata: {
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+          sessionId: feedback.userJourney?.sessionId ?? 'unknown'
+        }
+      },
+      created_at: new Date().toISOString(),
+      session_id: feedback.userJourney?.sessionId ?? 'anonymous'
+    })
   }
 
   const handleClose = () => {
@@ -205,14 +307,28 @@ const EnhancedFeedbackWidget: React.FC = () => {
         setShowSuccess(true)
         setStep('success')
         
-        // Track successful submission
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedbacksubmitted', {
-            feedbacktype: feedback.type,
-            sentiment: feedback.sentiment,
-            page: feedback.userJourney?.currentPage || 'unknown'
-          })
-        }
+        // Track successful submission using analytics store
+        trackUserAction('feedback_submitted', 'engagement', 'Feedback Submission')
+        trackEvent({
+          event_type: 'user_action',
+          type: 'user_action',
+          category: 'engagement',
+          action: 'feedback_submitted',
+          label: 'Feedback Submission',
+          event_data: {
+            type: 'user_action',
+            category: 'engagement',
+            action: 'feedback_submitted',
+            label: 'Feedback Submission',
+            metadata: {
+              feedbackType: feedback.type,
+              sentiment: feedback.sentiment,
+              page: feedback.userJourney?.currentPage ?? 'unknown'
+            }
+          },
+          created_at: new Date().toISOString(),
+          session_id: feedback.userJourney?.sessionId ?? 'anonymous'
+        })
 
         // Auto-close after 3 seconds
         setTimeout(() => {
@@ -228,9 +344,30 @@ const EnhancedFeedbackWidget: React.FC = () => {
       setShowSuccess(false)
       setStep('sentiment') // Go back to previous step
       
-      // More user-friendly error message
-      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to submit feedback'
-      alert(`Feedback submission failed: ${errorMessage}. Please try again.`)
+      // Set error in analytics store
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
+      setAnalyticsError(errorMessage)
+      
+      // Track error event
+      trackEvent({
+        event_type: 'error',
+        type: 'error',
+        category: 'feedback',
+        action: 'feedback_submission_failed',
+        label: errorMessage,
+        event_data: {
+          type: 'error',
+          category: 'feedback',
+          action: 'feedback_submission_failed',
+          label: errorMessage,
+          metadata: {
+            feedbackType: feedback.type,
+            sentiment: feedback.sentiment
+          }
+        },
+        created_at: new Date().toISOString(),
+        session_id: feedback.userJourney?.sessionId ?? 'anonymous'
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -492,7 +629,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </p>
                       
                       <div className="flex items-center justify-center gap-1 text-yellow-500">
-                        {[1, 2, 3, 4, 5].map((star: any) => (
+                        {[1, 2, 3, 4, 5].map((star: number) => (
                           <Star key={star} className="w-5 h-5 fill-current" />
                         ))}
                       </div>

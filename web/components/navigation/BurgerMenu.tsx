@@ -130,7 +130,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
             {user.avatar ? (
               <Image
                 src={user.avatar}
-                alt={user.name || 'User avatar'}
+                alt={user.name ?? 'User avatar'}
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-full"
@@ -142,7 +142,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
             )}
             <div>
               <div className="font-medium text-gray-900">
-                {user.name || 'User'}
+                {user.name ?? 'User'}
               </div>
               <div className="text-sm text-gray-500">
                 {user.email}

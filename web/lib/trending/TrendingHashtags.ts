@@ -118,7 +118,7 @@ export class TrendingHashtagsTracker {
     this.hashtagUsage.forEach(u => {
       const t = new Date(u.timestamp);
       if (t > last7Days && t <= last24Hours) {
-        baselineCounts[u.hashtag] = (baselineCounts[u.hashtag] || 0) + 1;
+        baselineCounts[u.hashtag] = (baselineCounts[u.hashtag] ?? 0) + 1;
       }
     });
 
@@ -135,14 +135,14 @@ export class TrendingHashtagsTracker {
     // Category breakdown
     const categoryBreakdown: Record<string, number> = {};
     recentUsage.forEach(usage => {
-      const category = usage.metadata?.category || 'general';
-      categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1;
+      const category = usage.metadata?.category ?? 'general';
+      categoryBreakdown[category] = (categoryBreakdown[category] ?? 0) + 1;
     });
 
     // User engagement
     const userEngagement: Record<string, number> = {};
     recentUsage.forEach(usage => {
-      userEngagement[usage.userId] = (userEngagement[usage.userId] || 0) + 1;
+      userEngagement[usage.userId] = (userEngagement[usage.userId] ?? 0) + 1;
     });
 
     // Viral potential (hashtags with high growth rate and engagement)
@@ -216,8 +216,8 @@ export class TrendingHashtagsTracker {
     // Top categories
     const categoryCount: Record<string, number> = {};
     hashtagUsage.forEach(usage => {
-      const category = usage.metadata?.category || 'general';
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
+      const category = usage.metadata?.category ?? 'general';
+      categoryCount[category] = (categoryCount[category] ?? 0) + 1;
     });
     
     const topCategories = Object.entries(categoryCount)

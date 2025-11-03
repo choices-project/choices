@@ -135,8 +135,8 @@ export async function verifyRegistrationResponse(
   response: RegistrationResponse,
   expectedChallenge: string,
   expectedOrigin: string,
-  expectedRPID: string,
-  credentialData?: WebAuthnCredential
+  _expectedRPID: string,
+  _credentialData?: WebAuthnCredential
 ): Promise<VerificationResult> {
   try {
     // Parse client data
@@ -178,7 +178,7 @@ export async function verifyRegistrationResponse(
     
     // Parse attestation object
     const attestationObject = response.response.attestationObject;
-    const attestationData = new Uint8Array(attestationObject);
+    const _attestationData = new Uint8Array(attestationObject);
     
     // Extract credential ID and public key from attestation object
     // This is a simplified implementation - in production, you'd need to
@@ -192,8 +192,8 @@ export async function verifyRegistrationResponse(
       publicKey,
       counter: 0,
       transports: response.clientExtensionResults?.credProps?.rk ? ['internal'] : [],
-      backupEligible: response.clientExtensionResults?.credProps?.rk || false,
-      backupState: response.clientExtensionResults?.credProps?.rk || false
+      backupEligible: response.clientExtensionResults?.credProps?.rk ?? false,
+      backupState: response.clientExtensionResults?.credProps?.rk ?? false
     };
     
   } catch (error) {
@@ -214,7 +214,7 @@ export async function verifyAuthenticationResponse(
   response: AuthenticationResponse,
   expectedChallenge: string,
   expectedOrigin: string,
-  expectedRPID: string,
+  _expectedRPID: string,
   credentialData: WebAuthnCredential
 ): Promise<AuthenticationVerificationResult> {
   try {

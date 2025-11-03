@@ -40,18 +40,6 @@ type AnalyticsEvent = {
   }>;
 }
 
-// Advanced analytics metrics
-type AnalyticsMetrics = {
-  totalEvents: number;
-  uniqueUsers: number;
-  sessionDuration: number;
-  bounceRate: number;
-  conversionRate: number;
-  engagementScore: number;
-  trustScore: number;
-  participationRate: number;
-}
-
 // Chart data types for analytics visualization
 type ChartData = {
   name: string;

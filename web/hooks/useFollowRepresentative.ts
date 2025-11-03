@@ -59,10 +59,10 @@ export function useFollowRepresentative(representativeId: number | null) {
           throw new Error('Failed to check follow status');
         }
 
-        const data = await response.json();
+        const _data = await response.json();
         
         setStatus({
-          following: data.following ?? false,
+          following: _data.following ?? false,
           loading: false,
           error: null
         });
@@ -101,7 +101,7 @@ export function useFollowRepresentative(representativeId: number | null) {
         throw new Error(errorData.error ?? 'Failed to follow representative');
       }
 
-      const data = await response.json();
+      const _data = await response.json();
       
       setStatus({
         following: true,

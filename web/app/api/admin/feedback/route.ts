@@ -96,9 +96,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply additional search filtering if needed (for fields not in the database)
-    let filteredFeedback = feedback || [];
+    let filteredFeedback = feedback ?? [];
     if (feedback) {
-      filteredFeedback = feedback.filter((item: any) => {
+      filteredFeedback = feedback.filter((item: { title?: string; description?: string }) => {
         const searchLower = search.toLowerCase();
         return (
           (item && 'title' in item ? item.title?.toLowerCase().includes(searchLower) : false) ||

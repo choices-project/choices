@@ -2,10 +2,55 @@
 
 import React, { useState, useEffect } from 'react';
 
+type Feed = {
+  id: string;
+  title: string;
+  content: string;
+  description?: string;
+  summary?: string;
+  author?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    verified?: boolean;
+  };
+  category?: string;
+  tags?: string[];
+  type?: string;
+  source?: {
+    name: string;
+    url: string;
+    logo?: string;
+    verified?: boolean;
+  };
+  publishedAt?: string;
+  updatedAt?: string;
+  readTime?: number;
+  engagement?: {
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    views?: number;
+  };
+  userInteraction?: {
+    liked?: boolean;
+    shared?: boolean;
+    bookmarked?: boolean;
+    read?: boolean;
+  };
+  pollData?: {
+    id: string;
+    title: string;
+    options?: unknown[];
+    totalVotes?: number;
+    status?: string;
+    primaryHashtag?: string;
+  };
+};
 
 export default function FeedPage() {
   console.log('[FeedPage] Rendering');
-  const [feeds, setFeeds] = useState<any[]>([]);
+  const [feeds, setFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

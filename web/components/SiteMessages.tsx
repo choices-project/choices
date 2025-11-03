@@ -63,7 +63,7 @@ export default function SiteMessages({
       
       if (response.ok) {
         const data = await response.json()
-        setMessages(data.messages || [])
+        setMessages(data.messages ?? [])
       } else {
         setError('Failed to load messages')
       }
@@ -79,7 +79,7 @@ export default function SiteMessages({
     setDismissedMessages(prev => new Set([...prev, messageId]))
     
     // Store dismissal in localStorage for persistence
-    const stored = JSON.parse(localStorage.getItem('dismissedSiteMessages') || '[]')
+    const stored = JSON.parse(localStorage.getItem('dismissedSiteMessages') ?? '[]')
     stored.push(messageId)
     localStorage.setItem('dismissedSiteMessages', JSON.stringify(stored))
   }

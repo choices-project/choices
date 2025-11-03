@@ -277,8 +277,8 @@ class FeedbackTracker {
   private isUserAuthenticated(): boolean {
     // Check for authentication indicators
     return !!(
-      (typeof localStorage !== 'undefined' && localStorage.getItem('supabase.auth.token')) ||
-      (typeof document !== 'undefined' && document.querySelector('[data-auth="authenticated"]')) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('supabase.auth.token')) ??
+      (typeof document !== 'undefined' && document.querySelector('[data-auth="authenticated"]')) ??
       (typeof window !== 'undefined' && window.location.pathname.includes('/admin'))
     )
   }

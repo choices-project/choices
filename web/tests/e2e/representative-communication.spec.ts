@@ -4,15 +4,108 @@
  * Comprehensive end-to-end tests for representative communication features
  * 
  * Created: January 26, 2025
+ * Updated: November 3, 2025 - Added proper authentication setup
  */
 
 import { test, expect } from '@playwright/test';
 
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser,
+  waitForPageReady,
+  setupExternalAPIMocks
+} from './helpers/e2e-setup';
+
 test.describe('Representative Communication Features', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+  };
+
   test.beforeEach(async ({ page }) => {
-    // Navigate to app and authenticate
-    await page.goto('/');
-    // Assume authentication happens here (adjust based on your auth flow)
+    // Create unique test user for each test to ensure clean state
+    const timestamp = Date.now();
+    testData = {
+      user: createTestUser({
+        email: `rep-comm-${timestamp}@example.com`,
+        username: `repcomm${timestamp}`,
+        password: 'RepComm123!'
+      })
+    };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
+
+    // Set up test data
+    await setupE2ETestData({ user: testData.user });
+
+    // Register new user for clean test state
+    await page.goto('/register?e2e=1&method=password', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+
+    // Wait for register form hydration
+    try {
+      await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached', timeout: 10000 });
+      await page.waitForTimeout(500); // Wait for hydration to complete
+    } catch {
+      console.warn('⚠️ Register hydration sentinel not found, continuing...');
+    }
+
+    // Select password registration method
+    try {
+      const passwordButton = page.locator('button:has-text("Password Account")');
+      if (await passwordButton.isVisible({ timeout: 2000 })) {
+        await passwordButton.click();
+        await page.waitForTimeout(500);
+      }
+    } catch {
+      console.warn('⚠️ Password Account button not found, form might already be showing password fields');
+    }
+
+    // Fill registration form (using correct testids from actual page)
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="displayName"]', testData.user.username); // displayName is also required
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirmPassword"]', testData.user.password); // Note: camelCase, not kebab-case
+
+    // Submit registration (correct testid)
+    await page.click('[data-testid="register-submit"]');
+
+    // Wait for registration to complete and redirect
+    try {
+      // Wait for redirect to onboarding or dashboard
+      await page.waitForURL(/\/(onboarding|dashboard|representatives)/, { timeout: 15000 });
+      await waitForPageReady(page);
+    } catch (error) {
+      console.warn('⚠️ Registration redirect timeout');
+      
+      // Check current URL and page state
+      const currentUrl = page.url();
+      console.log('Current URL:', currentUrl);
+      
+      // Check for error messages on the page
+      const errorElement = await page.locator('[data-testid="register-error"]').textContent().catch(() => null);
+      if (errorElement) {
+        console.error('❌ Registration error:', errorElement);
+        throw new Error(`Registration failed: ${errorElement}`);
+      }
+      
+      // Check if we're on an authenticated page anyway
+      if (!currentUrl.includes('/register') && !currentUrl.includes('/login')) {
+        console.log('✅ User appears to be authenticated despite redirect timeout');
+        await waitForPageReady(page);
+      } else {
+        // We're still on register/login page - registration might have failed silently
+        console.error('❌ Still on registration page - registration may have failed');
+        throw new Error(`Registration did not complete. Current URL: ${currentUrl}`);
+      }
+    }
+  });
+
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({ user: testData.user });
   });
 
   test.describe('Message Templates', () => {

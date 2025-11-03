@@ -13,8 +13,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Use database types for actual schema
 
-type TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
-type UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
+type _TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
+type _UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
 type TrustTierAnalyticsFactors = {
   confidence_level?: number;
   data_quality_score?: number;

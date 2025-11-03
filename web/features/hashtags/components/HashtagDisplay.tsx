@@ -24,15 +24,15 @@ type HashtagDisplayProps = {
 export function HashtagDisplay({
   hashtags,
   showStats = true,
-  showTrending = true,
+  showTrending: _showTrending = true,
   maxDisplay = 10,
   className = "",
   onHashtagClick,
-  showCount = true,
-  showCategory = true,
-  clickable = true,
-  onFollow,
-  onUnfollow
+  showCount: _showCount = true,
+  showCategory: _showCategory = true,
+  clickable: _clickable = true,
+  onFollow: _onFollow,
+  onUnfollow: _onUnfollow
 }: HashtagDisplayProps) {
   const displayHashtags = hashtags.slice(0, maxDisplay);
   const remainingCount = hashtags.length - maxDisplay;

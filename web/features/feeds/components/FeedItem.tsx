@@ -12,6 +12,8 @@
 
 'use client';
 
+/// <reference types="node" />
+
 import { 
   HeartIcon, 
   ChatBubbleLeftIcon, 

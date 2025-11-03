@@ -3,9 +3,6 @@
 import { Fingerprint, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import React, { useState, useEffect, createContext, useContext } from 'react';
 
-
-
-
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

@@ -87,7 +87,7 @@ export default function ProgressiveDisclosure({
         onKeyDown={handleKeyDown}
         className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
         aria-expanded={expanded}
-        aria-label={ariaLabel || (expanded ? 'Collapse content' : 'Expand content')}
+        aria-label={ariaLabel ?? (expanded ? 'Collapse content' : 'Expand content')}
         disabled={isAnimating}
       >
         <div className="flex-1">

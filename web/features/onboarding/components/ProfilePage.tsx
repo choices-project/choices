@@ -61,8 +61,8 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto p-6">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {profileError || 'Failed to load profile. Please try again.'}
+      <AlertDescription>
+        {profileError ?? 'Failed to load profile. Please try again.'}
           </AlertDescription>
         </Alert>
       </div>

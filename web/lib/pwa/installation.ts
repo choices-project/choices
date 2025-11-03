@@ -115,7 +115,7 @@ class PWAInstallationManager {
       isInstallable: !!this.deferredPrompt,
       isInstalled: this.isInstalled,
       canPrompt: !!this.deferredPrompt && !this.isInstalled,
-      platform: this.deferredPrompt?.platforms?.[0] || null,
+      platform: this.deferredPrompt?.platforms?.[0] ?? null,
       deferredPrompt: this.deferredPrompt
     };
   }

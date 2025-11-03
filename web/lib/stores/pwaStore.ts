@@ -13,11 +13,12 @@ import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
+import type { BeforeInstallPromptEvent } from '@/types/pwa';
 
 // PWA data types
 export type PWAInstallation = {
   isInstalled: boolean;
-  installPrompt: any; // BeforeInstallPromptEvent
+  installPrompt: BeforeInstallPromptEvent | null;
   canInstall: boolean;
   installSource: 'browser' | 'app_store' | 'play_store' | 'manual';
   installedAt?: string;
@@ -35,7 +36,7 @@ export type PWAOffline = {
     queuedActions: Array<{
       id: string;
       action: string;
-      data: any;
+      data: unknown;
       timestamp: string;
     }>;
   };

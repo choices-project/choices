@@ -152,7 +152,7 @@ export async function calculateTrendingHashtags(
     // Calculate trending scores and create trending hashtags
     const trendingHashtags: TrendingHashtag[] = [];
 
-    for (const hashtag of hashtags || []) {
+    for (const hashtag of hashtags ?? []) {
       if (category && String(hashtag.category) !== category) continue;
 
       const metrics = hashtagMetrics.get(hashtag.id);
@@ -282,7 +282,7 @@ export async function getCrossFeatureDiscovery(
       .select('hashtag_id, hashtag:hashtags(*)')
       .eq('user_id', userId);
 
-    const currentHashtagIds = userHashtags?.map(uh => uh.hashtag_id) || [];
+    const currentHashtagIds = userHashtags?.map(uh => uh.hashtag_id) ?? [];
 
     // Get profile-based suggestions
     const profileSuggestions = await getProfileBasedSuggestions(userId, currentHashtagIds, limit);
@@ -337,12 +337,12 @@ async function getHashtagUsageData(hashtagId: string, startDate: string, endDate
   if (error) throw error;
 
   return {
-    totalUsage: data?.length || 0,
-    totalViews: data?.reduce((sum, usage) => sum + (usage.views || 0), 0) || 0,
-    currentUsage: data?.length || 0,
+    totalUsage: data?.length ?? 0,
+    totalViews: data?.reduce((sum, usage) => sum + (usage.views ?? 0), 0) ?? 0,
+    currentUsage: data?.length ?? 0,
     previousUsage: await getPreviousPeriodUsage(hashtagId, startDate, endDate),
     peakUsage: Math.max(...(data?.map(_d => 1) || [0])),
-    averageUsage: data?.length || 0
+    averageUsage: data?.length ?? 0
   };
 }
 
@@ -357,10 +357,10 @@ async function getHashtagEngagementData(_hashtagId: string, _startDate: string, 
   if (error) throw error;
 
   return {
-    totalInteractions: data?.length || 0,
-    clicks: data?.filter(d => d.engagement_type === 'click').length || 0,
-    shares: data?.filter(d => d.engagement_type === 'share').length || 0,
-    views: data?.filter(d => d.engagement_type === 'view').length || 0
+    totalInteractions: data?.length ?? 0,
+    clicks: data?.filter(d => d.engagement_type === 'click').length ?? 0,
+    shares: data?.filter(d => d.engagement_type === 'share').length ?? 0,
+    views: data?.filter(d => d.engagement_type === 'view').length ?? 0
   };
 }
 
@@ -395,7 +395,7 @@ async function getHashtagContentData(hashtagId: string, startDate: string, endDa
   if (error) throw error;
 
   return {
-    topContent: data?.map(d => d.content_id) || []
+    topContent: data?.map(d => d.content_id) ?? []
   };
 }
 
@@ -521,7 +521,7 @@ async function getGeographicDistribution(hashtagId: string, startDate: string, e
     usageData?.forEach(usage => {
       if (usage.metadata?.geographic_region) {
         const region = usage.metadata.geographic_region;
-        geographicCounts[region] = (geographicCounts[region] || 0) + 1;
+        geographicCounts[region] = (geographicCounts[region] ?? 0) + 1;
         totalCount++;
       }
     });
@@ -565,7 +565,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
     if (error) throw error;
 
     // Get user demographic data
-    const userIds = usageData?.map(u => u.user_id).filter(Boolean) || [];
+    const userIds = usageData?.map(u => u.user_id).filter(Boolean) ?? [];
     if (userIds.length === 0) {
       return {
         '18-24': 0.3,
@@ -589,7 +589,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
     userData?.forEach(user => {
       const ageGroup = user.age_group || user.demographic_data?.age_group;
       if (ageGroup) {
-        demographicCounts[ageGroup] = (demographicCounts[ageGroup] || 0) + 1;
+        demographicCounts[ageGroup] = (demographicCounts[ageGroup] ?? 0) + 1;
         totalCount++;
       }
     });
@@ -632,7 +632,7 @@ async function getUsageCount(hashtagId: string, days: number): Promise<number> {
     .gte('created_at', startDate.toISOString());
 
   if (error) throw error;
-  return data?.length || 0;
+  return data?.length ?? 0;
 }
 
 async function getCategoryTrends(category: string) {
@@ -649,19 +649,19 @@ async function getCategoryTrends(category: string) {
     if (error) throw error;
 
     // Calculate category trend metrics
-    const totalTrendScore = categoryHashtags?.reduce((sum, h) => sum + h.trend_score, 0) || 0;
-    const totalUsage = categoryHashtags?.reduce((sum, h) => sum + h.usage_count, 0) || 0;
+    const totalTrendScore = categoryHashtags?.reduce((sum, h) => sum + h.trend_score, 0) ?? 0;
+    const totalUsage = categoryHashtags?.reduce((sum, h) => sum + h.usage_count, 0) ?? 0;
     const averageTrendScore = categoryHashtags?.length ? totalTrendScore / categoryHashtags.length : 0;
     const averageUsage = categoryHashtags?.length ? totalUsage / categoryHashtags.length : 0;
 
     return {
       category,
-      trending_hashtags: categoryHashtags?.length || 0,
+      trending_hashtags: categoryHashtags?.length ?? 0,
       total_trend_score: totalTrendScore,
       total_usage: totalUsage,
       average_trend_score: averageTrendScore,
       average_usage: averageUsage,
-      top_hashtags: categoryHashtags?.slice(0, 5).map(h => h.name) || []
+      top_hashtags: categoryHashtags?.slice(0, 5).map(h => h.name) ?? []
     };
   } catch (error) {
     console.error('Failed to get category trends:', error);
@@ -690,8 +690,8 @@ async function getHashtagBenchmarks(hashtagId: string) {
     if (categoryError) throw categoryError;
 
     // Calculate benchmarks
-    const usageCounts = categoryHashtags?.map(h => h.usage_count) || [];
-    const trendScores = categoryHashtags?.map(h => h.trend_score) || [];
+    const usageCounts = categoryHashtags?.map(h => h.usage_count) ?? [];
+    const trendScores = categoryHashtags?.map(h => h.trend_score) ?? [];
 
     const averageUsage = usageCounts.length ? usageCounts.reduce((sum, count) => sum + count, 0) / usageCounts.length : 0;
     const topUsage = usageCounts.length ? Math.max(...usageCounts) : 0;
@@ -702,7 +702,7 @@ async function getHashtagBenchmarks(hashtagId: string) {
     const currentTrend = hashtag.trend_score;
 
     return {
-      category: hashtag.category || 'custom',
+      category: hashtag.category ?? 'custom',
       usage: {
         average: Math.round(averageUsage),
         top: topUsage,
@@ -752,7 +752,7 @@ async function getProfileBasedSuggestions(userId: string, currentHashtagIds: str
     if (profileError) throw profileError;
 
     // Get hashtags based on user interests
-    const interests = profile?.interests || [];
+    const interests = profile?.interests ?? [];
     const suggestions: any[] = [];
 
     if (interests.length > 0) {
@@ -828,7 +828,7 @@ async function getPollBasedSuggestions(userId: string, currentHashtagIds: string
 
     if (hashtagError) throw hashtagError;
 
-    return pollHashtagData || [];
+    return pollHashtagData ?? [];
   } catch (error) {
     console.error('Failed to get poll-based suggestions:', error);
     return [];
@@ -871,7 +871,7 @@ async function getFeedBasedSuggestions(userId: string, currentHashtagIds: string
 
     if (hashtagError) throw hashtagError;
 
-    return feedHashtagData || [];
+    return feedHashtagData ?? [];
   } catch (error) {
     console.error('Failed to get feed-based suggestions:', error);
     return [];
@@ -891,7 +891,7 @@ async function getTrendingSuggestions(currentHashtagIds: string[], limit: number
 
     if (error) throw error;
 
-    return trendingHashtags || [];
+    return trendingHashtags ?? [];
   } catch (error) {
     console.error('Failed to get trending suggestions:', error);
     return [];
@@ -925,7 +925,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
     const dailyUsage = new Map<string, number>();
     data.forEach(usage => {
       const date = usage.created_at.split('T')[0];
-      dailyUsage.set(date, (dailyUsage.get(date) || 0) + 1);
+      dailyUsage.set(date, (dailyUsage.get(date) ?? 0) + 1);
     });
 
     // Find the day with peak usage
@@ -960,7 +960,7 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
 
     if (error) throw error;
 
-    const currentUsage = data?.length || 0;
+    const currentUsage = data?.length ?? 0;
 
     // Calculate position based on current usage (simplified ranking)
     if (currentUsage === 0) return 10;
@@ -998,7 +998,7 @@ async function getPreviousPeriodUsage(hashtagId: string, startDate: string, endD
 
     if (error) throw error;
 
-    return data?.length || 0;
+    return data?.length ?? 0;
   } catch (error) {
     console.error('Failed to get previous period usage:', error);
     return 0;

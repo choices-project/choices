@@ -83,7 +83,7 @@ export class PerformanceMonitor {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        this.metrics.lcp = lastEntry?.startTime || 0;
+        this.metrics.lcp = lastEntry?.startTime ?? 0;
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       this.observers.push(lcpObserver);
@@ -282,8 +282,8 @@ export class PerformanceMonitor {
 ## Resource Performance
 - **JavaScript Bundle Size:** ${metrics.jsBundleSize ? `${(metrics.jsBundleSize / 1024).toFixed(2)}KB` : 'N/A'}
 - **CSS Bundle Size:** ${metrics.cssBundleSize ? `${(metrics.cssBundleSize / 1024).toFixed(2)}KB` : 'N/A'}
-- **Image Count:** ${metrics.imageCount || 'N/A'}
-- **Total Requests:** ${metrics.totalRequests || 'N/A'}
+- **Image Count:** ${metrics.imageCount ?? 'N/A'}
+- **Total Requests:** ${metrics.totalRequests ?? 'N/A'}
 
 ## Memory Performance
 - **Used JS Heap:** ${metrics.memoryUsage ? `${(metrics.memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB` : 'N/A'}

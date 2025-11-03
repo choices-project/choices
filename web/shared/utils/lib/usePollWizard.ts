@@ -81,7 +81,7 @@ export const usePollWizard = (template?: PollTemplate) => {
         }
         break;
 
-      case 1: // Poll Options
+      case 1: { // Poll Options
         const validOptions = data.options.filter(option => option.trim().length > 0);
         if (validOptions.length < 2) {
           errors.options = 'At least 2 options are required';
@@ -94,6 +94,7 @@ export const usePollWizard = (template?: PollTemplate) => {
           }
         });
         break;
+      }
 
       case 2: // Category & Tags
         if (!data.category) {

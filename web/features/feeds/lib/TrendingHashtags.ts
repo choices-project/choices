@@ -146,7 +146,7 @@ export class TrendingHashtagsTracker {
     const categoryBreakdown: Record<string, number> = {};
     recentUsage.forEach(usage => {
       const category = usage.metadata?.category ?? 'general';
-      categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1;
+      categoryBreakdown[category] = (categoryBreakdown[category] ?? 0) + 1;
     });
 
     // User engagement
@@ -166,7 +166,7 @@ export class TrendingHashtagsTracker {
     return {
       hashtag: 'all',
       usageCount: this.hashtagUsage.length,
-      trendScore: trendingHashtags.length > 0 ? trendingHashtags[0]?.trendScore || 0 : 0,
+      trendScore: trendingHashtags.length > 0 ? trendingHashtags[0]?.trendScore ?? 0 : 0,
       engagementRate: Object.keys(userEngagement).length > 0 ? Object.values(userEngagement).reduce((a, b) => a + b, 0) / Object.keys(userEngagement).length : 0,
       lastUsed: new Date(),
       totalHashtags: new Set(this.hashtagUsage.map(u => u.hashtag)).size,
@@ -190,12 +190,12 @@ export class TrendingHashtagsTracker {
         interest.includes(hashtag.hashtag) ||
         this.calculateSimilarity(hashtag.hashtag, interest) > 0.3
       );
-    }) || [];
+    }) ?? [];
 
     // Add some viral potential hashtags
     const viralSuggestions = analytics.viralPotential
       ?.filter((hashtag: any) => !userInterests.includes(hashtag.hashtag))
-      .slice(0, 5) || [];
+      .slice(0, 5) ?? [];
 
     return [
       ...relatedTrending.map((h: any) => h.hashtag),
@@ -235,7 +235,7 @@ export class TrendingHashtagsTracker {
     const categoryCount: Record<string, number> = {};
     hashtagUsage.forEach(usage => {
       const category = usage.metadata?.category ?? 'general';
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
+      categoryCount[category] = (categoryCount[category] ?? 0) + 1;
     });
     
     const topCategories = Object.entries(categoryCount)

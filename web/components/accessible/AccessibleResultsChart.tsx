@@ -181,26 +181,29 @@ export function AccessibleResultsChart({
 
   const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
     switch (event.key) {
-      case 'ArrowUp':
+      case 'ArrowUp': {
         if (index > 0) {
           setFocusedIndex(index - 1);
           const prevData = data[index - 1];
           if (prevData) onDataPointFocus?.(prevData);
         }
         break;
-      case 'ArrowDown':
+      }
+      case 'ArrowDown': {
         if (index < data.length - 1) {
           setFocusedIndex(index + 1);
           const nextData = data[index + 1];
           if (nextData) onDataPointFocus?.(nextData);
         }
         break;
+      }
       case 'Enter':
-      case ' ':
+      case ' ': {
         event.preventDefault();
         const dataPoint = data[index];
         if (dataPoint) onDataPointClick?.(dataPoint);
         break;
+      }
     }
   };
 
@@ -274,7 +277,7 @@ export function AccessibleResultsChart({
               <td>{item.name}</td>
               <td>{formatVoteCount(item.votes)}</td>
               {showPercentages && <td>{formatPercentage(item.percentage)}</td>}
-              {showRoundInfo && <td>{item.round || 'N/A'}</td>}
+              {showRoundInfo && <td>{item.round ?? 'N/A'}</td>}
               <td>
                 {item.isWinner && 'Winner'}
                 {item.isEliminated && 'Eliminated'}

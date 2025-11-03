@@ -10,18 +10,15 @@
 
 import { logger } from '@/lib/utils/logger';
 
-// Node.js types
+/// <reference types="node" />
+
+// Node.js types - Extend global ProcessEnv
 declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      NEXT_PUBLIC_ANALYTICS_ENABLED?: string;
-      NEXT_PUBLIC_ANALYTICS_DEBUG?: string;
-    }
+  type ProcessEnv = {
+    NEXT_PUBLIC_ANALYTICS_ENABLED?: string;
+    NEXT_PUBLIC_ANALYTICS_DEBUG?: string;
   }
 }
-
-// Type for NodeJS namespace
-type NodeJS = typeof globalThis.NodeJS;
 
 export type AnalyticsEvent = {
   [key: string]: unknown;
@@ -48,6 +45,7 @@ export class AnalyticsEngine {
   private sessionCount = 0;
   private featureUsage: Record<string, number> = {};
   private userRetentionRate = 0;
+  private eventListenersInitialized = false;
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
     this.config = {
@@ -60,7 +58,125 @@ export class AnalyticsEngine {
 
     if (this.config.enabled) {
       this.startFlushTimer();
+      this.setupPWAEventListeners();
     }
+  }
+
+  /**
+   * Setup PWA-specific event listeners (integrated from PWAAnalyticsEngine)
+   * Tracks installation, offline/online, service worker, and notification events
+   */
+  private setupPWAEventListeners(): void {
+    if (typeof window === 'undefined' || this.eventListenersInitialized) return;
+    this.eventListenersInitialized = true;
+
+    // Installation events
+    window.addEventListener('beforeinstallprompt', (event) => {
+      this.track({
+        type: 'pwa_event',
+        category: 'pwa',
+        action: 'install_prompt_shown',
+        properties: {
+          platform: this.getPlatform(),
+          userAgent: navigator.userAgent,
+          promptType: event.type,
+          canInstall: true
+        }
+      });
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.track({
+        type: 'pwa_event',
+        category: 'pwa',
+        action: 'app_installed',
+        properties: {
+          platform: this.getPlatform(),
+          userAgent: navigator.userAgent,
+          installSource: 'browser_prompt',
+          installTime: Date.now()
+        }
+      });
+    });
+
+    // Offline events
+    window.addEventListener('online', () => {
+      this.track({
+        type: 'pwa_event',
+        category: 'pwa',
+        action: 'offline_exited',
+        properties: {
+          syncSuccess: true
+        }
+      });
+    });
+
+    window.addEventListener('offline', () => {
+      this.track({
+        type: 'pwa_event',
+        category: 'pwa',
+        action: 'offline_entered',
+        properties: {}
+      });
+    });
+
+    // Service worker events
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'CACHE_HIT') {
+          this.track({
+            type: 'pwa_event',
+            category: 'pwa',
+            action: 'cache_hit',
+            properties: {
+              cacheName: event.data.cacheName,
+              hitRate: event.data.hitRate
+            }
+          });
+        } else if (event.data.type === 'CACHE_MISS') {
+          this.track({
+            type: 'pwa_event',
+            category: 'pwa',
+            action: 'cache_miss',
+            properties: {
+              cacheName: event.data.cacheName
+            }
+          });
+        }
+      });
+    }
+
+    // Notification events
+    if ('Notification' in window) {
+      const originalRequestPermission = Notification.requestPermission.bind(Notification);
+      Notification.requestPermission = async () => {
+        const result = await originalRequestPermission();
+        
+        this.track({
+          type: 'pwa_event',
+          category: 'pwa',
+          action: result === 'granted' ? 'notification_permission_granted' : 'notification_permission_denied',
+          properties: {
+            permission: result
+          }
+        });
+        
+        return result;
+      };
+    }
+  }
+
+  /**
+   * Get platform information (from PWAAnalyticsEngine)
+   */
+  private getPlatform(): string {
+    if (typeof window === 'undefined') return 'server';
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes('chrome')) return 'chrome';
+    if (userAgent.includes('firefox')) return 'firefox';
+    if (userAgent.includes('safari')) return 'safari';
+    if (userAgent.includes('edge')) return 'edge';
+    return 'unknown';
   }
 
   /**
@@ -71,8 +187,8 @@ export class AnalyticsEngine {
 
     const fullEvent: AnalyticsEvent = {
       ...event,
-      timestamp: event.timestamp || Date.now(),
-      sessionId: event.sessionId || this.getSessionId()
+      timestamp: event.timestamp ?? Date.now(),
+      sessionId: event.sessionId ?? this.getSessionId()
     };
 
     this.events.push(fullEvent);
@@ -119,7 +235,7 @@ export class AnalyticsEngine {
    * Update feature usage
    */
   updateFeatureUsage(feature: string, count: number): void {
-    this.featureUsage[feature] = (this.featureUsage[feature] || 0) + count;
+    this.featureUsage[feature] = (this.featureUsage[feature] ?? 0) + count;
   }
 
   /**

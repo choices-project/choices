@@ -29,16 +29,64 @@ type AnalyticsView = {
   enabled: boolean;
 }
 
+// Extended analytics data type for view components (matches AnalyticsDashboard structure)
+type AnalyticsData = {
+  totalEvents?: number;
+  uniqueUsers?: number;
+  sessionCount?: number;
+  averageSessionDuration?: number;
+  topPages?: Array<{ page: string; views: number }>;
+  topActions?: Array<{ action: string; count: number }>;
+  userEngagement?: number;
+  conversionFunnel?: Array<{ step: string; users: number; conversion: number }>;
+  overview?: {
+    totalPolls?: number;
+    activePolls?: number;
+    totalUsers?: number;
+    totalVotes?: number;
+    averageEngagement?: number;
+    participationRate?: number;
+    averageSessionDuration?: number;
+    bounceRate?: number;
+    conversionRate?: number;
+  };
+  demographics?: {
+    ageGroups?: Record<string, number>;
+    locations?: Record<string, number>;
+    genders?: Record<string, number>;
+    deviceTypes?: Record<string, number>;
+  };
+  performance?: {
+    loadTimes?: Array<{
+      page: string;
+      averageLoadTime: number;
+      p95LoadTime: number;
+    }>;
+  };
+  engagement?: {
+    activeUsers?: number;
+    returningUsers?: number;
+    sessionDuration?: number;
+    pagesPerSession?: number;
+    featureUsage?: Record<string, number>;
+  };
+  privacy?: {
+    dataRetention?: number;
+    anonymizationEnabled?: boolean;
+    dataCollected?: number;
+    dataShared?: number;
+    anonymizationLevel?: string;
+    encryptionEnabled?: boolean;
+    userConsent?: boolean;
+  };
+} | null
+
 export default function AnalyticsPage() {
   const analyticsData = useAnalyticsDashboard();
   const loading = useAnalyticsLoading();
   const error = useAnalyticsError();
   const analyticsActions = useAnalyticsActions();
-  const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions as {
-    trackEvent: (event: any) => void;
-    sendAnalytics: () => Promise<void>;
-    exportAnalytics: () => Promise<any[]>;
-  };
+  const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions;
   
   // Feature flags - these would come from app store in a real implementation
   const analyticsEnabled = true;
@@ -113,14 +161,14 @@ export default function AnalyticsPage() {
       category: 'analytics',
       action: 'view_analytics_page',
       label: 'Analytics Dashboard',
+      session_id: '', // Will be filled by trackEvent
       event_data: {
         type: 'page_view',
         category: 'analytics',
         action: 'view_analytics_page',
         label: 'Analytics Dashboard'
       },
-      created_at: new Date().toISOString(),
-      session_id: 'analytics-page'
+      created_at: new Date().toISOString()
     });
   }, [trackEvent]);
 
@@ -198,15 +246,13 @@ export default function AnalyticsPage() {
                 onClick={() => trackEvent({ 
                   event_type: 'user_action', 
                   type: 'user_action', 
-                  category: 'analytics', 
+                  category: 'analytics',
                   action: 'toggle_auto_refresh',
+                  session_id: '', // Will be filled by trackEvent
                   event_data: {
-                    type: 'user_action', 
-                    category: 'analytics', 
                     action: 'toggle_auto_refresh'
                   },
-                  created_at: new Date().toISOString(),
-                  session_id: 'analytics-page'
+                  created_at: new Date().toISOString()
                 })}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -230,7 +276,7 @@ export default function AnalyticsPage() {
             <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
               {analyticsViews
                 .filter(view => view.enabled)
-                .map((view: any) => (
+                .map((view) => (
                   <button
                     key={view.id}
                     onClick={() => setSelectedView(view.id)}
@@ -284,14 +330,14 @@ export default function AnalyticsPage() {
 }
 
 // Overview View Component
-function OverviewView({ data }: { data: any }) {
+function OverviewView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Polls"
-          value={data.overview?.totalPolls ?? 0}
+          value={data?.overview?.totalPolls ?? 0}
           icon={<BarChart3 className="h-6 w-6" />}
           color="blue"
           trend="+12%"
@@ -299,7 +345,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Active Polls"
-          value={data.overview?.activePolls ?? 0}
+          value={data?.overview?.activePolls ?? 0}
           icon={<Activity className="h-6 w-6" />}
           color="green"
           trend="+5%"
@@ -307,7 +353,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Total Votes"
-          value={data.overview?.totalVotes ?? 0}
+          value={data?.overview?.totalVotes ?? 0}
           icon={<Users className="h-6 w-6" />}
           color="purple"
           trend="+23%"
@@ -315,7 +361,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Participation Rate"
-          value={`${data.overview?.participationRate ?? 0}%`}
+          value={`${data?.overview?.participationRate ?? 0}%`}
           icon={<TrendingUp className="h-6 w-6" />}
           color="orange"
           trend="+8%"
@@ -331,19 +377,19 @@ function OverviewView({ data }: { data: any }) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Session Duration</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview?.averageSessionDuration ?? 0} min
+                {data?.overview?.averageSessionDuration ?? 0} min
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Bounce Rate</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview?.bounceRate || 0}%
+                {data?.overview?.bounceRate ?? 0}%
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Conversion Rate</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview?.conversionRate || 0}%
+                {data?.overview?.conversionRate ?? 0}%
               </span>
             </div>
           </div>
@@ -369,7 +415,7 @@ function OverviewView({ data }: { data: any }) {
 }
 
 // Trends View Component
-function TrendsView({ data: _data }: { data: any }) {
+function TrendsView({ data: _data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -383,21 +429,21 @@ function TrendsView({ data: _data }: { data: any }) {
 }
 
 // Demographics View Component
-function DemographicsView({ data }: { data: any }) {
+function DemographicsView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics?.ageGroups || {}).map(([age, count]) => (
+            {Object.entries(data?.demographics?.ageGroups ?? {}).map(([age, count]) => (
               <div key={age} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{age}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-16 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(Number(count) / Math.max(...Object.values(data.demographics?.ageGroups || {}).map(v => Number(v)))) * 100}%` }}
+                      style={{ width: `${(Number(count) / Math.max(...Object.values(data?.demographics?.ageGroups ?? {}).map(v => Number(v)))) * 100}%` }}
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-900">{String(count)}</span>
@@ -410,7 +456,7 @@ function DemographicsView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Types</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => {
+            {Object.entries(data?.demographics?.deviceTypes ?? {}).map(([device, percentage]) => {
               const percentageValue = typeof percentage === 'number' ? percentage : 0;
               return (
                 <div key={device} className="flex items-center justify-between">
@@ -435,13 +481,13 @@ function DemographicsView({ data }: { data: any }) {
 }
 
 // Performance View Component
-function PerformanceView({ data }: { data: any }) {
+function PerformanceView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Page Load Times</h3>
         <div className="space-y-4">
-          {data.performance?.loadTimes?.map((page: any) => (
+          {data?.performance?.loadTimes?.map((page: { page: string; averageLoadTime: number; p95LoadTime: number }) => (
             <div key={page.page} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{page.page}</span>
               <div className="flex items-center space-x-4">
@@ -457,7 +503,7 @@ function PerformanceView({ data }: { data: any }) {
 }
 
 // Privacy View Component
-function PrivacyView({ data }: { data: any }) {
+function PrivacyView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -466,27 +512,27 @@ function PrivacyView({ data }: { data: any }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Data Collected</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy?.dataCollected || 0} fields</span>
+              <span className="text-sm font-medium text-gray-900">{data?.privacy?.dataCollected ?? 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Data Shared</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy?.dataShared || 0} fields</span>
+              <span className="text-sm font-medium text-gray-900">{data?.privacy?.dataShared ?? 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Anonymization</span>
-              <span className="text-sm font-medium text-gray-900 capitalize">{data.privacy?.anonymizationLevel || 'N/A'}</span>
+              <span className="text-sm font-medium text-gray-900 capitalize">{data?.privacy?.anonymizationLevel ?? 'N/A'}</span>
             </div>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Encryption</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.privacy?.encryptionEnabled ? 'Enabled' : 'Disabled'}
+                {data?.privacy?.encryptionEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Consent Granted</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy?.userConsent?.granted || 0}%</span>
+              <span className="text-sm font-medium text-gray-900">{data?.privacy?.userConsent ? 'Granted' : 'Pending'}</span>
             </div>
           </div>
         </div>
@@ -496,7 +542,7 @@ function PrivacyView({ data }: { data: any }) {
 }
 
 // Engagement View Component
-function EngagementView({ data }: { data: any }) {
+function EngagementView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -505,19 +551,19 @@ function EngagementView({ data }: { data: any }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Active Users</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement?.activeUsers || 0}</span>
+              <span className="text-sm font-medium text-gray-900">{data?.engagement?.activeUsers ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Returning Users</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement?.returningUsers || 0}</span>
+              <span className="text-sm font-medium text-gray-900">{data?.engagement?.returningUsers ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Session Duration</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement?.sessionDuration || 0} min</span>
+              <span className="text-sm font-medium text-gray-900">{data?.engagement?.sessionDuration ?? 0} min</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Pages per Session</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement?.pagesPerSession || 0}</span>
+              <span className="text-sm font-medium text-gray-900">{data?.engagement?.pagesPerSession ?? 0}</span>
             </div>
           </div>
         </div>
@@ -525,7 +571,7 @@ function EngagementView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Usage</h3>
           <div className="space-y-3">
-            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => {
+            {Object.entries(data?.engagement?.featureUsage ?? {}).map(([feature, percentage]) => {
               const percentageValue = typeof percentage === 'number' ? percentage : 0;
               return (
                 <div key={feature} className="flex items-center justify-between">
@@ -550,7 +596,7 @@ function EngagementView({ data }: { data: any }) {
 }
 
 // Advanced View Component
-function AdvancedView({ data: _data }: { data: any }) {
+function AdvancedView({ data: _data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">

@@ -525,7 +525,7 @@ export class UnifiedDataOrchestrator {
     for (const { source, data } of sources) {
       const sourceName = source.replace('-', '') as keyof UnifiedRepresentative['dataSources'];
       if (merged.dataSources && sourceName in merged.dataSources) {
-        (merged.dataSources as UnifiedRepresentative['dataSources'])[sourceName] = true;
+        (merged.dataSources)[sourceName] = true;
       }
       
       const dataRecord = data as Record<string, unknown>;

@@ -101,7 +101,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
   }, []);
 
   const getFlag = useCallback((flagId: string): FeatureFlag | undefined => {
-    return featureFlagManager.getFlag(flagId) || undefined;
+    return featureFlagManager.getFlag(flagId) ?? undefined;
   }, []);
 
   const getAllFlags = useCallback((): Map<string, FeatureFlag> => {

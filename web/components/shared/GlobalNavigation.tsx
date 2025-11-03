@@ -32,11 +32,11 @@ import { Button } from '@/components/ui/button'
  */
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [hasError, setHasError] = useState(false)
+  const [_hasError, _setHasError] = useState(false)
   const pathname = usePathname()
 
   // Error boundary for component
-  if (hasError) {
+  if (_hasError) {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,8 +54,8 @@ export default function GlobalNavigation() {
   }
   
   // Auth/i18n stubs to avoid build-time hook resolution issues
-  const user: any = null;
-  const signOut: (() => Promise<void>) | null = null;
+  const user: { id?: string; email?: string; [key: string]: unknown } | null = null;
+  const _signOut: (() => Promise<void>) | null = null;
   const isLoading = false;
   const isAuthenticated = false;
   const t: (key: string) => string = (key) => key;

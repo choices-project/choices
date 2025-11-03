@@ -105,7 +105,7 @@ export const getSocialLoginOption = (provider: string): SocialLoginOption | unde
 
 export const getAvailableProviders = (): SocialLoginOption[] => {
   // Filter based on environment configuration
-  const enabledProviders = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS?.split(',') || ['google', 'github']
+  const enabledProviders = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS?.split(',') ?? ['google', 'github']
   
   return socialLoginOptions.filter(option => 
     enabledProviders.includes(option.provider)

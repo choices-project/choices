@@ -168,8 +168,8 @@ export class RangeStrategy implements VotingStrategy {
             ratings,
             totalScore,
             averageScore,
-            rangeMin: poll.votingConfig.rangeMin || 0,
-            rangeMax: poll.votingConfig.rangeMax || 10
+            rangeMin: poll.votingConfig.rangeMin ?? 0,
+            rangeMax: poll.votingConfig.rangeMax ?? 10
           }
         },
         {

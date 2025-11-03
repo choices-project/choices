@@ -21,8 +21,8 @@ type AuthSetupStepProps = {
 type AuthMethod = 'email' | 'social' | 'webauthn' | 'anonymous' | 'skip'
 
 export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepProps) {
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
-  const [email, setEmail] = useState(data?.email || '')
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod ?? 'email')
+  const [email, setEmail] = useState(data?.email ?? '')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)

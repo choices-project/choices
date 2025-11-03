@@ -52,7 +52,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     loading,
     error,
     lastUpdated,
-    fetchAnalytics,
+    fetchAnalytics: _fetchAnalytics,
     trackFeatureUsage,
     getSystemHealth,
     getActiveSiteMessages,

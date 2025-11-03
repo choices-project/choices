@@ -298,25 +298,25 @@ function transformRepresentative(rep: any): any {
       value: contact.value,
       is_verified: contact.is_verified,
       source: contact.source
-    })) || [],
+    })) ?? [],
     photos: rep.representative_photos?.map((photo: any) => ({
       url: photo.url,
       is_primary: photo.is_primary,
       source: photo.source
-    })) || [],
+    })) ?? [],
     social_media: rep.representative_social_media?.map((social: any) => ({
       platform: social.platform,
       handle: social.handle,
       url: social.url,
       is_verified: social.is_verified
-    })) || [],
+    })) ?? [],
     activity: rep.representative_activity?.map((activity: any) => ({
       type: activity.type,
       title: activity.title,
       description: activity.description,
       date: activity.date,
       source: activity.source
-    })) || []
+    })) ?? []
   };
 }
 

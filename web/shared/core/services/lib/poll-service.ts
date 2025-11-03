@@ -223,7 +223,7 @@ const userPolls: Poll[] = [];
 // Configuration
 const config = {
   useMockData: true, // Toggle between mock and real data
-  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080',
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080',
   enableUserPolls: true, // Allow user-generated polls
   mockDataEnabled: true // Keep mock data available for testing
 };
@@ -298,7 +298,7 @@ class PollService {
         status: 'active' as const,
         total_votes: 0,
         participation: 0,
-        sponsors: pollData.sponsors || [],
+        sponsors: pollData.sponsors ?? [],
         created_at: new Date().toISOString(),
         is_mock: false,
         created_by: await this.getCurrentUserId()
@@ -424,7 +424,7 @@ class PollService {
       poll.results = { total: 0 };
     }
 
-    poll.results[choice] = (poll.results[choice] || 0) + 1;
+    poll.results[choice] = (poll.results[choice] ?? 0) + 1;
     poll.results.total += 1;
 
     // Update participation rate
@@ -449,25 +449,25 @@ class PollService {
       const data = await response.json();
       
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch polls');
+        throw new Error(data.error ?? 'Failed to fetch polls');
       }
       
       // Transform API response to match Poll interface
       return data.polls?.map((apiPoll: any) => ({
         id: apiPoll.poll_id,
         title: apiPoll.title,
-        description: apiPoll.description || '',
-        status: apiPoll.status || 'active',
-        options: apiPoll.options || [],
-        total_votes: apiPoll.total_votes || 0,
-        participation: apiPoll.participation_rate || 0,
+        description: apiPoll.description ?? '',
+        status: apiPoll.status ?? 'active',
+        options: apiPoll.options ?? [],
+        total_votes: apiPoll.total_votes ?? 0,
+        participation: apiPoll.participation_rate ?? 0,
         sponsors: [],
-        created_at: apiPoll.created_at || new Date().toISOString(),
+        created_at: apiPoll.created_at ?? new Date().toISOString(),
         end_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Default 30 days
         category: apiPoll.category,
-        tags: apiPoll.tags || [],
+        tags: apiPoll.tags ?? [],
         is_mock: false
-      })) || [];
+      })) ?? [];
     } catch (error) {
       logger.error('Error fetching polls from API:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -491,16 +491,16 @@ class PollService {
       return {
         id: apiPoll.poll_id,
         title: apiPoll.title,
-        description: apiPoll.description || '',
-        status: apiPoll.status || 'active',
-        options: apiPoll.options || [],
-        total_votes: apiPoll.total_votes || 0,
-        participation: apiPoll.participation_rate || 0,
+        description: apiPoll.description ?? '',
+        status: apiPoll.status ?? 'active',
+        options: apiPoll.options ?? [],
+        total_votes: apiPoll.total_votes ?? 0,
+        participation: apiPoll.participation_rate ?? 0,
         sponsors: [],
-        created_at: apiPoll.created_at || new Date().toISOString(),
+        created_at: apiPoll.created_at ?? new Date().toISOString(),
         end_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Default 30 days
         category: apiPoll.category,
-        tags: apiPoll.tags || [],
+        tags: apiPoll.tags ?? [],
         is_mock: false
       };
     } catch (error) {
@@ -529,7 +529,7 @@ class PollService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to save poll: ${response.statusText}`);
+        throw new Error(errorData.error ?? `Failed to save poll: ${response.statusText}`);
       }
       
       devLog('Poll saved to API successfully');
@@ -554,15 +554,15 @@ class PollService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to submit vote: ${response.statusText}`);
+        throw new Error(errorData.error ?? `Failed to submit vote: ${response.statusText}`);
       }
       
       const result = await response.json();
       
       return {
-        success: result.success || true,
-        voteId: result.vote_id || `vote_${Date.now()}`,
-        message: result.message || 'Vote submitted successfully!'
+        success: result.success ?? true,
+        voteId: result.vote_id ?? `vote_${Date.now()}`,
+        message: result.message ?? 'Vote submitted successfully!'
       };
     } catch (error) {
       logger.error('Error submitting vote to API:', error instanceof Error ? error : new Error(String(error)));

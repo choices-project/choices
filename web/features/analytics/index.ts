@@ -6,7 +6,7 @@
 
 // Components
 export { default as EnhancedAnalyticsDashboard } from './components/EnhancedAnalyticsDashboard';
-export { default as FeedbackWidget } from './components/FeedbackWidget';
+export { default as FeedbackWidget } from '@/components/EnhancedFeedbackWidget';
 export { ProfessionalChart } from './components/ProfessionalChart';
 
 // Hooks

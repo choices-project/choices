@@ -1,15 +1,33 @@
 import React from 'react';
 
-async function fetchMonitoring() {
+type MonitoringData = {
+  success: boolean;
+  data: {
+    metrics?: {
+      violationsLastHour?: number;
+      violationsLast24Hours?: number;
+      topViolatingIPs?: Array<{ ip: string; count: number }>;
+      violationsByEndpoint?: Record<string, number>;
+    };
+    recentViolations?: Array<{
+      timestamp: number;
+      ip: string;
+      endpoint: string;
+      count: number;
+    }>;
+  } | null;
+};
+
+async function fetchMonitoring(): Promise<MonitoringData> {
   const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/security/monitoring`, {
     headers: { 'x-admin-key': adminKey },
     cache: 'no-store'
   });
   if (!res.ok) {
-    return { success: false, data: null } as any;
+    return { success: false, data: null };
   }
-  return res.json();
+  return res.json() as Promise<MonitoringData>;
 }
 
 async function fetchExtendedHealth() {
@@ -55,7 +73,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
 
   const now = Date.now();
   const cutoff = range === '1h' ? now - 60 * 60 * 1000 : range === '7d' ? now - 7 * 24 * 60 * 60 * 1000 : now - 24 * 60 * 60 * 1000;
-  const recent = (data?.recentViolations ?? []).filter((v: any) => v.timestamp > cutoff && (!endpointFilter || v.endpoint === endpointFilter));
+  const recent = (data?.recentViolations ?? []).filter((v) => v.timestamp > cutoff && (!endpointFilter || v.endpoint === endpointFilter));
 
   // Build simple time buckets for a tiny bar chart (per 10-minute bucket for 1h, hourly for 24h/7d)
   const bucketMs = range === '1h' ? 10 * 60 * 1000 : 60 * 60 * 1000;
@@ -63,7 +81,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
   const buckets = Array.from({ length: bucketCount }, (_, i) => now - (bucketCount - 1 - i) * bucketMs);
   const bucketValues = buckets.map((start, _idx) => {
     const end = start + bucketMs;
-    return recent.filter((v: any) => v.timestamp >= start && v.timestamp < end).length;
+    return recent.filter((v) => v.timestamp >= start && v.timestamp < end).length;
   });
   const maxVal = Math.max(1, ...bucketValues);
 
@@ -138,7 +156,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
       <section className="rounded-lg border p-4">
         <h2 className="text-lg font-semibold mb-2">Top IPs</h2>
         <ul className="divide-y">
-          {(data?.metrics?.topViolatingIPs ?? []).map((item: any) => (
+          {(data?.metrics?.topViolatingIPs ?? []).map((item) => (
             <li key={`${item.ip}`} className="py-2 flex items-center justify-between">
               <span className="font-mono">{item.ip}</span>
               <span className="text-sm text-gray-600">{item.count}</span>
@@ -181,7 +199,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
         <ul className="divide-y">
           {Object.entries(data?.metrics?.violationsByEndpoint ?? {})
             .filter(([endpoint]) => !endpointFilter || endpoint === endpointFilter)
-            .map(([endpoint, count]: any) => (
+            .map(([endpoint, count]: [string, number]) => (
             <li key={endpoint} className="py-2 flex items-center justify-between">
               <span className="font-mono">{endpoint}</span>
               <span className="text-sm text-gray-600">{count}</span>
@@ -237,7 +255,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
               </tr>
             </thead>
             <tbody>
-              {recent.slice(0, 50).map((v: any, idx: number) => (
+              {recent.slice(0, 50).map((v, idx: number) => (
                 <tr key={idx} className="border-t">
                   <td className="py-2 pr-4">{new Date(v.timestamp).toLocaleString()}</td>
                   <td className="py-2 pr-4 font-mono">{v.ip}</td>

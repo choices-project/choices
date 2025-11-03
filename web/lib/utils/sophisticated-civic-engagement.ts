@@ -428,7 +428,7 @@ export async function getTrendingCivicActions(
       return [];
     }
 
-    if (!actions || actions.length === 0) {
+    if (!actions?.length) {
       logger.info('No trending civic actions found', { limit, category });
       return [];
     }
@@ -461,7 +461,7 @@ export async function getTrendingCivicActions(
       };
     }).sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0))
       .slice(0, limit)
-      .map(({ trendingScore, ...action }) => action as SophisticatedCivicAction);
+      .map(({ trendingScore: _trendingScore, ...action }) => action as SophisticatedCivicAction);
 
     logger.info('Retrieved trending civic actions', { count: trendingActions.length, limit, category });
     
@@ -515,7 +515,7 @@ export function calculateTrustTier(civicScore: number): 'bronze' | 'silver' | 'g
  */
 export function getCivicEngagementRecommendations(
   userMetrics: CivicEngagementMetrics,
-  availableActions: SophisticatedCivicAction[]
+  _availableActions: SophisticatedCivicAction[]
 ): string[] {
   const recommendations: string[] = [];
 

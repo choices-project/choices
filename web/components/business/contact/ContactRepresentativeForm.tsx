@@ -99,7 +99,7 @@ export function ContactRepresentativeForm({
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+    const files = Array.from(event.target.files ?? []);
     
     // Validate file count
     if (formData.attachments.length + files.length > MAX_ATTACHMENTS) {
@@ -162,7 +162,7 @@ export function ContactRepresentativeForm({
 
     try {
       // Prepare attachments data
-      const attachmentsData = formData.attachments.map(file => ({
+      const _attachmentsData = formData.attachments.map(file => ({
         name: file.name,
         size: file.size,
         type: file.type
@@ -175,7 +175,7 @@ export function ContactRepresentativeForm({
         recipientId: String(representativeId)
       });
 
-      if (sent && sent.id) {
+      if (sent?.id) {
         setSubmitStatus('success');
         setFormData({
           subject: '',

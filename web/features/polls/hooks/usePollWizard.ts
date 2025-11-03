@@ -56,12 +56,13 @@ export function usePollWizard() {
         }
         break;
       
-      case 1: // Options
+      case 1: { // Options
         const step1ValidOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (step1ValidOptions.length < 2) {
           errors.options = 'At least 2 options are required';
         }
         break;
+      }
       
       case 2: // Settings
         if (data.category === 'general' && !data.tags.length) {
@@ -69,7 +70,7 @@ export function usePollWizard() {
         }
         break;
       
-      case 3: // Review
+      case 3: { // Review
         // Final validation - comprehensive check
         const validOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (validOptions.length < 2) {

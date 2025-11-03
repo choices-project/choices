@@ -14,7 +14,7 @@ type PWAFeaturesSimpleProps = {
  * A minimal version that doesn't use complex Zustand stores to avoid infinite loops.
  * This component provides basic PWA feature information for E2E testing.
  */
-export default function PWAFeaturesSimple({ className = '', showDetails = false }: PWAFeaturesSimpleProps) {
+export default function PWAFeaturesSimple({ className = '', showDetails: _showDetails = false }: PWAFeaturesSimpleProps) {
   return (
     <div className={`space-y-4 ${className}`} data-testid="pwa-features">
       {/* Offline Features */}

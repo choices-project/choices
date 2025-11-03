@@ -236,7 +236,7 @@ export default function EngagementMetrics({
                 <span>Views</span>
               </div>
               <p className="text-lg font-semibold text-gray-900">
-                {formatNumber(metrics.views || 0)}
+                {formatNumber(metrics.views ?? 0)}
               </p>
             </div>
             

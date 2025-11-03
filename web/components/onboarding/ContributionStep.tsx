@@ -14,13 +14,14 @@ import {
 } from 'lucide-react'
 import React, { useState } from 'react';
 
-
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+import type { StepDataMap } from './types'
+
 type ContributionStepProps = {
-  data: any
+  data: Partial<StepDataMap['contribution']> & { [key: string]: unknown }
   onUpdate: (updates: {
     contributionInterests?: string[]
     contributionStepCompleted?: boolean
@@ -30,7 +31,7 @@ type ContributionStepProps = {
 }
 
 export default function ContributionStep({ data, onUpdate, onNext, onBack }: ContributionStepProps) {
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(data.contributionInterests || [])
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(data.contributionInterests ?? [])
   const [currentSection, setCurrentSection] = useState<'overview' | 'interests' | 'complete'>('overview')
 
   const contributionOptions = [

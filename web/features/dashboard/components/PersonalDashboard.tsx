@@ -92,7 +92,7 @@ type PersonalDashboardProps = {
   className?: string;
 }
 
-export default function PersonalDashboard({ userId, className = '' }: PersonalDashboardProps) {
+export default function PersonalDashboard({ userId: _userId, className = '' }: PersonalDashboardProps) {
   const [analytics, setAnalytics] = useState<PersonalAnalytics | null>(null);
   const [electedOfficials, setElectedOfficials] = useState<ElectedOfficial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,7 +105,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
   const [showEngagementScore, setShowEngagementScore] = useState(true);
   
   // Performance monitoring state
-  const [performanceMetrics, setPerformanceMetrics] = useState({
+  const [_performanceMetrics, _setPerformanceMetrics] = useState({
     dashboardLoadTime: 0,
     apiResponseTime: 0,
     cacheHitRate: 0,
@@ -223,7 +223,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
       setAnalytics(data.analytics);
       
       // Update performance metrics
-      setPerformanceMetrics(prev => ({
+        _setPerformanceMetrics(prev => ({
         ...prev,
         dashboardLoadTime: loadTime,
         apiResponseTime: data.loadTime ?? loadTime,

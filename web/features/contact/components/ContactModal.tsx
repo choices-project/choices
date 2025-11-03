@@ -75,15 +75,15 @@ export default function ContactModal({
 
   // Contact hooks
   const { 
-    messages, 
-    loading: messagesLoading, 
-    error: messagesError,
+    messages: _messages, 
+    loading: _messagesLoading, 
+    error: _messagesError,
     sendMessage 
   } = useContactMessages(representative.id.toString());
 
   const { 
     threads, 
-    loading: threadsLoading,
+    loading: _threadsLoading,
     createThread 
   } = useContactThreads();
 

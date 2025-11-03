@@ -92,7 +92,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
                            flags.length > 0 ? 'flagged' : 'approved';
 
     // Transform flags to match HashtagFlag type
-    const transformedFlags: HashtagFlag[] = flags.map(flag => ({
+    const _transformedFlags: HashtagFlag[] = flags.map(flag => ({
       id: flag.id,
       hashtag_id: flag.hashtag_id,
       user_id: flag.user_id,
@@ -220,7 +220,7 @@ export async function flagHashtag(
 export async function moderateHashtag(
   hashtagId: string,
   status: HashtagModeration['status'],
-  reason?: string
+  _reason?: string
 ): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
     const supabase = await getSupabaseBrowserClient();
@@ -376,7 +376,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
 
     // Determine if human review is required
     const humanReviewRequired = score > MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD || 
-                               (flagCount || 0) >= 3;
+                               (flagCount ?? 0) >= 3;
 
     // Update hashtag flags with auto-moderation results
     await supabase
@@ -389,7 +389,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
       .eq('status', 'pending');
 
     // Auto-approve if score is low and no flags
-    if (score < MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD && (flagCount || 0) === 0) {
+    if (score < MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD && (flagCount ?? 0) === 0) {
       await moderateHashtag(hashtagId, 'approved', 'Auto-approved by system');
     }
 
@@ -584,7 +584,7 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
 
     const topFlagTypes = flagTypes?.reduce((acc: any, flag: any) => {
       // Categorize by reason content since flag_type doesn't exist
-      const reason = flag.reason?.toLowerCase() || 'other';
+      const reason = flag.reason?.toLowerCase() ?? 'other';
       let type = 'other';
       
       if (reason.includes('spam') || reason.includes('promotional')) type = 'spam';

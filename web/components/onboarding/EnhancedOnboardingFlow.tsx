@@ -290,7 +290,7 @@ function EnhancedOnboardingFlowInner() {
           body: JSON.stringify({
             step,
             action: 'update',
-            data: stepData || {},
+            data: stepData ?? {},
           }),
         });
         if (!response.ok) throw new Error('Failed to update onboarding step');
@@ -334,8 +334,8 @@ function EnhancedOnboardingFlowInner() {
           setData(prev => ({
             ...prev,
             user,
-            displayName: user.user_metadata.full_name || user.email?.split('@')[0] || '',
-            avatar: user.user_metadata.avatar_url || '',
+            displayName: user.user_metadata.full_name ?? user.email?.split('@')[0] ?? '',
+            avatar: user.user_metadata.avatar_url ?? '',
           }));
         }
 

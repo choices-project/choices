@@ -16,7 +16,7 @@ export default function SingleChoiceVoting({
   hasVoted = false,
   userVote
 }: SingleChoiceVotingProps) {
-  const [selectedOption, setSelectedOption] = useState<number | null>(userVote || null)
+  const [selectedOption, setSelectedOption] = useState<number | null>(userVote ?? null)
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)

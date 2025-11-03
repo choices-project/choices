@@ -9,12 +9,11 @@
 // Load environment variables
 
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import { NextResponse } from 'next/server';
 
 import { logger } from '@/lib/utils/logger';
 
-dotenv.config({ path: '.env.local' });
+// Environment variables are automatically loaded by Next.js from .env.local
 
 export async function requireServiceKey(): Promise<NextResponse | null> {
   try {

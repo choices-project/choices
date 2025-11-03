@@ -78,7 +78,7 @@ export function ProfessionalChart({
 
   // Cache max value calculation
   const calculatedMaxValue = useCallback(() => {
-    return maxValue || Math.max(...data.map(item => item.value))
+    return maxValue ?? Math.max(...data.map(item => item.value))
   }, [data, maxValue])
 
   const sortedData = processedData()

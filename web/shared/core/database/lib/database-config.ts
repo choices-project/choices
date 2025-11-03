@@ -55,7 +55,7 @@ export const getDatabaseConfig = (): DatabaseConfig => {
         fallbackToMock: true
       },
       {
-        url: LOCAL_DATABASE_URL || DATABASE_URL
+        url: LOCAL_DATABASE_URL ?? DATABASE_URL
       }
     )
   }
@@ -129,7 +129,7 @@ export const getDatabaseStatus = () => {
     databaseEnabled: config.enabled,
     fallbackToMock: config.fallbackToMock,
     supabaseConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
-    postgresConfigured: !!(DATABASE_URL || LOCAL_DATABASE_URL),
+    postgresConfigured: !!(DATABASE_URL ?? LOCAL_DATABASE_URL),
     vercelUrl: process.env.VERCEL_URL
   }
 }

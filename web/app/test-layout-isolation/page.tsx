@@ -18,7 +18,7 @@ export default function TestLayoutIsolation() {
       // Test each component individually
       try {
         // Test 1: UserStoreProvider
-        const { UserStoreProvider } = await import('@/lib/providers/UserStoreProvider');
+        const { UserStoreProvider: _UserStoreProvider } = await import('@/lib/providers/UserStoreProvider');
         results.UserStoreProvider = '✅ OK';
       } catch (error) {
         results.UserStoreProvider = `❌ Error: ${error}`;
@@ -26,7 +26,7 @@ export default function TestLayoutIsolation() {
       
       try {
         // Test 2: GlobalNavigation
-        const { default: GlobalNavigation } = await import('@/components/shared/GlobalNavigation');
+        const { default: _GlobalNavigation } = await import('@/components/shared/GlobalNavigation');
         results.GlobalNavigation = '✅ OK';
       } catch (error) {
         results.GlobalNavigation = `❌ Error: ${error}`;
@@ -34,7 +34,7 @@ export default function TestLayoutIsolation() {
       
       try {
         // Test 3: SiteMessages
-        const { default: SiteMessages } = await import('@/components/shared/SiteMessages');
+        const { default: _SiteMessages } = await import('@/components/shared/SiteMessages');
         results.SiteMessages = '✅ OK';
       } catch (error) {
         results.SiteMessages = `❌ Error: ${error}`;
@@ -42,7 +42,7 @@ export default function TestLayoutIsolation() {
       
       try {
         // Test 4: EnhancedFeedbackWidget
-        const { default: EnhancedFeedbackWidget } = await import('@/features/analytics/components/FeedbackWidget');
+        const { default: _EnhancedFeedbackWidget } = await import('@/components/EnhancedFeedbackWidget');
         results.EnhancedFeedbackWidget = '✅ OK';
       } catch (error) {
         results.EnhancedFeedbackWidget = `❌ Error: ${error}`;
@@ -50,7 +50,7 @@ export default function TestLayoutIsolation() {
       
       try {
         // Test 5: PWABackground
-        const { default: PWABackground } = await import('@/features/pwa/components/PWABackground');
+        const { default: _PWABackground } = await import('@/features/pwa/components/PWABackground');
         results.PWABackground = '✅ OK';
       } catch (error) {
         results.PWABackground = `❌ Error: ${error}`;

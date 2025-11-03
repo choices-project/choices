@@ -245,7 +245,7 @@ export function FilingAssistant({
           )}
 
           {/* Eligibility Requirements */}
-          {(req.eligibility.age || req.eligibility.residency || req.eligibility.citizenship) && (
+          {(req.eligibility.age ?? req.eligibility.residency ?? req.eligibility.citizenship) && (
             <div>
               <h4 className="font-semibold mb-2 flex items-center">
                 <CheckCircle className="w-4 h-4 mr-2" />
@@ -405,7 +405,7 @@ export function FilingAssistant({
           </div>
 
           {/* Helpful Links */}
-          {(req.helpfulLinks.filingGuide || req.helpfulLinks.formLibrary || req.helpfulLinks.candidateGuide) && (
+          {(req.helpfulLinks.filingGuide ?? req.helpfulLinks.formLibrary ?? req.helpfulLinks.candidateGuide) && (
             <div>
               <h4 className="font-semibold mb-2">Additional Resources</h4>
               <div className="space-y-2">

@@ -32,8 +32,8 @@ type ProfileSetupStepProps = {
 type ProfileVisibility = 'public' | 'private' | 'friends_only' | 'anonymous'
 
 export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetupStepProps) {
-  const [displayName, setDisplayName] = useState(data?.displayName || '')
-  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>((data?.profileVisibility as ProfileVisibility) || 'public')
+  const [displayName, setDisplayName] = useState(data?.displayName ?? '')
+  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>((data?.profileVisibility as ProfileVisibility) ?? 'public')
   const [emailNotifications, setEmailNotifications] = useState(data?.emailNotifications !== false)
   const [pushNotifications, setPushNotifications] = useState(data?.pushNotifications !== false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'profile' | 'preferences' | 'complete'>('overview')
@@ -455,7 +455,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="font-medium">Display Name</span>
-              <span className="text-gray-600">{displayName || 'Not set'}</span>
+              <span className="text-gray-600">{displayName ?? 'Not set'}</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

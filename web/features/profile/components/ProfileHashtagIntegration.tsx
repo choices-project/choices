@@ -34,7 +34,7 @@ type ProfileHashtagIntegrationProps = {
 }
 
 export default function ProfileHashtagIntegration({
-  profile,
+  profile: _profile,
   onUpdate,
   className
 }: ProfileHashtagIntegrationProps) {

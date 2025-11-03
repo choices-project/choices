@@ -50,7 +50,7 @@ export async function GET(
 
     return NextResponse.json({
       ...poll,
-      results: results || []
+      results: results ?? []
     });
 
   } catch (error) {

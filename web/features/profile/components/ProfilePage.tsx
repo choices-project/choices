@@ -38,8 +38,8 @@ import type { ProfilePageProps } from '../index';
 
 export default function ProfilePage({ 
   user, 
-  isOwnProfile = false, 
-  canEdit = false 
+  isOwnProfile: _isOwnProfile = false, 
+  canEdit: _canEdit = false 
 }: ProfilePageProps) {
   const { user: _authUser, isLoading: authLoading } = useAuth();
   const { 

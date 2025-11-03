@@ -67,7 +67,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
               </span>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900">{data.displayName || 'User'}</h4>
+              <h4 className="font-semibold text-gray-900">{data.displayName ?? 'User'}</h4>
               <p className="text-gray-600 text-sm">Ready to participate</p>
             </div>
           </div>

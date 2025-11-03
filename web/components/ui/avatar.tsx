@@ -35,8 +35,8 @@ const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
   ({ className, src, alt, width, height, ...props }, ref) => (
     <Image
       ref={ref}
-      src={src || '/default-avatar.png'}
-      alt={alt || 'Avatar'}
+      src={src ?? '/default-avatar.png'}
+      alt={alt ?? 'Avatar'}
       width={typeof width === 'number' ? width : typeof width === 'string' ? parseInt(width) : 40}
       height={typeof height === 'number' ? height : typeof height === 'string' ? parseInt(height) : 40}
       className={cn("aspect-square h-full w-full object-cover", className)}

@@ -36,7 +36,7 @@ export default function SiteMessages({
   showDismiss = true,
   messages: propMessages = [] // Messages passed from server-side rendering
 }: SiteMessagesProps) {
-  const [messages, setMessages] = useState<SiteMessage[]>(propMessages)
+  const [messages, _setMessages] = useState<SiteMessage[]>(propMessages)
   const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set())
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
 
@@ -49,7 +49,7 @@ export default function SiteMessages({
     setDismissedMessages(prev => new Set([...prev, messageId]))
     
     // Store dismissal in localStorage for persistence
-    const stored = JSON.parse(localStorage.getItem('dismissedSiteMessages') || '[]')
+    const stored = JSON.parse(localStorage.getItem('dismissedSiteMessages') ?? '[]')
     stored.push(messageId)
     localStorage.setItem('dismissedSiteMessages', JSON.stringify(stored))
   }

@@ -13,7 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
-type AnalyticsData = {
+// Placeholder type for future analytics data (currently unused but reserved for upcoming features)
+type _AnalyticsData = {
   userGrowth: Array<{ date: string; users: number }>;
   pollActivity: Array<{ date: string; polls: number; votes: number }>;
   votingMethods: Array<{ method: string; count: number; percentage: number }>;
@@ -37,7 +38,7 @@ export default function AnalyticsPanel({
   const {
     dashboard,
     performanceMetrics,
-    userBehavior,
+    userBehavior: _userBehavior,
     isLoading: storeLoading,
     error: storeError,
     setDashboard,

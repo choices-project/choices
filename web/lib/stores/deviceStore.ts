@@ -53,6 +53,14 @@ export type NetworkInfo = {
   online: boolean;
 }
 
+// Network connection API type (may not be available in all browsers)
+type NetworkConnection = {
+  readonly effectiveType?: string;
+  readonly downlink?: number;
+  readonly rtt?: number;
+  readonly saveData?: boolean;
+} & EventTarget
+
 export type DeviceStore = {
   // Device Information
   deviceType: DeviceType;
@@ -143,7 +151,7 @@ const detectCapabilities = (): DeviceCapabilities => {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
     highContrast: window.matchMedia('(prefers-contrast: high)').matches,
-    lowData: (navigator as any).connection?.saveData || false,
+    lowData: (navigator as Navigator & { connection?: NetworkConnection }).connection?.saveData ?? false,
     offline: !navigator.onLine,
     geolocation: 'geolocation' in navigator,
     camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
@@ -167,13 +175,13 @@ const detectNetworkInfo = (): NetworkInfo => {
     };
   }
 
-  const connection = (navigator as any).connection;
+  const connection = (navigator as Navigator & { connection?: NetworkConnection }).connection;
   return {
-    type: connection?.effectiveType || 'unknown',
-    effectiveType: connection?.effectiveType || '4g',
-    downlink: connection?.downlink || 10,
-    rtt: connection?.rtt || 50,
-    saveData: connection?.saveData || false,
+    type: connection?.effectiveType ?? 'unknown',
+    effectiveType: connection?.effectiveType ?? '4g',
+    downlink: connection?.downlink ?? 10,
+    rtt: connection?.rtt ?? 50,
+    saveData: connection?.saveData ?? false,
     online: navigator.onLine
   };
 };
@@ -284,7 +292,7 @@ export const useDeviceStore = create<DeviceStore>()(
               aspectRatio: window.innerWidth / window.innerHeight
             };
             
-            state.pixelRatio = window.devicePixelRatio || 1;
+            state.pixelRatio = window.devicePixelRatio ?? 1;
           });
         },
 

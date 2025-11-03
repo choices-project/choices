@@ -509,7 +509,7 @@ export class SMSRankingParser {
    */
   static generateSMSConfirmation(ranking: string[], candidates: Candidate[]): string {
     const candidateNames = ranking.map(id => 
-      candidates.find(c => c.id === id)?.name || 'Unknown'
+      candidates.find(c => c.id === id)?.name ?? 'Unknown'
     );
     
     return `Your ranking received: ${candidateNames.join(' > ')}. 

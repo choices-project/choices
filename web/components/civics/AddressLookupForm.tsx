@@ -102,7 +102,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
                 'Enter your voting address (not your current location).\n\nThis address will be used to find your representatives. Same privacy rules—nothing is stored.',
                 address
               );
-              if (alternateAddress && alternateAddress.trim() && alternateAddress !== address) {
+              if (alternateAddress?.trim() && alternateAddress !== address) {
                 setAddress(alternateAddress.trim());
                 setError(null);
                 // Optionally trigger lookup immediately

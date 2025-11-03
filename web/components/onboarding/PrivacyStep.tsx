@@ -33,7 +33,7 @@ type PrivacyStepProps = {
 }
 
 export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyStepProps) {
-  const [privacy, setPrivacy] = useState(data.privacy || {
+  const [privacy, setPrivacy] = useState(data.privacy ?? {
     shareProfile: false,
     shareDemographics: false,
     shareParticipation: false,
@@ -51,7 +51,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
     // Map to the correct type for updateData
     updateData({ 
       privacy: {
-        shareAnalytics: newPrivacy.allowAnalytics || false,
+        shareAnalytics: newPrivacy.allowAnalytics ?? false,
         dpLevel: 1,
         privacyCompleted: true
       }

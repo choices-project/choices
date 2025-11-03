@@ -119,7 +119,7 @@ export async function getAutoCompleteSuggestions(
     if (error) throw error;
     
     // Convert to suggestions
-    const suggestions: HashtagSuggestion[] = (hashtags || []).map(hashtag => {
+    const suggestions: HashtagSuggestion[] = (hashtags ?? []).map(hashtag => {
       const confidence = calculateMatchConfidence(normalizedQuery, String(hashtag.name));
       return {
         hashtag: hashtag as Hashtag,
@@ -132,7 +132,7 @@ export async function getAutoCompleteSuggestions(
           related_hashtags: [],
           category_match: true,
           user_history: false,
-          social_proof: Number(hashtag.usage_count) || 0
+          social_proof: Number(hashtag.usage_count) ?? 0
         }
       };
     });
@@ -195,7 +195,7 @@ export async function getRelatedHashtags(
     const suggestions: HashtagSuggestion[] = [];
     
     // Add category-based suggestions
-    (categoryHashtags || []).forEach(relatedHashtag => {
+    (categoryHashtags ?? []).forEach(relatedHashtag => {
       suggestions.push({
         hashtag: relatedHashtag as Hashtag,
         reason: 'related',
@@ -206,7 +206,7 @@ export async function getRelatedHashtags(
     });
     
     // Add co-occurring suggestions
-    (coOccurring || []).forEach(coOccur => {
+    (coOccurring ?? []).forEach(coOccur => {
       if (coOccur.hashtags && Array.isArray(coOccur.hashtags) && coOccur.hashtags.length > 0) {
         const hashtag = coOccur.hashtags[0];
         suggestions.push({
@@ -249,7 +249,7 @@ export async function getTrendingSuggestions(
     
     if (error) throw error;
     
-    return (trending || []).map(hashtag => ({
+    return (trending ?? []).map(hashtag => ({
       hashtag: hashtag as Hashtag,
         reason: 'trending',
       confidence: 0.8,
@@ -260,7 +260,7 @@ export async function getTrendingSuggestions(
         related_hashtags: [],
         category_match: false,
         user_history: false,
-        social_proof: hashtag.usage_count || 0
+        social_proof: hashtag.usage_count ?? 0
       }
     }));
   } catch (error) {
@@ -280,7 +280,7 @@ async function getUserHashtags(userId: string): Promise<string[]> {
     .eq('user_id', userId);
   
   if (error) throw error;
-  return data?.map(uh => uh.hashtag_id) || [];
+  return data?.map(uh => uh.hashtag_id) ?? [];
 }
 
 async function getContentBasedSuggestions(
@@ -305,7 +305,7 @@ async function getContentBasedSuggestions(
     
     if (error) continue;
     
-    (hashtags || []).forEach(hashtag => {
+    (hashtags ?? []).forEach(hashtag => {
       suggestions.push({
         hashtag: hashtag as Hashtag,
         reason: 'related',
@@ -334,7 +334,7 @@ async function getCategoryBasedSuggestions(
   
   if (error) throw error;
   
-  return (hashtags || []).map(hashtag => ({
+  return (hashtags ?? []).map(hashtag => ({
     hashtag: hashtag as Hashtag,
     reason: 'popular',
     confidence: 0.7,
@@ -360,7 +360,7 @@ async function getRelatedSuggestions(
   
   if (error) throw error;
   
-  return (coOccurring || []).map(coOccur => {
+  return (coOccurring ?? []).map(coOccur => {
     const hashtag = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
     return {
       hashtag: hashtag as Hashtag,
@@ -500,7 +500,7 @@ function rankSuggestions(
     if (Math.abs(confidenceDiff) > 0.1) return confidenceDiff;
     
     // Secondary: usage count
-    const usageDiff = (b.hashtag.usage_count || 0) - (a.hashtag.usage_count || 0);
+    const usageDiff = (b.hashtag.usage_count ?? 0) - (a.hashtag.usage_count ?? 0);
     if (Math.abs(usageDiff) > 100) return usageDiff;
     
     // Tertiary: trending status

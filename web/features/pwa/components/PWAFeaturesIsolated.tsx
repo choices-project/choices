@@ -14,7 +14,7 @@ type PWAFeaturesIsolatedProps = {
  * A completely isolated version that doesn't use complex Zustand stores to avoid infinite loops.
  * This component provides PWA feature information for E2E testing without causing React infinite loops.
  */
-export default function PWAFeaturesIsolated({ className = '', showDetails = false }: PWAFeaturesIsolatedProps) {
+export default function PWAFeaturesIsolated({ className = '', showDetails: _showDetails = false }: PWAFeaturesIsolatedProps) {
   const [isOnline, setIsOnline] = useState(true)
   const [isSupported, setIsSupported] = useState(false)
 

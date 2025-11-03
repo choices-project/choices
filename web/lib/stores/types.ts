@@ -21,7 +21,13 @@ export type BaseStore = {
 }
 
 // Store middleware configuration
-export type StoreMiddleware = (config: any) => (set: any, get: any, api: any) => any;
+export type StoreMiddleware = <T>(
+  config: unknown
+) => (
+  set: (partial: T | Partial<T> | ((state: T) => T | Partial<T>), replace?: boolean) => void,
+  get: () => T,
+  api: unknown
+) => unknown;
 
 // Store configuration options
 export type StoreConfig = {

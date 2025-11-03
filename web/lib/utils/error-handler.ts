@@ -215,7 +215,7 @@ export function getUserMessage(error: AppError): string {
     UNKNOWN_ERROR: 'An unknown error occurred. Please try again'
   };
 
-  return userMessages[error.code] || 'An error occurred. Please try again';
+  return userMessages[error.code] ?? 'An error occurred. Please try again';
 }
 
 /**

@@ -3,7 +3,8 @@ import React, { lazy, Suspense } from 'react';
 "use client"
 
 // Lazy load heavy admin components
-const AdminDashboard = lazy(() => import('@/components/lazy/AdminDashboard'))
+// Updated to use the production AdminDashboard from features/admin
+const AdminDashboard = lazy(() => import('@/features/admin/components/AdminDashboard').then(mod => ({ default: mod.default })))
 const AnalyticsPanel = lazy(() => import('@/components/lazy/AnalyticsPanel'))
 const AuditLogs = lazy(() => import('@/components/lazy/AuditLogs'))
 const SystemSettings = lazy(() => import('@/components/lazy/SystemSettings'))

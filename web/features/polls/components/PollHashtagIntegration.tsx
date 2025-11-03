@@ -23,7 +23,7 @@ import type { Hashtag } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 
-import type { Poll, PollHashtagIntegration } from '../types';
+import type { Poll, PollHashtagIntegrationRecord } from '../types';
 
 type PollHashtagIntegrationProps = {
   poll: Poll;
@@ -39,7 +39,7 @@ export default function PollHashtagIntegration({
   className
 }: PollHashtagIntegrationProps) {
   const [activeTab, setActiveTab] = useState('hashtags');
-  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegration | null>(
+  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegrationRecord | null>(
     poll.hashtags ? {
       poll_id: poll.id,
       hashtag_id: poll.id,
@@ -58,8 +58,8 @@ export default function PollHashtagIntegration({
   }, [getTrendingHashtags]);
 
   // Track hashtag engagement in real-time
-  const trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
-    // Since PollHashtagIntegration doesn't have hashtag_engagement,
+  const _trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
+    // Since PollHashtagIntegrationRecord doesn't have hashtag_engagement,
     // we'll track this separately
     console.log(`Hashtag engagement tracked: ${action}`);
     // TODO: Implement proper engagement tracking
@@ -67,7 +67,7 @@ export default function PollHashtagIntegration({
 
   // Handle hashtag updates with enhanced analytics
   const handleHashtagUpdate = (newHashtags: string[]) => {
-    const updatedIntegration: PollHashtagIntegration = {
+    const updatedIntegration: PollHashtagIntegrationRecord = {
       poll_id: poll.id,
       hashtag_id: poll.id,
       created_at: new Date().toISOString()
@@ -82,12 +82,12 @@ export default function PollHashtagIntegration({
   };
 
   // Calculate trending score based on hashtag popularity
-  const calculateTrendingScore = (hashtagNames: string[]): number => {
+  const _calculateTrendingScore = (hashtagNames: string[]): number => {
     if (!hashtagNames.length) return 0;
     
     const totalScore = hashtagNames.reduce((score, hashtagName) => {
       const hashtag = hashtags.find(h => h.name === hashtagName);
-      return score + (hashtag?.trend_score || 0);
+      return score + (hashtag?.trend_score ?? 0);
     }, 0);
     
     return Math.round(totalScore / hashtagNames.length);

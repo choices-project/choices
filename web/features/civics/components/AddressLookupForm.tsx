@@ -116,7 +116,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
             onClick={() => {
               // Implement different address flow - show modal or redirect to different address form
               const differentAddress = prompt('Enter your voting address (this will be used for representative lookup only):');
-              if (differentAddress && differentAddress.trim()) {
+              if (differentAddress?.trim()) {
                 setAddress(differentAddress.trim());
                 // Auto-submit the form with the different address
                 setTimeout(() => {

@@ -105,7 +105,7 @@ export function getRedirectStrategy(): 'server' | 'client' | 'hybrid' {
  */
 export function navigateTo(url: string, strategy?: 'server' | 'client' | 'hybrid') {
   const browser = detectBrowser()
-  const redirectStrategy = strategy || getRedirectStrategy()
+  const redirectStrategy = strategy ?? getRedirectStrategy()
 
   logger.info('🔍 Browser navigation:', {
     browser: browser.name,

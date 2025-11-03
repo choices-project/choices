@@ -99,7 +99,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
       const requestFilters = withOptional(filters, customFilters);
       const queryParams = new URLSearchParams({
-        period: requestFilters.dateRange || '7d'
+        period: requestFilters.dateRange ?? '7d'
       });
 
       const response = await fetch(`/api/analytics?${queryParams}`);
@@ -266,10 +266,11 @@ function generateReportSummary(data: AnalyticsData, type: string): string {
     case 'overview':
       return `Platform Overview (${data.period}): ${data.summary.totalPolls} total polls with ${data.summary.totalVotes} votes from ${data.summary.totalUsers} users. ${data.summary.activeUsers} active users.`;
     
-    case 'trends':
+    case 'trends': {
       const totalUserGrowth = data.trends.userGrowth.reduce((sum, trend) => sum + trend.count, 0);
       const totalPollActivity = data.trends.pollActivity.reduce((sum, trend) => sum + trend.count, 0);
       return `Trends Summary (${data.period}): ${totalUserGrowth} new users, ${totalPollActivity} new polls.`;
+    }
     
     case 'performance':
       return `Performance Summary: Query optimized: ${data.performance.queryOptimized}, Cache enabled: ${data.performance.cacheEnabled}.`;

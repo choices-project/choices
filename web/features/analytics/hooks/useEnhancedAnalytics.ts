@@ -13,7 +13,7 @@ import type { Database } from '@/types/database';
 import { EnhancedAnalyticsService } from '../lib/enhanced-analytics-service';
 
 
-type SupabaseClient = ReturnType<typeof createClient<Database>>;
+type _SupabaseClient = ReturnType<typeof createClient<Database>>;
 
 type EnhancedAnalyticsData = {
   // Existing analytics data

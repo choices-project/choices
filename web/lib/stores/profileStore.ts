@@ -143,17 +143,18 @@ export const useProfileStore = create<ProfileStore>()(
 
         // Profile data actions
         setProfile: (profile) => set((state) => {
-          state.profile = profile as any;
+          state.profile = profile;
           state.isProfileLoaded = !!profile;
           // Profile completeness will be updated elsewhere
         }),
 
         setUserProfile: (userProfile) => set((state) => {
-          state.userProfile = userProfile as any;
+          state.userProfile = userProfile;
           if (userProfile) {
             // Handle preferences and privacy settings safely
-            state.preferences = (userProfile as any).preferences as ProfilePreferences ?? null;
-            state.privacySettings = (userProfile as any).privacy_settings as PrivacySettings ?? null;
+            const profile = userProfile;
+            state.preferences = ('preferences' in profile ? profile.preferences : null) as ProfilePreferences | null;
+            state.privacySettings = ('privacy_settings' in profile ? profile.privacy_settings : null) as PrivacySettings | null;
           }
         }),
 

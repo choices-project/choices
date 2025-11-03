@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Save
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,12 +43,12 @@ export function FilingGuideWizard({
   const getSavedProgress = () => {
     if (typeof window === 'undefined') return { step: 0, completed: new Set<string>() }
     try {
-      const saved = localStorage.getItem(`filing-guide-${level}-${office}-${state || 'general'}`)
+      const saved = localStorage.getItem(`filing-guide-${level}-${office}-${state ?? 'general'}`)
       if (saved) {
         const parsed = JSON.parse(saved)
         return {
-          step: parsed.step || 0,
-          completed: new Set<string>(parsed.completed || [])
+          step: parsed.step ?? 0,
+          completed: new Set<string>(parsed.completed ?? [])
         }
       }
     } catch {
@@ -66,7 +66,7 @@ export function FilingGuideWizard({
     if (typeof window === 'undefined') return
     try {
       localStorage.setItem(
-        `filing-guide-${level}-${office}-${state || 'general'}`,
+        `filing-guide-${level}-${office}-${state ?? 'general'}`,
         JSON.stringify({
           step,
           completed: Array.from(completed),
@@ -80,7 +80,7 @@ export function FilingGuideWizard({
   
   // Fetch requirements to enhance guide content
   const [requirements, setRequirements] = useState<any>(null)
-  const [loadingRequirements, setLoadingRequirements] = useState(false)
+  const [_loadingRequirements, setLoadingRequirements] = useState(false)
   
   useEffect(() => {
     const fetchRequirements = async () => {

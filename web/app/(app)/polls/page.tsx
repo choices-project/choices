@@ -4,17 +4,9 @@ import { Plus, TrendingUp, Clock, Users, BarChart3, Search, Hash, Flame, Star, E
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Import hashtag functionality - RE-ENABLED after fixing infinite loop
-
-// Try to import full hashtag store, fallback to minimal if it fails
-// Import hashtag store with fallback
-import { useHashtagStore as fullUseHashtagStore, useHashtagActions as fullUseHashtagActions, useHashtagStats as fullUseHashtagStats } from '@/lib/stores';
-import { useHashtagStore as minimalUseHashtagStore, useHashtagActions as minimalUseHashtagActions, useHashtagStats as minimalUseHashtagStats } from '@/lib/stores/hashtagStoreMinimal';
-
-// Use full store if available, fallback to minimal store
-const useHashtagStore = fullUseHashtagStore || minimalUseHashtagStore;
-const useHashtagActions = fullUseHashtagActions || minimalUseHashtagActions;
-const useHashtagStats = fullUseHashtagStats || minimalUseHashtagStats;
+// Import hashtag functionality
+import type { HashtagSearchQuery } from '@/features/hashtags/types';
+import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 
 // Enhanced poll interface with hashtag integration
 type EnhancedPoll = {
@@ -43,6 +35,8 @@ type EnhancedPoll = {
   };
 }
 
+// Removed unused type definitions
+
 const CATEGORIES = [
   { id: 'general', name: 'General', icon: '📊', color: 'bg-gray-100 text-gray-700' },
   { id: 'business', name: 'Business', icon: '💼', color: 'bg-blue-100 text-blue-700' },
@@ -64,25 +58,17 @@ export default function PollsPage() {
   const [sortBy, _setSortBy] = useState<'newest' | 'popular' | 'trending' | 'engagement'>('trending');
   const [viewMode, _setViewMode] = useState<'grid' | 'list' | 'trending'>('trending');
   
-  // Hashtag store integration - STILL CAUSING INFINITE LOOP
-  // Move hook calls to top level to prevent infinite loops
-  let _hashtags: any[] = [];
-  const _trendingHashtags: any[] = [];
-  const _trendingCount = 0;
-  let _hashtagActions: any = null;
-  
-  // Hooks must be called at the top level - no conditional calls allowed
+  // Hashtag store integration
   const hashtagStore = useHashtagStore();
-  const _hashtagStats = useHashtagStats();
+  const hashtagStats = useHashtagStats();
   const hashtagActions = useHashtagActions();
   
-  // Update state with hook results
-  _hashtags = hashtagStore?.hashtags ?? [];
-  _hashtagActions = hashtagActions;
-  // trendingHashtags = hashtagStore?.trendingHashtags ?? [];
-  // trendingCount = hashtagStats?.trendingCount ?? 0;
+  // Get hashtag data from store
+  const _hashtags = hashtagStore?.hashtags ?? [];
+  const _trendingHashtags = hashtagStore?.trendingHashtags ?? [];
+  const _trendingCount = hashtagStats?.trendingCount ?? 0;
   
-  // Use useCallback to prevent infinite loops - now using the hook result from top level
+  // Use useCallback to prevent infinite loops
   const getTrendingHashtags = useCallback(async () => {
     try {
       if (hashtagActions?.getTrendingHashtags) {
@@ -96,7 +82,8 @@ export default function PollsPage() {
   const _searchHashtags = useCallback(async (query: string) => {
     try {
       if (hashtagActions?.searchHashtags) {
-        return await hashtagActions.searchHashtags(query);
+        const searchQuery: HashtagSearchQuery = { query };
+        await hashtagActions.searchHashtags(searchQuery);
       }
     } catch (error) {
       console.warn('Failed to search hashtags:', error);
@@ -259,7 +246,7 @@ export default function PollsPage() {
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setFilter(id as any)}
+              onClick={() => setFilter(id as 'all' | 'active' | 'closed' | 'trending')}
               className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 filter === id
                   ? 'bg-white text-blue-600 shadow-sm'
@@ -306,15 +293,15 @@ export default function PollsPage() {
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Trending Hashtags</h3>
             <div className="flex flex-wrap gap-2">
-              {_trendingHashtags.slice(0, 10).map((hashtag, index) => (
+              {_trendingHashtags.slice(0, 10).map((trendingHashtag) => (
                 <button
-                  key={index}
-                  onClick={() => handleHashtagSelect(hashtag.hashtag ?? hashtag)}
+                  key={trendingHashtag.hashtag.id}
+                  onClick={() => handleHashtagSelect(trendingHashtag.hashtag.name)}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                 >
                   <Hash className="h-3 w-3 mr-1" />
-                  {hashtag.hashtag ?? hashtag}
-                  {hashtag.count && <span className="ml-1 text-blue-500">({hashtag.count})</span>}
+                  {trendingHashtag.hashtag.display_name ?? trendingHashtag.hashtag.name}
+                  {trendingHashtag.hashtag.usage_count && <span className="ml-1 text-blue-500">({trendingHashtag.hashtag.usage_count})</span>}
                 </button>
               ))}
             </div>

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // User profile loaded successfully
-    const displayName = (profile as any).display_name || profile.username || authData.user.email || 'User'
+    const displayName = (profile as any).display_name ?? profile.username ?? authData.user.email ?? 'User'
     logger.info('User profile loaded', { userId: authData.user.id, displayName })
 
     logger.info('User logged in successfully', { 

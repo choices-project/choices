@@ -179,8 +179,8 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
 
       const authUser: AuthUser = withOptional({
         id: user.id,
-        email: user.email || '',
-        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier || 'T1' : 'T1'
+        email: user.email ?? '',
+        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier ?? 'T1' : 'T1'
       }, {
         username: profile && !('error' in profile) ? (profile as UserProfile).username : null
       });

@@ -256,7 +256,7 @@ export default function Civics2Page() {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={selectedLevel}
-                    onChange={(e) => setSelectedLevel(e.target.value as any)}
+                    onChange={(e) => setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local')}
                   >
                     <option value="all">All Levels</option>
                     <option value="federal">Federal</option>
@@ -268,7 +268,7 @@ export default function Civics2Page() {
                     <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={cardVariant}
-                      onChange={(e) => setCardVariant(e.target.value as any)}
+                      onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
                     >
                       <option value="default">Default</option>
                       <option value="compact">Compact</option>
@@ -362,7 +362,7 @@ export default function Civics2Page() {
                           data-testid="level-filter"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           value={selectedLevel}
-                          onChange={(e) => setSelectedLevel(e.target.value as any)}
+                          onChange={(e) => setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local')}
                         >
                           <option value="all">All Levels</option>
                           <option value="federal">Federal</option>

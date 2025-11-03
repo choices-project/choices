@@ -34,7 +34,7 @@ export async function POST() {
     const { data: existingUser, error: checkError } = await supabaseClient
       .from('ia_users')
       .select('id, stable_id, email, verification_tier, is_active')
-      .eq('stable_id', String(user.id) as any)
+      .eq('stable_id', String(user.id))
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -67,7 +67,7 @@ export async function POST() {
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any)
+      })
       .select()
       .single()
 

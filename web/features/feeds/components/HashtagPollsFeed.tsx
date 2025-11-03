@@ -45,7 +45,7 @@ export default function HashtagPollsFeed({
   className = '',
   onPollSelect,
   onHashtagSelect,
-  enablePersonalization = true,
+  enablePersonalization: _enablePersonalization = true,
   enableTrending = true,
   enableAnalytics = false,
   maxPolls = 20
@@ -121,7 +121,7 @@ export default function HashtagPollsFeed({
         filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
         break;
       case 'engagement':
-        filtered.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0));
+        filtered.sort((a, b) => (b.totalVotes ?? 0) - (a.totalVotes ?? 0));
         break;
       case 'relevance':
       default:
@@ -150,7 +150,7 @@ export default function HashtagPollsFeed({
   }, [onPollSelect]);
 
   // Track hashtag engagement
-  const trackHashtagEngagement = useCallback(async (hashtag: string, action: 'view' | 'click' | 'share') => {
+  const _trackHashtagEngagement = useCallback(async (hashtag: string, action: 'view' | 'click' | 'share') => {
     try {
       await fetch('/api/feeds/hashtag-engagement', {
         method: 'POST',

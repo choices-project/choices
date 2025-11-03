@@ -168,7 +168,7 @@ class PerformanceMetricsCollector {
       script.addEventListener('load', () => {
         const loadTime = performance.now() - startTime;
         const bundle: BundlePerformance = {
-          bundleName: script.getAttribute('src') || 'unknown',
+          bundleName: script.getAttribute('src') ?? 'unknown',
           loadTime,
           parseTime: 0, // Would need more sophisticated tracking
           executeTime: 0, // Would need more sophisticated tracking

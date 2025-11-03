@@ -325,7 +325,7 @@ export async function GET(request: NextRequest) {
           feature_enabled: isEnabled,
           status,
           message: status === 'healthy' ? 'Civics system is healthy' : 
-                   status === 'warning' ? 'Civics system has warnings' : 'Civics system has issues',
+                   (status === 'warning' ? 'Civics system has warnings' : 'Civics system has issues'),
           timestamp,
           issues: issues.length > 0 ? issues : undefined,
           checks: {

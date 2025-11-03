@@ -25,7 +25,7 @@ import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/store
 import { cn } from '@/lib/utils';
 
 // Local type definitions
-export type FeedHashtagIntegration = {
+export type FeedHashtagIntegrationProps = {
   id: string;
   hashtagId: string;
   feedItemId: string;
@@ -48,7 +48,7 @@ export type HashtagSort = {
   label: string;
 }
 
-type FeedHashtagIntegrationProps = {
+type FeedHashtagIntegrationComponentProps = {
   feedItems: FeedItemData[];
   onFilter: (filters: HashtagFilter[]) => void;
   onSort: (sort: HashtagSort) => void;
@@ -60,7 +60,7 @@ export default function FeedHashtagIntegration({
   onFilter,
   onSort,
   className
-}: FeedHashtagIntegrationProps) {
+}: FeedHashtagIntegrationComponentProps) {
   const [activeTab, setActiveTab] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<HashtagFilter[]>([]);

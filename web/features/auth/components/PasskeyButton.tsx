@@ -90,7 +90,7 @@ export function PasskeyButton({
       if (result.success) {
         onSuccess?.();
       } else {
-        const errorMsg = result.error || 'Operation failed';
+        const errorMsg = result.error ?? 'Operation failed';
         setError(errorMsg);
         onError?.(errorMsg);
       }

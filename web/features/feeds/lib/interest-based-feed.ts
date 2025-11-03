@@ -39,7 +39,7 @@ export type Demographics = {
 }
 
 // Database types
-type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+type _UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 export type PersonalizedPollFeed = {
   userId: string;
@@ -187,7 +187,7 @@ export class InterestBasedPollFeed {
         created_at: poll.created_at,
         jurisdiction: poll.jurisdiction,
         district: poll.district
-      })) || [];
+      })) ?? [];
     } catch (error) {
       logger.error('Error in findMatchingPolls:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -262,7 +262,7 @@ export class InterestBasedPollFeed {
         jurisdiction: poll.jurisdiction,
         district: poll.district,
         civicRelevance: this.calculateCivicRelevance(poll, locationData)
-      })) || [];
+      })) ?? [];
     } catch (error) {
       logger.error('Error in getDistrictBasedPolls:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -353,8 +353,8 @@ export class InterestBasedPollFeed {
       }
 
       return {
-        representatives: representatives || [],
-        civicPolls: civicPolls || [],
+        representatives: representatives ?? [],
+        civicPolls: civicPolls ?? [],
         district: parsedLocation.district,
         state: parsedLocation.state
       };
@@ -422,7 +422,7 @@ export class InterestBasedPollFeed {
     
     polls.forEach(poll => {
       poll.interestMatches.forEach(interest => {
-        interestCounts[interest] = (interestCounts[interest] || 0) + 1;
+        interestCounts[interest] = (interestCounts[interest] ?? 0) + 1;
       });
     });
 
@@ -475,7 +475,7 @@ export class InterestBasedPollFeed {
       // Count frequency of hashtags
       const hashtagCounts: { [key: string]: number } = {};
       data?.forEach((item: any) => {
-        hashtagCounts[item.hashtag] = (hashtagCounts[item.hashtag] || 0) + 1;
+        hashtagCounts[item.hashtag] = (hashtagCounts[item.hashtag] ?? 0) + 1;
       });
 
       // Return top 5 most popular hashtags
@@ -518,7 +518,7 @@ export class InterestBasedPollFeed {
         interestMatches: [],
         totalVotes: poll.total_votes ?? 0,
         created_at: poll.created_at
-      })) || [];
+      })) ?? [];
     } catch (error) {
       logger.error('Error in getTrendingPolls:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -639,7 +639,7 @@ export async function GET(request: NextRequest) {
         } : null,
         feed_enhancement: {
           hashtag_integration: !!hashtagPollsFeed,
-          personalization_level: (hashtagPollsFeed?.hashtag_interests?.length || 0) > 0 ? 'high' : 'medium',
+          personalization_level: (hashtagPollsFeed?.hashtag_interests?.length ?? 0) > 0 ? 'high' : 'medium',
           autopopulation_driver: 'followed_hashtags'
         }
       }

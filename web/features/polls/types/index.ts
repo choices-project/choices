@@ -149,7 +149,7 @@ export type PollUpdateData = {
   is_shareable?: boolean
 }
 
-export type PollHashtagIntegration = {
+export type PollHashtagIntegrationRecord = {
   poll_id: string
   hashtag_id: string
   created_at: string

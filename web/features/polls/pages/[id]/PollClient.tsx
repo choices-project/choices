@@ -32,7 +32,7 @@ type PollClientProps = {
 
 export default function PollClient({ poll }: PollClientProps) {
   const { user } = useAuth();
-  const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote || null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote ?? null);
   const [isVoting, setIsVoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

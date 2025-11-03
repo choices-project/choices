@@ -177,7 +177,7 @@ export class HashtagPollsIntegrationService {
       // Extract hashtag names from followed hashtags
       const followedHashtagNames = followedHashtags?.map((uh: any) => 
         uh.hashtags?.name
-      ).filter(Boolean) || [];
+      ).filter(Boolean) ?? [];
 
       // If user has no followed hashtags, get trending hashtags as default
       if (followedHashtagNames.length === 0) {
@@ -222,7 +222,7 @@ export class HashtagPollsIntegrationService {
         const eventData = event.event_data;
         if (eventData?.hashtag) {
           const hashtag = eventData.hashtag;
-          const currentScore = hashtagScores.get(hashtag) || 0;
+          const currentScore = hashtagScores.get(hashtag) ?? 0;
           hashtagScores.set(hashtag, currentScore + 1);
         }
       });
@@ -342,7 +342,7 @@ export class HashtagPollsIntegrationService {
       // Convert to PollRecommendation format with enhanced hashtag scoring
       const recommendations: PollRecommendation[] = pollsData?.map((poll: any) => {
         // Calculate priority score based on followed hashtags
-        const followedHashtagMatches = (poll.hashtags || []).filter((hashtag: string) => 
+        const followedHashtagMatches = (poll.hashtags ?? []).filter((hashtag: string) => 
           followedHashtags.includes(hashtag)
         ).length;
         
@@ -361,12 +361,12 @@ export class HashtagPollsIntegrationService {
         );
 
         // Generate personalized reason based on followed hashtags
-        const matchedHashtags = (poll.hashtags || []).filter((hashtag: string) => 
+        const matchedHashtags = (poll.hashtags ?? []).filter((hashtag: string) => 
           followedHashtags.includes(hashtag)
         );
         const reason = matchedHashtags.length > 0 
           ? `Matches your followed hashtags: ${matchedHashtags.map((h: string) => `#${h}`).join(', ')}`
-          : `Related to your interests in ${poll.primary_hashtag || 'politics'}`;
+          : `Related to your interests in ${poll.primary_hashtag ?? 'politics'}`;
 
         return {
           poll_id: poll.id,
@@ -376,13 +376,13 @@ export class HashtagPollsIntegrationService {
           hashtag_match_score: hashtagMatchScore + primaryHashtagBonus,
           engagement_score: engagementScore,
           recency_score: recencyScore,
-          hashtags: poll.hashtags || [],
+          hashtags: poll.hashtags ?? [],
           primary_hashtag: poll.primary_hashtag,
-          total_votes: poll.total_votes || 0,
+          total_votes: poll.total_votes ?? 0,
           created_at: poll.created_at,
           reason
         };
-      }) || [];
+      }) ?? [];
 
       // Sort by relevance score and return top recommendations
       return recommendations
@@ -430,12 +430,12 @@ export class HashtagPollsIntegrationService {
         hashtag_match_score: 0,
         engagement_score: this.calculateEngagementScore(poll),
         recency_score: this.calculateRecencyScore(poll.created_at),
-        hashtags: poll.hashtags || [],
+        hashtags: poll.hashtags ?? [],
         primary_hashtag: poll.primary_hashtag,
-        total_votes: poll.total_votes || 0,
+        total_votes: poll.total_votes ?? 0,
         created_at: poll.created_at,
         reason: 'Trending poll'
-      })) || [];
+      })) ?? [];
       
     } catch (error) {
       logger.error('Failed to get trending poll recommendations:', error as Error);
@@ -469,10 +469,10 @@ export class HashtagPollsIntegrationService {
         // Calculate engagement rate
         const totalEngagement = pollData?.reduce((sum: number, poll: any) => {
           const engagement = poll.hashtag_engagement || {};
-          return sum + (engagement.total_views || 0) + (engagement.hashtag_clicks || 0);
-        }, 0) || 0;
+          return sum + (engagement.total_views ?? 0) + (engagement.hashtag_clicks ?? 0);
+        }, 0) ?? 0;
 
-        const pollCount = pollData?.length || 0;
+        const pollCount = pollData?.length ?? 0;
         const engagementRate = pollCount > 0 ? totalEngagement / pollCount : 0;
 
         // Calculate trending position
@@ -523,10 +523,10 @@ export class HashtagPollsIntegrationService {
    * Calculate engagement score for a poll
    */
   private calculateEngagementScore(poll: any): number {
-    const totalVotes = poll.total_votes || 0;
+    const totalVotes = poll.total_votes ?? 0;
     const engagement = poll.hashtag_engagement || {};
-    const hashtagViews = engagement.total_views || 0;
-    const hashtagClicks = engagement.hashtag_clicks || 0;
+    const hashtagViews = engagement.total_views ?? 0;
+    const hashtagClicks = engagement.hashtag_clicks ?? 0;
     
     // Normalize engagement score (0-1)
     const totalEngagement = totalVotes + hashtagViews + hashtagClicks;

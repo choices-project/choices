@@ -31,8 +31,8 @@ import type { ProfileSetupStepProps, ProfileVisibility } from '../types';
  * @returns {JSX.Element} Profile setup interface
  */
 export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetupStepProps) {
-  const [displayName, setDisplayName] = useState(data?.displayName || '')
-  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>((data?.profileVisibility as ProfileVisibility) || 'public')
+  const [displayName, setDisplayName] = useState(data?.displayName ?? '')
+  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>((data?.profileVisibility as ProfileVisibility) ?? 'public')
   const [emailNotifications, setEmailNotifications] = useState(data?.emailNotifications !== false)
   const [pushNotifications, setPushNotifications] = useState(data?.pushNotifications !== false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'profile' | 'preferences' | 'complete'>('overview')

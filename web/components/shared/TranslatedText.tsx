@@ -44,7 +44,7 @@ export default function TranslatedText({
 
   return (
     <Component className={className} {...props}>
-      {children || displayText}
+      {children ?? displayText}
     </Component>
   );
 }

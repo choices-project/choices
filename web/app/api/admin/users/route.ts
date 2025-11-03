@@ -1,5 +1,4 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import { logger } from '@/lib/logger';
@@ -105,7 +104,7 @@ export async function PUT(request: NextRequest) {
 
     // Validate updates
     const allowedFields = ['is_admin', 'username']
-    const validUpdates: any = {}
+    const validUpdates: Record<string, unknown> = {}
     
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key)) {

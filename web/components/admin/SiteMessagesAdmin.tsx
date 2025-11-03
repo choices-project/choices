@@ -37,7 +37,7 @@ export default function SiteMessagesAdmin({
   const [messages, setMessages] = useState<SiteMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [editingMessage, setEditingMessage] = useState<SiteMessage | null>(null)
+  const [_editingMessage, _setEditingMessage] = useState<SiteMessage | null>(null)
   const [newMessage, setNewMessage] = useState<Partial<SiteMessage>>({
     title: '',
     message: '',
@@ -115,14 +115,14 @@ export default function SiteMessagesAdmin({
     }
   }
 
-  const handleUpdateMessage = async (message: SiteMessage) => {
+  const _handleUpdateMessage = async (message: SiteMessage) => {
     try {
       setMessages(prev => prev.map(m => 
         m.id === message.id 
           ? { ...message, updated_at: new Date().toISOString() }
           : m
       ))
-      setEditingMessage(null)
+      _setEditingMessage(null)
     } catch (error) {
       devLog('Error updating message:', error)
     }
@@ -346,7 +346,7 @@ export default function SiteMessagesAdmin({
               </div>
               <div className="flex items-center gap-2 ml-4">
                 <button
-                  onClick={() => setEditingMessage(message)}
+                  onClick={() => _setEditingMessage(message)}
                   className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   title="Edit message"
                 >

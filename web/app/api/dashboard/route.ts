@@ -247,7 +247,7 @@ async function loadDashboardDataFallback(supabase: any, userId: string): Promise
     user: {
       id: userId,
       email: user.email ?? '',
-      name: user.name ?? 'User'
+      name: (user.display_name ?? user.username ?? 'User')
     },
     analytics: {
       total_votes: totalVotes,

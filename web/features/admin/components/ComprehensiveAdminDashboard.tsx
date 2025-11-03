@@ -112,15 +112,15 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [_showMessageForm, _setShowMessageForm] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Admin dashboard preferences
-  const [showSystemHealth, setShowSystemHealth] = useState(true);
-  const [showUserManagement, setShowUserManagement] = useState(true);
-  const [showAnalytics, setShowAnalytics] = useState(true);
-  const [showSiteMessages, setShowSiteMessages] = useState(true);
+  const [_showSystemHealth, _setShowSystemHealth] = useState(true);
+  const [_showUserManagement, _setShowUserManagement] = useState(true);
+  const [_showAnalytics, _setShowAnalytics] = useState(true);
+  const [_showSiteMessages, _setShowSiteMessages] = useState(true);
 
   // Load platform analytics with optimized API
   const loadPlatformAnalytics = useCallback(async () => {

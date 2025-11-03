@@ -179,16 +179,6 @@ export async function trackSophisticatedEvent(
   try {
     const sessionId = options.sessionId ?? crypto.randomUUID();
     
-    const analyticsEvent: SophisticatedAnalyticsEvent = {
-      event_type: eventType,
-      user_id: options.userId,
-      session_id: sessionId,
-      event_data: eventData,
-      ip_address: options.ipAddress,
-      user_agent: options.userAgent,
-      created_at: new Date().toISOString()
-    };
-
     // In a real implementation, this would make an API call to store the event
     logger.info('Sophisticated analytics event tracked', {
       eventType,
@@ -276,7 +266,6 @@ export async function trackAnalyticsEventData(
 export function calculateEngagementMetrics(
   events: SophisticatedAnalyticsEvent[]
 ): EngagementMetrics {
-  const totalEvents = events.length;
   const uniqueUsers = new Set(events.map(e => e.user_id).filter(Boolean)).size;
   const sessionDuration = calculateSessionDuration(events);
   const bounceRate = calculateBounceRate(events);

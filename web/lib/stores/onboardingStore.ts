@@ -74,7 +74,7 @@ type OnboardingStep = {
   required: boolean;
   completed: boolean;
   skipped: boolean;
-  data?: any;
+  data?: unknown;
 }
 
 // Onboarding store state interface
@@ -96,7 +96,7 @@ type OnboardingStore = {
   progress: number;
   completedSteps: number[];
   skippedSteps: number[];
-  stepData: Record<number, any>;
+  stepData: Record<number, unknown>;
   
   // Steps configuration
   steps: OnboardingStep[];

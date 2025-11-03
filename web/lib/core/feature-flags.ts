@@ -199,7 +199,7 @@ export const featureFlagManager = {
   get: (key: string | FeatureFlagKey): boolean => {
     const normalizedKey = normalize(String(key));
     if (normalizedKey && normalizedKey in mutableFlags) {
-      return mutableFlags[normalizedKey] || false;
+      return mutableFlags[normalizedKey] ?? false;
     }
     return false;
   },
@@ -220,14 +220,14 @@ export const featureFlagManager = {
   isEnabled: (key: string | FeatureFlagKey): boolean => {
     const normalizedKey = normalize(String(key));
     if (normalizedKey && normalizedKey in mutableFlags) {
-      return mutableFlags[normalizedKey] || false;
+      return mutableFlags[normalizedKey] ?? false;
     }
     return false;
   },
   getFlag: (flagId: string): FeatureFlag | null => {
     const normalizedKey = normalize(flagId);
     if (normalizedKey && normalizedKey in mutableFlags) {
-      const enabled = mutableFlags[normalizedKey] || false;
+      const enabled = mutableFlags[normalizedKey] ?? false;
       return {
         id: flagId,
         name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
@@ -279,11 +279,11 @@ export const featureFlagManager = {
       // System features
       system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
     };
-    const flagIds = categories[category] || [];
+    const flagIds = categories[category] ?? [];
     return flagIds.map(flagId => ({
       id: flagId,
       name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-      enabled: mutableFlags[flagId as FeatureFlagKey] || false,
+      enabled: mutableFlags[flagId as FeatureFlagKey] ?? false,
       description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
       key: flagId as FeatureFlagKey,
       category: category
@@ -405,5 +405,5 @@ export async function setFeatureFlags(flags: Record<string, boolean>): Promise<v
 }
 export const getAllFeatureFlags = () => featureFlagManager.all();
 
-// Additional exports expected by useFeatureFlags hook
-export const FeatureFlagManager = featureFlagManager;
+// Note: FeatureFlagManager type is exported above (line 102)
+// The featureFlagManager instance is already exported via the const declaration above

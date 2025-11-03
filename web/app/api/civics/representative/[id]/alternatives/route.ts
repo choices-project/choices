@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-import type { CandidatePlatformRow } from '@/types/candidate'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 

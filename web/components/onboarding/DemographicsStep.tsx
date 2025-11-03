@@ -14,7 +14,7 @@ type DemographicsStepProps = {
 }
 
 export default function DemographicsStep({ data, onUpdate, onNext, onBack }: DemographicsStepProps) {
-  const [demographics, setDemographics] = useState(data.demographics || {})
+  const [demographics, setDemographics] = useState(data.demographics ?? {})
   const { updateData } = useOnboardingContext()
 
   const handleDemographicChange = (field: string, value: string | undefined) => {

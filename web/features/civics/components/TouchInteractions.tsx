@@ -148,7 +148,7 @@ export default function TouchInteractions({
       const touch2 = e.touches[1];
       if (touch1 && touch2) {
         const currentDistance = calculateDistance(touch1, touch2);
-        const distanceChange = currentDistance - (touchState.lastDistance || touchState.initialDistance);
+        const distanceChange = currentDistance - (touchState.lastDistance ?? touchState.initialDistance);
         
         setTouchState(prev => ({
           ...prev,

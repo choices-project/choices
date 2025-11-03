@@ -312,7 +312,7 @@ export const VALIDATION_RULES = {
   },
   bio: {
     maxLength: PROFILE_LIMITS.MAX_BIO_LENGTH,
-    allowedCharacters: /^[a-zA-Z0-9\s\-_.,!?@#$%^&*()+=\[\]{}|\\:";'<>?\/~`]+$/,
+    allowedCharacters: /^[a-zA-Z0-9\s\-_.,!?@#$%^&*()+=[\]{}|\\:";'<>?/~`]+$/,
   },
 } as const;
 

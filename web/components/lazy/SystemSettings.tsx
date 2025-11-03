@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 
-type SystemSettings = {
+type SystemSettingsConfig = {
   general: {
     siteName: string;
     siteDescription: string;
@@ -37,11 +37,11 @@ type SystemSettings = {
 }
 
 type SystemSettingsProps = {
-  onSettingsUpdate?: (settings: SystemSettings) => void;
+  onSettingsUpdate?: (settings: SystemSettingsConfig) => void;
 }
 
 export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps) {
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [settings, setSettings] = useState<SystemSettingsConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
         await new Promise(resolve => setTimeout(resolve, 600));
         
         // Mock data - in real implementation, this would come from an API
-        const mockSettings: SystemSettings = {
+        const mockSettings: SystemSettingsConfig = {
           general: {
             siteName: 'Choices Platform',
             siteDescription: 'A modern voting platform for democratic decision making',
@@ -128,7 +128,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
     }
   };
 
-  const handleSettingChange = (section: keyof SystemSettings, key: string, value: any) => {
+  const handleSettingChange = (section: keyof SystemSettingsConfig, key: string, value: unknown) => {
     if (!settings) return;
     
     setSettings({

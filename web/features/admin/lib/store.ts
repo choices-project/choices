@@ -411,9 +411,9 @@ export const useAdminStore = create<AdminStore>()(
           set((state: any) => ({
             featureFlags: {
               ...state.featureFlags,
-              flags: config.flags || [],
-              enabledFlags: (config.flags || []).filter(flag => flag.enabled).map(flag => flag.id),
-              disabledFlags: (config.flags || []).filter(flag => !flag.enabled).map(flag => flag.id)
+              flags: config.flags ?? [],
+              enabledFlags: (config.flags ?? []).filter(flag => flag.enabled).map(flag => flag.id),
+              disabledFlags: (config.flags ?? []).filter(flag => !flag.enabled).map(flag => flag.id)
             }
           }));
           

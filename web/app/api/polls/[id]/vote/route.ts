@@ -100,7 +100,7 @@ export async function POST(
         .insert({
           poll_id: pollId,
           user_id: user.id,
-          option_id: approvals[0] || '', // Use first approval as primary option_id
+          option_id: approvals[0] ?? '', // Use first approval as primary option_id
           voting_method: 'approval',
           vote_data: { approvals },
           is_verified: true
@@ -127,7 +127,7 @@ export async function POST(
         .insert({
           poll_id: pollId,
           user_id: user.id,
-          option_id: selections[0] || '', // Use first selection as primary option_id
+          option_id: selections[0] ?? '', // Use first selection as primary option_id
           voting_method: 'multiple',
           vote_data: { selections },
           is_verified: true

@@ -63,7 +63,7 @@ export class CivicsCache {
    * Generate cache key for state lookup
    */
   static getStateKey(state: string, level?: string, chamber?: string): string {
-    const params = [state, level || 'all', chamber || 'all'].join(':');
+    const params = [state, level ?? 'all', chamber ?? 'all'].join(':');
     return `${CACHE_CONFIG.state.keyPrefix}${params}`;
   }
 

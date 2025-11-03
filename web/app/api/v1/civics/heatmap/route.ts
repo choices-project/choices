@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const bboxStr = searchParams.get('bbox');
-    const precision = (Number(searchParams.get('precision')) as 5 | 6 | 7) || 5;
+    const precisionParam = searchParams.get('precision');
+    const precision = precisionParam ? (Number(precisionParam) as 5 | 6 | 7) : 5;
     
     // Validate bbox parameter
     const bbox = bboxStr?.split(',').map(Number);

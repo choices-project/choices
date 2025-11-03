@@ -167,8 +167,8 @@ export async function GET(request: NextRequest) {
 // POST /api/feeds - Create or update feed items (for testing)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
     // Category filtering not yet implemented
+    // const _body = await request.json(); // Unused for now
 
     // For now, just return the same data as GET
     return GET(request);

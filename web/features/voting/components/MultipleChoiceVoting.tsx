@@ -29,7 +29,7 @@ export default function MultipleChoiceVoting({
   userVote,
   maxSelections
 }: MultipleChoiceVotingProps) {
-  const [selectedOptions, setSelectedOptions] = useState<number[]>(userVote || [])
+  const [selectedOptions, setSelectedOptions] = useState<number[]>(userVote ?? [])
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
