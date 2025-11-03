@@ -307,7 +307,7 @@ export enum SecurityEventType {
 ```bash
 # Secure environment variable management
 # Production secrets (never commit)
-SUPABASE_SECRET_KEY=your_secret_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 GOOGLE_CIVIC_API_KEY=your_api_key
 CIVICS_INGEST_SECRET=your_ingest_secret
 

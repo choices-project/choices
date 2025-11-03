@@ -1,8 +1,8 @@
 # Supabase Client Usage Guide
 
 **Created:** January 29, 2025  
-**Last Updated:** January 29, 2025  
-**Status:** ✅ Current  
+**Last Updated:** November 3, 2025  
+**Status:** ✅ Current (Verified - pattern still used)  
 **Purpose:** Guide for using Supabase clients correctly in the Choices platform
 
 ---

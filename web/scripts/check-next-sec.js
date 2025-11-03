@@ -17,7 +17,8 @@ console.log('🔒 Running Next.js security checks...');
 // Check for exposed sensitive environment variables
 const envVars = process.env;
 const sensitiveVars = [
-  'SUPABASE_SECRET_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_SECRET_KEY', // Legacy, keep for backwards compat check
   'DATABASE_URL',
   'NEXTAUTH_SECRET',
   'JWT_SECRET',

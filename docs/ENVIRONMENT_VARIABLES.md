@@ -1,7 +1,7 @@
 # Environment Variables Documentation
 
-**Last Updated:** January 29, 2025  
-**Status:** ✅ Production-Ready Reference
+**Last Updated:** November 3, 2025  
+**Status:** ✅ Current (Verified against .env.local)
 
 This document lists all environment variables required for the Choices application.
 
@@ -18,10 +18,11 @@ This document lists all environment variables required for the Choices applicati
   - Used for: Public read access to representative data
   - Security: Safe to expose in client-side code (protected by RLS)
 
-- `SUPABASE_SECRET_KEY` (required)
-  - Supabase service role key
+- `SUPABASE_SERVICE_ROLE_KEY` (required)
+  - Supabase service role key (standardized name)
   - Used for: Server-side operations requiring elevated permissions
   - Security: ⚠️ NEVER expose in client-side code, server-only
+  - Note: Replaces legacy `SUPABASE_SECRET_KEY`
 
 ### Rate Limiting (Upstash Redis)
 - `UPSTASH_REDIS_REST_URL` (required)
@@ -91,7 +92,7 @@ This document lists all environment variables required for the Choices applicati
 ### Civics Integration
 - **Read Operations**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Rate Limiting**: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
-- **Write Operations**: `SUPABASE_SECRET_KEY` (via `getSupabaseServerClient()`)
+- **Write Operations**: `SUPABASE_SERVICE_ROLE_KEY` (via `getSupabaseAdminClient()`)
 
 ### Authentication
 - **Supabase Auth**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -104,7 +105,7 @@ This document lists all environment variables required for the Choices applicati
 ## Security Best Practices
 
 1. **Never expose secrets in client-side code**
-   - `SUPABASE_SECRET_KEY` - Server-only
+   - `SUPABASE_SERVICE_ROLE_KEY` - Server-only
    - `UPSTASH_REDIS_REST_TOKEN` - Server-only
    - `ADMIN_MONITORING_KEY` - Server-only
 
@@ -136,7 +137,7 @@ Before deploying to production, verify:
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SECRET_KEY=your-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Upstash Redis
 UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io

@@ -27,7 +27,7 @@ const validateEnvironment = () => {
   const requiredVars = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
   }
 
   const missing = Object.entries(requiredVars)
@@ -119,7 +119,7 @@ export const createServiceRoleClient = (): SupabaseClient<Database> | null => {
     
     return createClient<Database>(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.SUPABASE_SECRET_KEY!,
+      env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         auth: {
           autoRefreshToken: false,

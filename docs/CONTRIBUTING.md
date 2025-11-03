@@ -1,5 +1,6 @@
-**Last Updated**: 2025-09-17
 # Contributing to Choices
+
+**Last Updated**: November 3, 2025
 
 > **Guidelines for contributing to the Choices democratic polling platform**
 
@@ -25,10 +26,12 @@ This project adheres to our [Code of Conduct](core/CODE_OF_CONDUCT.md). By parti
 
 ### Prerequisites
 
-- **Node.js**: Version 22.19.0 (exact version required)
-- **npm**: Latest version
+- **Node.js**: 18+ (pnpm as package manager)
+- **Supabase CLI**: For database operations
 - **Git**: For version control
 - **Supabase Account**: For database access
+
+See `DEVELOPMENT.md` for detailed setup.
 
 ### Development Setup
 
@@ -41,13 +44,14 @@ This project adheres to our [Code of Conduct](core/CODE_OF_CONDUCT.md). By parti
 
 2. **Environment Setup**
    ```bash
-   # Use the correct Node.js version
-   nvm use
+   cd web
+   pnpm install
    
-   # Install dependencies
-   npm install
+   # Copy environment template
+   cp .env.example .env.local
+   # Edit .env.local with your Supabase credentials
    
-   # Set up environment variables
+   # See ENVIRONMENT_VARIABLES.md for all required vars
    node scripts/setup-supabase-env.js
    ```
 
