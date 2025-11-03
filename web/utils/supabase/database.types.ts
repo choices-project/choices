@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -2832,57 +2833,6 @@ export type Database = {
           },
         ]
       }
-      trust_weighted_votes: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_anonymous: boolean | null
-          poll_id: string | null
-          trust_tier: number
-          trust_weight: number
-          user_id: string | null
-          vote_value: number
-          weighted_vote: number
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_anonymous?: boolean | null
-          poll_id?: string | null
-          trust_tier: number
-          trust_weight: number
-          user_id?: string | null
-          vote_value: number
-          weighted_vote: number
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_anonymous?: boolean | null
-          poll_id?: string | null
-          trust_tier?: number
-          trust_weight?: number
-          user_id?: string | null
-          vote_value?: number
-          weighted_vote?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trust_weighted_votes_poll_id_fkey"
-            columns: ["poll_id"]
-            isOneToOne: false
-            referencedRelation: "polls"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trust_weighted_votes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_hashtags: {
         Row: {
           created_at: string | null
@@ -3138,7 +3088,6 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
           vote_status: string | null
-          vote_weight: number | null
           voter_session: string | null
         }
         Insert: {
@@ -3154,7 +3103,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           vote_status?: string | null
-          vote_weight?: number | null
           voter_session?: string | null
         }
         Update: {
@@ -3170,7 +3118,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           vote_status?: string | null
-          vote_weight?: number | null
           voter_session?: string | null
         }
         Relationships: [
@@ -3475,6 +3422,14 @@ export type Database = {
       }
       get_poll_results_by_trust_tier: {
         Args: { p_poll_id: string; p_trust_tiers?: number[] }
+        Returns: Json
+      }
+      get_poll_votes_by_trust_tier: {
+        Args: {
+          p_max_trust_tier?: number
+          p_min_trust_tier?: number
+          p_poll_id: string
+        }
         Returns: Json
       }
       get_real_time_analytics: {
