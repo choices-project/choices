@@ -136,7 +136,7 @@ export class DataValidationPipeline {
       description: 'Contact information must be properly formatted',
       severity: 'warning',
       validator: (rep: NormalizedRepresentative) => {
-        if (rep.contact.phone && !/^\+?[\d\s\-\(\)]+$/.test(rep.contact.phone)) {
+        if (rep.contact.phone && !/^\+?[\d\s\-()]+$/.test(rep.contact.phone)) {
           return false;
         }
         if (rep.contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rep.contact.email)) {

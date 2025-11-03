@@ -268,11 +268,12 @@ export class DataIngestionPipeline {
 
     try {
       switch (sourceConfig.type) {
-        case 'civicinfo':
+        case 'civicinfo': {
           const civicResult = await this.processGoogleCivicSource(sourceConfig, job);
           recordsProcessed = civicResult.recordsProcessed;
           recordsTotal = civicResult.recordsTotal;
           break;
+        }
 
         case 'propublica':
           // ProPublica service discontinued - skip
