@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -184,6 +185,48 @@ export type Database = {
           },
         ]
       }
+      cache_performance_log: {
+        Row: {
+          cache_key: string
+          cache_operation: string
+          cache_size_bytes: number | null
+          cache_type: string | null
+          expires_at: string | null
+          id: string
+          is_hit: boolean | null
+          namespace: string | null
+          operation_time_ms: number | null
+          recorded_at: string | null
+          ttl_seconds: number | null
+        }
+        Insert: {
+          cache_key: string
+          cache_operation: string
+          cache_size_bytes?: number | null
+          cache_type?: string | null
+          expires_at?: string | null
+          id?: string
+          is_hit?: boolean | null
+          namespace?: string | null
+          operation_time_ms?: number | null
+          recorded_at?: string | null
+          ttl_seconds?: number | null
+        }
+        Update: {
+          cache_key?: string
+          cache_operation?: string
+          cache_size_bytes?: number | null
+          cache_type?: string | null
+          expires_at?: string | null
+          id?: string
+          is_hit?: boolean | null
+          namespace?: string | null
+          operation_time_ms?: number | null
+          recorded_at?: string | null
+          ttl_seconds?: number | null
+        }
+        Relationships: []
+      }
       candidate_platforms: {
         Row: {
           ballot_access_confirmed: boolean | null
@@ -330,6 +373,7 @@ export type Database = {
       civic_actions: {
         Row: {
           action_type: string
+          category: string | null
           created_at: string | null
           created_by: string
           current_signatures: number | null
@@ -348,6 +392,7 @@ export type Database = {
         }
         Insert: {
           action_type: string
+          category?: string | null
           created_at?: string | null
           created_by: string
           current_signatures?: number | null
@@ -366,6 +411,7 @@ export type Database = {
         }
         Update: {
           action_type?: string
+          category?: string | null
           created_at?: string | null
           created_by?: string
           current_signatures?: number | null
@@ -1361,6 +1407,62 @@ export type Database = {
           },
         ]
       }
+      performance_metrics: {
+        Row: {
+          endpoint: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          query_hash: string | null
+          recorded_at: string | null
+          session_id: string | null
+          table_name: string | null
+          tags: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          endpoint?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          query_hash?: string | null
+          recorded_at?: string | null
+          session_id?: string | null
+          table_name?: string | null
+          tags?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          endpoint?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          query_hash?: string | null
+          recorded_at?: string | null
+          session_id?: string | null
+          table_name?: string | null
+          tags?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           action: string
@@ -1474,8 +1576,93 @@ export type Database = {
           },
         ]
       }
+      poll_participation_analytics: {
+        Row: {
+          age_group: string | null
+          biometric_verified: boolean | null
+          confidence_level: number | null
+          created_at: string | null
+          data_quality_score: number | null
+          education_level: string | null
+          geographic_region: string | null
+          id: string
+          identity_verified: boolean | null
+          income_bracket: string | null
+          participated_at: string | null
+          phone_verified: boolean | null
+          political_affiliation: string | null
+          poll_id: string
+          trust_score: number | null
+          trust_tier: number
+          updated_at: string | null
+          user_id: string
+          verification_methods: string[] | null
+          voting_history_count: number | null
+        }
+        Insert: {
+          age_group?: string | null
+          biometric_verified?: boolean | null
+          confidence_level?: number | null
+          created_at?: string | null
+          data_quality_score?: number | null
+          education_level?: string | null
+          geographic_region?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          income_bracket?: string | null
+          participated_at?: string | null
+          phone_verified?: boolean | null
+          political_affiliation?: string | null
+          poll_id: string
+          trust_score?: number | null
+          trust_tier: number
+          updated_at?: string | null
+          user_id: string
+          verification_methods?: string[] | null
+          voting_history_count?: number | null
+        }
+        Update: {
+          age_group?: string | null
+          biometric_verified?: boolean | null
+          confidence_level?: number | null
+          created_at?: string | null
+          data_quality_score?: number | null
+          education_level?: string | null
+          geographic_region?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          income_bracket?: string | null
+          participated_at?: string | null
+          phone_verified?: boolean | null
+          political_affiliation?: string | null
+          poll_id?: string
+          trust_score?: number | null
+          trust_tier?: number
+          updated_at?: string | null
+          user_id?: string
+          verification_methods?: string[] | null
+          voting_history_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_participation_analytics_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_participation_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       polls: {
         Row: {
+          allow_multiple_votes: boolean | null
           allow_post_close: boolean | null
           allow_reopen: boolean | null
           auto_lock_at: string | null
@@ -1536,6 +1723,7 @@ export type Database = {
           voting_method: string | null
         }
         Insert: {
+          allow_multiple_votes?: boolean | null
           allow_post_close?: boolean | null
           allow_reopen?: boolean | null
           auto_lock_at?: string | null
@@ -1596,6 +1784,7 @@ export type Database = {
           voting_method?: string | null
         }
         Update: {
+          allow_multiple_votes?: boolean | null
           allow_post_close?: boolean | null
           allow_reopen?: boolean | null
           auto_lock_at?: string | null
@@ -1656,6 +1845,83 @@ export type Database = {
           voting_method?: string | null
         }
         Relationships: []
+      }
+      query_performance_log: {
+        Row: {
+          buffer_hits: number | null
+          buffer_reads: number | null
+          cache_efficiency: number | null
+          client_ip: unknown
+          endpoint: string | null
+          execution_time_ms: number
+          expires_at: string | null
+          id: string
+          planning_time_ms: number | null
+          query_hash: string
+          query_signature: string
+          query_type: string
+          recorded_at: string | null
+          rows_affected: number | null
+          rows_scanned: number | null
+          session_id: string | null
+          slow_query: boolean | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          buffer_hits?: number | null
+          buffer_reads?: number | null
+          cache_efficiency?: number | null
+          client_ip?: unknown
+          endpoint?: string | null
+          execution_time_ms: number
+          expires_at?: string | null
+          id?: string
+          planning_time_ms?: number | null
+          query_hash: string
+          query_signature: string
+          query_type: string
+          recorded_at?: string | null
+          rows_affected?: number | null
+          rows_scanned?: number | null
+          session_id?: string | null
+          slow_query?: boolean | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          buffer_hits?: number | null
+          buffer_reads?: number | null
+          cache_efficiency?: number | null
+          client_ip?: unknown
+          endpoint?: string | null
+          execution_time_ms?: number
+          expires_at?: string | null
+          id?: string
+          planning_time_ms?: number | null
+          query_hash?: string
+          query_signature?: string
+          query_type?: string
+          recorded_at?: string | null
+          rows_affected?: number | null
+          rows_scanned?: number | null
+          session_id?: string | null
+          slow_query?: boolean | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_performance_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
@@ -3113,6 +3379,24 @@ export type Database = {
           total_rows: number
         }[]
       }
+      analyze_query_performance: {
+        Args: {
+          p_buffer_hits?: number
+          p_buffer_reads?: number
+          p_client_ip?: unknown
+          p_execution_time_ms: number
+          p_planning_time_ms?: number
+          p_query_hash: string
+          p_query_signature: string
+          p_query_type: string
+          p_rows_affected?: number
+          p_rows_scanned?: number
+          p_session_id?: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       analyze_temporal_patterns:
         | {
             Args: never
@@ -3149,6 +3433,7 @@ export type Database = {
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_inactive_sessions: { Args: never; Returns: number }
+      cleanup_performance_data: { Args: never; Returns: Json }
       detect_bot_behavior:
         | { Args: { p_user_id: string }; Returns: Json }
         | {
@@ -3171,6 +3456,18 @@ export type Database = {
           position_rank: number
           score: number
           timestamp_value: string
+        }[]
+      }
+      get_performance_recommendations: {
+        Args: never
+        Returns: {
+          affected_tables: string[]
+          description: string
+          estimated_impact: string
+          occurrence_count: number
+          recommendation_type: string
+          severity: string
+          suggested_action: string
         }[]
       }
       get_personalized_recommendations: {
@@ -3211,6 +3508,21 @@ export type Database = {
       }
       rebuild_poll_indexes: { Args: never; Returns: undefined }
       refresh_poll_statistics_view: { Args: never; Returns: undefined }
+      run_maintenance_job: {
+        Args: { p_job_name: string; p_job_type: string }
+        Returns: Json
+      }
+      update_cache_performance_metrics: {
+        Args: {
+          p_cache_key: string
+          p_cache_size_bytes?: number
+          p_cache_type?: string
+          p_operation: string
+          p_operation_time_ms?: number
+          p_ttl_seconds?: number
+        }
+        Returns: string
+      }
       update_hashtag_trending_scores: { Args: never; Returns: undefined }
       update_poll_statistics: { Args: never; Returns: undefined }
       update_trending_scores: { Args: never; Returns: undefined }

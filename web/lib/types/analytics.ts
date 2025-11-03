@@ -130,30 +130,27 @@ export class AnalyticsService {
       if (trustTierScore.factors.phone_verified) verificationMethods.push('phone')
       if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
 
-      // Record poll participation analytics using analytics_events table
-      // trust_tier_analytics is for tier changes only, not poll participation
+      // Record poll participation analytics using dedicated table
+      // poll_participation_analytics table was added in November 2025 migration
       const { error: insertError } = await supabase
-        .from('analytics_events')
+        .from('poll_participation_analytics')
         .insert({
-          event_type: 'poll_participation',
           user_id: userId,
-          event_data: {
-            poll_id: pollId,
-            trust_tier: trustTierScore.trust_tier,
-            age_group: demographicData?.age_group,
-            geographic_region: demographicData?.geographic_region,
-            education_level: demographicData?.education_level,
-            income_bracket: demographicData?.income_bracket,
-            political_affiliation: demographicData?.political_affiliation,
-            voting_history_count: trustTierScore.factors.voting_history_count,
-            biometric_verified: trustTierScore.factors.biometric_verified,
-            phone_verified: trustTierScore.factors.phone_verified,
-            identity_verified: trustTierScore.factors.identity_verified,
-            verification_methods: verificationMethods,
-            data_quality_score: trustTierScore.score,
-            confidence_level: trustTierScore.score,
-            last_activity: new Date().toISOString()
-          }
+          poll_id: pollId,
+          trust_tier: trustTierScore.trust_tier,
+          trust_score: trustTierScore.score,
+          age_group: demographicData?.age_group,
+          geographic_region: demographicData?.geographic_region,
+          education_level: demographicData?.education_level,
+          income_bracket: demographicData?.income_bracket,
+          political_affiliation: demographicData?.political_affiliation,
+          voting_history_count: trustTierScore.factors.voting_history_count,
+          biometric_verified: trustTierScore.factors.biometric_verified,
+          phone_verified: trustTierScore.factors.phone_verified,
+          identity_verified: trustTierScore.factors.identity_verified,
+          verification_methods: verificationMethods,
+          data_quality_score: trustTierScore.score,
+          confidence_level: trustTierScore.score
         })
 
       if (insertError) {

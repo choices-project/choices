@@ -58,9 +58,8 @@ export const vote = createSecureServerAction(
     }
 
     // Check if user has already voted (unless multiple votes are allowed)
-    // Read from poll_settings JSONB since allow_multiple_votes column doesn't exist
-    const pollSettings = poll.poll_settings as { allow_multiple_votes?: boolean } | null
-    if (!pollSettings?.allow_multiple_votes) {
+    // Use dedicated allow_multiple_votes column (added in November 2025 migration)
+    if (!poll.allow_multiple_votes) {
       const { data: existingVote } = await supabaseClient
         .from('votes')
         .select('id')
