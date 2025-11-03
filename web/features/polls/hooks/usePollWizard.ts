@@ -97,6 +97,7 @@ export function usePollWizard() {
         }
         
         break;
+      }
     }
 
     return errors;

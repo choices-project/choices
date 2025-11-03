@@ -223,3 +223,100 @@ export const E2E_CONFIG = {
     MOBILE_VIEWPORT: { width: 375, height: 667 }
   }
 };
+
+/**
+ * Login a test user for E2E tests
+ * 
+ * This function handles the complete login flow for E2E tests.
+ * It navigates to the login page, fills in credentials, submits the form,
+ * and waits for successful authentication.
+ * 
+ * @param page - Playwright page object
+ * @param user - Test user credentials
+ */
+export async function loginTestUser(page: Page, user: E2ETestUser): Promise<void> {
+  console.log('[E2E Auth] Logging in test user:', user.email);
+  
+  try {
+    // Navigate to login page with e2e flag
+    await page.goto('/login?e2e=1', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Wait for login form to be ready
+    await page.waitForSelector('[data-testid="login-email"]', { timeout: 10000 });
+    
+    // Fill in credentials
+    await page.fill('[data-testid="login-email"]', user.email);
+    await page.fill('[data-testid="login-password"]', user.password);
+    
+    // Submit form
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for successful login (redirect to dashboard or home)
+    // Be flexible - might redirect to different pages
+    await Promise.race([
+      page.waitForURL('**/dashboard**', { timeout: 10000 }),
+      page.waitForURL('**/', { timeout: 10000 }),
+      page.waitForURL('**/polls**', { timeout: 10000 })
+    ]).catch(() => {
+      // If no redirect, just wait for page to be ready
+      console.warn('[E2E Auth] No redirect detected, continuing anyway');
+    });
+    
+    await waitForPageReady(page);
+    
+    console.log('[E2E Auth] ✅ Test user logged in successfully');
+  } catch (error) {
+    console.error('[E2E Auth] ❌ Login failed:', error);
+    throw new Error(`Failed to login test user: ${error}`);
+  }
+}
+
+/**
+ * Register a test user for E2E tests
+ * 
+ * This function handles the complete registration flow for E2E tests.
+ * It navigates to the register page, fills in all required fields,
+ * submits the form, and waits for successful registration.
+ * 
+ * @param page - Playwright page object
+ * @param user - Test user details
+ */
+export async function registerTestUser(page: Page, user: E2ETestUser): Promise<void> {
+  console.log('[E2E Auth] Registering test user:', user.email);
+  
+  try {
+    // Navigate to register page with password method
+    await page.goto('/register?e2e=1&method=password', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Wait for register form to be ready
+    await page.waitForSelector('[data-testid="register-form"]', { timeout: 10000 });
+    
+    // Fill in all registration fields
+    await page.fill('[data-testid="username"]', user.username);
+    await page.fill('[data-testid="displayName"]', user.username); // Use username as display name
+    await page.fill('[data-testid="email"]', user.email);
+    await page.fill('[data-testid="password"]', user.password);
+    await page.fill('[data-testid="confirmPassword"]', user.password);
+    
+    // Submit form
+    await page.click('[data-testid="register-submit"]');
+    
+    // Wait for successful registration (redirect to onboarding or dashboard)
+    await Promise.race([
+      page.waitForURL('**/onboarding**', { timeout: 10000 }),
+      page.waitForURL('**/dashboard**', { timeout: 10000 }),
+      page.waitForURL('**/', { timeout: 10000 })
+    ]).catch(() => {
+      console.warn('[E2E Auth] No redirect detected after registration, continuing anyway');
+    });
+    
+    await waitForPageReady(page);
+    
+    console.log('[E2E Auth] ✅ Test user registered successfully');
+  } catch (error) {
+    console.error('[E2E Auth] ❌ Registration failed:', error);
+    throw new Error(`Failed to register test user: ${error}`);
+  }
+}

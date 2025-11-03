@@ -138,8 +138,8 @@ function UnifiedFeed({
   const [pullDistance, setPullDistance] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [_page, setPage] = useState(1);
-  const [_expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [_loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const [refreshThreshold] = useState(80);
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -346,7 +346,18 @@ function UnifiedFeed({
     }
   }, [showTrending, getTrendingHashtags]);
 
-  // Optimized filtered feed items with better memoization
+  /**
+   * Filtered and personalized feed items
+   * 
+   * Filters feed items by:
+   * - Selected hashtags
+   * - Search query
+   * 
+   * Then applies personalization scoring to sort items by relevance
+   * when user has selected hashtags (indicating interests).
+   * 
+   * @returns Filtered and sorted feed items, limited to maxItems
+   */
   const filteredFeedItems = useMemo(() => {
     let filtered = feeds || [];
 
@@ -367,8 +378,23 @@ function UnifiedFeed({
       );
     }
 
+    // Apply personalization scoring and sort if user has interests
+    const userInterests = selectedHashtags.length > 0 ? selectedHashtags : [];
+    
+    if (userInterests.length > 0) {
+      const scoredItems = filtered.map((item: any) => {
+        const itemTags = item.hashtags ?? item.tags ?? [];
+        const score = calculatePersonalizationScore(userInterests, itemTags);
+        return { item, score };
+      });
+      
+      // Sort by personalization score (highest first)
+      scoredItems.sort((a, b) => b.score - a.score);
+      filtered = scoredItems.map(({ item }) => item);
+    }
+
     return filtered.slice(0, maxItems);
-  }, [feeds, selectedHashtags, searchQuery, maxItems]);
+  }, [feeds, selectedHashtags, searchQuery, maxItems, calculatePersonalizationScore]);
 
   // Handle hashtag selection
   const handleHashtagSelect = useCallback((hashtag: string) => {
@@ -482,14 +508,7 @@ function UnifiedFeed({
     const contentType = (item as any).type === 'poll' ? 'poll' : 'feed';
     const shareUrl = (item as any).url || `${window.location.origin}/polls/${itemId}`;
     
-    const sharingOptions = {
-      title: (item as any).title,
-      description: (item as any).description || (item as any).summary || '',
-      url: shareUrl,
-      pollId: (item as any).type === 'poll' ? itemId : undefined,
-      contentType: contentType as 'poll' | 'representative' | 'feed',
-      placement: 'feed'
-    };
+    // Share using social sharing hook
     if (typeof (socialSharing)?.share === 'function') {
       await (socialSharing).share(shareUrl, (item as any).title, (item as any).description || (item as any).summary || '');
     } else if (typeof socialSharing?.copyToClipboard === 'function') {
@@ -634,71 +653,18 @@ function UnifiedFeed({
   //   return () => clearTimeout(timeoutId);
   // }, [initializeSuperiorPWAFeatures, checkOnlineStatus, setError]);
 
-  // Content type icons (from FeedItem.tsx)
-  const getContentTypeIcon = useCallback((type: string) => {
-    const iconClass = "w-5 h-5";
-    
-    switch (type) {
-      case 'vote':
-        return <div className={`${iconClass} bg-green-100 rounded-full flex items-center justify-center`}>
-          <span className="text-green-600 text-xs font-bold">V</span>
-        </div>;
-      case 'bill':
-        return <div className={`${iconClass} bg-blue-100 rounded-full flex items-center justify-center`}>
-          <span className="text-blue-600 text-xs font-bold">B</span>
-        </div>;
-      case 'statement':
-        return <div className={`${iconClass} bg-purple-100 rounded-full flex items-center justify-center`}>
-          <span className="text-purple-600 text-xs font-bold">S</span>
-        </div>;
-      case 'social_media':
-        return <div className={`${iconClass} bg-pink-100 rounded-full flex items-center justify-center`}>
-          <span className="text-pink-600 text-xs font-bold">@</span>
-        </div>;
-      case 'photo':
-        return <div className={`${iconClass} bg-gray-100 rounded-full flex items-center justify-center`}>
-          <span className="text-gray-600 text-xs font-bold">📷</span>
-        </div>;
-      default:
-        return <div className={`${iconClass} bg-gray-100 rounded-full flex items-center justify-center`}>
-          <span className="text-gray-600 text-xs font-bold">?</span>
-        </div>;
-    }
-  }, []);
+  // NOTE: formatDate, getContentTypeIcon, getPartyColor removed - FeedItem component handles these internally
 
-  // Party colors (from FeedItem.tsx)
-  const getPartyColor = useCallback((party: string) => {
-    const partyColors: Record<string, string> = {
-      'Republican': 'text-red-600 bg-red-50 border-red-200',
-      'Democrat': 'text-blue-600 bg-blue-50 border-blue-200',
-      'Independent': 'text-gray-600 bg-gray-50 border-gray-200',
-      'Green': 'text-green-600 bg-green-50 border-green-200',
-      'Libertarian': 'text-yellow-600 bg-yellow-50 border-yellow-200'
-    };
-    
-    return partyColors[party] ?? 'text-gray-600 bg-gray-50 border-gray-200';
-  }, []);
-
-  // Format date (from FeedItem.tsx)
-  const formatDate = useCallback((date: Date | string | null | undefined) => {
-    if (!date) return 'Unknown date';
-    
-    const now = new Date();
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (!dateObj || isNaN(dateObj.getTime())) {
-      return 'Invalid date';
-    }
-    
-    const diffInHours = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return 'Yesterday';
-    return new Date(date).toLocaleDateString();
-  }, []);
-
-  // Personalization algorithms (from EnhancedSocialFeed.tsx)
+  /**
+   * Calculate personalization score for content matching
+   * 
+   * Compares user interests (hashtags they've selected) against content tags
+   * to determine relevance. Used for sorting feed items.
+   * 
+   * @param userInterests - Array of user's selected/followed hashtags
+   * @param contentTags - Array of tags associated with the content item
+   * @returns Score between 0-1, where 1 is perfect match
+   */
   const calculatePersonalizationScore = useCallback((userInterests: string[], contentTags: string[]) => {
     if (!userInterests.length || !contentTags.length) return 0;
     
@@ -712,7 +678,14 @@ function UnifiedFeed({
     return matchingTags.length / Math.max(userInterests.length, contentTags.length);
   }, []);
 
-  // Progressive disclosure functionality
+  /**
+   * Toggle expansion state for feed item
+   * 
+   * Manages which feed items are expanded to show full content.
+   * Announces state changes to screen readers for accessibility.
+   * 
+   * @param itemId - ID of the feed item to toggle
+   */
   const toggleItemExpansion = useCallback((itemId: string) => {
     setExpandedItems(prev => {
       const newSet = new Set(prev);
@@ -727,7 +700,10 @@ function UnifiedFeed({
     });
   }, [announceToScreenReader]);
 
-  // Image loading with progressive enhancement
+  /**
+   * Handle successful image load
+   * Removes item from loading state when image loads successfully.
+   */
   const handleImageLoad = useCallback((itemId: string) => {
     setLoadingImages(prev => {
       const newSet = new Set(prev);
@@ -745,7 +721,15 @@ function UnifiedFeed({
     setError(`Failed to load image for item ${itemId}`);
   }, [setError]);
 
-  // Lazy loading for images
+  /**
+   * Lazy load image for feed item
+   * 
+   * Progressively loads images to improve performance.
+   * Tracks loading state and handles load/error events.
+   * 
+   * @param itemId - ID of the feed item
+   * @param imageUrl - URL of the image to load
+   */
   const loadImage = useCallback((itemId: string, imageUrl: string) => {
     setLoadingImages(prev => new Set(prev).add(itemId));
     
@@ -1225,7 +1209,12 @@ function UnifiedFeed({
                     onBookmark={() => handleBookmark(item.id)}
                     onShare={() => handleShare(item.id)}
                     onComment={() => handleComment(item.id)}
-                    onViewDetails={() => handleViewDetails(item.id)}
+                    onViewDetails={() => {
+                      toggleItemExpansion(item.id);
+                      handleViewDetails(item.id);
+                    }}
+                    showEngagement={true}
+                    enableHaptics={enableHaptics}
                   />
                 </article>
               ))}

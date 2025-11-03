@@ -37,9 +37,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { logger } from '@/lib/utils/logger';
 
 type PlatformAnalytics = {
@@ -72,14 +76,17 @@ type PlatformAnalytics = {
 type SiteMessage = {
   id: string;
   title: string;
-  content: string;
-  type: 'info' | 'warning' | 'error' | 'success';
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success' | 'announcement';
   priority: 'low' | 'medium' | 'high' | 'critical';
+  status?: 'active' | 'inactive' | 'scheduled';
   is_active: boolean;
   start_date?: string;
   end_date?: string;
+  target_audience?: string | null;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
 type SystemMetrics = {
@@ -106,13 +113,30 @@ type ComprehensiveAdminDashboardProps = {
 }
 
 export default function ComprehensiveAdminDashboard({ className = '' }: ComprehensiveAdminDashboardProps) {
+  // Platform data state
   const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
   const [siteMessages, setSiteMessages] = useState<SiteMessage[]>([]);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  
+  // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [_showMessageForm, _setShowMessageForm] = useState(false);
+  
+  // Message creation form state
+  /** Controls visibility of the message creation modal */
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  /** Form data for new site message - matches API schema */
+  const [newMessage, setNewMessage] = useState({
+    title: '',
+    message: '', // Matches 'message' field in site_messages table
+    type: 'info' as const,
+    priority: 'medium' as const,
+    status: 'active' as const,
+    is_active: true
+  });
+  
+  // Auto-refresh state
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -201,7 +225,14 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
     }
   }, []);
 
-  // Load site messages
+  /**
+   * Load site messages from admin API
+   * 
+   * Fetches all site messages for admin management.
+   * Includes timeout protection and error handling.
+   * 
+   * @returns Promise that resolves when messages are loaded
+   */
   const loadSiteMessages = useCallback(async () => {
     try {
       // Add timeout protection
@@ -219,8 +250,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setSiteMessages(data ?? []);
-      logger.info('Site messages loaded', { count: data?.length ?? 0 });
+      setSiteMessages(data.messages ?? []);
+      logger.info('Site messages loaded', { count: data.messages?.length ?? 0 });
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
         logger.warn('Site messages request timed out');
@@ -693,7 +724,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Badge variant="outline">{message.type}</Badge>
                         <Badge variant="outline">{message.priority}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{message.content}</p>
+                      <p className="text-sm text-gray-600 mb-2">{message.message}</p>
                       <div className="text-xs text-gray-500">
                         Created: {new Date(message.created_at).toLocaleString()}
                         {message.updated_at !== message.created_at && (
@@ -785,6 +816,155 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Message Creation Form Modal */}
+      {showMessageForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMessageForm(false)}>
+          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <CardTitle>Create Site Message</CardTitle>
+              <CardDescription>
+                Create a new site-wide message or announcement
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Message Title</Label>
+                <Input
+                  id="title"
+                  value={newMessage.title}
+                  onChange={(e) => setNewMessage({ ...newMessage, title: e.target.value })}
+                  placeholder="Enter message title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message">Message Content</Label>
+                <Textarea
+                  id="message"
+                  value={newMessage.message}
+                  onChange={(e) => setNewMessage({ ...newMessage, message: e.target.value })}
+                  placeholder="Enter message content"
+                  rows={4}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Message Type</Label>
+                  <Select
+                    value={newMessage.type}
+                    onValueChange={(value: 'info' | 'warning' | 'error' | 'success') =>
+                      setNewMessage({ ...newMessage, type: value })
+                    }
+                  >
+                    <SelectTrigger id="type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="info">Info</SelectItem>
+                      <SelectItem value="warning">Warning</SelectItem>
+                      <SelectItem value="error">Error</SelectItem>
+                      <SelectItem value="success">Success</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select
+                    value={newMessage.priority}
+                    onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') =>
+                      setNewMessage({ ...newMessage, priority: value })
+                    }
+                  >
+                    <SelectTrigger id="priority">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={newMessage.is_active}
+                  onChange={(e) => setNewMessage({ ...newMessage, is_active: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_active" className="cursor-pointer">
+                  Activate message immediately
+                </Label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowMessageForm(false);
+                    setNewMessage({
+                      title: '',
+                      message: '',
+                      type: 'info',
+                      priority: 'medium',
+                      status: 'active',
+                      is_active: true
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/admin/site-messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: newMessage.title,
+                          message: newMessage.message,
+                          priority: newMessage.priority,
+                          status: newMessage.status,
+                          type: newMessage.type,
+                        }),
+                      });
+
+                      if (response.ok) {
+                        await loadSiteMessages();
+                        setShowMessageForm(false);
+                        setNewMessage({
+                          title: '',
+                          message: '',
+                          type: 'info',
+                          priority: 'medium',
+                          status: 'active',
+                          is_active: true
+                        });
+                      } else {
+                        const errorData = await response.json();
+                        setError(errorData.error ?? 'Failed to create message');
+                      }
+                    } catch (err) {
+                      logger.error('Error creating message:', err instanceof Error ? err : new Error(String(err)));
+                      setError('Failed to create message');
+                    }
+                  }}
+                  disabled={!newMessage.title || !newMessage.message}
+                >
+                  Create Message
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

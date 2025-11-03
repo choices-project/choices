@@ -207,6 +207,7 @@ export function useUserType(userId?: string) {
         if (engagement_rate >= influencerThresholds.min_engagement_rate) score++
         totalChecks = 3
         break
+      }
 
       case 'admin':
         score = 1

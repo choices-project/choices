@@ -266,7 +266,6 @@ export async function trackAnalyticsEventData(
 export function calculateEngagementMetrics(
   events: SophisticatedAnalyticsEvent[]
 ): EngagementMetrics {
-  const uniqueUsers = new Set(events.map(e => e.user_id).filter(Boolean)).size;
   const sessionDuration = calculateSessionDuration(events);
   const bounceRate = calculateBounceRate(events);
   const conversionRate = calculateConversionRate(events);

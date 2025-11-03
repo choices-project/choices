@@ -12,7 +12,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { cookies } from 'next/headers'
 
 import { logger } from '@/lib/logger'
-import { isBrowser, isServer } from '@/lib/ssr-safe'
+import { isBrowser, isServer } from '@/lib/utils/ssr-safe'
 import type { Database } from '@/types/database'
 
 // Derive types from Database schema

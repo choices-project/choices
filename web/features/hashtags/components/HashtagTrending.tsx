@@ -37,6 +37,7 @@ import {
 
 // Get filtering methods from the store
 // Note: This helper is currently unused but kept for future hashtag filtering UI
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const useHashtagFilters = () => {
   const store = useHashtagStore();
   return {

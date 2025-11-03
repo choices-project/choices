@@ -37,8 +37,18 @@ export { default as PollHashtagIntegrationComponent } from './components/PollHas
 // HOOK EXPORTS
 // ============================================================================
 
-/** Poll wizard hook */
+/** Poll wizard hook - migrated to Zustand store */
 export { usePollWizard } from './hooks/usePollWizard';
+
+/** Poll wizard Zustand store hooks (RECOMMENDED - use these instead of usePollWizard) */
+export {
+  usePollWizardData,
+  usePollWizardStep,
+  usePollWizardProgress,
+  usePollWizardErrors,
+  usePollWizardCanProceed,
+  usePollWizardActions
+} from '@/lib/stores';
 
 // ============================================================================
 // SERVICE EXPORTS

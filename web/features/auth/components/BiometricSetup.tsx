@@ -7,8 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-// Native WebAuthn implementation to avoid decorator issues
 
+// Native WebAuthn implementation to avoid decorator issues
 import { devLog } from '@/lib/utils/logger'
 
 // Context for sharing biometric setup state

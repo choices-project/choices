@@ -9,7 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 // ... existing code ...
 import { Separator } from '@/components/ui/separator';
-import { usePollWizard } from '@/lib/hooks/usePollWizard';
+import {
+  usePollWizardData,
+  usePollWizardStep,
+  usePollWizardProgress,
+  usePollWizardErrors,
+  usePollWizardCanProceed,
+  usePollWizardActions
+} from '@/lib/stores';
 import { devLog } from '@/lib/logger';
 import type { PollCategory } from '@/lib/types/poll-templates';
 
@@ -32,12 +39,19 @@ const CATEGORIES: Array<{ id: PollCategory; name: string; description: string; i
 
 export default function CreatePollPage() {
   const [newTag, setNewTag] = useState('');
+  
+  // Get state from pollWizardStore
+  const data = usePollWizardData();
+  const currentStep = usePollWizardStep();
+  const progress = usePollWizardProgress();
+  const errors = usePollWizardErrors();
+  const canProceed = usePollWizardCanProceed();
+  
+  // Get actions from pollWizardStore
   const {
-    wizardState,
-    progress,
-    updateWizardData,
+    updateData: updateWizardData,
     nextStep,
-    previousStep,
+    prevStep: previousStep,
     addOption,
     removeOption,
     updateOption,
@@ -70,7 +84,7 @@ export default function CreatePollPage() {
   };
 
   const renderStepContent = () => {
-    switch (wizardState.currentStep) {
+    switch (currentStep) {
       case 0:
         return (
           <div className="space-y-6">
@@ -80,13 +94,13 @@ export default function CreatePollPage() {
               </label>
               <Input
                 id="title"
-                value={wizardState.data.title}
+                value={data.title}
                 onChange={(e) => updateWizardData({ title: e.target.value })}
                 placeholder="Enter your poll question..."
-                className={wizardState.errors.title ? 'border-red-500' : ''}
+                className={errors.title ? 'border-red-500' : ''}
               />
-              {wizardState.errors.title && (
-                <p className="text-red-500 text-sm mt-1">{wizardState.errors.title}</p>
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
               )}
             </div>
 
@@ -96,14 +110,14 @@ export default function CreatePollPage() {
               </label>
                              <textarea
                  id="description"
-                 value={wizardState.data.description}
+                 value={data.description}
                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateWizardData({ description: e.target.value })}
                  placeholder="Provide more context about your poll..."
                  rows={4}
-                 className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${wizardState.errors.description ? 'border-red-500' : 'border-gray-300'}`}
+                 className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
                />
-              {wizardState.errors.description && (
-                <p className="text-red-500 text-sm mt-1">{wizardState.errors.description}</p>
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
               )}
             </div>
           </div>
@@ -116,20 +130,20 @@ export default function CreatePollPage() {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Poll Options *
               </label>
-              {wizardState.errors.options && (
-                <p className="text-red-500 text-sm mb-2">{wizardState.errors.options}</p>
+              {errors.options && (
+                <p className="text-red-500 text-sm mb-2">{errors.options}</p>
               )}
               
               <div className="space-y-3">
-                {wizardState.data.options.map((option, index) => (
+                {data.options.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <Input
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className={wizardState.errors[`option-${index}`] ? 'border-red-500' : ''}
+                      className={errors[`option-${index}`] ? 'border-red-500' : ''}
                     />
-                    {wizardState.data.options.length > 2 && (
+                    {data.options.length > 2 && (
                       <Button
                         type="button"
                         variant="outline"
@@ -144,7 +158,7 @@ export default function CreatePollPage() {
                 ))}
               </div>
 
-              {wizardState.data.options.length < 10 && (
+              {data.options.length < 10 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -166,8 +180,8 @@ export default function CreatePollPage() {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Category *
               </label>
-              {wizardState.errors.category && (
-                <p className="text-red-500 text-sm mb-2">{wizardState.errors.category}</p>
+              {errors.category && (
+                <p className="text-red-500 text-sm mb-2">{errors.category}</p>
               )}
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -177,7 +191,7 @@ export default function CreatePollPage() {
                     type="button"
                     onClick={() => updateWizardData({ category: category.id })}
                     className={`p-4 border rounded-lg text-left transition-colors ${
-                      wizardState.data.category === category.id
+                      data.category === category.id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -194,12 +208,12 @@ export default function CreatePollPage() {
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 Tags (Optional)
               </label>
-              {wizardState.errors.tags && (
-                <p className="text-red-500 text-sm mb-2">{wizardState.errors.tags}</p>
+              {errors.tags && (
+                <p className="text-red-500 text-sm mb-2">{errors.tags}</p>
               )}
               
               <div className="flex flex-wrap gap-2 mb-3">
-                {wizardState.data.tags.map((tag) => (
+                {data.tags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                     {tag}
                     <button
@@ -213,7 +227,7 @@ export default function CreatePollPage() {
                 ))}
               </div>
 
-              {wizardState.data.tags.length < 5 && (
+              {data.tags.length < 5 && (
                 <div className="flex space-x-2">
                   <Input
                     value={newTag}
@@ -260,7 +274,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow multiple votes</label>
                     <input
                       type="checkbox"
-                      checked={wizardState.data.settings.allowMultipleVotes}
+                      checked={data.settings.allowMultipleVotes}
                       onChange={(e) => updateSettings({ allowMultipleVotes: e.target.checked })}
                       className="rounded"
                     />
@@ -270,7 +284,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow anonymous votes</label>
                     <input
                       type="checkbox"
-                      checked={wizardState.data.settings.allowAnonymousVotes}
+                      checked={data.settings.allowAnonymousVotes}
                       onChange={(e) => updateSettings({ allowAnonymousVotes: e.target.checked })}
                       className="rounded"
                     />
@@ -280,7 +294,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Show results immediately</label>
                     <input
                       type="checkbox"
-                      checked={wizardState.data.settings.showResults}
+                      checked={data.settings.showResults}
                       onChange={(e) => updateSettings({ showResults: e.target.checked })}
                       className="rounded"
                     />
@@ -290,7 +304,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow comments</label>
                     <input
                       type="checkbox"
-                      checked={wizardState.data.settings.allowComments}
+                      checked={data.settings.allowComments}
                       onChange={(e) => updateSettings({ allowComments: e.target.checked })}
                       className="rounded"
                     />
@@ -306,7 +320,7 @@ export default function CreatePollPage() {
                   <div>
                     <label className="text-sm font-medium block mb-2">Privacy Level</label>
                     <select
-                      value={wizardState.data.settings.privacyLevel}
+                      value={data.settings.privacyLevel}
                       onChange={(e) => updateSettings({ privacyLevel: e.target.value as any })}
                       className="w-full p-2 border rounded-md"
                     >
@@ -319,7 +333,7 @@ export default function CreatePollPage() {
                   <div>
                     <label className="text-sm font-medium block mb-2">Voting Method</label>
                     <select
-                      value={wizardState.data.settings.votingMethod}
+                      value={data.settings.votingMethod}
                       onChange={(e) => updateSettings({ votingMethod: e.target.value as any })}
                       className="w-full p-2 border rounded-md"
                     >
@@ -334,7 +348,7 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Auto-close when threshold reached</label>
                     <input
                       type="checkbox"
-                      checked={wizardState.data.settings.autoClose}
+                      checked={data.settings.autoClose}
                       onChange={(e) => updateSettings({ autoClose: e.target.checked })}
                       className="rounded"
                     />
@@ -356,8 +370,8 @@ export default function CreatePollPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold">{wizardState.data.title}</h3>
-                    <p className="text-gray-600 mt-1">{wizardState.data.description}</p>
+                    <h3 className="text-lg font-semibold">{data.title}</h3>
+                    <p className="text-gray-600 mt-1">{data.description}</p>
                   </div>
                   
                   <Separator />
@@ -365,7 +379,7 @@ export default function CreatePollPage() {
                   <div>
                     <h4 className="font-medium mb-2">Options:</h4>
                     <div className="space-y-2">
-                      {wizardState.data.options.filter(opt => opt.trim()).map((option, index) => (
+                      {data.options.filter(opt => opt.trim()).map((option, index) => (
                         <div key={index} className="flex items-center space-x-2">
                           <input type="radio" name="preview" disabled />
                           <span>{option}</span>
@@ -377,17 +391,17 @@ export default function CreatePollPage() {
                   <Separator />
                   
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">{wizardState.data.category}</Badge>
-                    {wizardState.data.tags.map((tag) => (
+                    <Badge variant="outline">{data.category}</Badge>
+                    {data.tags.map((tag) => (
                       <Badge key={tag} variant="secondary">{tag}</Badge>
                     ))}
                   </div>
                   
                   <div className="text-sm text-gray-500">
-                    <p>Privacy: {wizardState.data.settings.privacyLevel}</p>
-                    <p>Voting: {wizardState.data.settings.votingMethod}</p>
-                    <p>Multiple votes: {wizardState.data.settings.allowMultipleVotes ? 'Yes' : 'No'}</p>
-                    <p>Anonymous: {wizardState.data.settings.allowAnonymousVotes ? 'Yes' : 'No'}</p>
+                    <p>Privacy: {data.settings.privacyLevel}</p>
+                    <p>Voting: {data.settings.votingMethod}</p>
+                    <p>Multiple votes: {data.settings.allowMultipleVotes ? 'Yes' : 'No'}</p>
+                    <p>Anonymous: {data.settings.allowAnonymousVotes ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -439,10 +453,10 @@ export default function CreatePollPage() {
           
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-900">
-              {progress[wizardState.currentStep]?.title}
+              {progress[currentStep]?.title}
             </h2>
             <p className="text-gray-600 mt-1">
-              Step {wizardState.currentStep + 1} of {wizardState.totalSteps}
+              Step {currentStep + 1} of 6
             </p>
           </div>
         </div>
@@ -470,7 +484,7 @@ export default function CreatePollPage() {
             {wizardState.currentStep === wizardState.totalSteps - 1 ? (
               <Button
                 onClick={handlePublish}
-                disabled={!wizardState.canProceed || wizardState.isLoading}
+                disabled={!canProceed || wizardState.isLoading}
                 className="flex items-center"
               >
                 {wizardState.isLoading ? 'Creating...' : 'Create Poll'}
@@ -478,7 +492,7 @@ export default function CreatePollPage() {
             ) : (
               <Button
                 onClick={nextStep}
-                disabled={!wizardState.canProceed}
+                disabled={!canProceed}
                 className="flex items-center"
               >
                 Next
