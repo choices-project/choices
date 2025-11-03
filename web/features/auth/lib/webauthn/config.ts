@@ -6,12 +6,13 @@ import type { NextRequest } from 'next/server';
  * Privacy-first configuration for WebAuthn implementation
  */
 
-export const RP_ID = process.env.RP_ID || 'choices-platform.vercel.app';
-export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://choices-platform.vercel.app,http://localhost:3000')
+export const RP_ID = process.env.RP_ID ?? 'choices-platform.vercel.app';
+export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://choices-platform.vercel.app,http://localhost:3000')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
-export const CHALLENGE_TTL_MS = (Number(process.env.WEBAUTHN_CHALLENGE_TTL_SECONDS || '300') * 1000) || 300_000;
+const challengeTtlSeconds = Number(process.env.WEBAUTHN_CHALLENGE_TTL_SECONDS ?? '300');
+export const CHALLENGE_TTL_MS = (isNaN(challengeTtlSeconds) ? 300 : challengeTtlSeconds) * 1000;
 
 /**
  * Get RP ID and origins with environment awareness
@@ -22,7 +23,7 @@ export function getRPIDAndOrigins(req: NextRequest) {
   const allowedOrigins = ALLOWED_ORIGINS;
 
   // Block previews: if host !== rpID and not localhost, disable passkeys
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   const isLocal = host.startsWith('localhost:') || host === 'localhost';
   const isProdHost = host === rpID;
   const isPreview = isVercelPreview(host) && !isProdHost;

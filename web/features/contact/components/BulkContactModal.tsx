@@ -20,10 +20,11 @@ import {
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useMessageTemplates } from '../hooks/useMessageTemplates';
-import { useContactThreads } from '../hooks/useContactMessages';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
+
+import { useContactThreads } from '../hooks/useContactMessages';
+import { useMessageTemplates } from '../hooks/useMessageTemplates';
 
 type BulkContactModalProps = {
   isOpen: boolean;

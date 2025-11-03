@@ -16,12 +16,12 @@ export default function FeedPage() {
         const response = await fetch('/api/feeds');
         if (response.ok) {
           const data = await response.json();
-          setFeeds(data.feeds || []);
+          setFeeds(data.feeds ?? []);
         } else {
           setError('Failed to load feeds');
         }
-      } catch (error) {
-        console.error('Failed to load feeds:', error);
+      } catch (err) {
+        console.error('Failed to load feeds:', err);
         setError('Failed to load feeds');
       } finally {
         setLoading(false);
@@ -64,7 +64,7 @@ export default function FeedPage() {
               <h3 className="text-lg font-semibold">{feed.title}</h3>
               <p className="text-gray-600">{feed.content}</p>
               <div className="mt-2 text-sm text-gray-500">
-                {feed.engagement?.views || 0} views
+                {feed.engagement?.views ?? 0} views
               </div>
             </div>
           ))

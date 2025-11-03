@@ -24,7 +24,7 @@ export type RateLimitStats = {
 export type RateLimitOptions = {
   windowMs: number;
   maxRequests: number;
-  keyGenerator?: (req: any) => string;
+  keyGenerator?: (req: unknown) => string;
 }
 
 /**

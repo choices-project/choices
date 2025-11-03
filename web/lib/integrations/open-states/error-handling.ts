@@ -10,7 +10,7 @@ import { dev } from '../../dev.logger';
 export type ErrorDetails = {
   code?: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   userMessage?: string;
   retryable?: boolean;
   statusCode?: number;
@@ -30,9 +30,9 @@ export class OpenStatesApiError extends Error {
   public readonly code: string;
   public readonly statusCode?: number;
   public readonly retryable: boolean;
-  public readonly details?: any;
+  public readonly details?: Record<string, unknown>;
 
-  constructor(message: string, code: string = 'OPEN_STATES_ERROR', statusCode?: number, retryable: boolean = false, details?: any) {
+  constructor(message: string, code: string = 'OPEN_STATES_ERROR', statusCode?: number, retryable: boolean = false, details?: Record<string, unknown>) {
     super(message);
     this.name = 'OpenStatesApiError';
     this.code = code;
@@ -92,7 +92,7 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
 };
 
 // Error classification
-export function classifyError(error: any): OpenStatesApiError {
+export function classifyError(error: unknown): OpenStatesApiError {
   dev.logger.debug('Classifying Open States API error', { error });
 
   // If it's already an OpenStatesApiError, return it
@@ -100,11 +100,14 @@ export function classifyError(error: any): OpenStatesApiError {
     return error;
   }
 
+  // Type guard for error with response
+  const errorWithResponse = error as { response?: { status?: number; data?: { message?: string; error?: string; retry_after?: number } } };
+  
   // Handle HTTP errors
-  if (error.response) {
-    const status = error.response.status;
-    const data = error.response.data;
-    const message = data?.message || data?.error || `HTTP ${status} error`;
+  if (errorWithResponse.response) {
+    const status = errorWithResponse.response.status ?? 500;
+    const data = errorWithResponse.response.data;
+    const message = data?.message ?? data?.error ?? `HTTP ${status} error`;
 
     switch (status) {
       case 401:
@@ -119,23 +122,26 @@ export function classifyError(error: any): OpenStatesApiError {
       case 504:
         return new OpenStatesServerError(message, status);
       default:
-        return new OpenStatesApiError(message, 'HTTP_ERROR', status, status >= 500);
+        return new OpenStatesApiError(message, 'HTTP_ERROR', status ?? 500, (status ?? 500) >= 500);
     }
   }
 
+  // Type guard for network errors
+  const networkError = error as { code?: string; message?: string };
+  
   // Handle network errors
-  if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+  if (networkError.code === 'ENOTFOUND' || networkError.code === 'ECONNREFUSED' || networkError.code === 'ETIMEDOUT') {
     return new OpenStatesApiError(
-      `Network error: ${error.message}`,
+      `Network error: ${networkError.message ?? 'Network error'}`,
       'NETWORK_ERROR',
       undefined,
       true,
-      { originalError: error.code }
+      { originalError: networkError.code }
     );
   }
 
   // Handle timeout errors
-  if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+  if (networkError.code === 'ETIMEDOUT' || networkError.message?.includes('timeout')) {
     return new OpenStatesApiError(
       'Request timeout',
       'TIMEOUT_ERROR',
@@ -146,11 +152,11 @@ export function classifyError(error: any): OpenStatesApiError {
 
   // Handle generic errors
   return new OpenStatesApiError(
-    error.message || 'Unknown error occurred',
+    networkError.message ?? 'Unknown error occurred',
     'UNKNOWN_ERROR',
     undefined,
     false,
-    { originalError: error }
+    { originalError: networkError }
   );
 }
 
@@ -158,7 +164,7 @@ export function classifyError(error: any): OpenStatesApiError {
 export function formatErrorForUser(error: OpenStatesApiError): string {
   const userMessage = error.details?.userMessage;
   
-  if (userMessage) {
+  if (userMessage && typeof userMessage === 'string') {
     return userMessage;
   }
 
@@ -192,7 +198,7 @@ export function shouldRetry(error: OpenStatesApiError, attempt: number, config: 
     return false;
   }
 
-  if (config.retryableStatusCodes.includes(error.statusCode || 0)) {
+  if (config.retryableStatusCodes.includes(error.statusCode ?? 0)) {
     return true;
   }
 
@@ -204,7 +210,7 @@ export function shouldRetry(error: OpenStatesApiError, attempt: number, config: 
 }
 
 export function calculateRetryDelay(attempt: number, config: RetryConfig, baseDelay?: number): number {
-  const delay = baseDelay || config.baseDelay;
+  const delay = baseDelay ?? config.baseDelay;
   const exponentialDelay = delay * Math.pow(config.backoffMultiplier, attempt);
   const jitter = Math.random() * 0.1 * exponentialDelay; // Add 10% jitter
   return Math.min(exponentialDelay + jitter, config.maxDelay);
@@ -292,10 +298,10 @@ export class ErrorMonitor {
 
   recordError(error: OpenStatesApiError, retries: number = 0): void {
     this.metrics.totalErrors++;
-    this.metrics.errorsByCode[error.code] = (this.metrics.errorsByCode[error.code] || 0) + 1;
+    this.metrics.errorsByCode[error.code] = (this.metrics.errorsByCode[error.code] ?? 0) + 1;
     
     if (error.statusCode) {
-      this.metrics.errorsByStatusCode[error.statusCode] = (this.metrics.errorsByStatusCode[error.statusCode] || 0) + 1;
+      this.metrics.errorsByStatusCode[error.statusCode] = (this.metrics.errorsByStatusCode[error.statusCode] ?? 0) + 1;
     }
     
     if (error.retryable) {

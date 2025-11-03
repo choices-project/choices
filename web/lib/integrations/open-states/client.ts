@@ -194,7 +194,7 @@ export class OpenStatesApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public apiResponse?: any
+    public apiResponse?: unknown
   ) {
     super(message);
     this.name = 'OpenStatesApiError';

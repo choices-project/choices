@@ -66,42 +66,47 @@ export const createPoll = createSecureServerAction(
     const sanitizedOptions = validatedData.options.map((option: string) => sanitizeInput(option))
 
     // Create poll
+    // Note: Some fields not in Database type, using Record for additional fields
+    const pollInsert: Record<string, unknown> = {
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      options: sanitizedOptions,
+      voting_method: validatedData.type,
+      created_by: user.userId,
+      end_time: validatedData.endDate ?? null,
+      status: 'active',
+      privacy_level: validatedData.visibility,
+      total_votes: 0,
+      participation: 0,
+      category: '',
+      tags: [],
+      sponsors: [],
+      is_mock: false,
+      settings: {},
+      hashtags: [],
+      primary_hashtag: null,
+      poll_settings: {},
+      total_views: 0,
+      engagement_score: 0,
+      trending_score: 0,
+      is_trending: false,
+      is_featured: false,
+      is_verified: false,
+      last_modified_by: null,
+      modification_reason: null
+    }
+    
     const { data: pollData, error: pollError } = await supabase
       .from('polls')
-      .insert({
-        title: sanitizedTitle,
-        description: sanitizedDescription,
-        options: sanitizedOptions,
-        voting_method: validatedData.type,
-        created_by: user.userId,
-        end_time: validatedData.endDate ?? null,
-        status: 'active',
-        privacy_level: validatedData.visibility,
-        total_votes: 0,
-        participation: 0,
-        category: '',
-        tags: [],
-        sponsors: [],
-        is_mock: false,
-        settings: {},
-        hashtags: [],
-        primary_hashtag: null,
-        poll_settings: {},
-        total_views: 0,
-        engagement_score: 0,
-        trending_score: 0,
-        is_trending: false,
-        is_featured: false,
-        is_verified: false,
-        last_modified_by: null,
-        modification_reason: null
-      } as any)
+      .insert(pollInsert)
+      .select('id')
 
     if (pollError) {
       throw new Error('Failed to create poll')
     }
 
-    const pollId = (pollData as any)?.[0]?.id
+    type PollInsertResult = Array<{ id: string }>
+    const pollId = (pollData as PollInsertResult)?.[0]?.id
     if (!pollId) {
       throw new Error('Failed to get poll ID')
     }

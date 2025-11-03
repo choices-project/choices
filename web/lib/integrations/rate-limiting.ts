@@ -156,7 +156,7 @@ export class RateLimiter {
 
     // Check second limit
     const secondKey = Math.floor(now / 1000).toString();
-    const requestsThisSecond = this.requestHistory.get(secondKey)?.length || 0;
+    const requestsThisSecond = this.requestHistory.get(secondKey)?.length ?? 0;
     
     if (requestsThisSecond >= this.config.requestsPerSecond) {
       const waitTime = 1000 - (now % 1000); // Wait until next second
@@ -180,7 +180,10 @@ export class RateLimiter {
     if (!this.requestHistory.has(secondKey)) {
       this.requestHistory.set(secondKey, []);
     }
-    this.requestHistory.get(secondKey)!.push(now);
+    const secondRequests = this.requestHistory.get(secondKey);
+    if (secondRequests) {
+      secondRequests.push(now);
+    }
 
     // Update metrics
     this.usageMetrics.requestsToday++;
@@ -339,7 +342,7 @@ export function createOpenStatesRateLimiter(): RateLimiter {
 /**
  * Rate limit decorator for API calls
  */
-export function withRateLimit<T extends any[], R>(
+export function withRateLimit<T extends unknown[], R>(
   rateLimiter: RateLimiter,
   fn: (...args: T) => Promise<R>
 ) {
@@ -423,7 +426,7 @@ export class ApiUsageMonitor {
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerHour
       };
       
-      if (metrics.requestsThisHour >= hourlyThreshold * (hourlyLimits[apiName as keyof typeof hourlyLimits] || 1000)) {
+      if (metrics.requestsThisHour >= hourlyThreshold * (hourlyLimits[apiName as keyof typeof hourlyLimits] ?? 1000)) {
         logger.warn('API quota warning', {
           apiName,
           requestsThisHour: metrics.requestsThisHour,
@@ -440,7 +443,7 @@ export class ApiUsageMonitor {
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerDay
       };
       
-      if (metrics.requestsToday >= dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] || 10000)) {
+      if (metrics.requestsToday >= dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] ?? 10000)) {
         logger.error('API quota alert', {
           apiName,
           requestsToday: metrics.requestsToday,

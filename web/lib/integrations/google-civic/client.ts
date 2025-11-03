@@ -274,7 +274,7 @@ export class GoogleCivicClient {
         div.name.includes('U.S. House')
       );
 
-      const district = congressionalDivision?.name || 'Unknown';
+      const district = congressionalDivision?.name ?? 'Unknown';
       const state = response.normalizedInput.state;
 
       // Transform representatives
@@ -286,8 +286,8 @@ export class GoogleCivicClient {
         return {
           id: `google-civic-${index}`,
           name: official.name,
-          party: official.party || 'Unknown',
-          office: office?.name || 'Unknown',
+          party: official.party ?? 'Unknown',
+          office: office?.name ?? 'Unknown',
           district: district,
           state: state,
           contact: {
@@ -329,8 +329,8 @@ export class GoogleCivicClient {
       this.lastResetTime = now;
     }
 
-    const minuteCount = this.rateLimiter.get(minuteKey) || 0;
-    const hourCount = this.rateLimiter.get(hourKey) || 0;
+    const minuteCount = this.rateLimiter.get(minuteKey) ?? 0;
+    const hourCount = this.rateLimiter.get(hourKey) ?? 0;
 
     if (minuteCount >= this.config.rateLimit.requestsPerMinute) {
       throw new GoogleCivicApiError('Rate limit exceeded: too many requests per minute', 429);
@@ -374,8 +374,8 @@ export class GoogleCivicClient {
     return {
       requestsPerMinute: this.config.rateLimit.requestsPerMinute,
       requestsPerHour: this.config.rateLimit.requestsPerHour,
-      currentMinute: this.rateLimiter.get(minuteKey) || 0,
-      currentHour: this.rateLimiter.get(hourKey) || 0
+      currentMinute: this.rateLimiter.get(minuteKey) ?? 0,
+      currentHour: this.rateLimiter.get(hourKey) ?? 0
     };
   }
 }

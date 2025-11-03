@@ -1,12 +1,13 @@
 'use client';
 
+import { useSearchParams, useRouter } from 'next/navigation';
 import * as React from 'react';
+
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 
 // useFormStatus removed - using client-side completion instead
-import { useSearchParams, useRouter } from 'next/navigation';
 
 // Server action replaced with client-side fetch to fix boundary violation
 
@@ -20,9 +21,9 @@ import PlatformTourStep from './PlatformTourStep';
 import PrivacyPhilosophyStep from './PrivacyPhilosophyStep';
 import ProfileSetupStep from './ProfileSetupStep';
 import ProgressIndicator from './ProgressIndicator';
-import WelcomeStep from './WelcomeStep';
 import type { StepId, StepDataMap, StepSlug, OnboardingDataHybrid, OnStepUpdate, OnGenericUpdate } from './types';
 import { toSlug, DEFAULT_STEP_ORDER } from './types';
+import WelcomeStep from './WelcomeStep';
 
 // Step components
 

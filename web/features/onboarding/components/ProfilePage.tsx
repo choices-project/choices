@@ -1,5 +1,14 @@
-import React from 'react';
-'use client';
+import { 
+  User,
+  Shield,
+  Download,
+  Edit,
+  Settings,
+  CheckCircle,
+  AlertTriangle,
+  Loader2
+} from 'lucide-react';
+import React, { useState } from 'react';
 
 /**
  * Enhanced Profile Page Component
@@ -11,26 +20,16 @@ import React from 'react';
  * Status: ✅ SUPERIOR IMPLEMENTATION
  */
 
-import { useState } from 'react';
-import { 
-  User,
-  Shield,
-  Download,
-  Edit,
-  Settings,
-  CheckCircle,
-  AlertTriangle,
-  Loader2
-} from 'lucide-react';
 
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProfile, useProfileLoadingStates, useProfileErrorStates, useProfileExport } from '@/features/profile/hooks/use-profile';
+
+'use client';
 
 export default function ProfilePage() {
   const { profile, isLoading, error } = useProfile();

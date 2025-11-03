@@ -28,10 +28,10 @@ type LazyComponentOptions = {
 /**
  * Create a lazy-loaded component with error boundary and retry logic
  */
-export function createLazyComponent<T extends ComponentType<any>>(
+export function createLazyComponent<T extends ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>,
   options: LazyComponentOptions = {}
-): ComponentType<any> {
+): ComponentType<Record<string, unknown>> {
   const {
     retryCount = 3,
     retryDelay = 1000,
@@ -68,11 +68,12 @@ export function createLazyComponent<T extends ComponentType<any>>(
     throw lastError;
   });
 
-  return function LazyWrapper(props: any) {
+  return function LazyWrapper(props: Record<string, unknown>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return React.createElement(
       Suspense,
       { fallback },
-      React.createElement(LazyComponent, props)
+      React.createElement(LazyComponent, props as any)
     );
   };
 }
@@ -90,6 +91,8 @@ export function lazyLoadImages(
   } = options;
 
   if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+    // Intentional empty stub for SSR environments without IntersectionObserver
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
   }
 
@@ -312,15 +315,15 @@ export function useLazyLoading<T>(
 /**
  * Lazy load components with viewport detection
  */
-export function createViewportLazyComponent<T extends ComponentType<any>>(
+export function createViewportLazyComponent<T extends ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>,
   options: LazyComponentOptions & {
     viewportThreshold?: number;
   } = {}
-): ComponentType<any> {
+): ComponentType<Record<string, unknown>> {
   const { viewportThreshold = 0.1, ...lazyOptions } = options;
   
-  return function ViewportLazyWrapper(props: any) {
+  return function ViewportLazyWrapper(props: Record<string, unknown>) {
     const [isInViewport, setIsInViewport] = React.useState(false);
     const ref = React.useRef<HTMLDivElement>(null);
     

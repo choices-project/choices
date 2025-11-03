@@ -14,10 +14,11 @@ export async function GET() {
   }
 
   const { data, error } = await supabase
-    .from('civics_representatives')
-    .select('name,party,office,contact,ocd_division_id')
+    .from('representatives_core')
+    .select('id,name,party,office,level,jurisdiction,state,district,primary_email,primary_phone,primary_website')
     .eq('level','local')
-    .eq('jurisdiction','San Francisco, CA')
+    .eq('state','CA')
+    .ilike('jurisdiction','%San Francisco%')
     .order('office', { ascending: true });
 
   if (error) return NextResponse.json({ error: 'Database error' }, { status: 500 });

@@ -27,4 +27,7 @@ export * from './utils/index';
 // Database types (generated)
 export * from './database';
 
+// Candidate platform types
+export * from './candidate';
+
 // Global types - declaration file, no need to export

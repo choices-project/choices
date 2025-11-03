@@ -10,14 +10,14 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import {
   sanitizeSubject,
   sanitizeMessageContent,
   validateRepresentativeId,
   validatePriority,
 } from '@/lib/security/input-sanitization';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

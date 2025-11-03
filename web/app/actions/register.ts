@@ -85,7 +85,7 @@ export async function register(
 
     // Check for existing username in user_profiles table
     logger.info('Checking for existing username', { username: data.username.toLowerCase() });
-    const { data: existingUsername, error: usernameError } = await (supabase as any)
+    const { data: existingUsername, error: usernameError } = await supabase
       .from('user_profiles')
       .select('user_id')
       .eq('username', data.username.toLowerCase())
@@ -147,7 +147,7 @@ export async function register(
         email: data.email.toLowerCase()
       });
       
-      const { error: profileError } = await (serviceRoleClient as any)
+      const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
           user_id: authUser.id,
@@ -167,7 +167,12 @@ export async function register(
       logger.info('✅ User profile created successfully');
       
       // Create user role
-      const { error: roleError } = await (serviceRoleClient as any)
+      // Note: user_roles table type not in Database type definition
+      const { error: roleError } = await (serviceRoleClient as unknown as {
+        from: (table: string) => {
+          insert: (data: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+        }
+      })
         .from('user_roles')
         .insert({
           user_id: authUser.id,
@@ -251,7 +256,7 @@ export async function register(
         email: data.email.toLowerCase()
       });
       
-      const { error: profileError } = await (serviceRoleClient as any)
+      const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
           user_id: authUser.id,
@@ -271,7 +276,12 @@ export async function register(
       logger.info('✅ User profile created successfully');
       
       // Create user role
-      const { error: roleError } = await (serviceRoleClient as any)
+      // Note: user_roles table type not in Database type definition
+      const { error: roleError } = await (serviceRoleClient as unknown as {
+        from: (table: string) => {
+          insert: (data: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+        }
+      })
         .from('user_roles')
         .insert({
           user_id: authUser.id,

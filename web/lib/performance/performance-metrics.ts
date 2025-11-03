@@ -73,8 +73,12 @@ class PerformanceMetricsCollector {
       // First Input Delay
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          this.addMetric('fid', entry.processingStart - entry.startTime);
+        entries.forEach((entry) => {
+          if ('processingStart' in entry && 'startTime' in entry) {
+            const processingStart = (entry as { processingStart: number }).processingStart;
+            const startTime = (entry as { startTime: number }).startTime;
+            this.addMetric('fid', processingStart - startTime);
+          }
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
@@ -83,9 +87,13 @@ class PerformanceMetricsCollector {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+        entries.forEach((entry) => {
+          if ('hadRecentInput' in entry && 'value' in entry) {
+            const hadRecentInput = (entry as { hadRecentInput: boolean }).hadRecentInput;
+            const value = (entry as { value: number }).value;
+            if (!hadRecentInput) {
+              clsValue += value;
+            }
           }
         });
         this.addMetric('cls', clsValue);
@@ -104,8 +112,12 @@ class PerformanceMetricsCollector {
       // Time to First Byte
       const navigationObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          this.addMetric('ttfb', entry.responseStart - entry.requestStart);
+        entries.forEach((entry) => {
+          if ('responseStart' in entry && 'requestStart' in entry) {
+            const responseStart = (entry as { responseStart: number }).responseStart;
+            const requestStart = (entry as { requestStart: number }).requestStart;
+            this.addMetric('ttfb', responseStart - requestStart);
+          }
         });
       });
       navigationObserver.observe({ entryTypes: ['navigation'] });
@@ -121,15 +133,21 @@ class PerformanceMetricsCollector {
     if ('PerformanceObserver' in window) {
       const resourceObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          const resource: ResourcePerformance = {
-            url: entry.name,
-            type: this.getResourceType(entry.name),
-            loadTime: entry.duration,
-            size: entry.transferSize || 0,
-            cached: entry.transferSize === 0 && entry.decodedBodySize > 0,
-          };
-          this.resourcePerformance.push(resource);
+        entries.forEach((entry) => {
+          if ('name' in entry && 'duration' in entry) {
+            const name = (entry as { name: string }).name;
+            const duration = (entry as { duration: number }).duration;
+            const transferSize = 'transferSize' in entry ? (entry as { transferSize: number }).transferSize : 0;
+            const decodedBodySize = 'decodedBodySize' in entry ? (entry as { decodedBodySize: number }).decodedBodySize : 0;
+            const resource: ResourcePerformance = {
+              url: name,
+              type: this.getResourceType(name),
+              loadTime: duration,
+              size: transferSize || 0,
+              cached: transferSize === 0 && decodedBodySize > 0,
+            };
+            this.resourcePerformance.push(resource);
+          }
         });
       });
       resourceObserver.observe({ entryTypes: ['resource'] });
@@ -183,7 +201,7 @@ class PerformanceMetricsCollector {
       url: typeof window !== 'undefined' ? window.location.href : '',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       connection: typeof navigator !== 'undefined' && 'connection' in navigator 
-        ? (navigator as any).connection?.effectiveType : undefined,
+        ? (navigator.connection as { effectiveType?: string })?.effectiveType : undefined,
     };
 
     this.metrics.push(metric);

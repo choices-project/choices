@@ -326,7 +326,7 @@ test.describe('Robust Rate Limiting Bypass - V2', () => {
     await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
     await page.click('button:has-text("Next")');
 
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
 
     await page.click('button:has-text("Create Poll")');
@@ -353,7 +353,7 @@ test.describe('Robust Rate Limiting Bypass - V2', () => {
     // Test address lookup with bypass
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => response.url().includes('/api/v1/civics/address-lookup') || response.url().includes('/api/civics/by-address'));
 
     await expect(page.locator('[data-testid="address-results"]')).toBeVisible();
   });

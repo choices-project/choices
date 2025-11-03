@@ -10,6 +10,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { civicsIntegration } from '@/lib/services/civics-integration';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false,

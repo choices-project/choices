@@ -206,7 +206,8 @@ export async function GET(request: NextRequest) {
           }
         });
       } catch (error) {
-        const appError = { message: (error as Error).message ?? 'Unknown error' };
+        const errorMessage = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+        const appError = { message: errorMessage };
         return NextResponse.json({
           status: {
             environment,

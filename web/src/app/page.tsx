@@ -1,9 +1,9 @@
 'use client'
 
+import { Shield, Vote, Lock, Users, ArrowRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react';
-import { Shield, Vote, Lock, Users, ArrowRight, CheckCircle } from 'lucide-react';
 
 
 

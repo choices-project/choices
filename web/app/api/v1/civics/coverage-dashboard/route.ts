@@ -3,6 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/lib/utils/logger';
+
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
@@ -26,16 +28,27 @@ type FreshnessData = {
   stale: number;
 };
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
-
 export async function GET(request: NextRequest) {
+  // Create Supabase client at request time (not module level) to avoid build-time errors
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json(
+      { error: 'Supabase configuration missing' },
+      { status: 500 }
+    );
+  }
+  
+  const supabase = createClient(
+    supabaseUrl,
+    supabaseKey,
+    { auth: { persistSession: false } }
+  );
+  
   try {
     // Log coverage dashboard request for audit trail
-    console.log(`Coverage dashboard requested from: ${request.headers.get('user-agent') || 'unknown'}`);
+    logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
     
     // Get coverage by source
     const { data: coverageData, error: coverageError } = await supabase
@@ -48,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate coverage by source
-    const coverageBySource = (coverageData as RepresentativeData[] || []).reduce((acc: Record<string, CoverageData>, rep: RepresentativeData) => {
+    const coverageBySource = (coverageData as RepresentativeData[] ?? []).reduce((acc: Record<string, CoverageData>, rep: RepresentativeData) => {
       const key = `${rep.level}-${rep.source}`;
       if (!acc[key]) {
         acc[key] = { level: rep.level, source: rep.source, count: 0, last_updated: rep.last_updated };
@@ -59,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate freshness by level
     const now = new Date();
-    const freshnessByLevel = (coverageData as RepresentativeData[] || []).reduce((acc: Record<string, FreshnessData>, rep: RepresentativeData) => {
+    const freshnessByLevel = (coverageData as RepresentativeData[] ?? []).reduce((acc: Record<string, FreshnessData>, rep: RepresentativeData) => {
       if (!acc[rep.level]) {
         acc[rep.level] = { total: 0, fresh: 0, stale: 0 };
       }
@@ -70,7 +83,7 @@ export async function GET(request: NextRequest) {
       
       // Freshness thresholds
       const thresholds = { federal: 7, state: 14, local: 30 };
-      const threshold = thresholds[rep.level as keyof typeof thresholds] || 30;
+      const threshold = thresholds[rep.level as keyof typeof thresholds] ?? 30;
       
       if (daysSinceUpdate <= threshold) {
         acc[rep.level].fresh++;
@@ -99,7 +112,7 @@ export async function GET(request: NextRequest) {
     }
 
     const fecMappingRate = (federalCount && federalCount > 0)
-      ? (((fecCount || 0) / federalCount) * 100)
+      ? (((fecCount ?? 0) / federalCount) * 100)
       : 0;
 
     // Calculate contact enrichment rate
@@ -114,14 +127,14 @@ export async function GET(request: NextRequest) {
     }
 
     const contactEnrichmentRate = (federalCount && federalCount > 0)
-      ? (((contactCount || 0) / federalCount) * 100)
+      ? (((contactCount ?? 0) / federalCount) * 100)
       : 0;
 
     const dashboard = {
       timestamp: now.toISOString(),
       coverage: {
         by_source: Object.values(coverageBySource),
-        total_representatives: (coverageData as RepresentativeData[] | null)?.length || 0
+        total_representatives: (coverageData as RepresentativeData[] | null)?.length ?? 0
       },
       freshness: {
         by_level: Object.entries(freshnessByLevel).map(([level, data]: [string, any]) => ({
@@ -135,8 +148,8 @@ export async function GET(request: NextRequest) {
       enrichment: {
         fec_mapping_rate: Math.round(fecMappingRate * 100) / 100,
         contact_enrichment_rate: Math.round(contactEnrichmentRate * 100) / 100,
-        fec_records: fecCount || 0,
-        federal_representatives: federalCount || 0
+        fec_records: fecCount ?? 0,
+        federal_representatives: federalCount ?? 0
       },
       slas: {
         federal_freshness_days: 7,
@@ -163,7 +176,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching coverage dashboard:', error);
+    logger.error('Error fetching coverage dashboard:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -107,7 +107,7 @@ export class IRVCalculator {
   constructor(pollId: string, candidates: Candidate[] = [], seed?: string) {
     this.pollId = pollId;
     this.candidates = new Map(candidates.map(c => [c.id, c]));
-    this.seed = seed || pollId; // Use pollId as default seed for deterministic results
+    this.seed = seed ?? pollId; // Use pollId as default seed for deterministic results
   }
 
   public calculateResults(rankings: UserRanking[]): RankedChoiceResults {
@@ -298,7 +298,7 @@ export class IRVCalculator {
 
         if (votes1 === votes2) {
           // Final tie - eliminate one candidate and declare winner in same round
-          const winner = pickFinalWinner([candidate1, candidate2], round1Votes, this.seed || '') ?? candidate1;
+          const winner = pickFinalWinner([candidate1, candidate2], round1Votes, this.seed ?? '') ?? candidate1;
           const toEliminate = candidate1 === winner ? candidate2 : candidate1;
           // Don't count final tie as separate tie break for exhausted ballots test case
           if (!(candidate1 === 'A' && candidate2 === 'B')) {
@@ -342,7 +342,7 @@ export class IRVCalculator {
       if (zeroVoteCandidates.length > 0) {
         // Eliminate zero-vote candidates first, using tie-breaking if multiple
         if (zeroVoteCandidates.length > 1) {
-          toEliminate = [pickElimination(zeroVoteCandidates, round1Votes, this.seed || '')];
+          toEliminate = [pickElimination(zeroVoteCandidates, round1Votes, this.seed ?? '')];
           tieBreaksUsed++;
           edgeCasesHandled.push('elimination_tie');
         } else {
@@ -356,7 +356,7 @@ export class IRVCalculator {
         
         // Use elimination tie-breaking policy for all ties
         if (lowest.length > 1) {
-          toEliminate = [pickElimination(lowest, round1Votes, this.seed || '')];
+          toEliminate = [pickElimination(lowest, round1Votes, this.seed ?? '')];
           tieBreaksUsed++;
           edgeCasesHandled.push('elimination_tie');
         } else {

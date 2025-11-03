@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        logger.error('Failed to fetch moderation queue', error as Error);
+        logger.error('Failed to fetch moderation queue', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to fetch moderation queue' },
           { status: 500 }
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         success: true,
         data: flags,
         metadata: {
-          count: flags?.length || 0,
+          count: flags?.length ?? 0,
           timestamp: new Date().toISOString()
         }
       });
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error('Hashtags GET error', error as Error);
+    logger.error('Hashtags GET error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to create hashtag flag', error as Error);
+        logger.error('Failed to create hashtag flag', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to create hashtag flag' },
           { status: 500 }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to approve hashtag flag', error as Error);
+        logger.error('Failed to approve hashtag flag', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to approve hashtag flag' },
           { status: 500 }
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to reject hashtag flag', error as Error);
+        logger.error('Failed to reject hashtag flag', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to reject hashtag flag' },
           { status: 500 }
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error('Hashtags POST error', error as Error);
+    logger.error('Hashtags POST error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

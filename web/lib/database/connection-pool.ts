@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Database Connection Pool Manager
  * 

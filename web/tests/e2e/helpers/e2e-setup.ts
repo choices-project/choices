@@ -52,7 +52,7 @@ export async function setupE2ETestData(testData: E2ETestData): Promise<void> {
     userId,
     pollId,
     userEmail: testData.user.email,
-    pollTitle: testData.poll?.title || 'none'
+    pollTitle: testData.poll?.title ?? 'none'
   });
 }
 

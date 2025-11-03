@@ -13,7 +13,6 @@ import {
   MESSAGE_TEMPLATES,
   type MessageTemplate,
   getTemplateById,
-  getTemplatesByCategory,
   fillTemplate,
   validateTemplateValues,
 } from '@/lib/contact/message-templates';

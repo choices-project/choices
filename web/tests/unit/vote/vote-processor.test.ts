@@ -195,7 +195,7 @@ describe('VoteProcessor', () => {
 
     it('should validate approval vote data', async () => {
       const approvalPoll = Object.assign({}, mockPoll, { votingMethod: 'approval' as const });
-      const { choice, ...approvalVoteData } = mockVoteData;
+      const { choice: _choice, ...approvalVoteData } = mockVoteData;
       const approvalVote = Object.assign({}, approvalVoteData, { 
         approvals: [0, 1]
       });
@@ -219,7 +219,7 @@ describe('VoteProcessor', () => {
 
     it('should validate ranked vote data', async () => {
       const rankedPoll = Object.assign({}, mockPoll, { votingMethod: 'ranked' as const });
-      const { choice, ...rankedVoteData } = mockVoteData;
+      const { choice: _choice, ...rankedVoteData } = mockVoteData;
       const rankedVote = Object.assign({}, rankedVoteData, { 
         rankings: [0, 1, 2]
       });
@@ -243,7 +243,7 @@ describe('VoteProcessor', () => {
 
     it('should validate quadratic vote data', async () => {
       const quadraticPoll = Object.assign({}, mockPoll, { votingMethod: 'quadratic' as const });
-      const { choice, ...quadraticVoteData } = mockVoteData;
+      const { choice: _choice, ...quadraticVoteData } = mockVoteData;
       const quadraticVote = Object.assign({}, quadraticVoteData, { 
         allocations: { '0': 5, '1': 3 }
       });
@@ -267,7 +267,7 @@ describe('VoteProcessor', () => {
 
     it('should validate range vote data', async () => {
       const rangePoll = Object.assign({}, mockPoll, { votingMethod: 'range' as const });
-      const { choice, ...rangeVoteData } = mockVoteData;
+      const { choice: _choice, ...rangeVoteData } = mockVoteData;
       const rangeVote = Object.assign({}, rangeVoteData, { 
         ratings: { '0': 8, '1': 6, '2': 4 }
       });

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Performance monitoring utilities
  * Provides tools for tracking and optimizing application performance

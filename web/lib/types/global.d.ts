@@ -5,7 +5,7 @@
  */
 
 declare global {
-  interface Window {
+  type Window = {
     gtag: (...args: any[]) => void;
   }
 }

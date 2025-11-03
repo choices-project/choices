@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 import type { UserPreferences } from '@/features/civics/lib/types/civics-types';
 import { useSocialSharing } from '@/hooks/useSocialSharing';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
@@ -491,8 +490,8 @@ function UnifiedFeed({
       contentType: contentType as 'poll' | 'representative' | 'feed',
       placement: 'feed'
     };
-    if (typeof (socialSharing as any)?.share === 'function') {
-      await (socialSharing as any).share(shareUrl, (item as any).title, (item as any).description || (item as any).summary || '');
+    if (typeof (socialSharing)?.share === 'function') {
+      await (socialSharing).share(shareUrl, (item as any).title, (item as any).description || (item as any).summary || '');
     } else if (typeof socialSharing?.copyToClipboard === 'function') {
       await socialSharing.copyToClipboard(shareUrl);
     }

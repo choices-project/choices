@@ -210,7 +210,7 @@ export class RFCManager {
       { parentId }
     );
     
-    const comments = this.commentStorage.get(rfcId) || [];
+    const comments = this.commentStorage.get(rfcId) ?? [];
     comments.push(comment);
     this.commentStorage.set(rfcId, comments);
     
@@ -259,7 +259,7 @@ export class RFCManager {
       { reasoning }
     );
     
-    const votes = this.voteStorage.get(rfcId) || [];
+    const votes = this.voteStorage.get(rfcId) ?? [];
     
     // Remove existing vote from same voter
     const existingVoteIndex = votes.findIndex(v => v.voter === voter);
@@ -317,7 +317,7 @@ export class RFCManager {
    * Get RFC by ID
    */
   async getRFC(rfcId: string): Promise<RFC | null> {
-    return this.rfcStorage.get(rfcId) || null;
+    return this.rfcStorage.get(rfcId) ?? null;
   }
 
   /**
@@ -339,8 +339,8 @@ export class RFCManager {
    * Sanitize RFC for public consumption
    */
   private sanitizeForPublic(rfc: RFC): PublicRFC {
-    const comments = this.commentStorage.get(rfc.id) || [];
-    const votes = this.voteStorage.get(rfc.id) || [];
+    const comments = this.commentStorage.get(rfc.id) ?? [];
+    const votes = this.voteStorage.get(rfc.id) ?? [];
     
     return {
       id: rfc.id,
@@ -518,7 +518,7 @@ export class RFCManager {
       metadata: {
         oldStatus,
         newStatus: rfc.status,
-        reason: reason || 'No reason provided'
+        reason: reason ?? 'No reason provided'
       }
     };
     
@@ -529,7 +529,7 @@ export class RFCManager {
    * Send notification
    */
   private async sendNotification(notification: RFCNotification): Promise<void> {
-    const notifications = this.notificationStorage.get(notification.rfcId) || [];
+    const notifications = this.notificationStorage.get(notification.rfcId) ?? [];
     notifications.push(notification);
     this.notificationStorage.set(notification.rfcId, notifications);
     

@@ -45,7 +45,7 @@ type BrowserWindow = {
     createObjectURL?: (blob: Blob) => string;
     revokeObjectURL?: (url: string) => void;
   };
-  gtag?: (command: string, eventName: string, parameters?: Record<string, any>) => void;
+  gtag?: (command: string, eventName: string, parameters?: Record<string, unknown>) => void;
 }
 
 type BrowserDocument = {

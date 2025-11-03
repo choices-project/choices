@@ -371,7 +371,7 @@ export class FECService {
         throw new Error(`Failed to get FEC cycles: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`FEC cycles lookup failed: ${error}`);
     }
@@ -464,7 +464,7 @@ export class FECService {
         throw new Error(`Failed to get candidate committees: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Candidate committees lookup failed: ${error}`);
     }
@@ -486,7 +486,7 @@ export class FECService {
         throw new Error(`Failed to calculate independence score: ${scoreError.message}`);
       }
 
-      const score = scoreData || 0;
+      const score = scoreData ?? 0;
 
       // Get detailed contribution breakdown
       const { data: contributions, error: contribError } = await this.supabase
@@ -499,11 +499,11 @@ export class FECService {
         throw new Error(`Failed to get contribution breakdown: ${contribError.message}`);
       }
 
-      const totalAmount = contributions?.reduce((sum: number, c: any) => sum + c.amount, 0) || 0;
-      const pacAmount = contributions?.filter((c: any) => c.is_pac).reduce((sum: number, c: any) => sum + c.amount, 0) || 0;
-      const partyAmount = contributions?.filter((c: any) => c.is_party).reduce((sum: number, c: any) => sum + c.amount, 0) || 0;
-      const corporateAmount = contributions?.filter((c: any) => c.is_corporate).reduce((sum: number, c: any) => sum + c.amount, 0) || 0;
-      const individualAmount = contributions?.filter((c: any) => c.is_individual).reduce((sum: number, c: any) => sum + c.amount, 0) || 0;
+      const totalAmount = contributions?.reduce((sum: number, c: any) => sum + c.amount, 0) ?? 0;
+      const pacAmount = contributions?.filter((c: any) => c.is_pac).reduce((sum: number, c: any) => sum + c.amount, 0) ?? 0;
+      const partyAmount = contributions?.filter((c: any) => c.is_party).reduce((sum: number, c: any) => sum + c.amount, 0) ?? 0;
+      const corporateAmount = contributions?.filter((c: any) => c.is_corporate).reduce((sum: number, c: any) => sum + c.amount, 0) ?? 0;
+      const individualAmount = contributions?.filter((c: any) => c.is_individual).reduce((sum: number, c: any) => sum + c.amount, 0) ?? 0;
 
       return {
         candidate_id: candidateId,
@@ -570,7 +570,7 @@ export class FECService {
       }
 
       if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+        query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1);
       }
 
       const { data, error } = await query;
@@ -579,7 +579,7 @@ export class FECService {
         throw new Error(`Failed to get candidate contributions: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Candidate contributions lookup failed: ${error}`);
     }
@@ -627,7 +627,7 @@ export class FECService {
       }
 
       if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+        query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1);
       }
 
       const { data, error } = await query;
@@ -636,7 +636,7 @@ export class FECService {
         throw new Error(`Failed to get candidate disbursements: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Candidate disbursements lookup failed: ${error}`);
     }
@@ -679,7 +679,7 @@ export class FECService {
       }
 
       if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+        query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1);
       }
 
       const { data, error } = await query;
@@ -688,7 +688,7 @@ export class FECService {
         throw new Error(`Failed to get candidate independent expenditures: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Candidate independent expenditures lookup failed: ${error}`);
     }
@@ -706,7 +706,7 @@ export class FECService {
         throw new Error(`Failed to get e-filing vs processed summary: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`E-filing vs processed summary lookup failed: ${error}`);
     }
@@ -788,7 +788,7 @@ export class FECService {
         this.getAllFECCycles()
       ]);
 
-      const currentCycleYear = currentCycle?.cycle || 2024;
+      const currentCycleYear = currentCycle?.cycle ?? 2024;
       const efilingSummary = await this.getEFileVsProcessedSummary(currentCycleYear);
 
       const totalRecords = efilingSummary.reduce((sum, s) => sum + s.total_records, 0);
@@ -796,10 +796,10 @@ export class FECService {
       const totalProcessed = efilingSummary.reduce((sum, s) => sum + s.processed_records, 0);
 
       return {
-        total_candidates: candidatesCount.count || 0,
-        total_committees: committeesCount.count || 0,
-        total_contributions: contributionsCount.count || 0,
-        total_disbursements: disbursementsCount.count || 0,
+        total_candidates: candidatesCount.count ?? 0,
+        total_committees: committeesCount.count ?? 0,
+        total_contributions: contributionsCount.count ?? 0,
+        total_disbursements: disbursementsCount.count ?? 0,
         total_independent_expenditures: ieCount.count || 0,
         current_cycle: currentCycleYear,
         cycles_available: cycles.map(c => c.cycle),

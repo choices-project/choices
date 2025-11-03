@@ -327,11 +327,11 @@ export function useUserType(userId?: string) {
   }, [loadUserType])
 
   return {
-    userType: segmentationData?.user_type || 'newcomer',
-    confidenceScore: segmentationData?.confidence_score || 0,
-    behaviorMetrics: segmentationData?.behavior_metrics || null,
-    recommendations: segmentationData?.recommendations || [],
-    nextMilestone: segmentationData?.next_milestone || '',
+    userType: segmentationData?.user_type ?? 'newcomer',
+    confidenceScore: segmentationData?.confidence_score ?? 0,
+    behaviorMetrics: segmentationData?.behavior_metrics ?? null,
+    recommendations: segmentationData?.recommendations ?? [],
+    nextMilestone: segmentationData?.next_milestone ?? '',
     isLoading,
     error,
     updateUserType,

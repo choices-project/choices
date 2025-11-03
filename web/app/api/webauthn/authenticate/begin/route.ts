@@ -59,10 +59,10 @@ export async function POST(req: Request) {
     const allowCredentials = credentials.map(cred => ({
       id: isoUint8Array.fromB64url(cred.credential_id),
       type: 'public-key',
-      transports: cred.transports || undefined,
+      transports: cred.transports ?? undefined,
     }));
 
-    const rpId = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN || 'localhost';
+    const rpId = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN ?? 'localhost';
 
     const options = {
       challenge: isoUint8Array.fromString(challenge),

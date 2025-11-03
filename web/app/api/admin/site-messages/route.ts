@@ -66,7 +66,7 @@ async function GET(request: NextRequest) {
     const { data: messages, error } = await query;
 
     if (error) {
-      logger.error('Error fetching site messages:', error as Error);
+      logger.error('Error fetching site messages:', error instanceof Error ? error : new Error(String(error)));
       return NextResponse.json(
         { error: 'Failed to fetch site messages' },
         { status: 500 }
@@ -89,7 +89,7 @@ async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Admin site-messages API error:', error as Error);
+    logger.error('Admin site-messages API error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -164,7 +164,7 @@ async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      logger.error('Error creating site message:', error as Error);
+      logger.error('Error creating site message:', error instanceof Error ? error : new Error(String(error)));
       return NextResponse.json(
         { error: 'Failed to create site message' },
         { status: 500 }
@@ -178,7 +178,7 @@ async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Admin site-messages POST API error:', error as Error);
+    logger.error('Admin site-messages POST API error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -3,21 +3,35 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+import { logger } from '@/lib/utils/logger';
+
 // Force dynamic rendering since we use request.url
 export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
+  // Create Supabase client at request time (not module level) to avoid build-time errors
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json(
+      { error: 'Supabase configuration missing' },
+      { status: 500 }
+    );
+  }
+  
+  const supabase = createClient(
+    supabaseUrl,
+    supabaseKey,
+    { auth: { persistSession: false } }
+  );
+  
   try {
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
     const level = searchParams.get('level');
-    const fields = searchParams.get('fields')?.split(',') || [];
-    const include = searchParams.get('include')?.split(',') || [];
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const fields = searchParams.get('fields')?.split(',') ?? [];
+    const include = searchParams.get('include')?.split(',') ?? [];
+    const limit = parseInt(searchParams.get('limit') ?? '50');
 
     if (!state) {
       return NextResponse.json(
@@ -69,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     // Process each representative
     const processedReps = await Promise.all(
-      (reps || []).map(async (rep) => {
+      (reps ?? []).map(async (rep) => {
         const response: Record<string, unknown> = {
           id: rep.id,
           name: rep.name,
@@ -171,7 +185,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching representatives by state:', error);
+    logger.error('Error fetching representatives by state:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

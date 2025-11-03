@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
 
-import { logger } from '@/lib/utils/logger';
 import { useUser, useIsAuthenticated } from '@/lib/stores/userStore';
+import { logger } from '@/lib/utils/logger';
 
 import type { Poll } from '../../lib/api';
 import { iaApi, poApi } from '../../lib/api'

@@ -15,13 +15,13 @@
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
+import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
 import { useAppStore } from '@/lib/stores/appStore';
 
 
 
 
-import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 
 type LanguageSelectorProps = {
   className?: string;

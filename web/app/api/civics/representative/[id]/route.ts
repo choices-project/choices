@@ -11,19 +11,14 @@
  * @feature CIVICS_REPRESENTATIVE_DETAILS
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-// Use anon key with proper RLS policies
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: true } }
-);
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/civics/representative/[id]
@@ -82,6 +77,15 @@ export async function GET(
           data_quality_score: 95
         }
       });
+    }
+
+    // Get Supabase client
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { ok: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
     }
 
     // Get representative data with optimized query
@@ -271,7 +275,7 @@ export async function GET(
     });
 
   } catch (error) {
-    logger.error('Error fetching representative details', error instanceof Error ? error : undefined);
+    logger.error('Error fetching representative details', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         ok: false, 

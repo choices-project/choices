@@ -185,7 +185,7 @@ export class GovTrackClient {
         `/member?${params.toString()}`
       );
 
-      return response.objects || [];
+      return response.objects ?? [];
     } catch (error) {
       logger.error('Failed to get current members from GovTrack API', { chamber, error });
       throw error;
@@ -229,7 +229,7 @@ export class GovTrackClient {
         `/vote?${params.toString()}`
       );
 
-      return response.objects || [];
+      return response.objects ?? [];
     } catch (error) {
       logger.error('Failed to get recent votes from GovTrack API', { memberId, error });
       throw error;
@@ -255,7 +255,7 @@ export class GovTrackClient {
         `/bill?${params.toString()}`
       );
 
-      return response.objects || [];
+      return response.objects ?? [];
     } catch (error) {
       logger.error('Failed to get recent bills from GovTrack API', { congress, error });
       throw error;
@@ -303,7 +303,7 @@ export class GovTrackClient {
         `/member?${params.toString()}`
       );
 
-      return response.objects || [];
+      return response.objects ?? [];
     } catch (error) {
       logger.error('Failed to search members in GovTrack API', { query, chamber, error });
       throw error;
@@ -384,8 +384,8 @@ export class GovTrackClient {
       this.lastResetTime = now;
     }
 
-    const minuteCount = this.rateLimiter.get(minuteKey) || 0;
-    const hourCount = this.rateLimiter.get(hourKey) || 0;
+    const minuteCount = this.rateLimiter.get(minuteKey) ?? 0;
+    const hourCount = this.rateLimiter.get(hourKey) ?? 0;
 
     if (minuteCount >= this.config.rateLimit.requestsPerMinute) {
       throw new GovTrackApiError('Rate limit exceeded: too many requests per minute', 429);
@@ -429,8 +429,8 @@ export class GovTrackClient {
     return {
       requestsPerMinute: this.config.rateLimit.requestsPerMinute,
       requestsPerHour: this.config.rateLimit.requestsPerHour,
-      currentMinute: this.rateLimiter.get(minuteKey) || 0,
-      currentHour: this.rateLimiter.get(hourKey) || 0
+      currentMinute: this.rateLimiter.get(minuteKey) ?? 0,
+      currentHour: this.rateLimiter.get(hourKey) ?? 0
     };
   }
 }

@@ -178,7 +178,7 @@ export class FECClient {
 
   constructor(config: FECClientConfig = {}) {
     this.config = Object.assign({
-      apiKey: config.apiKey || '',
+      apiKey: config.apiKey ?? '',
       baseUrl: 'https://api.open.fec.gov/v1',
       rateLimit: {
         requestsPerHour: 1000,

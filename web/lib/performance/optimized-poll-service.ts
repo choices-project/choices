@@ -5,6 +5,22 @@
  * It replaces the old @/shared/core/performance/lib/optimized-poll-service imports.
  */
 
+type Poll = {
+  id: string;
+  title: string;
+  description?: string;
+  options: string[];
+  status: string;
+  [key: string]: unknown;
+}
+
+type DatabaseMaintenanceStats = {
+  tablesOptimized: number;
+  indexesRebuilt: number;
+  cacheCleared: boolean;
+  duration: string;
+}
+
 export type PerformanceMetrics = {
   metricName: string;
   avgValue: number;
@@ -18,7 +34,7 @@ export type PerformanceMetrics = {
 }
 
 export class OptimizedPollService {
-  private cache: Map<string, any> = new Map();
+  private cache: Map<string, Poll> = new Map();
   private metrics: PerformanceMetrics = {
     metricName: 'default',
     avgValue: 0,
@@ -31,7 +47,7 @@ export class OptimizedPollService {
     errorRate: 0
   };
 
-  async getPoll(id: string): Promise<any> {
+  async getPoll(id: string): Promise<Poll | undefined> {
     const startTime = Date.now();
     
     try {
@@ -55,7 +71,7 @@ export class OptimizedPollService {
     }
   }
 
-  private async fetchPollFromDatabase(id: string): Promise<any> {
+  private async fetchPollFromDatabase(id: string): Promise<Poll> {
     // TODO: Implement actual database fetch
     return {
       id,
@@ -133,7 +149,7 @@ export class OptimizedPollService {
   }
 
   // Perform database maintenance (admin only)
-  async performDatabaseMaintenance(): Promise<{ success: boolean; message: string; stats: any }> {
+  async performDatabaseMaintenance(): Promise<{ success: boolean; message: string; stats: DatabaseMaintenanceStats }> {
     // TODO: Implement actual database maintenance
     // This should be server-side only and require admin authentication
     return {
@@ -213,7 +229,7 @@ export type OptimizedPollResult = {
     votePercentage?: number;
     uniqueVoters?: number;
   }>;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   pollStatus?: string;
   pollTitle?: string;
   pollType?: string;

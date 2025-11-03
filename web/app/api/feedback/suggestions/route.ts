@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const suggestion: InterestSuggestion = {
       type: type as 'interest' | 'demographic',
       text: text.trim(),
-      userId: userId || 'anonymous',
+      userId: userId ?? 'anonymous',
       timestamp: new Date().toISOString()
     };
 
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         .insert({
           id: parsedFeedback.id,
           user_id: parsedFeedback.metadata.userId,
+          feedback_type: parsedFeedback.type,
           type: parsedFeedback.type,
           title: parsedFeedback.title,
           description: parsedFeedback.description,
@@ -113,8 +114,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      suggestions: data || [],
-      count: data.length ?? 0
+      suggestions: data ?? [],
+      count: data?.length ?? 0
     });
 
   } catch (error) {

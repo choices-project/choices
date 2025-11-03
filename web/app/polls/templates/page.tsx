@@ -275,7 +275,7 @@ export default function PollTemplatesPage() {
         comparison = bTime - aTime;
         break;
       case 'rating':
-        comparison = (b.rating || 0) - (a.rating || 0);
+        comparison = (b.rating ?? 0) - (a.rating ?? 0);
         break;
       case 'name':
         comparison = a.name.localeCompare(b.name);

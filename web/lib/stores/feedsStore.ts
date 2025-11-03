@@ -627,7 +627,7 @@ export const useFeedsStore = create<FeedsStore>()(
               body: JSON.stringify({ category }),
             });
             
-            if (response && response.ok) {
+            if (response?.ok) {
               const feeds = await response.json();
               set({ feeds, filteredFeeds: feeds, isLoading: false });
               

@@ -78,9 +78,9 @@ export type HashtagActivity = {
 // Helper function to transform database data to Hashtag type
 function transformHashtagData(data: HashtagRow): Hashtag {
   return {
-    id: data.id,
-    name: data.name,
-    display_name: data.name,
+    id: String(data.id),
+    name: String(data.name),
+    display_name: String(data.name),
     description: undefined,
     category: 'general' as HashtagCategory,
     usage_count: 0,
@@ -89,8 +89,8 @@ function transformHashtagData(data: HashtagRow): Hashtag {
     is_featured: false,
     follower_count: 0,
     trend_score: 0,
-    created_at: data.created_at ?? new Date().toISOString(),
-    updated_at: data.updated_at ?? new Date().toISOString(),
+    created_at: String(data.created_at ?? new Date().toISOString()),
+    updated_at: String(data.updated_at ?? new Date().toISOString()),
     created_by: undefined,
     metadata: {}
   };
@@ -310,8 +310,8 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
     }
 
     // Apply pagination
-    const limit = query.limit || 20;
-    const offset = query.offset || 0;
+    const limit = query.limit ?? 20;
+    const offset = query.offset ?? 0;
     supabaseQuery = supabaseQuery.range(offset, offset + limit - 1);
 
     const { data: hashtags, error, count } = await supabaseQuery;
@@ -321,9 +321,9 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
     }
 
     const result: HashtagSearchResponse = {
-      hashtags: (hashtags || []).map(transformHashtagData),
-      total_count: count || 0,
-      suggestions: generateSuggestions(query.query, (hashtags || []).map(transformHashtagData)),
+      hashtags: (hashtags ?? []).map(transformHashtagData),
+      total_count: count ?? 0,
+      suggestions: generateSuggestions(query.query, (hashtags ?? []).map(transformHashtagData)),
       related_queries: await generateRelatedQueries(query.query),
       filters_applied: {},
       search_time_ms: Date.now() - startTime
@@ -375,11 +375,11 @@ export async function getTrendingHashtags(
     }
 
     // Transform to trending hashtags with additional metrics
-    const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags || []).map(async hashtag => {
+    const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags ?? []).map(async hashtag => {
       const transformedHashtag = transformHashtagData(hashtag);
       const trendingHashtag: TrendingHashtag = {
         hashtag: transformedHashtag,
-        trend_score: hashtag.trending_score || 0,
+        trend_score: hashtag.trending_score ?? 0,
         growth_rate: await calculateGrowthRate(transformedHashtag),
         peak_usage: await calculateUsage24h(transformedHashtag),
         time_period: '24h'
@@ -439,7 +439,7 @@ export async function getHashtagSuggestions(
     }
 
     // Get base suggestions
-    const suggestions: HashtagSuggestion[] = (hashtags || []).map(hashtag => ({
+    const suggestions: HashtagSuggestion[] = (hashtags ?? []).map(hashtag => ({
       hashtag: transformHashtagData(hashtag),
       reason: determineSuggestionReason(transformHashtagData(hashtag), input),
       confidence: calculateConfidenceScore(transformHashtagData(hashtag), input),
@@ -548,18 +548,18 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
     if (currentHashtag) {
       await supabase
         .from('hashtags')
-        .update({ follower_count: (currentHashtag.follower_count || 0) + 1 })
+        .update({ follower_count: (currentHashtag.follower_count ?? 0) + 1 })
         .eq('id', hashtagId);
     }
 
     return { success: true, data: {
       ...data,
       hashtag: transformHashtagData(data.hashtag),
-      followed_at: data.followed_at || new Date().toISOString(),
-      is_primary: data.is_primary || false,
-      usage_count: data.usage_count || 0,
-      last_used_at: data.last_used_at || new Date().toISOString(),
-      preferences: data.preferences || {}
+      followed_at: data.followed_at ?? new Date().toISOString(),
+      is_primary: data.is_primary ?? false,
+      usage_count: data.usage_count ?? 0,
+      last_used_at: data.last_used_at ?? new Date().toISOString(),
+      preferences: data.preferences ?? {}
     } as unknown as UserHashtag };
   } catch (error) {
     return { 
@@ -600,7 +600,7 @@ export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResp
     if (currentHashtag) {
       await supabase
         .from('hashtags')
-        .update({ follower_count: Math.max((currentHashtag.follower_count || 0) - 1, 0) })
+        .update({ follower_count: Math.max((currentHashtag.follower_count ?? 0) - 1, 0) })
         .eq('id', hashtagId);
     }
 
@@ -637,14 +637,14 @@ export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: (data || []).map(item => ({
+    return { success: true, data: (data ?? []).map(item => ({
       ...item,
       hashtag: transformHashtagData(item.hashtag),
-      followed_at: item.followed_at || new Date().toISOString(),
-      is_primary: item.is_primary || false,
-      usage_count: item.usage_count || 0,
-      last_used_at: item.last_used_at || new Date().toISOString(),
-      preferences: item.preferences || {}
+      followed_at: item.followed_at ?? new Date().toISOString(),
+      is_primary: item.is_primary ?? false,
+      usage_count: item.usage_count ?? 0,
+      last_used_at: item.last_used_at ?? new Date().toISOString(),
+      preferences: item.preferences ?? {}
     } as unknown as UserHashtag)) };
   } catch (error) {
     return { 
@@ -697,11 +697,11 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
     }
 
     const statsResponse = {
-      total_hashtags: stats?.length || 0,
-      trending_count: stats?.filter(s => s.is_trending).length || 0,
-      verified_count: stats?.filter(s => s.is_verified).length || 0,
+      total_hashtags: stats?.length ?? 0,
+      trending_count: stats?.filter(s => s.is_trending).length ?? 0,
+      verified_count: stats?.filter(s => s.is_verified).length ?? 0,
       categories: {} as Record<HashtagCategory, number>,
-      top_hashtags: stats?.slice(0, 10) as Hashtag[] || [],
+      top_hashtags: (stats?.slice(0, 10) as Hashtag[]) ?? [],
       recent_activity: await getRecentActivity() as HashtagActivity[],
       system_health: {
         api_response_time: 0,
@@ -831,11 +831,11 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
 
     const integration = {
       user_id: userId,
-      primary_hashtags: userHashtags?.filter(uh => uh.is_primary).map(uh => uh.hashtag.name) || [],
-      interest_hashtags: userHashtags?.filter(uh => !uh.is_primary).map(uh => uh.hashtag.name) || [],
+      primary_hashtags: userHashtags?.filter(uh => uh.is_primary).map(uh => uh.hashtag.name) ?? [],
+      interest_hashtags: userHashtags?.filter(uh => !uh.is_primary).map(uh => uh.hashtag.name) ?? [],
       custom_hashtags: await getUserCustomHashtags(userId),
-      followed_hashtags: userHashtags?.map(uh => uh.hashtag.name) || [],
-      hashtag_preferences: (preferences || {
+      followed_hashtags: userHashtags?.map(uh => uh.hashtag.name) ?? [],
+      hashtag_preferences: (preferences ?? {
         user_id: userId,
         default_categories: [],
         auto_follow_suggestions: false,
@@ -855,7 +855,7 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }) as unknown as any,
-      hashtag_activity: (activity || []) as unknown as HashtagEngagement[],
+      hashtag_activity: (activity ?? []) as unknown as HashtagEngagement[],
       last_updated: new Date().toISOString()
     };
 
@@ -911,7 +911,7 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
     const { data: relatedPolls, error: relatedError } = await supabase
       .from('polls')
       .select('id')
-      .overlaps('hashtags', poll.hashtags || [])
+      .overlaps('hashtags', poll.hashtags ?? [])
       .neq('id', pollId)
       .limit(10);
 
@@ -922,14 +922,14 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
 
     const integration = {
       poll_id: pollId,
-      hashtags: poll.hashtags || [],
-      primary_hashtag: poll.primary_hashtag || undefined,
+      hashtags: poll.hashtags ?? [],
+      primary_hashtag: poll.primary_hashtag ?? undefined,
       hashtag_engagement: {
-        total_views: poll.total_views || 0,
-        hashtag_clicks: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'click').length || 0,
-        hashtag_shares: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'share').length || 0
+        total_views: poll.total_views ?? 0,
+        hashtag_clicks: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'click').length ?? 0,
+        hashtag_shares: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'share').length ?? 0
       },
-      related_polls: relatedPolls?.map(p => p.id) || [],
+      related_polls: relatedPolls?.map(p => p.id) ?? [],
       hashtag_trending_score: trendingScore
     };
 
@@ -968,7 +968,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
         .single();
       const feedData = result.data as { hashtag_filters?: string[]; id: string } | null;
       feed = feedData ? {
-        hashtag_filters: feedData.hashtag_filters || [],
+        hashtag_filters: feedData.hashtag_filters ?? [],
         user_id: feedData.id
       } : null;
       feedError = result.error;
@@ -1010,7 +1010,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     const { data: personalizedHashtags, error: personalError } = await supabase
       .from('user_hashtags')
       .select('hashtag:hashtags(name)')
-      .eq('user_id', feed?.user_id || '')
+      .eq('user_id', feed?.user_id ?? '')
       .order('usage_count', { ascending: false })
       .limit(10);
 
@@ -1020,8 +1020,8 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     let analytics, analyticsError;
     try {
       analytics = {
-        total_hashtags: hashtagContent?.length || 0,
-        trending_count: trendingHashtags?.length || 0,
+        total_hashtags: hashtagContent?.length ?? 0,
+        trending_count: trendingHashtags?.length ?? 0,
         engagement_rate: 0,
         last_updated: new Date().toISOString()
       };
@@ -1036,11 +1036,11 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     const integration = {
       feed_id: feedId,
-      hashtag_filters: feed?.hashtag_filters || [],
-      trending_hashtags: trendingHashtags?.map(h => h.name) || [],
-      hashtag_content: (hashtagContent || []) as unknown as any[],
-      hashtag_analytics: (analytics || {}) as unknown as HashtagAnalytics,
-      personalized_hashtags: personalizedHashtags?.map((uh: any) => uh.hashtag.name) || []
+      hashtag_filters: feed?.hashtag_filters ?? [],
+      trending_hashtags: trendingHashtags?.map(h => h.name) ?? [],
+      hashtag_content: (hashtagContent ?? []) as unknown as any[],
+      hashtag_analytics: (analytics ?? {}) as unknown as HashtagAnalytics,
+      personalized_hashtags: personalizedHashtags?.map((uh: any) => uh.hashtag.name) ?? []
     };
 
     return { success: true, data: integration };

@@ -13,14 +13,14 @@ import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { logger } from '@/lib/utils/logger';
-import { useAuth } from '@/hooks/useAuth';
-
+import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
-import ContactModal from '@/features/contact/components/ContactModal';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
+import ContactModal from '@/features/contact/components/ContactModal';
+import { useAuth } from '@/hooks/useAuth';
+import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 type FollowedRepresentative = {
@@ -137,7 +137,7 @@ export default function MyRepresentativesPage() {
           <span>My Representatives</span>
         </h1>
             <p className="text-gray-600">
-          Representatives you're following. You'll be notified about their activity.
+          Representatives you&apos;re following. You&apos;ll be notified about their activity.
         </p>
         <div className="mt-2 flex space-x-4">
           <Button variant="ghost" size="sm" asChild>
@@ -192,7 +192,7 @@ export default function MyRepresentativesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {representatives.map(({ representative, follow }) => (
+            {representatives.map(({ representative }) => (
               <RepresentativeCard
                 key={representative.id}
                 representative={representative}
@@ -216,13 +216,14 @@ export default function MyRepresentativesPage() {
             setShowContactModal(false);
             setSelectedRepresentative(null);
           }}
-          representative={{
+          representative={withOptional({
             id: selectedRepresentative.id,
             name: selectedRepresentative.name,
             office: selectedRepresentative.office ?? 'Unknown Office',
             party: selectedRepresentative.party,
+          }, {
             photo: selectedRepresentative.primary_photo_url ?? undefined,
-          }}
+          })}
           userId={user.id}
         />
       )}
@@ -231,13 +232,7 @@ export default function MyRepresentativesPage() {
         <BulkContactModal
           isOpen={showBulkContactModal}
           onClose={() => setShowBulkContactModal(false)}
-          representatives={representatives.map(({ representative }) => ({
-            id: representative.id,
-            name: representative.name,
-            office: representative.office ?? 'Unknown Office',
-            party: representative.party,
-            photo: representative.primary_photo_url ?? undefined,
-          }))}
+          representatives={representatives.map(({ representative }) => representative)}
           userId={user.id}
         />
       )}

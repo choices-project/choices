@@ -223,14 +223,14 @@ export function formatPercentage(value: number, decimals = 1): string {
 /**
  * Check if a value is a valid number
  */
-export function isValidNumber(value: any): value is number {
+export function isValidNumber(value: unknown): value is number {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
 }
 
 /**
  * Check if a value is a valid date
  */
-export function isValidDate(value: any): value is Date {
+export function isValidDate(value: unknown): value is Date {
   return value instanceof Date && !isNaN(value.getTime());
 }
 

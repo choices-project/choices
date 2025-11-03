@@ -13,7 +13,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { logger } from '@/lib/utils/logger';
-import { getTrendingHashtags } from '@/features/hashtags/lib/hashtag-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 /**
@@ -143,17 +142,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get trending hashtags for analytics if needed
+    // Get trending hashtags for analytics if needed (server-side query)
     let trendingHashtags: any[] = [];
     if (sort === 'trending' || status === 'trending' || includeAnalytics) {
       try {
-        const trendingResult = await getTrendingHashtags(undefined, 10);
-        if (trendingResult.success && trendingResult.data) {
-          trendingHashtags = trendingResult.data.map(th => ({
-            hashtag: th.hashtag,
-            trend_score: th.trend_score,
-            growth_rate: th.growth_rate,
-            peak_usage: th.peak_usage
+        const { data: hashtagData, error: hashtagError } = await supabase
+          .from('hashtags')
+          .select('id, name, display_name, trend_score, usage_count, follower_count')
+          .eq('is_trending', true)
+          .order('trend_score', { ascending: false })
+          .limit(10);
+        
+        if (!hashtagError && hashtagData) {
+          trendingHashtags = hashtagData.map(th => ({
+            hashtag: th,
+            trend_score: th.trend_score ?? 0,
+            growth_rate: 0, // Would need additional calculation
+            peak_usage: th.usage_count ?? 0
           }));
         }
       } catch (error) {

@@ -1,6 +1,6 @@
 import type { State } from './supabase-mock';
 
-export type Register = (m: (s: State) => boolean, r: () => any) => void;
+export type Register = (m: (s: State) => boolean, r: () => unknown) => void;
 
 function normalize(s: State) {
   return Object.assign({}, s, {
@@ -13,10 +13,10 @@ export type MockBuilder = {
   table: (t: string) => MockBuilder;
   op: (op: State['op']) => MockBuilder;
   select: (sel?: string) => MockBuilder;
-  eq: (c: string, v: any) => MockBuilder;
+  eq: (c: string, v: unknown) => MockBuilder;
   where: (pred: (s: State) => boolean) => MockBuilder;
-  returnsSingle: (row: any) => void;
-  returnsList: (rows: any[]) => void;
+  returnsSingle: (row: unknown) => void;
+  returnsList: (rows: unknown[]) => void;
   returnsError: (msg: string) => void;
 };
 
@@ -40,7 +40,7 @@ export function makeWhen(registerRoute: Register) {
       table(t){ wanted.table = t; return api; },
       op(op){ wanted.op = op; return api; },
       select(sel){ wanted.selects = sel ?? '*'; return api; },
-      eq(c,v){ (wanted.filters as any[]).push({ type:'eq', column:c, value:v }); return api; },
+      eq(c,v){ (wanted.filters as Array<{ type: 'eq'; column: string; value: unknown }>).push({ type:'eq', column:c, value:v }); return api; },
       where(p){ pred = p; return api; },
 
       returnsSingle(row){ registerRoute(subsetMatch, () => ({ data: row, error: null })); },
@@ -52,5 +52,7 @@ export function makeWhen(registerRoute: Register) {
 }
 
 // Export the when function and expectQueryState for backward compatibility
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export const when = makeWhen(() => {});
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export const expectQueryState = () => {};

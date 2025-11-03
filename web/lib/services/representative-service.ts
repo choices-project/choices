@@ -8,8 +8,6 @@
  * Status: ✅ FOUNDATION
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 import type {
   Representative,
   RepresentativeSearchQuery,
@@ -19,13 +17,11 @@ import type {
   RepresentativeListResponse
 } from '@/types/representative';
 
-import { civicsIntegration } from './civics-integration';
+import { logger } from '@/lib/utils/logger';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_tJOpGO2IPjujJDQou44P_g_BgbTFBfc'
-);
+// Note: We don't import civicsIntegration here because it contains server-only code
+// Client-side code should call API routes instead
+// Note: Supabase client removed - service now uses API routes for all operations
 
 // ============================================================================
 // MOCK DATA (for development before real data is ready)
@@ -124,29 +120,44 @@ const MOCK_REPRESENTATIVES: Representative[] = [
 // ============================================================================
 
 export class RepresentativeService {
-  private cache: Map<string, any> = new Map();
+  private cache: Map<string, unknown> = new Map();
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
   /**
    * Get all representatives with optional filtering
-   * Now uses real civics backend data instead of mock data
+   * Uses API route instead of direct server calls (client-safe)
    */
   async getRepresentatives(query?: RepresentativeSearchQuery): Promise<RepresentativeListResponse> {
     try {
       console.log('🔍 Service: getRepresentatives called with query:', query);
       
-      // Use civics integration for real data
-      const result = await civicsIntegration.getRepresentatives(query);
+      // Build query string
+      const params = new URLSearchParams();
+      if (query?.state) params.append('state', query.state);
+      if (query?.party) params.append('party', query.party);
+      if (query?.level) params.append('level', query.level);
+      if (query?.office) params.append('office', query.office);
+      if (query?.query) params.append('query', query.query);
+      if (query?.limit) params.append('limit', query.limit.toString());
+      // Note: page is not part of RepresentativeSearchQuery type, using default pagination
       
-      console.log('✅ Service: Returning civics integration response');
+      // Call API route (client-safe)
+      const response = await fetch(`/api/civics/by-state?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      const apiResult = await response.json();
+      
+      console.log('✅ Service: Returning API response');
       return {
         success: true,
         data: {
-          representatives: result.representatives,
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          hasMore: result.hasMore
+          representatives: apiResult.data ?? [],
+          total: apiResult.total ?? 0,
+          page: 1, // API doesn't support pagination in query type
+          limit: query?.limit ?? 20,
+          hasMore: (apiResult.data?.length ?? 0) >= (query?.limit ?? 20)
         }
       };
     } catch (error) {
@@ -167,22 +178,27 @@ export class RepresentativeService {
 
   /**
    * Get a single representative by ID
-   * Now uses civics integration for real data with committee information
+   * Uses API route instead of direct server calls (client-safe)
    */
   async getRepresentativeById(id: number): Promise<RepresentativeApiResponse> {
     try {
-      const representative = await civicsIntegration.getRepresentativeById(id);
-      
-      if (!representative) {
-        return {
-          success: false,
-          error: 'Representative not found'
-        };
+      // Call API route (client-safe)
+      const response = await fetch(`/api/civics/representative/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return {
+            success: false,
+            error: 'Representative not found'
+          };
+        }
+        throw new Error(`API request failed: ${response.statusText}`);
       }
 
+      const apiResult = await response.json();
+      
       return {
         success: true,
-        data: representative
+        data: apiResult.data ?? apiResult
       };
     } catch (error) {
       return {
@@ -194,20 +210,29 @@ export class RepresentativeService {
 
   /**
    * Find representatives by location (address)
-   * Now uses civics integration for real location-based data
+   * Uses API route instead of direct server calls (client-safe)
    */
   async findByLocation(query: RepresentativeLocationQuery): Promise<RepresentativeListResponse> {
     try {
-      const result = await civicsIntegration.findByLocation(query.address);
+      // Call API route (client-safe)
+      const params = new URLSearchParams();
+      params.append('address', query.address);
+      
+      const response = await fetch(`/api/civics/by-state?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      const apiResult = await response.json();
       
       return {
         success: true,
         data: {
-          representatives: result.representatives,
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          hasMore: result.hasMore
+          representatives: apiResult.data ?? [],
+          total: apiResult.total ?? 0,
+          page: 1,
+          limit: 20,
+          hasMore: false
         }
       };
     } catch (error) {
@@ -252,6 +277,7 @@ export class RepresentativeService {
         hasMore: result.data.hasMore
       };
     } catch (error) {
+      logger.error('Error searching representatives:', error instanceof Error ? error : new Error(String(error)));
       return {
         representatives: [],
         total: 0,
@@ -277,6 +303,7 @@ export class RepresentativeService {
 
       return representatives;
     } catch (error) {
+      logger.error('Error getting committee members:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -316,14 +343,15 @@ export class RepresentativeService {
   /**
    * Get user's followed representatives
    */
-  async getUserRepresentatives(userId: string): Promise<Representative[]> {
+  async getUserRepresentatives(_userId: string): Promise<Representative[]> {
     try {
       await this.delay(300);
       
       // Mock implementation - return empty array for now
+      // userId parameter reserved for future database implementation
       return [];
     } catch (error) {
-      console.error('Error getting user representatives:', error);
+      logger.error('Error getting user representatives:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }

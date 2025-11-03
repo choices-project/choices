@@ -363,6 +363,24 @@ export default [
     },
   },
   
+  // Tool files (.mjs) - Node.js environment
+  {
+    files: ['tools/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        console: 'readonly',
+        process: 'readonly',
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'no-undef': 'off', // Node.js globals are available
+      'import/no-extraneous-dependencies': 'off',
+    },
+  },
+  
   // Ignore patterns
   {
     ignores: [

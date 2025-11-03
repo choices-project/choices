@@ -261,7 +261,7 @@ export function MessageThread({
         senderId: currentUserId,
         recipientId: representative.id
       } as any);
-      if (!sent || !sent.id) {
+      if (!sent?.id) {
         setError('Failed to send message');
         setNewMessage(messageContent);
       }

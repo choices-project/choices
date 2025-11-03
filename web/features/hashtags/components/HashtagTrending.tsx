@@ -116,13 +116,13 @@ export default function HashtagTrending({
     // Apply sorting
     switch (filters.sortBy) {
       case 'trend_score':
-        sorted.sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0));
+        sorted.sort((a, b) => (b.trend_score ?? 0) - (a.trend_score ?? 0));
         break;
       case 'usage':
-        sorted.sort((a, b) => (b.trend_score || 0) - (a.trend_score || 0));
+        sorted.sort((a, b) => (b.trend_score ?? 0) - (a.trend_score ?? 0));
         break;
       case 'growth':
-        sorted.sort((a, b) => (b.growth_rate || 0) - (a.growth_rate || 0));
+        sorted.sort((a, b) => (b.growth_rate ?? 0) - (a.growth_rate ?? 0));
         break;
       case 'alphabetical':
         sorted.sort((a, b) => a.hashtag.name.localeCompare(b.hashtag.name));
@@ -273,14 +273,14 @@ export default function HashtagTrending({
                   
                   {/* Hashtag Info */}
                   <div className="flex items-center space-x-3">
-                    {getHashtagCategoryIcon(trending.hashtag.category || 'other')}
+                    {getHashtagCategoryIcon(trending.hashtag.category ?? 'other')}
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className="text-lg font-semibold text-gray-900">
                           #{trending.hashtag.name}
                         </span>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor(trending.hashtag.category || 'other')}`}>
-                      {trending.hashtag.category || 'other'}
+                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor(trending.hashtag.category ?? 'other')}`}>
+                      {trending.hashtag.category ?? 'other'}
                     </span>
                         {trending.hashtag.is_verified && (
                           <span className="text-blue-500 text-sm">✓</span>
@@ -301,21 +301,21 @@ export default function HashtagTrending({
                     <div className="text-center">
                       <div className="text-gray-500">Usage (24h)</div>
                       <div className="font-semibold text-gray-900">
-                        {formatUsageCount(trending.trend_score || 0)}
+                        {formatUsageCount(trending.trend_score ?? 0)}
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <div className="text-gray-500">Growth</div>
-                      <div className={`font-semibold ${getTrendColor(trending.growth_rate || 0)}`}>
-                        {formatGrowthRate(trending.growth_rate || 0)}
+                      <div className={`font-semibold ${getTrendColor(trending.growth_rate ?? 0)}`}>
+                        {formatGrowthRate(trending.growth_rate ?? 0)}
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <div className="text-gray-500">Trend Score</div>
                       <div className="font-semibold text-blue-600">
-                        {formatTrendingScore(trending.trend_score || 0)}
+                        {formatTrendingScore(trending.trend_score ?? 0)}
                       </div>
                     </div>
                     

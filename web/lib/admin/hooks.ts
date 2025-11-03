@@ -55,8 +55,8 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
-    return data.topics || mockTrendingTopics;
+    devLog('Fetched trending topics from API', { count: data.topics?.length ?? 0 });
+    return data.topics ?? mockTrendingTopics;
   } catch (error) {
     devLog('Error fetching trending topics, using mock data', error);
     return mockTrendingTopics;
@@ -70,8 +70,8 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
-    return data.polls || mockGeneratedPolls;
+    devLog('Fetched generated polls from API', { count: data.polls?.length ?? 0 });
+    return data.polls ?? mockGeneratedPolls;
   } catch (error) {
     devLog('Error fetching generated polls, using mock data', error);
     return mockGeneratedPolls;
@@ -86,7 +86,7 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
     }
     const data = await response.json();
     devLog('Fetched system metrics from API', data.metrics);
-    return data.metrics || mockSystemMetrics;
+    return data.metrics ?? mockSystemMetrics;
   } catch (error) {
     devLog('Error fetching system metrics, using mock data', error);
     return mockSystemMetrics;
@@ -146,8 +146,8 @@ const fetchBreakingNews = async (): Promise<BreakingNewsStory[]> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    devLog('Fetched breaking news from API', { count: data.stories?.length || 0 });
-    return data.stories || [];
+    devLog('Fetched breaking news from API', { count: data.stories?.length ?? 0 });
+    return data.stories ?? [];
   } catch (error) {
     devLog('Error fetching breaking news, using empty array', error);
     return [];

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Database Performance Monitor
  * 
@@ -195,17 +197,17 @@ export class DatabasePerformanceMonitor {
       const systemMetrics = await this.getSystemMetrics()
       
       const metrics: DatabaseMetrics = {
-        connectionCount: dbMetrics.connectionCount || 0,
-        activeConnections: dbMetrics.activeConnections || 0,
-        idleConnections: dbMetrics.idleConnections || 0,
-        queryCount: dbMetrics.queryCount || 0,
-        averageQueryTime: dbMetrics.averageQueryTime || 0,
-        slowQueries: dbMetrics.slowQueries || 0,
-        errorCount: dbMetrics.errorCount || 0,
-        cacheHitRate: dbMetrics.cacheHitRate || 0,
-        memoryUsage: systemMetrics.memoryUsage || 0,
-        diskUsage: systemMetrics.diskUsage || 0,
-        cpuUsage: systemMetrics.cpuUsage || 0,
+        connectionCount: dbMetrics.connectionCount ?? 0,
+        activeConnections: dbMetrics.activeConnections ?? 0,
+        idleConnections: dbMetrics.idleConnections ?? 0,
+        queryCount: dbMetrics.queryCount ?? 0,
+        averageQueryTime: dbMetrics.averageQueryTime ?? 0,
+        slowQueries: dbMetrics.slowQueries ?? 0,
+        errorCount: dbMetrics.errorCount ?? 0,
+        cacheHitRate: dbMetrics.cacheHitRate ?? 0,
+        memoryUsage: systemMetrics.memoryUsage ?? 0,
+        diskUsage: systemMetrics.diskUsage ?? 0,
+        cpuUsage: systemMetrics.cpuUsage ?? 0,
         timestamp: Date.now()
       }
       
@@ -252,14 +254,14 @@ export class DatabasePerformanceMonitor {
         .single()
       
       return {
-        connectionCount: (connectionData as { total_connections?: number }).total_connections || 0,
-        activeConnections: (connectionData as { active_connections?: number }).active_connections || 0,
-        idleConnections: (connectionData as { idle_connections?: number }).idle_connections || 0,
-        queryCount: (queryData as { total_queries?: number }).total_queries || 0,
-        averageQueryTime: (queryData as { avg_query_time?: number }).avg_query_time || 0,
-        slowQueries: (queryData as { slow_queries?: number }).slow_queries || 0,
-        errorCount: (queryData as { error_count?: number }).error_count || 0,
-        cacheHitRate: (cacheData as { hit_rate?: number }).hit_rate || 0
+        connectionCount: (connectionData as { total_connections?: number }).total_connections ?? 0,
+        activeConnections: (connectionData as { active_connections?: number }).active_connections ?? 0,
+        idleConnections: (connectionData as { idle_connections?: number }).idle_connections ?? 0,
+        queryCount: (queryData as { total_queries?: number }).total_queries ?? 0,
+        averageQueryTime: (queryData as { avg_query_time?: number }).avg_query_time ?? 0,
+        slowQueries: (queryData as { slow_queries?: number }).slow_queries ?? 0,
+        errorCount: (queryData as { error_count?: number }).error_count ?? 0,
+        cacheHitRate: (cacheData as { hit_rate?: number }).hit_rate ?? 0
       }
     } catch (error) {
       logger.warn('Failed to get database metrics', error instanceof Error ? error : new Error('Unknown error'))
@@ -276,11 +278,11 @@ export class DatabasePerformanceMonitor {
         .rpc('get_slow_queries', { threshold_ms: this.thresholds.slowQueryThreshold })
         .limit(10)
       
-      return (data || []).map((query: Record<string, unknown>) => ({
+      return (data ?? []).map((query: Record<string, unknown>) => ({
         query: query.query_text as string,
         executionTime: query.mean_time as number,
         rowsReturned: query.rows as number,
-        cacheHit: (query.cache_hit as boolean) || false,
+        cacheHit: (query.cache_hit as boolean) ?? false,
         timestamp: Date.now()
       }))
     } catch (error) {
@@ -300,9 +302,9 @@ export class DatabasePerformanceMonitor {
         .single()
       
       return {
-        memoryUsage: (data as { memory_usage?: number }).memory_usage || 0,
-        diskUsage: (data as { disk_usage?: number }).disk_usage || 0,
-        cpuUsage: (data as { cpu_usage?: number }).cpu_usage || 0
+        memoryUsage: (data as { memory_usage?: number }).memory_usage ?? 0,
+        diskUsage: (data as { disk_usage?: number }).disk_usage ?? 0,
+        cpuUsage: (data as { cpu_usage?: number }).cpu_usage ?? 0
       }
     } catch (error) {
       logger.warn('Failed to get system metrics', error instanceof Error ? error : new Error('Unknown error'))
@@ -529,7 +531,7 @@ export class DatabasePerformanceMonitor {
       
       recentQueries.forEach(q => {
         const normalizedQuery = q.query.toLowerCase().replace(/\s+/g, ' ').trim()
-        queryCounts.set(normalizedQuery, (queryCounts.get(normalizedQuery) || 0) + 1)
+        queryCounts.set(normalizedQuery, (queryCounts.get(normalizedQuery) ?? 0) + 1)
       })
       
       const repeatedQueries = Array.from(queryCounts.entries())

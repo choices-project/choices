@@ -27,6 +27,7 @@
     "**/__tests__/**",
     "tests/**",
     "web/tests/**",
+    "web/utils/supabase/database.types.ts",
     "node_modules",
     "dist",
     "build",

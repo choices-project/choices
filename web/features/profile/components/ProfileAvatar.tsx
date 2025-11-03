@@ -47,7 +47,7 @@ export default function ProfileAvatar({
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUploading;
-  const finalError = avatarError || error;
+  const finalError = avatarError ?? error;
 
   // Get initials for fallback
   const getInitials = (name: string) => {
@@ -95,7 +95,7 @@ export default function ProfileAvatar({
         setSuccess('Avatar updated successfully');
         onUpload?.(file);
       } else {
-        setError(result.error || 'Failed to update avatar');
+        setError(result.error ?? 'Failed to update avatar');
       }
     } catch {
       setError('Failed to update avatar');
@@ -157,8 +157,8 @@ export default function ProfileAvatar({
         <div className="relative">
           <Avatar className="h-24 w-24">
             <AvatarImage 
-              src={preview || avatar_url || ''} 
-              alt={display_name || 'User'} 
+              src={preview ?? avatar_url ?? ''} 
+              alt={display_name ?? 'User'} 
             />
             <AvatarFallback className="text-lg">
               {getInitials(display_name || 'User')}
@@ -236,7 +236,7 @@ export default function ProfileAvatar({
           <Upload className="h-4 w-4 mr-2" />
           Upload New
         </Button>
-        {(avatar_url || preview) && (
+        {(avatar_url ?? preview) && (
           <Button
             type="button"
             variant="outline"

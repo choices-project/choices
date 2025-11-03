@@ -43,6 +43,7 @@
     "**/scripts.disabled/**",
     "**/tests.disabled/**",
     "archive/**",
-    "archive-*/**"
+    "archive-*/**",
+    "utils/supabase/database.types.ts"
   ]
 }

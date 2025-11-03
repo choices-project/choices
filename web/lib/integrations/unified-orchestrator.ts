@@ -189,6 +189,7 @@ export class UnifiedDataOrchestrator {
     } catch (error) {
       dev.logger.warn('Some API clients failed to initialize', { error });
       // Initialize with available clients only
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.clients = {} as any;
     }
   }
@@ -197,7 +198,7 @@ export class UnifiedDataOrchestrator {
    * Get comprehensive representative data from all available sources
    */
   async getRepresentative(identifier: string, _type: 'bioguide' | 'name' | 'state-district' = 'bioguide'): Promise<UnifiedRepresentative | null> {
-    const dataFromSources: Array<{ source: string; data: any; priority: number }> = [];
+    const dataFromSources: Array<{ source: string; data: unknown; priority: number }> = [];
 
     try {
       // Try Congress.gov first (highest priority for federal)
@@ -376,7 +377,7 @@ export class UnifiedDataOrchestrator {
    * Get campaign finance data for a representative
    */
   async getCampaignFinance(representativeId: string, cycle: number): Promise<UnifiedCampaignFinance | null> {
-    const financeData: any = {};
+    const financeData: Record<string, unknown> = {};
 
     try {
       // Get FEC data (primary source)
@@ -472,8 +473,8 @@ export class UnifiedDataOrchestrator {
   /**
    * Get API usage metrics across all sources
    */
-  getUsageMetrics(): Record<string, any> {
-    const metrics: Record<string, any> = {};
+  getUsageMetrics(): Record<string, unknown> {
+    const metrics: Record<string, unknown> = {};
     
     if (this.clients.congressGov) {
       metrics['congress-gov'] = this.clients.congressGov.getUsageMetrics();
@@ -492,7 +493,7 @@ export class UnifiedDataOrchestrator {
   }
 
   // Private helper methods
-  private mergeRepresentativeData(sources: Array<{ source: string; data: any; priority: number }>): UnifiedRepresentative {
+  private mergeRepresentativeData(sources: Array<{ source: string; data: unknown; priority: number }>): UnifiedRepresentative {
     // Sort by priority (highest first)
     sources.sort((a, b) => b.priority - a.priority);
     
@@ -501,8 +502,10 @@ export class UnifiedDataOrchestrator {
       throw new Error('No data sources provided for merge');
     }
     
-    const merged: any = {
-      id: firstSource.data.bioguideId || firstSource.data.id || `unknown-${Date.now()}`,
+    // Type guard for representative data from various sources
+    const sourceData = firstSource.data as Record<string, unknown>;
+    const merged: Partial<UnifiedRepresentative> & Record<string, unknown> = {
+      id: (sourceData.bioguideId as string | undefined) ?? (sourceData.id as string | undefined) ?? `unknown-${Date.now()}`,
       dataSources: {
         congressGov: false,
         openStates: false,
@@ -520,23 +523,27 @@ export class UnifiedDataOrchestrator {
 
     // Merge data from all sources
     for (const { source, data } of sources) {
-      merged.dataSources[source.replace('-', '')] = true;
+      const sourceName = source.replace('-', '') as keyof UnifiedRepresentative['dataSources'];
+      if (merged.dataSources && sourceName in merged.dataSources) {
+        (merged.dataSources as UnifiedRepresentative['dataSources'])[sourceName] = true;
+      }
       
+      const dataRecord = data as Record<string, unknown>;
       // Merge basic info (prioritize higher-priority sources)
-      if (!merged.name && data.fullName) merged.name = data.fullName;
-      if (!merged.firstName && data.firstName) merged.firstName = data.firstName;
-      if (!merged.lastName && data.lastName) merged.lastName = data.lastName;
-      if (!merged.party && data.party) merged.party = data.party;
-      if (!merged.state && data.state) merged.state = data.state;
-      if (!merged.district && data.district) merged.district = data.district;
-      if (!merged.email && data.email) merged.email = data.email;
-      if (!merged.phone && data.phone) merged.phone = data.phone;
-      if (!merged.website && data.website) merged.website = data.website;
+      if (!merged.name && dataRecord.fullName) merged.name = dataRecord.fullName as string;
+      if (!merged.firstName && dataRecord.firstName) merged.firstName = dataRecord.firstName as string;
+      if (!merged.lastName && dataRecord.lastName) merged.lastName = dataRecord.lastName as string;
+      if (!merged.party && dataRecord.party) merged.party = dataRecord.party as string;
+      if (!merged.state && dataRecord.state) merged.state = dataRecord.state as string;
+      if (!merged.district && dataRecord.district) merged.district = dataRecord.district as string;
+      if (!merged.email && dataRecord.email) merged.email = dataRecord.email as string;
+      if (!merged.phone && dataRecord.phone) merged.phone = dataRecord.phone as string;
+      if (!merged.website && dataRecord.website) merged.website = dataRecord.website as string;
       
       // Merge social media
-      if (data.twitter_id) merged.socialMedia.twitter = data.twitter_id;
-      if (data.facebook_id) merged.socialMedia.facebook = data.facebook_id;
-      if (data.youtube_url) merged.socialMedia.youtube = data.youtube_url;
+      if (merged.socialMedia && dataRecord.twitter_id) merged.socialMedia.twitter = dataRecord.twitter_id as string;
+      if (merged.socialMedia && dataRecord.facebook_id) merged.socialMedia.facebook = dataRecord.facebook_id as string;
+      if (merged.socialMedia && dataRecord.youtube_url) merged.socialMedia.youtube = dataRecord.youtube_url as string;
     }
 
     // Calculate completeness
@@ -550,7 +557,7 @@ export class UnifiedDataOrchestrator {
     return merged as UnifiedRepresentative;
   }
 
-  private mergeCampaignFinanceData(financeData: any, representativeId: string, cycle: number): UnifiedCampaignFinance {
+  private mergeCampaignFinanceData(financeData: Record<string, unknown>, representativeId: string, cycle: number): UnifiedCampaignFinance {
     const merged: UnifiedCampaignFinance = {
       id: `${representativeId}-${cycle}`,
       representativeId,
@@ -609,8 +616,8 @@ export class UnifiedDataOrchestrator {
     return 'tabled';
   }
 
-  private calculateCompleteness(representative: any): number {
-    const fields = ['name', 'firstName', 'lastName', 'party', 'state', 'chamber', 'email', 'phone', 'website'];
+  private calculateCompleteness(representative: Partial<UnifiedRepresentative>): number {
+    const fields: Array<keyof UnifiedRepresentative> = ['name', 'firstName', 'lastName', 'party', 'state', 'chamber', 'email', 'phone', 'website'];
     const filledFields = fields.filter(field => representative[field]).length;
     return Math.round((filledFields / fields.length) * 100);
   }

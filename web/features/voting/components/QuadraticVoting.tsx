@@ -41,7 +41,7 @@ export default function QuadraticVoting({
     } else {
       const initialAllocations: { [optionId: string]: number } = {}
       options.forEach(option => {
-        initialAllocations[option.id] = 0
+        initialAllocations[String(option.id)] = 0
       })
       setAllocations(initialAllocations)
     }
@@ -96,7 +96,7 @@ export default function QuadraticVoting({
       let totalSpent = 0
       
       for (const [optionId, credits] of Object.entries(allocations)) {
-        if (options.some(option => option.id === optionId)) {
+        if (options.some(option => String(option.id) === optionId)) {
           validAllocations[optionId] = Math.max(0, credits)
           totalSpent += credits * credits // Quadratic cost
         }
@@ -213,14 +213,15 @@ export default function QuadraticVoting({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-6">
           {options.map((option: PollOption) => {
-            const credits = allocations[option.id] || 0
+            const optionId = String(option.id)
+            const credits = allocations[optionId] || 0
             const cost = credits ** 2
             return (
-              <div key={option.id} className="border border-gray-200 rounded-lg p-4">
+              <div key={optionId} className="border border-gray-200 rounded-lg p-4">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.option_text && (
-                    <p className="text-sm text-gray-600">{option.option_text}</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                  {(option as any).option_text && (
+                    <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
                   )}
                 </div>
 
@@ -233,7 +234,7 @@ export default function QuadraticVoting({
                   
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleAllocationChange(option.id, credits - 1)}
+                      onClick={() => handleAllocationChange(optionId, credits - 1)}
                       disabled={isDisabled || credits <= 0}
                       className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
@@ -246,7 +247,7 @@ export default function QuadraticVoting({
                     </div>
                     
                     <button
-                      onClick={() => handleAllocationChange(option.id, credits + 1)}
+                      onClick={() => handleAllocationChange(optionId, credits + 1)}
                       disabled={isDisabled || getRemainingCredits() < ((credits + 1) ** 2 - cost)}
                       className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >

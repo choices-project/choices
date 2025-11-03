@@ -18,6 +18,15 @@ export {
 // Congress.gov API
 export * from './congress-gov';
 
+// FEC (Federal Election Commission) API
+export {
+  FECClient,
+  createFECClient,
+  type FECCandidate,
+  type FECSearchResult,
+  type FECConfig
+} from './fec';
+
 // Resolve export conflicts by re-exporting with specific names
 export type {
   GoogleCivicErrorDetails

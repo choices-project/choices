@@ -411,7 +411,7 @@ export class CandidateVerificationSystem {
    * Get candidate verification status
    */
   getVerificationStatus(candidateId: string): CandidateVerification | null {
-    return this.verifiedCandidates.get(candidateId) || null;
+    return this.verifiedCandidates.get(candidateId) ?? null;
   }
 
   /**

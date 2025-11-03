@@ -277,7 +277,7 @@ export class ProvenanceService {
           target_record_id: targetRecordId,
           transformation_type: transformationType,
           transformation_version: transformationVersion,
-          transformation_params: options.transformationParams || {},
+          transformation_params: options.transformationParams ?? {},
           source_data_hash: options.sourceDataHash,
           target_data_hash: options.targetDataHash
         });

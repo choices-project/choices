@@ -44,7 +44,7 @@ class QueryMonitor {
 
   recordQuery(sql: string, duration: number) {
     const normalizedSql = this.normalizeSql(sql)
-    const existing = this.queries.get(normalizedSql) || {
+    const existing = this.queries.get(normalizedSql) ?? {
       count: 0,
       totalTime: 0,
       avgTime: 0,
@@ -79,7 +79,7 @@ class QueryMonitor {
 
     return {
       totalQueries: stats.reduce((sum, s) => sum + s.count, 0),
-      averageQueryTime: stats.reduce((sum, s) => sum + s.avgTime, 0) / stats.length || 0,
+      averageQueryTime: stats.length > 0 ? stats.reduce((sum, s) => sum + s.avgTime, 0) / stats.length : 0,
       slowQueries: stats.reduce((sum, s) => sum + s.slowQueries, 0),
       topSlowQueries: stats
         .filter(s => s.avgTime > 100)
@@ -332,7 +332,7 @@ export class QueryOptimizer {
     } = options
 
     // Create cache key and query pattern
-    const cacheKey = `polls_${page}_${limit}_${privacyLevel || 'all'}_${userId || 'all'}_${includeVotes ? 'with_votes' : 'no_votes'}`
+    const cacheKey = `polls_${page}_${limit}_${privacyLevel ?? 'all'}_${userId ?? 'all'}_${includeVotes ? 'with_votes' : 'no_votes'}`
     const queryPattern = 'SELECT polls WITH pagination and filters'
     
     // Try smart cache first
@@ -392,8 +392,8 @@ export class QueryOptimizer {
       pagination: {
         page,
         limit,
-        total: result.count || 0,
-        pages: Math.ceil((result.count || 0) / limit)
+        total: result.count ?? 0,
+        pages: Math.ceil((result.count ?? 0) / limit)
       }
     }
 
@@ -523,12 +523,12 @@ export class QueryOptimizer {
         .order('created_at', { ascending: true })
     ])
 
-    const totalUsers = userCountResult.count || 0
-    const totalPolls = pollCountResult.count || 0
-    const totalVotes = voteCountResult.count || 0
-    const userGrowth = userGrowthResult.data as Array<{ created_at: string }> || []
-    const pollActivity = pollActivityResult.data as Array<{ created_at: string }> || []
-    const voteActivity = voteActivityResult.data as Array<{ created_at: string }> || []
+    const totalUsers = userCountResult.count ?? 0
+    const totalPolls = pollCountResult.count ?? 0
+    const totalVotes = voteCountResult.count ?? 0
+    const userGrowth = (userGrowthResult.data as Array<{ created_at: string }>) ?? []
+    const pollActivity = (pollActivityResult.data as Array<{ created_at: string }>) ?? []
+    const voteActivity = (voteActivityResult.data as Array<{ created_at: string }>) ?? []
 
     const duration = Date.now() - startTime
     queryMonitor.recordQuery('SELECT analytics', duration)
@@ -540,7 +540,7 @@ export class QueryOptimizer {
       if (dateValue) {
         const date = new Date(dateValue).toISOString().split('T')[0]
         if (date) {
-          acc[date] = (acc[date] || 0) + 1
+          acc[date] = (acc[date] ?? 0) + 1
         }
       }
       return acc
@@ -623,12 +623,12 @@ export class QueryOptimizer {
 
     const results = healthChecks.map((result, index) => {
       const testNames = ['Connectivity', 'Table Access', 'Performance', 'Complex Query']
-      const testName = testNames[index] || `Test ${index + 1}`
+      const testName = testNames[index] ?? `Test ${index + 1}`
       
       return {
         test: testName,
         status: result.status === 'fulfilled' ? 'healthy' as const : 'unhealthy' as const,
-        error: result.status === 'rejected' ? (result.reason as Error).message || 'Unknown error' : null
+        error: result.status === 'rejected' ? (result.reason as Error).message ?? 'Unknown error' : null
       }
     })
 

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 // ============================================================================
 // PHASE 2: DATA RETENTION POLICIES IMPLEMENTATION
 // ============================================================================
@@ -79,6 +81,23 @@ export type PurgeResult = {
   dataType: string;
 }
 
+// Minimal Supabase client interface for type safety
+type SupabaseQueryBuilder = {
+  lt: (column: string, value: string) => SupabaseQueryBuilder;
+  eq: (column: string, value: string | boolean) => SupabaseQueryBuilder;
+  order: (column: string, options?: { ascending: boolean }) => SupabaseQueryBuilder;
+  then: <T>(onfulfilled?: ((value: { data: T | null; error: { message: string } | null; count?: number | null }) => T | PromiseLike<T>) | null, onrejected?: ((reason: unknown) => T | PromiseLike<T>) | null) => Promise<{ data: T | null; error: { message: string } | null; count?: number | null }>;
+  [Symbol.toPrimitive]?: () => Promise<{ data: unknown; error: { message: string } | null }>;
+};
+
+type SupabaseClientLike = {
+  from: (table: string) => {
+    delete: () => SupabaseQueryBuilder;
+    update: (data: Record<string, unknown>) => SupabaseQueryBuilder;
+    select: (columns?: string, options?: { count?: 'exact' | 'estimated' | 'planned'; head?: boolean }) => SupabaseQueryBuilder;
+  };
+}
+
 // ============================================================================
 // DATA RETENTION MANAGER
 // ============================================================================
@@ -86,11 +105,11 @@ export type PurgeResult = {
 export class DataRetentionManager {
   private policies: Map<string, RetentionPolicy> = new Map();
   private lifecycleEvents: DataLifecycleEvent[] = [];
-  private supabaseClient: any; // Would be properly typed in production
+  private supabaseClient: SupabaseClientLike;
   private cleanupSchedule: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor(supabaseClient: any) {
-    this.supabaseClient = supabaseClient;
+  constructor(supabaseClient: unknown) {
+    this.supabaseClient = supabaseClient as SupabaseClientLike;
     this.initializeDefaultPolicies();
     this.scheduleCleanupTasks();
   }
@@ -432,7 +451,7 @@ export class DataRetentionManager {
         throw new Error(`Failed to delete old ${dataType} data: ${error.message}`);
       }
 
-      return data?.length || 0;
+      return (Array.isArray(data) ? data.length : 0) || 0;
     } catch (error) {
       console.error(`Error deleting old ${dataType} data:`, error);
       throw error;
@@ -467,7 +486,7 @@ export class DataRetentionManager {
         throw new Error(`Failed to anonymize old ${dataType} data: ${error.message}`);
       }
 
-      return data?.length || 0;
+      return (Array.isArray(data) ? data.length : 0) || 0;
     } catch (error) {
       console.error(`Error anonymizing old ${dataType} data:`, error);
       throw error;
@@ -520,10 +539,11 @@ export class DataRetentionManager {
         throw new Error(`Failed to get statistics for ${dataType}: ${error.message}`);
       }
 
+      const records = Array.isArray(data) ? data : [];
       return {
-        totalRecords: data.length,
-        oldestRecord: data.length > 0 ? new Date(data[0].created_at) : new Date(),
-        newestRecord: data.length > 0 ? new Date(data[data.length - 1].created_at) : new Date()
+        totalRecords: records.length,
+        oldestRecord: records.length > 0 ? new Date((records[0] as { created_at: string }).created_at) : new Date(),
+        newestRecord: records.length > 0 ? new Date((records[records.length - 1] as { created_at: string }).created_at) : new Date()
       };
     } catch (error) {
       console.error(`Error getting statistics for ${dataType}:`, error);

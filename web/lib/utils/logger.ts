@@ -44,14 +44,21 @@ class Logger {
       console.error(`[ERROR] ${message}`, ...args);
       
       // Send to Sentry if available
-      if (typeof window !== 'undefined' && (window as any).Sentry) {
-        try {
-          const error = args[0] instanceof Error ? args[0] : new Error(message);
-          (window as any).Sentry.captureException(error, {
-            extra: { message, args: args.length > 1 ? args.slice(1) : [] }
-          });
-        } catch {
-          // Ignore Sentry errors
+      if (typeof window !== 'undefined') {
+        const sentryWindow = window as typeof window & {
+          Sentry?: {
+            captureException: (error: Error, options?: { extra?: Record<string, unknown> }) => void;
+          };
+        };
+        if (sentryWindow.Sentry) {
+          try {
+            const error = args[0] instanceof Error ? args[0] : new Error(message);
+            sentryWindow.Sentry.captureException(error, {
+              extra: { message, args: args.length > 1 ? args.slice(1) : [] }
+            });
+          } catch {
+            // Ignore Sentry errors
+          }
         }
       }
     }

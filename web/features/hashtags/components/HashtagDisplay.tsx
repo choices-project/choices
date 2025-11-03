@@ -92,7 +92,7 @@ export function HashtagDisplay({
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
-                <span>{(hashtag.follower_count || 0).toLocaleString()}</span>
+                <span>{(hashtag.follower_count ?? 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MessageSquare className="h-4 w-4" />
@@ -101,7 +101,7 @@ export function HashtagDisplay({
               {hashtag.is_trending && (
                 <div className="flex items-center space-x-1 text-orange-500">
                   <TrendingUp className="h-4 w-4" />
-                  <span>{(hashtag.trend_score || 0).toFixed(1)}</span>
+                  <span>{(hashtag.trend_score ?? 0).toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -165,7 +165,7 @@ export function TrendingHashtagDisplay({
               </div>
               <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
                 <span>{trending.hashtag.usage_count.toLocaleString()} uses</span>
-                <span>{(trending.hashtag.follower_count || 0).toLocaleString()} followers</span>
+                <span>{(trending.hashtag.follower_count ?? 0).toLocaleString()} followers</span>
               </div>
             </div>
           </div>

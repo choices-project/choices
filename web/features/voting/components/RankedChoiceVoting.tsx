@@ -44,7 +44,7 @@ export default function RankedChoiceVoting({
     } else {
       const initialRankings: { [optionId: string]: number } = {}
       options.forEach(option => {
-        initialRankings[option.id] = 0 // 0 means unranked
+        initialRankings[String(option.id)] = 0 // 0 means unranked
       })
       setRankings(initialRankings)
     }
@@ -219,38 +219,38 @@ export default function RankedChoiceVoting({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {options.map((option: PollOption, index: number) => (
             <div
-              key={`${option.id}-${index}`}
-              onClick={() => handleRankClick(option.id)}
+              key={`${String(option.id)}-${index}`}
+              onClick={() => handleRankClick(String(option.id))}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isDisabled 
                   ? 'cursor-not-allowed opacity-60' 
                   : 'hover:border-blue-300 hover:shadow-md'
                 }
-                ${(rankings[option.id] ?? 0) > 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}
+                ${(rankings[String(option.id)] ?? 0) > 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}
               `}
             >
               {/* Rank Display */}
               <div className={`
                 absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                ${getRankClass(option.id)}
+                ${getRankClass(String(option.id))}
                 transition-all duration-200
               `}>
-                {getRankDisplay(option.id)}
+                {getRankDisplay(String(option.id))}
               </div>
 
               {/* Option Content */}
               <div className="pr-8">
-                <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.option_text && (
-                  <p className="text-sm text-gray-600">{option.option_text}</p>
+                <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                {(option as any).option_text && (
+                  <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
                 )}
               </div>
 
               {/* Rank Label */}
-              {(rankings[option.id] ?? 0) > 0 && (
+              {(rankings[String(option.id)] ?? 0) > 0 && (
                 <div className="mt-2 text-xs font-medium text-blue-600">
-                  {getRankLabel(rankings[option.id] ?? 0)} choice
+                  {getRankLabel(rankings[String(option.id)] ?? 0)} choice
                 </div>
               )}
             </div>
@@ -321,19 +321,22 @@ export default function RankedChoiceVoting({
           <h3 className="font-semibold text-gray-900 mb-4">Your Current Rankings</h3>
           <div className="space-y-2">
             {options
-              .filter(option => (rankings[option.id] ?? 0) > 0)
-              .sort((a, b) => (rankings[a.id] ?? 0) - (rankings[b.id] ?? 0))
-              .map(option => (
-                <div key={option.id} className="flex items-center space-x-3">
+              .filter(option => (rankings[String(option.id)] ?? 0) > 0)
+              .sort((a, b) => (rankings[String(a.id)] ?? 0) - (rankings[String(b.id)] ?? 0))
+              .map(option => {
+                const optionId = String(option.id)
+                return (
+                <div key={optionId} className="flex items-center space-x-3">
                   <div className={`
                     w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
-                    ${getRankClass(option.id)}
+                    ${getRankClass(optionId)}
                   `}>
-                    {rankings[option.id] ?? 0}
+                    {rankings[optionId] ?? 0}
                   </div>
-                  <span className="text-gray-900">{option.text}</span>
+                  <span className="text-gray-900">{String((option as any).text ?? '')}</span>
                 </div>
-              ))
+                )
+              })
             }
           </div>
         </div>

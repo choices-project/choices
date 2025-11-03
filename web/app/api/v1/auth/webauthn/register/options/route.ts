@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       .select('credential_id')
       .eq('user_id', user.id);
 
-    const excludeCredentials = (creds || []).map(c => ({
+    const excludeCredentials = (creds ?? []).map(c => ({
       id: c.credential_id,
       type: 'public-key' as const,
     }));

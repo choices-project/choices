@@ -35,7 +35,7 @@ export function RepresentativeSearch({
 
   const handleSearch = () => {
     const query: RepresentativeSearchQuery = {
-      query: searchQuery || undefined,
+      query: searchQuery ?? undefined,
       ...filters
     };
     
@@ -153,7 +153,7 @@ export function RepresentativeSearch({
                 State
               </label>
               <Select
-                value={filters.state || ''}
+                value={filters.state ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}
               >
                 <SelectTrigger>
@@ -177,7 +177,7 @@ export function RepresentativeSearch({
                 Party
               </label>
               <Select
-                value={filters.party || ''}
+                value={filters.party ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, party: value }))}
               >
                 <SelectTrigger>
@@ -200,7 +200,7 @@ export function RepresentativeSearch({
                 Office
               </label>
               <Select
-                value={filters.office || ''}
+                value={filters.office ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, office: value }))}
               >
                 <SelectTrigger>
@@ -223,7 +223,7 @@ export function RepresentativeSearch({
                 Level
               </label>
               <Select
-                value={filters.level || ''}
+                value={filters.level ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, level: value as any }))}
               >
                 <SelectTrigger>

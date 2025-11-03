@@ -125,7 +125,7 @@ export const GET = async (request: NextRequest) => {
         });
 
       } catch (error) {
-        logger.error('Error getting analytics summary', error as Error);
+        logger.error('Error getting analytics summary', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to get analytics summary' },
           { status: 500 }
@@ -186,7 +186,7 @@ export const GET = async (request: NextRequest) => {
         });
 
       } catch (error) {
-        logger.error('Error getting poll analytics', error as Error);
+        logger.error('Error getting poll analytics', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to get poll analytics' },
           { status: 500 }
@@ -247,7 +247,7 @@ export const GET = async (request: NextRequest) => {
         });
 
       } catch (error) {
-        logger.error('Error getting user analytics', error as Error);
+        logger.error('Error getting user analytics', error instanceof Error ? error : new Error(String(error)));
         return NextResponse.json(
           { error: 'Failed to get user analytics' },
           { status: 500 }

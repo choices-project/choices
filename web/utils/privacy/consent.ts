@@ -7,6 +7,8 @@
  * @created September 9, 2025
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 export type ConsentType = 
   | 'analytics'           // Basic usage analytics
   | 'demographics'        // Age, location, education data
@@ -37,9 +39,9 @@ export type ConsentPreferences = {
 }
 
 export class ConsentManager {
-  private supabase: any;
+  private supabase: SupabaseClient<unknown>;
 
-  constructor(supabase: any) {
+  constructor(supabase: SupabaseClient<unknown>) {
     this.supabase = supabase;
   }
 

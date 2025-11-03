@@ -22,7 +22,7 @@ import { logger } from '@/lib/utils/logger';
 export type ErrorDetails = {
   code: string;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   timestamp: string;
   stack?: string;
 }
@@ -41,14 +41,14 @@ export class AppError extends Error {
   public readonly code: string;
   public readonly statusCode: number;
   public readonly isOperational: boolean;
-  public readonly details?: Record<string, any>;
+  public readonly details?: Record<string, unknown>;
 
   constructor(
     message: string,
     code: string = 'INTERNAL_ERROR',
     statusCode: number = 500,
     isOperational: boolean = true,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -65,7 +65,7 @@ export class AppError extends Error {
  * Validation error class
  */
 export class ValidationError extends AppError {
-  constructor(message: string, details?: Record<string, any>) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super(message, 'VALIDATION_ERROR', 400, true, details);
   }
 }
@@ -74,7 +74,7 @@ export class ValidationError extends AppError {
  * Authentication error class
  */
 export class AuthenticationError extends AppError {
-  constructor(message: string = 'Authentication required', details?: Record<string, any>) {
+  constructor(message: string = 'Authentication required', details?: Record<string, unknown>) {
     super(message, 'AUTHENTICATION_ERROR', 401, true, details);
   }
 }
@@ -83,7 +83,7 @@ export class AuthenticationError extends AppError {
  * Authorization error class
  */
 export class AuthorizationError extends AppError {
-  constructor(message: string = 'Access denied', details?: Record<string, any>) {
+  constructor(message: string = 'Access denied', details?: Record<string, unknown>) {
     super(message, 'AUTHORIZATION_ERROR', 403, true, details);
   }
 }
@@ -92,7 +92,7 @@ export class AuthorizationError extends AppError {
  * Not found error class
  */
 export class NotFoundError extends AppError {
-  constructor(message: string = 'Resource not found', details?: Record<string, any>) {
+  constructor(message: string = 'Resource not found', details?: Record<string, unknown>) {
     super(message, 'NOT_FOUND_ERROR', 404, true, details);
   }
 }
@@ -101,7 +101,7 @@ export class NotFoundError extends AppError {
  * Conflict error class
  */
 export class ConflictError extends AppError {
-  constructor(message: string = 'Resource conflict', details?: Record<string, any>) {
+  constructor(message: string = 'Resource conflict', details?: Record<string, unknown>) {
     super(message, 'CONFLICT_ERROR', 409, true, details);
   }
 }
@@ -110,7 +110,7 @@ export class ConflictError extends AppError {
  * Rate limit error class
  */
 export class RateLimitError extends AppError {
-  constructor(message: string = 'Rate limit exceeded', details?: Record<string, any>) {
+  constructor(message: string = 'Rate limit exceeded', details?: Record<string, unknown>) {
     super(message, 'RATE_LIMIT_ERROR', 429, true, details);
   }
 }
@@ -119,7 +119,7 @@ export class RateLimitError extends AppError {
  * Database error class
  */
 export class DatabaseError extends AppError {
-  constructor(message: string = 'Database operation failed', details?: Record<string, any>) {
+  constructor(message: string = 'Database operation failed', details?: Record<string, unknown>) {
     super(message, 'DATABASE_ERROR', 500, true, details);
   }
 }
@@ -128,7 +128,7 @@ export class DatabaseError extends AppError {
  * External service error class
  */
 export class ExternalServiceError extends AppError {
-  constructor(message: string = 'External service error', details?: Record<string, any>) {
+  constructor(message: string = 'External service error', details?: Record<string, unknown>) {
     super(message, 'EXTERNAL_SERVICE_ERROR', 502, true, details);
   }
 }

@@ -64,8 +64,6 @@ import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-assertPepperConfig();
-
 /**
  * Look up jurisdiction information for an address using Google Civic API
  * 
@@ -212,6 +210,9 @@ function extractOCDDivisionId(divisions: Record<string, any>): string | null {
 }
 
 export async function POST(req: Request) {
+  // Assert pepper configuration at runtime (not build time)
+  assertPepperConfig();
+  
   try {
     const { address } = await req.json();
     if (!address || typeof address !== 'string') {
@@ -226,7 +227,12 @@ export async function POST(req: Request) {
     // See file header for detailed explanation of why this exception exists
     const juris = await lookupJurisdictionFromExternalAPI(address);
 
-    await setJurisdictionCookie(juris);
+    // Extract only the fields setJurisdictionCookie expects
+    await setJurisdictionCookie({
+      state: juris.state,
+      district: juris.district ?? undefined,
+      county: juris.county ?? undefined
+    });
     return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
   } catch (error) {
     logger.error('Address lookup error', error instanceof Error ? error : new Error(String(error)));

@@ -306,7 +306,7 @@ export function ModerationStatus({
     <div className={`flex items-center gap-2 ${className}`}>
       {getStatusIcon()}
       <Badge className={getStatusColor()}>
-        {(moderation.status || 'pending').charAt(0).toUpperCase() + (moderation.status || 'pending').slice(1)}
+        {(moderation.status ?? 'pending').charAt(0).toUpperCase() + (moderation.status ?? 'pending').slice(1)}
       </Badge>
       {moderation.human_review_required && (
         <Badge variant="outline" className="text-xs">
@@ -346,7 +346,7 @@ export function ModerationQueue({
       if (result.success) {
         setHashtags(result.data);
       } else {
-        setError(result.error || 'Failed to load moderation queue');
+        setError(result.error ?? 'Failed to load moderation queue');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -378,7 +378,7 @@ export function ModerationQueue({
         onModerationAction?.(hashtagId, action);
         loadModerationQueue(); // Refresh the queue
       } else {
-        setError(result.error || 'Failed to moderate hashtag');
+        setError(result.error ?? 'Failed to moderate hashtag');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -444,7 +444,7 @@ export function ModerationQueue({
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
-                        {item.created_by || 'Unknown'}
+                        {item.created_by ?? 'Unknown'}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
@@ -512,7 +512,7 @@ export default function HashtagModeration({
         setModeration(result.data);
         onModerationUpdate?.(result.data);
       } else {
-        setError(result.error || 'Failed to load moderation status');
+        setError(result.error ?? 'Failed to load moderation status');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -618,7 +618,7 @@ export default function HashtagModeration({
         setModeration(result.data);
         onModerationUpdate?.(result.data);
       } else {
-        setError(result.error || 'Failed to moderate hashtag');
+        setError(result.error ?? 'Failed to moderate hashtag');
       }
     } catch (err) {
       setError('Network error. Please try again.');

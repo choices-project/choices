@@ -43,7 +43,7 @@ export class QuadraticStrategy implements VotingStrategy {
       }
 
       const allocations = voteData.allocations;
-      const totalCredits = poll.votingConfig.quadraticCredits || 100;
+      const totalCredits = poll.votingConfig.quadraticCredits ?? 100;
       
       // Validate all allocations are valid numbers
       let totalSpent = 0;
@@ -130,7 +130,7 @@ export class QuadraticStrategy implements VotingStrategy {
       const auditReceipt = `receipt_${voteId}_${Date.now()}`;
 
       // Calculate total spending for audit
-      const allocations = voteData.allocations || {};
+      const allocations = voteData.allocations ?? {};
       const totalSpent = Object.values(allocations).reduce((sum: number, credits) => {
         return sum + (credits) * (credits);
       }, 0);
@@ -161,8 +161,8 @@ export class QuadraticStrategy implements VotingStrategy {
           votingMethod: 'quadratic',
           allocations,
           totalSpent,
-          totalCredits: poll.votingConfig.quadraticCredits || 100,
-          remainingCredits: (poll.votingConfig.quadraticCredits || 100) - (totalSpent)
+          totalCredits: poll.votingConfig.quadraticCredits ?? 100,
+          remainingCredits: (poll.votingConfig.quadraticCredits ?? 100) - (totalSpent)
         }
       }, {
         privacyLevel

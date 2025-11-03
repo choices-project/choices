@@ -3,11 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+import { logger } from '@/lib/utils/logger';
 
 type RepresentativeResponse = {
   id: string;
@@ -46,10 +42,27 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Create Supabase client at request time (not module level) to avoid build-time errors
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json(
+      { error: 'Supabase configuration missing' },
+      { status: 500 }
+    );
+  }
+  
+  const supabase = createClient(
+    supabaseUrl,
+    supabaseKey,
+    { auth: { persistSession: false } }
+  );
+  
   try {
     const { searchParams } = new URL(request.url);
-    const fields = searchParams.get('fields')?.split(',') || [];
-    const include = searchParams.get('include')?.split(',') || [];
+    const fields = searchParams.get('fields')?.split(',') ?? [];
+    const include = searchParams.get('include')?.split(',') ?? [];
     
     const representativeId = params.id;
 
@@ -176,7 +189,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching representative:', error);
+    logger.error('Error fetching representative:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

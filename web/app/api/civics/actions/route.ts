@@ -1,11 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { createApiLogger } from '@/lib/utils/api-logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-// SECURITY: Use regular Supabase client with user authentication, not service role
-// Users should access data through Supabase with RLS, not service role APIs
-// Note: This global client is not used - each function creates its own client
+export const dynamic = 'force-dynamic';
 
 // ============================================================================
 // TYPES
@@ -43,11 +41,13 @@ export async function GET(request: NextRequest) {
   
   try {
     // Get Supabase client
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { persistSession: true } }
-    );
+    const supabaseClient = await getSupabaseServerClient();
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
 
     // Authentication
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Error in civic actions GET:', error as Error);
+    logger.error('Error in civic actions GET:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -142,11 +142,13 @@ export async function POST(request: NextRequest) {
   
   try {
     // Get Supabase client
-    const supabaseClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { persistSession: true } }
-    );
+    const supabaseClient = await getSupabaseServerClient();
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
 
     // Authentication
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
@@ -233,7 +235,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Error in civic actions POST:', error as Error);
+    logger.error('Error in civic actions POST:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

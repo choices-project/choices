@@ -140,15 +140,19 @@ export class EnhancedRateLimiter {
 
   // Generate device fingerprint from request
   private generateDeviceFingerprint(req: Request): DeviceFingerprint {
-    const userAgent = req.headers.get('user-agent') || ''
-    const acceptLanguage = req.headers.get('accept-language') || ''
+    const userAgent = req.headers.get('user-agent') ?? ''
+    const acceptLanguage = req.headers.get('accept-language') ?? ''
     
     // Extract basic fingerprint data
+    const viewportWidth = req.headers.get('sec-ch-viewport-width') ?? '';
+    const viewportHeight = req.headers.get('sec-ch-viewport-height') ?? '';
+    const screenResolution = viewportWidth && viewportHeight ? `${viewportWidth}x${viewportHeight}` : 'unknown';
+    
     const fingerprint: DeviceFingerprint = {
       userAgent,
-      screenResolution: req.headers.get('sec-ch-viewport-width') + 'x' + req.headers.get('sec-ch-viewport-height') || 'unknown',
-      timezone: req.headers.get('sec-ch-prefers-color-scheme') || 'unknown',
-      language: acceptLanguage.split(',')[0] || 'unknown',
+      screenResolution,
+      timezone: req.headers.get('sec-ch-prefers-color-scheme') ?? 'unknown',
+      language: acceptLanguage.split(',')[0] ?? 'unknown',
       platform: this.extractPlatform(userAgent),
       cookieEnabled: req.headers.get('cookie') !== null,
       doNotTrack: req.headers.get('dnt') === '1',
@@ -320,7 +324,7 @@ export class EnhancedRateLimiter {
   async check(req: Request, identifier?: string): Promise<RateLimitResult> {
     const ip = this.getClientIP(req)
     const deviceFingerprint = this.generateDeviceFingerprint(req)
-    const key = identifier || ip
+    const key = identifier ?? ip
 
     // Assess risk
     const riskAssessment = this.assessRisk(ip, deviceFingerprint)
@@ -363,13 +367,13 @@ export class EnhancedRateLimiter {
       resetTime,
       retryAfter: allowed ? null : Math.ceil((resetTime.getTime() - Date.now()) / 1000),
       riskAssessment,
-      reputation: this.reputation.get(ip) || null
+      reputation: this.reputation.get(ip) ?? null
     }
   }
 
   // Get reputation for an IP
   getReputation(ip: string): IPReputation | null {
-    return this.reputation.get(ip) || null
+    return this.reputation.get(ip) ?? null
   }
 
   // Manually update reputation

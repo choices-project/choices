@@ -38,7 +38,7 @@ export function createWebAuthnSessionToken(sessionData: Omit<WebAuthnSessionData
   // Generate a secure session token
   const token = generateSessionToken({
     sub: fullSessionData.userId,
-    role: fullSessionData.trustTier || 'T1',
+    role: fullSessionData.trustTier ?? 'T1',
     stableId: fullSessionData.userId
   });
 
@@ -62,9 +62,9 @@ export function setWebAuthnSessionCookie(
   const token = createWebAuthnSessionToken(sessionData);
   
   const cookieOptions = {
-    maxAge: options.maxAge || 7 * 24 * 60 * 60, // 7 days default
+    maxAge: options.maxAge ?? 7 * 24 * 60 * 60, // 7 days default
     secure: options.secure ?? process.env.NODE_ENV === 'production',
-    sameSite: options.sameSite || 'lax' as const
+    sameSite: options.sameSite ?? 'lax' as const
   };
 
   // Set the session cookie with proper security headers
@@ -194,7 +194,7 @@ export function getWebAuthnSession(request: Request): WebAuthnSessionData | null
         }
         return acc;
       }, {} as Record<string, string>);
-      sessionToken = cookies.session || null;
+      sessionToken = cookies.session ?? null;
     }
     
     if (!sessionToken) {

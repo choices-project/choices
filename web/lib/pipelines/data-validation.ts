@@ -16,8 +16,8 @@ export type ValidationRule = {
   name: string;
   description: string;
   severity: 'error' | 'warning' | 'info';
-  validator: (data: any) => boolean;
-  fixer?: (data: any) => any;
+  validator: (data: unknown) => boolean;
+  fixer?: (data: unknown) => unknown;
 }
 
 export type ValidationResult = {
@@ -36,7 +36,7 @@ export type ValidationResult = {
 export type ValidationError = {
   field: string;
   message: string;
-  value: any;
+  value: unknown;
   rule: string;
   severity: 'error' | 'warning' | 'info';
 }
@@ -44,14 +44,14 @@ export type ValidationError = {
 export type ValidationWarning = {
   field: string;
   message: string;
-  value: any;
+  value: unknown;
   suggestion: string;
 }
 
 export type ValidationFix = {
   field: string;
-  originalValue: any;
-  fixedValue: any;
+  originalValue: unknown;
+  fixedValue: unknown;
   rule: string;
 }
 
@@ -343,7 +343,8 @@ export class DataValidationPipeline {
       const key = this.generateDeduplicationKey(rep);
       
       if (seen.has(key)) {
-        const existing = seen.get(key)!;
+        const existing = seen.get(key);
+        if (!existing) continue; // Should not happen if seen.has(key) is true, but TypeScript safety
         const confidence = this.calculateDuplicateConfidence(existing, rep);
         
         duplicates.push({
@@ -383,7 +384,8 @@ export class DataValidationPipeline {
       const key = this.generateBillDeduplicationKey(bill);
       
       if (seen.has(key)) {
-        const existing = seen.get(key)!;
+        const existing = seen.get(key);
+        if (!existing) continue; // TypeScript safety check
         const confidence = this.calculateBillDuplicateConfidence(existing, bill);
         
         duplicates.push({
@@ -474,7 +476,7 @@ export class DataValidationPipeline {
   /**
    * Calculate data quality metrics
    */
-  private calculateQuality(data: any, errors: ValidationError[], warnings: ValidationWarning[]): {
+  private calculateQuality(data: Record<string, unknown>, errors: ValidationError[], warnings: ValidationWarning[]): {
     completeness: number;
     accuracy: number;
     consistency: number;
@@ -507,13 +509,13 @@ export class DataValidationPipeline {
       'bill-date-format': 'dates'
     };
     
-    return fieldMap[ruleName] || 'unknown';
+    return fieldMap[ruleName] ?? 'unknown';
   }
 
   /**
    * Get field value from data object
    */
-  private getFieldValue(data: any, ruleName: string): any {
+  private getFieldValue(data: Record<string, unknown>, ruleName: string): unknown {
     const fieldMap: Record<string, string> = {
       'representative-name-format': 'name',
       'representative-party-valid': 'party',
@@ -545,7 +547,7 @@ export class DataValidationPipeline {
       'libertarian': 'Libertarian'
     };
     
-    return partyMap[party.toLowerCase()] || party;
+    return partyMap[party.toLowerCase()] ?? party;
   }
 }
 

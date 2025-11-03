@@ -43,7 +43,7 @@ export default function RangeVoting({
     } else {
       const initialRatings: { [optionId: string]: number } = {}
       options.forEach(option => {
-        initialRatings[option.id] = minRating
+        initialRatings[String(option.id)] = minRating
       })
       setRatings(initialRatings)
     }
@@ -78,7 +78,7 @@ export default function RangeVoting({
       let totalRating = 0
       
       for (const [optionId, rating] of Object.entries(ratings)) {
-        if (options.some(option => option.id === optionId)) {
+        if (options.some(option => String(option.id) === optionId)) {
           const validRating = Math.max(minRating, Math.min(maxRating, rating))
           validRatings[optionId] = validRating
           totalRating += validRating
@@ -176,19 +176,21 @@ export default function RangeVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-6">
-          {options.map((option: PollOption) => (
-            <div key={option.id} className="border border-gray-200 rounded-lg p-4">
+          {options.map((option: PollOption) => {
+            const optionId = String(option.id)
+            return (
+            <div key={optionId} className="border border-gray-200 rounded-lg p-4">
               <div className="mb-3">
-                <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                {option.option_text && (
-                  <p className="text-sm text-gray-600">{option.option_text}</p>
+                <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                {(option as any).option_text && (
+                  <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
                 )}
               </div>
 
               {/* Rating Slider */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Rating: {ratings[option.id] || minRating}</span>
+                  <span className="text-sm text-gray-600">Rating: {ratings[optionId] || minRating}</span>
                   <span className="text-sm text-gray-500">{minRating} - {maxRating}</span>
                 </div>
                 
@@ -198,13 +200,13 @@ export default function RangeVoting({
                     min={minRating}
                     max={maxRating}
                     step="1"
-                    value={ratings[option.id] || minRating}
-                    onChange={(e) => handleRatingChange(option.id, parseInt(e.target.value))}
+                    value={ratings[optionId] || minRating}
+                    onChange={(e) => handleRatingChange(optionId, parseInt(e.target.value))}
                     disabled={isDisabled}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <span className="text-sm font-medium text-gray-900 min-w-[2rem] text-center">
-                    {ratings[option.id] || minRating}
+                    {ratings[optionId] || minRating}
                   </span>
                 </div>
 
@@ -212,11 +214,11 @@ export default function RangeVoting({
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: maxRating - minRating + 1 }, (_, i) => {
                     const starValue = i + minRating
-                    const isFilled = (ratings[option.id] || minRating) >= starValue
+                    const isFilled = (ratings[optionId] || minRating) >= starValue
                     return (
                       <button
                         key={starValue}
-                        onClick={() => handleRatingChange(option.id, starValue)}
+                        onClick={() => handleRatingChange(optionId, starValue)}
                         disabled={isDisabled}
                         className={`transition-colors ${
                           isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-110'
@@ -233,7 +235,8 @@ export default function RangeVoting({
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Instructions */}

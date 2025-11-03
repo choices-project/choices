@@ -271,7 +271,7 @@ export const useUserStore = create<UserStore>()(
           state.session = session;
           
           // Only update derived state if session actually changed
-          const newUser = session?.user || null;
+          const newUser = session?.user ?? null;
           const newAuthenticated = !!newUser;
           
           if (state.user !== newUser) {
@@ -325,9 +325,6 @@ export const useUserStore = create<UserStore>()(
       // Profile actions
       setProfile: (profile) => set((state) => {
         state.profile = profile;
-        
-        if (profile) {
-        }
       }),
       
       updateProfile: (updates) => set((state) => {
@@ -421,7 +418,7 @@ export const useUserStore = create<UserStore>()(
       
       updateArrayField: (field, value) => set((state) => {
         if (state.profileEditData) {
-          const currentArray = state.profileEditData[field] || [];
+          const currentArray = state.profileEditData[field] ?? [];
           const newArray = currentArray.includes(value)
             ? currentArray.filter(item => item !== value)
             : [...currentArray, value];
@@ -431,7 +428,7 @@ export const useUserStore = create<UserStore>()(
       
       updatePrivacySetting: (setting, value) => set((state) => {
         if (state.profileEditData) {
-          (state.profileEditData.privacysettings as Record<string, any>)[setting] = value;
+          (state.profileEditData.privacysettings as Record<string, unknown>)[setting] = value;
         }
       }),
       
@@ -492,17 +489,12 @@ export const useUserStore = create<UserStore>()(
       }),
       
       lookupAddress: async (address) => {
-        try {
-          const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
-          if (!response.ok) {
-            throw new Error('Address lookup failed');
-          }
-          const result = await response.json();
-          return result.data || [];
-        } catch (error) {
-          // Address lookup failed - error will be handled by calling code
-          throw error;
+        const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        if (!response.ok) {
+          throw new Error('Address lookup failed');
         }
+        const result = await response.json();
+        return result.data ?? [];
       },
       
       handleAddressUpdate: async (address) => {
@@ -716,7 +708,7 @@ export const useUserAvatar = () => useUserStore(state => {
 });
 
 export const useUserTheme = () => useUserStore(state => {
-  return state.profile?.preferences?.theme || 'system';
+  return state.profile?.preferences?.theme ?? 'system';
 });
 
 export const useUserNotifications = () => useUserStore(state => {
@@ -790,10 +782,10 @@ export const userStoreUtils = {
   getDisplayInfo: () => {
     const state = useUserStore.getState();
     return {
-      name: state.profile?.username || state.user?.email?.split('@')[0] || 'User',
-      avatar: state.profile?.avatar || state.user?.user_metadata?.avatar_url,
+      name: state.profile?.username ?? state.user?.email?.split('@')[0] ?? 'User',
+      avatar: state.profile?.avatar ?? state.user?.user_metadata?.avatar_url,
       email: state.user?.email,
-      theme: state.profile?.preferences?.theme || 'system',
+      theme: state.profile?.preferences?.theme ?? 'system',
       notifications: state.profile?.preferences?.notifications ?? true,
     };
   }
@@ -853,7 +845,7 @@ export const userStoreDebug = {
    * Log current user state
    */
   logState: () => {
-    const state = useUserStore.getState();
+    useUserStore.getState();
     // User store state logged for debugging
   },
   

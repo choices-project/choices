@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyRegistrationResponse, arrayBufferToBase64URL } from '@/features/auth/lib/webauthn/native/server';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -60,9 +61,15 @@ export async function POST(req: NextRequest) {
     // Convert challenge to base64URL for verification
     const challengeBase64 = arrayBufferToBase64URL(Buffer.from(chal.challenge, 'base64').buffer);
 
-    // Get current request origin
-    const origin = req.headers.get('origin') || req.headers.get('referer') || '';
+    // Get current request origin and validate against allowed origins
+    const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
     const currentOrigin = origin.replace(/\/$/, ''); // Remove trailing slash
+
+    // Validate origin against allowed origins for security
+    if (allowedOrigins.length > 0 && !allowedOrigins.includes(currentOrigin)) {
+      logger.warn('WebAuthn registration attempt from disallowed origin', { currentOrigin, allowedOrigins });
+      return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+    }
 
     // Verify
     const verification = await verifyRegistrationResponse(
@@ -93,16 +100,16 @@ export async function POST(req: NextRequest) {
       public_key: Buffer.from(publicKey).toString('base64'),
       cose_alg: body?.response?.publicKeyAlgorithm ?? null,
       counter,
-      aaguid: aaguid || null,
+      aaguid: aaguid ?? null,
       backup_state: backupState ?? false,
       backup_eligible: backupEligible ?? false,
       device_label: body?.clientExtensionResults?.credProps?.rk ? 'This device' : null,
-      transports: body?.response?.transports || [],
+      transports: body?.response?.transports ?? [],
       last_used_at: new Date().toISOString(),
     });
 
     if (credErr) {
-      console.error('Store credential failed:', credErr);
+      logger.error('Store credential failed:', credErr instanceof Error ? credErr : new Error(String(credErr)));
       return NextResponse.json({ error: 'Store credential failed' }, { status: 500 });
     }
 
@@ -114,7 +121,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
 
   } catch (error) {
-    console.error('Registration verify error:', error);
+    logger.error('Registration verify error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -122,7 +122,7 @@ export async function GET() {
 
   } catch (error) {
     devLog('Error in trending polls API:', error);
-    const appError = handleError(error as Error)
+    const appError = handleError(error instanceof Error ? error : new Error(String(error)))
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

@@ -165,7 +165,7 @@ async function getTrendingPolls(limit: number) {
           id: option.id ?? `option-${index}`,
           text: option.text ?? option.title ?? `Option ${index + 1}`,
           votes: option.votes ?? 0,
-          percentage: ((poll as any).total_votes ?? 0) > 0 ? Math.round((option.votes ?? 0) / ((poll as any).total_votes ?? 0) * 100) : 0
+          percentage: ((poll).total_votes ?? 0) > 0 ? Math.round((option.votes ?? 0) / ((poll).total_votes ?? 0) * 100) : 0
         })) : []
       };
     }).filter(poll => poll !== null);
@@ -179,7 +179,7 @@ async function getTrendingPolls(limit: number) {
     });
     
   } catch (error) {
-    logger.error('Error in trending polls API', error as Error);
+    logger.error('Error in trending polls API', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ polls: [] }, { status: 500 });
   }
 }
@@ -343,7 +343,7 @@ async function trackHashtags(request: NextRequest) {
     await trendingHashtagsTracker.trackMultipleHashtags(
       hashtags,
       userId,
-      source || 'custom'
+      source ?? 'custom'
     );
 
     devLog('Hashtags tracked:', { hashtags, userId, source, metadata });

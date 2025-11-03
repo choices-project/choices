@@ -14,7 +14,6 @@ import type {
   RepresentativeSearchResult,
   RepresentativeCommittee
 } from '@/types/representative';
-
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Note: This service only queries Supabase - it does NOT call external APIs.
@@ -71,8 +70,8 @@ export class CivicsIntegrationService {
       }
 
       // Apply pagination
-      const limit = query?.limit || 20;
-      const offset = query?.offset || 0;
+      const limit = query?.limit ?? 20;
+      const offset = query?.offset ?? 0;
       dbQuery = dbQuery
         .range(offset, offset + limit - 1)
         .order('data_quality_score', { ascending: false })
@@ -85,23 +84,23 @@ export class CivicsIntegrationService {
       }
 
       // Get committee data from OpenStates integration
-      const representativeIds = (representatives || []).map(rep => rep.id);
+      const representativeIds = (representatives ?? []).map(rep => rep.id);
       const committees = await this.getCommitteeData(representativeIds);
 
       // Get crosswalk data for external IDs
       const crosswalkData = await this.getCrosswalkData(representativeIds);
 
       // Transform data to match our interface
-      const transformedRepresentatives = (representatives || []).map(rep =>
+      const transformedRepresentatives = (representatives ?? []).map(rep =>
         this.transformRepresentative(rep, committees, crosswalkData)
       );
 
       const result: RepresentativeSearchResult = {
         representatives: transformedRepresentatives,
-        total: count || 0,
+        total: count ?? 0,
         page: Math.floor(offset / limit) + 1,
         limit,
-        hasMore: (offset + limit) < (count || 0)
+        hasMore: (offset + limit) < (count ?? 0)
       };
 
       this.setCachedData(cacheKey, result);
@@ -158,7 +157,7 @@ export class CivicsIntegrationService {
       // Group committees by representative ID
       const committeeMap = new Map<number, RepresentativeCommittee[]>();
 
-      for (const committee of committees || []) {
+      for (const committee of committees ?? []) {
         const repId = committee.openstates_people_data?.[0]?.id;
         if (!repId) continue;
 
@@ -169,7 +168,7 @@ export class CivicsIntegrationService {
         committeeMap.get(repId)!.push({
           id: committee.openstates_person_id,
           representative_id: repId,
-          committee_name: committee.title || 'Unknown Committee',
+          committee_name: committee.title ?? 'Unknown Committee',
           role: this.mapRoleType(committee.role_type),
           jurisdiction: committee.jurisdiction,
           start_date: committee.start_date,
@@ -228,7 +227,7 @@ export class CivicsIntegrationService {
       const crosswalkMap = new Map<number, any[]>();
       const canonicalToRepId = new Map(reps.map(rep => [rep.canonical_id, rep.id]));
 
-      for (const item of crosswalk || []) {
+      for (const item of crosswalk ?? []) {
         const repId = canonicalToRepId.get(item.canonical_id);
         if (!repId) continue;
 
@@ -289,9 +288,9 @@ export class CivicsIntegrationService {
       next_election_date: rep.next_election_date,
 
       // Data Quality
-      data_quality_score: rep.data_quality_score || 0,
-      verification_status: rep.verification_status || 'pending',
-      data_sources: rep.data_sources || [],
+      data_quality_score: rep.data_quality_score ?? 0,
+      verification_status: rep.verification_status ?? 'pending',
+      data_sources: rep.data_sources ?? [],
 
       // Timestamps
       created_at: rep.created_at,
@@ -311,7 +310,7 @@ export class CivicsIntegrationService {
         is_primary: photo.is_primary,
         created_at: photo.created_at,
         updated_at: photo.updated_at
-      })) || [],
+      })) ?? [],
 
       activities: rep.representative_activity?.map((activity: any) => ({
         id: activity.id,
@@ -326,9 +325,9 @@ export class CivicsIntegrationService {
         metadata: activity.metadata,
         created_at: activity.created_at,
         updated_at: activity.updated_at
-      })) || [],
+      })) ?? [],
 
-      committees: committees.get(rep.id) || [],
+      committees: committees.get(rep.id) ?? [],
 
       crosswalk: crosswalk.get(rep.id)?.map((item: any) => ({
         id: item.id,
@@ -339,7 +338,7 @@ export class CivicsIntegrationService {
         attrs: item.attrs,
         created_at: item.created_at,
         updated_at: item.updated_at
-      })) || []
+      })) ?? []
     };
   }
 
@@ -454,13 +453,13 @@ export class CivicsIntegrationService {
 
       if (error) throw error;
 
-      const total = stats?.length || 0;
-      const highQuality = stats?.filter(s => s.data_quality_score >= 80).length || 0;
-      const averageScore = stats?.reduce((sum, s) => sum + (s.data_quality_score || 0), 0) / total || 0;
+      const total = stats?.length ?? 0;
+      const highQuality = stats?.filter(s => s.data_quality_score >= 80).length ?? 0;
+      const averageScore = total > 0 ? stats?.reduce((sum, s) => sum + (s.data_quality_score ?? 0), 0) / total : 0;
 
       const byState: Record<string, number> = {};
       stats?.forEach(stat => {
-        byState[stat.state] = (byState[stat.state] || 0) + 1;
+        byState[stat.state] = (byState[stat.state] ?? 0) + 1;
       });
 
       return {

@@ -264,12 +264,12 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.searchResults = result.data || null;
+                state.searchResults = result.data ?? null;
                 state.isSearching = false;
               });
             } else {
               set((state) => {
-                state.searchError = result.error || 'Search failed';
+                state.searchError = result.error ?? 'Search failed';
                 state.isSearching = false;
               });
             }
@@ -293,12 +293,12 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.trendingHashtags = result.data || [];
+                state.trendingHashtags = result.data ?? [];
                 state.isLoading = false;
               });
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to fetch trending hashtags';
+                state.error = result.error ?? 'Failed to fetch trending hashtags';
                 state.isLoading = false;
               });
             }
@@ -317,7 +317,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.suggestions = result.data || [];
+                state.suggestions = result.data ?? [];
               });
             }
           } catch (error) {
@@ -361,7 +361,7 @@ export const useHashtagStore = create<HashtagStore>()(
               return true;
             } else {
               set((state) => {
-                state.followError = result.error || 'Failed to follow hashtag';
+                state.followError = result.error ?? 'Failed to follow hashtag';
                 state.isFollowing = false;
               });
               return false;
@@ -395,7 +395,7 @@ export const useHashtagStore = create<HashtagStore>()(
               return true;
             } else {
               set((state) => {
-                state.followError = result.error || 'Failed to unfollow hashtag';
+                state.followError = result.error ?? 'Failed to unfollow hashtag';
                 state.isUnfollowing = false;
               });
               return false;
@@ -427,7 +427,7 @@ export const useHashtagStore = create<HashtagStore>()(
               return result.data;
             } else {
               set((state) => {
-                state.createError = result.error || 'Failed to create hashtag';
+                state.createError = result.error ?? 'Failed to create hashtag';
                 state.isCreating = false;
               });
               return null;
@@ -453,14 +453,14 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.userHashtags = result.data || [];
-                state.followedHashtags = (result.data || []).map(uh => uh.hashtag_id);
-                state.primaryHashtags = (result.data || []).filter(uh => (uh as any).is_primary).map(uh => uh.hashtag_id);
+                state.userHashtags = result.data ?? [];
+                state.followedHashtags = (result.data ?? []).map(uh => uh.hashtag_id);
+                state.primaryHashtags = (result.data ?? []).filter(uh => (uh as any).is_primary).map(uh => uh.hashtag_id);
                 state.isLoading = false;
               });
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to fetch user hashtags';
+                state.error = result.error ?? 'Failed to fetch user hashtags';
                 state.isLoading = false;
               });
             }
@@ -497,7 +497,7 @@ export const useHashtagStore = create<HashtagStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to update preferences';
+                state.error = result.error ?? 'Failed to update preferences';
                 state.isUpdating = false;
               });
               return false;
@@ -528,7 +528,7 @@ export const useHashtagStore = create<HashtagStore>()(
               });
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to fetch preferences';
+                state.error = result.error ?? 'Failed to fetch preferences';
                 state.isLoading = false;
               });
             }
@@ -573,7 +573,7 @@ export const useHashtagStore = create<HashtagStore>()(
               });
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to fetch hashtag stats';
+                state.error = result.error ?? 'Failed to fetch hashtag stats';
                 state.isLoading = false;
               });
             }
@@ -752,7 +752,7 @@ export const useHashtagStore = create<HashtagStore>()(
           const state = get();
           return state.suggestions.filter(s => 
             s.hashtag.name.toLowerCase().includes(input.toLowerCase()) ||
-            (s.hashtag.display_name || s.hashtag.name).toLowerCase().includes(input.toLowerCase())
+            (s.hashtag.display_name ?? s.hashtag.name).toLowerCase().includes(input.toLowerCase())
           );
         },
         
@@ -846,7 +846,7 @@ export const hashtagSelectors = {
   // Statistics
   followedCount: (state: HashtagStore) => state.followedHashtags.length,
   trendingCount: (state: HashtagStore) => state.trendingHashtags.length,
-  searchResultCount: (state: HashtagStore) => state.searchResults?.hashtags.length || 0
+  searchResultCount: (state: HashtagStore) => state.searchResults?.hashtags.length ?? 0
 };
 
 // Hashtag store hooks for common patterns
@@ -881,7 +881,7 @@ export const useHashtagError = () => useHashtagStore((state) => ({
   searchError: state.searchError,
   followError: state.followError,
   createError: state.createError,
-  hasError: !!(state.error || state.searchError || state.followError || state.createError)
+  hasError: !!(state.error ?? state.searchError ?? state.followError ?? state.createError)
 }));
 
 export const useHashtagActions = () => useHashtagStore((state) => ({
@@ -913,7 +913,7 @@ export const useHashtagSearchQuery = () => useHashtagStore((state) => state.filt
 export const useHashtagStats = () => useHashtagStore((state) => ({
   followedCount: state.followedHashtags.length,
   trendingCount: state.trendingHashtags.length,
-  searchResultCount: state.searchResults?.hashtags.length || 0,
+  searchResultCount: state.searchResults?.hashtags.length ?? 0,
   recentSearchesCount: state.recentSearches.length
 }));
 

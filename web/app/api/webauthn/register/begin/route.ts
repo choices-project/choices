@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // WebAuthn options
-    const rpId = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN || 'localhost';
+    const rpId = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN ?? 'localhost';
     const options = {
       rp: { 
         id: rpId, 

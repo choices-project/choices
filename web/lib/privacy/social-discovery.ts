@@ -111,6 +111,43 @@ export type GeographicInsight = {
   privacyProtected: boolean;
 }
 
+type DemographicBreakdown = {
+  ageGroup: string;
+  education: string;
+  topCandidate: {
+    id: string;
+    name: string;
+  };
+  confidence: number;
+  userCount: number;
+}
+
+type GeographicBreakdown = {
+  area: string;
+  topCandidate: {
+    id: string;
+    name: string;
+  };
+  confidence: number;
+  userCount: number;
+}
+
+type InterestBreakdown = {
+  interest: string;
+  topCandidate: {
+    id: string;
+    name: string;
+  };
+  confidence: number;
+  userCount: number;
+}
+
+type AggregatedInsightsData = {
+  demographicBreakdowns?: DemographicBreakdown[];
+  geographicBreakdowns?: GeographicBreakdown[];
+  interestBreakdowns?: InterestBreakdown[];
+}
+
 export type CrossInterestInsight = {
   candidateId: string;
   candidateName: string;
@@ -195,7 +232,7 @@ export class PrivacyAwareSocialDiscoveryManager {
    */
   async getCrossDemographicInsights(
     userProfile: UserProfile, 
-    aggregatedInsights: any
+    aggregatedInsights: AggregatedInsightsData
   ): Promise<CrossDemographicInsight[]> {
     // Get user's demographic group
     const userAgeGroup = this.getAgeGroup(userProfile.age);
@@ -203,11 +240,11 @@ export class PrivacyAwareSocialDiscoveryManager {
     
     // Find insights from different demographic groups
     const crossDemographicInsights = aggregatedInsights.demographicBreakdowns
-      ?.filter((breakdown: any) => 
+      ?.filter((breakdown) => 
         breakdown.ageGroup !== userAgeGroup || 
         breakdown.education !== userEducation
       )
-      ?.map((breakdown: any) => ({
+      ?.map((breakdown) => ({
         candidateId: breakdown.topCandidate.id,
         candidateName: breakdown.topCandidate.name,
         confidence: breakdown.confidence,
@@ -216,7 +253,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.loggedIn
       })) || [];
 
-    return crossDemographicInsights.filter((insight: any) => insight.privacyProtected);
+    return crossDemographicInsights.filter((insight) => insight.privacyProtected);
   }
 
   // ============================================================================
@@ -231,12 +268,12 @@ export class PrivacyAwareSocialDiscoveryManager {
    */
   async getGeographicInsights(
     userLocation: string, 
-    aggregatedInsights: any
+    aggregatedInsights: AggregatedInsightsData
   ): Promise<GeographicInsight[]> {
     // Find insights from different geographic areas
     const geographicInsights = aggregatedInsights.geographicBreakdowns
-      ?.filter((breakdown: any) => breakdown.area !== userLocation)
-      ?.map((breakdown: any) => ({
+      ?.filter((breakdown) => breakdown.area !== userLocation)
+      ?.map((breakdown) => ({
         candidateId: breakdown.topCandidate.id,
         candidateName: breakdown.topCandidate.name,
         confidence: breakdown.confidence,
@@ -245,7 +282,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.public
       })) || [];
 
-    return geographicInsights.filter((insight: any) => insight.privacyProtected);
+    return geographicInsights.filter((insight) => insight.privacyProtected);
   }
 
   // ============================================================================
@@ -260,12 +297,12 @@ export class PrivacyAwareSocialDiscoveryManager {
    */
   async getCrossInterestInsights(
     userInterests: string[], 
-    aggregatedInsights: any
+    aggregatedInsights: AggregatedInsightsData
   ): Promise<CrossInterestInsight[]> {
     // Find insights from different interest categories
     const crossInterestInsights = aggregatedInsights.interestBreakdowns
-      ?.filter((breakdown: any) => !userInterests.includes(breakdown.interest))
-      ?.map((breakdown: any) => ({
+      ?.filter((breakdown) => !userInterests.includes(breakdown.interest))
+      ?.map((breakdown) => ({
         candidateId: breakdown.topCandidate.id,
         candidateName: breakdown.topCandidate.name,
         confidence: breakdown.confidence,
@@ -274,7 +311,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.loggedIn
       })) || [];
 
-    return crossInterestInsights.filter((insight: any) => insight.privacyProtected);
+    return crossInterestInsights.filter((insight) => insight.privacyProtected);
   }
 
   // ============================================================================
@@ -339,7 +376,7 @@ export class PrivacyAwareSocialDiscoveryManager {
    * @param pollId - Poll ID
    * @param aggregatedData - Aggregated user data
    */
-  async updatePublicCentroids(pollId: string, aggregatedData: any[]): Promise<void> {
+  async updatePublicCentroids(pollId: string, aggregatedData: unknown[]): Promise<void> {
     try {
       // Compute centroids from aggregated, anonymized data
       const newCentroids = this.computeCentroids(aggregatedData);
@@ -500,7 +537,7 @@ export class PrivacyAwareSocialDiscoveryManager {
     return allInsights.filter(insight => insight.source === clusterId);
   }
 
-  private computeCentroids(aggregatedData: any[]): PublicCentroid[] {
+  private computeCentroids(aggregatedData: unknown[]): PublicCentroid[] {
     // Compute centroids using k-means or similar clustering
     // Ensure k-anonymity is maintained
     const centroids: PublicCentroid[] = [];

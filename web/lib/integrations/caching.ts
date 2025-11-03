@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * API Response Caching System
  * 
@@ -109,10 +111,10 @@ export class ApiResponseCache<T = unknown> {
       key,
       data,
       timestamp: Date.now(),
-      ttl: ttl || this.config.defaultTTL,
+      ttl: ttl ?? this.config.defaultTTL,
       accessCount: 0,
       lastAccessed: Date.now(),
-      source: source || 'unknown',
+      source: source ?? 'unknown',
       ...(metadata && { metadata })
     };
 

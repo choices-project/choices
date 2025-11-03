@@ -174,6 +174,26 @@ export default function ContactModal({
     }
   }, [message, subject, existingThreadId, representative.id, userId, sendMessage, createThread, onClose]);
 
+  // Handle escape key to close modal (must be before early returns)
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Focus trap: focus first focusable element
+      const firstInput = document.querySelector('#subject') as HTMLInputElement;
+      firstInput?.focus();
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   if (!contactSystemEnabled) {
@@ -196,26 +216,6 @@ export default function ContactModal({
       </div>
     );
   }
-
-  // Handle escape key to close modal
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      // Focus trap: focus first focusable element
-      const firstInput = document.querySelector('#subject') as HTMLInputElement;
-      firstInput?.focus();
-    }
-    
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
 
   return (
     <div 

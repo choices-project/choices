@@ -31,7 +31,7 @@ export default function RegisterPage() {
       if (e2eMethod === 'password') {
         return 'password'
       }
-    } catch (e) {
+    } catch {
       // localStorage might not be available during SSR
     }
     
@@ -75,7 +75,7 @@ export default function RegisterPage() {
           setRegistrationMethod('password')
           return
         }
-      } catch (e) {
+      } catch {
         // localStorage might not be available
       }
     }
@@ -86,10 +86,10 @@ export default function RegisterPage() {
     setError('')
 
     const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const _username = String(fd.get('username') || '').trim()
-    const _email = String(fd.get('email') || '').trim()
-    const password = String(fd.get('password') || '')
-    const confirm = String(fd.get('confirmPassword') || '')
+    const _username = String(fd.get('username') ?? '').trim()
+    const _email = String(fd.get('email') ?? '').trim()
+    const password = String(fd.get('password') ?? '')
+    const confirm = String(fd.get('confirmPassword') ?? '')
 
     if (password !== confirm) {
       setError('Passwords do not match')
@@ -107,7 +107,7 @@ export default function RegisterPage() {
       userId: ''
     })
     if (!result.ok) {
-      setError(result.error || 'Registration failed')
+      setError(result.error ?? 'Registration failed')
       return
     }
 

@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Address lookup error', error as Error);
+    logger.error('Address lookup error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

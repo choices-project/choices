@@ -42,7 +42,7 @@ export function validateOrigin(
   const referer = request.headers.get('referer');
 
   // Extract origin from referer if origin header is missing
-  const effectiveOrigin = origin || (referer ? new URL(referer).origin : null);
+  const effectiveOrigin = origin ?? (referer ? new URL(referer).origin : null);
   
   // Log host for debugging purposes
   if (host) {
@@ -227,7 +227,7 @@ export function getClientIP(request: Request): string {
  * Check if request is from a bot/crawler
  */
 export function isBotRequest(request: Request): boolean {
-  const userAgent = request.headers.get('user-agent') || '';
+  const userAgent = request.headers.get('user-agent') ?? '';
   const botPatterns = [
     /bot/i,
     /crawler/i,
@@ -250,8 +250,8 @@ export function isBotRequest(request: Request): boolean {
  */
 export function getRequestFingerprint(request: Request): string {
   const ip = getClientIP(request);
-  const userAgent = request.headers.get('user-agent') || '';
-  const acceptLanguage = request.headers.get('accept-language') || '';
+  const userAgent = request.headers.get('user-agent') ?? '';
+  const acceptLanguage = request.headers.get('accept-language') ?? '';
   
   // Create a simple fingerprint
   const fingerprint = `${ip}|${userAgent}|${acceptLanguage}`;

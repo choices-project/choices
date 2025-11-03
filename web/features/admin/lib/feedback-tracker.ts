@@ -87,7 +87,7 @@ class FeedbackTracker {
   
   private getFID(): number | undefined {
     const fidEntry = performance.getEntriesByName('first-input-delay')[0] as any
-    return fidEntry ? (fidEntry.processingStart || 0) - (fidEntry.startTime || 0) : undefined
+    return fidEntry ? (fidEntry.processingStart ?? 0) - (fidEntry.startTime ?? 0) : undefined
   }
   
   private getCLS(): number | undefined {
@@ -108,7 +108,7 @@ class FeedbackTracker {
     window.addEventListener('unhandledrejection', (event) => {
       this.errors.push({
         type: 'promise',
-        message: event.reason?.message || 'Unhandled Promise Rejection',
+        message: event.reason?.message ?? 'Unhandled Promise Rejection',
         stack: event.reason?.stack,
         timestamp: new Date().toISOString()
       })
@@ -122,13 +122,13 @@ class FeedbackTracker {
     // Track clicks, form submissions, etc.
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement
-      const action = `click:${target.tagName.toLowerCase()}:${target.className || target.id || 'unknown'}`
+      const action = `click:${target.tagName.toLowerCase()}:${target.className ?? target.id ?? 'unknown'}`
       this.actionSequence.push(action)
     })
     
     document.addEventListener('submit', (event) => {
       const target = event.target as HTMLFormElement
-      const action = `submit:${target.action || target.className || 'unknown'}`
+      const action = `submit:${target.action ?? target.className ?? 'unknown'}`
       this.actionSequence.push(action)
     })
   }
@@ -143,10 +143,10 @@ class FeedbackTracker {
         const duration = Date.now() - startTime
         
         // Store network request info
-        this.performanceMetrics.networkRequests = this.performanceMetrics.networkRequests || []
+        this.performanceMetrics.networkRequests = this.performanceMetrics.networkRequests ?? []
         this.performanceMetrics.networkRequests.push({
           url: typeof args[0] === 'string' ? args[0] : (args[0] as Request).url,
-          method: args[1]?.method || 'GET',
+          method: args[1]?.method ?? 'GET',
           status: response.status,
           duration
         })
@@ -224,17 +224,17 @@ class FeedbackTracker {
       userAgent: navigator.userAgent,
       screenResolution: `${window.screen.width}x${window.screen.height}`,
       viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-      timeOnPage: this.performanceMetrics.timeOnPage || 0,
+      timeOnPage: this.performanceMetrics.timeOnPage ?? 0,
       
       sessionId: this.sessionId,
       sessionStartTime: this.sessionStartTime,
       totalPageViews: this.pageViews,
       
       activeFeatures: this.getActiveFeatures(),
-      lastAction: this.actionSequence[this.actionSequence.length - 1] || 'none',
+      lastAction: this.actionSequence[this.actionSequence.length - 1] ?? 'none',
       actionSequence: this.actionSequence.slice(-10), // Last 10 actions
       
-      pageLoadTime: this.performanceMetrics.pageLoadTime || 0,
+      pageLoadTime: this.performanceMetrics.pageLoadTime ?? 0,
       performanceMetrics: {
         fcp: this.performanceMetrics.fcp,
         lcp: this.performanceMetrics.lcp,
@@ -287,14 +287,14 @@ class FeedbackTracker {
     // Extract user role from various sources
     if (typeof document === 'undefined') return undefined
     const roleElement = document.querySelector('[data-user-role]')
-    return roleElement?.getAttribute('data-user-role') || undefined
+    return roleElement?.getAttribute('data-user-role') ?? undefined
   }
   
   private getUserId(): string | undefined {
     // Extract user ID from various sources
     if (typeof document === 'undefined') return undefined
     const userIdElement = document.querySelector('[data-user-id]')
-    return userIdElement?.getAttribute('data-user-id') || undefined
+    return userIdElement?.getAttribute('data-user-id') ?? undefined
   }
   
   public captureConsoleLogs(): string[] {
@@ -342,7 +342,7 @@ class FeedbackTracker {
       severity: this.determineSeverity(type, sentiment),
       
       consoleLogs: this.captureConsoleLogs(),
-      networkRequests: this.performanceMetrics.networkRequests || [],
+      networkRequests: this.performanceMetrics.networkRequests ?? [],
       
       aiAnalysis: {
         intent: '',

@@ -150,7 +150,7 @@ export function HashtagAnalytics({
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Verified</p>
-              <p className="text-2xl font-bold text-gray-900">{(stats.verified_count || 0).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{(stats.verified_count ?? 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -212,19 +212,19 @@ export function HashtagAnalytics({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {stats.system_health?.api_response_time || 0}ms
+                {stats.system_health?.api_response_time ?? 0}ms
               </div>
               <div className="text-sm text-gray-600">API Response Time</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.system_health?.cache_hit_rate || 0}%
+                {stats.system_health?.cache_hit_rate ?? 0}%
               </div>
               <div className="text-sm text-gray-600">Database Performance</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {stats.system_health?.error_rate || 0}%
+                {stats.system_health?.error_rate ?? 0}%
               </div>
               <div className="text-sm text-gray-600">Cache Hit Rate</div>
             </div>

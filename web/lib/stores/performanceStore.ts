@@ -25,7 +25,7 @@ export type PerformanceMetric = {
   unit: 'ms' | 'bytes' | 'count' | 'score' | 'percentage';
   timestamp: Date;
   url: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type DatabasePerformanceMetric = {
@@ -54,7 +54,7 @@ export type PerformanceAlert = {
   message: string;
   timestamp: Date;
   resolved: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type PerformanceThresholds = {
@@ -108,9 +108,9 @@ export type PerformanceStore = {
   
   // Actions - Metrics
   recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => void;
-  recordNavigationMetric: (name: string, value: number, metadata?: Record<string, any>) => void;
-  recordResourceMetric: (name: string, value: number, metadata?: Record<string, any>) => void;
-  recordCustomMetric: (name: string, value: number, unit?: 'ms' | 'bytes' | 'count' | 'score', metadata?: Record<string, any>) => void;
+  recordNavigationMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
+  recordResourceMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
+  recordCustomMetric: (name: string, value: number, unit?: 'ms' | 'bytes' | 'count' | 'score', metadata?: Record<string, unknown>) => void;
   clearMetrics: () => void;
   
   // Actions - Alerts
@@ -155,11 +155,11 @@ export type PerformanceStore = {
 
 const calculatePerformanceScore = (metrics: PerformanceMetric[]): { score: number; grade: 'A' | 'B' | 'C' | 'D' | 'F' } => {
   const navigationMetrics = metrics.filter(m => m.type === 'navigation');
-  const fcp = navigationMetrics.find(m => m.name === 'FCP')?.value || 0;
-  const lcp = navigationMetrics.find(m => m.name === 'LCP')?.value || 0;
-  const fid = navigationMetrics.find(m => m.name === 'FID')?.value || 0;
-  const cls = navigationMetrics.find(m => m.name === 'CLS')?.value || 0;
-  const ttfb = navigationMetrics.find(m => m.name === 'TTFB')?.value || 0;
+  const fcp = navigationMetrics.find(m => m.name === 'FCP')?.value ?? 0;
+  const lcp = navigationMetrics.find(m => m.name === 'LCP')?.value ?? 0;
+  const fid = navigationMetrics.find(m => m.name === 'FID')?.value ?? 0;
+  const cls = navigationMetrics.find(m => m.name === 'CLS')?.value ?? 0;
+  const ttfb = navigationMetrics.find(m => m.name === 'TTFB')?.value ?? 0;
 
   // Calculate score based on Core Web Vitals
   let score = 100;
@@ -193,11 +193,11 @@ const generateRecommendations = (metrics: PerformanceMetric[]): string[] => {
   const recommendations: string[] = [];
   const navigationMetrics = metrics.filter(m => m.type === 'navigation');
   
-  const fcp = navigationMetrics.find(m => m.name === 'FCP')?.value || 0;
-  const lcp = navigationMetrics.find(m => m.name === 'LCP')?.value || 0;
-  const fid = navigationMetrics.find(m => m.name === 'FID')?.value || 0;
-  const cls = navigationMetrics.find(m => m.name === 'CLS')?.value || 0;
-  const ttfb = navigationMetrics.find(m => m.name === 'TTFB')?.value || 0;
+  const fcp = navigationMetrics.find(m => m.name === 'FCP')?.value ?? 0;
+  const lcp = navigationMetrics.find(m => m.name === 'LCP')?.value ?? 0;
+  const fid = navigationMetrics.find(m => m.name === 'FID')?.value ?? 0;
+  const cls = navigationMetrics.find(m => m.name === 'CLS')?.value ?? 0;
+  const ttfb = navigationMetrics.find(m => m.name === 'TTFB')?.value ?? 0;
 
   if (fcp > 1800) recommendations.push('Optimize First Contentful Paint by reducing render-blocking resources');
   if (lcp > 2500) recommendations.push('Improve Largest Contentful Paint by optimizing images and fonts');
@@ -407,11 +407,11 @@ export const usePerformanceStore = create<PerformanceStore>()(
             let threshold = 0;
             
             if (metric.type === 'navigation' && metric.name in thresholds.navigation) {
-              threshold = (thresholds.navigation as Record<string, number>)[metric.name] || 0;
+              threshold = (thresholds.navigation as Record<string, number>)[metric.name] ?? 0;
             } else if (metric.type === 'resource' && metric.name in thresholds.resource) {
-              threshold = (thresholds.resource as Record<string, number>)[metric.name] || 0;
+              threshold = (thresholds.resource as Record<string, number>)[metric.name] ?? 0;
             } else if (metric.type === 'custom' && metric.name in thresholds.custom) {
-              threshold = thresholds.custom[metric.name] || 0;
+              threshold = thresholds.custom[metric.name] ?? 0;
             }
 
             if (threshold > 0 && metric.value > threshold) {
@@ -564,17 +564,17 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
             // Transform metrics data to match DatabasePerformanceMetric interface
             const databaseMetrics: DatabasePerformanceMetric[] = metricsData?.map(metric => ({
-              metricName: metric.event_type || 'unknown',
+              metricName: metric.event_type ?? 'unknown',
               avgValue: 0, // Default value since analytics_events doesn't have these fields
               minValue: 0,
               maxValue: 0,
               countMeasurements: 1,
-              timestamp: new Date(metric.created_at || new Date())
-            })) || [];
+              timestamp: new Date(metric.created_at ?? new Date())
+            })) ?? [];
 
             // Get cache statistics
             // FUNCTIONALITY MERGED INTO analytics_events - use analytics table for cache stats
-            const { data: cacheData, error: cacheError } = await supabase
+            const { error: cacheError } = await supabase
               .from('analytics_events')
               .select('*')
               .eq('event_type', 'vote')

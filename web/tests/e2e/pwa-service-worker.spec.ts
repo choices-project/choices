@@ -369,7 +369,7 @@ test.describe('PWA Service Worker - V2', () => {
     await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
     await page.click('button:has-text("Next")');
 
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
 
     await page.click('button:has-text("Create Poll")');
@@ -400,7 +400,10 @@ test.describe('PWA Service Worker - V2', () => {
 
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
 
     // Check service worker with civics context
     const swRegistered = await page.evaluate(async () => {

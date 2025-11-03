@@ -39,7 +39,7 @@ export async function GET() {
 
     return response;
   } catch (error) {
-    logger.error('CSRF token generation error', error as Error);
+    logger.error('CSRF token generation error', error instanceof Error ? error : new Error(String(error)));
     
     return NextResponse.json(
       { error: 'Failed to generate CSRF token' },

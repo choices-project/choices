@@ -57,9 +57,9 @@ export function useProfile(): UseProfileReturn {
   });
 
   return {
-    profile: query.data?.data as UserProfile || null,
+    profile: query.data?.data ?? null,
     isLoading: query.isLoading,
-    error: query.error?.message || null,
+    error: query.error?.message ?? null,
     refetch: async () => {
       await query.refetch();
     },
@@ -92,7 +92,7 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
         const oldData = old as { data: UserProfile };
         return {
           ...oldData,
-          data: { ...(oldData.data || {}), ...(newData || {}) },
+          data: { ...(oldData.data ?? {}), ...(newData ?? {}) },
         };
       });
 
@@ -116,7 +116,7 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
       return result;
     },
     isUpdating: mutation.isPending,
-    error: mutation.error?.message || null,
+    error: mutation.error?.message ?? null,
   };
 }
 
@@ -140,7 +140,7 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
       return await mutation.mutateAsync(file);
     },
     isUploading: mutation.isPending,
-    error: mutation.error?.message || null,
+    error: mutation.error?.message ?? null,
   };
 }
 
@@ -185,7 +185,7 @@ export function useProfileExport(): UseProfileExportReturn {
       return await mutation.mutateAsync(options);
     },
     isExporting: mutation.isPending,
-    error: mutation.error?.message || null,
+    error: mutation.error?.message ?? null,
   };
 }
 
@@ -316,7 +316,7 @@ export function useProfileDisplay() {
     };
   }
 
-  const displayName = profile.display_name || profile.username || profile.email?.split('@')[0] || 'User';
+  const displayName = profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
   const initials = displayName
     .split(' ')
     .map((word: string) => word.charAt(0))
@@ -324,18 +324,19 @@ export function useProfileDisplay() {
     .toUpperCase()
     .slice(0, 2);
 
+  const trustTierKey = (profile.trust_tier ?? 'T0') as 'T0' | 'T1' | 'T2' | 'T3'
   const trustTierDisplay = {
     'T0': 'New User',
     'T1': 'Verified User',
     'T2': 'Trusted User',
     'T3': 'VIP User',
-  }[profile.trust_tier || 'T0'] || 'Unknown';
+  }[trustTierKey] ?? 'Unknown';
 
   return {
     displayName,
     initials,
     trustTier: profile.trust_tier,
     trustTierDisplay,
-    isAdmin: profile.is_admin,
+    isAdmin: (profile as any).is_admin ?? false,
   };
 }

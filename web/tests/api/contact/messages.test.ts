@@ -7,24 +7,14 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-
 import { NextRequest } from 'next/server';
 
 import { POST, GET } from '@/app/api/contact/messages/route';
 
 // Mock dependencies
-const mockCheckLimit = jest.fn();
-const mockGetSupabaseClient = jest.fn();
-const mockGetUser = jest.fn();
-const mockFrom = jest.fn();
-const mockSelect = jest.fn();
-const mockInsert = jest.fn();
-const mockEq = jest.fn();
-const mockOrder = jest.fn();
-const mockLimit = jest.fn();
 
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => {
-  const actual = jest.requireActual('@/lib/rate-limiting/api-rate-limiter');
+  jest.requireActual('@/lib/rate-limiting/api-rate-limiter');
   return {
     apiRateLimiter: {
       checkLimit: jest.fn(),
@@ -47,6 +37,11 @@ jest.mock('@/lib/utils/logger', () => ({
 describe('POST /api/contact/messages', () => {
   let apiRateLimiter: { checkLimit: jest.Mock };
   let getSupabaseServerClient: jest.Mock;
+  let mockGetUser: jest.Mock;
+  let mockFrom: jest.Mock;
+  let mockSelect: jest.Mock;
+  let mockInsert: jest.Mock;
+  let mockLimit: jest.Mock;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -54,6 +49,13 @@ describe('POST /api/contact/messages', () => {
     // Get mocked modules
     apiRateLimiter = (await import('@/lib/rate-limiting/api-rate-limiter')).apiRateLimiter;
     getSupabaseServerClient = (await import('@/utils/supabase/server')).getSupabaseServerClient;
+
+    // Initialize mock functions
+    mockGetUser = jest.fn();
+    mockFrom = jest.fn();
+    mockSelect = jest.fn();
+    mockInsert = jest.fn();
+    mockLimit = jest.fn();
 
     // Default successful rate limit
     apiRateLimiter.checkLimit.mockResolvedValue({
@@ -210,11 +212,25 @@ describe('POST /api/contact/messages', () => {
 
 describe('GET /api/contact/messages', () => {
   let getSupabaseServerClient: jest.Mock;
+  let mockGetUser: jest.Mock;
+  let mockFrom: jest.Mock;
+  let mockSelect: jest.Mock;
+  let mockEq: jest.Mock;
+  let mockOrder: jest.Mock;
+  let mockLimit: jest.Mock;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     
     getSupabaseServerClient = (await import('@/utils/supabase/server')).getSupabaseServerClient;
+
+    // Initialize mock functions
+    mockGetUser = jest.fn();
+    mockFrom = jest.fn();
+    mockSelect = jest.fn();
+    mockEq = jest.fn();
+    mockOrder = jest.fn();
+    mockLimit = jest.fn();
 
     getSupabaseServerClient.mockResolvedValue({
       auth: {

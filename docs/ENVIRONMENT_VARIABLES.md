@@ -54,6 +54,27 @@ This document lists all environment variables required for the Choices applicati
   - Format: `https://[key]@[org].ingest.sentry.io/[project-id]`
   - Used by: Error monitoring and tracking
 
+### Email Service (Resend)
+- `RESEND_API_KEY` (required for candidate journey emails)
+  - Resend API key for sending emails
+  - Format: `re_...`
+  - Used by: Candidate journey reminder emails
+  - Security: ⚠️ Server-only, never expose
+  - Get from: https://resend.com/api-keys
+
+- `RESEND_FROM_EMAIL` (optional)
+  - Email address to send from
+  - Default: `onboarding@resend.dev` (test email)
+  - Production: Should use verified domain (e.g., `candidates@yourdomain.com`)
+  - Used by: Candidate journey emails
+
+### Cron Jobs
+- `CRON_SECRET` (optional but recommended)
+  - Secret key for authenticating cron job requests
+  - Used by: `/api/cron/candidate-reminders`
+  - Security: Prevents unauthorized access to cron endpoints
+  - Generate: Random secure string
+
 ### Admin & Security
 - `ADMIN_MONITORING_KEY` (optional)
   - Key required to access admin monitoring endpoints
@@ -131,4 +152,5 @@ NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
 # Optional: Admin
 ADMIN_MONITORING_KEY=your-admin-key
 ```
+
 

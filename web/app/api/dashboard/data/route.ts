@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { getCurrentUser } from '@/lib/core/auth/utils';
 import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -112,7 +113,7 @@ export async function GET(request: NextRequest) {
       .gte('ends_at', new Date().toISOString());
 
     if (allPollsError) {
-      console.error('Error fetching active polls for participation calculation:', allPollsError);
+      logger.error('Error fetching active polls for participation calculation:', allPollsError instanceof Error ? allPollsError : new Error(String(allPollsError)));
     }
 
     const availablePolls = allPolls?.length ?? 1; // Avoid division by zero
@@ -182,12 +183,12 @@ export async function GET(request: NextRequest) {
         id: poll.id,
         title: poll.title,
         status: poll.status,
-        totalvotes: poll.choices?.reduce((sum, choice) => sum + choice.votes, 0) || 0,
+        totalvotes: poll.choices?.reduce((sum: number, choice: { votes: number }) => sum + choice.votes, 0) ?? 0,
         participation: Math.floor(Math.random() * 100),
         createdat: poll.created_at,
         endsat: poll.ends_at,
-        choices: poll.choices || []
-      })) || [],
+        choices: poll.choices ?? []
+      })) ?? [],
       userMetrics: {
         pollsCreated,
         pollsActive,
@@ -218,7 +219,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(dashboardData);
 
   } catch (error) {
-    devLog('Error in dashboard data API:', error);
+    logger.error('Error in dashboard data API:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

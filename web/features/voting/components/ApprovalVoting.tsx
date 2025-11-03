@@ -64,7 +64,7 @@ export default function ApprovalVoting({
     try {
       // Validate approvals before submission
       const validApprovals = approvedOptions.filter(approval => 
-        options.some(option => option.id === approval)
+        options.some(option => String(option.id) === approval)
       )
       
       if (validApprovals.length !== approvedOptions.length) {
@@ -150,46 +150,49 @@ export default function ApprovalVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option: PollOption) => (
-            <div
-              key={option.id}
-              onClick={() => handleOptionToggle(option.id)}
-              data-testid={`option-${parseInt(option.id) + 1}-checkbox`}
-              className={`
-                relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
-                ${isDisabled 
-                  ? 'cursor-not-allowed opacity-60' 
-                  : 'hover:border-green-300 hover:bg-green-50'
-                }
-                ${approvedOptions.includes(option.id) ? 'border-green-500 bg-green-50' : 'border-gray-200'}
-              `}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-1">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                    approvedOptions.includes(option.id) 
-                      ? 'border-green-500 bg-green-500' 
-                      : 'border-gray-300 bg-white'
-                  }`}>
-                    {approvedOptions.includes(option.id) && (
-                      <CheckSquare className="w-4 h-4 text-white" />
+          {options.map((option: PollOption) => {
+            const optionId = String(option.id)
+            return (
+              <div
+                key={optionId}
+                onClick={() => handleOptionToggle(optionId)}
+                data-testid={`option-${parseInt(optionId) + 1}-checkbox`}
+                className={`
+                  relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
+                  ${isDisabled 
+                    ? 'cursor-not-allowed opacity-60' 
+                    : 'hover:border-green-300 hover:bg-green-50'
+                  }
+                  ${approvedOptions.includes(optionId) ? 'border-green-500 bg-green-50' : 'border-gray-200'}
+                `}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                      approvedOptions.includes(optionId)
+                        ? 'border-green-500 bg-green-500' 
+                        : 'border-gray-300 bg-white'
+                    }`}>
+                      {approvedOptions.includes(optionId) && (
+                        <CheckSquare className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                    {(option as any).option_text && (
+                      <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
                     )}
                   </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.option_text && (
-                    <p className="text-sm text-gray-600">{option.option_text}</p>
+                  {approvedOptions.includes(optionId) && (
+                    <div className="flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    </div>
                   )}
                 </div>
-                {approvedOptions.includes(option.id) && (
-                  <div className="flex-shrink-0">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Instructions */}

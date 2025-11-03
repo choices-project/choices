@@ -23,10 +23,10 @@ export default function RegisterPage() {
     setError('')
 
     const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const _username = String(fd.get('username') || '').trim()
-    const _email = String(fd.get('email') || '').trim()
-    const password = String(fd.get('password') || '')
-    const confirm = String(fd.get('confirmPassword') || '')
+    const _username = String(fd.get('username') ?? '').trim()
+    const _email = String(fd.get('email') ?? '').trim()
+    const password = String(fd.get('password') ?? '')
+    const confirm = String(fd.get('confirmPassword') ?? '')
 
     if (password !== confirm) {
       setError('Passwords do not match')
@@ -40,7 +40,7 @@ export default function RegisterPage() {
     // E2E env returns { ok: true } immediately
     const result = await serverRegister(fd, { ipAddress: '', userAgent: '', userId: '' })
     if (!result.ok) {
-      setError(result.error || 'Registration failed')
+      setError(result.error ?? 'Registration failed')
       return
     }
 

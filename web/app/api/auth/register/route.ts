@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest} from 'next/server';
 
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
+import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await apiRateLimiter.checkLimit(
       ip,
       '/api/auth/register',
-      { userAgent }
+      withOptional({}, { userAgent })
     );
     
     if (!rateLimitResult.allowed) {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       options: {
         data: {
           username,
-          display_name: display_name || username
+          display_name: display_name ?? username
         }
       }
     })
@@ -110,10 +111,10 @@ export async function POST(request: NextRequest) {
         user_id: authData.user.id,
         username,
         email: email.toLowerCase().trim(),
-        display_name: display_name || username,
+        display_name: display_name ?? username,
         trust_tier: 'T0',
         is_active: true
-      } as any)
+      })
       .select()
       .single()
 

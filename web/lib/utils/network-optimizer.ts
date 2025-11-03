@@ -21,7 +21,7 @@ export type RequestConfig = {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   cache?: CacheConfig;
   retries?: number;
   timeout?: number;
@@ -39,8 +39,8 @@ export type NetworkMetrics = {
  * Network Optimizer Class
  */
 export class NetworkOptimizer {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-  private requestQueue = new Map<string, Promise<any>>();
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
+  private requestQueue = new Map<string, Promise<unknown>>();
   private metrics: NetworkMetrics = {
     totalRequests: 0,
     cachedRequests: 0,
@@ -61,15 +61,15 @@ export class NetworkOptimizer {
     // Check cache first
     if (config.method === 'GET' && config.cache) {
       const cached = this.getFromCache(cacheKey);
-      if (cached) {
+      if (cached !== null) {
         this.metrics.cachedRequests++;
-        return cached;
+        return cached as T;
       }
     }
 
     // Check if request is already in progress
     if (this.requestQueue.has(cacheKey)) {
-      return this.requestQueue.get(cacheKey)!;
+      return this.requestQueue.get(cacheKey)! as Promise<T>;
     }
 
     // Make the request
@@ -152,7 +152,7 @@ export class NetworkOptimizer {
   /**
    * Get data from cache
    */
-  private getFromCache(key: string): any {
+  private getFromCache(key: string): unknown {
     const cached = this.cache.get(key);
     if (!cached) return null;
 
@@ -168,7 +168,7 @@ export class NetworkOptimizer {
   /**
    * Set data in cache
    */
-  private setCache(key: string, data: any, config: CacheConfig): void {
+  private setCache(key: string, data: unknown, config: CacheConfig): void {
     // Check cache size limit
     if (this.cache.size >= config.maxSize) {
       // Remove oldest entry
@@ -280,7 +280,7 @@ export class OptimizedAPIClient {
   /**
    * Post data without caching
    */
-  async post<T>(endpoint: string, data: any, options: Partial<RequestConfig> = {}): Promise<T> {
+  async post<T>(endpoint: string, data: unknown, options: Partial<RequestConfig> = {}): Promise<T> {
     return this.optimizer.request<T>({
       url: `${this.baseURL}${endpoint}`,
       method: 'POST',

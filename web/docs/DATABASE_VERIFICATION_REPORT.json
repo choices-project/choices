@@ -1,0 +1,198 @@
+{
+  "generated": "2025-11-02T20:57:08.729Z",
+  "supabaseUrl": "https://muqwrehywjrbaeerjgfb.supabase.co",
+  "summary": {
+    "totalExpected": 29,
+    "existing": 29,
+    "missing": 0,
+    "errors": 0
+  },
+  "existing": [
+    {
+      "table": "user_profiles",
+      "status": "expected",
+      "category": "core"
+    },
+    {
+      "table": "polls",
+      "status": "expected",
+      "category": "core"
+    },
+    {
+      "table": "votes",
+      "status": "expected",
+      "category": "core"
+    },
+    {
+      "table": "feedback",
+      "status": "expected",
+      "category": "core"
+    },
+    {
+      "table": "error_logs",
+      "status": "expected",
+      "category": "core"
+    },
+    {
+      "table": "webauthn_credentials",
+      "status": "expected",
+      "category": "webauthn",
+      "feature": "WEBAUTHN: true"
+    },
+    {
+      "table": "webauthn_challenges",
+      "status": "expected",
+      "category": "webauthn",
+      "feature": "WEBAUTHN: true"
+    },
+    {
+      "table": "civics_person_xref",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_representatives",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_votes_minimal",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_fec_minimal",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_quality_thresholds",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_expected_counts",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "civics_source_precedence",
+      "status": "expected",
+      "category": "civics"
+    },
+    {
+      "table": "device_flows",
+      "status": "optional",
+      "category": "device-flow",
+      "feature": "DEVICE_FLOW_AUTH: false"
+    },
+    {
+      "table": "contact_threads",
+      "status": "optional",
+      "category": "contact",
+      "feature": "CONTACT_INFORMATION_SYSTEM: false"
+    },
+    {
+      "table": "contact_messages",
+      "status": "optional",
+      "category": "contact",
+      "feature": "CONTACT_INFORMATION_SYSTEM: false"
+    },
+    {
+      "table": "message_templates",
+      "status": "optional",
+      "category": "contact",
+      "feature": "CONTACT_INFORMATION_SYSTEM: false"
+    },
+    {
+      "table": "notification_subscriptions",
+      "status": "optional",
+      "category": "notifications",
+      "feature": "PUSH_NOTIFICATIONS: false"
+    },
+    {
+      "table": "notification_history",
+      "status": "optional",
+      "category": "notifications",
+      "feature": "PUSH_NOTIFICATIONS: false"
+    },
+    {
+      "table": "poll_narratives",
+      "status": "optional",
+      "category": "narrative",
+      "feature": "POLL_NARRATIVE_SYSTEM: false"
+    },
+    {
+      "table": "verified_facts",
+      "status": "optional",
+      "category": "narrative",
+      "feature": "POLL_NARRATIVE_SYSTEM: false"
+    },
+    {
+      "table": "community_facts",
+      "status": "optional",
+      "category": "narrative",
+      "feature": "POLL_NARRATIVE_SYSTEM: false"
+    },
+    {
+      "table": "fact_votes",
+      "status": "optional",
+      "category": "narrative",
+      "feature": "POLL_NARRATIVE_SYSTEM: false"
+    },
+    {
+      "table": "narrative_moderation",
+      "status": "optional",
+      "category": "narrative",
+      "feature": "POLL_NARRATIVE_SYSTEM: false"
+    },
+    {
+      "table": "zk_nullifiers",
+      "status": "optional",
+      "category": "privacy",
+      "feature": "ADVANCED_PRIVACY: false"
+    },
+    {
+      "table": "zk_artifacts",
+      "status": "optional",
+      "category": "privacy",
+      "feature": "ADVANCED_PRIVACY: false"
+    },
+    {
+      "table": "oauth_accounts",
+      "status": "optional",
+      "category": "social",
+      "feature": "SOCIAL_SIGNUP: false"
+    },
+    {
+      "table": "civic_database_entries",
+      "status": "optional",
+      "category": "analytics",
+      "note": "Referenced in analytics-service.ts but not created"
+    }
+  ],
+  "missing": [],
+  "criticalIssues": [],
+  "recommendations": [
+    {
+      "priority": "info",
+      "message": "WebAuthn tables exist - feature should be functional"
+    },
+    {
+      "priority": "info",
+      "message": "device_flows exists - DEVICE_FLOW_AUTH feature may be ready to enable"
+    },
+    {
+      "priority": "info",
+      "message": "contact_threads exists - CONTACT_INFORMATION_SYSTEM feature may be ready to enable"
+    },
+    {
+      "priority": "info",
+      "message": "notification_subscriptions exists - PUSH_NOTIFICATIONS feature may be ready to enable"
+    },
+    {
+      "priority": "info",
+      "message": "poll_narratives exists - POLL_NARRATIVE_SYSTEM feature may be ready to enable"
+    }
+  ]
+}

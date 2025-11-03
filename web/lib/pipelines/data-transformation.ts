@@ -11,7 +11,7 @@ import { logger } from '../logger';
 type AddressLookupResult = {
   district: string;
   state: string;
-  representatives: any[];
+  representatives: unknown[];
   normalizedAddress: string;
   confidence: number;
   coordinates?: { lat: number; lng: number };
@@ -252,7 +252,7 @@ export class DataTransformationPipeline {
       'CA': 80, 'TX': 150, 'FL': 120, 'NY': 150, 'PA': 203,
       'IL': 118, 'OH': 99, 'GA': 180, 'NC': 120, 'MI': 110
     };
-    return estimates[stateCode] || 100;
+    return estimates[stateCode] ?? 100;
   }
 
   /**
@@ -281,19 +281,26 @@ export class DataTransformationPipeline {
 
     try {
       // Transform representatives
-      const normalizedReps = data.representatives.map((rep: any) => {
+      const normalizedReps = data.representatives.map((rep: unknown) => {
         recordsTransformed++;
         
+        // Type guard for representative data
+        if (!rep || typeof rep !== 'object') {
+          errors.push('Invalid representative data: not an object');
+          return null;
+        }
+        
+        const repObj = rep as Record<string, unknown>;
         const normalized: NormalizedRepresentative = {
-          id: rep.id,
-          name: rep.name,
-          party: rep.party,
-          office: rep.office,
-          level: this.determineLevel(rep.office),
+          id: String(repObj.id ?? ''),
+          name: String(repObj.name ?? ''),
+          party: String(repObj.party ?? ''),
+          office: String(repObj.office ?? ''),
+          level: this.determineLevel(String(repObj.office ?? '')),
           jurisdiction: data.state,
-          district: rep.district,
-          contact: rep.contact,
-          socialMedia: rep.socialMedia,
+          district: repObj.district ? String(repObj.district) : undefined,
+          contact: repObj.contact as NormalizedRepresentative['contact'],
+          socialMedia: repObj.socialMedia as NormalizedRepresentative['socialMedia'],
           sources: ['google-civic'],
           lastUpdated: new Date().toISOString()
         };
@@ -301,11 +308,11 @@ export class DataTransformationPipeline {
         if (this.validateRepresentative(normalized)) {
           recordsValid++;
         } else {
-          errors.push(`Invalid representative data: ${rep.name}`);
+          errors.push(`Invalid representative data: ${normalized.name || 'unknown'}`);
         }
 
         return normalized;
-      });
+      }).filter((rep): rep is NormalizedRepresentative => rep !== null);
 
       const completeness = recordsValid / recordsTransformed;
       const accuracy = this.calculateAccuracy(normalizedReps);
@@ -401,14 +408,17 @@ export class DataTransformationPipeline {
   /**
    * Calculate data accuracy score
    */
-  private calculateAccuracy(records: any[]): number {
+  private calculateAccuracy(records: unknown[]): number {
     if (records.length === 0) return 0;
     
     let validFields = 0;
     let totalFields = 0;
     
     for (const record of records) {
-      for (const [key, value] of Object.entries(record)) {
+      if (!record || typeof record !== 'object') continue;
+      
+      const recordObj = record as Record<string, unknown>;
+      for (const [key, value] of Object.entries(recordObj)) {
         totalFields++;
         if (value !== undefined && value !== null && value !== '') {
           validFields++;
@@ -426,13 +436,15 @@ export class DataTransformationPipeline {
   /**
    * Calculate data consistency score
    */
-  private calculateConsistency(records: any[]): number {
+  private calculateConsistency(records: unknown[]): number {
     if (records.length === 0) return 0;
     
     // Check for consistent data formats, required fields, etc.
     let consistentRecords = 0;
     
     for (const record of records) {
+      if (!record || typeof record !== 'object') continue;
+      
       if (this.isRecordConsistent(record)) {
         consistentRecords++;
       }
@@ -444,14 +456,19 @@ export class DataTransformationPipeline {
   /**
    * Check if a record is consistent
    */
-  private isRecordConsistent(record: any): boolean {
+  private isRecordConsistent(record: unknown): boolean {
     // Check for required fields, proper formats, etc.
+    if (!record || typeof record !== 'object') {
+      return false;
+    }
+    
+    const recordObj = record as Record<string, unknown>;
     return !!(
-      record.id &&
-      record.name &&
-      record.lastUpdated &&
-      typeof record.lastUpdated === 'string' &&
-      !isNaN(Date.parse(record.lastUpdated))
+      recordObj.id &&
+      recordObj.name &&
+      recordObj.lastUpdated &&
+      typeof recordObj.lastUpdated === 'string' &&
+      !isNaN(Date.parse(recordObj.lastUpdated))
     );
   }
 

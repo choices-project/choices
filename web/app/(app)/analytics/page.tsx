@@ -291,7 +291,7 @@ function OverviewView({ data }: { data: any }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Polls"
-          value={data.overview?.totalPolls || 0}
+          value={data.overview?.totalPolls ?? 0}
           icon={<BarChart3 className="h-6 w-6" />}
           color="blue"
           trend="+12%"
@@ -299,7 +299,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Active Polls"
-          value={data.overview?.activePolls || 0}
+          value={data.overview?.activePolls ?? 0}
           icon={<Activity className="h-6 w-6" />}
           color="green"
           trend="+5%"
@@ -307,7 +307,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Total Votes"
-          value={data.overview?.totalVotes || 0}
+          value={data.overview?.totalVotes ?? 0}
           icon={<Users className="h-6 w-6" />}
           color="purple"
           trend="+23%"
@@ -315,7 +315,7 @@ function OverviewView({ data }: { data: any }) {
         />
         <MetricCard
           title="Participation Rate"
-          value={`${data.overview?.participationRate || 0}%`}
+          value={`${data.overview?.participationRate ?? 0}%`}
           icon={<TrendingUp className="h-6 w-6" />}
           color="orange"
           trend="+8%"
@@ -331,7 +331,7 @@ function OverviewView({ data }: { data: any }) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Session Duration</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview?.averageSessionDuration || 0} min
+                {data.overview?.averageSessionDuration ?? 0} min
               </span>
             </div>
             <div className="flex items-center justify-between">

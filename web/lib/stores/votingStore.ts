@@ -974,8 +974,8 @@ export const votingStoreDebug = {
       totalElections: state.elections.length,
       totalVotingRecords: state.votingRecords.length,
       searchResults: state.search.results.length,
-      selectedBallot: state.selectedBallot?.title || 'none',
-      selectedElection: state.selectedElection?.name || 'none',
+      selectedBallot: state.selectedBallot?.title ?? 'none',
+      selectedElection: state.selectedElection?.name ?? 'none',
       isLoading: state.isLoading,
       isVoting: state.isVoting,
       error: state.error

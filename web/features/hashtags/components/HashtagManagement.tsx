@@ -52,7 +52,7 @@ export function HashtagManagement({
       
       // If userHashtags are provided, use them; otherwise search for hashtags
       if (userHashtags && userHashtags.length > 0) {
-        setHashtags(userHashtags.map(uh => uh.hashtag || uh));
+        setHashtags(userHashtags.map(uh => uh.hashtag ?? uh));
       } else {
         const result = await searchHashtags({ 
           query: '',
@@ -63,7 +63,7 @@ export function HashtagManagement({
         if (result.success && result.data) {
           setHashtags(result.data.hashtags);
         } else {
-          setError(result.error || 'Failed to load hashtags');
+          setError(result.error ?? 'Failed to load hashtags');
         }
       }
     } catch (err) {
@@ -89,7 +89,7 @@ export function HashtagManagement({
         setNewHashtag({ name: '', display_name: '', category: 'politics', description: '' });
         setShowCreateForm(false);
       } else {
-        setError(result.error || 'Failed to create hashtag');
+        setError(result.error ?? 'Failed to create hashtag');
       }
     } catch (err) {
       setError('An error occurred while creating hashtag');
@@ -112,7 +112,7 @@ export function HashtagManagement({
       if (result.success && result.data) {
         setHashtags(prev => prev.map(h => h.id === hashtag.id ? result.data! : h));
       } else {
-        setError(result.error || 'Failed to update hashtag');
+        setError(result.error ?? 'Failed to update hashtag');
       }
     } catch (err) {
       setError('An error occurred while updating hashtag');
@@ -133,7 +133,7 @@ export function HashtagManagement({
       if (result.success) {
         setHashtags(prev => prev.filter(h => h.id !== hashtagId));
     } else {
-        setError(result.error || 'Failed to delete hashtag');
+        setError(result.error ?? 'Failed to delete hashtag');
       }
     } catch (err) {
       setError('An error occurred while deleting hashtag');

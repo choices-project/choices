@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -184,6 +183,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      candidate_platforms: {
+        Row: {
+          ballot_access_confirmed: boolean | null
+          campaign_email: string | null
+          campaign_funding: Json | null
+          campaign_phone: string | null
+          campaign_website: string | null
+          candidate_name: string
+          created_at: string | null
+          district: string | null
+          election_date: string | null
+          endorsements: Json | null
+          experience: string | null
+          filing_deadline: string | null
+          filing_document_url: string | null
+          filing_jurisdiction: string | null
+          filing_status: string | null
+          id: string
+          jurisdiction: string
+          last_active_at: string | null
+          level: string
+          office: string
+          official_filing_date: string | null
+          official_filing_id: string | null
+          party: string | null
+          photo_url: string | null
+          platform_positions: Json
+          state: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          verification_method: string | null
+          verified: boolean | null
+          verified_at: string | null
+          verified_by: string | null
+          visibility: string | null
+        }
+        Insert: {
+          ballot_access_confirmed?: boolean | null
+          campaign_email?: string | null
+          campaign_funding?: Json | null
+          campaign_phone?: string | null
+          campaign_website?: string | null
+          candidate_name: string
+          created_at?: string | null
+          district?: string | null
+          election_date?: string | null
+          endorsements?: Json | null
+          experience?: string | null
+          filing_deadline?: string | null
+          filing_document_url?: string | null
+          filing_jurisdiction?: string | null
+          filing_status?: string | null
+          id?: string
+          jurisdiction: string
+          last_active_at?: string | null
+          level: string
+          office: string
+          official_filing_date?: string | null
+          official_filing_id?: string | null
+          party?: string | null
+          photo_url?: string | null
+          platform_positions?: Json
+          state: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_method?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          ballot_access_confirmed?: boolean | null
+          campaign_email?: string | null
+          campaign_funding?: Json | null
+          campaign_phone?: string | null
+          campaign_website?: string | null
+          candidate_name?: string
+          created_at?: string | null
+          district?: string | null
+          election_date?: string | null
+          endorsements?: Json | null
+          experience?: string | null
+          filing_deadline?: string | null
+          filing_document_url?: string | null
+          filing_jurisdiction?: string | null
+          filing_status?: string | null
+          id?: string
+          jurisdiction?: string
+          last_active_at?: string | null
+          level?: string
+          office?: string
+          official_filing_date?: string | null
+          official_filing_id?: string | null
+          party?: string | null
+          photo_url?: string | null
+          platform_positions?: Json
+          state?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_method?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+          visibility?: string | null
+        }
+        Relationships: []
       }
       civic_action_metadata: {
         Row: {
@@ -3239,5 +3349,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-A new version of Supabase CLI is available: v2.54.11 (currently installed v2.51.0)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

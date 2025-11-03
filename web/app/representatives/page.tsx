@@ -63,7 +63,7 @@ export default function RepresentativesPage() {
         <div className="mt-4 flex space-x-2">
           <Badge variant="outline" className="flex items-center space-x-1">
             <Users className="w-3 h-3" />
-            <span>{searchResults?.data?.total || 0} Representatives</span>
+            <span>{searchResults?.data?.total ?? 0} Representatives</span>
           </Badge>
           <Badge variant="outline" className="flex items-center space-x-1">
             <MapPin className="w-3 h-3" />
@@ -125,9 +125,9 @@ export default function RepresentativesPage() {
                 </CardHeader>
                 <CardContent>
                   <RepresentativeList
-                    representatives={searchResults?.data?.representatives || []}
+                    representatives={searchResults?.data?.representatives ?? []}
                     loading={loading}
-                    error={error || undefined}
+                    error={error ?? undefined}
                     onRepresentativeClick={handleRepresentativeClick}
                   />
                 </CardContent>
@@ -164,25 +164,25 @@ export default function RepresentativesPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">
-                {searchResults?.data?.total || 0}
+                {searchResults?.data?.total ?? 0}
               </div>
               <div className="text-sm text-gray-600">Total Representatives</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-green-600">
-                {searchResults?.data?.representatives?.filter(r => r.data_quality_score >= 90).length || 0}
+                {searchResults?.data?.representatives?.filter(r => r.data_quality_score >= 90).length ?? 0}
               </div>
               <div className="text-sm text-gray-600">High Quality Records</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">
-                {new Set(searchResults?.data?.representatives?.map(r => r.state) || []).size}
+                {new Set(searchResults?.data?.representatives?.map(r => r.state) ?? []).size}
               </div>
               <div className="text-sm text-gray-600">States Covered</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {new Set(searchResults?.data?.representatives?.map(r => r.party) || []).size}
+                {new Set(searchResults?.data?.representatives?.map(r => r.party) ?? []).size}
               </div>
               <div className="text-sm text-gray-600">Political Parties</div>
             </div>

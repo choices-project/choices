@@ -327,7 +327,7 @@ export async function GET(
         methodPerformance[method] = Date.now() - methodStartTime;
         
       } catch (error) {
-        logger.error(`Analytics method ${method} failed:`, error as Error);
+        logger.error(`Analytics method ${method} failed:`, error instanceof Error ? error : new Error(String(error)));
         errors[method] = error instanceof Error ? error.message : 'Unknown error';
         methodPerformance[method] = Date.now() - methodStartTime;
       }
@@ -379,7 +379,7 @@ export async function GET(
     return NextResponse.json(response);
     
   } catch (error) {
-    logger.error('Unified analytics API error:', error as Error);
+    logger.error('Unified analytics API error:', error instanceof Error ? error : new Error(String(error)));
     
     return NextResponse.json({
       success: false,
@@ -498,7 +498,7 @@ async function executeSentimentAnalysis(
       }
     }
   } catch (error) {
-    logger.warn(`AI provider ${aiProvider} failed, trying fallback:`, error as Error);
+    logger.warn(`AI provider ${aiProvider} failed, trying fallback:`, error instanceof Error ? error : new Error(String(error)));
     
     // Try fallback provider
     const fallbackProvider = AI_PROVIDERS[aiProvider].fallback;
@@ -592,7 +592,7 @@ async function executeBotDetection(
       }
     }
   } catch (error) {
-    logger.warn(`AI provider ${aiProvider} failed for bot detection, trying fallback:`, error as Error);
+    logger.warn(`AI provider ${aiProvider} failed for bot detection, trying fallback:`, error instanceof Error ? error : new Error(String(error)));
     
     // Try fallback provider
     const fallbackProvider = AI_PROVIDERS[aiProvider].fallback;

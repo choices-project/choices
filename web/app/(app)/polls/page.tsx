@@ -77,10 +77,10 @@ export default function PollsPage() {
   const hashtagActions = useHashtagActions();
   
   // Update state with hook results
-  _hashtags = hashtagStore?.hashtags || [];
+  _hashtags = hashtagStore?.hashtags ?? [];
   _hashtagActions = hashtagActions;
-  // trendingHashtags = hashtagStore?.trendingHashtags || [];
-  // trendingCount = hashtagStats?.trendingCount || 0;
+  // trendingHashtags = hashtagStore?.trendingHashtags ?? [];
+  // trendingCount = hashtagStats?.trendingCount ?? 0;
   
   // Use useCallback to prevent infinite loops - now using the hook result from top level
   const getTrendingHashtags = useCallback(async () => {
@@ -130,13 +130,13 @@ export default function PollsPage() {
         const response = await fetch(`/api/polls?${params.toString()}`);
         if (response.ok) {
           const data = await response.json();
-          setPolls(data.polls || []);
+          setPolls(data.polls ?? []);
         } else {
           console.error('Failed to load polls:', response.statusText);
           setPolls([]);
         }
-      } catch (error) {
-        console.error('Failed to load polls:', error);
+      } catch (err) {
+        console.error('Failed to load polls:', err);
         setPolls([]);
       } finally {
         setLoading(false);
@@ -309,11 +309,11 @@ export default function PollsPage() {
               {_trendingHashtags.slice(0, 10).map((hashtag, index) => (
                 <button
                   key={index}
-                  onClick={() => handleHashtagSelect(hashtag.hashtag || hashtag)}
+                  onClick={() => handleHashtagSelect(hashtag.hashtag ?? hashtag)}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                 >
                   <Hash className="h-3 w-3 mr-1" />
-                  {hashtag.hashtag || hashtag}
+                  {hashtag.hashtag ?? hashtag}
                   {hashtag.count && <span className="ml-1 text-blue-500">({hashtag.count})</span>}
                 </button>
               ))}
@@ -331,7 +331,7 @@ export default function PollsPage() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No polls found</h3>
             <p className="text-gray-600 mb-4">
-              {searchQuery || selectedCategory !== 'all' || filter !== 'all'
+              {(searchQuery || selectedCategory !== 'all' || filter !== 'all')
                 ? 'Try adjusting your filters or search terms'
                 : 'Be the first to create a poll!'}
             </p>

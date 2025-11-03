@@ -91,13 +91,13 @@ export default function SiteMessagesAdmin({
     try {
       const message: SiteMessage = {
         id: Date.now().toString(),
-        title: newMessage.title || '',
-        message: newMessage.message || '',
-        type: newMessage.type || 'info',
-        priority: newMessage.priority || 'medium',
+        title: newMessage.title ?? '',
+        message: newMessage.message ?? '',
+        type: newMessage.type ?? 'info',
+        priority: newMessage.priority ?? 'medium',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        is_active: newMessage.is_active || true,
+        is_active: newMessage.is_active ?? true,
         expires_at: newMessage.expires_at
       }
       

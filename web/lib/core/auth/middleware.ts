@@ -11,9 +11,9 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTrustedOrigin } from '@/lib/http/origin';
 import { devLog } from '@/lib/logger';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { withOptional } from '@/lib/util/objects';
 import { getSupabaseServerClient } from '@/utils/supabase/server';

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest} from 'next/server';
 
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
+import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient, type Database } from '@/utils/supabase/server'
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await apiRateLimiter.checkLimit(
       ip,
       '/api/auth/login',
-      { userAgent }
+      withOptional({}, { userAgent })
     );
     
     if (!rateLimitResult.allowed) {
@@ -76,12 +77,13 @@ export async function POST(request: NextRequest) {
     }
 
     // User profile loaded successfully
-    logger.info('User profile loaded', { userId: authData.user.id, displayName: profile.display_name })
+    const displayName = (profile as any).display_name || profile.username || authData.user.email || 'User'
+    logger.info('User profile loaded', { userId: authData.user.id, displayName })
 
     logger.info('User logged in successfully', { 
       userId: authData.user.id, 
       email: authData.user.email,
-      displayName: profile.display_name 
+      displayName
     })
 
     // Create response with user data
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
         id: authData.user.id,
         email: authData.user.email,
         user_id: profile.user_id,
-        display_name: profile.display_name,
+        display_name: displayName,
         bio: profile.bio,
         created_at: profile.created_at,
         updated_at: profile.updated_at

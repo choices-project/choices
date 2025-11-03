@@ -85,7 +85,7 @@ export class ApprovalStrategy implements VotingStrategy {
       }
 
       // Check maximum approvals limit
-      const maxApprovals = poll.votingConfig.maxChoices || poll.options.length;
+      const maxApprovals = poll.votingConfig.maxChoices ?? poll.options.length;
       if (voteData.approvals.length > maxApprovals) {
         return {
           isValid: false,
@@ -152,7 +152,7 @@ export class ApprovalStrategy implements VotingStrategy {
         metadata: {
           votingMethod: 'approval',
           approvals: voteData.approvals,
-          approvedOptions: voteData.approvals?.map(index => poll.options[index]?.text) || []
+          approvedOptions: voteData.approvals?.map(index => poll.options[index]?.text) ?? []
         }
       }, {
         privacyLevel
@@ -264,7 +264,7 @@ export class ApprovalStrategy implements VotingStrategy {
           calculationTime: Date.now() - startTime,
           hasWinner: winner !== undefined,
           isTie: winnerVotes > 0 && Object.values(approvalScores).filter(s => s === winnerVotes).length > 1,
-          averageApprovals: totalVotes > 0 ? votes.reduce((sum, vote) => sum + (vote.approvals?.length || 0), 0) / totalVotes : 0
+          averageApprovals: totalVotes > 0 ? votes.reduce((sum, vote) => sum + (vote.approvals?.length ?? 0), 0) / totalVotes : 0
         }
       };
 

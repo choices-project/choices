@@ -14,7 +14,7 @@ export { GoogleCivicClient } from '../integrations/google-civic/client';
 export const lookupAddress = async (address: string) => {
   const { GoogleCivicClient } = await import('../integrations/google-civic/client');
   const client = new GoogleCivicClient({
-    apiKey: process.env.GOOGLE_CIVIC_API_KEY || ''
+    apiKey: process.env.GOOGLE_CIVIC_API_KEY ?? ''
   });
   
   return await client.lookupAddress(address);

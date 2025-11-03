@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { EnhancedAnalyticsService } from '@/features/analytics/lib/enhanced-analytics-service';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -223,7 +224,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Enhanced analytics tracking error:', error);
+    logger.error('Enhanced analytics tracking error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

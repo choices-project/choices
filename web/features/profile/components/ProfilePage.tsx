@@ -62,7 +62,7 @@ export default function ProfilePage({
   const [showExportConfirm, setShowExportConfirm] = useState(false);
 
   // Use available data
-  const finalUser = user || profile;
+  const finalUser = user ?? profile;
   const finalLoading = isLoading;
   const finalError = error;
 
@@ -90,7 +90,7 @@ export default function ProfilePage({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {finalError || 'Failed to load profile. Please try again.'}
+            {finalError ?? 'Failed to load profile. Please try again.'}
           </AlertDescription>
         </Alert>
       </div>
@@ -104,7 +104,7 @@ export default function ProfilePage({
         <CardHeader>
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={finalUser.avatar_url || ''} alt={displayName} />
+              <AvatarImage src={finalUser.avatar_url ?? ''} alt={displayName} />
               <AvatarFallback>
                 {initials}
               </AvatarFallback>
@@ -114,7 +114,7 @@ export default function ProfilePage({
                 {displayName}
               </CardTitle>
               <CardDescription className="text-lg" data-testid="profile-email">
-                @{finalUser.username || 'username'}
+                @{finalUser.username ?? 'username'}
               </CardDescription>
               <div className="flex items-center space-x-2 mt-2">
                 <Badge variant="secondary" className="flex items-center space-x-1">
@@ -204,11 +204,11 @@ export default function ProfilePage({
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Display Name</label>
-              <p className="text-sm">{finalUser.display_name || 'Not set'}</p>
+              <p className="text-sm">{finalUser.display_name ?? 'Not set'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Bio</label>
-              <p className="text-sm">{finalUser.bio || 'No bio provided'}</p>
+              <p className="text-sm">{finalUser.bio ?? 'No bio provided'}</p>
             </div>
           </CardContent>
         </Card>

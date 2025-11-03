@@ -19,12 +19,14 @@
  * @feature CIVICS_STATE_LOOKUP
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache } from '@/lib/utils/civics-cache';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 type RepresentativeData = {
   id: number;
@@ -83,16 +85,6 @@ type RepresentativeData = {
     is_verified: boolean;
   }>;
 }
-
-// Use anonymous key for public representative data APIs
-// RLS policies should allow public read access to representative data
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://muqwrehywjrbaeerjgfb.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? (() => {
-    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required');
-  })(),
-  { auth: { persistSession: false } }
-);
 
 /**
  * GET /api/civics/by-state
@@ -162,6 +154,15 @@ export async function GET(request: NextRequest) {
     }
 
     logger.info('Fetching representatives by state', { state, level, chamber, limit });
+
+    // Get Supabase client
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
 
     // Check cache first
     const cachedData = state ? CivicsCache.getCachedStateLookup(state, level ?? undefined, chamber ?? undefined) : null;

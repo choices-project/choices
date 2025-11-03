@@ -16,7 +16,7 @@ export type ApiLogContext = {
   duration?: number;
   statusCode?: number;
   error?: Error;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class ApiLogger {

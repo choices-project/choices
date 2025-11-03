@@ -197,9 +197,9 @@ export class AuthAnalytics {
       eventType,
       success,
       timestamp: new Date(),
-      ipAddress: context.ipAddress || 'unknown',
-      userAgent: context.userAgent || 'unknown',
-      deviceInfo: context.deviceInfo || {
+      ipAddress: context.ipAddress ?? 'unknown',
+      userAgent: context.userAgent ?? 'unknown',
+      deviceInfo: context.deviceInfo ?? {
         deviceType: 'unknown',
         browser: 'unknown',
         platform: 'unknown'
@@ -349,15 +349,17 @@ export class AuthAnalytics {
     }
 
     if (event.duration) {
-      const durations = this.events.filter(e => e.duration).map(e => e.duration!)
+      const durations = this.events
+        .filter((e): e is AuthEvent & { duration: number } => e.duration !== undefined)
+        .map(e => e.duration)
       this.performanceMetrics.averageResponseTime = durations.reduce((a, b) => a + b, 0) / durations.length
       
       // Calculate percentiles
       const sortedDurations = durations.sort((a, b) => a - b)
       const p95Index = Math.floor(sortedDurations.length * 0.95)
       const p99Index = Math.floor(sortedDurations.length * 0.99)
-      this.performanceMetrics.p95ResponseTime = sortedDurations[p95Index] || 0
-      this.performanceMetrics.p99ResponseTime = sortedDurations[p99Index] || 0
+      this.performanceMetrics.p95ResponseTime = sortedDurations[p95Index] ?? 0
+      this.performanceMetrics.p99ResponseTime = sortedDurations[p99Index] ?? 0
     }
 
     // Update method breakdown
@@ -371,7 +373,9 @@ export class AuthAnalytics {
       const methodSuccesses = methodEvents.filter(e => e.success).length
       this.performanceMetrics.methodBreakdown[event.authMethod].successRate = methodSuccesses / methodEvents.length
       
-      const methodDurations = methodEvents.filter(e => e.duration).map(e => e.duration!)
+      const methodDurations = methodEvents
+        .filter((e): e is AuthEvent & { duration: number } => e.duration !== undefined)
+        .map(e => e.duration)
       if (methodDurations.length > 0) {
         this.performanceMetrics.methodBreakdown[event.authMethod].averageTime = methodDurations.reduce((a, b) => a + b, 0) / methodDurations.length
       }
@@ -423,13 +427,13 @@ export class AuthAnalytics {
       // Update device breakdown
       if (event.deviceInfo) {
         const deviceType = event.deviceInfo.deviceType
-        this.biometricMetrics.deviceBreakdown[deviceType] = (this.biometricMetrics.deviceBreakdown[deviceType] || 0) + 1
+        this.biometricMetrics.deviceBreakdown[deviceType] = (this.biometricMetrics.deviceBreakdown[deviceType] ?? 0) + 1
 
         const browser = event.deviceInfo.browser
-        this.biometricMetrics.browserBreakdown[browser] = (this.biometricMetrics.browserBreakdown[browser] || 0) + 1
+        this.biometricMetrics.browserBreakdown[browser] = (this.biometricMetrics.browserBreakdown[browser] ?? 0) + 1
 
         const platform = event.deviceInfo.platform
-        this.biometricMetrics.platformBreakdown[platform] = (this.biometricMetrics.platformBreakdown[platform] || 0) + 1
+        this.biometricMetrics.platformBreakdown[platform] = (this.biometricMetrics.platformBreakdown[platform] ?? 0) + 1
       }
     }
   }

@@ -164,7 +164,7 @@ describe('VoteValidator', () => {
     });
 
     it('should accept vote for poll without end time', async () => {
-      const { endTime, ...noEndTimePoll } = mockPoll;
+      const { endTime: _endTime, ...noEndTimePoll } = mockPoll;
       const validation = await validator.validateVote(mockVoteData, noEndTimePoll, 'user-1');
       
       expect(validation.isValid).toBe(true);
@@ -189,7 +189,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with missing choice', async () => {
-      const { choice, ...invalidVote } = mockVoteData;
+      const { choice: _choice, ...invalidVote } = mockVoteData;
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -237,7 +237,7 @@ describe('VoteValidator', () => {
         maxChoices: 3, // Allow multiple approvals
         allowMultipleVotes: true
       };
-      const { choice, ...approvalVoteData } = mockVoteData;
+      const { choice: _choice, ...approvalVoteData } = mockVoteData;
       mockVoteData = Object.assign({}, approvalVoteData, {
         approvals: [0, 1]
       });
@@ -250,7 +250,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with missing approvals', async () => {
-      const { approvals, ...invalidVote } = mockVoteData;
+      const { approvals: _approvals, ...invalidVote } = mockVoteData;
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -302,7 +302,7 @@ describe('VoteValidator', () => {
   describe('Ranked Choice Validation', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'ranked';
-      const { choice, approvals, ...rankedVoteData } = mockVoteData;
+      const { choice: _choice, approvals: _approvals, ...rankedVoteData } = mockVoteData;
       mockVoteData = Object.assign({}, rankedVoteData, {
         rankings: [0, 1, 2]
       });
@@ -315,7 +315,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with missing rankings', async () => {
-      const { rankings, ...invalidVote } = mockVoteData;
+      const { rankings: _rankings, ...invalidVote } = mockVoteData;
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -350,7 +350,7 @@ describe('VoteValidator', () => {
   describe('Quadratic Voting Validation', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'quadratic';
-      const { choice, approvals, rankings, ...quadraticVoteData } = mockVoteData;
+      const { choice: _choice, approvals: _approvals, rankings: _rankings, ...quadraticVoteData } = mockVoteData;
       mockVoteData = Object.assign({}, quadraticVoteData, {
         allocations: {
           '0': 5,
@@ -366,7 +366,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with missing allocations', async () => {
-      const { allocations, ...invalidVote } = mockVoteData;
+      const { allocations: _allocations, ...invalidVote } = mockVoteData;
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -417,7 +417,7 @@ describe('VoteValidator', () => {
   describe('Range Voting Validation', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'range';
-      const { choice, approvals, rankings, allocations, ...rangeVoteData } = mockVoteData;
+      const { choice: _choice, approvals: _approvals, rankings: _rankings, allocations: _allocations, ratings: _ratings, ...rangeVoteData } = mockVoteData;
       mockVoteData = Object.assign({}, rangeVoteData, {
         ratings: {
           '0': 8,
@@ -434,7 +434,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with missing ratings', async () => {
-      const { ratings, ...invalidVote } = mockVoteData;
+      const { ratings: _ratings, ...invalidVote } = mockVoteData;
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);

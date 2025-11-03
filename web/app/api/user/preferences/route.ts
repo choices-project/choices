@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ message: 'Preferences saved successfully' })
   } catch (error) {
-    logger.error('Error saving user preferences', error as Error)
+    logger.error('Error saving user preferences', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { message: 'Failed to save preferences' },
       { status: 500 }

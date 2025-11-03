@@ -11,8 +11,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
-import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import {
   sanitizeMessageContent,
   sanitizeSubject,
@@ -21,6 +19,8 @@ import {
   validatePriority,
   validateMessageType,
 } from '@/lib/security/input-sanitization';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
         representative_id: validatedRepId,
         thread_id: finalThreadId,
         message: sanitizedContent,
-        subject: sanitizedSubject || 'Contact Message',
+        subject: sanitizedSubject ?? 'Contact Message',
         priority: validatedPriority,
         status: 'sent',
         message_type: validatedMessageType,
@@ -356,7 +356,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error creating message:', new Error(err?.message || 'Unknown error'), { error: err });
+    logger.error('Error creating message:', new Error(err?.message ?? 'Unknown error'), { error: err });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -462,7 +462,7 @@ export async function GET(request: NextRequest) {
     const { data: messages, error: messagesError } = await query;
 
     if (messagesError) {
-      logger.error('Failed to fetch messages', new Error(messagesError?.message || 'Unknown error'), { error: messagesError });
+      logger.error('Failed to fetch messages', new Error(messagesError?.message ?? 'Unknown error'), { error: messagesError });
       return NextResponse.json(
         { success: false, error: 'Failed to fetch messages' },
         { status: 500 }
@@ -546,7 +546,8 @@ async function sendRepresentativeNotification(
       });
     }
   } catch (error) {
-    logger.error('Failed to send representative notification', new Error((error as Error)?.message || 'Unknown error'), { error });
+    const errorMessage = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+    logger.error('Failed to send representative notification', new Error(errorMessage), { error });
     // Don't fail the message creation if notification fails
   }
 }

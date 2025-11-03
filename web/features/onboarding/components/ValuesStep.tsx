@@ -64,9 +64,9 @@ type ValuesStepProps = {
  * @returns {JSX.Element} Values selection interface
  */
 export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesStepProps) {
-  const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns || [])
-  const [communityFocus, setCommunityFocus] = useState<string[]>(data.communityFocus || [])
-  const [participationStyle, setParticipationStyle] = useState(data.participationStyle || 'observer')
+  const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns ?? [])
+  const [communityFocus, setCommunityFocus] = useState<string[]>(data.communityFocus ?? [])
+  const [participationStyle, setParticipationStyle] = useState(data.participationStyle ?? 'observer')
 
   // Sync component state with data changes
   useEffect(() => {

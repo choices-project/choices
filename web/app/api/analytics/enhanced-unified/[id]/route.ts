@@ -181,7 +181,7 @@ export async function GET(
         });
         
       } catch (error) {
-        logger.error(`Analytics method ${method} failed:`, error as Error);
+        logger.error(`Analytics method ${method} failed:`, error instanceof Error ? error : new Error(String(error)));
         errors[method] = error instanceof Error ? error.message : 'Unknown error';
         methodPerformance[method] = Date.now() - methodStartTime;
       }
@@ -197,7 +197,7 @@ export async function GET(
       try {
         enhancedResults = await enhancedAnalytics.enhanceUnifiedAnalytics(pollId, analyticsResults);
       } catch (error) {
-        logger.error('Analytics enhancement failed:', error as Error);
+        logger.error('Analytics enhancement failed:', error instanceof Error ? error : new Error(String(error)));
         // Continue with original results
       }
     }
@@ -246,7 +246,7 @@ export async function GET(
     return NextResponse.json(response);
     
   } catch (error) {
-    logger.error('Enhanced unified analytics API error:', error as Error);
+    logger.error('Enhanced unified analytics API error:', error instanceof Error ? error : new Error(String(error)));
     
     return NextResponse.json({
       success: false,
@@ -378,7 +378,7 @@ async function executeEnhancedAnalyticsMethod(
         );
     }
   } catch (error) {
-    logger.error(`Enhanced analytics method ${method} error:`, error as Error);
+    logger.error(`Enhanced analytics method ${method} error:`, error instanceof Error ? error : new Error(String(error)));
     return {
       data: null,
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -489,7 +489,7 @@ async function executeSentimentAnalysis(
       }
     }
   } catch (error) {
-    logger.warn(`AI provider ${aiProvider} failed, using rule-based fallback:`, error as Error);
+    logger.warn(`AI provider ${aiProvider} failed, using rule-based fallback:`, error instanceof Error ? error : new Error(String(error)));
   }
   
   // Fallback to rule-based sentiment analysis

@@ -109,14 +109,14 @@ export class EnhancedAnalyticsService {
       const enhancedStoreData = {
         ...storeData,
         sessionInsights: {
-          sessionData: sessionData || null,
-          featureUsage: featureUsage || [],
+          sessionData: sessionData ?? null,
+          featureUsage: featureUsage ?? [],
           sessionMetrics: {
-            totalActions: featureUsage?.length || 0,
+            totalActions: featureUsage?.length ?? 0,
             sessionDuration: sessionData ? 
               this.calculateSessionDuration(sessionData) : 0,
-            deviceType: (sessionData?.device_info as any)?.type || 'unknown',
-            pageViews: sessionData?.page_views || 0
+            deviceType: (sessionData?.device_info as any)?.type ?? 'unknown',
+            pageViews: sessionData?.page_views ?? 0
           }
         },
         enhancedAt: new Date().toISOString()
@@ -209,7 +209,7 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(10);
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getSessionAnalytics(pollId: string) {
@@ -219,7 +219,7 @@ export class EnhancedAnalyticsService {
       .gte('last_activity', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('last_activity', { ascending: false });
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getFeatureUsageAnalytics(pollId: string) {
@@ -229,7 +229,7 @@ export class EnhancedAnalyticsService {
       .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('timestamp', { ascending: false });
 
-    return data || [];
+    return data ?? [];
   }
 
   async getSystemHealthContext() {
@@ -238,7 +238,7 @@ export class EnhancedAnalyticsService {
       .select('*')
       .order('last_check', { ascending: false });
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getUserSessions(userId?: string) {
@@ -251,7 +251,7 @@ export class EnhancedAnalyticsService {
       .order('started_at', { ascending: false })
       .limit(10);
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getUserFeatureUsage(userId?: string) {
@@ -264,7 +264,7 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(20);
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getUserPlatformMetrics(userId?: string) {
@@ -277,7 +277,7 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(10);
 
-    return data || [];
+    return data ?? [];
   }
 
   private async getUserTrustTierProgression(userId?: string) {
@@ -306,7 +306,7 @@ export class EnhancedAnalyticsService {
     await this.supabase
       .from('user_sessions')
       .update({
-        user_id: authEvent.userId || null,
+        user_id: authEvent.userId ?? null,
         last_activity: new Date().toISOString(),
         metadata: {
           authenticated: authEvent.success,
@@ -363,7 +363,7 @@ export class EnhancedAnalyticsService {
     if (!sessionData.started_at) return 0;
     
     const start = new Date(sessionData.started_at);
-    const end = new Date(sessionData.last_activity || new Date());
+    const end = new Date(sessionData.last_activity ?? new Date());
     
     return Math.floor((end.getTime() - start.getTime()) / 1000); // seconds
   }
@@ -379,9 +379,9 @@ export class EnhancedAnalyticsService {
       if (error) throw error;
       
       return {
-        riskScore: (data as any)?.risk_score || 0,
-        suspiciousPatterns: (data as any)?.suspicious_patterns || [],
-        confidence: (data as any)?.confidence || 0,
+        riskScore: (data as any)?.risk_score ?? 0,
+        suspiciousPatterns: (data as any)?.suspicious_patterns ?? [],
+        confidence: (data as any)?.confidence ?? 0,
         analysis: data
       };
     } catch (error) {
@@ -407,7 +407,7 @@ export class EnhancedAnalyticsService {
         .order('priority', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return data ?? [];
     } catch (error) {
       logger.error('Site messages fetch error:', error);
       return [];
@@ -463,7 +463,7 @@ export class EnhancedAnalyticsService {
     try {
       const { data, error } = await this.supabase.rpc('get_comprehensive_analytics', {
         p_poll_id: pollId,
-        p_analysis_window: timeRange || '7 days'
+        p_analysis_window: timeRange ?? '7 days'
       });
       
       if (error) throw error;
@@ -506,13 +506,13 @@ export class EnhancedAnalyticsService {
         this.supabase.from('site_messages').select('*').eq('is_active', true)
       ]);
 
-      const totalEvents = analyticsEvents.data?.length || 0;
+      const totalEvents = analyticsEvents.data?.length ?? 0;
       const eventsByType = analyticsEvents.data?.reduce((acc: any, event: any) => {
-        acc[event.event_name] = (acc[event.event_name] || 0) + 1;
+        acc[event.event_name] = (acc[event.event_name] ?? 0) + 1;
         return acc;
-      }, {}) || {};
+      }, {}) ?? {};
 
-      const activeSessions = userSessions.data?.length || 0;
+      const activeSessions = userSessions.data?.length ?? 0;
       const totalSessionDuration = userSessions.data?.reduce((sum: number, session: any) => {
         if (session.session_start && session.session_end) {
           const start = new Date(session.session_start).getTime();
@@ -520,7 +520,7 @@ export class EnhancedAnalyticsService {
           return sum + (end - start);
         }
         return sum;
-      }, 0) || 0;
+      }, 0) ?? 0;
 
       const averageSessionDurationMs = activeSessions > 0 ? totalSessionDuration / activeSessions : 0;
       const averageSessionDuration = averageSessionDurationMs > 0
@@ -528,14 +528,14 @@ export class EnhancedAnalyticsService {
         : 'N/A';
 
       const featureAdoption = featureUsage.data?.reduce((acc: any, usage: any) => {
-        acc[usage.feature_name] = (acc[usage.feature_name] || 0) + (usage.usage_count || 0);
+        acc[usage.feature_name] = (acc[usage.feature_name] ?? 0) + (usage.usage_count ?? 0);
         return acc;
-      }, {}) || {};
+      }, {}) ?? {};
 
       const systemHealthStatus = systemHealth.data?.reduce((acc: any, check: any) => {
-        acc[check.check_name] = check.status || 'unknown';
+        acc[check.check_name] = check.status ?? 'unknown';
         return acc;
-      }, {}) || {};
+      }, {}) ?? {};
 
       return {
         totalEvents,

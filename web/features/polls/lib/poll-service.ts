@@ -116,7 +116,7 @@ export async function calculatePollStatistics(pollId: string): Promise<{
       status,
       createdAt,
       // Additional calculated fields
-      averageVotesPerDay: totalVotes ? Math.round(totalVotes / Math.max(1, Math.ceil((Date.now() - new Date(createdAt || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
+      averageVotesPerDay: totalVotes ? Math.round(totalVotes / Math.max(1, Math.ceil((Date.now() - new Date(createdAt ?? new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
       isActive: status === 'active',
       hasEnded: status === 'closed' || status === 'archived'
     };
@@ -284,9 +284,9 @@ export class OptimizedPollService {
       const avgParticipation = totalPolls > 0 ? pollStats.reduce((sum, poll) => sum + (poll && 'participation' in poll ? poll.participation ?? 0 : 0), 0) / totalPolls : 0;
       
       // Calculate response time based on cache performance
-      const cacheHitRate = this.metrics.cacheHitRate || 0;
-      const avgResponseTime = this.metrics.responseTime || 0;
-      const errorRate = this.metrics.errorRate || 0;
+      const cacheHitRate = this.metrics.cacheHitRate ?? 0;
+      const avgResponseTime = this.metrics.responseTime ?? 0;
+      const errorRate = this.metrics.errorRate ?? 0;
 
       return [
         {
@@ -337,8 +337,8 @@ export class OptimizedPollService {
     averageAge: number;
   } {
     const cacheSize = this.cache.size;
-    const totalRequests = this.metrics.countMeasurements || 1;
-    const cacheHits = this.metrics.cacheHitRate || 0;
+    const totalRequests = this.metrics.countMeasurements ?? 1;
+    const cacheHits = this.metrics.cacheHitRate ?? 0;
     const hitRate = cacheHits / totalRequests;
     const missRate = 1 - hitRate;
     
@@ -346,7 +346,7 @@ export class OptimizedPollService {
     const memoryUsage = cacheSize * 1024; // Rough estimate: 1KB per cached item
     
     // Calculate average age of cached items (simplified)
-    const averageAge = cacheSize > 0 ? Date.now() - (this.metrics.responseTime || Date.now()) : 0;
+    const averageAge = cacheSize > 0 ? Date.now() - (this.metrics.responseTime ?? Date.now()) : 0;
 
     return {
       size: cacheSize,
@@ -391,7 +391,7 @@ export class OptimizedPollService {
         return {
           success: false,
           message: 'Failed to refresh poll statistics view',
-          error: pollStatsError.message || 'Unknown error'
+          error: pollStatsError.message ?? 'Unknown error'
         };
       } else {
         logger.info('Successfully refreshed poll statistics view');
@@ -463,20 +463,20 @@ export class OptimizedPollService {
       if (cleanupError) {
         logger.warn('Failed to cleanup old polls:', { error: cleanupError.message });
       } else {
-        logger.info('Successfully cleaned up old polls', { cleanedCount: cleanupResult?.length || 0 });
+        logger.info('Successfully cleaned up old polls', { cleanedCount: cleanupResult?.length ?? 0 });
       }
 
       // Update poll statistics for all polls or specific poll
-      const targetPollId = pollId || 'all';
+      const targetPollId = pollId ?? 'all';
       const { error: statsError } = await supabase.rpc('update_poll_statistics');
       if (statsError) {
-        logger.warn('Failed to update poll statistics:', { error: statsError.message || 'Unknown error' });
+        logger.warn('Failed to update poll statistics:', { error: statsError.message ?? 'Unknown error' });
       } else {
         logger.info('Successfully updated poll statistics', { pollId: targetPollId });
       }
 
       const duration = Date.now() - startTime;
-      const cleanedPolls = cleanupResult?.length || 0;
+      const cleanedPolls = cleanupResult?.length ?? 0;
 
       logger.info('Database maintenance completed successfully', {
         duration: `${duration}ms`,

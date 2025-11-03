@@ -128,7 +128,7 @@ export default function SingleChoiceVoting({
         <div className="space-y-3">
           {options.map((option: PollOption, index: number) => (
             <div
-              key={option.id}
+              key={String(option.id ?? index)}
               onClick={() => handleOptionSelect(index)}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
@@ -162,9 +162,9 @@ export default function SingleChoiceVoting({
 
                 {/* Option Content */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{option.text}</h3>
-                  {option.option_text && (
-                    <p className="text-sm text-gray-600">{option.option_text}</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                  {(option as any).option_text && (
+                    <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
                   )}
                 </div>
 
@@ -224,7 +224,7 @@ export default function SingleChoiceVoting({
           <div className="mt-4 text-center">
             <div className="text-sm text-gray-600">
               Selected: <span className="font-medium text-blue-600">
-                {options.find((_: PollOption, idx: number) => idx === selectedOption)?.text}
+                {String((options.find((_: PollOption, idx: number) => idx === selectedOption) as any)?.text ?? '')}
               </span>
             </div>
           </div>

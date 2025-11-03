@@ -155,7 +155,7 @@ export type OpenStatesVote = {
 }
 
 // Transform Open States legislator to unified representative
-export function transformOpenStatesLegislator(legislator: OpenStatesLegislator): any {
+export function transformOpenStatesLegislator(legislator: OpenStatesLegislator): Record<string, unknown> {
   try {
     dev.logger.debug('Transforming Open States legislator', { 
       id: legislator.id, 
@@ -218,7 +218,7 @@ export function transformOpenStatesLegislator(legislator: OpenStatesLegislator):
 }
 
 // Transform Open States bill to unified bill
-export function transformOpenStatesBill(bill: OpenStatesBill): any {
+export function transformOpenStatesBill(bill: OpenStatesBill): Record<string, unknown> {
   try {
     dev.logger.debug('Transforming Open States bill', { 
       id: bill.id, 
@@ -230,7 +230,7 @@ export function transformOpenStatesBill(bill: OpenStatesBill): any {
       openStatesId: bill.id,
       identifier: bill.identifier,
       title: bill.title,
-      description: bill.abstract || '',
+      description: bill.abstract ?? '',
       classification: bill.classification,
       subjects: bill.subject,
       session: bill.legislative_session.identifier,
@@ -266,7 +266,7 @@ export function transformOpenStatesBill(bill: OpenStatesBill): any {
           url: link.url
         }))
       })),
-      votes: bill.votes.map(vote => transformOpenStatesVote(vote as any)),
+      votes: bill.votes.map(vote => transformOpenStatesVote(vote)),
       sources: bill.sources.map(source => ({
         url: source.url,
         note: source.note
@@ -291,7 +291,7 @@ export function transformOpenStatesBill(bill: OpenStatesBill): any {
 }
 
 // Transform Open States vote to unified vote
-export function transformOpenStatesVote(vote: OpenStatesVote): any {
+export function transformOpenStatesVote(vote: OpenStatesVote): Record<string, unknown> {
   try {
     dev.logger.debug('Transforming Open States vote', { 
       id: vote.id, 
@@ -338,7 +338,7 @@ export function transformOpenStatesVote(vote: OpenStatesVote): any {
 }
 
 // Transform to candidate card format
-export function transformToCandidateCard(legislator: OpenStatesLegislator): any {
+export function transformToCandidateCard(legislator: OpenStatesLegislator): Record<string, unknown> {
   try {
     dev.logger.debug('Transforming Open States legislator to candidate card', { 
       id: legislator.id 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Force dynamic rendering for this route
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    console.log('🏙️ Fetching Los Angeles local representatives...');
+    logger.info('Fetching Los Angeles local representatives');
     
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
@@ -21,19 +22,20 @@ export async function GET() {
     }
     
     const { data: representatives, error } = await supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select('*')
       .eq('level', 'local')
-      .eq('jurisdiction', 'Los Angeles, CA')
+      .eq('state', 'CA')
+      .ilike('jurisdiction', '%Los Angeles%')
       .order('office', { ascending: true });
     
     if (error) {
-      console.error('❌ Database error:', error);
+      logger.error('Database error fetching LA local representatives:', error instanceof Error ? error : new Error(String(error)));
       return NextResponse.json(
         { 
           ok: false, 
           error: 'Failed to fetch LA local representatives',
-          details: error.message 
+          details: error instanceof Error ? error.message : String(error)
         },
         { status: 500 }
       );
@@ -53,21 +55,24 @@ export async function GET() {
     
     // Transform the data for the frontend
     const transformedData = representatives.map(rep => ({
+      id: rep.id,
       name: rep.name,
       party: rep.party,
       office: rep.office,
       level: rep.level,
       jurisdiction: rep.jurisdiction,
-      district: rep.office.includes('District') ? 
-        rep.office.match(/District (\d+)/)?.[1] || null : null,
-      contact: rep.contact || null,
-      data_source: rep.data_source || 'manual_verification_la',
-      last_verified: rep.last_verified || null,
-      data_quality_score: rep.data_quality_score || 100,
-      verification_notes: rep.verification_notes || 'Manually verified current LA official'
+      state: rep.state,
+      district: rep.district,
+      primary_email: rep.primary_email ?? null,
+      primary_phone: rep.primary_phone ?? null,
+      primary_website: rep.primary_website ?? null,
+      data_sources: rep.data_sources ?? ['manual_verification_la'],
+      last_verified: rep.last_verified ?? null,
+      data_quality_score: rep.data_quality_score ?? 100,
+      verification_status: rep.verification_status ?? 'verified'
     }));
     
-    console.log(`✅ Found ${representatives.length} LA local representatives`);
+    logger.info(`Found ${representatives.length} LA local representatives`);
     
     return NextResponse.json({
       ok: true,
@@ -85,7 +90,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
+    logger.error('Unexpected error in LA local representatives API:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         ok: false, 

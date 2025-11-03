@@ -5,6 +5,8 @@
  * error codes, error contexts, and error response formats.
  */
 
+import type { ComponentType, ReactNode, ErrorInfo } from 'react';
+
 export type ErrorCode = 
   // Authentication errors
   | 'AUTH_REQUIRED'
@@ -146,13 +148,13 @@ export type ErrorMetrics = {
 }
 
 export type ErrorBoundaryProps = {
-  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-  children: React.ReactNode;
+  fallback?: ComponentType<{ error: Error; resetError: () => void }>;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  children: ReactNode;
 }
 
 export type ErrorBoundaryState = {
   hasError: boolean;
   error?: Error;
-  errorInfo?: React.ErrorInfo;
+  errorInfo?: ErrorInfo;
 }

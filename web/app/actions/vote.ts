@@ -39,18 +39,29 @@ export const vote = createSecureServerAction(
     }
 
     // Check if poll exists and is active
+    type PollResult = {
+      id: string
+      created_by: string
+      voting_method: string
+      privacy_level: string
+      end_time: string | null
+      options: string[]
+    }
+    
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, created_by, voting_method, privacy_level, end_time, options')
-      .eq('id', validatedData.pollId as any)
+      .eq('id', validatedData.pollId)
       .single()
 
     if (pollError || !poll) {
       throw new Error('Poll not found')
     }
 
+    const pollData = poll as PollResult
+
     // Check if poll has ended
-    if ((poll as any).end_time && new Date((poll as any).end_time as string) < new Date()) {
+    if (pollData.end_time && new Date(pollData.end_time) < new Date()) {
       throw new Error('Poll has ended')
     }
 
@@ -59,8 +70,8 @@ export const vote = createSecureServerAction(
     const { data: existingVote } = await supabase
       .from('votes')
       .select('id')
-      .eq('poll_id', validatedData.pollId as any)
-      .eq('user_id', user.userId as any)
+      .eq('poll_id', validatedData.pollId)
+      .eq('user_id', user.userId)
       .single()
 
     if (existingVote) {
@@ -69,14 +80,14 @@ export const vote = createSecureServerAction(
 
     // Validate that the selected options exist in the poll's options
     // Note: Options are stored as JSON array in polls.options field
-    if (!(poll as any).options || !Array.isArray((poll as any).options)) {
+    if (!pollData.options || !Array.isArray(pollData.options)) {
       throw new Error('Invalid poll options')
     }
     
     // For now, we'll validate that the option IDs are valid
     // This assumes optionIds are the actual option values from the array
     const validOptions = validatedData.optionIds.every((optionId: string) => 
-      ((poll as any).options as string[]).includes(optionId)
+      pollData.options.includes(optionId)
     )
     
     if (!validOptions) {
@@ -87,7 +98,7 @@ export const vote = createSecureServerAction(
     const voteData = validatedData.optionIds.map((optionId: string) => ({
       id: uuidv4(),
       poll_id: validatedData.pollId,
-      user_id: validatedData.anonymous ? 'anonymous' : user.userId as any,
+      user_id: validatedData.anonymous ? 'anonymous' : user.userId,
       option_id: optionId,
       vote_weight: 1
     }))

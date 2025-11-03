@@ -141,14 +141,15 @@ export default function ProfileEdit({
 
   // Initialize form data
   React.useEffect(() => {
+    const profileAny = profile as any
     setFormData({
-      display_name: profile.display_name || '',
-      bio: profile.bio || '',
-      username: profile.username || '',
-      primary_concerns: profile.primary_concerns || [],
-      community_focus: profile.community_focus || [],
-      participation_style: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
-      privacy_settings: (profile.privacy_settings as any) || {
+      display_name: profileAny.display_name ?? '',
+      bio: profile.bio ?? '',
+      username: profile.username ?? '',
+      primary_concerns: profileAny.primary_concerns ?? [],
+      community_focus: profileAny.community_focus ?? [],
+      participation_style: (profileAny.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') ?? 'observer',
+      privacy_settings: (profileAny.privacy_settings as any) ?? {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,
@@ -156,13 +157,13 @@ export default function ProfileEdit({
         share_demographics: false,
         allow_analytics: true
       },
-      demographics: (profile.demographics as Record<string, any>) || {}
+      demographics: (profileAny.demographics as Record<string, any>) ?? {}
     });
   }, [profile]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
-  const _finalError = externalError || updateError;
+  const _finalError = externalError ?? updateError;
   
   // Guard clause for null formData
   if (!formData) {
@@ -182,7 +183,7 @@ export default function ProfileEdit({
       ...prev,
       [field]: prev[field]?.includes(value) 
         ? prev[field]?.filter(item => item !== value)
-        : [...(prev[field] || []), value]
+        : [...(prev[field] ?? []), value]
     }));
   };
 
@@ -211,7 +212,7 @@ export default function ProfileEdit({
         setAvatarFile(null);
         setAvatarPreview(null);
       } else {
-        setError(result.error || 'Failed to update avatar');
+        setError(result.error ?? 'Failed to update avatar');
       }
     } catch {
       setError('Failed to update avatar');
@@ -248,14 +249,15 @@ export default function ProfileEdit({
 
   // Handle cancel
   const handleCancel = () => {
+    const profileAny = profile as any
     setFormData({
-      display_name: profile.display_name || '',
-      bio: profile.bio || '',
-      username: profile.username || '',
-      primary_concerns: profile.primary_concerns || [],
-      community_focus: profile.community_focus || [],
-      participation_style: (profile.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') || 'observer',
-      privacy_settings: (profile.privacy_settings as any) || {
+      display_name: profileAny.display_name ?? '',
+      bio: profile.bio ?? '',
+      username: profile.username ?? '',
+      primary_concerns: profileAny.primary_concerns ?? [],
+      community_focus: profileAny.community_focus ?? [],
+      participation_style: (profileAny.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') ?? 'observer',
+      privacy_settings: (profileAny.privacy_settings as any) ?? {
         profile_visibility: 'public',
         show_email: false,
         show_activity: true,
@@ -263,7 +265,7 @@ export default function ProfileEdit({
         share_demographics: false,
         allow_analytics: true
       },
-      demographics: (profile.demographics as Record<string, any>) || {}
+      demographics: (profileAny.demographics as Record<string, any>) ?? {}
     });
     setError(null);
     setSuccess(null);
@@ -318,7 +320,7 @@ export default function ProfileEdit({
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarPreview || profile.avatar_url || ''} alt={displayName} />
+                <AvatarImage src={avatarPreview ?? profile.avatar_url ?? ''} alt={displayName} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="space-y-2">
@@ -402,7 +404,7 @@ export default function ProfileEdit({
                 rows={3}
               />
               <p className="text-sm text-gray-500 mt-1">
-                {formData.bio?.length || 0}/500 characters
+                {formData.bio?.length ?? 0}/500 characters
               </p>
             </div>
           </CardContent>
@@ -455,7 +457,7 @@ export default function ProfileEdit({
             <div>
               <Label htmlFor="participation_style">Participation Style</Label>
               <Select
-                value={formData.participation_style || ''}
+                value={formData.participation_style ?? ''}
                 onValueChange={(value) => handleFieldChange('participation_style', value)}
               >
                 <SelectTrigger>
@@ -490,7 +492,7 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-email"
-                checked={formData.privacy_settings?.show_email || false}
+                checked={formData.privacy_settings?.show_email ?? false}
                 onChange={(e) => 
                   handleFieldChange('privacy_settings', {
                     ...formData.privacy_settings,
@@ -506,7 +508,7 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-activity"
-                checked={formData.privacy_settings?.show_activity || false}
+                checked={formData.privacy_settings?.show_activity ?? false}
                 onChange={(e) => 
                   handleFieldChange('privacy_settings', {
                     ...formData.privacy_settings,
@@ -522,7 +524,7 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="allow-messages"
-                checked={formData.privacy_settings?.allow_messages || false}
+                checked={formData.privacy_settings?.allow_messages ?? false}
                 onChange={(e) => 
                   handleFieldChange('privacy_settings', {
                     ...formData.privacy_settings,

@@ -215,8 +215,8 @@ export async function cleanupExpiredIdempotencyKeys(): Promise<{ deleted: number
       return { deleted: 0, error: 'Cleanup failed' }
     }
 
-    logger.info('Cleaned up expired idempotency keys', { deleted: count || 0 })
-    return { deleted: count || 0 }
+    logger.info('Cleaned up expired idempotency keys', { deleted: count ?? 0 })
+    return { deleted: count ?? 0 }
   } catch (error) {
     logger.error('Idempotency cleanup exception', error instanceof Error ? error : new Error('Unknown error'))
     return { deleted: 0, error: 'System error' }
@@ -270,11 +270,11 @@ export async function getIdempotencyStats(): Promise<{
       return { total: 0, expired: 0, active: 0, error: 'Query failed' }
     }
 
-    const active = (total || 0) - (expired || 0)
+    const active = (total ?? 0) - (expired ?? 0)
 
     return {
-      total: total || 0,
-      expired: expired || 0,
+      total: total ?? 0,
+      expired: expired ?? 0,
       active: Math.max(0, active)
     }
   } catch (error) {

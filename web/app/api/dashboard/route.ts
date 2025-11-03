@@ -17,6 +17,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRedisClient } from '@/lib/cache/redis-client';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Optimized dashboard API error:', error as Error);
+    logger.error('Optimized dashboard API error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -159,32 +160,32 @@ async function loadOptimizedDashboardData(supabase: any, userId: string): Promis
   return {
     user: {
       id: userId,
-      email: result.user_email || '',
-      name: result.user_name || 'User'
+      email: result.user_email ?? '',
+      name: result.user_name ?? 'User'
     },
     analytics: {
-      total_votes: result.total_votes || 0,
-      total_polls_created: result.total_polls_created || 0,
-      active_polls: result.active_polls || 0,
-      total_votes_on_user_polls: result.total_votes_on_user_polls || 0,
-      participation_score: result.participation_score || 0,
+      total_votes: result.total_votes ?? 0,
+      total_polls_created: result.total_polls_created ?? 0,
+      active_polls: result.active_polls ?? 0,
+      total_votes_on_user_polls: result.total_votes_on_user_polls ?? 0,
+      participation_score: result.participation_score ?? 0,
       recent_activity: {
-        votes_last_30_days: result.votes_last_30_days || 0,
-        polls_created_last_30_days: result.polls_created_last_30_days || 0
+        votes_last_30_days: result.votes_last_30_days ?? 0,
+        polls_created_last_30_days: result.polls_created_last_30_days ?? 0
       }
     },
     preferences: {
-      showElectedOfficials: result.show_elected_officials || true,
-      showQuickActions: result.show_quick_actions || true,
-      showRecentActivity: result.show_recent_activity || true,
-      showEngagementScore: result.show_engagement_score || true
+      showElectedOfficials: result.show_elected_officials ?? true,
+      showQuickActions: result.show_quick_actions ?? true,
+      showRecentActivity: result.show_recent_activity ?? true,
+      showEngagementScore: result.show_engagement_score ?? true
     },
     electedOfficials: [], // Simplified for performance
     platformStats: {
-      total_polls: result.platform_total_polls || 0,
-      total_votes: result.platform_total_votes || 0,
-      active_polls: result.platform_active_polls || 0,
-      total_users: result.platform_total_users || 0
+      total_polls: result.platform_total_polls ?? 0,
+      total_votes: result.platform_total_votes ?? 0,
+      active_polls: result.platform_active_polls ?? 0,
+      total_users: result.platform_total_users ?? 0
     },
     generatedAt: new Date().toISOString()
   };
@@ -219,10 +220,10 @@ async function loadDashboardDataFallback(supabase: any, userId: string): Promise
     loadPlatformStatsOptimized(supabase)
   ]);
 
-  const votes = votesResult.data || [];
-  const polls = pollsResult.data || [];
-  const user = userResult.data || { email: '', display_name: '', username: '' };
-  const platformStats = platformResult || { total_polls: 0, total_votes: 0, active_polls: 0, total_users: 0 };
+  const votes = votesResult.data ?? [];
+  const polls = pollsResult.data ?? [];
+  const user = userResult.data ?? { email: '', display_name: '', username: '' };
+  const platformStats = platformResult ?? { total_polls: 0, total_votes: 0, active_polls: 0, total_users: 0 };
 
   // Calculate analytics efficiently
   const totalVotes = votes.length;
@@ -239,14 +240,14 @@ async function loadDashboardDataFallback(supabase: any, userId: string): Promise
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .in('poll_id', pollIds);
-    totalVotesOnUserPolls = count || 0;
+    totalVotesOnUserPolls = count ?? 0;
   }
 
   return {
     user: {
       id: userId,
-      email: user.email || '',
-      name: user.name || 'User'
+      email: user.email ?? '',
+      name: user.name ?? 'User'
     },
     analytics: {
       total_votes: totalVotes,
@@ -298,9 +299,9 @@ async function loadPlatformStatsOptimized(supabase: any) {
       ]);
 
       const result = {
-        total_users: usersResult.count || 0,
-        total_polls: pollsResult.count || 0,
-        total_votes: votesResult.count || 0,
+        total_users: usersResult.count ?? 0,
+        total_polls: pollsResult.count ?? 0,
+        total_votes: votesResult.count ?? 0,
         active_polls: 0
       };
 
@@ -308,7 +309,7 @@ async function loadPlatformStatsOptimized(supabase: any) {
       return result;
     }
 
-    const result = data[0] || {
+    const result = data[0] ?? {
       total_users: 0,
       total_polls: 0,
       total_votes: 0,
@@ -319,7 +320,7 @@ async function loadPlatformStatsOptimized(supabase: any) {
     return result;
 
   } catch (error) {
-    console.error('Error loading platform stats:', error as Error);
+    logger.error('Error loading platform stats:', error instanceof Error ? error : new Error(String(error)));
     return {
       total_users: 0,
       total_polls: 0,

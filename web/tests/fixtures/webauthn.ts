@@ -8,6 +8,9 @@
  * Created: January 18, 2025
  */
 
+/* eslint-disable react-hooks/rules-of-hooks */
+// This file uses Playwright's `use` fixture function, not React hooks
+
 import { test as base } from '@playwright/test';
 
 type WebAuthnMode = 'chromium' | 'mock';
@@ -41,14 +44,18 @@ export const test = base.extend<Fixtures>({
       // Non-Chromium: Provide a light stub so component tests don't explode
       await page.addInitScript(() => {
         // Minimal shim – good enough for rendering & basic interaction tests
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (globalThis as any).PublicKeyCredential ??= class PublicKeyCredential {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (navigator as any).credentials ??= {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (navigator as any).credentials.create = async () => ({
           id: 'dummy',
           type: 'public-key',
           rawId: new ArrayBuffer(16),
           response: {},
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (navigator as any).credentials.get = async () => ({
           id: 'dummy',
           type: 'public-key',
@@ -62,3 +69,5 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect } from '@playwright/test';
+
+/* eslint-enable react-hooks/rules-of-hooks */

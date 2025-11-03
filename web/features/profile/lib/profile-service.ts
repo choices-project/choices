@@ -37,7 +37,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
 
   // Display name validation
   if (data.display_name) {
-    const displayName = data.display_name || '';
+    const displayName = data.display_name ?? '';
     if (displayName.length > PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH) {
       errors.push(`Display name must be ${PROFILE_CONSTANTS.MAX_DISPLAY_NAME_LENGTH} characters or less`);
     }
@@ -100,30 +100,31 @@ export function transformApiResponseToProfile(apiData: any): ProfileUser | null 
     return null;
   }
 
-  const profile = apiData.data || apiData.profile;
+  const profile = apiData.data ?? apiData.profile;
   if (!profile) {
     return null;
   }
 
+  const profileAny = profile as any
   return {
-    id: profile.id || profile.userid || profile.user_id,
+    id: profile.id ?? profile.userid ?? profile.user_id,
     email: profile.email,
     username: profile.username,
-    display_name: profile.display_name || profile.displayname,
+    display_name: profile.display_name ?? profileAny.displayname,
     bio: profile.bio,
-    avatar_url: profile.avatar_url || profile.avatar,
-    trust_tier: profile.trust_tier || PROFILE_DEFAULTS.trust_tier,
-    is_admin: profile.is_admin || false,
+    avatar_url: profile.avatar_url ?? profileAny.avatar,
+    trust_tier: profile.trust_tier ?? PROFILE_DEFAULTS.trust_tier,
+    is_admin: profileAny.is_admin ?? false,
     is_active: profile.is_active !== false,
-    created_at: profile.created_at || profile.createdat,
-    updated_at: profile.updated_at || profile.updatedat,
-    user_id: profile.user_id || profile.userid || profile.id,
-    primary_concerns: profile.primary_concerns || [],
-    community_focus: profile.community_focus || [],
-    participation_style: profile.participation_style || PROFILE_DEFAULTS.participation_style,
-    demographics: profile.demographics || {},
-    privacy_settings: profile.privacy_settings || PROFILE_DEFAULTS.privacy_settings,
-  };
+    created_at: profile.created_at ?? profileAny.createdat ?? new Date().toISOString(),
+    updated_at: profile.updated_at ?? profileAny.updatedat ?? new Date().toISOString(),
+    user_id: profile.user_id ?? profileAny.userid ?? profile.id,
+    primary_concerns: profileAny.primary_concerns ?? [],
+    community_focus: profileAny.community_focus ?? [],
+    participation_style: profileAny.participation_style ?? PROFILE_DEFAULTS.participation_style,
+    demographics: profileAny.demographics ?? {},
+    privacy_settings: profileAny.privacy_settings ?? PROFILE_DEFAULTS.privacy_settings,
+  } as any;
 }
 
 /**
@@ -225,7 +226,7 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     if (!result.success) {
       return {
         success: false,
-        error: result.error || 'Failed to update profile',
+        error: result.error ?? 'Failed to update profile',
       };
     }
 
@@ -313,7 +314,7 @@ export async function exportUserData(options?: ExportOptions): Promise<ProfileEx
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(options || {}),
+      body: JSON.stringify(options ?? {}),
     });
 
     if (!response.ok) {
@@ -323,7 +324,7 @@ export async function exportUserData(options?: ExportOptions): Promise<ProfileEx
     const result = await response.json();
 
     if (!result.success) {
-      throw new Error(result.error || 'Failed to export data');
+      throw new Error(result.error ?? 'Failed to export data');
     }
 
     return result.data;
@@ -383,7 +384,7 @@ export async function deleteProfile(): Promise<ProfileActionResult> {
  * Returns appropriate display name with fallbacks
  */
 export function getProfileDisplayName(profile: ProfileUser | UserProfile): string {
-  return profile.display_name || profile.username || profile.email?.split('@')[0] || 'User';
+  return profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
 }
 
 /**
@@ -423,7 +424,7 @@ export function getTrustTierDisplayName(tier: string): string {
     'T2': 'Trusted User',
     'T3': 'VIP User',
   };
-  return tierNames[tier] || 'Unknown';
+  return tierNames[tier] ?? 'Unknown';
 }
 
 /**
@@ -436,5 +437,5 @@ export function getParticipationStyleDisplayName(style: string): string {
     'contributor': 'Contributor',
     'leader': 'Leader',
   };
-  return styleNames[style] || 'Unknown';
+  return styleNames[style] ?? 'Unknown';
 }

@@ -181,11 +181,11 @@ export class CommunicationComplianceManager {
       type,
       granted,
       timestamp: Date.now(),
-      ipAddress: context.ipAddress || await this.getUserIP(userId),
-      userAgent: context.userAgent || await this.getUserAgent(userId),
-      consentMethod: context.consentMethod || 'explicit',
-      legalBasis: context.legalBasis || 'consent',
-      purpose: context.purpose || 'communication',
+      ipAddress: context.ipAddress ?? await this.getUserIP(userId),
+      userAgent: context.userAgent ?? await this.getUserAgent(userId),
+      consentMethod: context.consentMethod ?? 'explicit',
+      legalBasis: context.legalBasis ?? 'consent',
+      purpose: context.purpose ?? 'communication',
       retentionPeriod: this.getRetentionPeriod(type),
       withdrawable: true
     };
@@ -520,7 +520,7 @@ export class CommunicationComplianceManager {
       'marketing': 365 * 24 * 60 * 60 * 1000 // 1 year
     };
     
-    return retentionPeriods[type] || 365 * 24 * 60 * 60 * 1000;
+    return retentionPeriods[type] ?? 365 * 24 * 60 * 60 * 1000;
   }
 
   private async logCommunication(type: string, recipient: string, userId: string, content: string): Promise<void> {
@@ -664,7 +664,7 @@ export class CommunicationComplianceManager {
       'objection': 'legitimate_interest'
     };
     
-    return legalBases[type] || 'consent';
+    return legalBases[type] ?? 'consent';
   }
 
   private async storeDataSubjectRequest(userId: string, request: DataSubjectRequest): Promise<void> {

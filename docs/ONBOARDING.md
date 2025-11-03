@@ -28,8 +28,11 @@ cd web && npm install
 cp .env.example .env.local
 # Edit .env.local with your Supabase credentials
 
-# 4. Run development server
-cd web && npm run dev
+# 4. Generate TypeScript types from database schema
+cd web && npm run types:generate
+
+# 5. Run development server
+npm run dev
 ```
 
 ---

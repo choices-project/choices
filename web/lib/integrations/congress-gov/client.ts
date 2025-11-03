@@ -265,7 +265,7 @@ export class CongressGovClient {
   // Congress information
   async getCongresses(): Promise<CongressGovCongress[]> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovCongress>>('/congress');
-    return response.results || [];
+    return response.results ?? [];
   }
 
   async getCurrentCongress(): Promise<CongressGovCongress> {
@@ -285,7 +285,7 @@ export class CongressGovClient {
     offset?: number;
   } = {}): Promise<CongressGovMember[]> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovMember>>('/member', params);
-    return response.results || [];
+    return response.results ?? [];
   }
 
   async getMember(bioguideId: string): Promise<CongressGovMember> {
@@ -302,7 +302,7 @@ export class CongressGovClient {
     if (chamber) params.chamber = chamber;
     
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovMember>>('/member', params);
-    return response.results || [];
+    return response.results ?? [];
   }
 
   // Bill information
@@ -313,7 +313,7 @@ export class CongressGovClient {
     offset?: number;
   } = {}): Promise<CongressGovBill[]> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovBill>>('/bill', params);
-    return response.results || [];
+    return response.results ?? [];
   }
 
   async getBill(congress: number, billId: string): Promise<CongressGovBill> {
@@ -331,7 +331,7 @@ export class CongressGovClient {
     offset?: number;
   } = {}): Promise<CongressGovBill[]> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovBill>>(`/member/${bioguideId}/bills`, params);
-    return response.results || [];
+    return response.results ?? [];
   }
 
   // Vote information
@@ -342,7 +342,7 @@ export class CongressGovClient {
     offset?: number;
   } = {}): Promise<CongressGovVote[]> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovVote>>('/vote', params);
-    return response.results || [];
+    return response.results ?? [];
   }
 
   async getVote(congress: number, session: number, rollCall: number): Promise<CongressGovVote> {

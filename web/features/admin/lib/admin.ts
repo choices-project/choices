@@ -61,8 +61,8 @@ export async function logAdminAction(
         admin_id: user.id,
         action,
         details,
-        ip_address: request.headers.get('x-forwarded-for') || 'unknown',
-        user_agent: request.headers.get('user-agent') || 'unknown',
+        ip_address: request.headers.get('x-forwarded-for') ?? 'unknown',
+        user_agent: request.headers.get('user-agent') ?? 'unknown',
         timestamp: new Date().toISOString()
       });
     }
@@ -74,7 +74,7 @@ export async function logAdminAction(
 // Rate limiting for admin endpoints
 export async function checkAdminRateLimit(request: NextRequest): Promise<NextResponse | null> {
   try {
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
     const supabase = await getSupabaseServerClient();
     
     // Check rate limit (10 requests per minute)
@@ -123,10 +123,10 @@ export async function getOptimizedUsers(request: NextRequest) {
     // Get search parameters
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const search = searchParams.get('search') || '';
-    const role = searchParams.get('role') || 'all';
+    const page = parseInt(searchParams.get('page') ?? '1');
+    const limit = parseInt(searchParams.get('limit') ?? '20');
+    const search = searchParams.get('search') ?? '';
+    const role = searchParams.get('role') ?? 'all';
     
     // Optimized user query with performance tracking
     const users = await trackAdminPerformance('get_users', async () => {
@@ -163,17 +163,17 @@ export async function getOptimizedUsers(request: NextRequest) {
         throw new Error(`Database error: ${error.message}`);
       }
       
-      return { users: data || [], total: count || 0 };
+      return { users: data ?? [], total: count ?? 0 };
     });
     
     return NextResponse.json({
       ok: true,
       data: users.users,
       pagination: {
-        page: parseInt(searchParams.get('page') || '1'),
-        limit: parseInt(searchParams.get('limit') || '20'),
+        page: parseInt(searchParams.get('page') ?? '1'),
+        limit: parseInt(searchParams.get('limit') ?? '20'),
         total: users.total,
-        pages: Math.ceil(users.total / parseInt(searchParams.get('limit') || '20'))
+        pages: Math.ceil(users.total / parseInt(searchParams.get('limit') ?? '20'))
       }
     });
     
@@ -220,11 +220,11 @@ export async function getOptimizedSystemMetrics(request: NextRequest) {
       ]);
       
       return {
-        totalUsers: usersResult.count || 0,
-        totalPolls: pollsResult.count || 0,
-        totalVotes: votesResult.count || 0,
-        totalFeedback: feedbackResult.count || 0,
-        systemHealth: systemHealthResult.data?.[0] || { status: 'healthy' },
+        totalUsers: usersResult.count ?? 0,
+        totalPolls: pollsResult.count ?? 0,
+        totalVotes: votesResult.count ?? 0,
+        totalFeedback: feedbackResult.count ?? 0,
+        systemHealth: systemHealthResult.data?.[0] ?? { status: 'healthy' },
         lastUpdated: new Date().toISOString()
       };
     });

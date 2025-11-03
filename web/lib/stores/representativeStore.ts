@@ -71,7 +71,7 @@ type RepresentativeStore = {
 const useRepresentativeStore = create<RepresentativeStore>()(
   devtools(
     persist(
-      immer((set, get) => ({
+      immer((set, _get) => ({
         // Initial state
         representatives: [],
         currentRepresentative: null,
@@ -111,7 +111,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               console.log('✅ Store: Updated state with results:', results);
             } else {
               set(state => {
-                state.error = results.error || 'Search failed';
+                state.error = results.error ?? 'Search failed';
                 state.searchLoading = false;
               });
               console.log('❌ Store: Search failed:', results.error);
@@ -141,7 +141,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               });
             } else {
               set(state => {
-                state.error = response.error || 'Location search failed';
+                state.error = response.error ?? 'Location search failed';
                 state.loading = false;
               });
             }
@@ -164,12 +164,12 @@ const useRepresentativeStore = create<RepresentativeStore>()(
             
             if (response.success && response.data) {
               set(state => {
-                state.currentRepresentative = response.data as Representative || null;
+                state.currentRepresentative = (response.data as Representative) ?? null;
                 state.loading = false;
               });
             } else {
               set(state => {
-                state.error = response.error || 'Representative not found';
+                state.error = response.error ?? 'Representative not found';
                 state.loading = false;
               });
             }

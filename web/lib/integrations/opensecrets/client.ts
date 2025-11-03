@@ -135,7 +135,7 @@ export class OpenSecretsApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public apiResponse?: any
+    public apiResponse?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'OpenSecretsApiError';
@@ -331,8 +331,8 @@ export class OpenSecretsClient {
     });
   }
 
-  async getCandidateSummary(cid: string, cycle: number): Promise<OpenSecretsApiResponse<any>> {
-    return await this.makeRequest<OpenSecretsApiResponse<any>>('/getOrgs', { 
+  async getCandidateSummary(cid: string, cycle: number): Promise<OpenSecretsApiResponse<unknown>> {
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
       method: 'candSummary',
       cid,
       cycle
@@ -369,15 +369,15 @@ export class OpenSecretsClient {
   }
 
   // Organization information
-  async getOrganization(orgId: string): Promise<OpenSecretsApiResponse<any>> {
-    return await this.makeRequest<OpenSecretsApiResponse<any>>('/getOrgs', { 
+  async getOrganization(orgId: string): Promise<OpenSecretsApiResponse<unknown>> {
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
       method: 'orgSummary',
       id: orgId
     });
   }
 
-  async getOrganizationContributions(orgId: string, cycle: number): Promise<OpenSecretsApiResponse<any>> {
-    return await this.makeRequest<OpenSecretsApiResponse<any>>('/getOrgs', { 
+  async getOrganizationContributions(orgId: string, cycle: number): Promise<OpenSecretsApiResponse<unknown>> {
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
       method: 'orgContrib',
       id: orgId,
       cycle

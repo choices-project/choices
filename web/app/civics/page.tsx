@@ -83,7 +83,7 @@ export default function CivicsPage() {
       }
 
       const data: CivicsData = await response.json();
-      setRepresentatives(data.data || []);
+      setRepresentatives(data.data ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
       setRepresentatives([]);
@@ -405,7 +405,7 @@ export default function CivicsPage() {
               )}
               
               {/* Data Quality Information */}
-              {(rep.data_quality_score || rep.last_verified) && (
+              {(rep.data_quality_score ?? rep.last_verified) && (
                 <div className="mt-4 pt-3 border-t border-gray-100">
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     {rep.data_quality_score && (
@@ -439,16 +439,17 @@ export default function CivicsPage() {
             {isFeatureEnabled('CANDIDATE_ACCOUNTABILITY') && (
               <CandidateAccountabilityCard
                 representative={{
-                  id: rep.name.toLowerCase().replace(/\s+/g, '-'),
+                  id: String(rep.name.toLowerCase().replace(/\s+/g, '-')),
                   name: rep.name,
                   title: rep.office,
-                  party: rep.party || 'Independent',
-                  district: rep.district || 'N/A',
+                  party: rep.party ?? 'Independent',
+                  district: rep.district ?? 'N/A',
                   state: selectedState,
+                  level: rep.level,  // Include level for API lookup
                   office: rep.office,
-                  phone: rep.contact?.phone || '',
-                  email: rep.contact?.email || '',
-                  website: rep.contact?.website || '',
+                  phone: rep.contact?.phone ?? '',
+                  email: rep.contact?.email ?? '',
+                  website: rep.contact?.website ?? '',
                   tenure: '2 years',
                   nextElection: '2024-11-05'
                 }}

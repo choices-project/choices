@@ -11,16 +11,16 @@
  */
 export function stripUndefinedDeep<T>(input: T): T {
   if (Array.isArray(input)) {
-    return input.map(stripUndefinedDeep) as any
+    return input.map(stripUndefinedDeep) as T
   }
   
   if (input && typeof input === 'object') {
-    const out: any = {}
+    const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(input)) {
       if (v === undefined) continue
       out[k] = stripUndefinedDeep(v)
     }
-    return out
+    return out as T
   }
   
   return input
@@ -53,7 +53,7 @@ export function safeGet<T, K extends keyof T>(
 /**
  * Create object with only defined properties (no undefined keys)
  */
-export function createCleanObject<T extends Record<string, any>>(obj: T): Partial<T> {
+export function createCleanObject<T extends Record<string, unknown>>(obj: T): Partial<T> {
   const result: Partial<T> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {

@@ -21,8 +21,11 @@ import type {
 // } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
 
 // Temporary stub types until civics features are re-enabled
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddressLookupResult = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Representative = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CandidateCardV1 = any;
 
 export type TransformedRepresentative = {
@@ -102,8 +105,8 @@ export function transformRepresentatives(
       {
         id: `google-civic-${index}-${Date.now()}`,
         name: official.name,
-        party: official.party || 'Unknown',
-        office: office?.name || 'Unknown Office',
+        party: official.party ?? 'Unknown',
+        office: office?.name ?? 'Unknown Office',
         district,
         state,
         contact: withOptional(
@@ -119,7 +122,7 @@ export function transformRepresentatives(
       {
         photoUrl: official.photoUrl,
         socialMedia,
-        channels: official.channels || undefined
+        channels: official.channels ?? undefined
       }
     );
   });
@@ -143,9 +146,9 @@ export function transformToCandidateCard(
     office: representative.office,
     district: representative.district,
     state: representative.state,
-    imageUrl: representative.photoUrl || '',
+    imageUrl: representative.photoUrl ?? '',
     bio: additionalData?.bio,
-    website: representative.contact.website || '',
+    website: representative.contact.website ?? '',
     socialMedia: representative.socialMedia,
     positions: additionalData?.positions,
     recentVotes: additionalData?.recentVotes,
@@ -194,7 +197,7 @@ function extractDistrictInfo(
   // Fallback to first division or state
   const firstDivision = divisionValues[0];
   return {
-    district: firstDivision?.name || `${state} General`,
+    district: firstDivision?.name ?? `${state} General`,
     state
   };
 }
@@ -315,7 +318,7 @@ export function cleanRepresentativeData(representative: TransformedRepresentativ
   return withOptional(
     Object.assign({}, representative, {
       name: representative.name.trim(),
-      party: representative.party.trim() || 'Unknown',
+      party: representative.party.trim() ?? 'Unknown',
       office: representative.office.trim(),
       district: representative.district.trim(),
       state: representative.state.trim().toUpperCase(),

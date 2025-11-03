@@ -1,6 +1,7 @@
 'use client'
 
 import React, { Suspense } from 'react';
+
 import EnhancedOnboardingFlow from '@/components/onboarding/EnhancedOnboardingFlow'
 
 function OnboardingContent() {
@@ -14,5 +15,7 @@ export default function OnboardingPage() {
     </Suspense>
   )
 }
+
+
 
 

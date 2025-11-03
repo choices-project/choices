@@ -105,8 +105,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      actions: actions || [],
-      total: actions?.length || 0,
+      actions: actions ?? [],
+      total: actions?.length ?? 0,
       filters: { category, actionType, urgency }
     });
 

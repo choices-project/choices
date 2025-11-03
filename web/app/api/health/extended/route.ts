@@ -14,7 +14,6 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -25,7 +24,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/health/extended
  * Comprehensive health check with detailed metrics
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const timestamp = new Date().toISOString();
     const environment = process.env.NODE_ENV ?? 'development';
@@ -105,7 +104,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(health, { status: statusCode });
 
   } catch (error) {
-    logger.error('Error in extended health check:', error);
+    logger.error('Error in extended health check:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         status: 'error',
@@ -167,7 +166,7 @@ async function checkRateLimitingHealth() {
       metrics: {
         totalViolations: metrics.totalViolations ?? 0,
         violationsLastHour: metrics.violationsLastHour ?? 0,
-        violationsLast24Hours: metrics.violationsLast24Hours ?? 0,
+        violationsLast24Hours: metrics.violationsLastHour ?? 0, // Using violationsLastHour as proxy
         topIPs: (metrics.topViolatingIPs ?? []).slice(0, 5)
       },
       message: 'Rate limiting system operational'
@@ -190,7 +189,7 @@ async function checkSupabaseHealth() {
     const startTime = Date.now();
 
     // Test auth connection
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user: _user }, error: authError } = await supabase.auth.getUser();
     const authResponseTime = Date.now() - startTime;
 
     // Test database connection

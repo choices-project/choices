@@ -163,7 +163,7 @@ export default function AnalyticsPanel({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-600">
-              {dashboard?.uniqueUsers || 0}
+              {dashboard?.uniqueUsers ?? 0}
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Total user registrations
@@ -179,7 +179,7 @@ export default function AnalyticsPanel({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {dashboard?.topPages?.length || 0}
+              {dashboard?.topPages?.length ?? 0}
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Active polls
@@ -198,19 +198,19 @@ export default function AnalyticsPanel({
               <div className="flex justify-between">
                 <span className="text-sm">Response Time:</span>
                 <span className="text-sm font-medium">
-                  {performanceMetrics?.pageLoadTime || 0}ms
+                  {performanceMetrics?.pageLoadTime ?? 0}ms
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Uptime:</span>
                 <span className="text-sm font-medium">
-                  {performanceMetrics?.timeToInteractive || 0}ms
+                  {performanceMetrics?.timeToInteractive ?? 0}ms
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Error Rate:</span>
                 <span className="text-sm font-medium">
-                  {performanceMetrics?.cumulativeLayoutShift || 0}
+                  {performanceMetrics?.cumulativeLayoutShift ?? 0}
                 </span>
               </div>
             </div>

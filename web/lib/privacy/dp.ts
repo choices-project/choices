@@ -348,11 +348,11 @@ export class DifferentialPrivacyManager {
    * @returns Privacy-protected breakdown
    */
   createPrivacyAwareBreakdown(
-    data: any[],
+    data: unknown[],
     pollId: string,
     context: 'public' | 'loggedIn' | 'internal',
     epsilon: number = this.config.defaultEpsilon
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     // Check if we can allocate epsilon
     if (!this.canAllocateEpsilon(pollId, epsilon)) {
       throw new Error(`Cannot allocate epsilon ${epsilon} for poll ${pollId}`);
@@ -379,8 +379,8 @@ export class DifferentialPrivacyManager {
       },
       metadata: {
         originalDataPoints: data.length,
-        suppressedGroups: Object.values(privacyProtectedBreakdown).filter((v: any) => v.suppressed).length,
-        privacyProtectedGroups: Object.values(privacyProtectedBreakdown).filter((v: any) => v.privacyProtected).length
+        suppressedGroups: Object.values(privacyProtectedBreakdown).filter((v): v is { suppressed: boolean } => typeof v === 'object' && v !== null && 'suppressed' in v && Boolean(v.suppressed)).length,
+        privacyProtectedGroups: Object.values(privacyProtectedBreakdown).filter((v): v is { privacyProtected: boolean } => typeof v === 'object' && v !== null && 'privacyProtected' in v && Boolean(v.privacyProtected)).length
       }
     };
   }
@@ -412,8 +412,8 @@ export class DifferentialPrivacyManager {
     return epsilon;
   }
 
-  private createInitialBreakdown(data: any[]): Record<string, any> {
-    const breakdown: Record<string, any> = {};
+  private createInitialBreakdown(data: unknown[]): Record<string, unknown> {
+    const breakdown: Record<string, unknown> = {};
     
     // This would be customized based on the data structure
     // For now, create a simple count breakdown

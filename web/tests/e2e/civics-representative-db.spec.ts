@@ -18,7 +18,7 @@ test.describe('Civics Representative Database', () => {
     // Updated to reflect actual database state: 1,273 representatives
     await page.route('**/api/v1/civics/by-state**', async route => {
       const url = new URL(route.request().url());
-      const state = url.searchParams.get('state') || 'CA';
+      const state = url.searchParams.get('state') ?? 'CA';
       const payload = {
         ok: true,
         count: 1273, // Actual database count

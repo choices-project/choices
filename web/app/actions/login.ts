@@ -53,7 +53,7 @@ export async function loginAction(formData: FormData) {
   logger.info('User authenticated successfully', { userId: authData.user.id });
   
   // Check if user has completed onboarding based on key fields
-  const { data: profile, error: profileError } = await (supabase as any)
+  const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
     .select('demographics, primary_concerns, community_focus, participation_style')
     .eq('user_id', authData.user.id)

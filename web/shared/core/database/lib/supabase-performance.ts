@@ -33,7 +33,7 @@ class PerformanceMonitor {
   }> = new Map()
 
   recordOperation(operation: string, duration: number, success: boolean = true) {
-    const existing = this.metrics.get(operation) || {
+    const existing = this.metrics.get(operation) ?? {
       count: 0,
       totalTime: 0,
       avgTime: 0,
@@ -344,8 +344,8 @@ class RateLimiter {
   }
 
   isAllowed(key: string, limit?: number, window?: number): boolean {
-    const currentLimit = limit || this.defaultLimit
-    const currentWindow = window || this.defaultWindow
+    const currentLimit = limit ?? this.defaultLimit
+    const currentWindow = window ?? this.defaultWindow
     const now = new Date()
 
     const existing = this.limits.get(key)
@@ -454,7 +454,7 @@ export class OptimizedSupabaseClient {
     return {
       select: async (fields: string[] = ['*'], cacheKey?: string) => {
         const optimized = queryOptimizer.optimizeSelect(table, fields)
-        const cacheKeyFinal = cacheKey || queryOptimizer.generateCacheKey('select', table, { fields })
+        const cacheKeyFinal = cacheKey ?? queryOptimizer.generateCacheKey('select', table, { fields })
         
         return this.executeQuery(
           `select:${table}`,
@@ -475,7 +475,7 @@ export class OptimizedSupabaseClient {
             const result = await this.client.from(table).insert(data)
             return result
           },
-          cacheKey || `insert:${table}:${optimized.batch ? 'batch' : 'single'}`
+          cacheKey ?? `insert:${table}:${optimized.batch ? 'batch' : 'single'}`
         )
       },
 
@@ -494,7 +494,7 @@ export class OptimizedSupabaseClient {
             const result = await query
             return result
           },
-          cacheKey || `update:${table}:${optimized.updateFields.length}`
+          cacheKey ?? `update:${table}:${optimized.updateFields.length}`
         )
       },
 

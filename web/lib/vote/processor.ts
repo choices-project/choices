@@ -84,15 +84,15 @@ export class VoteProcessor implements IVoteProcessor {
       const voteRecord = {
         id: vote.id,
         poll_id: vote.pollId,
-        user_id: vote.userId || null,
+        user_id: vote.userId ?? null,
         voting_method: pollData.votingMethod,
         vote_data: vote,
         created_at: vote.timestamp.toISOString(),
         updated_at: vote.timestamp.toISOString(),
-        verification_token: vote.verificationToken || null,
+        verification_token: vote.verificationToken ?? null,
         is_verified: false,
-        ip_address: vote.ipAddress || null,
-        user_agent: vote.userAgent || null
+        ip_address: vote.ipAddress ?? null,
+        user_agent: vote.userAgent ?? null
       };
 
       // Insert vote into database
@@ -230,7 +230,7 @@ export class VoteProcessor implements IVoteProcessor {
       await supabaseClient
         .from('polls')
         .update({ 
-          total_votes: count || 0,
+          total_votes: count ?? 0,
           updated_at: new Date().toISOString()
         })
         .eq('id', pollId);
@@ -331,7 +331,7 @@ export class VoteProcessor implements IVoteProcessor {
       return false;
     }
 
-    const totalCredits = poll.votingConfig.quadraticCredits || 100;
+    const totalCredits = poll.votingConfig.quadraticCredits ?? 100;
     let totalSpent = 0;
 
     for (const [optionIndex, credits] of Object.entries(vote.allocations)) {
@@ -358,8 +358,8 @@ export class VoteProcessor implements IVoteProcessor {
       return false;
     }
 
-    const rangeMin = poll.votingConfig.rangeMin || 0;
-    const rangeMax = poll.votingConfig.rangeMax || 10;
+    const rangeMin = poll.votingConfig.rangeMin ?? 0;
+    const rangeMax = poll.votingConfig.rangeMax ?? 10;
 
     for (const [optionIndex, rating] of Object.entries(vote.ratings)) {
       if (typeof rating !== 'number' || rating < rangeMin || rating > rangeMax) {

@@ -81,8 +81,10 @@ export const systemStatus = createSecureServerAction(
 
           // Update system configuration (using user_profiles table for now)
           // First get the current user profile
-                    const supabase = supabaseClient as any
-          const { data: userProfile, error: profileError } = await supabase
+          type UserProfilePreferences = {
+            preferences?: Record<string, unknown>
+          }
+          const { data: userProfile, error: profileError } = await supabaseClient
             .from('user_profiles')
             .select('preferences')
             .eq('user_id', admin.userId)
@@ -92,16 +94,17 @@ export const systemStatus = createSecureServerAction(
             throw new Error(`Failed to get user profile: ${profileError.message}`)
           }
 
-          const { error: updateError } = await supabase
+          const profileData = userProfile as UserProfilePreferences | null
+          const { error: updateError } = await supabaseClient
             .from('user_profiles')
             .update({
               preferences: {
-                ...(userProfile?.preferences || {}),
+                ...(profileData?.preferences ?? {}),
                 [validatedData.configKey]: validatedData.configValue
               },
               updated_at: new Date().toISOString()
             })
-            .eq('id', admin.userId)
+            .eq('user_id', admin.userId)
 
           if (updateError) {
             throw new Error('Failed to update system configuration')

@@ -149,7 +149,7 @@ export class ElectoralFeedService {
   private async getCurrentOfficials(jurisdictionId: JurisdictionID): Promise<Official[]> {
     // This would integrate with our multi-source data system
     // For now, return placeholder data based on jurisdiction
-    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    const jurisdictionName = jurisdictionId.split('-').pop() ?? 'Unknown';
     
     return [
       {
@@ -177,7 +177,7 @@ export class ElectoralFeedService {
   private async getUpcomingRaces(jurisdictionId: JurisdictionID): Promise<Race[]> {
     // This would integrate with our multi-source data system
     // For now, return placeholder data based on jurisdiction
-    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    const jurisdictionName = jurisdictionId.split('-').pop() ?? 'Unknown';
     
     return [
       {
@@ -221,7 +221,7 @@ export class ElectoralFeedService {
   private async getKeyIssues(jurisdictionId: JurisdictionID): Promise<Issue[]> {
     // This would integrate with our multi-source data system
     // For now, return placeholder data based on jurisdiction
-    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    const jurisdictionName = jurisdictionId.split('-').pop() ?? 'Unknown';
     
     return [
       {

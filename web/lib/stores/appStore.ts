@@ -29,10 +29,10 @@ type AppStore = {
   
   // Modal State
   activeModal: string | null;
-  modalData: any;
+  modalData: Record<string, unknown> | null;
   modalStack: Array<{
     id: string;
-    data: any;
+    data: Record<string, unknown>;
   }>;
   
   // Mobile UI State
@@ -93,10 +93,10 @@ type AppStore = {
   setSidebarActiveSection: (section: string | null) => void;
   
   // Actions - Modal
-  openModal: (id: string, data?: any) => void;
+  openModal: (id: string, data?: Record<string, unknown>) => void;
   closeModal: () => void;
   closeAllModals: () => void;
-  pushModal: (id: string, data?: any) => void;
+  pushModal: (id: string, data?: Record<string, unknown>) => void;
   popModal: () => void;
   
   // Actions - Mobile UI
@@ -272,8 +272,8 @@ export const useAppStore = create<AppStore>()(
       // Modal actions
       openModal: (id, data) => set((state) => {
         state.activeModal = id;
-        state.modalData = data;
-        state.modalStack.push({ id, data });
+        state.modalData = data ?? null;
+        state.modalStack.push({ id, data: data ?? {} });
       }),
       
       closeModal: () => set((state) => {
@@ -297,9 +297,9 @@ export const useAppStore = create<AppStore>()(
       }),
       
       pushModal: (id, data) => set((state) => {
-        state.modalStack.push({ id, data });
+        state.modalStack.push({ id, data: data ?? {} });
         state.activeModal = id;
-        state.modalData = data;
+        state.modalData = data ?? null;
       }),
       
       popModal: () => set((state) => {

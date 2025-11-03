@@ -92,7 +92,7 @@ export class SecureKeyManager {
   // ============================================================================
 
   async generateUserKey(keyId?: string): Promise<SecureKey> {
-    const id = keyId || this.generateKeyId();
+    const id = keyId ?? this.generateKeyId();
     
     // Generate non-extractable AES-GCM key
     const key = await crypto.subtle.generateKey(
@@ -126,7 +126,7 @@ export class SecureKeyManager {
   }
 
   async generateServerKey(keyId?: string): Promise<SecureKey> {
-    const id = keyId || this.generateKeyId();
+    const id = keyId ?? this.generateKeyId();
     
     // Generate extractable server key for backup/rotation
     const key = await crypto.subtle.generateKey(
@@ -193,7 +193,7 @@ export class SecureKeyManager {
   // ============================================================================
 
   async encrypt(plaintext: string, keyId?: string): Promise<EncryptionResult> {
-    const key = this.getKey(keyId || this.currentKeyId);
+    const key = this.getKey(keyId ?? this.currentKeyId);
     if (!key) {
       throw new Error('No encryption key available');
     }
@@ -408,7 +408,7 @@ export class SecureKeyManager {
 
   async deterministicHash(input: string, salt?: string): Promise<string> {
     const encoder = new TextEncoder();
-    const data = encoder.encode(input + (salt || ''));
+    const data = encoder.encode(input + (salt ?? ''));
     const hash = await crypto.subtle.digest('SHA-256', data);
     return this.arrayBufferToBase64(hash);
   }
@@ -425,7 +425,7 @@ export class SecureKeyManager {
 
   private getKey(keyId: string | null): SecureKey | null {
     if (!keyId) return null;
-    return this.keys.get(keyId) || null;
+    return this.keys.get(keyId) ?? null;
   }
 
   private generateKeyId(): string {

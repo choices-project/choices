@@ -86,7 +86,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
     }
 
     // Transform hashtag_flags data to HashtagModeration format
-    const flags = data || [];
+    const flags = data ?? [];
     const pendingFlags = flags.filter(flag => flag.status === 'pending');
     const moderationStatus = pendingFlags.length > 0 ? 'pending' : 
                            flags.length > 0 ? 'flagged' : 'approved';
@@ -97,9 +97,9 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       hashtag_id: flag.hashtag_id,
       user_id: flag.user_id,
       flag_type: flag.flag_type,
-      reason: flag.reason || '',
-      created_at: flag.created_at || new Date().toISOString(),
-      updated_at: flag.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
+      reason: flag.reason ?? '',
+      created_at: flag.created_at ?? new Date().toISOString(),
+      updated_at: flag.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
       status: flag.status === 'approved' ? 'resolved' : 
               flag.status === 'rejected' ? 'rejected' : 'pending'
     }));
@@ -108,8 +108,8 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       id: `moderation_${hashtagId}`,
       hashtag_id: hashtagId,
       status: moderationStatus,
-      created_at: flags[0]?.created_at || new Date().toISOString(),
-      updated_at: flags[0]?.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
+      created_at: flags[0]?.created_at ?? new Date().toISOString(),
+      updated_at: flags[0]?.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
       human_review_required: pendingFlags.length > 0,
       moderation_reason: pendingFlags.length > 0 ? 'Pending review' : undefined
     };
@@ -194,10 +194,10 @@ export async function flagHashtag(
       id: data.id,
       hashtag_id: data.hashtag_id,
       user_id: data.user_id,
-      flag_type: data.flag_type as any,
-      reason: data.reason || '',
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.created_at || new Date().toISOString(), // Use created_at since updated_at doesn't exist
+      flag_type: data.flag_type,
+      reason: data.reason ?? '',
+      created_at: data.created_at ?? new Date().toISOString(),
+      updated_at: data.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
       status: data.status as 'pending' | 'resolved' | 'rejected'
     };
 
@@ -324,12 +324,12 @@ export async function getModerationQueue(
         status: item.status,
         moderation_reason: item.reason,
         moderated_by: item.reviewed_by,
-        moderated_at: item.updated_at || item.created_at,
+        moderated_at: item.updated_at ?? item.created_at,
         flags: [], // Will be populated separately if needed
         auto_moderation_score: 0.5, // Default score
         human_review_required: item.status === 'pending'
       }
-    })) || [];
+    })) ?? [];
 
     return {
       success: true,
@@ -425,7 +425,7 @@ export async function calculateAutoModerationScore(hashtag: any): Promise<number
   score += misleadingMatches.length * 0.2;
 
   // Check for excessive special characters
-  const specialCharCount = (name.match(/[^a-z0-9]/g) || []).length;
+  const specialCharCount = (name.match(/[^a-z0-9]/g) ?? []).length;
   if (specialCharCount > name.length * 0.3) {
     score += 0.2;
   }
@@ -470,7 +470,7 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
       const existingNormalized = hashtag.name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const similarity = calculateSimilarity(normalizedName, existingNormalized);
       return similarity > MODERATION_CONSTANTS.DUPLICATE_THRESHOLD;
-    }) || [];
+    }) ?? [];
 
     // Transform duplicates to handle null values
     const transformedDuplicates = duplicates.map(hashtag => ({
@@ -592,9 +592,9 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
       else if (reason.includes('misleading') || reason.includes('false')) type = 'misleading';
       else if (reason.includes('duplicate')) type = 'duplicate';
       
-      acc[type] = (acc[type] || 0) + 1;
+        acc[type] = (acc[type] ?? 0) + 1;
       return acc;
-    }, {} as Record<string, number>) || {};
+    }, {} as Record<string, number>) ?? {};
 
     const topFlagTypesArray = Object.entries(topFlagTypes)
       .map(([type, count]) => ({ type, count }))
@@ -604,14 +604,14 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
     return {
       success: true,
       data: {
-        total_hashtags: totalHashtags || 0,
-        pending_review: pendingReview || 0,
-        approved: approved || 0,
-        rejected: rejected || 0,
-        flagged: flagged || 0,
-        auto_approved: approved || 0, // Simplified for now
-        human_reviewed: (approved || 0) + (rejected || 0),
-        flag_count: flagCount || 0,
+        total_hashtags: totalHashtags ?? 0,
+        pending_review: pendingReview ?? 0,
+        approved: approved ?? 0,
+        rejected: rejected ?? 0,
+        flagged: flagged ?? 0,
+        auto_approved: approved ?? 0, // Simplified for now
+        human_reviewed: (approved ?? 0) + (rejected ?? 0),
+        flag_count: flagCount ?? 0,
         top_flag_types: topFlagTypesArray as Array<{ type: string; count: number }>
       }
     };

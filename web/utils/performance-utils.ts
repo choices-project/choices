@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Performance Utilities
  * 
@@ -142,9 +144,10 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
   return ((...args: Parameters<T>) => {
     const key = keyGenerator ? keyGenerator(...args) : JSON.stringify(args);
     
-    if (cache.has(key)) {
+    const cached = cache.get(key);
+    if (cached !== undefined) {
       performanceMetrics.addMetric('memoize-hit', 1);
-      return cache.get(key)!;
+      return cached;
     }
     
     performanceMetrics.addMetric('memoize-miss', 1);
@@ -167,7 +170,7 @@ export class TTLCache<K, V> {
   }
   
   set(key: K, value: V, ttl?: number): void {
-    const expires = Date.now() + (ttl || this.defaultTTL);
+    const expires = Date.now() + (ttl ?? this.defaultTTL);
     this.cache.set(key, { value, expires });
   }
   
@@ -409,11 +412,13 @@ export class PerformanceProfiler {
       const endTime = performance.now();
       const duration = endTime - startTime;
       
-      if (!this.profiles.has(name)) {
-        this.profiles.set(name, []);
+      let durations = this.profiles.get(name);
+      if (!durations) {
+        durations = [];
+        this.profiles.set(name, durations);
       }
       
-      this.profiles.get(name)!.push(duration);
+      durations.push(duration);
       performanceMetrics.addMetric(`profile-${name}`, duration);
     };
   }

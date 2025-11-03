@@ -223,7 +223,7 @@ export class FinancialTransparencySystem {
         corporateContributions: campaignFinance.corporateContributions,
         unionContributions: campaignFinance.unionContributions,
         selfFunding: campaignFinance.selfFunding,
-        smallDonorPercentage: campaignFinance.smallDonorPercentage || 0
+        smallDonorPercentage: campaignFinance.smallDonorPercentage ?? 0
       };
 
       // Analyze top contributors
@@ -339,8 +339,8 @@ export class FinancialTransparencySystem {
         topContributors: campaignFinance.topContributors.map(contributor => ({
           name: contributor.name,
           amount: contributor.amount,
-          industry: contributor.industry || 'Unknown',
-          issueAlignment: contributor.influenceScore || 0
+          industry: contributor.industry ?? 'Unknown',
+          issueAlignment: contributor.influenceScore ?? 0
         })),
         votesOnIssue,
         influenceScore,
@@ -499,7 +499,7 @@ export class FinancialTransparencySystem {
       name: contributor.name,
       amount: contributor.amount,
       type: contributor.type,
-      industry: contributor.industry || 'Unknown',
+      industry: contributor.industry ?? 'Unknown',
       influenceScore: contributor.influenceScore
     }));
   }
@@ -548,7 +548,7 @@ export class FinancialTransparencySystem {
     
     const corporateInfluence = total > 0 ? (campaignFinance.corporateContributions / total) * 100 : 0;
     const pacInfluence = total > 0 ? (campaignFinance.pacContributions / total) * 100 : 0;
-    const smallDonorInfluence = campaignFinance.smallDonorPercentage || 0;
+    const smallDonorInfluence = campaignFinance.smallDonorPercentage ?? 0;
     
     // Independence score: higher small donor percentage = more independent
     const independenceScore = Math.max(0, 100 - (corporateInfluence + pacInfluence) + smallDonorInfluence);
@@ -637,10 +637,10 @@ export class FinancialTransparencySystem {
     const revolvingDoor = this.revolvingDoorData.get(candidateId);
     
     const fundingDiversity = campaignFinance ? this.calculateFundingDiversity(campaignFinance) : 0;
-    const smallDonorRatio = campaignFinance?.smallDonorPercentage || 0;
+    const smallDonorRatio = campaignFinance?.smallDonorPercentage ?? 0;
     const corporateInfluence = campaignFinance ? (campaignFinance.corporateContributions / campaignFinance.totalRaised) * 100 : 0;
     const pacInfluence = campaignFinance ? (campaignFinance.pacContributions / campaignFinance.totalRaised) * 100 : 0;
-    const revolvingDoorScore = revolvingDoor?.revolvingDoorScore.overall || 0;
+    const revolvingDoorScore = revolvingDoor?.revolvingDoorScore.overall ?? 0;
     
     const overall = (fundingDiversity + smallDonorRatio + (100 - corporateInfluence) + (100 - pacInfluence) + (100 - revolvingDoorScore)) / 5;
     
@@ -831,7 +831,7 @@ export class FinancialTransparencySystem {
       'agriculture': ['agriculture', 'farming', 'food', 'livestock']
     };
     
-    const relevantIndustries = issueIndustryMap[issue.toLowerCase()] || [];
+    const relevantIndustries = issueIndustryMap[issue.toLowerCase()] ?? [];
     if (relevantIndustries.length === 0) return 0;
     
     let totalContributions = 0;
@@ -841,7 +841,7 @@ export class FinancialTransparencySystem {
       totalContributions += contributor.amount;
       
       // Check if contributor's industry matches the issue
-      const contributorIndustry = contributor.industry?.toLowerCase() || '';
+      const contributorIndustry = contributor.industry?.toLowerCase() ?? '';
       const isRelevantIndustry = relevantIndustries.some(industry => 
         contributorIndustry.includes(industry.toLowerCase())
       );
@@ -872,8 +872,8 @@ export class FinancialTransparencySystem {
     // Group contributors by industry for analysis
     const industryContributions: Record<string, number> = {};
     for (const contributor of contributors) {
-      const industry = contributor.industry || 'unknown';
-      industryContributions[industry] = (industryContributions[industry] || 0) + contributor.amount;
+      const industry = contributor.industry ?? 'unknown';
+      industryContributions[industry] = (industryContributions[industry] ?? 0) + contributor.amount;
     }
     
     for (const vote of votes) {
@@ -971,12 +971,12 @@ export class FinancialTransparencySystem {
         if (entry && typeof entry === 'object') {
           const service = entry as Record<string, unknown>;
           return {
-            position: service.position as string || 'Unknown Position',
-            agency: service.agency as string || 'Unknown Agency',
-            start_date: service.start_date as string || '',
-            end_date: service.end_date as string || '',
-            salary: service.salary as number || 0,
-            responsibilities: service.responsibilities as string || ''
+            position: (service.position as string) ?? 'Unknown Position',
+            agency: (service.agency as string) ?? 'Unknown Agency',
+            start_date: (service.start_date as string) ?? '',
+            end_date: (service.end_date as string) ?? '',
+            salary: (service.salary as number) ?? 0,
+            responsibilities: (service.responsibilities as string) ?? ''
           };
         }
         return {
@@ -1009,12 +1009,12 @@ export class FinancialTransparencySystem {
         if (entry && typeof entry === 'object') {
           const employment = entry as Record<string, unknown>;
           return {
-            employer: employment.company as string || 'Unknown Company',
-            position: employment.position as string || 'Unknown Position',
-            start_date: employment.start_date as string || '',
-            industry: employment.industry as string || 'Unknown Industry',
-            salary: employment.salary as number || 0,
-            lobbying: employment.lobbying_activities as boolean || false
+            employer: (employment.company as string) ?? 'Unknown Company',
+            position: (employment.position as string) ?? 'Unknown Position',
+            start_date: (employment.start_date as string) ?? '',
+            industry: (employment.industry as string) ?? 'Unknown Industry',
+            salary: (employment.salary as number) ?? 0,
+            lobbying: (employment.lobbying_activities as boolean) ?? false
           };
         }
         return {
@@ -1167,11 +1167,11 @@ export class FinancialTransparencySystem {
         if (connection && typeof connection === 'object') {
           const conn = connection as Record<string, unknown>;
           return {
-            company: conn.company as string || 'Unknown Company',
-            industry: conn.industry as string || 'Unknown Industry',
-            connection_type: conn.connection_type as 'donation' | 'employment' | 'board_member' | 'consultant' || 'donation',
+            company: (conn.company as string) ?? 'Unknown Company',
+            industry: (conn.industry as string) ?? 'Unknown Industry',
+            connection_type: (conn.connection_type as 'donation' | 'employment' | 'board_member' | 'consultant') ?? 'donation',
             ...(conn.amount !== undefined && { amount: conn.amount as number }),
-            start_date: conn.start_date as string || '',
+            start_date: (conn.start_date as string) ?? '',
             ...(conn.end_date !== undefined && { end_date: conn.end_date as string })
           };
         }
@@ -1208,7 +1208,7 @@ export class FinancialTransparencySystem {
     const influences: IndustryInfluence[] = [];
     
     for (const [industry, connections] of Object.entries(industryMap)) {
-      const totalFinancialInterest = connections.reduce((sum, conn) => sum + (conn.amount || 0), 0);
+      const totalFinancialInterest = connections.reduce((sum, conn) => sum + (conn.amount ?? 0), 0);
       const boardMembers = connections.filter(conn => conn.connection_type === 'board_member').length;
       const consultants = connections.filter(conn => conn.connection_type === 'consultant').length;
       const shareholders = connections.filter(conn => conn.connection_type === 'donation').length;
@@ -1340,8 +1340,8 @@ export class FinancialTransparencySystem {
     return votingRecords.filter((record: unknown) => {
       if (record && typeof record === 'object') {
         const vote = record as Record<string, unknown>;
-        const description = (vote.description as string || '').toLowerCase();
-        const title = (vote.title as string || '').toLowerCase();
+        const description = ((vote.description as string) ?? '').toLowerCase();
+        const title = ((vote.title as string) ?? '').toLowerCase();
         
         return industryKeywords.some(keyword => 
           description.includes(keyword) || title.includes(keyword)
@@ -1359,8 +1359,8 @@ export class FinancialTransparencySystem {
     return policyPositions.filter((policy: unknown) => {
       if (policy && typeof policy === 'object') {
         const pos = policy as Record<string, unknown>;
-        const description = (pos.description as string || '').toLowerCase();
-        const title = (pos.title as string || '').toLowerCase();
+        const description = ((pos.description as string) ?? '').toLowerCase();
+        const title = ((pos.title as string) ?? '').toLowerCase();
         
         return industryKeywords.some(keyword => 
           description.includes(keyword) || title.includes(keyword)
@@ -1380,7 +1380,7 @@ export class FinancialTransparencySystem {
       'Agriculture': ['agriculture', 'farming', 'food', 'crop', 'livestock']
     };
     
-    return keywordMap[industry] || [];
+    return keywordMap[industry] ?? [];
   }
   
   private calculateConflictScore(
@@ -1391,7 +1391,7 @@ export class FinancialTransparencySystem {
     let score = 0;
     
     // Base score from financial interest
-    score += Math.min((connection.amount || 0) / 1000, 30);
+    score += Math.min((connection.amount ?? 0) / 1000, 30);
     
     // Add points for relevant votes and policies
     score += relevantVotes.length * 5;

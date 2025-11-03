@@ -13,6 +13,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRedisClient } from '@/lib/cache/redis-client';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -207,7 +208,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Optimized admin dashboard API error:', error as Error);
+    logger.error('Optimized admin dashboard API error:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -251,7 +252,7 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
     return result;
 
   } catch (error) {
-    console.error('Error loading admin overview:', error as Error);
+    logger.error('Error loading admin overview:', error instanceof Error ? error : new Error(String(error)));
     return {
       total_users: 0,
       total_polls: 0,
@@ -311,7 +312,7 @@ async function loadAdminAnalytics(_supabase: any) {
     return result;
 
   } catch (error) {
-    console.error('Error loading admin analytics:', error as Error);
+    logger.error('Error loading admin analytics:', error instanceof Error ? error : new Error(String(error)));
     return {
       user_growth: [],
       poll_activity: [],
@@ -352,7 +353,7 @@ async function loadSystemHealth(supabase: any) {
     return result;
 
   } catch (error) {
-    console.error('Error loading system health:', error as Error);
+    logger.error('Error loading system health:', error instanceof Error ? error : new Error(String(error)));
     return {
       status: 'degraded',
       database_latency_ms: 0,
@@ -406,7 +407,7 @@ async function loadRecentActivity(supabase: any) {
     return result;
 
   } catch (error) {
-    console.error('Error loading recent activity:', error as Error);
+    logger.error('Error loading recent activity:', error instanceof Error ? error : new Error(String(error)));
     return {
       new_users: [],
       recent_polls: [],

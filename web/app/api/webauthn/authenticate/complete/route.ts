@@ -13,9 +13,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'WebAuthn feature is disabled' }, { status: 403 });
     }
 
-    const { userId, response } = await req.json();
+    const { userId, response: webauthnResponse } = await req.json();
     
-    if (!userId || !response) {
+    if (!userId || !webauthnResponse) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       .select('*')
       .eq('user_id', userId)
       .eq('type', 'authentication')
-      .eq('challenge', response.challenge)
+      .eq('challenge', webauthnResponse.challenge)
       .single();
 
     if (challengeError || !challengeData) {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       .eq('id', challengeData.id);
 
     // Extract credential ID from response
-    const credentialId = isoUint8Array.toB64url(new Uint8Array(response.rawId));
+    const credentialId = isoUint8Array.toB64url(new Uint8Array(webauthnResponse.rawId));
 
     // Get the credential from database
     const { data: credential, error: credentialError } = await supabase
@@ -65,12 +65,12 @@ export async function POST(req: Request) {
     // This provides additional security guarantees but basic validation is acceptable for MVP.
 
     // Basic validation (replace with proper @simplewebauthn/server verification)
-    if (!response.rawId || !response.response) {
+    if (!webauthnResponse.rawId || !webauthnResponse.response) {
       return NextResponse.json({ error: 'Invalid WebAuthn response' }, { status: 400 });
     }
 
     // Check signature counter (basic replay protection)
-    const newCounter = response.response.counter || 0;
+    const newCounter = webauthnResponse.response.counter || 0;
     if (newCounter <= credential.sign_count) {
       return NextResponse.json({ error: 'Invalid signature counter' }, { status: 400 });
     }

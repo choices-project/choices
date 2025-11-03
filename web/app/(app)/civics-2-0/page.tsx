@@ -22,6 +22,7 @@ import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/sup
 import {
   useAppStore
 } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
@@ -65,8 +66,8 @@ export default function Civics2Page() {
 
       const data = await response.json();
       logger.info('✅ API Response:', data);
-      logger.info('📊 Setting representatives:', data.data?.length || 0);
-      setRepresentatives(data.data || []);
+      logger.info('📊 Setting representatives:', data.data?.length ?? 0);
+      setRepresentatives(data.data ?? []);
       logger.info('🎯 Representatives state updated');
     } catch (error) {
       console.error('❌ Error loading representatives:', error);
@@ -130,8 +131,8 @@ export default function Civics2Page() {
   const filteredRepresentatives = representatives.filter(rep => {
     if (!searchQuery) return true;
     return rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (rep.office || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (rep.party || '').toLowerCase().includes(searchQuery.toLowerCase());
+           (rep.office ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+           (rep.party ?? '').toLowerCase().includes(searchQuery.toLowerCase());
   });
 
 
@@ -406,13 +407,21 @@ export default function Civics2Page() {
               }`}>
                 {filteredRepresentatives.map((representative) => {
                   // Transform SuperiorRepresentativeData to Representative
-                  const transformedRep: Representative = {
-                    id: parseInt(representative.id) || 0,
+                  const transformedRep: Representative = withOptional({
+                    id: parseInt(representative.id) ?? 0,
                     name: representative.name,
                     party: representative.party,
                     office: representative.office,
                     level: representative.level,
                     state: representative.state,
+                    data_quality_score: representative.dataQualityScore ?? 0,
+                    verification_status: representative.verificationStatus === 'verified' ? 'verified' : 
+                                        representative.verificationStatus === 'pending' ? 'pending' : 'failed',
+                    data_sources: representative.dataSource ?? [],
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    last_verified: representative.lastVerified ?? new Date().toISOString()
+                  }, {
                     district: representative.district,
                     primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value,
                     primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value,
@@ -422,15 +431,8 @@ export default function Civics2Page() {
                     primary_photo_url: representative.photoUrl ?? representative.photo,
                     term_start_date: representative.termStart,
                     term_end_date: representative.termEnd,
-                    next_election_date: representative.nextElection,
-                    data_quality_score: representative.dataQualityScore ?? 0,
-                    verification_status: representative.verificationStatus === 'verified' ? 'verified' : 
-                                        representative.verificationStatus === 'pending' ? 'pending' : 'failed',
-                    data_sources: representative.dataSource ?? [],
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    last_verified: representative.lastVerified ?? new Date().toISOString()
-                  };
+                    next_election_date: representative.nextElection
+                  });
                   
                   return (
                     <RepresentativeCard

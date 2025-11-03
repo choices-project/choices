@@ -62,8 +62,8 @@ async function handlePost(request: NextRequest) {
         poll_question: poll.question,
         vote_status: 'active',
         trust_tier: 1, // Default trust tier
-        voter_session: request.headers.get('x-session-id') || null,
-        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+        voter_session: request.headers.get('x-session-id') ?? null,
+        ip_address: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown'
       });
 
     if (voteError) {
@@ -75,8 +75,8 @@ async function handlePost(request: NextRequest) {
     const { error: updatePollError } = await (await supabase)
       .from('polls')
       .update({
-        total_votes: (poll.total_votes || 0) + 1, // Use existing total_votes field
-        participation: (poll.participation || 0) + 1 // Use existing participation field
+        total_votes: (poll.total_votes ?? 0) + 1, // Use existing total_votes field
+        participation: (poll.participation ?? 0) + 1 // Use existing participation field
       })
       .eq('id', validatedData.pollId);
 
@@ -87,7 +87,7 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ message: 'Vote recorded successfully' }, { status: 200 });
 
   } catch (error) {
-    logger.error('Error in POST /api/vote:', error as Error);
+    logger.error('Error in POST /api/vote:', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef } from 'react';
  *   const onScroll = useDebouncedCallback((evt) => { ... }, 50, [rowHeight, buffer]);
  *   <div onScroll={onScroll} />
  */
-export function useDebouncedCallback<T extends (...args: any[]) => void>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => void>(
   fn: T,
   delay: number,
   deps: readonly unknown[] = []
@@ -26,7 +26,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
   const debounced = useMemo(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
-    const wrapped = ((...args: any[]) => {
+    const wrapped = ((...args: Parameters<T>) => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         timer = null;
@@ -47,7 +47,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
   // cancel any pending run on unmount
   useEffect(() => {
     return () => {
-      (debounced as any)?.cancel?.();
+      (debounced as T & { cancel?: () => void })?.cancel?.();
     };
   }, [debounced]);
 

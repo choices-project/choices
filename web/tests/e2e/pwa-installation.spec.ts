@@ -70,7 +70,7 @@ test.describe('PWA Installation - V2', () => {
 
     // Debug: Check what's actually on the page
     const bodyText = await page.textContent('body');
-    console.log('V2 Page body contains PWA:', bodyText?.includes('PWA') || bodyText?.includes('pwa'));
+    console.log('V2 Page body contains PWA:', bodyText?.includes('PWA') ?? bodyText?.includes('pwa') ?? false);
     console.log('V2 Page body content (first 500 chars):', bodyText?.substring(0, 500));
     
     // Check if PWAStatus component exists in DOM
@@ -334,7 +334,7 @@ test.describe('PWA Installation - V2', () => {
     await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
     await page.click('button:has-text("Next")');
 
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
 
     await page.click('button:has-text("Create Poll")');
@@ -363,7 +363,7 @@ test.describe('PWA Installation - V2', () => {
 
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => response.url().includes('/api/v1/civics/address-lookup') || response.url().includes('/api/civics/by-address'));
 
     // Check PWA installation with civics context
     const civicsInstallPrompt = await page.evaluate(() => {

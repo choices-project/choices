@@ -148,22 +148,22 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       
       // Transform optimized data to match existing interface
       const transformedAnalytics: PlatformAnalytics = {
-        totalUsers: data.overview?.total_users || 0,
-        totalPolls: data.overview?.total_polls || 0,
-        totalVotes: data.overview?.total_votes || 0,
-        activePolls: data.overview?.active_polls || 0,
+        totalUsers: data.overview?.total_users ?? 0,
+        totalPolls: data.overview?.total_polls ?? 0,
+        totalVotes: data.overview?.total_votes ?? 0,
+        activePolls: data.overview?.active_polls ?? 0,
         totalFeedback: 0, // Would need separate query
         systemHealth: {
           status: data.system_health?.status === 'operational' ? 'healthy' : 'warning',
-          uptime: data.system_health?.uptime_percentage || 0,
-          responseTime: data.system_health?.database_latency_ms || 0,
+          uptime: data.system_health?.uptime_percentage ?? 0,
+          responseTime: data.system_health?.database_latency_ms ?? 0,
           errorRate: 0 // Would need calculation
         },
         engagement: {
           dailyActiveUsers: 0, // Would need separate query
           weeklyActiveUsers: 0, // Would need separate query
           monthlyActiveUsers: 0, // Would need separate query
-          participationRate: data.overview?.engagement_rate || 0
+          participationRate: data.overview?.engagement_rate ?? 0
         },
         recentActivity: data.recent_activity?.recent_votes?.map((vote: any) => ({
           id: vote.id,
@@ -171,7 +171,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           description: `User voted on poll ${vote.poll_id}`,
           timestamp: vote.created_at,
           user_id: vote.user_id
-        })) || []
+        })) ?? []
       };
       
       setAnalytics(transformedAnalytics);
@@ -219,8 +219,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setSiteMessages(data || []);
-      logger.info('Site messages loaded', { count: data?.length || 0 });
+      setSiteMessages(data ?? []);
+      logger.info('Site messages loaded', { count: data?.length ?? 0 });
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
         logger.warn('Site messages request timed out');
@@ -461,7 +461,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             ) : (
               <AlertTriangle className="h-4 w-4" />
             )}
-            System {analytics?.systemHealth.status || 'unknown'}
+            System {analytics?.systemHealth.status ?? 'unknown'}
           </Badge>
         </div>
       </div>
@@ -485,9 +485,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalUsers || 0}</div>
+                <div className="text-2xl font-bold">{analytics?.totalUsers ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  +{analytics?.engagement.dailyActiveUsers || 0} today
+                  +{analytics?.engagement.dailyActiveUsers ?? 0} today
                 </p>
               </CardContent>
             </Card>
@@ -498,9 +498,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalPolls || 0}</div>
+                <div className="text-2xl font-bold">{analytics?.totalPolls ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {analytics?.activePolls || 0} active
+                  {analytics?.activePolls ?? 0} active
                 </p>
               </CardContent>
             </Card>
@@ -511,9 +511,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalVotes || 0}</div>
+                <div className="text-2xl font-bold">{analytics?.totalVotes ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {analytics?.engagement.participationRate || 0}% participation
+                  {analytics?.engagement.participationRate ?? 0}% participation
                 </p>
               </CardContent>
             </Card>
@@ -529,10 +529,10 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold capitalize">
-                  {analytics?.systemHealth.status || 'unknown'}
+                  {analytics?.systemHealth.status ?? 'unknown'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {analytics?.systemHealth.uptime || 0}% uptime
+                  {analytics?.systemHealth.uptime ?? 0}% uptime
                 </p>
               </CardContent>
             </Card>
@@ -558,7 +558,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                       key={action.id}
                       variant="outline"
                       className="h-auto p-4 flex flex-col items-center gap-2"
-                      onClick={action.action || (() => window.location.href = action.href!)}
+                      onClick={action.action ?? (() => window.location.href = action.href!)}
                     >
                       <Icon className="h-6 w-6" />
                       <div className="text-center">
@@ -613,23 +613,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Daily Active Users</span>
-                    <span className="font-medium">{analytics?.engagement.dailyActiveUsers || 0}</span>
+                    <span className="font-medium">{analytics?.engagement.dailyActiveUsers ?? 0}</span>
                   </div>
-                  <Progress value={(analytics?.engagement.dailyActiveUsers || 0) / 100 * 100} />
+                  <Progress value={(analytics?.engagement.dailyActiveUsers ?? 0) / 100 * 100} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Weekly Active Users</span>
-                    <span className="font-medium">{analytics?.engagement.weeklyActiveUsers || 0}</span>
+                    <span className="font-medium">{analytics?.engagement.weeklyActiveUsers ?? 0}</span>
                   </div>
-                  <Progress value={(analytics?.engagement.weeklyActiveUsers || 0) / 100 * 100} />
+                  <Progress value={(analytics?.engagement.weeklyActiveUsers ?? 0) / 100 * 100} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Participation Rate</span>
-                    <span className="font-medium">{analytics?.engagement.participationRate || 0}%</span>
+                    <span className="font-medium">{analytics?.engagement.participationRate ?? 0}%</span>
                   </div>
-                  <Progress value={analytics?.engagement.participationRate || 0} />
+                  <Progress value={analytics?.engagement.participationRate ?? 0} />
                 </div>
               </CardContent>
             </Card>
@@ -643,23 +643,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Uptime</span>
-                    <span className="font-medium">{analytics?.systemHealth.uptime || 0}%</span>
+                    <span className="font-medium">{analytics?.systemHealth.uptime ?? 0}%</span>
                   </div>
-                  <Progress value={analytics?.systemHealth.uptime || 0} />
+                  <Progress value={analytics?.systemHealth.uptime ?? 0} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Response Time</span>
-                    <span className="font-medium">{analytics?.systemHealth.responseTime || 0}ms</span>
+                    <span className="font-medium">{analytics?.systemHealth.responseTime ?? 0}ms</span>
                   </div>
-                  <Progress value={100 - (analytics?.systemHealth.responseTime || 0) / 10} />
+                  <Progress value={100 - (analytics?.systemHealth.responseTime ?? 0) / 10} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Error Rate</span>
-                    <span className="font-medium">{analytics?.systemHealth.errorRate || 0}%</span>
+                    <span className="font-medium">{analytics?.systemHealth.errorRate ?? 0}%</span>
                   </div>
-                  <Progress value={100 - (analytics?.systemHealth.errorRate || 0)} />
+                  <Progress value={100 - (analytics?.systemHealth.errorRate ?? 0)} />
                 </div>
               </CardContent>
             </Card>
@@ -730,23 +730,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Active Connections</span>
-                    <span className="font-medium">{systemMetrics?.database.connections || 0}</span>
+                    <span className="font-medium">{systemMetrics?.database.connections ?? 0}</span>
                   </div>
-                  <Progress value={(systemMetrics?.database.connections || 0) / 100 * 100} />
+                  <Progress value={(systemMetrics?.database.connections ?? 0) / 100 * 100} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Query Time</span>
-                    <span className="font-medium">{systemMetrics?.database.queryTime || 0}ms</span>
+                    <span className="font-medium">{systemMetrics?.database.queryTime ?? 0}ms</span>
                   </div>
-                  <Progress value={100 - (systemMetrics?.database.queryTime || 0) / 10} />
+                  <Progress value={100 - (systemMetrics?.database.queryTime ?? 0) / 10} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Cache Hit Rate</span>
-                    <span className="font-medium">{systemMetrics?.database.cacheHitRate || 0}%</span>
+                    <span className="font-medium">{systemMetrics?.database.cacheHitRate ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.database.cacheHitRate || 0} />
+                  <Progress value={systemMetrics?.database.cacheHitRate ?? 0} />
                 </div>
               </CardContent>
             </Card>
@@ -762,23 +762,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>CPU Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.cpu || 0}%</span>
+                    <span className="font-medium">{systemMetrics?.server.cpu ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.cpu || 0} />
+                  <Progress value={systemMetrics?.server.cpu ?? 0} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Memory Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.memory || 0}%</span>
+                    <span className="font-medium">{systemMetrics?.server.memory ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.memory || 0} />
+                  <Progress value={systemMetrics?.server.memory ?? 0} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Disk Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.disk || 0}%</span>
+                    <span className="font-medium">{systemMetrics?.server.disk ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.disk || 0} />
+                  <Progress value={systemMetrics?.server.disk ?? 0} />
                 </div>
               </CardContent>
             </Card>

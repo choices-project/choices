@@ -92,7 +92,7 @@ export async function POST() {
 
   } catch (error) {
     devLog('Unexpected error in sync-user:', error)
-    const appError = handleError(error as Error)
+    const appError = handleError(error instanceof Error ? error : new Error(String(error)))
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

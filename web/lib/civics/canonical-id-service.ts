@@ -36,7 +36,7 @@ export class CanonicalIdService {
    */
   generateCanonicalId(entityType: EntityType, primaryData: Record<string, any>): string {
     switch (entityType) {
-      case 'person':
+      case 'person': {
         // Use bioguide_id if available, otherwise generate from name + state + district
         if (primaryData.bioguide_id) {
           return `person_${primaryData.bioguide_id}`;
@@ -45,14 +45,16 @@ export class CanonicalIdService {
         const state = primaryData.state || 'unknown';
         const district = primaryData.district || 'unknown';
         return `person_${nameSlug}_${state}_${district}`;
+      }
 
-      case 'committee':
+      case 'committee': {
         // Use FEC committee ID if available
         if (primaryData.fec_committee_id) {
           return `committee_${primaryData.fec_committee_id}`;
         }
         const committeeName = primaryData.name?.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'unknown';
         return `committee_${committeeName}`;
+      }
 
       case 'bill':
         // Use normalized bill ID format
@@ -65,12 +67,13 @@ export class CanonicalIdService {
         // Use OCD Division ID
         return `jurisdiction_${primaryData.ocd_division_id || 'unknown'}`;
 
-      case 'election':
+      case 'election': {
         // Use election ID + date + jurisdiction
         const electionId = primaryData.election_id || 'unknown';
         const date = primaryData.election_date || 'unknown';
         const jurisdiction = primaryData.ocd_division_id || 'unknown';
         return `election_${electionId}_${date}_${jurisdiction}`;
+      }
 
       default:
         throw new Error(`Unknown entity type: ${entityType}`);
@@ -192,8 +195,8 @@ export class CanonicalIdService {
     if (!canonicalId) {
       // Use the highest priority source for canonical ID generation
       const priorityOrder: DataSource[] = ['congress-gov', 'fec', 'open-states', 'opensecrets', 'govtrack', 'google-civic'];
-      const primarySource = sourceData.find(s => priorityOrder.includes(s.source)) || sourceData[0];
-      canonicalId = this.generateCanonicalId(entityType, primarySource?.data || {});
+      const primarySource = sourceData.find(s => priorityOrder.includes(s.source)) ?? sourceData[0];
+      canonicalId = this.generateCanonicalId(entityType, primarySource?.data ?? {});
     }
 
     // Create/update crosswalk entries for all sources

@@ -251,12 +251,23 @@ All client functions return typed Supabase clients with full TypeScript support:
 
 ```typescript
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
-import type { Database } from '@/utils/supabase/client'
+import type { Database } from '@/utils/supabase/database.types'
 
 const supabase = await getSupabaseBrowserClient()
 // supabase is typed as SupabaseClient<Database>
 // Full autocomplete and type checking available
 ```
+
+### **Regenerating Types**
+
+When database schema changes, regenerate TypeScript types:
+
+```bash
+cd web
+npm run types:generate
+```
+
+Types are automatically generated from the linked Supabase project using Supabase CLI v2.54.11+.
 
 ---
 

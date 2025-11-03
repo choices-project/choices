@@ -63,12 +63,13 @@ export function handleCongressGovError(error: unknown): never {
         throw new CongressGovAuthenticationError();
       case 404:
         throw new CongressGovNotFoundError('Resource', 'Unknown');
-      case 429:
+      case 429: {
         const retryAfter = response.headers?.['retry-after'];
         throw new CongressGovRateLimitError(
           'Rate limit exceeded',
           retryAfter ? parseInt(retryAfter) : undefined
         );
+      }
       case 500:
       case 502:
       case 503:
@@ -79,7 +80,7 @@ export function handleCongressGovError(error: unknown): never {
         );
       default:
         throw new CongressGovApiError(
-          `API error: ${status} ${(data as any)?.message || 'Unknown error'}`,
+          `API error: ${status} ${(data as { message?: string })?.message ?? 'Unknown error'}`,
           status,
           data
         );

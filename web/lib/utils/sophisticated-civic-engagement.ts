@@ -18,8 +18,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { logger } from '../logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import { logger } from '../logger';
 
 /**
  * Sophisticated civic action types supported by our platform
@@ -92,7 +93,7 @@ export type SophisticatedCivicAction = {
   /** Optional end date for the action */
   end_date?: string;
   /** Additional metadata for the action */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -282,7 +283,7 @@ export async function getRepresentativesByLocation(
         title: "U.S. Senator",
         party: "Democratic",
         state: location.state,
-        district: location.district || "At-Large",
+        district: location.district ?? "At-Large",
         contact_info: {
           email: "jane.smith@senate.gov",
           phone: "(202) 224-1234"
@@ -382,7 +383,7 @@ export async function getTrendingCivicActions(
   try {
     logger.info('Fetching trending civic actions', { limit, category });
 
-    const supabase = supabaseClient || await getSupabaseServerClient();
+    const supabase = supabaseClient ?? await getSupabaseServerClient();
     
     if (!supabase) {
       logger.error('Failed to get Supabase client for trending civic actions');
@@ -435,7 +436,7 @@ export async function getTrendingCivicActions(
     // Calculate trending score and sort by trending algorithm
     // Trending factors: signature growth rate, urgency level, recency
     const now = Date.now();
-    const trendingActions = actions.map((action: any) => {
+    const trendingActions = actions.map((action: SophisticatedCivicAction & { trendingScore?: number }) => {
       const createdAt = new Date(action.created_at).getTime();
       const ageInHours = (now - createdAt) / (1000 * 60 * 60);
       const signatureGrowthRate = action.signature_count / Math.max(ageInHours, 1);
@@ -452,15 +453,15 @@ export async function getTrendingCivicActions(
       const timeDecay = Math.max(0, 1 - (ageInHours / (7 * 24))); // Decay over 7 days
       
       // Calculate trending score
-      const trendingScore = signatureGrowthRate * (urgencyMultiplier[action.urgency_level] || 1.0) * timeDecay;
+      const trendingScore = signatureGrowthRate * (urgencyMultiplier[action.urgency_level] ?? 1.0) * timeDecay;
       
       return {
         ...action,
         trendingScore
       };
-    }).sort((a: any, b: any) => b.trendingScore - a.trendingScore)
+    }).sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0))
       .slice(0, limit)
-      .map(({ trendingScore, ...action }: any) => action);
+      .map(({ trendingScore, ...action }) => action as SophisticatedCivicAction);
 
     logger.info('Retrieved trending civic actions', { count: trendingActions.length, limit, category });
     

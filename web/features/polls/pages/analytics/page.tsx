@@ -12,9 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-
 import { useSupabaseAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
 
 // UI Components
@@ -23,6 +21,7 @@ import { withOptional } from '@/lib/util/objects'
 
 // Utilities
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/utils/logger'
 
 type PollAnalytics = {
   pollid: string

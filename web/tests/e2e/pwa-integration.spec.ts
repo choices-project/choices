@@ -158,7 +158,7 @@ test.describe('PWA Integration - V2', () => {
     await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
     await page.click('button:has-text("Next")');
 
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
 
     await page.click('button:has-text("Create Poll")');
@@ -475,7 +475,7 @@ test.describe('PWA Integration - V2', () => {
     await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
     await page.click('button:has-text("Next")');
 
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
 
     await page.click('button:has-text("Create Poll")');

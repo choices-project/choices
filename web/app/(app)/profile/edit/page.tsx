@@ -143,12 +143,12 @@ export default function EditProfilePage() {
         if (data.profile) {
           setProfile(data.profile)
           setFormData({
-            displayname: data.profile.displayname || '',
-            bio: data.profile.bio || '',
-            primaryconcerns: data.profile.primaryconcerns || [],
-            communityfocus: data.profile.communityfocus || [],
-            participationstyle: data.profile.participationstyle || 'observer',
-            privacysettings: data.profile.privacysettings || {
+            displayname: data.profile.displayname ?? '',
+            bio: data.profile.bio ?? '',
+            primaryconcerns: data.profile.primaryconcerns ?? [],
+            communityfocus: data.profile.communityfocus ?? [],
+            participationstyle: data.profile.participationstyle ?? 'observer',
+            privacysettings: data.profile.privacysettings ?? {
               profilevisibility: 'public',
               showemail: false,
               showactivity: true,

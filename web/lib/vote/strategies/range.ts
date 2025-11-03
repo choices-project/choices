@@ -43,8 +43,8 @@ export class RangeStrategy implements VotingStrategy {
       }
 
       const ratings = voteData.ratings;
-      const rangeMin = poll.votingConfig.rangeMin || 0;
-      const rangeMax = poll.votingConfig.rangeMax || 10;
+      const rangeMin = poll.votingConfig.rangeMin ?? 0;
+      const rangeMax = poll.votingConfig.rangeMax ?? 10;
       
       // Validate all ratings are within range
       for (const [optionIndex, rating] of Object.entries(ratings)) {
@@ -135,7 +135,7 @@ export class RangeStrategy implements VotingStrategy {
       const auditReceipt = `receipt_${voteId}_${Date.now()}`;
 
       // Calculate total score for audit
-      const ratings = voteData.ratings || {};
+      const ratings = voteData.ratings ?? {};
       const totalScore = Object.values(ratings).reduce((sum: number, rating) => sum + (rating), 0);
       const averageScore = Object.keys(ratings).length > 0 ? (totalScore) / Object.keys(ratings).length : 0;
 
@@ -300,9 +300,9 @@ export class RangeStrategy implements VotingStrategy {
           calculationTime: Date.now() - startTime,
           hasWinner: winner !== undefined,
           isTie: winnerVotes > 0 && Object.values(rangeAverages).filter(a => a === winnerVotes).length > 1,
-          averageRating: totalVotes > 0 ? Object.values(rangeScores).reduce((sum, score) => sum + score, 0) / (Object.values(ratingCounts).reduce((sum, count) => sum + count, 0) || 1) : 0,
-          rangeMin: poll.votingConfig.rangeMin || 0,
-          rangeMax: poll.votingConfig.rangeMax || 10
+          averageRating: totalVotes > 0 ? Object.values(rangeScores).reduce((sum, score) => sum + score, 0) / (Object.values(ratingCounts).reduce((sum, count) => sum + count, 0) ?? 1) : 0,
+          rangeMin: poll.votingConfig.rangeMin ?? 0,
+          rangeMax: poll.votingConfig.rangeMax ?? 10
         }
       };
 

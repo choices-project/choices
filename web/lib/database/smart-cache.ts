@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Smart Query Caching System
  * 
@@ -5,6 +7,8 @@
  * cache strategies automatically. Builds on our validation system for
  * type-safe cache operations.
  */
+
+import type { ZodSchema } from 'zod';
 
 import { logger } from '@/lib/logger';
 import { safeParse } from '@/lib/validation/validator';
@@ -131,7 +135,7 @@ export class SmartCacheManager {
   async get<T>(
     key: string,
     queryPattern: string,
-    schema?: any
+    schema?: ZodSchema<T>
   ): Promise<T | null> {
     const startTime = Date.now();
     
@@ -194,7 +198,7 @@ export class SmartCacheManager {
       ttl?: number;
       tags?: string[];
       priority?: number;
-      schema?: any;
+      schema?: ZodSchema<T>;
     } = {}
   ): Promise<void> {
     try {
@@ -228,8 +232,8 @@ export class SmartCacheManager {
         accessCount: 0,
         lastAccessed: Date.now(),
         queryPattern,
-        priority: options.priority || this.calculatePriority(queryPattern),
-        tags: options.tags || [],
+        priority: options.priority ?? this.calculatePriority(queryPattern),
+        tags: options.tags ?? [],
         size,
       };
 
@@ -303,13 +307,13 @@ export class SmartCacheManager {
     
     // Calculate average access time
     const averageAccessTime = this.accessLog.length > 0 
-      ? this.accessLog.reduce((sum, log) => sum + (log.timestamp || 0), 0) / this.accessLog.length
+      ? this.accessLog.reduce((sum, log) => sum + (log.timestamp ?? 0), 0) / this.accessLog.length
       : 0;
     
     // Get top patterns
     const patternStats = new Map<string, { count: number; hits: number }>();
     for (const log of this.accessLog) {
-      const stats = patternStats.get(log.pattern) || { count: 0, hits: 0 };
+      const stats = patternStats.get(log.pattern) ?? { count: 0, hits: 0 };
       stats.count++;
       if (log.hit) stats.hits++;
       patternStats.set(log.pattern, stats);
@@ -355,7 +359,7 @@ export class SmartCacheManager {
     // Update TTL recommendations based on access patterns
     for (const pattern of patterns) {
       if (pattern.frequency >= this.config.minPatternFrequency) {
-        const currentTtl = this.config.defaultTtl[this.getDataTypeFromPattern(pattern.pattern)] || 300000;
+        const currentTtl = this.config.defaultTtl[this.getDataTypeFromPattern(pattern.pattern)] ?? 300000;
         const recommendedTtl = this.calculateOptimalTtl(pattern);
         
         if (Math.abs(recommendedTtl - currentTtl) > currentTtl * 0.2) {
@@ -410,7 +414,7 @@ export class SmartCacheManager {
     if (providedTtl) return providedTtl;
     
     const dataType = this.getDataTypeFromPattern(pattern);
-    const baseTtl = this.config.defaultTtl[dataType] || 300000; // 5 minutes default
+    const baseTtl = this.config.defaultTtl[dataType] ?? 300000; // 5 minutes default
     
     // Adjust TTL based on pattern frequency and hit rate
     const patternStats = this.queryPatterns.get(pattern);
@@ -437,7 +441,7 @@ export class SmartCacheManager {
       analytics: 4,
     };
     
-    return priorityMap[dataType] || 5;
+    return priorityMap[dataType] ?? 5;
   }
 
   private calculateDataSize(data: unknown): number {

@@ -1,5 +1,5 @@
 // Utility functions for object manipulation
-export const withOptional = <T extends Record<string, any>>(
+export const withOptional = <T extends Record<string, unknown>>(
   obj: T,
   keys: Array<keyof T> | string
 ): Partial<T> => {
@@ -13,7 +13,7 @@ export const withOptional = <T extends Record<string, any>>(
   return result
 }
 
-export const pick = <T extends Record<string, any>, K extends keyof T>(
+export const pick = <T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
   keys: K[]
 ): Pick<T, K> => {
@@ -26,7 +26,7 @@ export const pick = <T extends Record<string, any>, K extends keyof T>(
   return result
 }
 
-export const omit = <T extends Record<string, any>, K extends keyof T>(
+export const omit = <T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
   keys: K[]
 ): Omit<T, K> => {
@@ -37,14 +37,14 @@ export const omit = <T extends Record<string, any>, K extends keyof T>(
   return result
 }
 
-export const isEmpty = (obj: any): boolean => {
+export const isEmpty = (obj: unknown): boolean => {
   if (obj == null) return true
   if (Array.isArray(obj)) return obj.length === 0
   if (typeof obj === 'object') return Object.keys(obj).length === 0
   return false
 }
 
-export const deepMerge = <T extends Record<string, any>>(
+export const deepMerge = <T extends Record<string, unknown>>(
   target: T,
   source: Partial<T>
 ): T => {

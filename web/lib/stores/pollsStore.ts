@@ -1200,7 +1200,7 @@ export const pollsStoreDebug = {
       filteredPolls: state.filteredPolls.length,
       comments: state.comments.length,
       searchResults: state.search.results.length,
-      selectedPoll: state.selectedPoll?.title || 'none',
+      selectedPoll: state.selectedPoll?.title ?? 'none',
       currentView: state.currentView,
       isLoading: state.isLoading,
       isVoting: state.isVoting,

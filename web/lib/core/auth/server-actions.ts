@@ -88,7 +88,7 @@ export function createSecureServerAction<TInput, TOutput>(
         // Create context for the action
         const context: ServerActionContext = {
           ipAddress: 'unknown', // Will be set by middleware
-          userAgent: 'unknown', // Will be set by middleware
+          userAgent: 'unknown' // Will be set by middleware
         }
 
         // Execute the action
@@ -98,7 +98,7 @@ export function createSecureServerAction<TInput, TOutput>(
         if (options.sessionRotation && context.userId) {
           const newSessionToken = rotateSessionToken(
             context.userId,
-            context.userRole || 'user',
+            context.userRole ?? 'user',
             context.userId
           )
           
@@ -129,7 +129,7 @@ export function createSecureServerAction<TInput, TOutput>(
         // Re-throw for proper error handling
         throw error
       }
-    }, options.idempotency || { namespace: 'server-action' })
+    }, options.idempotency ?? { namespace: 'server-action' })
     
     if (result.success && result.data) {
       return result.data
@@ -155,7 +155,7 @@ export async function getAuthenticatedUser(context: ServerActionContext): Promis
 
   return {
     userId: context.userId,
-    userRole: context.userRole || 'user',
+    userRole: context.userRole ?? 'user',
     sessionToken: context.sessionToken
   }
 }
@@ -241,10 +241,10 @@ export function checkRateLimit(
   ipAddress?: string
 ): boolean {
   const securityConfig = getSecurityConfig()
-  const _key = userId || ipAddress || 'anonymous'
+  const _key = userId ?? ipAddress ?? 'anonymous'
   
   // Check against security config for rate limiting
-  const _maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] || 
+  const _maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] ?? 
                      securityConfig.rateLimit.maxRequests
   
   logger.debug(`Rate limit check for ${endpoint} with key: ${_key}`)

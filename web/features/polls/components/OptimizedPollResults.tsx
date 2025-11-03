@@ -86,12 +86,12 @@ export default function OptimizedPollResults({
   const sortedOptions = useMemo(() => {
     if (!results?.results) return []
     
-    return [...results.results].sort((a, b) => (b.voteCount || b.votes) - (a.voteCount || a.votes))
+    return [...results.results].sort((a, b) => (b.voteCount ?? b.votes ?? 0) - (a.voteCount ?? a.votes ?? 0))
   }, [results?.results])
 
   // Memoized total votes for performance
   const totalVotes = useMemo(() => {
-    return results?.totalVotes || 0
+    return results?.totalVotes ?? 0
   }, [results?.totalVotes])
 
   // Memoized poll status display
@@ -224,7 +224,7 @@ export default function OptimizedPollResults({
             </span>
             {userId && (
               <span className="text-gray-600">
-                Budget: {results.privacyBudgetRemaining?.toFixed(2) || '0.00'} ε
+                Budget: {results.privacyBudgetRemaining?.toFixed(2) ?? '0.00'} ε
               </span>
             )}
           </div>
@@ -256,21 +256,21 @@ export default function OptimizedPollResults({
         <h3 className="text-lg font-semibold text-gray-900">Results</h3>
         <div className="space-y-3">
           {sortedOptions.map((option) => (
-            <div key={option.optionId || option.option} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={option.optionId ?? option.option} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.label || option.option}</h4>
+                <h4 className="font-medium text-gray-900">{option.label ?? option.option}</h4>
                 <span className="text-sm text-gray-600">
-                  {option.voteCount || option.votes} votes ({(option.votePercentage || option.percentage).toFixed(1)}%)
+                  {option.voteCount ?? option.votes} votes ({((option.votePercentage ?? option.percentage) ?? 0).toFixed(1)}%)
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${option.votePercentage || option.percentage}%` }}
+                  style={{ width: `${option.votePercentage ?? option.percentage ?? 0}%` }}
                  />
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                {option.uniqueVoters || 0} unique voters
+                {option.uniqueVoters ?? 0} unique voters
               </div>
             </div>
           ))}

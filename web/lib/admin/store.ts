@@ -250,7 +250,7 @@ export const useAdminStore = create<AdminStore>()(
         
         // Log polls update for monitoring
         const statusBreakdown = polls.reduce((acc, poll) => {
-          acc[poll.status] = (acc[poll.status] || 0) + 1;
+          acc[poll.status] = (acc[poll.status] ?? 0) + 1;
           return acc;
         }, {} as Record<string, number>);
         
@@ -313,7 +313,7 @@ export const useAdminStore = create<AdminStore>()(
         
         // Log activity feed update for monitoring
         const typeBreakdown = activities.reduce((acc, activity) => {
-          acc[activity.type] = (acc[activity.type] || 0) + 1;
+          acc[activity.type] = (acc[activity.type] ?? 0) + 1;
           return acc;
         }, {} as Record<string, number>);
         
@@ -393,7 +393,7 @@ export const useAdminStore = create<AdminStore>()(
               id: crypto.randomUUID(),
               type: 'topic_updated' as const,
               title: 'Trending Topic Updated',
-              description: `Topic "${updates.title || existingTopic?.title || 'Unknown'}" was updated`,
+              description: `Topic "${updates.title ?? existingTopic?.title ?? 'Unknown'}" was updated`,
               timestamp: new Date().toISOString(),
               metadata: { topicId: id, updates }
             },
@@ -472,7 +472,7 @@ export const useAdminStore = create<AdminStore>()(
               id: crypto.randomUUID(),
               type: 'poll_updated' as const,
               title: 'Generated Poll Updated',
-              description: `Poll "${updates.title || existingPoll?.title || 'Unknown'}" was updated`,
+              description: `Poll "${updates.title ?? existingPoll?.title ?? 'Unknown'}" was updated`,
               timestamp: new Date().toISOString(),
               metadata: { pollId: id, updates }
             },

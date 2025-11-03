@@ -1,4 +1,3 @@
-/* eslint-env node */
 #!/usr/bin/env node
 /* eslint-env node */
 /**

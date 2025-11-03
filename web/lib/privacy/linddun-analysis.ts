@@ -227,7 +227,7 @@ export class PrivacyThreatAssessmentManager {
   // ============================================================================
 
   private calculateRiskLevel(dataFlow: DataFlow, dimension: string): number {
-    const baseRisk = (PRIVACY_THREAT_MODEL as Record<string, any>)[dimension]?.riskLevel || 0;
+    const baseRisk = (PRIVACY_THREAT_MODEL as Record<string, any>)[dimension]?.riskLevel ?? 0;
     
     // Adjust risk based on data flow characteristics
     let adjustedRisk = baseRisk;
@@ -440,7 +440,7 @@ export class PrivacyThreatAssessmentManager {
    * @returns Retention policy or null
    */
   getRetentionPolicy(dataType: string): RetentionPolicy | null {
-    return this.retentionPolicies.get(dataType) || null;
+    return this.retentionPolicies.get(dataType) ?? null;
   }
 
   /**
@@ -507,9 +507,9 @@ export function createDataFlow(config: {
     sensitivityScore: config.sensitivityScore,
     processingComplexity: config.processingComplexity,
     retentionPeriod: config.retentionPeriod,
-    accessControls: config.accessControls || [],
-    encryption: config.encryption || false,
-    anonymization: config.anonymization || false
+    accessControls: config.accessControls ?? [],
+    encryption: config.encryption ?? false,
+    anonymization: config.anonymization ?? false
   };
 }
 

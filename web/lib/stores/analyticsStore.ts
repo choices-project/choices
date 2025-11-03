@@ -22,7 +22,7 @@ type AnalyticsEvent = {
   event_type: string;
   user_id?: string;
   session_id: string;
-  event_data: Record<string, any>;
+  event_data: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   created_at: string;
@@ -32,7 +32,7 @@ type AnalyticsEvent = {
   action: string;
   label?: string;
   value?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   analytics_event_data?: Array<{
     data_key: string;
     data_value: string;
@@ -147,9 +147,9 @@ type AnalyticsStore = {
   
   // Actions - Event tracking
   trackEvent: (event: Omit<AnalyticsEvent, 'id' | 'timestamp' | 'sessionId'>) => void;
-  trackPageView: (page: string, metadata?: Record<string, any>) => void;
+  trackPageView: (page: string, metadata?: Record<string, unknown>) => void;
   trackUserAction: (action: string, category: string, label?: string, value?: number) => void;
-  trackError: (error: Error, context?: Record<string, any>) => void;
+  trackError: (error: Error, context?: Record<string, unknown>) => void;
   trackPerformance: (metrics: Partial<PerformanceMetrics>) => void;
   
   // Actions - Data management

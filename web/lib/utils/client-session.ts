@@ -53,14 +53,14 @@ export function hasSession(): boolean {
  */
 export function getSessionToken(): string | null {
   const session = getSessionData();
-  return session?.token as string || null;
+  return (session?.token as string | undefined) ?? null;
 }
 
 /**
  * Set session token
  */
 export function setSessionToken(token: string): void {
-  const session = getSessionData() || {};
+  const session = getSessionData() ?? {};
   session.token = token;
   setSessionData(session);
 }

@@ -88,8 +88,11 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Submit address lookup
     await page.click('[data-testid="address-submit"]');
     
-    // Wait for API call to complete
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    // Wait for API call to complete (may use address-lookup or by-address)
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Verify jurisdiction cookie is set
     const cookies = await page.context().cookies();
@@ -136,7 +139,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     for (const address of addresses) {
       await page.fill('[data-testid="address-input"]', address);
       await page.click('[data-testid="address-submit"]');
-      await page.waitForResponse('**/api/v1/civics/address-lookup');
+      await page.waitForResponse((response) => 
+        response.url().includes('/api/v1/civics/address-lookup') || 
+        response.url().includes('/api/civics/by-address')
+      );
     }
     
     // Check that no raw addresses appear in any API responses or page content
@@ -159,7 +165,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Submit address
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Verify cookie security attributes
     const cookies = await page.context().cookies();
@@ -182,7 +191,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     });
 
     // Set jurisdiction cookie directly
-    await context.addCookies([{
+    await page.context().addCookies([{
       name: 'cx_jurisdictions',
       value: Buffer.from(JSON.stringify({
         body: JSON.stringify({ state: 'CA', district: '12', county: 'San Francisco', v: 1, iat: Date.now() }),
@@ -248,7 +257,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     
     // Wait for complete flow
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     await page.goto('/dashboard');
     await waitForPageReady(page);
     
@@ -279,7 +291,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Test mobile flow
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Navigate to dashboard on mobile
     await page.goto('/dashboard');
@@ -315,7 +330,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Fill address input
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Verify jurisdiction cookie is set
     const cookies = await page.context().cookies();
@@ -344,7 +362,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Authenticate user
     await page.goto('/login');
@@ -404,7 +425,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
       
       await page.fill('[data-testid="address-input"]', jurisdiction.address);
       await page.click('[data-testid="address-submit"]');
-      await page.waitForResponse('**/api/v1/civics/address-lookup');
+      await page.waitForResponse((response) => 
+        response.url().includes('/api/v1/civics/address-lookup') || 
+        response.url().includes('/api/civics/by-address')
+      );
       
       // Navigate to dashboard
       await page.goto('/dashboard');
@@ -440,7 +464,10 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Test with valid address after error
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => 
+      response.url().includes('/api/v1/civics/address-lookup') || 
+      response.url().includes('/api/civics/by-address')
+    );
     
     // Should work correctly
     await page.goto('/dashboard');

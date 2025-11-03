@@ -5,9 +5,9 @@
  * proper error classification, retry logic, and user-friendly messages.
  */
 
-import { logger } from '@/lib/logger';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/logger';
 
 import { GoogleCivicApiError } from './client';
 
@@ -48,7 +48,8 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle timeout errors
-    if ((error as any).name === 'AbortError') {
+    const errorObj = error as { name?: string; status?: number; statusCode?: number; body?: unknown; data?: unknown };
+    if (errorObj.name === 'AbortError') {
       return new GoogleCivicApiError(
         'Request timeout: Google Civic API did not respond in time',
         408,
@@ -57,8 +58,8 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle HTTP response errors
-    if ((error as any).status || (error as any).statusCode) {
-      return this.handleHttpError(error as { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context);
+    if (errorObj.status ?? errorObj.statusCode) {
+      return this.handleHttpError(errorObj, context);
     }
 
     // Handle JSON parsing errors
@@ -82,8 +83,8 @@ export class GoogleCivicErrorHandler {
    * Handle HTTP response errors
    */
   private handleHttpError(error: { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context?: ErrorContext): GoogleCivicApiError {
-    const status = error.status || error.statusCode;
-    const errorData = error.body || error.data || {};
+    const status = error.status ?? error.statusCode;
+    const errorData = error.body ?? error.data ?? {};
 
     switch (status) {
       case 400:
@@ -167,8 +168,8 @@ export class GoogleCivicErrorHandler {
 
       default:
         return new GoogleCivicApiError(
-          `HTTP error ${status}: ${(errorData as any).message || 'Unknown error'}`,
-          status || 500,
+          `HTTP error ${status}: ${(errorData as { message?: string }).message ?? 'Unknown error'}`,
+          status ?? 500,
           { 
             details: errorData,
             context,

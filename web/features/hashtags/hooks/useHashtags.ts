@@ -43,7 +43,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       if (result.success && result.data) {
         setTrendingHashtags(result.data);
       } else {
-        setError(result.error || 'Failed to load trending hashtags');
+        setError(result.error ?? 'Failed to load trending hashtags');
       }
     } catch (err) {
       setError('Failed to load trending hashtags');
@@ -63,7 +63,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       if (result.success && result.data) {
         setUserHashtags(result.data);
       } else {
-        setError(result.error || 'Failed to load user hashtags');
+        setError(result.error ?? 'Failed to load user hashtags');
       }
     } catch (err) {
       setError('Failed to load user hashtags');
@@ -84,7 +84,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
         setHashtags(result.data.hashtags);
         return result.data;
       } else {
-        setError(result.error || 'Failed to search hashtags');
+        setError(result.error ?? 'Failed to search hashtags');
         return null;
       }
     } catch (err) {
@@ -107,7 +107,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
         setUserHashtags(prev => [...prev, result.data!]);
         return true;
       } else {
-        setError(result.error || 'Failed to follow hashtag');
+        setError(result.error ?? 'Failed to follow hashtag');
         return false;
       }
     } catch (err) {
@@ -128,7 +128,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
         setUserHashtags(prev => prev.filter(uh => uh.hashtag_id !== hashtagId));
         return true;
       } else {
-        setError(result.error || 'Failed to unfollow hashtag');
+        setError(result.error ?? 'Failed to unfollow hashtag');
         return false;
       }
     } catch (err) {
@@ -147,7 +147,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       if (result.success && result.data) {
         return result.data;
       } else {
-        setError(result.error || 'Failed to get suggestions');
+        setError(result.error ?? 'Failed to get suggestions');
         return [];
       }
     } catch (err) {
@@ -245,7 +245,7 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
         if (searchResult.success && searchResult.data) {
           setResults(searchResult.data);
         } else {
-          setError(searchResult.error || 'Search failed');
+          setError(searchResult.error ?? 'Search failed');
         }
 
         // Also get suggestions

@@ -36,14 +36,13 @@ import {
   cleanupE2ETestData,
   createTestUser,
   waitForPageReady,
-  setupExternalAPIMocks,
-  E2E_CONFIG
+  setupExternalAPIMocks
 } from './helpers/e2e-setup';
 
 test.describe('Complete Civics User Journey - Registration to Representative Auto-population', () => {
   let testUser: ReturnType<typeof createTestUser>;
   const testAddress = '123 Main St, Springfield, IL 62701';
-  const mockGoogleCivicResponse = {
+  const _mockGoogleCivicResponse = {
     normalizedInput: {
       line1: '123 Main St',
       city: 'Springfield',
@@ -164,7 +163,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     // Mock Google Civic API call (SOLE EXCEPTION - this is the only external API call)
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
       if (route.request().method() === 'POST') {
-        const body = await route.request().postDataJSON();
+        await route.request().postDataJSON();
         // Verify address lookup is calling Google Civic API server-side
         // This is the ONLY endpoint that should call external APIs
         await route.fulfill({
@@ -239,7 +238,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     await page.route('**/api/civics/by-state*', async (route) => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state');
-      const level = url.searchParams.get('level') || 'all';
+      const level = url.searchParams.get('level') ?? 'all';
       
       expect(state).toBeTruthy();
       
@@ -285,7 +284,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     await cleanupE2ETestData({ user: testUser });
   });
 
-  test('Complete journey: Registration → Onboarding → Address Lookup → Representative Auto-population', async ({ page, context }) => {
+  test('Complete journey: Registration → Onboarding → Address Lookup → Representative Auto-population', async ({ page }) => {
     // ========================================
     // STEP 1: REGISTRATION
     // ========================================
@@ -313,7 +312,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         await page.waitForTimeout(2000);
       }
 
@@ -361,7 +360,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         );
         hydrationComplete = true;
         console.log('✓ React hydration complete');
-      } catch (e) {
+      } catch {
         // Fallback: wait for any visible content and check console for errors
         console.log('⚠️ Hydration check timed out, checking for React errors...');
         
@@ -434,7 +433,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
               
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-                throw new Error(errorData.message || `API returned ${response.status}`);
+                throw new Error(errorData.message ?? `API returned ${response.status}`);
               }
               
               return await response.json();
@@ -461,7 +460,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
               try {
                 await page.goto('/onboarding', { waitUntil: 'domcontentloaded', timeout: 10000 });
                 await page.waitForTimeout(1000);
-              } catch (navError) {
+              } catch {
                 // If navigation fails (e.g., redirects to auth), that's okay - we'll handle it
                 console.log(`⚠️ Navigation to onboarding failed or redirected: ${page.url()}`);
               }
@@ -507,7 +506,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         });
         formFound = true;
         console.log('✓ Registration form is visible (URL parameter worked)');
-      } catch (e) {
+      } catch {
         console.log('⚠️ Form not immediately visible, checking if button click is needed...');
         
         // Form not visible, need to click button to trigger state change
@@ -560,13 +559,13 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
                   const usernameInput = document.querySelector('input[name="username"], input[data-testid="username"]');
                   const isFormVisible = form && (form as HTMLElement).offsetParent !== null;
                   const isInputVisible = usernameInput && (usernameInput as HTMLElement).offsetParent !== null;
-                  return isFormVisible || isInputVisible;
+                  return (isFormVisible ?? false) || (isInputVisible ?? false);
                 },
                 { timeout: 8000 }
               );
               console.log('✓ Password registration form is now visible after button click');
               formFound = true;
-            } catch (e) {
+            } catch {
               // Strategy 2: Try force click
               console.log('⚠️ Form not appearing after first click, trying force click...');
               try {
@@ -608,7 +607,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
                       
                       // Check if password button has correct classes
                       const passwordBtn = document.querySelector('[data-testid="password-account-button"]');
-                      const btnClasses = passwordBtn?.className || '';
+                      const btnClasses = passwordBtn?.className ?? '';
                       const hasBlueBorder = btnClasses.includes('border-blue-500');
                       
                       // Check hydration status
@@ -640,7 +639,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
                       
                       // Since the URL parameter is set, the component should render the password form
                       // but React hydration is preventing it from showing. Let's try to force-show it
-                      const formShown = await page.evaluate(() => {
+                      await page.evaluate(() => {
                         // Check if form exists in DOM but is conditionally hidden
                         const form = document.querySelector('[data-testid="register-form"]') as HTMLElement;
                         if (form) {
@@ -698,32 +697,32 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Verify form is ready for interaction
       if (!formFound) {
         // Try one more time with multiple strategies
-        // Strategy 1: Wait for form with data-testid
-        try {
-          await page.waitForSelector('[data-testid="register-form"]', { 
-            state: 'visible', 
+      // Strategy 1: Wait for form with data-testid
+      try {
+        await page.waitForSelector('[data-testid="register-form"]', { 
+          state: 'visible', 
             timeout: 5000 
+        });
+        formFound = true;
+        console.log('✓ Found register form via data-testid');
+      } catch {
+        // Strategy 2: Wait for username input directly
+        try {
+          await page.waitForSelector('input[name="username"], input[data-testid="username"]', { 
+            state: 'visible', 
+              timeout: 5000 
           });
           formFound = true;
-          console.log('✓ Found register form via data-testid');
+          console.log('✓ Found register form via username input');
         } catch {
-          // Strategy 2: Wait for username input directly
-          try {
-            await page.waitForSelector('input[name="username"], input[data-testid="username"]', { 
-              state: 'visible', 
-              timeout: 5000 
-            });
-            formFound = true;
-            console.log('✓ Found register form via username input');
-          } catch {
-            // Strategy 3: Check if any form exists (with visibility check)
-            const formLocator = page.locator('form').first();
-            const formCount = await formLocator.count();
-            if (formCount > 0) {
-              const formVisible = await formLocator.isVisible({ timeout: 2000 }).catch(() => false);
-              if (formVisible) {
-                formFound = true;
-                console.log('✓ Found visible form element');
+          // Strategy 3: Check if any form exists (with visibility check)
+          const formLocator = page.locator('form').first();
+          const formCount = await formLocator.count();
+          if (formCount > 0) {
+            const formVisible = await formLocator.isVisible({ timeout: 2000 }).catch(() => false);
+            if (formVisible) {
+              formFound = true;
+              console.log('✓ Found visible form element');
               }
             }
           }
@@ -802,7 +801,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             console.log(`✓ Filled username using selector: ${selector}`);
             break;
           }
-        } catch (e) {
+        } catch {
           continue;
         }
       }
@@ -833,7 +832,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             await input.fill(testUser.username);
             break;
           }
-        } catch (e) {
+        } catch {
           continue;
         }
       }
@@ -852,7 +851,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             await input.fill(testUser.email);
             break;
           }
-        } catch (e) {
+        } catch {
           continue;
         }
       }
@@ -878,6 +877,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       const submitButton = page.locator('button[type="submit"], button[data-testid="register-submit"], button:has-text("Register"), button:has-text("Create account")').first();
       
       // Wait for submit button to be ready
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       await submitButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
       
       // Since React hydration may be incomplete, manually trigger form submission via JavaScript
@@ -892,7 +892,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       await page.waitForTimeout(2000);
       
       // Check if form has an onSubmit handler (React has hydrated)
-      const hasHandler = await page.evaluate(() => {
+      await page.evaluate(() => {
         const form = document.querySelector('[data-testid="register-form"]') as HTMLFormElement;
         // Check if React has attached event handlers by looking for React fiber or event listeners
         // This is indirect, but we can try to submit and see if it works
@@ -907,7 +907,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       await page.waitForTimeout(1000);
 
       // Wait for redirect to onboarding (or dashboard/civics if onboarding is skipped)
-      await navigationPromise.catch(async (e) => {
+      await navigationPromise.catch(async () => {
         // If navigation doesn't happen, check if we're still on register page or if there was an error
         await page.waitForTimeout(3000); // Give it more time for server action
         const currentUrl = page.url();
@@ -928,10 +928,10 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           console.log('⚠️ Attempting to register via API route as workaround...');
           
           // Workaround: Use the API route /api/auth/register to register the user
-          const urlParams = new URLSearchParams(currentUrl.split('?')[1] || '');
+          const urlParams = new URLSearchParams(currentUrl.split('?')[1] ?? '');
           
           // Extract username and ensure it's valid (3-20 chars, alphanumeric/underscore only)
-          let username = urlParams.get('username') || testUser.username;
+          let username = urlParams.get('username') ?? testUser.username;
           // If username from URL is too long, truncate it or use testUser.username
           if (username.length > 20) {
             console.log(`⚠️ Username from URL is too long (${username.length} chars), using testUser.username instead`);
@@ -942,14 +942,14 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           
           const registrationData = {
             username: username,
-            email: urlParams.get('email') || testUser.email,
-            password: urlParams.get('password') || testUser.password,
-            display_name: urlParams.get('displayName') || username
+            email: urlParams.get('email') ?? testUser.email,
+            password: urlParams.get('password') ?? testUser.password,
+            display_name: urlParams.get('displayName') ?? username
           };
           
           try {
             // Call the API route with E2E bypass header to skip CSRF protection
-            const apiResponse = await page.evaluate(async (data) => {
+            await page.evaluate(async (data) => {
               const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -961,7 +961,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
               
               if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || `API returned ${response.status}`);
+                throw new Error(errorData.message ?? `API returned ${response.status}`);
               }
               
               return await response.json();
@@ -994,7 +994,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         await page.waitForTimeout(2000);
       }
 
@@ -1085,7 +1085,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           // Submit address lookup - this triggers /api/civics/by-address (Supabase query only)
           const lookupButton = page.locator('button:has-text("Find Representatives"), button[type="submit"]:has-text("Find"), button:has-text("Lookup")').first();
           if (await lookupButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-            await lookupButton.click();
+          await lookupButton.click();
             console.log('✓ Clicked address lookup button');
           } else {
             // Try submitting the form directly if no button found
@@ -1194,7 +1194,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
               await addressInput.press('Enter');
               console.log('✓ Submitted form via Enter key');
             }
-          } catch (e) {
+          } catch {
             // Strategy 3: Submit form via JavaScript
             console.log('⚠️ Button click failed, submitting form via JavaScript...');
             await page.evaluate(() => {
@@ -1225,6 +1225,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             
             if (!pageStillValid) {
               // Page closed, try navigating to a valid page first
+              // eslint-disable-next-line @typescript-eslint/no-empty-function
               await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
               await page.waitForTimeout(1000);
             }
@@ -1245,7 +1246,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
               }
               
               return data;
-            }, { url: baseURL, address: inputValue || testAddress });
+            }, { url: baseURL, address: inputValue ?? testAddress });
             
             expect(byAddressData.metadata?.source).toBe('database');
             expect(byAddressData.success).toBe(true);
@@ -1259,52 +1260,54 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // If address lookup wasn't triggered in previous step, verify it here
       if (!addressLookupTriggered) {
         // Wait for representative lookup API call (from previous step)
-        // This MUST only query Supabase, NOT call external APIs
+      // This MUST only query Supabase, NOT call external APIs
         // Use shorter timeout and fallback to direct API call if needed
         const currentPageUrl = page.url();
         const baseURL = currentPageUrl.split('/').slice(0, 3).join('/');
         
         try {
-          const byAddressResponse = await page.waitForResponse(
-            (response) =>
-              response.url().includes('/api/civics/by-address') &&
-              response.request().method() === 'GET',
+      const byAddressResponse = await page.waitForResponse(
+        (response) =>
+          response.url().includes('/api/civics/by-address') &&
+          response.request().method() === 'GET',
             { timeout: 5000 } // Shorter timeout
-          );
-          
-          // Verify response indicates database source (not external API)
-          const byAddressData = await byAddressResponse.json();
-          expect(byAddressData.metadata?.source).toBe('database');
-          expect(byAddressData.success).toBe(true);
-          
-          // Verify data structure - API returns { data: { representatives: [...] } }
-          expect(byAddressData.data).toBeDefined();
-          expect(byAddressData.data.representatives).toBeDefined();
-          expect(Array.isArray(byAddressData.data.representatives)).toBe(true);
-          expect(byAddressData.data.representatives.length).toBeGreaterThan(0);
+      );
 
-          // Verify representatives have required fields from Supabase
-          const firstRep = byAddressData.data.representatives[0];
-          expect(firstRep).toHaveProperty('id');
-          expect(firstRep).toHaveProperty('name');
-          expect(firstRep).toHaveProperty('state');
-          expect(firstRep).toHaveProperty('office');
-          
-          // Verify data came from Supabase (not external API)
-          // Representatives should have data_quality_score, data_sources, etc.
-          expect(firstRep).toHaveProperty('data_quality_score');
-          expect(firstRep).toHaveProperty('data_sources');
-          expect(Array.isArray(firstRep.data_sources)).toBe(true);
-          
-          console.log('✓ Representatives queried from Supabase (no external API calls)');
-        } catch (timeoutError) {
+      // Verify response indicates database source (not external API)
+      const byAddressData = await byAddressResponse.json();
+      expect(byAddressData.metadata?.source).toBe('database');
+      expect(byAddressData.success).toBe(true);
+      
+      // Verify data structure - API returns { data: { representatives: [...] } }
+      expect(byAddressData.data).toBeDefined();
+      expect(byAddressData.data.representatives).toBeDefined();
+      expect(Array.isArray(byAddressData.data.representatives)).toBe(true);
+      expect(byAddressData.data.representatives.length).toBeGreaterThan(0);
+
+      // Verify representatives have required fields from Supabase
+      const firstRep = byAddressData.data.representatives[0];
+      expect(firstRep).toHaveProperty('id');
+      expect(firstRep).toHaveProperty('name');
+      expect(firstRep).toHaveProperty('state');
+      expect(firstRep).toHaveProperty('office');
+      
+      // Verify data came from Supabase (not external API)
+      // Representatives should have data_quality_score, data_sources, etc.
+      expect(firstRep).toHaveProperty('data_quality_score');
+      expect(firstRep).toHaveProperty('data_sources');
+      expect(Array.isArray(firstRep.data_sources)).toBe(true);
+      
+      console.log('✓ Representatives queried from Supabase (no external API calls)');
+        } catch {
           // Timeout waiting for response, make direct API call
           console.log('⚠️ Timeout waiting for API response, using direct API call fallback...');
           
           // Check if page is still valid
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           const pageStillValid = await page.evaluate(() => document.body !== null).catch(() => false);
           if (!pageStillValid) {
             // Page closed, navigate to a valid page
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
             await page.waitForTimeout(1000);
           }
@@ -1464,15 +1467,15 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       if (!pageStillValid) {
         // Page closed, navigate to a fresh page
         const currentPageUrl = page.url();
-        const baseURL = currentPageUrl.split('/').slice(0, 3).join('/') || 'http://127.0.0.1:3000';
+        const baseURL = currentPageUrl.split('/').slice(0, 3).join('/') ?? 'http://127.0.0.1:3000';
         await page.goto(`${baseURL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 10000 });
       } else {
         await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 10000 });
       }
       
       try {
-        await waitForPageReady(page);
-      } catch (e) {
+      await waitForPageReady(page);
+      } catch {
         // If waitForPageReady fails, just wait a bit and continue
         await page.waitForTimeout(2000);
       }
@@ -1484,7 +1487,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       });
 
       if (repsInStore) {
-        const repsArray = Array.isArray(repsInStore) ? repsInStore : (repsInStore.representatives || []);
+        const repsArray = Array.isArray(repsInStore) ? repsInStore : (repsInStore.representatives ?? []);
         expect(repsArray.length).toBeGreaterThan(0);
         console.log(`✓ Representatives persisted: ${repsArray.length} found`);
       }
@@ -1528,6 +1531,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     await test.step('Final verification of complete flow', async () => {
       // Verify user is logged in and redirected to a valid page
       // Wait for navigation to complete
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
       const currentUrl = page.url();
       
@@ -1553,7 +1557,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Handle both array format and object format
       const repsArray = Array.isArray(parsedFinalReps) 
         ? parsedFinalReps 
-        : (parsedFinalReps.representatives || []);
+        : (parsedFinalReps.representatives ?? []);
       
       expect(repsArray.length).toBeGreaterThan(0);
 
@@ -1579,11 +1583,11 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       console.log(`   - Representatives loaded from Supabase: ${repsArray.length}`);
       console.log(`   - Data flow compliant with civics architecture audit`);
       console.log(`   - Representatives have proper structure:`, {
-        hasId: firstRep.hasOwnProperty('id'),
-        hasName: firstRep.hasOwnProperty('name'),
-        hasState: firstRep.hasOwnProperty('state'),
-        hasDataQuality: firstRep.hasOwnProperty('data_quality_score'),
-        hasDataSources: firstRep.hasOwnProperty('data_sources')
+        hasId: Object.prototype.hasOwnProperty.call(firstRep, 'id'),
+        hasName: Object.prototype.hasOwnProperty.call(firstRep, 'name'),
+        hasState: Object.prototype.hasOwnProperty.call(firstRep, 'state'),
+        hasDataQuality: Object.prototype.hasOwnProperty.call(firstRep, 'data_quality_score'),
+        hasDataSources: Object.prototype.hasOwnProperty.call(firstRep, 'data_sources')
       });
     });
   });
@@ -1614,7 +1618,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         await page.waitForTimeout(2000);
       }
 
@@ -1631,7 +1635,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           await lookupButton.click();
           usedUI = true;
         }
-      } catch (e) {
+      } catch {
         // UI not available, will test via API call
       }
       
@@ -1670,7 +1674,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Wait for page to be ready, handling potential redirects
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         // If page isn't ready, try waiting a bit more
         await page.waitForTimeout(2000);
       }
@@ -1737,7 +1741,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           usedUI = true;
           console.log('✓ Using UI for address lookup');
         }
-      } catch (e) {
+      } catch {
         // UI not available, will use direct API call instead
         console.log('⚠️ UI not available, using direct API call for testing');
       }
@@ -1783,7 +1787,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     });
   });
 
-  test('Verify complete data flow: Address → Representatives → Storage → Display', async ({ page, context }) => {
+  test('Verify complete data flow: Address → Representatives → Storage → Display', async ({ page }) => {
     await test.step('End-to-end verification of complete data flow', async () => {
       // Setup test data and mocks
       await setupE2ETestData({ user: testUser });
@@ -1822,7 +1826,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-            throw new Error(errorData.message || `API returned ${response.status}`);
+            throw new Error(errorData.message ?? `API returned ${response.status}`);
           }
           
           return await response.json();
@@ -1853,7 +1857,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         await page.waitForTimeout(2000);
       }
 
@@ -1869,10 +1873,10 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         const isVisible = await addressInput.isVisible({ timeout: 5000 }).catch(() => false);
         
         if (isVisible) {
-          await addressInput.fill(testAddress);
-          flowSteps.push('Address entered');
-          
-          // Step 2: Submit triggers /api/civics/by-address (Supabase query)
+        await addressInput.fill(testAddress);
+        flowSteps.push('Address entered');
+        
+        // Step 2: Submit triggers /api/civics/by-address (Supabase query)
           const lookupButton = page.locator('button:has-text("Find Representatives"), button:has-text("Find"), button[type="submit"]:has-text("Find"), [data-testid="address-submit"]').first();
           const buttonVisible = await lookupButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => false);
           
@@ -1887,12 +1891,12 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             try {
               const isEnabled = await lookupButton.isEnabled({ timeout: 2000 }).catch(() => false);
               if (isEnabled) {
-                await lookupButton.click();
+        await lookupButton.click();
               } else {
                 // Button disabled, try Enter key or form submission
                 await addressInput.press('Enter');
               }
-            } catch (e) {
+            } catch {
               // Fallback: Submit form via JavaScript
               await page.evaluate(() => {
                 const form = document.querySelector('form');
@@ -1905,19 +1909,19 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             // Wait for API response with timeout handling
             const response = await responsePromise;
             if (response) {
-              flowSteps.push('Address lookup submitted');
+        flowSteps.push('Address lookup submitted');
               flowSteps.push('/api/civics/by-address called (Supabase query)');
               addressLookupCompleted = true;
             }
           }
         }
-      } catch (e) {
+      } catch {
         console.log('⚠️ UI interaction failed, using direct API call fallback');
       }
       
       // Fallback: Direct API call if UI interaction failed
       if (!addressLookupCompleted) {
-        const responseData = await page.evaluate(async (address) => {
+        await page.evaluate(async (address) => {
           const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
           if (!res.ok) {
             throw new Error(`API returned ${res.status}`);
@@ -1938,17 +1942,17 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         addressLookupCompleted = true;
       }
         
-      // Step 3: Verify representatives stored in localStorage
-      await page.waitForTimeout(1000);
-      const storedReps = await page.evaluate(() => {
-        return localStorage.getItem('userRepresentatives');
-      });
-      
-      if (storedReps) {
-        flowSteps.push('Representatives stored in localStorage');
-        const parsed = JSON.parse(storedReps);
-        const repsArray = Array.isArray(parsed) ? parsed : (parsed.representatives || []);
-        expect(repsArray.length).toBeGreaterThan(0);
+        // Step 3: Verify representatives stored in localStorage
+        await page.waitForTimeout(1000);
+        const storedReps = await page.evaluate(() => {
+          return localStorage.getItem('userRepresentatives');
+        });
+        
+        if (storedReps) {
+          flowSteps.push('Representatives stored in localStorage');
+          const parsed = JSON.parse(storedReps);
+          const repsArray = Array.isArray(parsed) ? parsed : (parsed.representatives ?? []);
+          expect(repsArray.length).toBeGreaterThan(0);
       } else {
         // If not stored from UI, verify API still works
         const apiResponse = await page.evaluate(async (address) => {
@@ -1963,10 +1967,10 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       }
       
       // Step 4: Verify representatives displayed (optional - UI might not be visible)
-      await page.waitForTimeout(1000);
-      const repDisplayed = await page.locator('text=Test Representative, text=representative').first().isVisible({ timeout: 3000 }).catch(() => false);
-      if (repDisplayed) {
-        flowSteps.push('Representatives displayed in UI');
+        await page.waitForTimeout(1000);
+        const repDisplayed = await page.locator('text=Test Representative, text=representative').first().isVisible({ timeout: 3000 }).catch(() => false);
+        if (repDisplayed) {
+          flowSteps.push('Representatives displayed in UI');
       } else {
         flowSteps.push('Representatives data available (UI display optional)');
       }
@@ -2002,7 +2006,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         await page.waitForTimeout(2000);
       }
 
@@ -2020,26 +2024,26 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           
           if (buttonVisible) {
             // Set up response listener before clicking, but with timeout handling
-            const responsePromise = page.waitForResponse(
-              (response) => response.url().includes('/api/civics/by-address') && response.status() === 500,
+          const responsePromise = page.waitForResponse(
+            (response) => response.url().includes('/api/civics/by-address') && response.status() === 500,
               { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
             ).catch(() => null); // Don't throw if timeout, just return null
-            
+          
             try {
-              await lookupButton.click();
+          await lookupButton.click();
               // Wait for response with timeout - if it times out, fall through to API call
               const response = await responsePromise;
               if (response && response.status() === 500) {
-                errorHandled = true;
+          errorHandled = true;
                 console.log('✓ Error response (500) received via UI interaction');
               }
-            } catch (clickError) {
+            } catch {
               // Click failed, will fall through to API call
               console.log('⚠️ Button click failed, will use API fallback');
             }
           }
         }
-      } catch (e) {
+      } catch {
         // UI not available, try direct API call to verify error handling
         console.log('⚠️ UI interaction failed, using direct API call to verify error handling');
       }
@@ -2105,7 +2109,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Wait for page to be ready, handling potential redirects
       try {
         await waitForPageReady(page);
-      } catch (e) {
+      } catch {
         // If page isn't ready, try waiting a bit more
         await page.waitForTimeout(2000);
       }
@@ -2126,25 +2130,25 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           
           if (buttonVisible) {
             // Set up response listener before clicking, but with timeout handling
-            const responsePromise = page.waitForResponse(
-              (response) => response.url().includes('/api/civics/by-address'),
+          const responsePromise = page.waitForResponse(
+            (response) => response.url().includes('/api/civics/by-address'),
               { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
             ).catch(() => null); // Don't throw if timeout, just return null
-            
+          
             try {
-              await lookupButton.click();
+          await lookupButton.click();
               // Wait for response with timeout - if it times out, fall through to API call
               const response = await responsePromise;
               if (response) {
-                lookupCompleted = true;
+          lookupCompleted = true;
               }
-            } catch (clickError) {
+            } catch {
               // Click failed, will fall through to API call
               console.log('⚠️ Button click failed, will use API fallback');
             }
           }
         }
-      } catch (e) {
+      } catch {
         // UI not available, use direct API call
         console.log('⚠️ UI interaction failed, using direct API call for privacy test');
       }
@@ -2152,29 +2156,29 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // If UI wasn't available, make direct API call
       if (!lookupCompleted) {
         try {
-          // Make the API call and verify response
-          const response = await page.evaluate(async (address) => {
-            const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        // Make the API call and verify response
+        const response = await page.evaluate(async (address) => {
+          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
             if (!res.ok) {
               throw new Error(`API returned ${res.status}`);
             }
-            const data = await res.json();
-            
-            // Store representatives in localStorage to simulate UI behavior
-            if (data.success && data.data?.representatives) {
-              localStorage.setItem('userRepresentatives', JSON.stringify(data.data.representatives));
-              localStorage.setItem('userAddress', address); // Temporary storage for testing
-            }
-            
-            return data;
-          }, testAddress);
+          const data = await res.json();
           
-          await page.waitForTimeout(1000);
-          lookupCompleted = true;
+          // Store representatives in localStorage to simulate UI behavior
+          if (data.success && data.data?.representatives) {
+            localStorage.setItem('userRepresentatives', JSON.stringify(data.data.representatives));
+            localStorage.setItem('userAddress', address); // Temporary storage for testing
+          }
           
-          // Verify API response structure
-          expect(response.success).toBe(true);
-          expect(response.data?.representatives).toBeDefined();
+          return data;
+        }, testAddress);
+        
+        await page.waitForTimeout(1000);
+        lookupCompleted = true;
+        
+        // Verify API response structure
+        expect(response.success).toBe(true);
+        expect(response.data?.representatives).toBeDefined();
         } catch (apiError) {
           // If API call fails, test still passes if we can verify privacy requirements
           console.log('⚠️ Direct API call failed, but continuing with privacy verification:', apiError);
@@ -2230,8 +2234,8 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       }
 
       // Verify representatives contain state/district (jurisdiction), not full address
-      const reps = JSON.parse(storedReps!);
-      const repsArray = Array.isArray(reps) ? reps : (reps.representatives || []);
+      const reps = JSON.parse(storedReps);
+      const repsArray = Array.isArray(reps) ? reps : (reps.representatives ?? []);
       if (repsArray.length > 0) {
         const firstRep = repsArray[0];
         expect(firstRep).toHaveProperty('state');
@@ -2403,7 +2407,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           expect(emptyResponse.error).toBeDefined();
         }
         console.log('✓ Empty address handled correctly');
-      } catch (error) {
+      } catch {
         // Network error is acceptable for empty address
         console.log('✓ Empty address handled (network error acceptable)');
       }
@@ -2418,7 +2422,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         // Should either return no results or handle gracefully
         expect(invalidResponse).toBeDefined();
         console.log('✓ Invalid address format handled');
-      } catch (error) {
+      } catch {
         // Network error is acceptable
         console.log('✓ Invalid address handled (network error acceptable)');
       }
@@ -2470,7 +2474,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           expect(Array.isArray(rep.data_sources)).toBe(true);
           
           // Common valid data sources
-          const validSources = [
+          const _validSources = [
             'openstates',
             'congress_gov',
             'govtrack',
@@ -2522,7 +2526,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           // Response should be valid (either success with data or graceful failure)
           expect(response).toBeDefined();
           console.log(`✓ Address format handled: "${address.substring(0, 30)}..."`);
-        } catch (error) {
+        } catch {
           // Some formats may fail, which is acceptable
           console.log(`⚠️ Address format failed (expected): "${address.substring(0, 30)}..."`);
         }

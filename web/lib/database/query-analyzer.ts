@@ -119,8 +119,8 @@ export class QueryAnalyzer {
       pattern,
       executionTime,
       rowsReturned,
-      rowsExamined: rowsExamined || rowsReturned,
-      usedIndex: usedIndex || false,
+      rowsExamined: rowsExamined ?? rowsReturned,
+      usedIndex: usedIndex ?? false,
       complexity,
       suggestions,
       timestamp: Date.now(),
@@ -151,7 +151,7 @@ export class QueryAnalyzer {
    * Get performance metrics for a query pattern
    */
   getPerformanceMetrics(pattern: string): QueryMetrics | null {
-    return this.performanceMetrics.get(pattern) || null;
+    return this.performanceMetrics.get(pattern) ?? null;
   }
 
   /**
@@ -193,7 +193,7 @@ export class QueryAnalyzer {
     const patternStats = new Map<string, { count: number; totalTime: number }>();
 
     for (const plan of this.queryHistory) {
-      const stats = patternStats.get(plan.pattern) || { count: 0, totalTime: 0 };
+      const stats = patternStats.get(plan.pattern) ?? { count: 0, totalTime: 0 };
       stats.count++;
       stats.totalTime += plan.executionTime;
       patternStats.set(plan.pattern, stats);
@@ -232,7 +232,7 @@ export class QueryAnalyzer {
     const optimizationCounts = new Map<string, { count: number; totalImprovement: number }>();
     for (const plan of this.queryHistory) {
       for (const suggestion of plan.suggestions) {
-        const stats = optimizationCounts.get(suggestion.type) || { count: 0, totalImprovement: 0 };
+        const stats = optimizationCounts.get(suggestion.type) ?? { count: 0, totalImprovement: 0 };
         stats.count++;
         stats.totalImprovement += suggestion.expectedImprovement;
         optimizationCounts.set(suggestion.type, stats);
@@ -288,15 +288,15 @@ export class QueryAnalyzer {
     let complexity = 1;
     
     // Add complexity for joins
-    const joinCount = (query.match(/\bjoin\b/gi) || []).length;
+    const joinCount = (query.match(/\bjoin\b/gi) ?? []).length;
     complexity += joinCount * 2;
     
     // Add complexity for subqueries
-    const subqueryCount = (query.match(/\([^)]*select[^)]*\)/gi) || []).length;
+    const subqueryCount = (query.match(/\([^)]*select[^)]*\)/gi) ?? []).length;
     complexity += subqueryCount * 3;
     
     // Add complexity for aggregations
-    const aggCount = (query.match(/\b(count|sum|avg|min|max|group by)\b/gi) || []).length;
+    const aggCount = (query.match(/\b(count|sum|avg|min|max|group by)\b/gi) ?? []).length;
     complexity += aggCount;
     
     // Add complexity for ordering
@@ -398,7 +398,7 @@ export class QueryAnalyzer {
   }
 
   private hasInefficientJoins(query: string): boolean {
-    const joinCount = (query.match(/\bjoin\b/gi) || []).length;
+    const joinCount = (query.match(/\bjoin\b/gi) ?? []).length;
     return joinCount > 3;
   }
 

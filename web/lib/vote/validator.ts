@@ -314,7 +314,7 @@ export class VoteValidator {
       };
     }
 
-    const maxApprovals = poll.votingConfig.maxChoices || poll.options.length;
+      const maxApprovals = poll.votingConfig.maxChoices ?? poll.options.length;
     if (voteData.approvals.length > maxApprovals) {
       return {
         isValid: false,
@@ -435,7 +435,7 @@ export class VoteValidator {
       };
     }
 
-    const totalCredits = poll.votingConfig.quadraticCredits || 100;
+    const totalCredits = poll.votingConfig.quadraticCredits ?? 100;
     let totalSpent = 0;
 
     for (const [optionIndex, credits] of Object.entries(voteData.allocations)) {
@@ -501,8 +501,8 @@ export class VoteValidator {
       };
     }
 
-    const rangeMin = poll.votingConfig.rangeMin || 0;
-    const rangeMax = poll.votingConfig.rangeMax || 10;
+    const rangeMin = poll.votingConfig.rangeMin ?? 0;
+    const rangeMax = poll.votingConfig.rangeMax ?? 10;
 
     for (const [optionIndex, rating] of Object.entries(voteData.ratings)) {
       if (typeof rating !== 'number' || isNaN(rating)) {
@@ -595,7 +595,7 @@ export class VoteValidator {
         .eq('user_id', userId)
         .single();
 
-      return data?.trust_tier || 'T0';
+      return data?.trust_tier ?? 'T0';
     } catch {
       return 'T0';
     }

@@ -26,8 +26,6 @@ import type {
 import { getSupabaseBrowserClient } from '../../utils/supabase/client';
 import { logger } from '../logger';
 
-type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
-
 // Admin store state interface (business logic only)
 type AdminStore = {
   // Admin-specific data
@@ -351,10 +349,6 @@ export const useAdminStore = create<AdminStore>()(
 
             // System settings are stored in user_profiles preferences or as constants
             // Since system_settings table doesn't exist, use default settings
-            const settingsData = null;
-            const error = null;
-
-            // No error handling needed since we're using default settings
 
             // Use default settings if none exist in database
             const defaultSettings = {
@@ -566,9 +560,6 @@ export const useAdminStore = create<AdminStore>()(
 
             // System settings are not stored in database - they're application constants
             // This is a no-op for now, but could be implemented with a proper settings table
-            const error = null;
-
-            // No error handling needed since we're not actually saving to database
 
             logger.info('System settings saved successfully');
           } catch (error) {
@@ -812,8 +803,8 @@ export const adminStoreSubscriptions = {
 // Admin store debug utilities
 export const adminStoreDebug = {
   logState: () => {
-    const state = useAdminStore.getState();
-            logger.info('Admin store state logged');
+    useAdminStore.getState();
+    logger.info('Admin store state logged');
   },
   
   logStats: () => {

@@ -7,14 +7,11 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/civics/by-address/route';
 
 // Mock dependencies
-const mockCheckLimit = jest.fn();
-const mockGetSupabaseServerClient = jest.fn();
 const mockFrom = jest.fn();
 const mockSelect = jest.fn();
 const mockEq = jest.fn();

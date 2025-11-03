@@ -41,7 +41,7 @@ type MinimalHashtagStore = {
   
   // Actions
   getTrendingHashtags: () => Promise<void>;
-  searchHashtags: (query: any) => Promise<void>;
+  searchHashtags: (_query: string) => Promise<void>;
   clearError: () => void;
   setCategory: (category: string) => void;
   setSortBy: (sortBy: string) => void;
@@ -52,7 +52,7 @@ type MinimalHashtagStore = {
 // Create minimal hashtag store
 export const useHashtagStore = create<MinimalHashtagStore>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       hashtags: [],
       trendingHashtags: [],
@@ -79,7 +79,7 @@ export const useHashtagStore = create<MinimalHashtagStore>()(
             hashtags: mockTrending,
             isLoading: false 
           });
-        } catch (error) {
+        } catch (_error) {
           set({ 
             error: 'Failed to load trending hashtags',
             isLoading: false 
@@ -87,10 +87,11 @@ export const useHashtagStore = create<MinimalHashtagStore>()(
         }
       },
       
-      searchHashtags: async (query: any) => {
+      searchHashtags: async (_query: string) => {
         set({ isLoading: true, error: null });
         try {
           // Mock search functionality
+          // Note: query parameter reserved for future implementation
           const mockResults = [
             { id: '1', name: 'politics', display_name: 'Politics', usage_count: 150, is_trending: true },
             { id: '2', name: 'environment', display_name: 'Environment', usage_count: 120, is_trending: true }
@@ -100,7 +101,7 @@ export const useHashtagStore = create<MinimalHashtagStore>()(
             hashtags: mockResults,
             isLoading: false 
           });
-        } catch (error) {
+        } catch (_error) {
           set({ 
             error: 'Failed to search hashtags',
             isLoading: false 

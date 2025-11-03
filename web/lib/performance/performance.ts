@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Performance utilities
  * 
@@ -34,7 +36,7 @@ export const performanceUtils = {
     }
   },
 
-  debounce: <T extends (...args: any[]) => any>(
+  debounce: <T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
   ): ((...args: Parameters<T>) => void) => {
@@ -45,7 +47,7 @@ export const performanceUtils = {
     };
   },
 
-  throttle: <T extends (...args: any[]) => any>(
+  throttle: <T extends (...args: unknown[]) => unknown>(
     func: T,
     limit: number
   ): ((...args: Parameters<T>) => void) => {

@@ -125,12 +125,12 @@ export type AnalyticsEvent = {
   timestamp: string;
   userId?: string;
   sessionId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Store selector types
-export type StoreSelector<T> = (state: T) => any;
-export type StoreAction<T> = (state: T, ...args: any[]) => void;
+export type StoreSelector<T, R = unknown> = (state: T) => R;
+export type StoreAction<T> = (state: T, ...args: unknown[]) => void;
 
 // Store subscription types
 export type StoreSubscription<T> = (state: T, prevState: T) => void;
@@ -165,7 +165,7 @@ export type StoreError = {
   code: string;
   message: string;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 // Store performance types

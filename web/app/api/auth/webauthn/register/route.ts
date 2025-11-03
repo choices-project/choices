@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import type { RegistrationResponseJSON } from '@simplewebauthn/server';
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -8,7 +9,6 @@ import { getRPIDAndOrigins } from '@/lib/webauthn/config';
 import { verifyCredentialRegistration } from '@/lib/webauthn/credential-verification';
 import { arrayBufferToBase64url } from '@/lib/webauthn/type-converters';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { RegistrationResponseJSON } from '@simplewebauthn/server';
 
 export const dynamic = 'force-dynamic'
 

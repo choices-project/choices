@@ -233,10 +233,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">
-                      {isLoadingTrending ? 'Loading trending poll...' : trendingPoll?.title || 'Climate Action 2024'}
+                      {isLoadingTrending ? 'Loading trending poll...' : trendingPoll?.title ?? 'Climate Action 2024'}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Active • {trendingPoll?.totalVotes.toLocaleString() || '2,847'} votes
+                      Active • {trendingPoll?.totalVotes.toLocaleString() ?? '2,847'} votes
                     </p>
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </div>
                   ))
                 ) : (
-                  (trendingPoll?.options || [
+                  (trendingPoll?.options ?? [
                     { text: 'Renewable Energy Investment', votes: 45, color: 'bg-green-500' },
                     { text: 'Carbon Tax Implementation', votes: 23, color: 'bg-blue-500' },
                     { text: 'Electric Vehicle Infrastructure', votes: 18, color: 'bg-purple-500' },
@@ -324,7 +324,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-green-600" />
                 <span className="text-sm font-medium text-green-700">
-                  {trendingPoll?.totalVotes.toLocaleString() || '2.8k'} votes
+                  {trendingPoll?.totalVotes.toLocaleString() ?? '2.8k'} votes
                 </span>
               </div>
             </div>

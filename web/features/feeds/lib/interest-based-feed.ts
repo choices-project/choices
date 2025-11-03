@@ -6,7 +6,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 import { getSupabaseServerClient } from '@/utils/supabase/server';

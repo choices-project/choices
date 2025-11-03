@@ -173,7 +173,7 @@ export function parseArray<T>(
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
     } else {
-      errors.push(`Item ${i}: ${result.error || 'Unknown error'}`);
+      errors.push(`Item ${i}: ${result.error ?? 'Unknown error'}`);
     }
   }
 
@@ -252,7 +252,7 @@ export function validateMultipleResponses<T>(
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
     } else {
-      errors.push(`Response ${i}: ${result.error || 'Unknown error'}`);
+      errors.push(`Response ${i}: ${result.error ?? 'Unknown error'}`);
     }
   }
 

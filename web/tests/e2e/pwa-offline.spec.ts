@@ -423,7 +423,7 @@ test.describe('PWA Offline Functionality - V2', () => {
 
     await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
     await page.click('[data-testid="address-submit"]');
-    await page.waitForResponse('**/api/v1/civics/address-lookup');
+    await page.waitForResponse((response) => response.url().includes('/api/v1/civics/address-lookup') || response.url().includes('/api/civics/by-address'));
 
     // Go offline
     await page.context().setOffline(true);

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Performance Monitoring Dashboard
  * 
@@ -6,8 +8,26 @@
  */
 
 import { queryAnalyzer } from '@/lib/database/query-analyzer';
+import type { QueryPlan, IndexRecommendation } from '@/lib/database/query-analyzer';
 import { smartCache } from '@/lib/database/smart-cache';
+import type { CacheStats } from '@/lib/database/smart-cache';
 import { logger } from '@/lib/logger';
+
+/**
+ * Type alias for query analysis report
+ */
+type QueryAnalysisReport = {
+  summary: {
+    totalQueries: number;
+    slowQueries: number;
+    optimizableQueries: number;
+    averageExecutionTime: number;
+    topOptimizations: Array<{ type: string; count: number; avgImprovement: number }>;
+  };
+  recommendations: IndexRecommendation[];
+  slowQueries: QueryPlan[];
+  optimizableQueries: QueryPlan[];
+};
 
 /**
  * Dashboard metrics for real-time monitoring
@@ -371,8 +391,8 @@ export class PerformanceDashboard {
 
   private determineSystemStatus(
     overallScore: number,
-    _cacheStats: any,
-    _queryAnalysis: any
+    _cacheStats: CacheStats,
+    _queryAnalysis: QueryAnalysisReport
   ): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' {
     if (overallScore >= 90) return 'excellent';
     if (overallScore >= 80) return 'good';
@@ -381,7 +401,7 @@ export class PerformanceDashboard {
     return 'critical';
   }
 
-  private generateAlerts(cacheStats: any, queryAnalysis: any): Array<{
+  private generateAlerts(cacheStats: CacheStats, queryAnalysis: QueryAnalysisReport): Array<{
     type: string;
     message: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
@@ -436,7 +456,7 @@ export class PerformanceDashboard {
     return alerts;
   }
 
-  private identifyImprovementOpportunities(cacheStats: any, queryAnalysis: any): string[] {
+  private identifyImprovementOpportunities(cacheStats: CacheStats, queryAnalysis: QueryAnalysisReport): string[] {
     const opportunities: string[] = [];
     
     if (cacheStats.hitRate < 0.8) {

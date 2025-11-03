@@ -10,7 +10,7 @@ import {
   NotFoundError,
   createErrorResponse
 } from '@/lib/utils/error-handler'
-import { devLog } from '@/lib/utils/logger'
+import { devLog, logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +39,7 @@ export async function POST(
     try {
       user = await getUser();
     } catch (error) {
-      console.error('Authentication error during vote:', error);
+      logger.error('Authentication error during vote:', error instanceof Error ? error : new Error(String(error)));
       throw new AuthenticationError('Authentication required to vote')
     }
 
@@ -170,15 +170,16 @@ export async function POST(
     }
 
   } catch (error) {
-    console.error('POST Vote API error:', error);
-    console.error('Error stack:', (error as Error).stack);
+    logger.error('POST Vote API error:', error instanceof Error ? error : new Error(String(error)));
     
     // Simple error response for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return NextResponse.json(
       { 
         error: 'Debug error',
-        details: (error as Error).message,
-        stack: (error as Error).stack
+        details: errorMessage,
+        stack: errorStack
       },
       { status: 500 }
     )

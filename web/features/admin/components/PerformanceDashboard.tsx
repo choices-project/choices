@@ -66,10 +66,10 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
 
   // Calculate performance insights
   const performanceInsights = {
-    avgQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.avgValue || 0,
-    maxQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.maxValue || 0,
-    totalQueries: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.countMeasurements || 0,
-    cacheHitRate: cacheStats?.hitRate || 0
+    avgQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.avgValue ?? 0,
+    maxQueryTime: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.maxValue ?? 0,
+    totalQueries: performanceStats.find((s: any) => s.metricName.includes('query_time'))?.countMeasurements ?? 0,
+    cacheHitRate: cacheStats?.hitRate ?? 0
   }
 
   // Performance status
@@ -214,7 +214,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
               {performanceStatus.status}
             </span>
             <span className="text-sm text-gray-600">
-              Last updated: {lastRefresh?.toLocaleTimeString() || 'Never'}
+              Last updated: {lastRefresh?.toLocaleTimeString() ?? 'Never'}
             </span>
           </div>
           <div className="flex space-x-2">

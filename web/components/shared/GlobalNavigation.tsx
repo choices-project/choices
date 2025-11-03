@@ -1,6 +1,9 @@
  'use client'
 
-import React from 'react';
+import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { useState } from 'react';
 
 /**
  * @fileoverview Global Navigation Component
@@ -14,11 +17,7 @@ import React from 'react';
  * @since 1.0.0
  */
 
-import { useState } from 'react'
-import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react'
 
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
 
 
 import { Button } from '@/components/ui/button'

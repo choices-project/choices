@@ -199,7 +199,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
             // Get user ID from user store
             const { useUserStore } = await import('@/lib/stores/userStore');
             const userStore = useUserStore.getState();
-            const userId = userStore.user?.id || 'anonymous';
+            const userId = userStore.user?.id ?? 'anonymous';
             
             const flag: HashtagFlag = {
               id: crypto.randomUUID(),

@@ -152,8 +152,8 @@ export const useProfileStore = create<ProfileStore>()(
           state.userProfile = userProfile as any;
           if (userProfile) {
             // Handle preferences and privacy settings safely
-            state.preferences = (userProfile as any).preferences as ProfilePreferences || null;
-            state.privacySettings = (userProfile as any).privacy_settings as PrivacySettings || null;
+            state.preferences = (userProfile as any).preferences as ProfilePreferences ?? null;
+            state.privacySettings = (userProfile as any).privacy_settings as PrivacySettings ?? null;
           }
         }),
 
@@ -177,7 +177,7 @@ export const useProfileStore = create<ProfileStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to update profile';
+                state.error = result.error ?? 'Failed to update profile';
                 state.isUpdating = false;
               });
               return false;
@@ -214,7 +214,7 @@ export const useProfileStore = create<ProfileStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to update preferences';
+                state.error = result.error ?? 'Failed to update preferences';
                 state.isUpdating = false;
               });
               return false;
@@ -251,7 +251,7 @@ export const useProfileStore = create<ProfileStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to update privacy settings';
+                state.error = result.error ?? 'Failed to update privacy settings';
                 state.isUpdating = false;
               });
               return false;
@@ -328,7 +328,7 @@ export const useProfileStore = create<ProfileStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to remove avatar';
+                state.error = result.error ?? 'Failed to remove avatar';
                 state.isUpdating = false;
               });
               return false;
@@ -361,7 +361,7 @@ export const useProfileStore = create<ProfileStore>()(
               });
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to load profile';
+                state.error = result.error ?? 'Failed to load profile';
                 state.isProfileLoading = false;
               });
             }
@@ -424,7 +424,7 @@ export const useProfileStore = create<ProfileStore>()(
               return true;
             } else {
               set((state) => {
-                state.error = result.error || 'Failed to delete profile';
+                state.error = result.error ?? 'Failed to delete profile';
                 state.isUpdating = false;
               });
               return false;
@@ -492,7 +492,7 @@ export const useProfileStore = create<ProfileStore>()(
         // Profile completeness
         updateProfileCompleteness: () => {
           const state = get();
-          const profile = state.profile || state.userProfile;
+          const profile = state.profile ?? state.userProfile;
 
           if (!profile) {
             set((state) => {
@@ -536,9 +536,9 @@ export const useProfileStore = create<ProfileStore>()(
         // Profile display helpers
         getDisplayName: () => {
           const state = get();
-          const profile = state.profile || state.userProfile;
+          const profile = state.profile ?? state.userProfile;
           if (!profile) return 'User';
-          return profile.display_name || profile.username || profile.email?.split('@')[0] || 'User';
+          return profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
         },
 
         getInitials: () => {
@@ -554,7 +554,7 @@ export const useProfileStore = create<ProfileStore>()(
 
         getTrustTierDisplay: () => {
           const state = get();
-          const profile = state.profile || state.userProfile;
+          const profile = state.profile ?? state.userProfile;
           if (!profile) return 'Unknown';
 
           const tierNames: Record<string, string> = {
@@ -563,13 +563,13 @@ export const useProfileStore = create<ProfileStore>()(
             'T2': 'Trusted User',
             'T3': 'VIP User',
           };
-          return tierNames[profile.trust_tier || ''] || 'Unknown';
+          return tierNames[profile.trust_tier ?? ''] ?? 'Unknown';
         },
 
         isAdmin: () => {
           const state = get();
-          const profile = state.profile || state.userProfile;
-          return profile?.is_admin || false;
+          const profile = state.profile ?? state.userProfile;
+          return (profile as any)?.is_admin ?? false;
         },
 
         // Reset and cleanup

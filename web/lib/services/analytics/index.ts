@@ -15,8 +15,12 @@ export { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 export const getAnalyticsUtils = () => {
   if (!isFeatureEnabled('analytics')) {
     return {
+      // Intentional empty stubs when analytics feature is disabled
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       trackEvent: () => {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       trackPageView: () => {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       trackUserAction: () => {},
       getAnalyticsData: () => Promise.resolve(null),
     };
@@ -45,8 +49,12 @@ export const isAnalyticsEnabled = () => isFeatureEnabled('analytics');
 
 // Graceful fallbacks for disabled features
 export const ANALYTICS_FALLBACKS = {
+  // Intentional empty stubs when analytics feature is disabled
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   trackEvent: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   trackPageView: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   trackUserAction: () => {},
   getAnalyticsData: () => Promise.resolve(null),
   isEnabled: false,

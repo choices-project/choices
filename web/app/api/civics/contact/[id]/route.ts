@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
+import { sanitizeText, validateRepresentativeId } from '@/lib/security/input-sanitization';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { sanitizeText, validateRepresentativeId } from '@/lib/security/input-sanitization';
+
+export const dynamic = 'force-dynamic';
 
 const logger = createApiLogger('/api/civics/contact/[id]', 'GET/POST');
 
@@ -65,10 +67,10 @@ export async function GET(
       );
     }
 
-    // Get representative basic information
+    // Get representative basic information from representatives_core
     const { data: representative, error: repError } = await supabase
-      .from('civics_representatives')
-      .select('id, name, office, level, jurisdiction, party')
+      .from('representatives_core')
+      .select('id, name, office, level, jurisdiction, party, primary_email, primary_phone, primary_website, data_quality_score, last_verified')
       .eq('id', validatedRepId)
       .single();
 
@@ -79,19 +81,17 @@ export async function GET(
       );
     }
 
-    // Get contact information
-    const { data: contactInfo } = await supabase
-      .from('civics_contact_info')
-      .select('*')
-      .eq('representative_id', validatedRepId)
-      .single();
+    // Get contact information from normalized table
+    const { data: contacts } = await supabase
+      .from('representative_contacts')
+      .select('contact_type, value, is_verified, source')
+      .eq('representative_id', validatedRepId);
 
-    // Get social media engagement
+    // Get social media from normalized table
     const { data: socialMedia } = await supabase
-      .from('civics_social_engagement')
-      .select('*')
-      .eq('representative_id', validatedRepId)
-      .order('followers_count', { ascending: false });
+      .from('representative_social_media')
+      .select('platform, handle, url, is_verified, is_primary')
+      .eq('representative_id', validatedRepId);
 
     // Transform contact data for easy access
     const contactData = {
@@ -105,47 +105,65 @@ export async function GET(
       },
       
       contact_methods: {
-        email: contactInfo?.official_email ? {
-          value: contactInfo.official_email,
-          verified: (contactInfo.data_quality_score || 0) >= 90,
-          quality_score: contactInfo.data_quality_score || 0
-        } : null,
+        email: representative.primary_email ? {
+          value: representative.primary_email,
+          verified: (representative.data_quality_score ?? 0) >= 90,
+          quality_score: representative.data_quality_score ?? 0
+        } : (contacts?.find(c => c.contact_type === 'email') ? {
+          value: contacts.find(c => c.contact_type === 'email')!.value,
+          verified: contacts.find(c => c.contact_type === 'email')!.is_verified ?? false,
+          quality_score: representative.data_quality_score ?? 0
+        } : null),
         
-        phone: contactInfo?.official_phone ? {
-          value: contactInfo.official_phone,
-          verified: (contactInfo.data_quality_score || 0) >= 90,
-          quality_score: contactInfo.data_quality_score || 0
-        } : null,
+        phone: representative.primary_phone ? {
+          value: representative.primary_phone,
+          verified: (representative.data_quality_score ?? 0) >= 90,
+          quality_score: representative.data_quality_score ?? 0
+        } : (contacts?.find(c => c.contact_type === 'phone') ? {
+          value: contacts.find(c => c.contact_type === 'phone')!.value,
+          verified: contacts.find(c => c.contact_type === 'phone')!.is_verified ?? false,
+          quality_score: representative.data_quality_score ?? 0
+        } : null),
         
-        website: contactInfo?.official_website ? {
-          value: contactInfo.official_website,
-          verified: (contactInfo.data_quality_score || 0) >= 90,
-          quality_score: contactInfo.data_quality_score || 0
-        } : null
+        website: representative.primary_website ? {
+          value: representative.primary_website,
+          verified: (representative.data_quality_score ?? 0) >= 90,
+          quality_score: representative.data_quality_score ?? 0
+        } : (contacts?.find(c => c.contact_type === 'website') ? {
+          value: contacts.find(c => c.contact_type === 'website')!.value,
+          verified: contacts.find(c => c.contact_type === 'website')!.is_verified ?? false,
+          quality_score: representative.data_quality_score ?? 0
+        } : null)
       },
       
-      office_addresses: contactInfo?.office_addresses || [],
+      office_addresses: contacts?.filter(c => c.contact_type === 'office_address').map(c => ({
+        type: c.contact_type,
+        value: c.value,
+        is_verified: c.is_verified,
+        source: c.source
+      })) ?? [],
       
       social_media: socialMedia?.map(sm => ({
         platform: sm.platform,
         handle: sm.handle,
         url: sm.url,
-        followers_count: sm.followers_count,
-        engagement_rate: sm.engagement_rate,
-        verified: sm.verified,
-        official_account: sm.official_account
+        followers_count: 0, // Not available in current schema
+        engagement_rate: 0, // Not available in current schema
+        verified: sm.is_verified,
+        official_account: true,
+        is_primary: sm.is_primary
       })) ?? [],
       
       communication_preferences: {
-        preferred_method: contactInfo?.preferred_contact_method ?? 'email',
-        response_time_expectation: contactInfo?.response_time_expectation ?? 'within_week'
+        preferred_method: 'email',
+        response_time_expectation: 'within_week'
       },
       
       data_quality: {
-        overall_score: contactInfo?.data_quality_score ?? 0,
-        last_verified: contactInfo?.last_verified ?? null,
-        data_source: contactInfo?.data_source ?? 'unknown',
-        verification_notes: contactInfo?.verification_notes ?? null
+        overall_score: representative.data_quality_score ?? 0,
+        last_verified: representative.last_verified ?? null,
+        data_source: 'openstates',
+        verification_notes: null
       }
     };
 
@@ -196,7 +214,7 @@ export async function GET(
           platform: sm.platform,
           label: `Follow on ${sm.platform.charAt(0).toUpperCase() + sm.platform.slice(1)}`,
           action: sm.url,
-          icon: platformIcons[sm.platform] || '📱',
+          icon: platformIcons[sm.platform] ?? '📱',
           followers_count: sm.followers_count
         });
       }
@@ -217,7 +235,7 @@ export async function GET(
     });
 
   } catch (error) {
-    logger.error('Error fetching contact information', error as Error);
+    logger.error('Error fetching contact information', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         ok: false, 
@@ -312,15 +330,51 @@ export async function POST(
     logger.info('Logging communication attempt', { representativeId, userId: user.id, communication_type });
 
     // Log the communication attempt - use authenticated user ID and sanitized inputs
+    // Use contact_messages table for logging communications
+    // Note: We need a thread_id, so we'll create or find a thread first
+    let threadId: string | undefined;
+    
+    // Try to find existing thread or create new one
+    const { data: existingThread } = await supabase
+      .from('contact_threads')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('representative_id', validatedRepId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (existingThread) {
+      threadId = existingThread.id;
+    } else {
+      // Create new thread
+      const { data: newThread } = await supabase
+        .from('contact_threads')
+        .insert({
+          user_id: user.id,
+          representative_id: validatedRepId,
+          subject: sanitizedSubject ?? 'Communication',
+          status: 'active'
+        })
+        .select()
+        .single();
+      
+      if (newThread) {
+        threadId = newThread.id;
+      }
+    }
+    
     const { data: logEntry, error: logError } = await supabase
-      .from('civics_communication_log')
+      .from('contact_messages')
       .insert({
-        representative_id: validatedRepId,
         user_id: user.id, // Use authenticated user ID, not from request body
-        communication_type,
+        representative_id: validatedRepId,
+        thread_id: threadId ?? crypto.randomUUID(), // Use thread ID if available
+        content: sanitizedMessagePreview ?? sanitizedSubject ?? '',
         subject: sanitizedSubject,
-        message_preview: sanitizedMessagePreview,
-        status: 'sent'
+        status: 'sent',
+        priority: 'normal',
+        message_type: communication_type === 'email' ? 'email' : 'text'
       })
       .select()
       .single();
@@ -342,7 +396,7 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('Error logging communication', error as Error);
+    logger.error('Error logging communication', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         ok: false, 

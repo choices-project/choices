@@ -159,7 +159,7 @@ export class GeographicService {
         throw new Error(`Failed to get districts: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`District lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -189,7 +189,7 @@ export class GeographicService {
         throw new Error(`Failed to get redistricting history: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Redistricting history lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -261,10 +261,10 @@ export class GeographicService {
       // Determine OCD Division ID from location
       if (location.zip) {
         const zipResult = await this.getOcdFromZip(location.zip);
-        ocdDivisionId = zipResult?.ocd_division_id || null;
+        ocdDivisionId = zipResult?.ocd_division_id ?? null;
       } else if (location.lat && location.lon) {
         const coordResult = await this.getOcdFromCoords(location.lat, location.lon);
-        ocdDivisionId = coordResult?.ocd_division_id || null;
+        ocdDivisionId = coordResult?.ocd_division_id ?? null;
       }
 
       if (!ocdDivisionId) {
@@ -295,7 +295,7 @@ export class GeographicService {
         throw new Error(`Candidate search failed: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Geographic candidate search failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -318,10 +318,10 @@ export class GeographicService {
       // Determine OCD Division ID from location
       if (location.zip) {
         const zipResult = await this.getOcdFromZip(location.zip);
-        ocdDivisionId = zipResult?.ocd_division_id || null;
+        ocdDivisionId = zipResult?.ocd_division_id ?? null;
       } else if (location.lat && location.lon) {
         const coordResult = await this.getOcdFromCoords(parseFloat(location.lat.toString()), parseFloat(location.lon.toString()));
-        ocdDivisionId = coordResult?.ocd_division_id || null;
+        ocdDivisionId = coordResult?.ocd_division_id ?? null;
       }
 
       if (!ocdDivisionId) {
@@ -354,7 +354,7 @@ export class GeographicService {
         throw new Error(`Election search failed: ${error.message}`);
       }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       throw new Error(`Geographic election search failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -370,7 +370,7 @@ export class GeographicService {
         .upsert(mappings.map(m => ({
           zip5: m.zip5,
           ocd_division_id: m.ocd_division_id,
-          confidence: m.confidence || 0.8
+          confidence: m.confidence ?? 0.8
         })), {
           onConflict: 'zip5'
         });
@@ -402,7 +402,7 @@ export class GeographicService {
           lat: m.lat,
           lon: m.lon,
           ocd_division_id: m.ocd_division_id,
-          confidence: m.confidence || 0.8
+          confidence: m.confidence ?? 0.8
         })), {
           onConflict: 'lat,lon'
         });
@@ -449,14 +449,14 @@ export class GeographicService {
 
       const coverageByState: Record<string, number> = {};
       stateData?.forEach((row: { state: string }) => {
-        coverageByState[row.state] = (coverageByState[row.state] || 0) + 1;
+        coverageByState[row.state] = (coverageByState[row.state] ?? 0) + 1;
       });
 
       return {
-        total_zip_mappings: zipCount.count || 0,
-        total_latlon_mappings: latlonCount.count || 0,
-        total_districts: districtsCount.count || 0,
-        total_redistricting_changes: redistrictingCount.count || 0,
+        total_zip_mappings: zipCount.count ?? 0,
+        total_latlon_mappings: latlonCount.count ?? 0,
+        total_districts: districtsCount.count ?? 0,
+        total_redistricting_changes: redistrictingCount.count ?? 0,
         coverage_by_state: coverageByState
       };
     } catch (error) {

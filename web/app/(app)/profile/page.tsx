@@ -47,6 +47,10 @@ export default function ProfilePage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
+  // All hooks must be called at the top level before any early returns
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
+  const exportMutation = useProfileExport();
+
   // Show loading state while checking authentication
   if (isLoading) {
     return (
@@ -57,6 +61,7 @@ export default function ProfilePage() {
   }
 
   // Show login prompt if not authenticated
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -67,10 +72,6 @@ export default function ProfilePage() {
       </div>
     );
   }
-
-  // Profile content (only shown if authenticated) - using actual hooks
-  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
-  const exportMutation = useProfileExport();
   
   const handleEditProfile = () => {
     router.push('/profile/edit');
@@ -119,15 +120,15 @@ export default function ProfilePage() {
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile?.avatar_url || ''} alt={profile?.display_name || 'User'} />
+                <AvatarImage src={profile?.avatar_url ?? ''} alt={profile?.display_name ?? 'User'} />
                 <AvatarFallback className="text-2xl">
-                  {profile?.display_name?.charAt(0) || 'U'}
+                  {profile?.display_name?.charAt(0) ?? 'U'}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <CardTitle className="text-3xl">{profile?.display_name || 'User Profile'}</CardTitle>
+            <CardTitle className="text-3xl">{profile?.display_name ?? 'User Profile'}</CardTitle>
             <CardDescription className="text-lg">
-              {profile?.email || 'No email provided'}
+              {profile?.email ?? 'No email provided'}
             </CardDescription>
             <div className="flex justify-center gap-4 mt-4">
               <Button onClick={handleEditProfile} variant="outline">
@@ -155,15 +156,15 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Display Name</label>
-                  <p className="text-lg">{profile?.display_name || 'Not set'}</p>
+                  <p className="text-lg">{profile?.display_name ?? 'Not set'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p className="text-lg">{profile?.email || 'Not set'}</p>
+                  <p className="text-lg">{profile?.email ?? 'Not set'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Bio</label>
-                  <p className="text-lg">{profile?.bio || 'No bio provided'}</p>
+                  <p className="text-lg">{profile?.bio ?? 'No bio provided'}</p>
                 </div>
               </div>
             </CardContent>
@@ -214,7 +215,12 @@ export default function ProfilePage() {
                 Edit Profile
               </Button>
               <Button 
-                onClick={() => exportMutation.exportProfile({})} 
+                onClick={() => exportMutation.exportProfile({
+                  includeActivity: true,
+                  includeVotes: true,
+                  includeComments: true,
+                  format: 'json'
+                })} 
                 variant="outline" 
                 className="justify-start"
                 disabled={exportMutation.isExporting}

@@ -58,9 +58,15 @@ This project adheres to our [Code of Conduct](core/CODE_OF_CONDUCT.md). By parti
    # Add your Supabase URL and keys
    ```
 
-4. **Start Development**
+4. **Generate TypeScript Types**
    ```bash
    cd web
+   npm run types:generate
+   ```
+   This generates TypeScript types from your Supabase database schema. Run this after any database schema changes.
+
+5. **Start Development**
+   ```bash
    npm run dev
    ```
 

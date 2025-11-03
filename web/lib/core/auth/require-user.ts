@@ -133,8 +133,8 @@ export async function requireUser(
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     const userObj: User = withOptional({
       id: user.id,
-      email: user.email || '',
-      trust_tier: userProfile?.trust_tier || 'T1',
+      email: user.email ?? '',
+      trust_tier: userProfile?.trust_tier ?? 'T1',
       is_admin: !!isAdmin
     }, {
       username: userProfile?.username
@@ -156,10 +156,10 @@ export async function requireUser(
         'T3': 3
       };
 
-      const userTier = tierHierarchy[userObj.trust_tier] || 0;
+      const userTier = tierHierarchy[userObj.trust_tier] ?? 0;
       const requiredTier = tierHierarchy[requireTrustTier];
 
-      if (userTier < (requiredTier || 0)) {
+      if (userTier < (requiredTier ?? 0)) {
         return {
           error: `Trust tier ${requireTrustTier} required`,
           status: 403
@@ -248,8 +248,8 @@ export async function requireUserForAction(
   const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
   const userObj: User = withOptional({
     id: user.id,
-    email: user.email || '',
-    trust_tier: userProfile?.trust_tier || 'T1',
+    email: user.email ?? '',
+    trust_tier: userProfile?.trust_tier ?? 'T1',
     is_admin: !!isAdmin
   }, {
     username: userProfile?.username
@@ -270,10 +270,10 @@ export async function requireUserForAction(
       'T3': 3
     };
 
-    const userTier = tierHierarchy[userObj.trust_tier] || 0;
+    const userTier = tierHierarchy[userObj.trust_tier] ?? 0;
     const requiredTier = tierHierarchy[options.requireTrustTier];
 
-    if (userTier < (requiredTier || 0)) {
+    if (userTier < (requiredTier ?? 0)) {
       return {
         error: `Trust tier ${options.requireTrustTier} required`,
         status: 403
@@ -315,8 +315,8 @@ export async function getCurrentUser(): Promise<User | null> {
     
     return withOptional({
       id: user.id,
-      email: user.email || '',
-      trust_tier: userProfile?.trust_tier || 'T1',
+      email: user.email ?? '',
+      trust_tier: userProfile?.trust_tier ?? 'T1',
       is_admin: !!isAdmin
     }, {
       username: userProfile?.username

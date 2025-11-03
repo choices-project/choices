@@ -126,7 +126,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
         // Use cache if less than 10 minutes old
         if (Date.now() - timestamp < 600000) {
           console.log('📦 Using cached preferences data');
-          setShowElectedOfficials(data.showElectedOfficials || false);
+          setShowElectedOfficials(data.showElectedOfficials ?? false);
           setShowQuickActions(data.showQuickActions !== false);
           setShowRecentActivity(data.showRecentActivity !== false);
           setShowEngagementScore(data.showEngagementScore !== false);
@@ -138,7 +138,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
       const response = await fetch('/api/dashboard?include=preferences');
       if (response.ok) {
         const data = await response.json();
-        const preferences = data.preferences || {};
+        const preferences = data.preferences ?? {};
         
         setShowElectedOfficials(preferences.showElectedOfficials || false);
         setShowQuickActions(preferences.showQuickActions !== false);
@@ -226,7 +226,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
       setPerformanceMetrics(prev => ({
         ...prev,
         dashboardLoadTime: loadTime,
-        apiResponseTime: data.loadTime || loadTime,
+        apiResponseTime: data.loadTime ?? loadTime,
         cacheHitRate: data.fromCache ? 100 : 0,
         totalRequests: prev.totalRequests + 1
       }));
@@ -453,7 +453,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
           </Button>
           <Badge variant="outline" className="flex items-center gap-2" data-testid="participation-score">
             <Activity className="h-4 w-4" />
-            {analytics?.participation_score || 0} Engagement Score
+            {analytics?.participation_score ?? 0} Engagement Score
           </Badge>
         </div>
       </div>
@@ -484,25 +484,25 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {analytics?.total_votes || 0}
+                        {analytics?.total_votes ?? 0}
                       </div>
                       <div className="text-sm text-gray-600">Total Votes</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {analytics?.total_polls_created || 0}
+                        {analytics?.total_polls_created ?? 0}
                       </div>
                       <div className="text-sm text-gray-600">Polls Created</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {analytics?.active_polls || 0}
+                        {analytics?.active_polls ?? 0}
                       </div>
                       <div className="text-sm text-gray-600">Active Polls</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
-                        {analytics?.total_votes_on_user_polls || 0}
+                        {analytics?.total_votes_on_user_polls ?? 0}
                       </div>
                       <div className="text-sm text-gray-600">Poll Votes</div>
                     </div>
@@ -527,11 +527,11 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Participation Level</span>
                     <span className="text-sm text-gray-600">
-                      {analytics?.participation_score || 0}/100
+                      {analytics?.participation_score ?? 0}/100
                     </span>
                   </div>
                   <Progress 
-                    value={analytics?.participation_score || 0} 
+                    value={analytics?.participation_score ?? 0} 
                     className="h-2"
                   />
                   <div className="text-xs text-gray-500">
@@ -789,7 +789,7 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center" data-testid="total-votes">
                       <div className="text-2xl font-bold text-blue-600">
-                        {analytics?.total_votes || 0}
+                        {analytics?.total_votes ?? 0}
                       </div>
                       <div className="text-sm text-gray-600">Total Votes</div>
                     </div>

@@ -226,19 +226,19 @@ export class GeographicElectoralFeed {
           if (election && typeof election === 'object') {
             const race = election as Record<string, unknown>;
             return {
-              raceId: race.raceId as string || '',
-              office: race.office as string || '',
-              jurisdiction: race.jurisdiction as string || '',
-              electionDate: race.electionDate as string || '',
-              incumbent: race.incumbent as Representative || await this.getMockRepresentative('Unknown'),
-              challengers: (race.challengers as Representative[]) || [],
-              allCandidates: (race.allCandidates as Candidate[]) || [],
-              keyIssues: (race.keyIssues as string[]) || [],
-              campaignFinance: race.campaignFinance as CampaignFinance || await this.getMockCampaignFinance('unknown'),
-              pollingData: race.pollingData || null,
-              voterRegistrationDeadline: race.voterRegistrationDeadline as string || '',
-              earlyVotingStart: race.earlyVotingStart as string || '',
-              absenteeBallotDeadline: race.absenteeBallotDeadline as string || '',
+              raceId: (race.raceId as string) ?? '',
+              office: (race.office as string) ?? '',
+              jurisdiction: (race.jurisdiction as string) ?? '',
+              electionDate: (race.electionDate as string) ?? '',
+              incumbent: (race.incumbent as Representative) ?? await this.getMockRepresentative('Unknown'),
+              challengers: (race.challengers as Representative[]) ?? [],
+              allCandidates: (race.allCandidates as Candidate[]) ?? [],
+              keyIssues: (race.keyIssues as string[]) ?? [],
+              campaignFinance: (race.campaignFinance as CampaignFinance) ?? await this.getMockCampaignFinance('unknown'),
+              pollingData: race.pollingData ?? null,
+              voterRegistrationDeadline: (race.voterRegistrationDeadline as string) ?? '',
+              earlyVotingStart: (race.earlyVotingStart as string) ?? '',
+              absenteeBallotDeadline: (race.absenteeBallotDeadline as string) ?? '',
               recentActivity: [],
               constituentQuestions: 0,
               candidateResponses: 0,
@@ -311,9 +311,9 @@ export class GeographicElectoralFeed {
           if (campaignData && typeof campaignData === 'object') {
             const data = campaignData as Record<string, unknown>;
             return Object.assign({}, race, {
-              recentActivity: (data.recentActivity as Activity[]) || race.recentActivity,
-              constituentQuestions: (data.constituentQuestions as number) || race.constituentQuestions,
-              candidateResponses: (data.candidateResponses as number) || race.candidateResponses,
+              recentActivity: (data.recentActivity as Activity[]) ?? race.recentActivity,
+              constituentQuestions: (data.constituentQuestions as number) ?? race.constituentQuestions,
+              candidateResponses: (data.candidateResponses as number) ?? race.candidateResponses,
               status: 'active' as const
             });
           }
@@ -366,8 +366,8 @@ export class GeographicElectoralFeed {
             const recentActivity = await this.getRecentActivityForIssue(item.issue as string, currentOfficials);
             
             issues.push({
-              issue: item.issue as string || 'Unknown Issue',
-              importance: this.determineIssueImportance(item.issue as string, item.mentions as number || 0),
+              issue: (item.issue as string) ?? 'Unknown Issue',
+              importance: this.determineIssueImportance(item.issue as string, (item.mentions as number) ?? 0),
               candidates,
               recentActivity
             });
@@ -456,24 +456,24 @@ export class GeographicElectoralFeed {
         party: representative.party,
         office: `${chamber} ${level}`,
         jurisdiction: representative.state,
-        socialMedia: representative.socialMedia || {},
+        socialMedia: representative.socialMedia ?? {},
       votingRecord: {
         totalVotes: votes.length,
         partyLineVotes: votes.filter(v => v.partyLineVote).length,
-        constituentAlignment: votes.reduce((sum, v) => sum + (v.constituentAlignment || 0), 0) / votes.length,
+        constituentAlignment: votes.length > 0 ? votes.reduce((sum, v) => sum + (v.constituentAlignment ?? 0), 0) / votes.length : 0,
         keyVotes: votes.slice(0, 10).map(vote => ({
           id: vote.id,
-          billId: vote.billId || 'unknown',
-          billTitle: vote.billTitle || vote.question,
+          billId: vote.billId ?? 'unknown',
+          billTitle: vote.billTitle ?? vote.question,
           question: vote.question,
           vote: vote.vote,
           result: vote.result,
           date: vote.date,
           partyLineVote: vote.partyLineVote,
-          constituentAlignment: vote.constituentAlignment || 0
+          constituentAlignment: vote.constituentAlignment ?? 0
         }))
       },
-      campaignFinance: campaignFinance || await this.getMockCampaignFinance('incumbent'),
+      campaignFinance: campaignFinance ?? await this.getMockCampaignFinance('incumbent'),
       engagement: {
         responseRate: 0, // Would need additional data
         averageResponseTime: 0,

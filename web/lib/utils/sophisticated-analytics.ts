@@ -63,7 +63,7 @@ export type SophisticatedAnalyticsEvent = {
   /** Session ID for tracking user sessions */
   session_id: string;
   /** Detailed event data as key-value pairs */
-  event_data: Record<string, any>;
+  event_data: Record<string, unknown>;
   /** Optional IP address for geolocation tracking */
   ip_address?: string;
   /** Optional user agent for device/browser tracking */
@@ -147,7 +147,7 @@ export type CivicEngagementMetrics = {
  * and comprehensive event metadata.
  * 
  * @param {AnalyticsEventType} eventType - Type of analytics event to track
- * @param {Record<string, any>} eventData - Detailed event data as key-value pairs
+ * @param {Record<string, unknown>} eventData - Detailed event data as key-value pairs
  * @param {Object} options - Optional tracking parameters
  * @param {string} [options.userId] - User ID for authenticated events
  * @param {string} [options.sessionId] - Session ID for session tracking
@@ -168,7 +168,7 @@ export type CivicEngagementMetrics = {
  */
 export async function trackSophisticatedEvent(
   eventType: AnalyticsEventType,
-  eventData: Record<string, any>,
+  eventData: Record<string, unknown>,
   options: {
     userId?: string;
     sessionId?: string;
@@ -177,7 +177,7 @@ export async function trackSophisticatedEvent(
   } = {}
 ): Promise<string | null> {
   try {
-    const sessionId = options.sessionId || crypto.randomUUID();
+    const sessionId = options.sessionId ?? crypto.randomUUID();
     
     const analyticsEvent: SophisticatedAnalyticsEvent = {
       event_type: eventType,
@@ -327,7 +327,7 @@ export function calculateCivicEngagementMetrics(
   const activePetitions = petitions.length;
   const representativeInteractions = representativeContacts.length;
   const signatureCount = petitions.reduce((sum, event) => 
-    sum + (event.event_data.signature_count || 0), 0
+    sum + (event.event_data.signature_count ?? 0), 0
   );
   
   const civicScore = calculateCivicScore(civicEvents);
@@ -353,7 +353,7 @@ export function calculateCivicEngagementMetrics(
  * @param {string} pollData.pollId - Unique poll identifier
  * @param {string} pollData.title - Poll title
  * @param {string} pollData.category - Poll category
- * @param {Record<string, any>} pollData.settings - Poll configuration settings
+ * @param {Record<string, unknown>} pollData.settings - Poll configuration settings
  * @param {string} [pollData.autoLockAt] - Auto-lock timestamp
  * @param {string} pollData.moderationStatus - Moderation status
  * @param {string} userId - User ID of poll creator
@@ -377,7 +377,7 @@ export async function trackPollCreation(
     pollId: string;
     title: string;
     category: string;
-    settings: Record<string, any>;
+    settings: Record<string, unknown>;
     autoLockAt?: string;
     moderationStatus: string;
   },

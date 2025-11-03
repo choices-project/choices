@@ -135,7 +135,7 @@ export class ScreenReaderSupport {
         message = 'Your ranking has been submitted successfully. Thank you for participating!';
         break;
       case 'error':
-        message = `Submission failed. ${details || 'Please try again.'}`;
+        message = `Submission failed. ${details ?? 'Please try again.'}`;
         break;
     }
     
@@ -183,7 +183,7 @@ export class ScreenReaderSupport {
    * @param priority - Priority level
    */
   static updateLiveRegion(id: string, content: string, priority: 'polite' | 'assertive' = 'polite'): void {
-    const liveRegion = this.liveRegions.get(id) || this.createLiveRegion(id, priority);
+    const liveRegion = this.liveRegions.get(id) ?? this.createLiveRegion(id, priority);
     
     // Clear existing content
     liveRegion.textContent = '';
@@ -494,13 +494,13 @@ export class ScreenReaderSupport {
     const ariaLabelledBy = element.getAttribute('aria-labelledby');
     if (ariaLabelledBy) {
       const labelElement = document.getElementById(ariaLabelledBy);
-      if (labelElement) return labelElement.textContent || '';
+      if (labelElement) return labelElement.textContent ?? '';
     }
     
     // Check for associated label
     if (element.id) {
       const label = document.querySelector(`label[for="${element.id}"]`);
-      if (label) return label.textContent || '';
+      if (label) return label.textContent ?? '';
     }
     
     // Check for text content
@@ -508,7 +508,7 @@ export class ScreenReaderSupport {
     
     // Check for alt text (images)
     if (element instanceof HTMLImageElement) {
-      return element.alt || '';
+      return element.alt ?? '';
     }
     
     // Check for title attribute

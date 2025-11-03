@@ -212,8 +212,8 @@ export class FeedbackParser {
           const interestSuggestion: InterestSuggestion = withOptional(
             {
               type: item.type,
-              text: item.text || '',
-              timestamp: item.timestamp || new Date().toISOString()
+              text: item.text ?? '',
+              timestamp: item.timestamp ?? new Date().toISOString()
             },
             { userId: item.userId }
           );
@@ -224,17 +224,17 @@ export class FeedbackParser {
             title: item.title,
             description: item.description,
             category: item.category,
-            suggestedBy: item.userId || 'anonymous',
+            suggestedBy: item.userId ?? 'anonymous',
             votes: 0, // Default for new suggestions
             status: 'pending',
-            createdAt: item.timestamp || new Date().toISOString()
+            createdAt: item.timestamp ?? new Date().toISOString()
           };
           parsed = await this.parsePollSuggestion(pollSuggestion);
         } else if (item.text) {
           // Convert RawFeedbackItem to general feedback format
           const generalFeedback = withOptional({
             text: item.text,
-            timestamp: item.timestamp || new Date().toISOString()
+            timestamp: item.timestamp ?? new Date().toISOString()
           }, {
             type: item.type,
             userId: item.userId

@@ -72,7 +72,7 @@ export type IngestionJob = {
   recordsProcessed: number;
   recordsTotal?: number;
   errors: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export type IngestionResult = {
@@ -116,7 +116,7 @@ export class DataIngestionPipeline {
     const job: IngestionJob = {
       id: jobId,
       type: 'full',
-      sources: sources || this.config.sources.map(s => s.name),
+      sources: sources ?? this.config.sources.map(s => s.name),
       startedAt: new Date(),
       status: 'running',
       recordsProcessed: 0,
@@ -148,7 +148,7 @@ export class DataIngestionPipeline {
     const job: IngestionJob = {
       id: jobId,
       type: 'incremental',
-      sources: sources || this.config.sources.map(s => s.name),
+      sources: sources ?? this.config.sources.map(s => s.name),
       startedAt: new Date(),
       status: 'running',
       recordsProcessed: 0,
@@ -436,7 +436,7 @@ export class DataIngestionPipeline {
    * Get job status
    */
   getJobStatus(jobId: string): IngestionJob | null {
-    return this.activeJobs.get(jobId) || null;
+    return this.activeJobs.get(jobId) ?? null;
   }
 
   /**
@@ -465,7 +465,7 @@ export class DataIngestionPipeline {
    * Get quality metrics for a source
    */
   getQualityMetrics(sourceName: string): DataQualityMetrics | null {
-    return this.qualityMetrics.get(sourceName) || null;
+    return this.qualityMetrics.get(sourceName) ?? null;
   }
 
   /**
@@ -501,7 +501,7 @@ export const defaultIngestionConfig: IngestionConfig = {
       name: 'google-civic',
       type: 'civicinfo',
       enabled: true,
-      apiKey: process.env.GOOGLE_CIVIC_INFO_API_KEY || '',
+      apiKey: process.env.GOOGLE_CIVIC_INFO_API_KEY ?? '',
       baseUrl: 'https://www.googleapis.com/civicinfo/v2',
       rateLimit: {
         requestsPerMinute: 60,

@@ -110,12 +110,14 @@ export class IntegrationMonitor {
     if (!this.responseTimes.has(apiName)) {
       this.responseTimes.set(apiName, []);
     }
-    this.responseTimes.get(apiName)!.push(responseTime);
+    const responseTimesList = this.responseTimes.get(apiName);
+    if (responseTimesList) {
+      responseTimesList.push(responseTime);
 
-    // Keep only last 1000 response times for performance
-    const times = this.responseTimes.get(apiName)!;
-    if (times.length > 1000) {
-      times.splice(0, times.length - 1000);
+      // Keep only last 1000 response times for performance
+      if (responseTimesList.length > 1000) {
+        responseTimesList.splice(0, responseTimesList.length - 1000);
+      }
     }
 
     // Record errors
@@ -124,12 +126,14 @@ export class IntegrationMonitor {
         this.errorCounts.set(apiName, new Map());
       }
       
-      const errorMap = this.errorCounts.get(apiName)!;
-      if (errorType) {
-        errorMap.set(errorType, (errorMap.get(errorType) || 0) + 1);
-      }
-      if (statusCode) {
-        errorMap.set(`status_${statusCode}`, (errorMap.get(`status_${statusCode}`) || 0) + 1);
+      const errorMap = this.errorCounts.get(apiName);
+      if (errorMap) {
+        if (errorType) {
+          errorMap.set(errorType, (errorMap.get(errorType) ?? 0) + 1);
+        }
+        if (statusCode) {
+          errorMap.set(`status_${statusCode}`, (errorMap.get(`status_${statusCode}`) ?? 0) + 1);
+        }
       }
     }
 
@@ -255,7 +259,7 @@ export class IntegrationMonitor {
    * Get recent metrics for an API
    */
   getRecentMetrics(apiName: string, hours: number = 24): IntegrationMetrics[] {
-    const metricsList = this.metrics.get(apiName) || [];
+    const metricsList = this.metrics.get(apiName) ?? [];
     const cutoff = Date.now() - (hours * 60 * 60 * 1000);
     
     return metricsList.filter(metrics => metrics.timestamp.getTime() > cutoff);
@@ -312,7 +316,7 @@ export class IntegrationMonitor {
    * Get health status for a specific API
    */
   getHealthCheck(apiName: string): HealthCheck | null {
-    return this.healthChecks.get(apiName) || null;
+    return this.healthChecks.get(apiName) ?? null;
   }
 
   /**
@@ -355,7 +359,9 @@ export class IntegrationMonitor {
       this.metrics.set(apiName, []);
     }
 
-    const metricsList = this.metrics.get(apiName)!;
+    const metricsList = this.metrics.get(apiName);
+    if (!metricsList) return;
+    
     let currentMetrics = metricsList[metricsList.length - 1];
 
     // Create new metrics entry if none exists or if it's been more than 1 hour
@@ -381,7 +387,7 @@ export class IntegrationMonitor {
     }
 
     // Update performance metrics
-    const responseTimes = this.responseTimes.get(apiName) || [];
+    const responseTimes = this.responseTimes.get(apiName) ?? [];
     if (responseTimes.length > 0) {
       const sorted = [...responseTimes].sort((a, b) => a - b);
       const p95Index = Math.floor(sorted.length * 0.95);

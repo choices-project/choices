@@ -38,8 +38,8 @@ export type TurnstileVerificationResult = {
  * Default Turnstile configuration
  */
 const DEFAULT_TURNSTILE_CONFIG: TurnstileConfig = {
-  secretKey: process.env.TURNSTILE_SECRET_KEY || '',
-  siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+  secretKey: process.env.TURNSTILE_SECRET_KEY ?? '',
+  siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
   enabled: process.env.NODE_ENV === 'production' && !!process.env.TURNSTILE_SECRET_KEY,
   strictMode: process.env.NODE_ENV === 'production',
   timeout: 10000, // 10 seconds
@@ -231,7 +231,7 @@ export async function requireTurnstileVerification(
   // Verify token
   const result = await verifyTurnstileToken(token, finalConfig);
   if (!result.success) {
-    throw new Error(result.error || 'Turnstile verification failed');
+    throw new Error(result.error ?? 'Turnstile verification failed');
   }
 
   // Validate action if specified
@@ -277,7 +277,7 @@ export function getTurnstileWidgetConfig(action?: string): {
 } {
   return withOptional(
     {
-      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
       theme: 'auto' as const,
       size: 'normal' as const,
     },
@@ -296,5 +296,5 @@ export function isTurnstileEnabled(): boolean {
  * Get Turnstile site key for client-side
  */
 export function getTurnstileSiteKey(): string {
-  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
+  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 }

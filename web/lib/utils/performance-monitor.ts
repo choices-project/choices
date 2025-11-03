@@ -91,9 +91,11 @@ export class PerformanceMonitor {
       // FID Observer
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (entry.processingStart && entry.startTime) {
-            this.metrics.fid = entry.processingStart - entry.startTime;
+        entries.forEach((entry) => {
+          if ('processingStart' in entry && 'startTime' in entry) {
+            const processingStart = (entry as { processingStart: number }).processingStart;
+            const startTime = (entry as { startTime: number }).startTime;
+            this.metrics.fid = processingStart - startTime;
           }
         });
       });
@@ -104,9 +106,13 @@ export class PerformanceMonitor {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+        entries.forEach((entry) => {
+          if ('hadRecentInput' in entry && 'value' in entry) {
+            const hadRecentInput = (entry as { hadRecentInput: boolean }).hadRecentInput;
+            const value = (entry as { value: number }).value;
+            if (!hadRecentInput) {
+              clsValue += value;
+            }
           }
         });
         this.metrics.cls = clsValue;
@@ -117,9 +123,13 @@ export class PerformanceMonitor {
       // FCP Observer
       const fcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (entry.name === 'first-contentful-paint') {
-            this.metrics.fcp = entry.startTime;
+        entries.forEach((entry) => {
+          if ('name' in entry && 'startTime' in entry) {
+            const name = (entry as { name: string }).name;
+            const startTime = (entry as { startTime: number }).startTime;
+            if (name === 'first-contentful-paint') {
+              this.metrics.fcp = startTime;
+            }
           }
         });
       });
@@ -153,10 +163,11 @@ export class PerformanceMonitor {
 
     // Get memory usage
     if ('memory' in performance) {
+      const memory = performance.memory as { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number };
       this.metrics.memoryUsage = {
-        usedJSHeapSize: (performance.memory as any).usedJSHeapSize,
-        totalJSHeapSize: (performance.memory as any).totalJSHeapSize,
-        jsHeapSizeLimit: (performance.memory as any).jsHeapSizeLimit,
+        usedJSHeapSize: memory.usedJSHeapSize,
+        totalJSHeapSize: memory.totalJSHeapSize,
+        jsHeapSizeLimit: memory.jsHeapSizeLimit,
       };
     }
 
@@ -166,13 +177,17 @@ export class PerformanceMonitor {
     let cssSize = 0;
     let imageCount = 0;
 
-    resources.forEach((resource: any) => {
-      if (resource.name.includes('.js')) {
-        jsSize += resource.transferSize || 0;
-      } else if (resource.name.includes('.css')) {
-        cssSize += resource.transferSize || 0;
-      } else if (resource.name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
-        imageCount++;
+    resources.forEach((resource) => {
+      if ('name' in resource && 'transferSize' in resource) {
+        const name = (resource as { name: string }).name;
+        const transferSize = (resource as { transferSize?: number }).transferSize ?? 0;
+        if (name.includes('.js')) {
+          jsSize += transferSize;
+        } else if (name.includes('.css')) {
+          cssSize += transferSize;
+        } else if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
+          imageCount++;
+        }
       }
     });
 

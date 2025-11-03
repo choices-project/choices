@@ -205,6 +205,21 @@ export class CivicsCache {
 }
 
 
+// Minimal Supabase client interface for type safety
+type SupabaseQueryBuilder = {
+  select: (columns?: string) => SupabaseQueryBuilder;
+  eq: (column: string, value: string | number) => SupabaseQueryBuilder;
+  in: (column: string, values: string[]) => SupabaseQueryBuilder;
+  limit: (count: number) => SupabaseQueryBuilder;
+  order: (column: string, options?: { ascending: boolean }) => SupabaseQueryBuilder;
+  single: () => SupabaseQueryBuilder;
+  then: <T>(onfulfilled?: ((value: { data: T | null; error: { message: string } | null }) => T | PromiseLike<T>) | null, onrejected?: ((reason: unknown) => T | PromiseLike<T>) | null) => Promise<{ data: T | null; error: { message: string } | null }>;
+};
+
+type SupabaseClientLike = {
+  from: (table: string) => SupabaseQueryBuilder;
+};
+
 /**
  * Database query optimization utilities
  */
@@ -212,7 +227,7 @@ export class CivicsQueryOptimizer {
   /**
    * Optimized representative query with normalized table joins
    */
-  static getRepresentativeQuery(supabase: any, id: string) {
+  static getRepresentativeQuery(supabase: SupabaseClientLike, id: string) {
     return supabase
       .from('representatives_core')
       .select(`
@@ -252,7 +267,7 @@ export class CivicsQueryOptimizer {
   /**
    * Optimized state query with filtering
    */
-  static getStateQuery(supabase: any, state: string, level?: string, chamber?: string, limit = 200) {
+  static getStateQuery(supabase: SupabaseClientLike, state: string, level?: string, chamber?: string, limit = 200) {
     let query = supabase
       .from('representatives_core')
       .select(`
@@ -309,7 +324,7 @@ export class CivicsQueryOptimizer {
   /**
    * Optimized address query with electoral info
    */
-  static getAddressQuery(supabase: any, state: string, districts: string[]) {
+  static getAddressQuery(supabase: SupabaseClientLike, state: string, districts: string[]) {
     return supabase
       .from('representatives_core')
       .select(`
@@ -361,7 +376,7 @@ export class CivicsCacheWarmer {
   /**
    * Warm cache for popular representatives
    */
-  static async warmPopularRepresentatives(supabase: any): Promise<void> {
+  static async warmPopularRepresentatives(supabase: SupabaseClientLike): Promise<void> {
     try {
       // Get most accessed representatives from analytics
       const { data: popularReps } = await supabase
@@ -370,7 +385,7 @@ export class CivicsCacheWarmer {
         .order('data_quality_score', { ascending: false })
         .limit(50);
 
-      if (popularReps) {
+      if (popularReps && Array.isArray(popularReps)) {
         for (const rep of popularReps) {
           // Pre-cache representative data
           const { data: repData } = await CivicsQueryOptimizer.getRepresentativeQuery(supabase, rep.id);
@@ -387,7 +402,7 @@ export class CivicsCacheWarmer {
   /**
    * Warm cache for state data
    */
-  static async warmStateData(supabase: any): Promise<void> {
+  static async warmStateData(supabase: SupabaseClientLike): Promise<void> {
     try {
       const states = ['CA', 'TX', 'FL', 'NY', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI'];
       

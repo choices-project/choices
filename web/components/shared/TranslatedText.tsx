@@ -40,7 +40,7 @@ export default function TranslatedText({
   ) : undefined;
   
   const translatedText = t(translationKey, stringParams);
-  const displayText = translatedText === translationKey ? (fallback || translationKey) : translatedText;
+  const displayText = translatedText === translationKey ? (fallback ?? translationKey) : translatedText;
 
   return (
     <Component className={className} {...props}>
@@ -72,7 +72,7 @@ export function TranslatedHeading({
   ) : undefined;
   
   const translatedText = t(translationKey, stringParams);
-  const displayText = translatedText === translationKey ? (fallback || translationKey) : translatedText;
+  const displayText = translatedText === translationKey ? (fallback ?? translationKey) : translatedText;
   const HeadingTag = `h${level}` as React.ElementType;
 
   return (
@@ -102,7 +102,7 @@ export function TranslatedButton({
   ) : undefined;
   
   const translatedText = t(translationKey, stringParams);
-  const displayText = translatedText === translationKey ? (fallback || translationKey) : translatedText;
+  const displayText = translatedText === translationKey ? (fallback ?? translationKey) : translatedText;
 
   return (
     <button className={className} {...props}>
@@ -131,7 +131,7 @@ export function TranslatedLabel({
   ) : undefined;
   
   const translatedText = t(translationKey, stringParams);
-  const displayText = translatedText === translationKey ? (fallback || translationKey) : translatedText;
+  const displayText = translatedText === translationKey ? (fallback ?? translationKey) : translatedText;
 
   return (
     <label className={className} {...props}>

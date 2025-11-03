@@ -184,7 +184,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
             .map(([endpoint, count]: any) => (
             <li key={endpoint} className="py-2 flex items-center justify-between">
               <span className="font-mono">{endpoint}</span>
-              <span className="text-sm text-gray-600">{count as any}</span>
+              <span className="text-sm text-gray-600">{count}</span>
             </li>
           ))}
         </ul>

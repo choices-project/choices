@@ -1,8 +1,6 @@
 import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
-
-// Generated types from Supabase - regenerate with: supabase gen types typescript --linked
 import type { Database } from './database.types'
 
 // Environment validation
@@ -42,9 +40,15 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   
   const { createServerClient } = await import('@supabase/ssr') // dynamic!
   
+  const url = env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error('Missing required Supabase environment variables');
+  }
+  
   return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL!,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
@@ -83,13 +87,15 @@ export async function getSupabaseAdminClient(): Promise<SupabaseClient<Database>
 }
 
 // Export types for use in other modules
+export type { Database }
 export type DatabaseTypes = Database
+
+// Core table types (tables that exist in the database)
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type Poll = Database['public']['Tables']['polls']['Row']
 export type Vote = Database['public']['Tables']['votes']['Row']
-export type UserConsent = Database['public']['Tables']['user_consent']['Row']
-export type PrivacyLog = Database['public']['Tables']['privacy_logs']['Row']
-export type UserProfileEncrypted = Database['public']['Tables']['user_profiles_encrypted']['Row']
-export type PrivateUserData = Database['public']['Tables']['private_user_data']['Row']
-export type AnalyticsContribution = Database['public']['Tables']['analytics_contributions']['Row']
-export type DemographicAnalytics = Database['public']['Views']['demographic_analytics']['Row']
+export type CandidatePlatform = Database['public']['Tables']['candidate_platforms']['Row']
+export type RepresentativeCore = Database['public']['Tables']['representatives_core']['Row']
+export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row']
+export type WebAuthnChallenge = Database['public']['Tables']['webauthn_challenges']['Row']

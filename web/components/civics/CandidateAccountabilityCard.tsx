@@ -14,12 +14,16 @@ import {
   BarChart3,
   Phone,
   Mail,
-  Twitter
+  Twitter,
+  Building2
 } from 'lucide-react';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { useUserStore } from '@/lib/stores/userStore';
 
 type Promise = {
   id: string;
@@ -100,6 +104,7 @@ type Representative = {
   district: string;
   state: string;
   office: string;
+  level?: 'federal' | 'state' | 'local';  // Add level for API lookup
   phone?: string;
   email?: string;
   website?: string;
@@ -134,8 +139,12 @@ export function CandidateAccountabilityCard({
   alternativeCandidates = [],
   className = ''
 }: CandidateAccountabilityCardProps) {
+  const router = useRouter();
+  const { isAuthenticated } = useUserStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAlternatives, setShowAlternatives] = useState(false);
+  const [loadingAlternatives, setLoadingAlternatives] = useState(false);
+  const [realAlternatives, setRealAlternatives] = useState<AlternativeCandidate[]>([]);
 
   // Mock data for demonstration
   const mockPromises: Promise[] = [
@@ -255,11 +264,47 @@ export function CandidateAccountabilityCard({
     }
   ];
 
+  // Fetch real alternative candidates when alternatives section is opened
+  useEffect(() => {
+    if (showAlternatives && representative?.office && representative?.state && isFeatureEnabled('ALTERNATIVE_CANDIDATES')) {
+      setLoadingAlternatives(true);
+      // Use query params for office/state lookup (more reliable than ID)
+      const params = new URLSearchParams({
+        office: representative.office,
+        state: representative.state,
+        level: representative.level ?? 'federal'
+      });
+      if (representative.district && representative.district !== 'N/A') {
+        params.append('district', representative.district);
+      }
+      
+      fetch(`/api/civics/representative/0/alternatives?${params.toString()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok && data.data?.alternatives) {
+            setRealAlternatives(data.data.alternatives);
+          }
+        })
+        .catch(() => {
+          // Fall back to empty array on error (will show "no candidates" message)
+          setRealAlternatives([]);
+        })
+        .finally(() => {
+          setLoadingAlternatives(false);
+        });
+    }
+  }, [showAlternatives, representative?.office, representative?.state, representative?.level, representative?.district]);
+
   const displayPromises = promises.length > 0 ? promises : mockPromises;
-  const displayCampaignFinance = campaignFinance || mockCampaignFinance;
-  const displayVotingRecord = votingRecord || mockVotingRecord;
-  const displayPerformanceMetrics = performanceMetrics || mockPerformanceMetrics;
-  const displayAlternatives = alternativeCandidates.length > 0 ? alternativeCandidates : mockAlternatives;
+  const displayCampaignFinance = campaignFinance ?? mockCampaignFinance;
+  const displayVotingRecord = votingRecord ?? mockVotingRecord;
+  const displayPerformanceMetrics = performanceMetrics ?? mockPerformanceMetrics;
+  
+  // Use real alternatives if available, otherwise use prop, otherwise mock
+  const displayAlternatives = 
+    realAlternatives.length > 0 ? realAlternatives :
+    alternativeCandidates.length > 0 ? alternativeCandidates : 
+    mockAlternatives;
 
   const getPromiseStatusIcon = (status: string) => {
     switch (status) {
@@ -682,10 +727,21 @@ export function CandidateAccountabilityCard({
       </div>
 
       {/* Alternative Candidates Section */}
-      {displayAlternatives.length > 0 && (
-        <div className="border-t border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Alternative Candidates</h3>
+      <div className="border-t border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Alternative Candidates</h3>
+          <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <Button
+                onClick={() => router.push(`/candidate/declare?office=${encodeURIComponent(representative.office)}&state=${representative.state}`)}
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                Run for This Office
+              </Button>
+            )}
             <button
               onClick={() => setShowAlternatives(!showAlternatives)}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -693,10 +749,15 @@ export function CandidateAccountabilityCard({
               {showAlternatives ? 'Hide' : 'Show'} Alternatives
             </button>
           </div>
-          
-          {showAlternatives && (
-            <div className="space-y-4">
-              {displayAlternatives.map((candidate) => (
+        </div>
+        
+        {showAlternatives && (
+          <>
+            {loadingAlternatives ? (
+              <div className="text-center py-8 text-gray-500">Loading candidates...</div>
+            ) : displayAlternatives.length > 0 ? (
+              <div className="space-y-4">
+                {displayAlternatives.map((candidate) => (
                 <div key={candidate.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -726,11 +787,26 @@ export function CandidateAccountabilityCard({
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No alternative candidates found for this office.</p>
+                {isAuthenticated && (
+                  <Button
+                    onClick={() => router.push(`/candidate/declare?office=${encodeURIComponent(representative.office)}&state=${representative.state}`)}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Be the First to Run
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

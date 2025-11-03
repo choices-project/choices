@@ -156,7 +156,7 @@ export class FinalizePollManager {
       // 6. Create snapshot
       const snapshot = await this.createSnapshot({
         pollId,
-        takenAt: poll.closeAt || new Date(),
+        takenAt: poll.closeAt ?? new Date(),
         results: irvResults,
         totalBallots: officialBallots.length,
         checksum,
@@ -215,7 +215,7 @@ export class FinalizePollManager {
       id: vote.id,
       pollId: vote.poll_id,
       userId: vote.user_id,
-      ranking: vote.vote_data?.ranking || [],
+      ranking: vote.vote_data?.ranking ?? [],
       createdAt: new Date(vote.created_at),
       isPostClose: closeAt ? new Date(vote.created_at) > closeAt : false
     }));
@@ -239,8 +239,8 @@ export class FinalizePollManager {
         {
           id: pollData.id,
           title: pollData.title,
-          candidates: pollData.options || [],
-          allowPostclose: pollData.allow_postclose || false,
+          candidates: pollData.options ?? [],
+          allowPostclose: pollData.allow_postclose ?? false,
           status: pollData.status as 'draft' | 'active' | 'closed' | 'archived',
           createdAt: new Date(pollData.created_at),
           updatedAt: new Date(pollData.updated_at)
@@ -271,7 +271,7 @@ export class FinalizePollManager {
           logger.error('Error fetching official ballots:', result.error);
           return [];
         }
-        return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) || [], closeAt);
+        return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) ?? [], closeAt);
       }
 
       const result = await this.supabaseClient
@@ -312,7 +312,7 @@ export class FinalizePollManager {
         id: vote.id,
         pollId: vote.poll_id,
         userId: vote.user_id,
-        ranking: vote.vote_data?.ranking || [],
+        ranking: vote.vote_data?.ranking ?? [],
         createdAt: new Date(vote.created_at),
         isPostClose: true
       }));
@@ -388,7 +388,7 @@ export class FinalizePollManager {
       }
 
       return {
-        winner: results.winner || '',
+        winner: results.winner ?? '',
         rounds: roundsWithPercentages,
         totalVotes: results.totalVotes,
         participationRate: 100, // Default to 100% for now
@@ -396,7 +396,7 @@ export class FinalizePollManager {
         metadata: {
           algorithm: 'IRV',
           tieBreakingMethod: 'deterministic',
-          calculationTime: results.metadata?.calculationTime || 0
+          calculationTime: results.metadata?.calculationTime ?? 0
         }
       };
     } catch (error) {

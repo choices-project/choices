@@ -141,7 +141,7 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Step 3: Settings (Category, Tags, Privacy) - Use V2 test data
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
     
     // Step 4: Review & Publish
@@ -220,7 +220,7 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Step 3: Settings
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
     
     // Step 4: Publish
@@ -369,7 +369,7 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Step 3: Settings - Set timing (if available in wizard)
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
     
     // Step 4: Publish
@@ -537,7 +537,7 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Set category
-    await page.selectOption('select', testData.poll.category || 'general');
+    await page.selectOption('select', testData.poll.category ?? 'general');
     await page.click('button:has-text("Next")');
     
     // Publish

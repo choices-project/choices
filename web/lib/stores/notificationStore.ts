@@ -144,7 +144,7 @@ export const useNotificationStore = create<NotificationStore>()(
             if (currentState.notifications.find(n => n.id === newNotification.id)) {
               currentState.removeNotification(newNotification.id);
             }
-          }, newNotification.duration || state.settings.duration);
+          }, newNotification.duration ?? state.settings.duration);
         }
         
         // Play sound if enabled (defer to avoid act() warnings)
@@ -395,7 +395,7 @@ export const notificationStoreUtils = {
       type: 'error',
       title,
       message,
-      duration: duration || 0, // Error notifications don't auto-dismiss by default
+      duration: duration ?? 0, // Error notifications don't auto-dismiss by default
     });
   },
   
