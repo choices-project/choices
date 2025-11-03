@@ -212,12 +212,13 @@ export async function createSophisticatedCivicAction(
   userId: string
 ): Promise<SophisticatedCivicAction | null> {
   try {
+    // Note: category column doesn't exist in civic_actions table
+    // action_type serves the same purpose for categorization
     const civicAction: SophisticatedCivicAction = {
       id: crypto.randomUUID(),
       title: actionData.title,
       description: actionData.description,
       action_type: actionData.actionType,
-      category: actionData.category,
       urgency_level: actionData.urgencyLevel,
       target_representatives: actionData.targetRepresentatives,
       signature_count: 0,
@@ -417,8 +418,9 @@ export async function getTrendingCivicActions(
       .limit(limit);
 
     // Apply category filter if provided
+    // Use action_type for filtering since category column doesn't exist
     if (category) {
-      query = query.eq('category', category);
+      query = query.eq('action_type', category);
     }
 
     const { data: actions, error } = await query;

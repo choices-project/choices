@@ -130,26 +130,30 @@ export class AnalyticsService {
       if (trustTierScore.factors.phone_verified) verificationMethods.push('phone')
       if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
 
-      // Insert analytics record
+      // Record poll participation analytics using analytics_events table
+      // trust_tier_analytics is for tier changes only, not poll participation
       const { error: insertError } = await supabase
-        .from('trust_tier_analytics')
+        .from('analytics_events')
         .insert({
+          event_type: 'poll_participation',
           user_id: userId,
-          poll_id: pollId,
-          trust_tier: trustTierScore.trust_tier,
-          age_group: demographicData?.age_group,
-          geographic_region: demographicData?.geographic_region,
-          education_level: demographicData?.education_level,
-          income_bracket: demographicData?.income_bracket,
-          political_affiliation: demographicData?.political_affiliation,
-          voting_history_count: trustTierScore.factors.voting_history_count,
-          biometric_verified: trustTierScore.factors.biometric_verified,
-          phone_verified: trustTierScore.factors.phone_verified,
-          identity_verified: trustTierScore.factors.identity_verified,
-          verification_methods: verificationMethods,
-          data_quality_score: trustTierScore.score,
-          confidence_level: trustTierScore.score,
-          last_activity: new Date().toISOString()
+          event_data: {
+            poll_id: pollId,
+            trust_tier: trustTierScore.trust_tier,
+            age_group: demographicData?.age_group,
+            geographic_region: demographicData?.geographic_region,
+            education_level: demographicData?.education_level,
+            income_bracket: demographicData?.income_bracket,
+            political_affiliation: demographicData?.political_affiliation,
+            voting_history_count: trustTierScore.factors.voting_history_count,
+            biometric_verified: trustTierScore.factors.biometric_verified,
+            phone_verified: trustTierScore.factors.phone_verified,
+            identity_verified: trustTierScore.factors.identity_verified,
+            verification_methods: verificationMethods,
+            data_quality_score: trustTierScore.score,
+            confidence_level: trustTierScore.score,
+            last_activity: new Date().toISOString()
+          }
         })
 
       if (insertError) {
@@ -442,18 +446,30 @@ export class AnalyticsService {
         throw new Error('Failed to get user analytics')
       }
 
-      // Get civic database entry
-      const { data: civicEntry, error: civicError } = await supabase
-        .from('civic_database_entries')
-        .select('*')
-        .eq('stable_user_id', userId)
-        .single()
+      // Calculate civic engagement metrics from user's votes
+      const { data: userVotes, error: votesError } = await supabase
+        .from('votes')
+        .select('poll_id, created_at, trust_tier')
+        .eq('user_id', userId)
 
-      if (civicError) {
-        throw new Error('Failed to get civic database entry')
+      if (votesError) {
+        devLog('Failed to get user votes for engagement metrics:', votesError)
+        // Continue with zero metrics rather than throwing
       }
 
-      // Get latest demographic data
+      // Calculate civic engagement metrics from votes
+      const total_votes_cast = userVotes?.length ?? 0
+      const total_polls_participated = userVotes ? new Set(userVotes.map(v => v.poll_id)).size : 0
+      
+      // Calculate average engagement score based on vote activity
+      const calculateAverageEngagement = (votes: typeof userVotes): number => {
+        if (!votes || votes.length === 0) return 0
+        // Simple engagement: votes per poll (1.0 = one vote per poll, >1.0 = multiple votes)
+        const score = votes.length / Math.max(total_polls_participated, 1)
+        return Math.min(score, 1.0) // Cap at 1.0
+      }
+
+      // Get latest demographic data from analytics events
       const latestAnalytics = analytics[0]
 
       return {
@@ -466,9 +482,9 @@ export class AnalyticsService {
           identity_verified: trustTierScore.factors.identity_verified
         },
         engagement_metrics: {
-          total_polls_participated: civicEntry?.total_polls_participated ?? 0,
-          total_votes_cast: civicEntry?.total_votes_cast ?? 0,
-          average_engagement_score: civicEntry?.average_engagement_score ?? 0,
+          total_polls_participated,
+          total_votes_cast,
+          average_engagement_score: calculateAverageEngagement(userVotes),
           last_activity: latestAnalytics?.last_activity ?? new Date().toISOString()
         },
         demographic_data: {

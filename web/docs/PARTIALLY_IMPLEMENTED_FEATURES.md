@@ -125,9 +125,21 @@
 
 ## 📋 RECOMMENDATION SUMMARY
 
-### IMMEDIATE FIXES (Bugs):
-1. ✅ **ComprehensiveAdminDashboard**: Add missing `showMessageForm` state
-2. ✅ **SiteMessagesAdmin**: Either implement edit feature OR remove `_editingMessage` state
+### ✅ COMPLETED FIXES:
+1. ✅ **ComprehensiveAdminDashboard**: Full message creation form with API integration (COMPLETE)
+2. ✅ **UnifiedFeed**: Personalization scoring integrated (COMPLETE)
+3. ✅ **Poll Wizard**: Migrated to Zustand store (COMPLETE)
+
+### NEW FINDINGS FROM SCHEMA AUDIT:
+4. 🐛 **Analytics Service** (`lib/types/analytics.ts`): Queries wrong tables
+   - Expects civic engagement columns on `votes` table (don't exist)
+   - Should calculate from aggregates instead
+5. 🐛 **Trust Tier Analytics**: Using wrong table for poll analytics
+   - `trust_tier_analytics` is for tier changes, not poll participation
+   - Should use `analytics_events` with event_data JSONB
+6. 🗑️ **Performance Monitoring**: 4 implementations depend on missing database tables
+   - ~1,738 lines of dead code
+   - Should archive until tables are created
 
 ### CLEANUP (Dead Code):
 3. ✅ **UnifiedFeed**: Remove 7 unused helper functions (lines 485-749)
