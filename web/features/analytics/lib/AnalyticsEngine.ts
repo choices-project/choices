@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Analytics Engine
  * 
@@ -5,7 +6,7 @@
  * Provides a unified interface for analytics across the application.
  * 
  * Created: January 9, 2025
- * Updated: January 9, 2025
+ * Updated: November 03, 2025
  */
 
 import { logger } from '@/lib/utils/logger';
