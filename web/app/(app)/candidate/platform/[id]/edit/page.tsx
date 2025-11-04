@@ -40,6 +40,8 @@ export default function EditPlatformPage() {
   }, [platformId])
 
   const handleSave = async () => {
+    if (!platform) return;
+    
     setSaving(true)
     try {
       const response = await fetch('/api/candidate/platform', {

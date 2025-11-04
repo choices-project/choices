@@ -507,12 +507,12 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium block mb-2">Privacy Level</label>
                     <select
                       value={data.settings.privacyLevel}
-                      onChange={(e) => handleUpdateSettings({ privacyLevel: e.target.value as 'public' | 'private' | 'invite-only' })}
+                      onChange={(e) => handleUpdateSettings({ privacyLevel: e.target.value as 'public' | 'private' | 'unlisted' })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="public">Public</option>
                       <option value="private">Private</option>
-                      <option value="invite-only">Invite Only</option>
+                      <option value="unlisted">Unlisted</option>
                     </select>
                   </div>
                   
@@ -520,13 +520,13 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium block mb-2">Voting Method</label>
                     <select
                       value={data.settings.votingMethod}
-                      onChange={(e) => handleUpdateSettings({ votingMethod: e.target.value as 'single' | 'multiple' | 'ranked' | 'approval' })}
+                      onChange={(e) => handleUpdateSettings({ votingMethod: e.target.value as 'single' | 'multiple' | 'ranked' | 'quadratic' })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="single">Single Choice</option>
                       <option value="multiple">Multiple Choice</option>
                       <option value="ranked">Ranked Choice</option>
-                      <option value="approval">Approval Voting</option>
+                      <option value="quadratic">Quadratic Voting</option>
                     </select>
                   </div>
                   

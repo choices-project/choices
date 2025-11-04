@@ -4,6 +4,7 @@ type MonitoringData = {
   success: boolean;
   data: {
     metrics?: {
+      totalViolations?: number;
       violationsLastHour?: number;
       violationsLast24Hours?: number;
       topViolatingIPs?: Array<{ ip: string; count: number }>;
