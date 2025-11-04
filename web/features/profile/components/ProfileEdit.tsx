@@ -139,10 +139,10 @@ export default function ProfileEdit({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Initialize form data
+  // Initialize form data (local and store)
   React.useEffect(() => {
-    const profileAny = profile as any
-    setFormData({
+    const profileAny = profile as any;
+    const initialData = {
       display_name: profileAny.display_name ?? '',
       bio: profile.bio ?? '',
       username: profile.username ?? '',
@@ -158,8 +158,11 @@ export default function ProfileEdit({
         allow_analytics: true
       },
       demographics: (profileAny.demographics as Record<string, any>) ?? {}
-    });
-  }, [profile]);
+    };
+    
+    setFormData(initialData);
+    setProfileEditData(initialData);
+  }, [profile, setProfileEditData]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
@@ -179,12 +182,17 @@ export default function ProfileEdit({
 
   // Handle array field changes (concerns, focus)
   const handleArrayFieldChange = (field: 'primary_concerns' | 'community_focus', value: string) => {
+    const newArray = formData[field]?.includes(value) 
+      ? formData[field]?.filter(item => item !== value)
+      : [...(formData[field] ?? []), value];
+    
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field]?.includes(value) 
-        ? prev[field]?.filter(item => item !== value)
-        : [...(prev[field] ?? []), value]
+      [field]: newArray
     }));
+    
+    // Sync with store
+    updateArrayField(field, newArray ?? []);
   };
 
   // Handle avatar file selection
