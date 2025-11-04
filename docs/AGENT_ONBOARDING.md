@@ -1,7 +1,8 @@
 # AI Agent Onboarding Guide
 
-**Last Updated**: November 4, 2025  
-**Purpose**: Essential information for AI agents working on this project
+**Last Updated**: November 03, 2025  
+**Purpose**: Essential information for AI agents working on this project  
+**Critical**: Read completely before starting any work
 
 ---
 
@@ -12,18 +13,33 @@
 - **Never silence linters** - fix the actual problem
 - **Implement features properly** - no shortcuts or workarounds
 - Temporarily increasing errors is acceptable if implementing correctly
+- **We do not lower functionality** - implement/improve, never remove features to "fix" issues
 
-### 2. Research First
+### 2. Research and Planning ALWAYS Come First
+- **Always check for existing implementations** before creating new
 - Comprehensively research codebase before making changes
 - Understand the full context and implications
-- Check for existing implementations, duplicates, redundancies
+- Check for duplicates, redundancies, partial implementations
 - Verify against actual database schema (not assumptions)
+- Plan the full implementation before writing code
 
-### 3. Technical Correctness
+### 3. Implement Fully, Integrate Completely
+- **No TODOs** - finish what you start
+- **No partial implementations** - complete the feature
+- **Integrate completely** - wire up all connections
+- **Test the implementation** - verify it works
+- If you can't complete it in the session, document what's done and what remains
+
+### 4. Technical Correctness
 - Documentation must be **technically accurate**
 - No grandstanding or self-congratulation
 - State facts, show file paths, include line numbers
 - If you don't know, say so - this is a learning environment
+
+### 5. File Maintenance
+- **Always check system date** - Use current date for updates
+- **Update "Last Updated" dates** on modified files
+- Keep documentation current with code changes
 
 ---
 
@@ -179,25 +195,45 @@ const vote = {
 
 ### When Implementing Features
 
-1. **Audit existing code**:
-   - Check for duplicates/redundancy
-   - Identify canonical implementations
-   - Look for partial implementations
+1. **Check system date**:
+   ```bash
+   date  # Get current date for documentation updates
+   ```
 
-2. **Research patterns**:
+2. **Search for existing implementations FIRST**:
+   - Use grep/codebase_search to find similar code
+   - Check for duplicates, redundancy, partial implementations
+   - Identify the canonical version if multiple exist
+   - Never recreate what already exists
+
+3. **Research patterns**:
    - How do similar features work?
    - What stores/hooks exist?
    - What database tables are involved?
+   - What APIs are available?
+   - What's the architecture pattern?
 
-3. **Implement properly**:
+4. **Plan the full implementation**:
+   - Map out all files that need changes
+   - Identify all integration points
+   - Plan database schema changes if needed
+   - Consider state management needs
+   - Think through edge cases
+
+5. **Implement completely**:
    - Use Zustand stores (not custom hooks)
    - Server actions for mutations
    - Type-safe (use database.types.ts)
+   - Wire up all connections (UI → state → API → database)
+   - No TODOs - finish what you start
+   - Test that it actually works
 
-4. **Update documentation**:
-   - Add JSDoc comments to functions
-   - Update feature .md files
+6. **Update documentation**:
+   - Add JSDoc comments to all new/modified functions
+   - Update feature .md files with current date
+   - Update CURRENT_STATUS.md if relevant
    - Note any architectural changes
+   - Document any new patterns introduced
 
 ### Feature Status
 - **✅ Operational**: Fully implemented, tested, production-ready
@@ -235,15 +271,31 @@ docs/
 ## Common Workflows
 
 ### Adding a New Feature
+
+**ALWAYS START WITH:**
+```bash
+# 1. Check current date
+date
+
+# 2. Search for existing implementations
+grep -r "featureName" web/
+# or use codebase_search tool
+```
+
+**THEN FOLLOW:**
 1. Check `docs/FEATURES.md` for status
-2. Check for existing partial implementations
-3. Design database schema if needed
-4. Create Zustand store for state
-5. Build components (server-first)
-6. Create server actions for mutations
-7. Add API routes if needed
-8. Write tests
-9. Document in `docs/features/[feature].md`
+2. **Search for existing partial implementations** (use grep/codebase_search)
+3. **Research similar features** to understand patterns
+4. Design database schema if needed (verify with database.types.ts)
+5. **Plan complete implementation** (all files, all integration points)
+6. Create Zustand store for state (check for existing stores first)
+7. Build components (server-first)
+8. Create server actions for mutations
+9. Add API routes if needed
+10. **Wire everything together** (UI → state → API → database)
+11. **Test that it works** (manually verify, write tests)
+12. Document in `docs/features/[feature].md` with **current date**
+13. **No TODOs left** - feature is complete and integrated
 
 ### Fixing Lint Errors
 1. Read `LINT_STANDARDS.md` for the specific rule
@@ -328,9 +380,14 @@ pnpm lint
 3. **Use service role key client-side** - security violation
 4. **Weight votes by trust tier** - all votes equal
 5. **Over-document** - be concise and technical
-6. **Create redundant implementations** - consolidate
+6. **Create redundant implementations** - search for existing first
 7. **Skip hooks** (--no-verify) - unless explicitly asked
 8. **Modify database.types.ts manually** - regenerate only
+9. **Leave TODOs in code** - finish what you start
+10. **Create partial implementations** - implement fully or not at all
+11. **Remove features to "fix" errors** - we do not lower functionality
+12. **Forget to update dates** - always update "Last Updated" with current date
+13. **Create before searching** - always check for existing implementations first
 
 ### ⚠️ Ask First
 1. Major architectural changes
@@ -375,6 +432,16 @@ When you join this project:
 7. ✅ Familiarize with database.types.ts structure
 8. ✅ Understand the docs/ structure
 
+**Before EVERY task**:
+```bash
+# Check current date for documentation updates
+date
+
+# Search for existing implementations before creating new
+grep -r "featureName" web/
+# or use codebase_search tool
+```
+
 **Then**: Ask questions if anything is unclear. This is a learning environment.
 
 ---
@@ -383,13 +450,21 @@ When you join this project:
 
 > "We are here for the best application possible."
 
-- **Quality first** - Do it right
-- **Research first** - Understand before acting
-- **Implement fully** - No half-measures
-- **Document accurately** - Truth over polish
-- **Learn continuously** - Ask when unsure
+### The Non-Negotiables
+1. **Quality first** - Do it right, not fast
+2. **Research ALWAYS comes first** - Search before you create
+3. **Implement fully, integrate completely** - No TODOs, no partial work
+4. **Never lower functionality** - Improve or maintain, never remove features
+5. **Document accurately** - Update dates, state facts, no polish
+6. **Learn continuously** - Ask when unsure
+
+### The Workflow
+```
+Check Date → Search Existing → Research → Plan → Implement Fully → 
+Integrate Completely → Test → Document (with current date) → Verify No TODOs
+```
 
 ---
 
-**This guide is your constitution. Follow it.**
+**This guide is your constitution. Follow it rigorously.**
 
