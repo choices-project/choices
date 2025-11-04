@@ -1,171 +1,106 @@
-# Choices Platform Documentation
+# Choices Documentation
 
-**Last Updated**: November 3, 2025  
-**Documentation Location**: This directory (`/docs`) is the CANONICAL source
-
----
-
-## 🚀 Quick Start
-
-**New to the project?** Start here:
-1. Read `CURRENT_STATUS.md` - Where we are now
-2. Read `ARCHITECTURE.md` - System overview (in `core/`)
-3. Read `DEVELOPMENT.md` - Setup guide (in `DEVELOPER_GUIDE_SUPABASE_CLIENT.md`)
-4. Read `FEATURES.md` - What's implemented (see `implementation/features/`)
+**Platform**: Civic engagement and democratic decision-making  
+**Last Updated**: November 4, 2025
 
 ---
 
-## 📚 Core Documentation
+## Quick Start
 
-### Essential Reading
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| **CURRENT_STATUS.md** | Current state, error count, active work | Everyone |
-| **DATABASE_SCHEMA.md** | Database design, 64 tables, migrations | Developers |
-| **LINT_STANDARDS.md** | Code quality standards | Developers |
-| **CONTRIBUTING.md** | How to contribute | Contributors |
-| **ENVIRONMENT_VARIABLES.md** | Required env vars | DevOps |
-
-### Architecture & Design
-- `core/SYSTEM_ARCHITECTURE.md` - High-level system design
-- `core/DATABASE_SCHEMA_COMPREHENSIVE.md` - Detailed database docs
-- `core/VOTING_ENGINE_COMPREHENSIVE.md` - Trust-weighted voting
-- `core/SECURITY_COMPREHENSIVE.md` - Security architecture
-- `core/FEATURE_FLAGS_COMPREHENSIVE.md` - Feature flag system
-
-### API Documentation
-- `api/README.md` - API overview
-- `api/API_ENDPOINT_DIFFERENCES.md` - Endpoint explanations
-- `API_DOCUMENTATION_CIVICS.md` - Civics API reference
-
-### Deployment & Operations
-- `DEPLOYMENT_READINESS_ASSESSMENT.md` - Production readiness
-- `PRODUCTION_READINESS_CHECKLIST.md` - Pre-deploy checklist
-- `MONITORING_SETUP.md` - Observability setup
-- `SUPABASE_CLI_SETUP.md` - Supabase CLI guide
+- **New Developer?** → [DEVELOPMENT.md](DEVELOPMENT.md)
+- **Deploying?** → [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Contributing?** → [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Need API docs?** → [API_DOCUMENTATION_CIVICS.md](API_DOCUMENTATION_CIVICS.md)
 
 ---
 
-## 🗂️ Directory Structure
+## Core Documentation
 
-```
-/docs/
-├── README.md                    ← You are here
-├── CURRENT_STATUS.md            ← START HERE for current state
-├── DATABASE_SCHEMA.md           ← Database design (64 tables)
-├── LINT_STANDARDS.md            ← Code quality rules
-├── CONTRIBUTING.md              ← Contribution guide
-│
-├── core/                        ← System architecture
-│   ├── SYSTEM_ARCHITECTURE.md
-│   ├── DATABASE_SCHEMA_COMPREHENSIVE.md
-│   ├── VOTING_ENGINE_COMPREHENSIVE.md
-│   ├── SECURITY_COMPREHENSIVE.md
-│   └── FEATURE_FLAGS_COMPREHENSIVE.md
-│
-├── features/                    ← Feature-specific docs
-│   ├── candidate-platform/
-│   ├── civics/
-│   └── filing-system/
-│
-├── api/                         ← API documentation
-│   ├── README.md
-│   └── API_ENDPOINT_DIFFERENCES.md
-│
-├── guides/                      ← How-to guides
-│   └── testing/
-│
-├── decisions/                   ← Architecture decisions (ADRs)
-│   └── quality-first-approach.md
-│
-├── implementation/              ← Implementation status
-│   └── features/                ← Per-feature implementation docs
-│
-└── archive/                     ← Historical documentation
-    └── 2025-11/                 ← November 2025 work
-        ├── migrations/          ← Migration planning docs
-        ├── audits/              ← Audit reports
-        ├── implementations/     ← Implementation logs
-        └── phase1-work/         ← Phase 1 tie-off work
-```
+### System Design
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Next.js 15, Zustand, Supabase
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - 64 tables, complete schema
+- [SECURITY.md](SECURITY.md) - WebAuthn, trust tiers, RLS
+- [TRUST_TIER_DESIGN.md](TRUST_TIER_DESIGN.md) - Equal voting philosophy
+
+### Development
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Local setup, tools, workflow
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Required env vars
+- [LINT_STANDARDS.md](LINT_STANDARDS.md) - Code quality standards
+- [DEVELOPER_GUIDE_SUPABASE_CLIENT.md](DEVELOPER_GUIDE_SUPABASE_CLIENT.md) - Supabase patterns
+
+### Project Status
+- [CURRENT_STATUS.md](CURRENT_STATUS.md) - Current state, error counts
+- [FEATURES.md](FEATURES.md) - Feature overview and status
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment readiness
 
 ---
 
-## 🎯 Documentation Standards
+## Features
 
-### File Naming
-- **UPPERCASE_WITH_UNDERSCORES.md** - Important project-level docs
-- **lowercase-with-hyphens.md** - Feature/guide docs
-- **Date prefix** - For time-series docs (e.g., `2025-11-03-migration.md`)
+All features documented in `features/`:
 
-### Content Standards
-- **Status badge** at top (🟢 Active, 🟡 In Progress, 🔴 Needs Update, ⚫ Archived)
-- **Last updated date** in header
-- **Clear purpose statement** in first paragraph
-- **Links to related docs**
+### Core Features (Operational)
+- [polls.md](features/polls.md) - Premier feature, 23 components
+- [voting.md](features/voting.md) - Equal voting, trust tier analytics
+- [authentication.md](features/authentication.md) - WebAuthn, passkeys
+- [admin.md](features/admin.md) - Admin dashboard, 27 components
+- [civics.md](features/civics.md) - Representative database, 15 components
 
-### When to Archive
-- ✅ Implementation complete reports
-- ✅ Audit reports (after issues fixed)
-- ✅ Planning docs (after plan executed)
-- ✅ Outdated status reports
-- ❌ DON'T archive: Core architecture, API docs, guides
+### Supporting Features
+- [analytics.md](features/analytics.md) - Platform analytics
+- [feeds.md](features/feeds.md) - Content personalization
+- [hashtags.md](features/hashtags.md) - Content organization
+- [onboarding.md](features/onboarding.md) - User onboarding
+- [profile.md](features/profile.md) - User profiles
+- [contact.md](features/contact.md) - Representative contact
+- [dashboard.md](features/dashboard.md) - User dashboard
 
----
-
-## ⚠️ DO NOT USE
-
-### `/scratch` - Work In Progress Only
-- Temporary planning workspace
-- NOT current project documentation
-- See `/scratch/README.md`
-
-### `/web/docs` - REMOVED
-- All content consolidated to `/docs`
-- Directory no longer exists
+### Partial/Framework
+- [pwa.md](features/pwa.md) - PWA framework (incomplete)
+- [candidate-platform.md](features/candidate-platform.md) - Partially implemented
+- [filing-system.md](features/filing-system.md) - Filing assistance
 
 ---
 
-## 🔄 Keeping Docs Current
+## Guides
 
-### After Schema Changes
-```bash
-# 1. Apply migration
-supabase db push
+### Setup
+- [guides/SUPABASE_CLI_SETUP.md](guides/SUPABASE_CLI_SETUP.md) - Link CLI, generate types
+- [guides/MONITORING_SETUP.md](guides/MONITORING_SETUP.md) - Sentry, BetterStack
+- [guides/UPSTASH_RATE_LIMITING.md](guides/UPSTASH_RATE_LIMITING.md) - Redis rate limiting
+- [guides/SCRIPTS_INVENTORY.md](guides/SCRIPTS_INVENTORY.md) - Available scripts
 
-# 2. Regenerate types
-supabase gen types typescript --linked > web/utils/supabase/database.types.ts
-
-# 3. Update DATABASE_SCHEMA.md
-# Add migration notes, new tables/columns
-
-# 4. Update CURRENT_STATUS.md
-# Reflect new capabilities
-```
-
-### After Feature Implementation
-```bash
-# 1. Update implementation/features/[feature].md
-# Mark as complete, document usage
-
-# 2. Update CURRENT_STATUS.md
-# Note completion, remove from in-progress
-
-# 3. Archive planning docs
-# Move to archive/YYYY-MM/
-```
+### Testing
+- [guides/testing/README.md](guides/testing/README.md) - Testing overview
+- [guides/testing/QUICK_START_TESTING.md](guides/testing/QUICK_START_TESTING.md) - Quick start
+- [guides/testing/TESTING_FEC_INTEGRATION.md](guides/testing/TESTING_FEC_INTEGRATION.md) - FEC tests
+- [guides/testing/TESTING_FILING_SYSTEM.md](guides/testing/TESTING_FILING_SYSTEM.md) - Filing tests
 
 ---
 
-## 📞 Questions?
+## Archive
 
-- **Current State**: See `CURRENT_STATUS.md`
-- **How to develop**: See `DEVELOPER_GUIDE_SUPABASE_CLIENT.md`
-- **How to deploy**: See `DEPLOYMENT_READINESS_ASSESSMENT.md`
-- **Architecture decisions**: See `decisions/`
-- **Feature status**: See `implementation/features/`
+Historical documentation in `archive/2025-11/`:
+- Comprehensive docs (system-wide detailed docs)
+- Component docs (individual component documentation)
+- Feature status docs (historical feature tracking)
+- Audits (implementation audits and reports)
+- Migrations (database migration docs)
+- Future feature plans (roadmaps for unimplemented features)
+
+**Note**: Archive preserved for reference, not current.
 
 ---
 
-_Single source of truth for all project documentation_
+## Documentation Standards
 
+- **Technically correct** - No grandstanding
+- **Current** - Matches codebase as of date
+- **Essential** - Only what's needed
+- **File paths included** - For all code references
+- **Status indicated** - ✅ Operational, 🟡 Partial, ❌ Not Implemented
+
+---
+
+**Total**: 39 essential documentation files  
+**Archive**: 118 historical files (preserved for reference)
