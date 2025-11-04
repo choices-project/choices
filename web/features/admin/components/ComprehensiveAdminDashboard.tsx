@@ -499,10 +499,11 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
       {/* Main Content */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="messages">Site Messages</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
         </TabsList>
 
@@ -745,6 +746,46 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* Performance Tab */}
+        <TabsContent value="performance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Performance Monitoring
+              </CardTitle>
+              <CardDescription>
+                Detailed performance metrics, alerts, and optimization recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Access the full performance monitoring dashboard for:
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-sm text-gray-700 ml-2">
+                  <li>Real-time system health metrics</li>
+                  <li>Performance alerts and resolution</li>
+                  <li>Slowest operations tracking</li>
+                  <li>Optimization recommendations</li>
+                  <li>Historical performance data (1h, 6h, 24h views)</li>
+                </ul>
+                <div className="pt-4">
+                  <a
+                    href="/admin/performance"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Open Performance Dashboard
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* System Tab */}
