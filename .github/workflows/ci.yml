@@ -64,7 +64,7 @@ jobs:
     - name: Run unit tests
       run: |
         cd web
-        npm run test:jest:ci
+        npm run jest:ci
 
     - name: Upload coverage
       uses: codecov/codecov-action@v3
@@ -124,6 +124,7 @@ jobs:
     - name: Run E2E tests
       run: |
         cd web
+        npx playwright install --with-deps chromium
         npm run test:e2e
 
     - name: Upload E2E results
