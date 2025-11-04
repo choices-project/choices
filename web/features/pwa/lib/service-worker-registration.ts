@@ -15,7 +15,7 @@
 /**
  * Configuration for service worker registration
  */
-export interface ServiceWorkerConfig {
+export type ServiceWorkerConfig = {
   /**
    * Callback fired when service worker is registered successfully
    */
@@ -46,7 +46,7 @@ export interface ServiceWorkerConfig {
 /**
  * Service Worker registration state
  */
-interface RegistrationState {
+type RegistrationState = {
   registration: ServiceWorkerRegistration | null;
   isRegistered: boolean;
   isUpdateAvailable: boolean;
@@ -245,7 +245,7 @@ function setupNetworkDetection(config: ServiceWorkerConfig): void {
  * ```
  */
 export async function activateUpdate(): Promise<void> {
-  if (!state.registration || !state.registration.waiting) {
+  if (!state.registration?.waiting) {
     console.warn('[SW] No waiting service worker to activate');
     return;
   }
@@ -345,7 +345,7 @@ export function isUpdateAvailable(): boolean {
  * ```
  */
 export async function sendMessage(message: any): Promise<any> {
-  if (!state.registration || !state.registration.active) {
+  if (!state.registration?.active) {
     throw new Error('No active service worker');
   }
   
@@ -371,7 +371,7 @@ export async function sendMessage(message: any): Promise<any> {
  * @returns {Promise<void>}
  */
 export async function clearCaches(): Promise<void> {
-  if (!state.registration || !state.registration.active) {
+  if (!state.registration?.active) {
     throw new Error('No active service worker');
   }
   

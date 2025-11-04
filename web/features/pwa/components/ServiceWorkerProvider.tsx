@@ -14,8 +14,10 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { logger } from '@/lib/utils/logger';
 
 import { 
   register, 
@@ -23,12 +25,11 @@ import {
   isServiceWorkerSupported,
   isUpdateAvailable as checkUpdateAvailable 
 } from '../lib/service-worker-registration';
-import { logger } from '@/lib/utils/logger';
 
 /**
  * Service Worker Provider Props
  */
-interface ServiceWorkerProviderProps {
+type ServiceWorkerProviderProps = {
   /**
    * Child components
    */

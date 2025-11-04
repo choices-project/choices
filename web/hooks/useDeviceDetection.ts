@@ -281,7 +281,7 @@ export function useDeviceDetection() {
     try {
       // Register service worker for offline functionality
       if ('serviceWorker' in navigator) {
-        await navigator.serviceWorker.register('/sw.js')
+        await navigator.serviceWorker.register('/service-worker.js')
         return true
       }
       return false

@@ -170,7 +170,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/manifest.json') ||
-    pathname.startsWith('/sw.js') ||
+    pathname.startsWith('/service-worker.js') ||
     pathname.startsWith('/workbox-') ||
     pathname.startsWith('/icons/') ||
     pathname.startsWith('/api/webhooks/') // Webhooks might need different headers

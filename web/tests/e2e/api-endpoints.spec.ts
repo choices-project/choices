@@ -412,7 +412,7 @@ test.describe('API Endpoints - V2', () => {
     expect(manifestData).toHaveProperty('short_name');
 
     // Test service worker endpoint
-    const swResponse = await page.request.get('/sw.js');
+    const swResponse = await page.request.get('/service-worker.js');
     expect(swResponse.ok()).toBe(true);
 
     // Test push notification subscription endpoint
@@ -582,7 +582,7 @@ test.describe('API Endpoints - V2', () => {
     const responses = await Promise.all([
       page.request.get('/api/polls'),
       page.request.get('/manifest.json'),
-      page.request.get('/sw.js')
+      page.request.get('/service-worker.js')
     ]);
 
     const endTime = Date.now();

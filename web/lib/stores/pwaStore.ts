@@ -548,7 +548,7 @@ export const usePWAStore = create<PWAStore>()(
             setError(null);
             
             if ('serviceWorker' in navigator) {
-              const registration = await navigator.serviceWorker.register('/sw.js');
+              const registration = await navigator.serviceWorker.register('/service-worker.js');
               logger.info('Service Worker registered:', { scope: registration.scope, active: !!registration.active });
             }
           } catch (error) {

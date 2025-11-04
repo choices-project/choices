@@ -65,7 +65,7 @@ export const CACHEABLE_API_ROUTES = [
 /**
  * Cache entry metadata
  */
-export interface CacheEntry {
+export type CacheEntry = {
   url: string;
   timestamp: number;
   strategy: CacheStrategy;
@@ -75,7 +75,7 @@ export interface CacheEntry {
 /**
  * Cache statistics
  */
-export interface CacheStats {
+export type CacheStats = {
   totalEntries: number;
   totalSize: number;
   caches: {

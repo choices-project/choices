@@ -158,7 +158,7 @@ test.describe('Rate Limiting Bypass - V2', () => {
       '/api/pwa/status',
       '/api/polls',
       '/manifest.json',
-      '/sw.js'
+      '/service-worker.js'
     ];
 
     for (const endpoint of endpoints) {

@@ -8,12 +8,13 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+
 import { PUSH_CONFIG } from './sw-config';
 
 /**
  * Push subscription state
  */
-export interface PushSubscriptionState {
+export type PushSubscriptionState = {
   isSubscribed: boolean;
   subscription: PushSubscription | null;
   permission: NotificationPermission;
@@ -23,7 +24,7 @@ export interface PushSubscriptionState {
 /**
  * Notification options for different types
  */
-export interface NotificationOptions {
+export type NotificationOptions = {
   title: string;
   body: string;
   icon?: string;

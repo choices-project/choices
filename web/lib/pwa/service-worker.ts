@@ -54,7 +54,7 @@ class ServiceWorkerManager {
     try {
       logger.info('PWA: Registering service worker...');
       
-      this.registration = await navigator.serviceWorker.register('/sw.js', {
+      this.registration = await navigator.serviceWorker.register('/service-worker.js', {
         scope: '/'
       });
 

@@ -132,7 +132,7 @@ test.describe('PWA API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    const response = await page.request.get('/sw.js');
+    const response = await page.request.get('/service-worker.js');
     
     expect(response.status()).toBe(200);
     
@@ -478,7 +478,7 @@ test.describe('PWA API Endpoints - V2', () => {
     const responses = await Promise.all([
       page.request.get('/api/pwa/status'),
       page.request.get('/manifest.json'),
-      page.request.get('/sw.js')
+      page.request.get('/service-worker.js')
     ]);
 
     const endTime = Date.now();

@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+
 import { BACKGROUND_SYNC_CONFIG, OFFLINE_QUEUE_CONFIG } from './sw-config';
 
 /**
@@ -25,7 +26,7 @@ export enum QueuedActionType {
 /**
  * Queued action structure
  */
-export interface QueuedAction {
+export type QueuedAction = {
   id: string;
   type: QueuedActionType;
   payload: any;
@@ -40,7 +41,7 @@ export interface QueuedAction {
 /**
  * Sync result
  */
-export interface SyncResult {
+export type SyncResult = {
   success: boolean;
   processed: number;
   succeeded: number;
