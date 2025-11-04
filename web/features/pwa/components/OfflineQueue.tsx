@@ -1,10 +1,9 @@
 'use client'
 
 import { Clock, WifiOff } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type OfflineQueueProps = {
@@ -12,35 +11,29 @@ type OfflineQueueProps = {
 }
 
 export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
-  const pwa = usePWA()
-  const [queueItems, setQueueItems] = useState<any[]>([])
-  const [isSyncing, setIsSyncing] = useState(false)
-
-  useEffect(() => {
-    // Simulate offline queue items
-    const mockQueueItems = [
-      { id: '1', type: 'vote', pollId: 'poll-1', timestamp: Date.now() - 300000 },
-      { id: '2', type: 'comment', pollId: 'poll-1', timestamp: Date.now() - 180000 },
-      { id: '3', type: 'vote', pollId: 'poll-2', timestamp: Date.now() - 60000 }
-    ]
-    setQueueItems(mockQueueItems)
-  }, [])
+  const { offline, syncData, isSyncing } = usePWAStore()
+  const [localSyncing, setLocalSyncing] = useState(false)
+  
+  // Use real queued actions from store
+  const queueItems = offline.offlineData.queuedActions
+  const hasOfflineData = queueItems.length > 0
 
   const handleSync = async () => {
-    setIsSyncing(true)
+    setLocalSyncing(true)
     try {
-      await pwa.syncOfflineData()
-      setQueueItems([])
+      await syncData()
     } catch (error) {
       logger.error('Sync failed:', error instanceof Error ? error : new Error(String(error)))
     } finally {
-      setIsSyncing(false)
+      setLocalSyncing(false)
     }
   }
 
-  if (!pwa.hasOfflineData && queueItems.length === 0) {
+  if (!hasOfflineData) {
     return null
   }
+  
+  const isSyncingNow = isSyncing || localSyncing
 
   return (
     <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`} data-testid="offline-queue-component">
@@ -68,13 +61,13 @@ export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
         ))}
       </div>
 
-      {pwa.isOnline && (
+      {offline.isOnline && (
         <button
           onClick={handleSync}
-          disabled={isSyncing}
+          disabled={isSyncingNow}
           className="w-full mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors"
         >
-          {isSyncing ? 'Syncing...' : 'Sync Now'}
+          {isSyncingNow ? 'Syncing...' : 'Sync Now'}
         </button>
       )}
     </div>

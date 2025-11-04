@@ -3,8 +3,7 @@
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
   showDetails?: boolean
@@ -12,9 +11,13 @@ type OfflineIndicatorProps = {
 }
 
 export default function OfflineIndicator({ showDetails = false, className = '' }: OfflineIndicatorProps) {
-  const pwa = usePWA()
+  const { offline, preferences } = usePWAStore()
   const [isOnline, setIsOnline] = useState(true)
   const [_showIndicator, setShowIndicator] = useState(false)
+  
+  // Get queued actions count
+  const offlineVotes = offline.offlineData.queuedActions.length
+  const hasOfflineData = offlineVotes > 0
 
   useEffect(() => {
     const handleOnline = () => {
@@ -45,7 +48,7 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
   }, [])
 
   // Don't show if PWA is not enabled
-  if (!pwa.isEnabled || !pwa.isSupported) {
+  if (!preferences.offlineMode) {
     return null
   }
 
@@ -121,20 +124,20 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
         </div>
 
         {/* Offline Data Status */}
-        {pwa.hasOfflineData && (
+        {hasOfflineData && (
           <div className="flex items-center justify-between" data-testid="offline-data-status">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-orange-500" />
               <span className="text-sm font-medium text-gray-700">Offline Data</span>
             </div>
             <span className="text-sm text-orange-600">
-              {pwa.offlineVotes} vote{pwa.offlineVotes > 1 ? 's' : ''} pending
+              {offlineVotes} vote{offlineVotes > 1 ? 's' : ''} pending
             </span>
           </div>
         )}
 
         {/* Sync Status */}
-        {!isOnline && pwa.hasOfflineData && (
+        {!isOnline && hasOfflineData && (
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center space-x-2 text-yellow-800">
               <AlertCircle className="w-4 h-4" />
@@ -147,7 +150,7 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
         )}
 
         {/* Online Status */}
-        {isOnline && pwa.hasOfflineData && (
+        {isOnline && hasOfflineData && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center space-x-2 text-green-800">
               <CheckCircle className="w-4 h-4" />
