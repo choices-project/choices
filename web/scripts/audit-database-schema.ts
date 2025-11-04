@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import type { Database } from '../utils/supabase/database.types';
 
 // Get environment variables
@@ -20,7 +21,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
-interface TableInfo {
+type TableInfo = {
   table_name: string;
   column_name: string;
   data_type: string;
@@ -28,19 +29,19 @@ interface TableInfo {
   column_default: string | null;
 }
 
-interface FunctionInfo {
+type FunctionInfo = {
   routine_name: string;
   routine_type: string;
 }
 
-interface TableColumn {
+type TableColumn = {
   name: string;
   type: string;
   nullable: boolean;
   default: string | null;
 }
 
-interface AuditResult {
+type AuditResult = {
   tables: Record<string, TableColumn[]>;
   functions: string[];
   missingTables: string[];

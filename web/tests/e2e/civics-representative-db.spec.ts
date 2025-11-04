@@ -9,7 +9,7 @@
  */
 import { test, expect } from '@playwright/test';
 
-import { waitForPageReady, E2E_CONFIG, setupExternalAPIMocks, loginTestUser, createTestUser, setupE2ETestData } from './helpers/e2e-setup';
+import { waitForPageReady, E2E_CONFIG, setupExternalAPIMocks } from './helpers/e2e-setup';
 
 test.describe('Civics Representative Database', () => {
   test.beforeEach(async ({ page }) => {

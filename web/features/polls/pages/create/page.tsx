@@ -9,15 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 // ... existing code ...
 import { Separator } from '@/components/ui/separator';
+import { devLog } from '@/lib/logger';
 import {
   usePollWizardData,
   usePollWizardStep,
   usePollWizardProgress,
   usePollWizardErrors,
-  usePollWizardCanProceed,
-  usePollWizardActions
+  usePollWizardCanProceed
 } from '@/lib/stores';
-import { devLog } from '@/lib/logger';
 import type { PollCategory } from '@/lib/types/poll-templates';
 
 const CATEGORIES: Array<{ id: PollCategory; name: string; description: string; icon: string }> = [

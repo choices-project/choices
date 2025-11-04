@@ -15,6 +15,12 @@
 // SUPABASE-GENERATED TYPES (Source of Truth)
 // ============================================================================
 
+// ============================================================================
+// CONVENIENT TYPE ALIASES (Re-export from Database)
+// ============================================================================
+
+import type { Database } from '@/utils/supabase/database.types'
+
 export * from '@/utils/supabase/database.types'
 export type { 
   Database,
@@ -24,12 +30,6 @@ export type {
   TablesUpdate,
   Enums
 } from '@/utils/supabase/database.types'
-
-// ============================================================================
-// CONVENIENT TYPE ALIASES (Re-export from Database)
-// ============================================================================
-
-import type { Database } from '@/utils/supabase/database.types'
 
 // Core Tables
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']

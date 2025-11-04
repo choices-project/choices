@@ -86,7 +86,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     });
 
     const response = await page.goto('/civics').catch(() => null);
-    if (!response || !response.ok()) {
+    if (!response?.ok()) {
       console.log('⚠️ Civics page failed to load - dev server may be down');
       test.skip();
       return;
