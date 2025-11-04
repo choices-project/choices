@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
-import { usePWA } from '@/hooks/usePWA';
+import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type EnhancedInstallPromptProps = {
@@ -39,7 +39,8 @@ export default function EnhancedInstallPrompt({
   showBenefits = true,
   showPlatformInstructions = true
 }: EnhancedInstallPromptProps) {
-  const { promptInstallation, isSupported, installation } = usePWA();
+  const { installation, installPWA } = usePWAStore();
+  const isSupported = 'serviceWorker' in navigator;
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState<string>('unknown');
   const [userEngagement, setUserEngagement] = useState(0);
@@ -122,9 +123,9 @@ export default function EnhancedInstallPrompt({
     try {
       setIsAnimating(true);
       
-      const result = await promptInstallation();
+      await installPWA();
       
-      if (result.outcome === 'accepted') {
+      if (installation.isInstalled) {
         // Track successful installation
         analyticsEngine.track({
           type: 'pwa_install_accepted',

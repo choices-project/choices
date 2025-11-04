@@ -3,8 +3,7 @@
 import { Bell, BellOff, CheckCircle, AlertCircle } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type NotificationPermissionState = 'default' | 'granted' | 'denied'
 
@@ -13,28 +12,32 @@ type NotificationPermissionProps = {
 }
 
 export default function NotificationPermission({ className = '' }: NotificationPermissionProps) {
-  const pwa = usePWA()
+  const { updatePreferences } = usePWAStore()
   const [permission, setPermission] = useState<NotificationPermissionState>('default')
   const [isRequesting, setIsRequesting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  const notificationsSupported = 'Notification' in window
 
   useEffect(() => {
-    if (pwa.notificationsSupported) {
-      setPermission(pwa.notificationsPermission)
+    if (notificationsSupported) {
+      setPermission(Notification.permission as NotificationPermissionState)
     }
-  }, [pwa.notificationsSupported, pwa.notificationsPermission])
+  }, [notificationsSupported])
 
   const handleRequestPermission = async () => {
     setIsRequesting(true)
     setError(null)
     
     try {
-      const granted = await pwa.requestNotificationPermission()
-      if (granted) {
+      const result = await Notification.requestPermission()
+      if (result === 'granted') {
         setPermission('granted')
+        updatePreferences({ pushNotifications: true })
       } else {
         setPermission('denied')
         setError('Notification permission denied')
+        updatePreferences({ pushNotifications: false })
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request permission')
@@ -43,7 +46,7 @@ export default function NotificationPermission({ className = '' }: NotificationP
     }
   }
 
-  if (!pwa.notificationsSupported) {
+  if (!notificationsSupported) {
     return (
       <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`}>
         <div className="flex items-center space-x-2 text-yellow-800">

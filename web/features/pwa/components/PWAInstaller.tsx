@@ -2,27 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 
-
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
-import { usePWA } from '@/hooks/usePWA';
+import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 export default function PWAInstaller() {
-  const pwa = usePWA();
+  const { installation, offline, preferences, installPWA, syncData } = usePWAStore();
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [showOfflineStatus, setShowOfflineStatus] = useState(false)
+  
+  const hasOfflineData = offline.offlineData.queuedActions.length > 0
+  const offlineVotes = offline.offlineData.queuedActions.length
+  const isOnline = offline.isOnline
+  const isSupported = 'serviceWorker' in navigator
+  const isEnabled = preferences.installPrompt
 
   useEffect(() => {
     // Initialize offline outbox
     initializeOfflineOutbox()
 
     // Show install prompt when PWA becomes installable
-    if (pwa.installation.isInstallable && !pwa.installation.isInstalled) {
+    if (installation.canInstall && !installation.isInstalled) {
       setShowInstallPrompt(true)
     }
 
     // Show offline status when there are offline votes
-    if (pwa.hasOfflineData) {
+    if (hasOfflineData) {
       setShowOfflineStatus(true)
     }
 
@@ -43,17 +48,15 @@ export default function PWAInstaller() {
     return () => {
       window.removeEventListener('offlineVotesSynced', handleOfflineVotesSynced as EventListener)
     }
-  }, [pwa.installation.isInstallable, pwa.installation.isInstalled, pwa.hasOfflineData])
+  }, [installation.canInstall, installation.isInstalled, hasOfflineData])
 
   const handleInstallClick = async () => {
     try {
-      const result = await pwa.promptInstallation()
+      await installPWA()
       
-      if (result.success && result.outcome === 'accepted') {
+      if (installation.isInstalled) {
         logger.info('User accepted the install prompt')
         showNotification('Choices installed successfully! 🎉', 'You can now use Choices offline and get notifications for new polls.')
-      } else if (result.outcome === 'dismissed') {
-        logger.info('User dismissed the install prompt')
       }
     } catch (error) {
       logger.error('Installation failed:', error instanceof Error ? error : new Error(String(error)))
@@ -64,7 +67,7 @@ export default function PWAInstaller() {
 
   const handleSyncOfflineVotes = async () => {
     try {
-      await pwa.syncOfflineData()
+      await syncData()
       showNotification('Votes synced! 📤', 'Your offline votes have been submitted successfully.')
     } catch (error) {
       logger.error('Failed to sync offline votes:', error instanceof Error ? error : new Error(String(error)))
@@ -100,7 +103,7 @@ export default function PWAInstaller() {
   }
 
   // Don't show anything if PWA is already installed or not supported
-  if (pwa.installation.isInstalled || !pwa.isSupported || !pwa.isEnabled) {
+  if (installation.isInstalled || !isSupported || !isEnabled) {
     return null
   }
 
@@ -187,14 +190,14 @@ export default function PWAInstaller() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-yellow-800">
-                      {pwa.isOnline ? 'Votes ready to sync' : 'Offline votes stored'}
+                      {isOnline ? 'Votes ready to sync' : 'Offline votes stored'}
                     </h3>
                     <p className="text-sm text-yellow-700">
-                      {pwa.offlineVotes} vote{pwa.offlineVotes > 1 ? 's' : ''} waiting to be submitted
+                      {offlineVotes} vote{offlineVotes > 1 ? 's' : ''} waiting to be submitted
                     </p>
                   </div>
                 </div>
-                {pwa.isOnline && (
+                {isOnline && (
                   <button
                     onClick={handleSyncOfflineVotes}
                     className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
@@ -208,7 +211,7 @@ export default function PWAInstaller() {
           )}
 
           {/* Connection Status */}
-          {!pwa.isOnline && (
+          {!isOnline && (
             <div className="fixed top-4 left-4 right-4 bg-red-50 border border-red-200 rounded-lg shadow-lg p-3 z-30" data-testid="offline-indicator">
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -3,8 +3,7 @@
 import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type OfflineVotingProps = {
@@ -13,18 +12,34 @@ type OfflineVotingProps = {
 }
 
 export default function OfflineVoting({ pollId, className = '' }: OfflineVotingProps) {
-  const pwa = usePWA()
+  const { offline } = usePWAStore()
   const [offlineVotes, setOfflineVotes] = useState<any[]>([])
   const [_isVoting, setIsVoting] = useState(false)
+  
+  // Get real offline votes for this poll from store
+  const pollVotes = offline.offlineData.queuedActions.filter(
+    action => action.action.includes('vote') && action.data && 
+    (action.data as any).pollId === pollId
+  )
 
   useEffect(() => {
-    // Simulate offline votes for this poll
-    const mockVotes = [
-      { id: '1', pollId, choice: 0, timestamp: Date.now() - 300000 },
-      { id: '2', pollId, choice: 1, timestamp: Date.now() - 180000 }
-    ]
-    setOfflineVotes(mockVotes)
-  }, [pollId])
+    // Use real votes from store, fallback to mock if none exist
+    if (pollVotes.length > 0) {
+      setOfflineVotes(pollVotes.map(action => ({
+        id: action.id,
+        pollId,
+        choice: (action.data as any).choice || 0,
+        timestamp: new Date(action.timestamp).getTime()
+      })))
+    } else {
+      // Keep mock votes for demo purposes if no real votes
+      const mockVotes = [
+        { id: '1', pollId, choice: 0, timestamp: Date.now() - 300000 },
+        { id: '2', pollId, choice: 1, timestamp: Date.now() - 180000 }
+      ]
+      setOfflineVotes(mockVotes)
+    }
+  }, [pollId, pollVotes.length])
 
   const _handleVote = (choice: number) => {
     setIsVoting(true)
@@ -44,7 +59,7 @@ export default function OfflineVoting({ pollId, className = '' }: OfflineVotingP
     }
   }
 
-  if (!pwa.hasOfflineData && offlineVotes.length === 0) {
+  if (offlineVotes.length === 0) {
     return null
   }
 

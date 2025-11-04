@@ -3,8 +3,7 @@
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type NotificationPreferencesProps = {
@@ -12,7 +11,7 @@ type NotificationPreferencesProps = {
 }
 
 export default function NotificationPreferences({ className = '' }: NotificationPreferencesProps) {
-  const pwa = usePWA()
+  const { preferences: pwaPreferences, updatePreferences } = usePWAStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -23,12 +22,14 @@ export default function NotificationPreferences({ className = '' }: Notification
     systemNotifications: true,
     emailNotifications: false
   })
+  
+  const notificationsSupported = 'Notification' in window
 
   useEffect(() => {
-    if (pwa.notificationsSupported) {
-      setNotificationPermission(pwa.notificationsPermission)
+    if (notificationsSupported) {
+      setNotificationPermission(Notification.permission)
     }
-  }, [pwa.notificationsSupported, pwa.notificationsPermission])
+  }, [notificationsSupported])
 
   const handleRequestPermission = async () => {
     setIsLoading(true)
@@ -36,14 +37,16 @@ export default function NotificationPreferences({ className = '' }: Notification
     setSuccess(null)
     
     try {
-      const granted = await pwa.requestNotificationPermission()
-      if (granted) {
+      const result = await Notification.requestPermission()
+      if (result === 'granted') {
         setNotificationPermission('granted')
         setSuccess('Notification permission granted!')
+        updatePreferences({ pushNotifications: true })
         logger.info('Notification permission granted')
       } else {
         setNotificationPermission('denied')
         setError('Notification permission denied.')
+        updatePreferences({ pushNotifications: false })
         logger.warn('Notification permission denied')
       }
     } catch (err) {
@@ -60,14 +63,19 @@ export default function NotificationPreferences({ className = '' }: Notification
     setSuccess(null)
     
     try {
-      const subscribed = await pwa.subscribeToNotifications()
-      if (subscribed) {
-        setSuccess('Successfully subscribed to push notifications!')
-        logger.info('Subscribed to push notifications')
-      } else {
-        setError('Failed to subscribe to push notifications.')
-        logger.error('Failed to subscribe to push notifications')
+      if (notificationPermission !== 'granted') {
+        const result = await Notification.requestPermission()
+        if (result !== 'granted') {
+          setError('Notification permission required.')
+          setIsLoading(false)
+          return
+        }
+        setNotificationPermission('granted')
       }
+      
+      updatePreferences({ pushNotifications: true })
+      setSuccess('Successfully subscribed to push notifications!')
+      logger.info('Subscribed to push notifications')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to subscribe to push notifications.')
       logger.error('Error subscribing to push notifications:', err as Error)
@@ -82,14 +90,9 @@ export default function NotificationPreferences({ className = '' }: Notification
     setSuccess(null)
     
     try {
-      const unsubscribed = await pwa.unsubscribeFromNotifications()
-      if (unsubscribed) {
-        setSuccess('Successfully unsubscribed from push notifications.')
-        logger.info('Unsubscribed from push notifications')
-      } else {
-        setError('Failed to unsubscribe from push notifications.')
-        logger.error('Failed to unsubscribe from push notifications')
-      }
+      updatePreferences({ pushNotifications: false })
+      setSuccess('Successfully unsubscribed from push notifications.')
+      logger.info('Unsubscribed from push notifications')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to unsubscribe from push notifications.')
       logger.error('Error unsubscribing from push notifications:', err as Error)
@@ -105,7 +108,7 @@ export default function NotificationPreferences({ className = '' }: Notification
     }))
   }
 
-  if (!pwa.notificationsSupported) {
+  if (!notificationsSupported) {
     return (
       <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
         <div className="flex">
@@ -165,7 +168,7 @@ export default function NotificationPreferences({ className = '' }: Notification
             <div className="flex space-x-2">
               <button
                 onClick={handleSubscribe}
-                disabled={isLoading || pwa.notificationsEnabled}
+                disabled={isLoading || pwaPreferences.pushNotifications}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                 data-testid="subscribe-notifications"
               >
@@ -174,7 +177,7 @@ export default function NotificationPreferences({ className = '' }: Notification
               </button>
               <button
                 onClick={handleUnsubscribe}
-                disabled={isLoading || !pwa.notificationsEnabled}
+                disabled={isLoading || !pwaPreferences.pushNotifications}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
                 <BellOff className="h-5 w-5 mr-2" />

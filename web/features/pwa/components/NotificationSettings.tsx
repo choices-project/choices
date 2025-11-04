@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA';
+import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type NotificationSettingsProps = {
@@ -11,15 +10,21 @@ type NotificationSettingsProps = {
 }
 
 export default function NotificationSettings({ className = '' }: NotificationSettingsProps) {
-  const pwa = usePWA();
+  const { preferences, updatePreferences } = usePWAStore();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  
+  const notificationsSupported = 'Notification' in window;
 
   useEffect(() => {
-    // Check current notification status
-    setIsSubscribed(pwa.notificationsEnabled);
-  }, [pwa.notificationsEnabled]);
+    // Check current notification status from preferences
+    setIsSubscribed(preferences.pushNotifications && Notification.permission === 'granted');
+    if (notificationsSupported) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, [preferences.pushNotifications, notificationsSupported]);
 
   const handleToggleNotifications = async () => {
     if (isLoading) return;
@@ -30,22 +35,23 @@ export default function NotificationSettings({ className = '' }: NotificationSet
     try {
       if (isSubscribed) {
         // Unsubscribe from notifications
-        const success = await pwa.unsubscribeFromNotifications();
-        if (success) {
-          setIsSubscribed(false);
-          logger.info('Successfully unsubscribed from notifications');
-        } else {
-          setError('Failed to unsubscribe from notifications');
-        }
+        updatePreferences({ pushNotifications: false });
+        setIsSubscribed(false);
+        logger.info('Successfully unsubscribed from notifications');
       } else {
-        // Subscribe to notifications
-        const success = await pwa.subscribeToNotifications();
-        if (success) {
-          setIsSubscribed(true);
-          logger.info('Successfully subscribed to notifications');
-        } else {
-          setError('Failed to subscribe to notifications');
+        // Check permission first
+        if (Notification.permission !== 'granted') {
+          const result = await Notification.requestPermission();
+          if (result !== 'granted') {
+            setError('Notification permission required');
+            setIsLoading(false);
+            return;
+          }
         }
+        // Subscribe to notifications
+        updatePreferences({ pushNotifications: true });
+        setIsSubscribed(true);
+        logger.info('Successfully subscribed to notifications');
       }
     } catch (error) {
       logger.error('Notification toggle failed:', error instanceof Error ? error : new Error(String(error)));
@@ -62,14 +68,12 @@ export default function NotificationSettings({ className = '' }: NotificationSet
     setError(null);
 
     try {
-      const granted = await pwa.requestNotificationPermission();
-      if (granted) {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
         logger.info('Notification permission granted');
-        // Try to subscribe after permission is granted
-        const success = await pwa.subscribeToNotifications();
-        if (success) {
-          setIsSubscribed(true);
-        }
+        // Auto-subscribe after permission is granted
+        updatePreferences({ pushNotifications: true });
+        setIsSubscribed(true);
       } else {
         setError('Notification permission denied');
       }
@@ -82,7 +86,7 @@ export default function NotificationSettings({ className = '' }: NotificationSet
   };
 
   // Don't show if notifications are not supported
-  if (!pwa.notificationsSupported) {
+  if (!('Notification' in window)) {
     return null;
   }
 
@@ -109,7 +113,7 @@ export default function NotificationSettings({ className = '' }: NotificationSet
       )}
 
       <div className="space-y-3">
-        {pwa.notificationsPermission === 'default' ? (
+        {notificationPermission === 'default' ? (
           <button
             onClick={handleRequestPermission}
             disabled={isLoading}
@@ -137,10 +141,10 @@ export default function NotificationSettings({ className = '' }: NotificationSet
 
         <div className="text-xs text-gray-500">
           <p>
-            <strong>Permission Status:</strong> {pwa.notificationsPermission}
+            <strong>Permission Status:</strong> {notificationPermission}
           </p>
           <p>
-            <strong>Supported:</strong> {pwa.notificationsSupported ? 'Yes' : 'No'}
+            <strong>Supported:</strong> {notificationsSupported ? 'Yes' : 'No'}
           </p>
         </div>
       </div>

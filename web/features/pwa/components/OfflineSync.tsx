@@ -3,22 +3,24 @@
 import { RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import React, { useState } from 'react';
 
-
-import { usePWA } from '@/hooks/usePWA'
+import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type OfflineSyncProps = {
   className?: string
 }
 
 export default function OfflineSync({ className = '' }: OfflineSyncProps) {
-  const pwa = usePWA()
+  const { offline, syncData } = usePWAStore()
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
   const [lastSync, setLastSync] = useState<Date | null>(null)
+  
+  const queuedActions = offline.offlineData.queuedActions
+  const hasOfflineData = queuedActions.length > 0
 
   const handleSync = async () => {
     setSyncStatus('syncing')
     try {
-      await pwa.syncOfflineData()
+      await syncData()
       setSyncStatus('success')
       setLastSync(new Date())
       setTimeout(() => setSyncStatus('idle'), 3000)
@@ -28,7 +30,7 @@ export default function OfflineSync({ className = '' }: OfflineSyncProps) {
     }
   }
 
-  if (!pwa.hasOfflineData) {
+  if (!hasOfflineData) {
     return null
   }
 
@@ -47,21 +49,22 @@ export default function OfflineSync({ className = '' }: OfflineSyncProps) {
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between p-2 bg-white rounded border">
-          <div className="flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-700">3 offline votes pending</span>
+        {queuedActions.slice(0, 3).map((action) => (
+          <div key={action.id} className="flex items-center justify-between p-2 bg-white rounded border">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-700">{action.action} pending</span>
+            </div>
+            <span className="text-xs text-gray-500">
+              {new Date(action.timestamp).toLocaleTimeString()}
+            </span>
           </div>
-          <span className="text-xs text-gray-500">2 minutes ago</span>
-        </div>
-
-        <div className="flex items-center justify-between p-2 bg-white rounded border">
-          <div className="flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-700">1 comment pending</span>
+        ))}
+        {queuedActions.length > 3 && (
+          <div className="text-xs text-center text-gray-500">
+            +{queuedActions.length - 3} more actions
           </div>
-          <span className="text-xs text-gray-500">5 minutes ago</span>
-        </div>
+        )}
       </div>
 
       <button
