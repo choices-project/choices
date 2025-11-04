@@ -7,16 +7,28 @@ import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/logger';
 
 /**
+ * @fileoverview PWA Integration Component
+ * 
+ * Lightweight integration wrapper for PWA installer.
+ * Delegates actual UI rendering to PWAInstaller component.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
+/**
  * PWA Integration Component
  * 
- * This component handles all PWA functionality including:
- * - Service worker registration (via ServiceWorkerProvider in layout)
- * - Installation prompts
- * - Offline status indicators  
- * - Background sync
- * - Push notifications
+ * Integration wrapper that:
+ * - Renders PWA installer when conditions are met
+ * - Checks PWA preferences and support
+ * - Logs initialization for debugging
  * 
- * Note: Service worker registration now handled by ServiceWorkerProvider in layout.tsx
+ * Note: Service worker registration, update notifications, and offline
+ * indicators are now handled by ServiceWorkerProvider in layout.tsx
+ * to prevent duplicate UI elements.
+ * 
+ * @returns PWAInstaller component or null if PWA not enabled/supported
  */
 export default function PWAIntegration() {
   const { installation, offline, preferences } = usePWAStore();

@@ -1,11 +1,34 @@
+/**
+ * @fileoverview PWA Installer Component
+ * 
+ * Main PWA installation interface with prompts and status indicators.
+ * Handles installation flow and offline vote synchronization.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
 import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
+/**
+ * PWA Installer Component
+ * 
+ * Comprehensive PWA installation interface featuring:
+ * - Installation prompts with benefits
+ * - Offline vote status and sync
+ * - Connection status indicators
+ * - Toast notifications for user feedback
+ * 
+ * Initializes offline outbox on mount.
+ * 
+ * @returns Installation UI or null if PWA already installed/not supported
+ */
 export default function PWAInstaller() {
   const { installation, offline, preferences, installPWA, syncData } = usePWAStore();
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)

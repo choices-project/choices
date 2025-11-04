@@ -1,3 +1,13 @@
+/**
+ * @fileoverview PWA Status Display Component
+ * 
+ * Displays comprehensive PWA status information.
+ * Shows installation, connection, notifications, and service worker status.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { 
@@ -17,10 +27,31 @@ import React from 'react';
 import { usePWAStore } from '@/lib/stores/pwaStore';
 
 type PWAStatusProps = {
+  /** Show detailed status view */
   showDetails?: boolean;
+  /** Additional CSS classes */
   className?: string;
 }
 
+/**
+ * PWA Status Component
+ * 
+ * Displays current PWA state with two display modes:
+ * - Compact: Icons only with status badges
+ * - Detailed: Full status card with action buttons
+ * 
+ * Shows:
+ * - Installation status (installed/installable/not available)
+ * - Connection status (online/offline)
+ * - Notification status (enabled/disabled)
+ * - Offline data count
+ * - Service worker status
+ * 
+ * Provides action buttons for install, enable notifications, and sync.
+ * 
+ * @param props - Component props
+ * @returns Status UI or null if PWA not enabled/supported
+ */
 export default function PWAStatus({ showDetails = false, className = '' }: PWAStatusProps) {
   const { installation, offline, preferences, isLoading, error: pwaError, installPWA, syncData, updateServiceWorker } = usePWAStore();
   

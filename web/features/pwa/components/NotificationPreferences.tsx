@@ -1,15 +1,38 @@
+/**
+ * @fileoverview Notification Preferences Component
+ * 
+ * Comprehensive notification preferences management.
+ * Handles permission requests, subscription, and preference toggles.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type NotificationPreferencesProps = {
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Notification Preferences Component
+ * 
+ * Advanced notification preference management with:
+ * - Permission request handling
+ * - Push notification subscription/unsubscription
+ * - Individual notification type toggles
+ * - Visual feedback for all operations
+ * 
+ * @param props - Component props
+ * @returns Preferences UI or null if notifications not supported
+ */
 export default function NotificationPreferences({ className = '' }: NotificationPreferencesProps) {
   const { preferences: pwaPreferences, updatePreferences } = usePWAStore()
   const [isLoading, setIsLoading] = useState(false)

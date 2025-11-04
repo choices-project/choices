@@ -1,14 +1,35 @@
+/**
+ * @fileoverview Offline Sync Component
+ * 
+ * Manages background synchronization of offline actions.
+ * Shows sync status and provides manual sync trigger.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react'
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type OfflineSyncProps = {
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Offline Sync Component
+ * 
+ * Displays pending offline actions and their sync status.
+ * Shows up to 3 most recent actions with overflow count.
+ * Provides sync button with success/error feedback.
+ * 
+ * @param props - Component props
+ * @returns Sync UI with action list or null if no offline data
+ */
 export default function OfflineSync({ className = '' }: OfflineSyncProps) {
   const { offline, syncData } = usePWAStore()
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')

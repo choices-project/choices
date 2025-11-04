@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Offline Indicator Component
+ * 
+ * Displays connection status and offline data information.
+ * Shows banner when offline with count of pending actions.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
@@ -6,10 +16,21 @@ import React, { useState, useEffect } from 'react';
 import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
+  /** Whether to show detailed status information */
   showDetails?: boolean
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Offline Indicator Component
+ * 
+ * Shows user when they're offline and how many actions are queued.
+ * Two modes: banner (default) or detailed view.
+ * 
+ * @param props - Component props
+ * @returns Offline indicator UI or null if online and not showing details
+ */
 export default function OfflineIndicator({ showDetails = false, className = '' }: OfflineIndicatorProps) {
   const { offline, preferences } = usePWAStore()
   const [isOnline, setIsOnline] = useState(true)

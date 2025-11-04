@@ -1,16 +1,37 @@
+/**
+ * @fileoverview Notification Permission Component
+ * 
+ * Manages browser notification permissions with UI feedback.
+ * Updates Zustand store preferences when permissions change.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { Bell, BellOff, CheckCircle, AlertCircle } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore'
 
 type NotificationPermissionState = 'default' | 'granted' | 'denied'
 
 type NotificationPermissionProps = {
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Notification Permission Component
+ * 
+ * Handles requesting browser notification permissions.
+ * Updates PWA store preferences when permission state changes.
+ * Shows appropriate UI based on current permission state.
+ * 
+ * @param props - Component props
+ * @returns Permission UI or null if notifications not supported
+ */
 export default function NotificationPermission({ className = '' }: NotificationPermissionProps) {
   const { updatePreferences } = usePWAStore()
   const [permission, setPermission] = useState<NotificationPermissionState>('default')

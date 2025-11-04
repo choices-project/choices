@@ -1,15 +1,35 @@
+/**
+ * @fileoverview Offline Queue Component
+ * 
+ * Displays queued offline actions with sync functionality.
+ * Shows all pending actions and allows manual sync when online.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { Clock, WifiOff } from 'lucide-react'
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type OfflineQueueProps = {
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Offline Queue Component
+ * 
+ * Displays all queued offline actions from Zustand store.
+ * Provides manual sync button when online.
+ * 
+ * @param props - Component props
+ * @returns Queue UI with sync button or null if no queued actions
+ */
 export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
   const { offline, syncData, isSyncing } = usePWAStore()
   const [localSyncing, setLocalSyncing] = useState(false)

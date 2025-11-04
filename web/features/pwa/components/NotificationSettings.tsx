@@ -1,14 +1,35 @@
+/**
+ * @fileoverview Notification Settings Component
+ * 
+ * Toggle notification subscription on/off.
+ * Manages push notification preferences via Zustand store.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type NotificationSettingsProps = {
+  /** Additional CSS classes */
   className?: string;
 }
 
+/**
+ * Notification Settings Component
+ * 
+ * Provides toggle UI for enabling/disabling push notifications.
+ * Handles permission requests and updates store preferences.
+ * Shows current permission status and support information.
+ * 
+ * @param props - Component props
+ * @returns Settings UI or null if notifications not supported
+ */
 export default function NotificationSettings({ className = '' }: NotificationSettingsProps) {
   const { preferences, updatePreferences } = usePWAStore();
   const [isSubscribed, setIsSubscribed] = useState(false);

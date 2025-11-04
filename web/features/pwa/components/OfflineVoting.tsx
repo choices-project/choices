@@ -1,16 +1,38 @@
+/**
+ * @fileoverview Offline Voting Component
+ * 
+ * Displays offline votes for a specific poll.
+ * Shows votes queued while offline with timestamps.
+ * 
+ * @author Choices Platform Team
+ * @migrated Zustand migration complete - November 4, 2025
+ */
+
 'use client'
 
 import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type OfflineVotingProps = {
+  /** Poll ID to filter votes for */
   pollId: string
+  /** Additional CSS classes */
   className?: string
 }
 
+/**
+ * Offline Voting Component
+ * 
+ * Displays votes queued for a specific poll while offline.
+ * Filters store's queued actions to show only votes for this poll.
+ * Falls back to demo votes if no real votes exist.
+ * 
+ * @param props - Component props
+ * @returns Offline voting UI or null if no votes
+ */
 export default function OfflineVoting({ pollId, className = '' }: OfflineVotingProps) {
   const { offline } = usePWAStore()
   const [offlineVotes, setOfflineVotes] = useState<any[]>([])
