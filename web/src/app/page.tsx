@@ -15,7 +15,7 @@ type Feature = {
 }
 
 export default function Home() {
-  const router = useRouter()
+  const _router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userStableId, setUserStableId] = useState('')
 

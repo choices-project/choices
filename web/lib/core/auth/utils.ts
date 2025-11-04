@@ -15,7 +15,7 @@ export type JWTPayload = {
 export function getAuthToken(request: NextRequest): string | null {
   // Try to get token from Authorization header
   const authHeader = request.headers.get('authorization')
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
     return authHeader.substring(7)
   }
 

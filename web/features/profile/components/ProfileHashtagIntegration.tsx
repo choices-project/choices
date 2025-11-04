@@ -44,7 +44,7 @@ export default function ProfileHashtagIntegration({
 
   // Hashtag store hooks
   const { hashtags, trendingHashtags, followedHashtags, isLoading, error } = useHashtagStore();
-  const { searchHashtags, clearError, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
+  const { searchHashtags, clearError } = useHashtagActions();
   const { } = useHashtagStats();
 
   // Load user hashtags on mount
