@@ -9,6 +9,7 @@
  * - Real-time updates
  * 
  * Created: January 23, 2025
+ * Updated: November 03, 2025
  * Status: ✅ ACTIVE
  */
 
@@ -59,13 +60,13 @@ export default function ContactRepresentativesSection({
   
   // Auth and contact hooks
   const { user } = useAuth();
-  const { threads, loading: threadsLoading } = useContactThreads();
+  const { threads, loading: _threadsLoading } = useContactThreads();
 
   // Get recent messages from threads
   useEffect(() => {
     if (threads.length > 0) {
       const recent = threads
-        .sort((a, b) => new Date(b.last_message_at || b.created_at).getTime() - new Date(a.last_message_at || a.created_at).getTime())
+        .sort((a, b) => new Date(b.last_message_at ?? b.created_at).getTime() - new Date(a.last_message_at ?? a.created_at).getTime())
         .slice(0, 3);
       setRecentMessages(recent);
     }
