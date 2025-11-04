@@ -138,8 +138,6 @@ function UnifiedFeed({
   const [pullDistance, setPullDistance] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [_page, setPage] = useState(1);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const [refreshThreshold] = useState(80);
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -505,7 +503,7 @@ function UnifiedFeed({
     }
 
     // Determine content type and URL
-    const contentType = (item as any).type === 'poll' ? 'poll' : 'feed';
+    const _contentType = (item as any).type === 'poll' ? 'poll' : 'feed';
     const shareUrl = (item as any).url || `${window.location.origin}/polls/${itemId}`;
     
     // Share using social sharing hook
@@ -687,7 +685,7 @@ function UnifiedFeed({
    * @param itemId - ID of the feed item to toggle
    */
   const toggleItemExpansion = useCallback((itemId: string) => {
-    setExpandedItems(prev => {
+    _setExpandedItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -702,24 +700,23 @@ function UnifiedFeed({
 
   /**
    * Handle successful image load
-   * Removes item from loading state when image loads successfully.
+   * FeedItem manages its own image loading state.
+   * This is a no-op placeholder for future enhancement.
    */
-  const handleImageLoad = useCallback((itemId: string) => {
-    setLoadingImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(itemId);
-      return newSet;
-    });
+  const handleImageLoad = useCallback((_itemId: string) => {
+    // FeedItem handles its own image loading
+    // No action needed here
   }, []);
 
+  /**
+   * Handle image load error
+   * FeedItem manages its own image loading state.
+   */
   const handleImageError = useCallback((itemId: string) => {
-    setLoadingImages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(itemId);
-      return newSet;
-    });
-    setError(`Failed to load image for item ${itemId}`);
-  }, [setError]);
+    // FeedItem handles its own image loading
+    // Just log the error
+    logger.warn(`Image load error for feed item: ${itemId}`);
+  }, []);
 
   /**
    * Lazy load image for feed item

@@ -584,7 +584,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {analytics?.recent_votes?.slice(0, 3).map((vote, index) => (
+                  {analytics?.recent_votes?.slice(0, 3).map((vote, _index) => (
                     <div key={vote.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Vote className="h-4 w-4 text-blue-600" />
                       <div className="flex-1">
@@ -595,7 +595,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
                       </div>
                     </div>
                   ))}
-                  {analytics?.recent_polls?.slice(0, 2).map((poll, index) => (
+                  {analytics?.recent_polls?.slice(0, 2).map((poll, _index) => (
                     <div key={poll.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Plus className="h-4 w-4 text-green-600" />
                       <div className="flex-1">
@@ -795,19 +795,19 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
                     </div>
                 <div className="text-center" data-testid="polls-created">
                   <div className="text-2xl font-bold text-green-600">
-                    {analytics?.total_polls_created || 0}
+                    {analytics?.total_polls_created ?? 0}
                   </div>
                   <div className="text-sm text-gray-600">Polls Created</div>
                 </div>
                 <div className="text-center" data-testid="active-polls">
                   <div className="text-2xl font-bold text-purple-600">
-                    {analytics?.active_polls || 0}
+                    {analytics?.active_polls ?? 0}
                   </div>
                   <div className="text-sm text-gray-600">Active Polls</div>
                 </div>
                 <div className="text-center" data-testid="votes-on-user-polls">
                   <div className="text-2xl font-bold text-orange-600">
-                    {analytics?.total_votes_on_user_polls || 0}
+                    {analytics?.total_votes_on_user_polls ?? 0}
                   </div>
                   <div className="text-sm text-gray-600">Votes on Your Polls</div>
                 </div>
