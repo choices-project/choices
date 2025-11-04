@@ -78,7 +78,7 @@ export class PrivacyDataManager {
 
   constructor(supabaseClient?: SupabaseClient) {
     this.encryption = new UserEncryption();
-    this.supabaseClient = supabaseClient || (getSupabaseBrowserClient() as unknown as SupabaseClient);
+    this.supabaseClient = supabaseClient ?? (getSupabaseBrowserClient() as unknown as SupabaseClient);
     this.consentManager = new ConsentManager(this.supabaseClient);
   }
 
