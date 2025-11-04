@@ -1,5 +1,5 @@
 // Import SSR polyfills first
-import '@/lib/ssr-polyfills'
+import './ssr-polyfills'
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'

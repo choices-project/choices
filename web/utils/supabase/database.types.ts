@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -379,6 +380,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
+          offline_synced: boolean | null
           required_signatures: number | null
           start_date: string | null
           status: string | null
@@ -398,6 +400,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          offline_synced?: boolean | null
           required_signatures?: number | null
           start_date?: string | null
           status?: string | null
@@ -417,6 +420,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          offline_synced?: boolean | null
           required_signatures?: number | null
           start_date?: string | null
           status?: string | null
@@ -434,6 +438,7 @@ export type Database = {
           created_at: string | null
           id: string
           message: string
+          offline_synced: boolean | null
           priority: string | null
           representative_id: number
           status: string | null
@@ -446,6 +451,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
+          offline_synced?: boolean | null
           priority?: string | null
           representative_id: number
           status?: string | null
@@ -458,6 +464,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
+          offline_synced?: boolean | null
           priority?: string | null
           representative_id?: number
           status?: string | null
@@ -1112,6 +1119,53 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          body: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          payload: Json
+          sent_at: string | null
+          status: string
+          subscription_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payload: Json
+          sent_at?: string | null
+          status: string
+          subscription_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       openstates_people_contacts: {
         Row: {
           contact_type: string
@@ -1698,6 +1752,7 @@ export type Database = {
           moderation_reviewed_by: string | null
           moderation_status: string | null
           modification_reason: string | null
+          offline_created: boolean | null
           options: Json | null
           participation: number | null
           participation_rate: number | null
@@ -1759,6 +1814,7 @@ export type Database = {
           moderation_reviewed_by?: string | null
           moderation_status?: string | null
           modification_reason?: string | null
+          offline_created?: boolean | null
           options?: Json | null
           participation?: number | null
           participation_rate?: number | null
@@ -1820,6 +1876,7 @@ export type Database = {
           moderation_reviewed_by?: string | null
           moderation_status?: string | null
           modification_reason?: string | null
+          offline_created?: boolean | null
           options?: Json | null
           participation?: number | null
           participation_rate?: number | null
@@ -1842,6 +1899,48 @@ export type Database = {
           updated_at?: string | null
           verification_notes?: string | null
           voting_method?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string | null
+          created_at: string | null
+          deactivated_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh_key: string | null
+          preferences: Json | null
+          subscription_data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_key?: string | null
+          created_at?: string | null
+          deactivated_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key?: string | null
+          preferences?: Json | null
+          subscription_data: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_key?: string | null
+          created_at?: string | null
+          deactivated_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key?: string | null
+          preferences?: Json | null
+          subscription_data?: Json
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -2665,6 +2764,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_log: {
+        Row: {
+          device_id: string | null
+          duration_ms: number | null
+          failure_count: number
+          id: string
+          success_count: number
+          sync_details: Json | null
+          synced_at: string | null
+          total_actions: number
+          user_id: string | null
+        }
+        Insert: {
+          device_id?: string | null
+          duration_ms?: number | null
+          failure_count?: number
+          id?: string
+          success_count?: number
+          sync_details?: Json | null
+          synced_at?: string | null
+          total_actions?: number
+          user_id?: string | null
+        }
+        Update: {
+          device_id?: string | null
+          duration_ms?: number | null
+          failure_count?: number
+          id?: string
+          success_count?: number
+          sync_details?: Json | null
+          synced_at?: string | null
+          total_actions?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       system_health: {
         Row: {
           alerts: Json | null
@@ -3079,6 +3214,8 @@ export type Database = {
           id: string
           ip_address: unknown
           linked_at: string | null
+          offline_synced: boolean | null
+          offline_timestamp: number | null
           option_id: string
           poll_id: string
           poll_option_id: string | null
@@ -3094,6 +3231,8 @@ export type Database = {
           id?: string
           ip_address?: unknown
           linked_at?: string | null
+          offline_synced?: boolean | null
+          offline_timestamp?: number | null
           option_id: string
           poll_id: string
           poll_option_id?: string | null
@@ -3109,6 +3248,8 @@ export type Database = {
           id?: string
           ip_address?: unknown
           linked_at?: string | null
+          offline_synced?: boolean | null
+          offline_timestamp?: number | null
           option_id?: string
           poll_id?: string
           poll_option_id?: string | null
@@ -3378,6 +3519,9 @@ export type Database = {
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_inactive_sessions: { Args: never; Returns: number }
+      cleanup_inactive_subscriptions: { Args: never; Returns: undefined }
+      cleanup_old_notification_logs: { Args: never; Returns: undefined }
+      cleanup_old_sync_logs: { Args: never; Returns: undefined }
       cleanup_performance_data: { Args: never; Returns: Json }
       detect_bot_behavior:
         | { Args: { p_user_id: string }; Returns: Json }

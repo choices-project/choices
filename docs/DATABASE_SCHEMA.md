@@ -645,3 +645,119 @@ _Generated: November 3, 2025, 22:00_
 _Method: Direct analysis of Supabase-generated database.types.ts_  
 _Confidence: HIGH (verified against actual generated types)_
 
+
+---
+
+## PWA (Progressive Web App) Tables
+
+**Added**: November 4, 2025  
+**Migration**: `20251104_pwa_push_subscriptions.sql`
+
+### push_subscriptions
+Stores user push notification subscriptions for Web Push API.
+
+**Purpose**: Enable push notifications to user devices  
+**Columns**: 11
+- `id` UUID PRIMARY KEY
+- `user_id` UUID (FK to auth.users)
+- `endpoint` TEXT (push service URL)
+- `p256dh_key` TEXT (encryption key)
+- `auth_key` TEXT (authentication secret)
+- `subscription_data` JSONB (full subscription object)
+- `preferences` JSONB (notification preferences)
+- `is_active` BOOLEAN
+- `created_at`, `updated_at`, `deactivated_at` TIMESTAMPTZ
+
+**Indexes**:
+- `idx_push_subscriptions_user_active` - Fast user lookup
+- `idx_push_subscriptions_active` - Broadcast queries
+- `idx_push_subscriptions_endpoint` - Deduplication
+
+**RLS Policies**: 5 policies (user owns, admin views, service role manages)
+
+### notification_log
+Tracks all push notifications sent for analytics and debugging.
+
+**Purpose**: Audit trail and notification history  
+**Columns**: 9
+- `id` UUID PRIMARY KEY
+- `subscription_id` UUID (FK to push_subscriptions)
+- `user_id` UUID (FK to auth.users)
+- `title`, `body` TEXT
+- `payload` JSONB (complete notification)
+- `status` TEXT (sent, failed, pending)
+- `error_message` TEXT
+- `sent_at` TIMESTAMPTZ
+
+**Indexes**:
+- `idx_notification_log_user` - User history
+- `idx_notification_log_status` - Monitoring
+- `idx_notification_log_subscription` - Debugging
+
+**RLS Policies**: 3 policies (user owns, admin views, service logs)
+
+### sync_log
+Tracks background sync operations for monitoring and analytics.
+
+**Purpose**: Monitor offline action syncing  
+**Columns**: 8
+- `id` UUID PRIMARY KEY
+- `user_id` UUID (FK to auth.users)
+- `device_id` TEXT
+- `total_actions`, `success_count`, `failure_count` INTEGER
+- `synced_at` TIMESTAMPTZ
+- `duration_ms` INTEGER
+- `sync_details` JSONB
+
+**Indexes**:
+- `idx_sync_log_user` - User sync history
+- `idx_sync_log_device` - Device tracking
+
+**RLS Policies**: 2 policies (user owns, service logs)
+
+---
+
+## Enhanced Tables (PWA Support)
+
+### votes
+**Added Columns** (Nov 4, 2025):
+- `offline_synced` BOOLEAN - Tracks if vote was created offline
+- `offline_timestamp` BIGINT - Original offline creation time
+
+### civic_actions  
+**Added Columns** (Nov 4, 2025):
+- `offline_synced` BOOLEAN - Tracks if action was created offline
+
+### contact_messages
+**Added Columns** (Nov 4, 2025):
+- `offline_synced` BOOLEAN - Tracks if message was created offline
+
+### polls
+**Added Columns** (Nov 4, 2025):
+- `offline_created` BOOLEAN - Tracks if poll was created offline
+
+---
+
+## PWA RPC Functions
+
+### cleanup_old_notification_logs()
+Automatically removes notification logs older than 30 days.
+
+**Returns**: void  
+**Security**: SECURITY DEFINER  
+**Usage**: Call periodically or via cron
+
+### cleanup_inactive_subscriptions()
+Removes push subscriptions that have been inactive for 90+ days.
+
+**Returns**: void  
+**Security**: SECURITY DEFINER  
+**Usage**: Call periodically to cleanup
+
+### cleanup_old_sync_logs()
+Removes sync logs older than 90 days.
+
+**Returns**: void  
+**Security**: SECURITY DEFINER  
+**Usage**: Call periodically for maintenance
+

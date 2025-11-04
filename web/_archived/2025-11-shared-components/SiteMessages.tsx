@@ -9,7 +9,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 
 import { logger } from '@/lib/logger';
 
@@ -45,7 +45,16 @@ export default function SiteMessages({
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMessages = useCallback(async () => {
+  useEffect(() => {
+    fetchMessages()
+    
+    if (autoRefresh) {
+      const interval = setInterval(fetchMessages, refreshInterval)
+      return () => clearInterval(interval)
+    }
+  }, [autoRefresh, refreshInterval])
+
+  const fetchMessages = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -64,16 +73,7 @@ export default function SiteMessages({
     } finally {
       setLoading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    fetchMessages()
-    
-    if (autoRefresh) {
-      const interval = setInterval(fetchMessages, refreshInterval)
-      return () => clearInterval(interval)
-    }
-  }, [autoRefresh, refreshInterval, fetchMessages])
+  }
 
   const handleDismiss = (messageId: string) => {
     setDismissedMessages(prev => new Set([...prev, messageId]))

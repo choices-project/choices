@@ -24,8 +24,16 @@ import type {
 import { getSupabaseBrowserClient } from '../../utils/supabase/client';
 import { logger } from '../logger';
 
-// Admin store state interface (business logic only)
+/**
+ * Admin store state interface
+ * Manages admin dashboard state, user management, system settings, and UI state.
+ */
 type AdminStore = {
+  // UI State
+  sidebarCollapsed: boolean;
+  currentPage: string;
+  notifications: AdminNotification[];
+  
   // Admin-specific data
   trendingTopics: TrendingTopic[];
   generatedPolls: GeneratedPoll[];
@@ -111,6 +119,13 @@ type AdminStore = {
   adminNotifications: AdminNotification[];
   
   // Actions
+  // UI Actions
+  toggleSidebar: () => void;
+  setCurrentPage: (page: string) => void;
+  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
+  markNotificationRead: (id: string) => void;
+  clearNotifications: () => void;
+  
   // Data loading actions
   loadUsers: () => Promise<void>;
   loadDashboardStats: () => Promise<void>;
@@ -165,6 +180,10 @@ export const useAdminStore = create<AdminStore>()(
     persist(
       (set, get) => ({
         // Initial state
+        sidebarCollapsed: false,
+        currentPage: 'dashboard',
+        notifications: [],
+        
         trendingTopics: [],
         generatedPolls: [],
         systemMetrics: null,
@@ -199,6 +218,115 @@ export const useAdminStore = create<AdminStore>()(
         isLoading: false,
         error: null,
         adminNotifications: [],
+
+        /**
+         * Toggle the admin sidebar collapsed state
+         */
+        toggleSidebar: () => {
+          const currentState = get();
+          const newState = !currentState.sidebarCollapsed;
+          
+          set(() => ({ 
+            sidebarCollapsed: newState 
+          }));
+          
+          logger.info('Admin sidebar toggled', { 
+            action: 'toggle_sidebar', 
+            newState,
+            currentPage: currentState.currentPage 
+          });
+        },
+        
+        /**
+         * Set the current admin page
+         * @param page The page identifier
+         */
+        setCurrentPage: (page: string) => {
+          const currentState = get();
+          
+          set({ currentPage: page });
+          
+          logger.info('Admin page navigation', { 
+            action: 'navigate_page', 
+            from: currentState.currentPage, 
+            to: page 
+          });
+        },
+        
+        /**
+         * Add a new admin notification
+         * @param notification The notification data (without id and timestamp)
+         */
+        addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => {
+          const currentState = get();
+          const newNotification: AdminNotification = {
+            ...notification,
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            read: false,
+          };
+          
+          set((state: AdminStore) => ({
+            notifications: [
+              newNotification,
+              ...state.notifications,
+            ].slice(0, 10), // Keep only last 10 notifications
+          }));
+          
+          logger.info('Admin notification created', { 
+            action: 'add_notification', 
+            type: notification.type,
+            title: notification.title,
+            currentCount: currentState.notifications.length + 1
+          });
+          
+          // Check for critical notifications
+          if (notification.type === 'error' || notification.type === 'warning') {
+            logger.warn('Critical admin notification', { 
+              notification: newNotification,
+              currentPage: currentState.currentPage 
+            });
+          }
+        },
+        
+        /**
+         * Mark notification as read
+         * @param id Notification ID
+         */
+        markNotificationRead: (id: string) => {
+          const currentState = get();
+          const notification = currentState.notifications.find((n: AdminNotification) => n.id === id);
+          
+          set((state: AdminStore) => ({
+            notifications: state.notifications.map((notif: AdminNotification) =>
+              notif.id === id ? { ...notif, read: true } : notif
+            ),
+          }));
+          
+          if (notification) {
+            logger.info('Admin notification read', { 
+              action: 'mark_notification_read', 
+              notificationId: id,
+              notificationType: notification.type,
+              timeToRead: Date.now() - new Date(notification.timestamp).getTime()
+            });
+          }
+        },
+        
+        /**
+         * Clear all notifications
+         */
+        clearNotifications: () => {
+          const currentState = get();
+          
+          set({ notifications: [] });
+          
+          logger.info('Admin notifications cleared', { 
+            action: 'clear_notifications', 
+            clearedCount: currentState.notifications.length,
+            currentPage: currentState.currentPage 
+          });
+        },
 
         // Data loading actions
         loadUsers: async () => {

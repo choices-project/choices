@@ -13,36 +13,51 @@ export async function GET(request: NextRequest) {
     const messages = await getActiveSiteMessages(includeExpired)
     return NextResponse.json(messages)
   } catch (error) {
-    logger.error('Error fetching public site messages', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Failed to fetch site messages' },
-      { status: 500 }
-    )
+    // Fail gracefully - return empty array instead of 500 error
+    logger.warn('Error fetching public site messages (non-critical):', error instanceof Error ? error : new Error(String(error)))
+    return NextResponse.json({
+      messages: [],
+      count: 0,
+      timestamp: new Date().toISOString()
+    })
   }
 }
 
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
-    // Use REST API directly to bypass PostgREST cache issues
-    let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&is_active=eq.true&order=priority.desc,created_at.desc`
+    const { createClient } = await import('@supabase/supabase-js');
     
+    // Create Supabase client properly
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const now = new Date().toISOString();
+    
+    // Build query with correct column names
+    let query = supabase
+      .from('site_messages')
+      .select('*')
+      .eq('is_active', true);
+    
+    // Filter by date range if not including expired
     if (!includeExpired) {
-      url += `&expires_at=is.null`
+      query = query
+        .or(`start_date.is.null,start_date.lte.${now}`)
+        .or(`end_date.is.null,end_date.gte.${now}`);
     }
+    
+    query = query
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    const response = await fetch(url, {
-      headers: {
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const { data: messages, error } = await query;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (error) {
+      logger.error('Supabase error fetching site messages:', error);
+      throw error;
     }
-
-    const messages = await response.json();
 
     return {
       messages: messages || [],
@@ -50,8 +65,8 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       timestamp: new Date().toISOString()
     }
   } catch (error) {
-    logger.error('Error in getActiveSiteMessages', error instanceof Error ? error : new Error(String(error)))
-    throw error
+    logger.error('Error in getActiveSiteMessages:', error);
+    throw error;
   }
 }
 

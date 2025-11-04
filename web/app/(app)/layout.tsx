@@ -42,7 +42,7 @@ export default function AppLayout({
       initializePWA().then(() => {
         logger.info('PWA: Initialization completed successfully')
       }).catch(error => {
-        console.error('PWA: Failed to initialize PWA:', error)
+        logger.warn('PWA: Failed to initialize PWA (non-critical):', error instanceof Error ? error : new Error(String(error)))
       })
     }
   }, [])

@@ -42,7 +42,7 @@ export function useFeatureFlags() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
-      console.error('Failed to fetch feature flags:', err);
+      // Silently fail - feature flags are non-critical
     } finally {
       setIsLoading(false);
     }

@@ -54,7 +54,7 @@ export class PWAUtils {
   static async registerServiceWorker(): Promise<boolean> {
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
         logger.info('Service Worker registered:', { scope: registration.scope, active: !!registration.active });
         return true;
       } catch (error) {

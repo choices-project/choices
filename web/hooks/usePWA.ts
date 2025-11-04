@@ -20,8 +20,6 @@ import {
 } from '@/lib/pwa/service-worker';
 import { withOptional } from '@/lib/util/objects';
 
-// Import PWA managers
-
 export type PWAStatus = {
   // Feature availability
   isSupported: boolean;
