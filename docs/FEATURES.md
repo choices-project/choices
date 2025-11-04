@@ -92,10 +92,11 @@
 - Hashtag CRUD (create, read, update, delete)
 - User follow/unfollow functionality
 - Trending tracking and analytics
+- **Trending notifications** (implemented Nov 2025)
 - Moderation system
 - Category-based organization
-- **Status**: Fully operational (notifications can be future enhancement)
-- **Tables**: hashtags, user_hashtags, hashtag_engagement
+- **Status**: Fully operational
+- **Tables**: hashtags, user_hashtags, hashtag_engagement, notifications
 
 ---
 

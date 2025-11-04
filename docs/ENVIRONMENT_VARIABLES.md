@@ -1,6 +1,6 @@
 # Environment Variables Documentation
 
-**Last Updated:** November 3, 2025  
+**Last Updated:** November 03, 2025  
 **Status:** ✅ Current (Verified against .env.local)
 
 This document lists all environment variables required for the Choices application.
@@ -70,11 +70,12 @@ This document lists all environment variables required for the Choices applicati
   - Used by: Candidate journey emails
 
 ### Cron Jobs
-- `CRON_SECRET` (optional but recommended)
+- `CRON_SECRET` (required for production)
   - Secret key for authenticating cron job requests
-  - Used by: `/api/cron/candidate-reminders`
+  - Used by: `/api/cron/candidate-reminders`, `/api/cron/hashtag-trending-notifications`
   - Security: Prevents unauthorized access to cron endpoints
-  - Generate: Random secure string
+  - Generate: `openssl rand -base64 32`
+  - Must be set in Vercel environment variables
 
 ### Admin & Security
 - `ADMIN_MONITORING_KEY` (optional)

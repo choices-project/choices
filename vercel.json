@@ -1,0 +1,36 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/candidate-reminders",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/hashtag-trending-notifications",
+      "schedule": "0 */2 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
+
