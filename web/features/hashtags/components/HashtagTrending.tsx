@@ -35,20 +35,6 @@ import {
   getHashtagCategoryIcon
 } from '../utils/hashtag-utils';
 
-// Get filtering methods from the store
-// Note: This helper is currently unused but kept for future hashtag filtering UI
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const useHashtagFilters = () => {
-  const store = useHashtagStore();
-  return {
-    setCategory: store.setCategory,
-    setSortBy: store.setSortBy,
-    setTimeRange: store.setTimeRange,
-    setSearchQuery: store.setSearchQuery
-  };
-};
-
-
 type HashtagTrendingProps = {
   category?: HashtagCategory;
   limit?: number;
@@ -188,7 +174,11 @@ export default function HashtagTrending({
                 type="text"
                 placeholder="Search hashtags..."
                 value={filters.searchQuery}
-                onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                onChange={(e) => {
+                  const query = e.target.value;
+                  setFilters(prev => ({ ...prev, searchQuery: query }));
+                  setSearchQuery(query);
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -196,7 +186,11 @@ export default function HashtagTrending({
             {/* Category Filter */}
             <select
               value={filters.selectedCategory}
-              onChange={(e) => setFilters(prev => ({ ...prev, selectedCategory: e.target.value }))}
+              onChange={(e) => {
+                const category = e.target.value as HashtagCategory | 'all';
+                setFilters(prev => ({ ...prev, selectedCategory: category }));
+                setCategory(category);
+              }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Categories</option>
@@ -213,7 +207,11 @@ export default function HashtagTrending({
             {/* Sort By */}
             <select
               value={filters.sortBy}
-              onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+              onChange={(e) => {
+                const sort = e.target.value as 'trend_score' | 'usage' | 'growth' | 'alphabetical';
+                setFilters(prev => ({ ...prev, sortBy: sort }));
+                setSortBy(sort);
+              }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="trend_score">Trend Score</option>
@@ -227,7 +225,9 @@ export default function HashtagTrending({
               value={filters.timeRange}
               onChange={(e) => {
                 const value = e.target.value as '24h' | '7d' | '30d' | 'all';
-                setFilters(prev => ({ ...prev, timeRange: value === 'all' ? '30d' : value }));
+                const timeRange = value === 'all' ? '30d' : value;
+                setFilters(prev => ({ ...prev, timeRange }));
+                setTimeRange(timeRange);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
