@@ -679,62 +679,16 @@ function UnifiedFeed({
   /**
    * Toggle expansion state for feed item
    * 
-   * Manages which feed items are expanded to show full content.
-   * Announces state changes to screen readers for accessibility.
+   * FeedItem manages its own expansion state internally.
+   * This function announces state changes to screen readers for accessibility.
    * 
    * @param itemId - ID of the feed item to toggle
    */
   const toggleItemExpansion = useCallback((itemId: string) => {
-    _setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-        announceToScreenReader(`Collapsed item ${itemId}`);
-      } else {
-        newSet.add(itemId);
-        announceToScreenReader(`Expanded item ${itemId}`);
-      }
-      return newSet;
-    });
+    // FeedItem handles expansion state internally
+    // Just announce for accessibility
+    announceToScreenReader(`Toggled item ${itemId}`);
   }, [announceToScreenReader]);
-
-  /**
-   * Handle successful image load
-   * FeedItem manages its own image loading state.
-   * This is a no-op placeholder for future enhancement.
-   */
-  const handleImageLoad = useCallback((_itemId: string) => {
-    // FeedItem handles its own image loading
-    // No action needed here
-  }, []);
-
-  /**
-   * Handle image load error
-   * FeedItem manages its own image loading state.
-   */
-  const handleImageError = useCallback((itemId: string) => {
-    // FeedItem handles its own image loading
-    // Just log the error
-    logger.warn(`Image load error for feed item: ${itemId}`);
-  }, []);
-
-  /**
-   * Lazy load image for feed item
-   * 
-   * Progressively loads images to improve performance.
-   * Tracks loading state and handles load/error events.
-   * 
-   * @param itemId - ID of the feed item
-   * @param imageUrl - URL of the image to load
-   */
-  const loadImage = useCallback((itemId: string, imageUrl: string) => {
-    setLoadingImages(prev => new Set(prev).add(itemId));
-    
-    const img = new (typeof window !== 'undefined' ? window.Image : Image)();
-    img.onload = () => handleImageLoad(itemId);
-    img.onerror = () => handleImageError(itemId);
-    img.src = imageUrl;
-  }, [handleImageLoad, handleImageError]);
 
   // Pull-to-refresh functionality
   const handlePullToRefresh = useCallback(async () => {
@@ -750,9 +704,6 @@ function UnifiedFeed({
       // Reset pagination
       setPage(1);
       setHasMore(true);
-      
-      // Clear expanded items
-      setExpandedItems(new Set());
       
       // Announce success
       announceToScreenReader('Feed refreshed successfully');
