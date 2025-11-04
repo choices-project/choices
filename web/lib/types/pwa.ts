@@ -1,5 +1,7 @@
+/// <reference types="node" />
 // PWA Types for Agent A5
 // Created: 2025-01-16
+// Updated: November 03, 2025
 // Purpose: Type definitions for PWA components and functionality
 
 export type BeforeInstallPromptEvent = {
