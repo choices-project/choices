@@ -7,6 +7,7 @@
 
 ## Quick Start
 
+- **New AI Agent?** → [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) ⭐
 - **New Developer?** → [DEVELOPMENT.md](DEVELOPMENT.md)
 - **Deploying?** → [DEPLOYMENT.md](DEPLOYMENT.md)
 - **Contributing?** → [CONTRIBUTING.md](CONTRIBUTING.md)
