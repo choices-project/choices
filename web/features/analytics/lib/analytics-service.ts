@@ -204,7 +204,7 @@ export class AnalyticsService {
 
       // Call database function to update insights
       try {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .rpc('update_poll_demographic_insights', { p_poll_id: pollId })
 
         if (error) {
@@ -272,7 +272,7 @@ export class AnalyticsService {
 
       // Check if civic database entry exists
       try {
-        const { data: existingEntry, error: selectError } = await (supabase as any)
+        const { data: existingEntry, error: selectError } = await supabase
           .from('civic_database_entries')
           .select('id, current_trust_tier, trust_tier_history, trust_tier_upgrade_date')
           .eq('stable_user_id', userId)
@@ -287,10 +287,19 @@ export class AnalyticsService {
           throw selectError
         }
 
-        const trustTierHistory = (existingEntry as any)?.trust_tier_history ?? []
+        // Parse JSONB trust tier history as array
+        type TrustTierHistoryEntry = {
+          trust_tier: string;
+          upgrade_date: string;
+          reason: string;
+          verification_methods: string[];
+        };
+        const trustTierHistory: TrustTierHistoryEntry[] = Array.isArray(existingEntry?.trust_tier_history) 
+          ? (existingEntry.trust_tier_history as TrustTierHistoryEntry[])
+          : [];
         
         // Add new trust tier entry if changed
-        if (!existingEntry || (existingEntry as any).current_trust_tier !== trustTierScore.trust_tier) {
+        if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
           trustTierHistory.push({
             trust_tier: trustTierScore.trust_tier,
             upgrade_date: new Date().toISOString(),
@@ -304,7 +313,7 @@ export class AnalyticsService {
         }
 
         // Upsert civic database entry
-        const { error: upsertError } = await (supabase as any)
+        const { error: upsertError } = await supabase
           .from('civic_database_entries')
           .upsert({
             stable_user_id: userId,
@@ -313,10 +322,10 @@ export class AnalyticsService {
             total_votes_cast,
             average_engagement_score,
             current_trust_tier: trustTierScore.trust_tier,
-            trust_tier_history: trustTierHistory,
-            trust_tier_upgrade_date: (existingEntry as any)?.current_trust_tier !== trustTierScore.trust_tier 
+            trust_tier_history: trustTierHistory as any, // JSONB type
+            trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
               ? new Date().toISOString() 
-              : (existingEntry as any)?.trust_tier_upgrade_date
+              : existingEntry?.trust_tier_upgrade_date
           })
 
         if (upsertError) {

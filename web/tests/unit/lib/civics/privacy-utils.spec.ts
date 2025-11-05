@@ -70,7 +70,7 @@ describe('pepper rotation verify', () => {
     const originalCurrentPepper = process.env.PRIVACY_PEPPER_CURRENT;
     
     try {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       process.env.PRIVACY_PEPPER_DEV = 'dev-pepper';
       process.env.PRIVACY_PEPPER_CURRENT = 'hex:' + 'ab'.repeat(32);
       
@@ -83,7 +83,7 @@ describe('pepper rotation verify', () => {
       }).rejects.toThrow('PRIVACY_PEPPER_DEV must NOT be set in preview/prod');
     } finally {
       // Restore original environment
-      process.env.NODE_ENV = originalNodeEnv;
+      (process.env as any).NODE_ENV = originalNodeEnv;
       if (originalDevPepper !== undefined) {
         process.env.PRIVACY_PEPPER_DEV = originalDevPepper;
       } else {

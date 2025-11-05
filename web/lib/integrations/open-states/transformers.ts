@@ -150,8 +150,8 @@ export type OpenStatesVote = {
     url: string;
     note?: string;
   }>;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Transform Open States legislator to unified representative

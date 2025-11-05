@@ -293,7 +293,9 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Step 3: Settings - Select a category
-    await page.selectOption('select', categoryPoll.category);
+    if (categoryPoll.category) {
+      await page.selectOption('select', categoryPoll.category);
+    }
     await page.click('button:has-text("Next")');
     
     // Step 4: Publish
@@ -302,7 +304,9 @@ test.describe('Poll Management - V2', () => {
     
     // Verify category is displayed
     const categoryDisplay = await page.locator('[data-testid="poll-category"]');
-    await expect(categoryDisplay).toContainText(categoryPoll.category);
+    if (categoryPoll.category) {
+      await expect(categoryDisplay).toContainText(categoryPoll.category);
+    }
   });
 
   test('should handle poll privacy settings with V2 setup', async ({ page }) => {
@@ -335,7 +339,9 @@ test.describe('Poll Management - V2', () => {
     await page.click('button:has-text("Next")');
     
     // Step 3: Settings - Set privacy level
-    await page.selectOption('select', privatePoll.privacy);
+    if (privatePoll.privacy) {
+      await page.selectOption('select', privatePoll.privacy);
+    }
     await page.click('button:has-text("Next")');
     
     // Step 4: Publish
@@ -344,7 +350,9 @@ test.describe('Poll Management - V2', () => {
     
     // Verify privacy setting is applied
     const privacyDisplay = await page.locator('[data-testid="poll-privacy"]');
-    await expect(privacyDisplay).toContainText(privatePoll.privacy);
+    if (privatePoll.privacy) {
+      await expect(privacyDisplay).toContainText(privatePoll.privacy);
+    }
   });
 
   test('should handle poll timing settings with V2 setup', async ({ page }) => {

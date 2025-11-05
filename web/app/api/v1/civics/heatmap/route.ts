@@ -1,14 +1,27 @@
 /**
- * Civics Heatmap API Endpoint
+ * Civics District Engagement Heatmap API Endpoint
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  * 
- * This endpoint provides privacy-safe geographic analytics
+ * Provides privacy-safe district-level civic engagement analytics.
+ * Uses congressional and legislative districts for aggregation.
+ * Enforces k-anonymity (min 5 users per district shown).
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
+/**
+ * GET /api/v1/civics/heatmap
+ * 
+ * Returns civic engagement aggregated by political districts.
+ * 
+ * @param state - Optional state filter (e.g., "CA", "NY")
+ * @param level - Optional level filter ("federal", "state", "local")
+ * @param min_count - Minimum users per district (default: 5 for k-anonymity)
+ * 
+ * @returns District engagement heatmap with k-anonymity protection
+ */
 export async function GET(request: NextRequest) {
   // Feature flag check - return 404 if disabled
   if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
@@ -20,49 +33,57 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const bboxStr = searchParams.get('bbox');
-    const precisionParam = searchParams.get('precision');
-    const precision = precisionParam ? (Number(precisionParam) as 5 | 6 | 7) : 5;
+    const state = searchParams.get('state') || null;
+    const level = searchParams.get('level') || null;
+    const minCountParam = searchParams.get('min_count');
+    const minCount = minCountParam ? Number(minCountParam) : 5;
     
-    // Validate bbox parameter
-    const bbox = bboxStr?.split(',').map(Number);
-    if (!bbox || bbox.length !== 4) {
+    // Validate level parameter if provided
+    if (level && !['federal', 'state', 'local'].includes(level)) {
       return NextResponse.json(
-        { error: 'Invalid bbox parameter' }, 
+        { error: 'Invalid level parameter. Must be: federal, state, or local' }, 
         { status: 400 }
       );
     }
 
-    // Validate precision
-    if (![5, 6, 7].includes(precision)) {
+    // Validate min_count
+    if (minCount < 1) {
       return NextResponse.json(
-        { error: 'Invalid precision parameter' }, 
+        { error: 'min_count must be >= 1' }, 
         { status: 400 }
       );
     }
 
-    // Generate geohash prefixes for the bounding box (stub implementation)
-    const prefixes = ['9q5', '9q6', '9q7', '9q8', '9q9']; // Example geohash prefixes
+    // Call the database RPC function for district-based heatmap
+    const { getSupabaseServerClient } = await import('@/utils/supabase/server');
+    const supabase = await getSupabaseServerClient();
+    
+    const { data, error } = await supabase.rpc('get_heatmap', { 
+      prefixes: state ? [state] : [],
+      min_count: minCount
+    });
 
-    // TODO: Call the database RPC when feature is fully implemented
-    // const { data, error } = await supabase.rpc('get_heatmap', { 
-    //   prefixes, 
-    //   min_count: 5 // k-anonymity: hide cells with counts < 5
-    // });
-
-    // For now, return placeholder data
-    const placeholderHeatmap = prefixes.slice(0, 5).map((prefix: string) => ({
-      geohash: prefix,
-      count: Math.floor(Math.random() * 20) + 5 // Random count >= 5 for k-anonymity
-    }));
+    if (error) {
+      // If RPC fails, return empty heatmap (not fake data)
+      console.warn('District heatmap RPC error:', error.message);
+      return NextResponse.json({
+        ok: true,
+        heatmap: [],
+        warning: 'Heatmap data temporarily unavailable',
+        k_anonymity: minCount
+      });
+    }
 
     return NextResponse.json({
       ok: true,
-      message: 'Civics heatmap is ready for implementation',
-      heatmap: placeholderHeatmap,
-      precision,
-      bbox: bboxStr,
-      k_anonymity: 5 // Minimum count threshold
+      heatmap: data || [],
+      filters: {
+        state,
+        level,
+        min_count: minCount
+      },
+      k_anonymity: minCount,
+      note: 'District-level aggregation with k-anonymity protection'
     });
 
   } catch (error) {

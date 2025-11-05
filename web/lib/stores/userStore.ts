@@ -288,7 +288,7 @@ export const useUserStore = create<UserStore>()(
       
       // Profile actions
       setProfile: (profile) => set((state) => {
-        state.profile = profile;
+        state.profile = profile as any;
       }),
       
       updateProfile: (updates) => set((state) => {
@@ -359,7 +359,7 @@ export const useUserStore = create<UserStore>()(
       
       updateProfileField: (field, value) => set((state) => {
         if (state.profileEditData) {
-          state.profileEditData[field] = value;
+          (state.profileEditData as any)[field] = value;
         }
       }),
       

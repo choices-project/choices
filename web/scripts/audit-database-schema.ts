@@ -131,7 +131,7 @@ async function checkTableExists(tableName: string): Promise<boolean> {
     return false;
   }
 
-  return data === true || (Array.isArray(data) && data.length > 0);
+  return (data as any) === true || (Array.isArray(data) && data.length > 0);
 }
 
 async function auditSchema(): Promise<AuditResult> {

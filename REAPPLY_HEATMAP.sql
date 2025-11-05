@@ -1,11 +1,12 @@
--- Migration: District-Based Engagement Heatmap RPC Function
--- Created: November 5, 2025
--- Purpose: Privacy-safe district-level civic engagement analytics with k-anonymity
-
 -- ============================================================================
--- GET DISTRICT HEATMAP FUNCTION
+-- IMPORTANT: Update Heatmap Function to District-Based
+-- This replaces the geohash-based version with district-based analytics
 -- ============================================================================
 
+-- Drop the old geohash-based function
+DROP FUNCTION IF EXISTS get_heatmap(TEXT[], INTEGER);
+
+-- Create the new district-based function
 CREATE OR REPLACE FUNCTION get_heatmap(
   state_filter TEXT DEFAULT NULL,
   level_filter TEXT DEFAULT NULL,
@@ -57,17 +58,13 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- ============================================================================
--- PERMISSIONS
--- ============================================================================
-
+-- Update permissions
 GRANT EXECUTE ON FUNCTION get_heatmap(TEXT, TEXT, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_heatmap(TEXT, TEXT, INTEGER) TO anon;
 
--- ============================================================================
--- COMMENTS
--- ============================================================================
-
+-- Update comment
 COMMENT ON FUNCTION get_heatmap(TEXT, TEXT, INTEGER) IS 
   'Returns district-level civic engagement heatmap with k-anonymity protection. Aggregates by congressional/legislative districts.';
+
+SELECT 'Heatmap function updated successfully - now district-based!' as status;
 

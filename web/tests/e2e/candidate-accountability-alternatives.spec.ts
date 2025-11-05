@@ -178,7 +178,7 @@ test.describe('Candidate Accountability - Alternative Candidates', () => {
     
     // Verify funding information is displayed if alternatives are visible
     // Check for funding display patterns
-    const fundingText = page.locator('text=Funding:').or(page.locator(/Funding:/i));
+    const fundingText = page.locator('text=Funding:').or(page.locator('text=/Funding:/i'));
     const fundingVisible = await fundingText.isVisible({ timeout: 2000 }).catch(() => false);
     
     if (fundingVisible) {
