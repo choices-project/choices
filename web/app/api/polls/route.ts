@@ -412,7 +412,7 @@ export async function POST(request: NextRequest) {
 
     // Store detailed analytics data
     if (analyticsEvent) {
-      await supabase
+      await (supabase as any)
         .from('analytics_event_data')
         .insert([
           {

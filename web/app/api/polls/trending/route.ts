@@ -49,11 +49,11 @@ export async function GET(request: NextRequest) {
       totalVotes: poll.total_votes ?? 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
-      options: poll.options.map((option: { id: string; text: string; votes?: number }) => ({
+      options: (poll as any).options?.map((option: { id: string; text: string; votes?: number }) => ({
         id: option.id,
         text: option.text,
         votes: option.votes ?? 0,
-        percentage: poll.total_votes > 0 ? Math.round((option.votes ?? 0) / poll.total_votes * 100) : 0
+        percentage: (poll.total_votes ?? 0) > 0 ? Math.round((option.votes ?? 0) / (poll.total_votes ?? 1) * 100) : 0
       })) ?? []
     })) ?? []
     

@@ -57,7 +57,7 @@ export async function POST() {
     }
 
     // Create user in user_profiles table
-    const { data: newUser, error: createError } = await supabaseClient
+    const { data: newUser, error: createError } = await (supabaseClient as any)
       .from('user_profiles')
       .insert({
         user_id: user.id,

@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
 
       for (const follower of followers) {
         // Check if user was already notified about this hashtag trending
-        const { data: existingNotification } = await supabase
+        const { data: existingNotification } = await (supabase as any)
           .from('notifications')
           .select('id')
           .eq('user_id', follower.user_id)
@@ -102,12 +102,12 @@ export async function GET(request: NextRequest) {
         }
 
         // Create notification
-        const { error: notificationError } = await supabase
+        const { error: notificationError } = await (supabase as any)
           .from('notifications')
           .insert({
             user_id: follower.user_id,
             title: `#${hashtag.name} is Trending!`,
-            message: `The hashtag you follow #${hashtag.name} is currently trending with ${hashtag.usage_count} uses and a trending score of ${hashtag.trending_score.toFixed(1)}.`,
+            message: `The hashtag you follow #${hashtag.name} is currently trending with ${hashtag.usage_count} uses and a trending score of ${(hashtag.trending_score ?? 0).toFixed(1)}.`,
             notification_type: 'hashtag_trending',
             priority: 'normal',
             action_url: `/hashtags/${hashtag.name}`,
