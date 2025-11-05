@@ -415,14 +415,31 @@ export class DifferentialPrivacyManager {
   private createInitialBreakdown(data: unknown[]): Record<string, unknown> {
     const breakdown: Record<string, unknown> = {};
     
-    // This would be customized based on the data structure
-    // For now, create a simple count breakdown
+    // Aggregate data by extracting categorical attributes
+    // Supports: category, type, demographic fields, geographic data
     data.forEach(item => {
-      const key = (item as any).category || (item as any).type || 'unknown';
-      breakdown[key] = {
-        count: ((breakdown[key] as any)?.count || 0) + 1,
-        items: [... ((breakdown[key] as any)?.items || []), item]
-      };
+      const itemData = item as any;
+      
+      // Primary key: use category, type, or demographic field
+      const key = itemData.category || 
+                  itemData.type || 
+                  itemData.age_group || 
+                  itemData.state || 
+                  itemData.party_affiliation ||
+                  itemData.trust_tier ||
+                  'uncategorized';
+      
+      if (!breakdown[key]) {
+        breakdown[key] = {
+          count: 0,
+          items: []
+        };
+      }
+      
+      const existing = breakdown[key] as any;
+      existing.count = (existing.count || 0) + 1;
+      existing.items = [...(existing.items || []), item];
+      breakdown[key] = existing;
     });
 
     return breakdown;
