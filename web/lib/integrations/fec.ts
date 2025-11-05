@@ -58,7 +58,7 @@ export class FECClient {
    */
   async verifyCandidate(fecId: string): Promise<FECCandidate | null> {
     try {
-      const response = await this.request(`/candidates/`, {
+      const response: any = await this.request(`/candidates/`, {
         candidate_id: fecId,
         per_page: 1
       })
@@ -86,7 +86,7 @@ export class FECClient {
     election_year?: number
   }): Promise<FECCandidate[]> {
     try {
-      const response = await this.request(`/candidates/`, {
+      const response: any = await this.request(`/candidates/`, {
         ...params,
         per_page: 20
       })

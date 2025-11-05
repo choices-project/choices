@@ -59,7 +59,7 @@ export async function POST(
     }
 
     // Check if already following
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('user_followed_representatives')
       .select('id')
       .eq('user_id', user.id)
@@ -78,7 +78,7 @@ export async function POST(
     }
 
     // Insert follow relationship
-    const { data: followData, error: followError } = await supabase
+    const { data: followData, error: followError } = await (supabase as any)
       .from('user_followed_representatives')
       .insert({
         user_id: user.id,
@@ -155,7 +155,7 @@ export async function DELETE(
     }
 
     // Delete follow relationship
-    const { error: unfollowError } = await supabase
+    const { error: unfollowError } = await (supabase as any)
       .from('user_followed_representatives')
       .delete()
       .eq('user_id', user.id)
@@ -224,7 +224,7 @@ export async function GET(
     }
 
     // Check if following
-    const { data: followData, error: followError } = await supabase
+    const { data: followData, error: followError } = await (supabase as any)
       .from('user_followed_representatives')
       .select('*')
       .eq('user_id', user.id)

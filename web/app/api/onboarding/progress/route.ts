@@ -23,10 +23,10 @@ export async function GET() {
     }
 
     // Get onboarding progress
-    const { data: progress, error: progressError } = await supabaseClient
+    const { data: progress, error: progressError } = await (supabaseClient as any)
       .from('onboarding_progress')
       .select('*')
-      .eq('user_id', String(user.id) as any)
+      .eq('user_id', String(user.id))
       .single()
 
     if (progressError && progressError.code !== 'PGRST116') {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'start':
         // Start onboarding - upsert progress record
-        const { data: startData, error: startError } = await supabaseClient
+        const { data: startData, error: startError } = await (supabaseClient as any)
           .from('onboarding_progress')
           .upsert({
             user_id: user.id,
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
       case 'update':
         // Update onboarding step
-        const { data: updateData, error: updateError } = await supabaseClient
+        const { data: updateData, error: updateError } = await (supabaseClient as any)
           .from('onboarding_progress')
           .update({
             current_step: step,
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
       case 'complete':
         // Complete onboarding
-        const { data: completeData, error: completeError } = await supabaseClient
+        const { data: completeData, error: completeError } = await (supabaseClient as any)
           .from('onboarding_progress')
           .update({
             completed_at: new Date().toISOString()

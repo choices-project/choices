@@ -418,10 +418,10 @@ export class DifferentialPrivacyManager {
     // This would be customized based on the data structure
     // For now, create a simple count breakdown
     data.forEach(item => {
-      const key = item.category || item.type || 'unknown';
+      const key = (item as any).category || (item as any).type || 'unknown';
       breakdown[key] = {
-        count: (breakdown[key]?.count || 0) + 1,
-        items: [...(breakdown[key]?.items || []), item]
+        count: ((breakdown[key] as any)?.count || 0) + 1,
+        items: [... ((breakdown[key] as any)?.items || []), item]
       };
     });
 
