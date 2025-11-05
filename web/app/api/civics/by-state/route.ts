@@ -254,10 +254,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Process the data to include enhanced data from normalized tables
-    const processedData = (data ?? []).map((rep: RepresentativeData) => ({
+    const processedData = (data ?? []).map((rep: any) => ({
       id: rep.id,
       name: rep.name,
-      party: rep.party,
+      party: rep.party ?? 'Independent',
       office: rep.office,
       level: rep.level,
       state: rep.state,

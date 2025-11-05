@@ -352,12 +352,11 @@ export async function POST(request: NextRequest) {
           .from('contact_messages')
           .insert({
             thread_id: thread.id,
-            sender_id: user.id,
-            recipient_id: validatedRepId,
-            content: initialMessageValidation.sanitized,
+            user_id: user.id,
+            representative_id: validatedRepId,
+            message: initialMessageValidation.sanitized,
             subject: sanitizedSubject,
             priority: validatedPriority,
-            message_type: 'text',
             status: 'sent'
           });
 

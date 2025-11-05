@@ -27,14 +27,13 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { UserPreferences } from '@/features/civics/lib/types/civics-types';
 import { useSocialSharing } from '@/hooks/useSocialSharing';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { useHashtagStore, useHashtagActions, useHashtagStats, usePWAStore, useUserStore, useNotificationStore } from '@/lib/stores';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
 import FeedItem from './FeedItem';
-
-// import { PollCard } from '@/features/polls/components';
+import { PollCard } from '@/features/polls';
 
 type UnifiedFeedProps = {
   userId?: string;
@@ -79,28 +78,19 @@ function UnifiedFeed({
 }: UnifiedFeedProps) {
   console.log('[UnifiedFeed] Component rendering', { userId });
   
-  // Store hooks - temporarily disabled to test rendering
-  // const feeds = useFeeds();
-  // const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
-  // const isLoading = useFeedsLoading();
-  // const pwaStore = usePWAStore();
-  // const { user } = useUserStore();
-  // const addNotification = useNotificationStore(state => state.addNotification);
-  // Hashtag hooks - temporarily disabled to test rendering
-  // const { hashtags, trendingHashtags } = useHashtagStore();
-  // const { getTrendingHashtags } = useHashtagActions();
-  // const { trendingCount } = useHashtagStats();
+  // Store hooks
+  const { feeds, isLoading, loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsStore();
+  const pwaStore = usePWAStore();
+  const { user } = useUserStore();
+  const addNotification = useNotificationStore(state => state.addNotification);
+  
+  // Hashtag store
+  const { hashtags, trendingHashtags } = useHashtagStore();
+  const { getTrendingHashtags } = useHashtagActions();
+  const { trendingCount } = useHashtagStats();
   
   // Local error state
   const [loadError, setLoadError] = useState<string | null>(null);
-
-  // Feeds store
-  const { feeds, isLoading, loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsStore();
-
-  // Hashtag store
-  const { trendingHashtags } = useHashtagStore();
-  const { getTrendingHashtags } = useHashtagActions();
-  const { trendingCount: _trendingCount } = useHashtagStats();
   
   const loadFeedsWrapped = useCallback(async () => {
     try {
@@ -111,10 +101,6 @@ function UnifiedFeed({
       setLoadError('Failed to load feeds');
     }
   }, [loadFeeds]);
-  // const _pwaStore = { isOnline: true };
-  // const _user = { id: 'test-user' };
-  // const _addNotification = useCallback(() => {}, []);
-  // const _hashtags: string[] = [];
   
 
   // Local state
@@ -152,7 +138,7 @@ function UnifiedFeed({
   // Touch gesture handling (from FeedItem.tsx) - moved to pull-to-refresh section
 
   // PWA Features
-  const _initializeSuperiorPWAFeatures = useCallback(async () => {
+  const initializeSuperiorPWAFeatures = useCallback(async () => {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.ready;
@@ -194,7 +180,7 @@ function UnifiedFeed({
     }
   }, []);
 
-  const _checkOnlineStatus = useCallback(() => {
+  const checkOnlineStatus = useCallback(() => {
     const handleOnline = () => {
       if (swRegistration) {
         syncOfflineData();
@@ -335,7 +321,7 @@ function UnifiedFeed({
         observerRef.current.disconnect();
       }
     };
-  }, [userId]); // Only depend on userId to prevent infinite loop
+  }, [userId, loadFeedsWrapped]); // Proper dependencies
 
   // Load trending hashtags
   useEffect(() => {
@@ -555,44 +541,44 @@ function UnifiedFeed({
     announceToScreenReader(`Viewing details for item ${itemId}`);
   }, [onViewDetails, trackEngagement, announceToScreenReader]);
 
-  // Infinite scroll setup - temporarily disabled to fix infinite loop
-  // useEffect(() => {
-  //   if (process.env.NODE_ENV === 'test') {
-  //     return;
-  //   }
-
-  //   if (observerRef.current) {
-  //     observerRef.current.disconnect();
-  //   }
-
-  //   observerRef.current = new IntersectionObserver(
-  //     (entries) => {
-  //       if (entries[0]?.isIntersecting && hasMore && !isLoading) {
-  //         handleLoadMore();
-  //       }
-  //     },
-  //     { threshold: 0.1 }
-  //   );
-
-  //   if (lastItemRef.current) {
-  //     observerRef.current.observe(lastItemRef.current);
-  //   }
-
-  //   return () => {
-  //     if (observerRef.current) {
-  //       observerRef.current.disconnect();
-  //     }
-  //   };
-  // }, [hasMore, isLoading]);
-
   // Load more functionality
-  const _handleLoadMore = useCallback(async () => {
+  const handleLoadMore = useCallback(async () => {
     if (hasMore && !isLoading) {
       setPage(prev => prev + 1);
       await loadFeeds();
       setHasMore(feeds.length === 20); // Adjust based on your pagination
     }
   }, [hasMore, isLoading, loadFeeds, feeds.length]);
+
+  // Infinite scroll setup
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoading) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (lastItemRef.current) {
+      observerRef.current.observe(lastItemRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, handleLoadMore]);
 
   // Scroll to top functionality
   const scrollToTop = useCallback(() => {
@@ -620,58 +606,84 @@ function UnifiedFeed({
     }
   }, [refreshFeeds, loadHashtagPollsFeed, announceToScreenReader]); // Removed setError as it's a stable state setter
 
-  // Real-time updates with WebSocket (from EnhancedSocialFeed.tsx) - temporarily disabled to fix infinite loop
-  // useEffect(() => {
-  //   if (process.env.NODE_ENV === 'test') {
-  //     return;
-  //   }
-  //   if (enableRealTimeUpdates && userId) {
-  //     // WebSocket connection for real-time updates
-  //     const ws = new WebSocket(`wss://your-websocket-endpoint/feed/${userId}`);
-  //     wsRef.current = ws;
+  // Real-time updates with WebSocket
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+    if (_enableRealTimeUpdates && userId && pwaStore.offline.isOnline) {
+      // Only enable WebSocket if we have a valid endpoint
+      const wsEndpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT;
+      if (wsEndpoint) {
+        const ws = new WebSocket(`${wsEndpoint}/feed/${userId}`);
+        wsRef.current = ws;
 
-  //     ws.onmessage = (event) => {
-  //       const data = JSON.parse(event.data);
-  //       if (data.label === 'new_item') {
-  //         logger.info('New item received:', data.item);
-  //         announceToScreenReader('New content available');
-  //       } else if (data.label === 'engagement_update') {
-  //         logger.info('Engagement update received:', data);
-  //         announceToScreenReader('Engagement updated');
-  //       }
-  //     };
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.label === 'new_item') {
+            logger.info('New item received:', data.item);
+            announceToScreenReader('New content available');
+            addNotification({
+              title: 'New Content',
+              message: 'New content is available in your feed',
+              type: 'info'
+            });
+          } else if (data.label === 'engagement_update') {
+            logger.info('Engagement update received:', data);
+            announceToScreenReader('Engagement updated');
+          }
+        };
 
-  //     // Fallback polling for updates
-  //     refreshIntervalRef.current = setInterval(() => {
-  //       handleRefresh();
-  //     }, 30000); // Refresh every 30 seconds
+        ws.onerror = (error) => {
+          logger.error('WebSocket error:', error);
+        };
+      }
 
-  //     return () => {
-  //       ws.close();
-  //       if (refreshIntervalRef.current) {
-  //         clearInterval(refreshIntervalRef.current);
-  //       }
-  //     };
-  //   }
-  // }, [enableRealTimeUpdates, userId, handleRefresh, announceToScreenReader]);
+      // Fallback polling for updates (only if online)
+      if (pwaStore.offline.isOnline) {
+        refreshIntervalRef.current = setInterval(() => {
+          handleRefresh();
+        }, 30000); // Refresh every 30 seconds
+      }
 
-  // Initialize PWA features on mount - temporarily disabled to fix infinite loop
-  // useEffect(() => {
-  //   const initializeApp = async () => {
-  //     try {
-  //       if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
-  //         await initializeSuperiorPWAFeatures();
-  //         checkOnlineStatus();
-  //       }
-  //     } catch (error) {
-  //       console.error('Error initializing app:', error);
-  //       setError('Failed to initialize app features');
-  //     }
-  //   };
-  //   
-  //   const timeoutId = setTimeout(initializeApp, 0);
-  //   return () => clearTimeout(timeoutId);
-  // }, [initializeSuperiorPWAFeatures, checkOnlineStatus, setError]);
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+        if (refreshIntervalRef.current) {
+          clearInterval(refreshIntervalRef.current);
+        }
+      };
+    }
+  }, [_enableRealTimeUpdates, userId, pwaStore.offline.isOnline, announceToScreenReader, addNotification, handleRefresh]);
+
+  // Initialize PWA features on mount
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+          await initializeSuperiorPWAFeatures();
+          const cleanup = checkOnlineStatus();
+          return cleanup;
+        }
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        setError('Failed to initialize app features');
+      }
+    };
+    
+    let cleanup: (() => void) | undefined;
+    const timeoutId = setTimeout(async () => {
+      cleanup = await initializeApp();
+    }, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      if (cleanup) {
+        cleanup();
+      }
+    };
+  }, [initializeSuperiorPWAFeatures, checkOnlineStatus, setError]);
 
   // NOTE: formatDate, getContentTypeIcon, getPartyColor removed - FeedItem component handles these internally
 

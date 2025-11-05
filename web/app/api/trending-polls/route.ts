@@ -79,37 +79,42 @@ export async function GET() {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = (trendingTopics as TopicData[]).map((topic: TopicData, _index: number) => {
+    const trendingPolls = (trendingTopics ?? []).map((topic: any, _index: number) => {
+      // Transform database data to TopicData format
+      const topicData: TopicData = {
+        ...topic,
+        category: topic.category ? (Array.isArray(topic.category) ? topic.category : [topic.category]) : []
+      };
       // Try to find a matching poll, or use the first available poll
       const matchingPoll = polls.find(poll => 
-        poll.title.toLowerCase().includes(topic.category?.[0]?.toLowerCase() || '') ||
+        poll.title.toLowerCase().includes(topicData.category?.[0]?.toLowerCase() || '') ||
         poll.title.toLowerCase().includes('climate') ||
         poll.title.toLowerCase().includes('community') ||
         poll.title.toLowerCase().includes('election')
       ) ?? polls[0];
 
       // Generate dynamic poll options based on topic category
-      const options = generateDynamicOptions(topic, matchingPoll);
+      const options = generateDynamicOptions(topicData, matchingPoll);
 
       return {
-        id: topic.id,
-        title: topic.title,
-        description: topic.description,
-        trendingScore: topic.trending_score,
-        source: topic.source_name,
-        category: topic.category,
+        id: topicData.id,
+        title: topicData.title,
+        description: topicData.description,
+        trendingScore: topicData.trending_score,
+        source: topicData.source_name,
+        category: topicData.category,
         totalVotes: matchingPoll?.total_votes ?? Math.floor(Math.random() * 5000) + 1000,
         participationRate: matchingPoll?.participation_rate ?? Math.floor(Math.random() * 30) + 50,
         options: options,
         metadata: {
           engagement: topic.metadata?.engagement ?? 'medium',
           controversy: topic.metadata?.controversy ?? 'low',
-          velocity: topic.velocity,
-          momentum: topic.momentum,
-          sentimentScore: topic.sentiment_score
+          velocity: topicData.velocity,
+          momentum: topicData.momentum,
+          sentimentScore: topicData.sentiment_score
         },
-        createdAt: topic.created_at,
-        updatedAt: topic.updated_at
+        createdAt: topicData.created_at,
+        updatedAt: topicData.updated_at
       };
     }) || [];
 
