@@ -165,7 +165,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
-        .select('trust_tier, username')
+        .select('trust_tier, username, is_admin')
         .eq('user_id', String(user.id))
         .single();
 
@@ -188,7 +188,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
         // Check is_admin field directly from user_profiles
-        const isAdmin = profile && !('error' in profile) ? (profile as UserProfile).is_admin : false;
+        const isAdmin = profile && !('error' in profile) ? (profile as any).is_admin : false;
 
         if (!isAdmin) {
           return NextResponse.json(

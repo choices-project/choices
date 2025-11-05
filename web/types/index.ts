@@ -11,21 +11,23 @@
 // Core system types
 export * from './core/index';
 
+// Database types (generated) - must come first to avoid conflicts
+export * from './database';
+
 // Feature-specific types
 export * from './features/analytics/index';
 export * from './features/polls/index';
 export * from './features/dashboard/index';
-export * from './features/auth/index';
-export * from './features/hashtags/index';
+// Auth types handled by database export
+// export * from './features/auth/index';
+// Hashtag types handled by database export  
+// export * from './features/hashtags/index';
 
 // External service types
 export * from './external/index';
 
 // Type utilities
 export * from './utils/index';
-
-// Database types (generated)
-export * from './database';
 
 // Candidate platform types
 export * from './candidate';
