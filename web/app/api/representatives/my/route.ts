@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') ?? '0');
 
     // Get followed representatives with full representative data
-    const { data: followed, error: followedError } = await supabase
+    const { data: followed, error: followedError } = await (supabase as any)
       .from('user_followed_representatives')
       .select(`
         id,
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count
-    const { count, error: countError } = await supabase
+    const { count, error: countError } = await (supabase as any)
       .from('user_followed_representatives')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);

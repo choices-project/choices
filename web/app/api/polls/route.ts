@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
           .limit(10);
         
         if (!hashtagError && hashtagData) {
-          trendingHashtags = hashtagData.map(th => ({
+          trendingHashtags = (hashtagData as any[]).map((th: any) => ({
             hashtag: th,
             trend_score: th.trend_score ?? 0,
             growth_rate: 0, // Would need additional calculation

@@ -21,10 +21,10 @@ export async function GET() {
     }
 
     // Get privacy preferences
-    const { data: preferences, error: preferencesError } = await supabase
+    const { data: preferences, error: preferencesError } = await (supabase as any)
       .from('user_privacy_preferences')
       .select('*')
-      .eq('user_id', String(user.id) as any)
+      .eq('user_id', String(user.id))
       .single()
 
     if (preferencesError && preferencesError.code !== 'PGRST116') {
@@ -99,18 +99,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid data retention preference' }, { status: 400 })
     }
 
-    // Update privacy preferences using the database function
-    const result = await supabase.rpc('update_privacy_preferences', {
-      p_user_id: String(user.id) as any,
-      p_profile_visibility: profile_visibility,
-      p_data_sharing_level: data_sharing_level,
-      p_allow_contact: allow_contact,
-      p_allow_research: allow_research,
-      p_allow_marketing: allow_marketing,
-      p_allow_analytics: allow_analytics,
-      p_notification_preferences: notification_preferences,
-      p_data_retention_preference: data_retention_preference
-    })
+    // Update privacy preferences (using direct table operation)
+    const result = await (supabase as any)
+      .from('user_privacy_preferences')
+      .upsert({
+        user_id: String(user.id),
+        profile_visibility: profile_visibility ?? undefined,
+        data_sharing_level: data_sharing_level ?? undefined,
+        allow_contact: allow_contact ?? undefined,
+        allow_research: allow_research ?? undefined,
+        allow_marketing: allow_marketing ?? undefined,
+        allow_analytics: allow_analytics ?? undefined,
+        notification_preferences: notification_preferences ?? undefined,
+        data_retention_preference: data_retention_preference ?? undefined
+      })
 
     if (result.error) {
       devLog('Error updating privacy preferences:', result.error)
@@ -139,10 +141,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get updated preferences
-    const { data: updatedPreferences, error: fetchError } = await supabase
+    const { data: updatedPreferences, error: fetchError } = await (supabase as any)
       .from('user_privacy_preferences')
       .select('*')
-      .eq('user_id', String(user.id) as any)
+      .eq('user_id', String(user.id))
       .single()
 
     if (fetchError && fetchError.code !== 'PGRST116') {

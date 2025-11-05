@@ -644,7 +644,7 @@ class PWAAnalytics {
         if (date && (eventData.event_data as any)?.pwa_performance_type) {
           const stats = dailyStats.get(date) ?? { offline: 0, total: 0 };
           stats.total++;
-          if (eventData.event_data.pwa_performance_type === 'offline_usage_time') {
+          if ((eventData.event_data as any).pwa_performance_type === 'offline_usage_time') {
             stats.offline++;
           }
           dailyStats.set(date, stats);
@@ -689,11 +689,11 @@ class PWAAnalytics {
 
       // Calculate average performance score by date
       const dailyScores = new Map<string, number[]>();
-      data?.forEach(event => {
+      (data as any[])?.forEach((event: any) => {
         const eventData = event;
         const date = new Date(eventData.created_at).toISOString().split('T')[0];
-        if (date && eventData.event_data?.metric_value) {
-          const score = eventData.event_data.metric_value ?? 0;
+        if (date && (eventData.event_data as any)?.metric_value) {
+          const score = (eventData.event_data as any).metric_value ?? 0;
           const scores = dailyScores.get(date) ?? [];
           scores.push(score);
           dailyScores.set(date, scores);
