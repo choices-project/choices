@@ -266,6 +266,7 @@ export function withAuth(
       .single();
 
     const isAdmin = profile && !('error' in profile) ? (profile as any).is_admin : false;
+    const username = profile && !('error' in profile) ? (profile as any).username : null;
     
     const context: AuthContext = {
       user: withOptional({
@@ -273,7 +274,7 @@ export function withAuth(
         email: user!.email || '',
         trust_tier: isAdmin ? 'T3' : 'T1'
       }, {
-        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
+        username
       }),
       supabase
     };

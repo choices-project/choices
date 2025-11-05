@@ -127,12 +127,19 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   /** Controls visibility of the message creation modal */
   const [showMessageForm, setShowMessageForm] = useState(false);
   /** Form data for new site message - matches API schema */
-  const [newMessage, setNewMessage] = useState({
+  const [newMessage, setNewMessage] = useState<{
+    title: string;
+    message: string;
+    type: 'info' | 'warning' | 'error' | 'success';
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'active' | 'scheduled' | 'expired';
+    is_active: boolean;
+  }>({
     title: '',
-    message: '', // Matches 'message' field in site_messages table
-    type: 'info' as const,
-    priority: 'medium' as const,
-    status: 'active' as const,
+    message: '',
+    type: 'info',
+    priority: 'medium',
+    status: 'active',
     is_active: true
   });
   

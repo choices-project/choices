@@ -24,10 +24,12 @@ import type {
 // Note: Supabase client removed - service now uses API routes for all operations
 
 // ============================================================================
-// MOCK DATA (for development before real data is ready)
+// LEGACY MOCK DATA - NO LONGER USED
+// Kept for reference only. All methods now call real APIs.
+// TODO: Move to test fixtures and remove from production code
 // ============================================================================
 
-const MOCK_REPRESENTATIVES: Representative[] = [
+const MOCK_REPRESENTATIVES_DEPRECATED: Representative[] = [
   {
     id: 1,
     name: "Alexandria Ocasio-Cortez",
@@ -290,20 +292,29 @@ export class RepresentativeService {
 
   /**
    * Get representatives by committee
+   * Calls API to fetch real committee membership data.
+   * 
+   * @param committeeName - Name of committee to search
+   * @returns Array of representatives or empty array on error
    */
   async getCommitteeMembers(committeeName: string): Promise<Representative[]> {
     try {
-      await this.delay(300);
+      // Call API route for committee members
+      const response = await fetch(`/api/civics/committees/${encodeURIComponent(committeeName)}/members`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          logger.warn(`Committee not found: ${committeeName}`);
+          return [];
+        }
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
 
-      const representatives = MOCK_REPRESENTATIVES.filter(rep => 
-        rep.committees?.some(committee => 
-          committee.committee_name.toLowerCase().includes(committeeName.toLowerCase())
-        )
-      );
-
-      return representatives;
+      const apiResult = await response.json();
+      return apiResult.data ?? [];
     } catch (error) {
       logger.error('Error getting committee members:', error instanceof Error ? error : new Error(String(error)));
+      // Return empty array on error (no mock data)
       return [];
     }
   }

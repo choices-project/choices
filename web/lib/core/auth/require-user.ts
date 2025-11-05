@@ -244,7 +244,7 @@ export async function requireUserForAction(
 
   // Check admin status from profile
   const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
-  const isAdmin = userProfile?.is_admin ?? false;
+  const isAdmin = (profile as any)?.is_admin ?? false;
 
   const userObj: User = withOptional({
     id: user.id,
