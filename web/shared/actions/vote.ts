@@ -44,7 +44,7 @@ export const vote = createSecureServerAction(
     // Check if poll exists and is active
     const { data: poll, error: pollError } = await supabaseClient
       .from('polls')
-      .select('id, owner_id, type, visibility, end_date, allow_multiple_votes')
+      .select('id, created_by, status, closed_at')
       .eq('id', validatedData.pollId)
       .single()
 
@@ -52,14 +52,18 @@ export const vote = createSecureServerAction(
       throw new Error('Poll not found')
     }
 
-    // Check if poll has ended
-    if (poll.end_date && new Date(poll.end_date) < new Date()) {
+    // Check if poll has ended (using closed_at instead of end_date)
+    if ((poll as any).closed_at && new Date((poll as any).closed_at) < new Date()) {
       throw new Error('Poll has ended')
     }
 
-    // Check if user has already voted (unless multiple votes are allowed)
-    // Use dedicated allow_multiple_votes column (added in November 2025 migration)
-    if (!poll.allow_multiple_votes) {
+    // Check if poll is closed
+    if ((poll as any).status === 'closed') {
+      throw new Error('Poll is closed')
+    }
+
+    // Check if user has already voted (polls don't allow multiple votes by default)
+    {
       const { data: existingVote } = await supabaseClient
         .from('votes')
         .select('id')

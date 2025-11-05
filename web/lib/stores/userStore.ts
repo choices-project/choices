@@ -547,9 +547,6 @@ export const useUserActions = () => {
   const clearUser = useUserStore(state => state.clearUser);
   const setProfile = useUserStore(state => state.setProfile);
   const updateProfile = useUserStore(state => state.updateProfile);
-  const updatePreferences = useUserStore(state => state.updatePreferences);
-  const updateSettings = useUserStore(state => state.updateSettings);
-  const updateMetadata = useUserStore(state => state.updateMetadata);
   const setProfileLoading = useUserStore(state => state.setProfileLoading);
   const setUpdating = useUserStore(state => state.setUpdating);
   const setUserError = useUserStore(state => state.setUserError);

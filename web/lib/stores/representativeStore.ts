@@ -256,18 +256,20 @@ const useRepresentativeStore = create<RepresentativeStore>()(
 
             if (data.success && data.data?.representatives) {
               set(state => {
-                state.userRepresentatives = data.data.representatives.map((item) => ({
-                  id: item.follow.id,
-                  user_id: '', // Set from auth context when needed
-                  representative_id: item.representative.id,
-                  relationship_type: 'following' as const,
-                  created_at: item.follow.created_at,
-                  updated_at: item.follow.updated_at
-                }));
-                // Update followed list
-                state.followedRepresentatives = data.data.representatives.map(
-                  (item) => item.representative.id
-                );
+                if (data.data?.representatives) {
+                  state.userRepresentatives = data.data.representatives.map((item) => ({
+                    id: item.follow.id,
+                    user_id: '', // Set from auth context when needed
+                    representative_id: item.representative.id,
+                    relationship_type: 'following' as const,
+                    created_at: item.follow.created_at,
+                    updated_at: item.follow.updated_at
+                  }));
+                  // Update followed list
+                  state.followedRepresentatives = data.data.representatives.map(
+                    (item) => item.representative.id
+                  );
+                }
                 state.loading = false;
               });
             }

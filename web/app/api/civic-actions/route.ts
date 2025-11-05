@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Create civic action with sophisticated features
+    // Create civic action (using actual schema fields)
     const { data: action, error: createError } = await supabase
       .from('civic_actions')
       .insert({
@@ -162,14 +162,15 @@ export async function POST(request: NextRequest) {
         description: validatedData.description,
         action_type: validatedData.action_type,
         category: validatedData.category ?? 'general',
-        urgency_level: validatedData.urgency_level ?? 'medium',
-        target_representatives: validatedData.target_representatives ?? [],
-        signature_count: 0,
-        target_signatures: 100, // Default target
+        target_representative_id: validatedData.target_representatives?.[0] ?? null,
+        target_state: validatedData.target_state ?? null,
+        target_district: validatedData.target_district ?? null,
+        target_office: validatedData.target_office ?? null,
+        current_signatures: 0,
+        required_signatures: 100, // Default target
         status: 'active',
-        is_public: validatedData.is_public !== false,
         created_by: user.id,
-        end_date: validatedData.end_date,
+        end_date: validatedData.end_date ?? undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -190,35 +191,32 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         session_id: sessionId,
         event_data: {
-          action_id: action.id,
-          action_type: action.action_type,
-          category: action.category,
-          urgency_level: action.urgency_level
+          action_id: (action as any).id,
+          action_type: (action as any).action_type,
+          category: (action as any).category
         },
-        ip_address: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'),
-        user_agent: request.headers.get('user-agent'),
+        ip_address: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? undefined,
+        user_agent: request.headers.get('user-agent') ?? undefined,
         created_at: new Date().toISOString()
       });
 
     logger.info('Civic action created successfully', { 
-      actionId: action.id, 
-      title: action.title,
+      actionId: (action as any).id, 
+      title: (action as any).title,
       userId: user.id 
     });
 
     return NextResponse.json({
       action: {
-        id: action.id,
-        title: action.title,
-        description: action.description,
-        actionType: action.action_type,
-        category: action.category,
-        urgencyLevel: action.urgency_level,
-        signatureCount: action.signature_count,
-        targetSignatures: action.target_signatures,
-        status: action.status,
-        isPublic: action.is_public,
-        createdAt: action.created_at,
+        id: (action as any).id,
+        title: (action as any).title,
+        description: (action as any).description,
+        actionType: (action as any).action_type,
+        category: (action as any).category,
+        currentSignatures: (action as any).current_signatures,
+        requiredSignatures: (action as any).required_signatures,
+        status: (action as any).status,
+        createdAt: (action as any).created_at,
         endDate: action.end_date
       }
     }, { status: 201 });

@@ -93,43 +93,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Step is required' }, { status: 400 })
     }
 
-    let result
+    let updatedProgress: any = null;
+    let progressError: any = null;
 
     switch (action) {
       case 'start':
-        // Start onboarding
-        result = await supabaseClient.rpc('start_onboarding', { p_user_id: user.id })
+        // Start onboarding - upsert progress record
+        const { data: startData, error: startError } = await supabaseClient
+          .from('onboarding_progress')
+          .upsert({
+            user_id: user.id,
+            current_step: step || 'welcome',
+            started_at: new Date().toISOString(),
+            last_activity_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        updatedProgress = startData;
+        progressError = startError;
         break
 
       case 'update':
         // Update onboarding step
-        result = await supabaseClient.rpc('update_onboarding_step', { 
-          p_user_id: user.id, 
-          p_step: step, 
-          p_data: data || {} 
-        })
+        const { data: updateData, error: updateError } = await supabaseClient
+          .from('onboarding_progress')
+          .update({
+            current_step: step,
+            step_data: data || {},
+            last_activity_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        updatedProgress = updateData;
+        progressError = updateError;
         break
 
       case 'complete':
         // Complete onboarding
-        result = await supabaseClient.rpc('complete_onboarding', { p_user_id: user.id })
+        const { data: completeData, error: completeError } = await supabaseClient
+          .from('onboarding_progress')
+          .update({
+            completed_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        updatedProgress = completeData;
+        progressError = completeError;
         break
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
-
-    if (result.error) {
-      devLog('Error updating onboarding progress:', result.error)
-      return NextResponse.json({ error: 'Failed to update progress' }, { status: 500 })
-    }
-
-    // Get updated progress
-    const { data: updatedProgress, error: progressError } = await supabaseClient
-      .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', String(user.id) as any)
-      .single()
 
     if (progressError && progressError.code !== 'PGRST116') {
       devLog('Error fetching updated progress:', progressError)

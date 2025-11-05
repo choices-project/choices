@@ -354,7 +354,9 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.userHashtags.push(result.data);
+                if (result.data) {
+                  state.userHashtags.push(result.data);
+                }
                 state.followedHashtags.push(hashtagId);
                 state.isFollowing = false;
               });
@@ -421,7 +423,9 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.hashtags.push(result.data);
+                if (result.data) {
+                  state.hashtags.push(result.data);
+                }
                 state.isCreating = false;
               });
               return result.data;
