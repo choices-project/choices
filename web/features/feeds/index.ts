@@ -55,10 +55,14 @@ export { default as FeedHashtagIntegration } from './components/FeedHashtagInteg
 export { default as FeedItem } from './components/FeedItem';
 export { default as InfiniteScroll } from './components/InfiniteScroll';
 
-// Hooks (when created)
+// Hooks - TODO: Implement these hooks
+// See GitHub Issue for feed hooks implementation
+// - useFeed: Hook for managing feed state
+// - useHashtags: Hook for hashtag management
+// - useFeedPersonalization: Hook for personalized feed recommendations
 // export { useFeed } from './hooks/useFeed'
 // export { useHashtags } from './hooks/useHashtags'
 // export { useFeedPersonalization } from './hooks/useFeedPersonalization'
 
-// Services (moved from polls)
-// export { InterestBasedPollFeed } from './lib/interest-based-feed' // Commented out to fix hydration issue
+// Services - TODO: Fix hydration issue in InterestBasedPollFeed
+// export { InterestBasedPollFeed } from './lib/interest-based-feed'

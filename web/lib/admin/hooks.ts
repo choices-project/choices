@@ -9,39 +9,18 @@ import { realTimeService } from './real-time-service';
 import type { TrendingTopic, GeneratedPoll, SystemMetrics } from './store';
 import { useAdminStore } from './store';
 
-// Real-time news service disabled for now - using mock types
+// Real-time news service - using empty arrays when API fails
+// NOTE: Production should have real data. If you see this message,
+// check your admin API endpoints are working properly.
 
-// Mock data for fallback
-const mockTrendingTopics: TrendingTopic[] = [
-  {
-    id: '1',
-    title: 'Climate Change Policy',
-    description: 'Analysis of climate change policy impacts and public opinion',
-    category: 'environment',
-    trending_score: 0.8,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-const mockGeneratedPolls: GeneratedPoll[] = [
-  {
-    id: '1',
-    title: 'Should renewable energy be prioritized over fossil fuels?',
-    description: 'Public opinion on renewable energy policy priorities',
-    options: ['Yes', 'No', 'Undecided'],
-    category: 'environment',
-    status: 'draft',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-const mockSystemMetrics: SystemMetrics = {
-  total_topics: 25,
-  total_polls: 45,
-  active_polls: 12,
-  system_health: 'healthy',
+// Fallback empty data (no fake data in production)
+const emptyTrendingTopics: TrendingTopic[] = [];
+const emptyGeneratedPolls: GeneratedPoll[] = [];
+const emptySystemMetrics: SystemMetrics = {
+  total_topics: 0,
+  total_polls: 0,
+  active_polls: 0,
+  system_health: 'warning', // Changed from 'unknown' to match type constraint
   last_updated: new Date().toISOString()
 };
 
@@ -56,10 +35,11 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
     }
     const data = await response.json();
     devLog('Fetched trending topics from API', { count: data.topics?.length ?? 0 });
-    return data.topics ?? mockTrendingTopics;
+    return data.topics ?? emptyTrendingTopics;
   } catch (error) {
-    devLog('Error fetching trending topics, using mock data', error);
-    return mockTrendingTopics;
+    devLog('Error fetching trending topics - API unavailable', error);
+    console.warn('⚠️ Admin API: Trending topics endpoint failed. Returning empty data.');
+    return emptyTrendingTopics;
   }
 };
 
@@ -71,10 +51,11 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
     }
     const data = await response.json();
     devLog('Fetched generated polls from API', { count: data.polls?.length ?? 0 });
-    return data.polls ?? mockGeneratedPolls;
+    return data.polls ?? emptyGeneratedPolls;
   } catch (error) {
-    devLog('Error fetching generated polls, using mock data', error);
-    return mockGeneratedPolls;
+    devLog('Error fetching generated polls - API unavailable', error);
+    console.warn('⚠️ Admin API: Generated polls endpoint failed. Returning empty data.');
+    return emptyGeneratedPolls;
   }
 };
 
@@ -86,10 +67,11 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
     }
     const data = await response.json();
     devLog('Fetched system metrics from API', data.metrics);
-    return data.metrics ?? mockSystemMetrics;
+    return data.metrics ?? emptySystemMetrics;
   } catch (error) {
-    devLog('Error fetching system metrics, using mock data', error);
-    return mockSystemMetrics;
+    devLog('Error fetching system metrics - API unavailable', error);
+    console.warn('⚠️ Admin API: System metrics endpoint failed. Returning empty data.');
+    return emptySystemMetrics;
   }
 };
 
@@ -196,9 +178,9 @@ export const useTrendingTopics = () => {
       updateTrendingTopics(query.data);
       setLoading('topics', false);
       
-      // Initialize activity feed with mock data if empty
-      if (query.data === mockTrendingTopics) {
-        updateActivityFeed(mockActivityFeed as any);
+      // Warn if we got empty data (API likely failed)
+      if (query.data === emptyTrendingTopics || query.data.length === 0) {
+        console.warn('⚠️ Admin Dashboard: No trending topics data available. Check API endpoints.');
       }
       
       // Invalidate related queries when trending topics update

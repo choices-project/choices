@@ -203,16 +203,17 @@ export default function PollsPage() {
             />
           </div>
 
-          {/* Hashtag Input - TEMPORARILY DISABLED to fix infinite loop */}
+          {/* Hashtag Input - Re-enabled with fixed infinite loop */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Filter by Hashtags:</label>
             <div className="flex flex-wrap gap-2">
               {selectedHashtags.map((hashtag, index) => (
-                <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                <span key={`hashtag-${index}-${hashtag}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
                   #{hashtag}
                   <button
                     onClick={() => handleHashtagRemove(hashtag)}
                     className="ml-1 text-blue-500 hover:text-blue-700"
+                    aria-label={`Remove ${hashtag} filter`}
                   >
                     ×
                   </button>
@@ -223,7 +224,7 @@ export default function PollsPage() {
                 placeholder="Add hashtags to filter polls..."
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    const newHashtag = e.currentTarget.value.trim();
+                    const newHashtag = e.currentTarget.value.trim().replace(/^#/, ''); // Remove # if user types it
                     if (!selectedHashtags.includes(newHashtag) && selectedHashtags.length < 5) {
                       setSelectedHashtags([...selectedHashtags, newHashtag]);
                     }
@@ -231,6 +232,7 @@ export default function PollsPage() {
                   }
                 }}
                 className="px-2 py-1 border border-gray-300 rounded text-sm"
+                aria-label="Add hashtag filter"
               />
             </div>
           </div>
@@ -287,27 +289,32 @@ export default function PollsPage() {
         </div>
       </div>
 
-      {/* Trending Hashtags Display - TEMPORARILY DISABLED to fix infinite loop */}
-      {_trendingHashtags.length > 0 && (
-        <div className="mb-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Trending Hashtags</h3>
+        {/* Trending Hashtags Display - Re-enabled with fixed infinite loop */}
+        {_trendingHashtags.length > 0 && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-2 mb-3">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <h3 className="text-sm font-semibold text-gray-900">Trending Hashtags</h3>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {_trendingHashtags.slice(0, 10).map((trendingHashtag) => (
+              {_trendingHashtags.slice(0, 10).map((hashtag: any, index: number) => (
                 <button
-                  key={trendingHashtag.hashtag.id}
-                  onClick={() => handleHashtagSelect(trendingHashtag.hashtag.name)}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                  key={`trending-${index}-${typeof hashtag === 'string' ? hashtag : hashtag.name}`}
+                  onClick={() => handleHashtagSelect(typeof hashtag === 'string' ? hashtag : hashtag.name)}
+                  className={cn(
+                    "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                    selectedHashtags.includes(typeof hashtag === 'string' ? hashtag : hashtag.name)
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
+                  )}
                 >
                   <Hash className="h-3 w-3 mr-1" />
-                  {trendingHashtag.hashtag.display_name ?? trendingHashtag.hashtag.name}
-                  {trendingHashtag.hashtag.usage_count && <span className="ml-1 text-blue-500">({trendingHashtag.hashtag.usage_count})</span>}
+                  {typeof hashtag === 'string' ? hashtag : hashtag.name}
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Polls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

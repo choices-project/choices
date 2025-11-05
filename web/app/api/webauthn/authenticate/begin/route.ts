@@ -8,9 +8,14 @@ import { isoUint8Array } from '../../register/begin/route';
 
 export async function POST(req: Request) {
   try {
-    // Check if WebAuthn is enabled
+    // Check if WebAuthn is enabled - graceful degradation
     if (!isFeatureEnabled('WEBAUTHN')) {
-      return NextResponse.json({ error: 'WebAuthn feature is disabled' }, { status: 403 });
+      return NextResponse.json({ 
+        error: 'WebAuthn feature is disabled',
+        fallback: 'password',
+        redirectTo: '/auth/login',
+        message: 'Biometric authentication is currently unavailable. Please use password authentication.'
+      }, { status: 503 }); // 503 Service Unavailable for better client handling
     }
 
     const { userId } = await req.json();

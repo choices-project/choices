@@ -197,16 +197,29 @@ export class AnalyticsService {
       }
 
       // Call database function to update insights
-      // Note: update_poll_demographic_insights function not yet implemented
-      // const { error } = await supabase
-      //   .rpc('update_poll_demographic_insights', { p_poll_id: pollId })
+      try {
+        const { error } = await supabase
+          .rpc('update_poll_demographic_insights', { p_poll_id: pollId })
 
-      // if (error) {
-      //   throw new Error('Failed to update poll demographic insights')
-      // }
+        if (error) {
+          // Check if it's a "function does not exist" error
+          if (error.message?.includes('function') && error.message?.includes('does not exist')) {
+            devLog('Warning: update_poll_demographic_insights function not yet implemented. Skipping demographic insights update.')
+            return // Gracefully skip if function doesn't exist yet
+          }
+          throw new Error(`Failed to update poll demographic insights: ${error.message}`)
+        }
+      } catch (rpcError: any) {
+        // Gracefully handle missing function
+        if (rpcError.message?.includes('does not exist')) {
+          devLog('Warning: update_poll_demographic_insights function not implemented. Database migration needed.')
+          return
+        }
+        throw rpcError
+      }
     } catch (error) {
       devLog('Error updating poll demographic insights:', { error })
-      throw error
+      // Don't throw - log and continue to prevent cascading failures
     }
   }
 
@@ -244,52 +257,69 @@ export class AnalyticsService {
       const userHash = await this.generateUserHash(userId)
 
       // Check if civic database entry exists
-      // Note: civic_database_entries table not yet implemented
-      // const { data: existingEntry } = await supabase
-      //   .from('civic_database_entries')
-      //   .select('id, current_trust_tier, trust_tier_history, trust_tier_upgrade_date')
-      //   .eq('stable_user_id', userId)
-      //   .single()
+      try {
+        const { data: existingEntry, error: selectError } = await supabase
+          .from('civic_database_entries')
+          .select('id, current_trust_tier, trust_tier_history, trust_tier_upgrade_date')
+          .eq('stable_user_id', userId)
+          .maybeSingle() // Use maybeSingle to avoid error if no rows
 
-      // const trustTierHistory = existingEntry?.trust_tier_history ?? []
-      
-      // // Add new trust tier entry if changed
-      // if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
-      //   trustTierHistory.push({
-      //     trust_tier: trustTierScore.trust_tier,
-      //     upgrade_date: new Date().toISOString(),
-      //     reason: 'Analytics update',
-      //     verification_methods: [
-      //       ...(trustTierScore.factors.biometric_verified ? ['biometric'] : []),
-      //       ...(trustTierScore.factors.phone_verified ? ['phone'] : []),
-      //       ...(trustTierScore.factors.identity_verified ? ['identity'] : [])
-      //     ]
-      //   })
-      // }
+        if (selectError) {
+          // Check if table doesn't exist
+          if (selectError.message?.includes('does not exist') || selectError.code === '42P01') {
+            devLog('Warning: civic_database_entries table not yet implemented. Skipping civic database update. Migration needed.')
+            return
+          }
+          throw selectError
+        }
 
-      // // Upsert civic database entry
-      // const { error: upsertError } = await supabase
-      //   .from('civic_database_entries')
-      //   .upsert({
-      //     stable_user_id: userId,
-      //     user_hash: userHash,
-      //     total_polls_participated,
-      //     total_votes_cast,
-      //     average_engagement_score,
-      //     current_trust_tier: trustTierScore.trust_tier,
-      //     trust_tier_history: trustTierHistory,
-      //     trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
-      //       ? new Date().toISOString() 
-      //       : existingEntry.trust_tier_upgrade_date
-      //   })
+        const trustTierHistory = existingEntry?.trust_tier_history ?? []
+        
+        // Add new trust tier entry if changed
+        if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
+          trustTierHistory.push({
+            trust_tier: trustTierScore.trust_tier,
+            upgrade_date: new Date().toISOString(),
+            reason: 'Analytics update',
+            verification_methods: [
+              ...(trustTierScore.factors.biometric_verified ? ['biometric'] : []),
+              ...(trustTierScore.factors.phone_verified ? ['phone'] : []),
+              ...(trustTierScore.factors.identity_verified ? ['identity'] : [])
+            ]
+          })
+        }
 
-      // if (upsertError) {
-      //   throw new Error('Failed to update civic database entry')
-      // }
+        // Upsert civic database entry
+        const { error: upsertError } = await supabase
+          .from('civic_database_entries')
+          .upsert({
+            stable_user_id: userId,
+            user_hash: userHash,
+            total_polls_participated,
+            total_votes_cast,
+            average_engagement_score,
+            current_trust_tier: trustTierScore.trust_tier,
+            trust_tier_history: trustTierHistory,
+            trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
+              ? new Date().toISOString() 
+              : existingEntry?.trust_tier_upgrade_date
+          })
+
+        if (upsertError) {
+          throw new Error(`Failed to update civic database entry: ${upsertError.message}`)
+        }
+      } catch (tableError: any) {
+        // Gracefully handle missing table
+        if (tableError.message?.includes('does not exist') || tableError.code === '42P01') {
+          devLog('Warning: civic_database_entries table not implemented. Database migration needed.')
+          return
+        }
+        throw tableError
+      }
 
     } catch (error) {
       devLog('Error updating civic database entry:', { error })
-      throw error
+      // Log but don't throw to prevent cascading failures
     }
   }
 

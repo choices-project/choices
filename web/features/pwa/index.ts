@@ -38,7 +38,26 @@ export const getPWAUtils = () => {
     installPwa: () => module.pwaManager.getPWAStatus().then(status => status.installable),
     isOffline: () => !navigator.onLine,
     registerServiceWorker: () => module.PWAUtils.registerServiceWorker(),
-    unregisterServiceWorker: () => Promise.resolve(false), // Not implemented in archived version
+    unregisterServiceWorker: async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+          // Clear caches
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          }
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Failed to unregister service worker:', error);
+        return false;
+      }
+    },
     // Additional utilities from superior implementation
     pwaManager: module.pwaManager,
     pwaWebAuthn: module.pwaWebAuthn,

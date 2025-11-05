@@ -177,7 +177,7 @@ const detectNetworkInfo = (): NetworkInfo => {
 
   const connection = (navigator as Navigator & { connection?: NetworkConnection }).connection;
   return {
-    type: connection?.effectiveType ?? 'unknown',
+    type: (connection?.effectiveType ?? 'unknown') as ConnectionType,
     effectiveType: connection?.effectiveType ?? '4g',
     downlink: connection?.downlink ?? 10,
     rtt: connection?.rtt ?? 50,

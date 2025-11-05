@@ -257,12 +257,12 @@ export const useAdminStore = create<AdminStore>()(
          * Add a new admin notification
          * @param notification The notification data (without id and timestamp)
          */
-        addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => {
+        addNotification: (notification: Omit<AdminNotification, 'id' | 'created_at'>) => {
           const currentState = get();
           const newNotification: AdminNotification = {
             ...notification,
             id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             read: false,
           };
           
@@ -308,7 +308,7 @@ export const useAdminStore = create<AdminStore>()(
               action: 'mark_notification_read', 
               notificationId: id,
               notificationType: notification.type,
-              timeToRead: Date.now() - new Date(notification.timestamp).getTime()
+              timeToRead: Date.now() - new Date(notification.created_at).getTime()
             });
           }
         },
