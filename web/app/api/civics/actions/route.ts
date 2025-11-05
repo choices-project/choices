@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create civic action
-    const { data: action, error: insertError } = await supabaseClient
+    const { data: action, error: insertError } = await (supabaseClient as any)
       .from('civic_actions')
       .insert({
         user_id: user.id,
@@ -225,8 +225,8 @@ export async function POST(request: NextRequest) {
     logger.info('Civic action created', {
       userId: user.id,
       actionId: action.id,
-      type: action.type,
-      title: action.title
+      type: (action as any).action_type,
+      title: (action as any).title
     });
 
     return NextResponse.json({

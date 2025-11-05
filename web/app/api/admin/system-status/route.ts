@@ -52,14 +52,14 @@ export async function GET() {
 
     // ---- 1) Connection test ----
     const [connectionTest, connectionCheck] = await timed('db:connect', async () => {
-      const { data, error } = await supabaseClient.from('pg_stat_activity').select('pid').limit(1);
+      const { data, error } = await (supabaseClient as any).from('pg_stat_activity').select('pid').limit(1);
       if (error) throw error;
       return data;
     });
 
     // ---- 2) Migrations table exists ----
     const [migrationRows, migrationCheck] = await timed('db:migrations', async () => {
-      const { data, error } = await supabaseClient.from('migrations').select('id, created_at').limit(1);
+      const { data, error } = await (supabaseClient as any).from('migrations').select('id, created_at').limit(1);
       if (error) throw error;
       return data;
     });

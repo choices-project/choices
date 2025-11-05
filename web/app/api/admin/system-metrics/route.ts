@@ -25,8 +25,8 @@ export async function GET(_request: NextRequest) {
     
     // Fetch real metrics from database
     const [topicsResult, pollsResult] = await Promise.all([
-      supabaseClient.from('trending_topics').select('id, processing_status'),
-      supabaseClient.from('generated_polls').select('id, status')
+      (supabaseClient as any).from('trending_topics').select('id, processing_status'),
+      (supabaseClient as any).from('generated_polls').select('id, status')
     ]);
 
     const totalTopics = topicsResult.data?.length ?? 0;

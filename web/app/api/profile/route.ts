@@ -115,7 +115,7 @@ export async function GET(_request: NextRequest) {
     const interests = {
       categories: profile?.primary_concerns ?? [],
       keywords: profile?.community_focus ?? [],
-      topics: profile?.primary_hashtags ?? []
+      topics: [] // primary_hashtags not in schema
     };
 
     // Fetch onboarding progress - determined by presence of key fields

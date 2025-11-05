@@ -60,7 +60,7 @@ export async function GET() {
       party: rep.party,
       office: rep.office,
       level: rep.level,
-      jurisdiction: rep.jurisdiction,
+      // jurisdiction not in schema, using state + district instead
       state: rep.state,
       district: rep.district,
       primary_email: rep.primary_email ?? null,

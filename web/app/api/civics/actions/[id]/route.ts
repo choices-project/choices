@@ -89,7 +89,7 @@ export async function GET(
     logger.info('Civic action retrieved', {
       userId: user.id,
       actionId: action.id,
-      type: action.type
+      type: (action as any).action_type
     });
 
     return NextResponse.json({

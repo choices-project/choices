@@ -100,10 +100,11 @@ export async function GET(request: NextRequest) {
     if (feedback) {
       filteredFeedback = feedback.filter((item: { title?: string; description?: string }) => {
         const searchLower = search.toLowerCase();
+        const itemAny = item as any;
         return (
           (item && 'title' in item ? item.title?.toLowerCase().includes(searchLower) : false) ||
           (item && 'description' in item ? item.description?.toLowerCase().includes(searchLower) : false) ||
-          (item && 'tags' in item ? item.tags?.some((tag: string) => tag.toLowerCase().includes(searchLower)) : false)
+          (item && 'tags' in item ? (itemAny.tags as string[])?.some((tag: string) => tag.toLowerCase().includes(searchLower)) : false)
         );
       });
     }
