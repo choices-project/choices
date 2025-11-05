@@ -82,7 +82,7 @@ export default function SystemSettingsPage() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [_error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState('general');
   const [showHiddenFields, setShowHiddenFields] = useState(false);
 
