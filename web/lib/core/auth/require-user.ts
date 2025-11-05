@@ -123,19 +123,20 @@ export async function requireUser(
     }
 
     // Check admin status
-    const { data: isAdmin, error: adminError } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    const { data: adminProfile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
 
-    if (adminError) {
-      devLog('Admin check error:', adminError, { userId: user.id });
-    }
+    const isAdmin = (adminProfile as any)?.is_admin === true;
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     const userObj: User = withOptional({
       id: user.id,
       email: user.email ?? '',
       trust_tier: userProfile?.trust_tier ?? 'T1',
-      is_admin: !!isAdmin
+      is_admin: isAdmin
     }, {
       username: userProfile?.username
     });
@@ -308,8 +309,13 @@ export async function getCurrentUser(): Promise<User | null> {
     if (profileError) return null;
 
     // Check admin status
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { input_user_id: user.id });
+    const { data: adminProfile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isAdmin = (adminProfile as any)?.is_admin === true;
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     
@@ -317,7 +323,7 @@ export async function getCurrentUser(): Promise<User | null> {
       id: user.id,
       email: user.email ?? '',
       trust_tier: userProfile?.trust_tier ?? 'T1',
-      is_admin: !!isAdmin
+      is_admin: isAdmin
     }, {
       username: userProfile?.username
     });
