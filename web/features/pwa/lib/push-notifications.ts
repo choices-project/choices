@@ -301,7 +301,7 @@ export async function showNotification(options: NotificationOptions): Promise<vo
       data: options.data,
       requireInteraction: options.requireInteraction ?? false,
       silent: options.silent ?? false,
-      vibrate: PUSH_CONFIG.defaultOptions.vibrate,
+      // vibrate not supported in NotificationOptions type
     });
     
     logger.info('Notification shown:', options.title);

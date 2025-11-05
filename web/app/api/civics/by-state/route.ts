@@ -287,25 +287,25 @@ export async function GET(request: NextRequest) {
       created_at: rep.created_at,
         updated_at: rep.updated_at,
       // Enhanced data from normalized tables
-      contacts: rep.representative_contacts?.map((contact) => ({
+      contacts: rep.representative_contacts?.map((contact: any) => ({
         type: contact.contact_type,
         value: contact.value,
         is_verified: contact.is_verified,
         source: contact.source
       })) ?? [],
-      photos: rep.representative_photos?.map((photo) => ({
+      photos: rep.representative_photos?.map((photo: any) => ({
         url: photo.url,
         is_primary: photo.is_primary,
         source: photo.source
       })) ?? [],
-      activity: rep.representative_activity?.map((activity) => ({
+      activity: rep.representative_activity?.map((activity: any) => ({
         type: activity.type,
         title: activity.title,
         description: activity.description,
         date: activity.date,
         source: activity.source
       })) ?? [],
-      social_media: rep.representative_social_media?.map((social) => ({
+      social_media: rep.representative_social_media?.map((social: any) => ({
         platform: social.platform,
         handle: social.handle,
         url: social.url,

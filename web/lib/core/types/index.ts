@@ -6,7 +6,7 @@
  */
 
 // Privacy types
-export * from '../privacy/hybrid-privacy';
+export * from '../../privacy/hybrid-privacy';
 
 // Analytics types
 export type AnalyticsEvent = {
