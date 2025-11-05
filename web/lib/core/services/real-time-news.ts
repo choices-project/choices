@@ -417,7 +417,7 @@ export class RealTimeNewsService {
   async getBreakingNews(limit: number = 10): Promise<BreakingNewsStory[]> {
     try {
       const supabaseClient = await getSupabaseServerClient();
-      const { data, error } = await supabaseClient
+      const { data, error } = await (supabaseClient as any)
         .from('breaking_news')
         .select('id, title, content, source, created_at')
         .order('created_at', { ascending: false })
@@ -425,7 +425,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data.map(this.mapBreakingNewsFromDB) || [];
+      return (data as any[])?.map((d: any) => this.mapBreakingNewsFromDB(d)) || [];
     } catch (error) {
       devLog('Error fetching breaking news:', error);
       return [];
@@ -435,7 +435,7 @@ export class RealTimeNewsService {
   async getBreakingNewsById(id: string): Promise<BreakingNewsStory | null> {
     try {
       const supabaseClient = await getSupabaseServerClient();
-      const { data, error } = await supabaseClient
+      const { data, error } = await (supabaseClient as any)
         .from('breaking_news')
         .select('id, title, content, source, created_at')
         .eq('id', id)
@@ -443,7 +443,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data ? this.mapBreakingNewsFromDB(data) : null;
+      return data ? this.mapBreakingNewsFromDB(data as any) : null;
     } catch (error) {
       devLog('Error fetching breaking news:', error);
       return null;
@@ -453,15 +453,15 @@ export class RealTimeNewsService {
   async createBreakingNews(story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory | null> {
     try {
       const supabaseClient = await getSupabaseServerClient();
-      const { data, error } = await supabaseClient
+      const { data, error } = await (supabaseClient as any)
         .from('breaking_news')
-        .insert([this.mapBreakingNewsToDB(story)])
+        .insert([this.mapBreakingNewsToDB(story as any)])
         .select()
         .single();
 
       if (error) throw error;
 
-      return data ? this.mapBreakingNewsFromDB(data) : null;
+      return data ? this.mapBreakingNewsFromDB(data as any) : null;
     } catch (error) {
       devLog('Error creating breaking news:', error);
       return null;
@@ -475,7 +475,7 @@ export class RealTimeNewsService {
   async getNewsSources(): Promise<NewsSource[]> {
     try {
       const supabaseClient = await getSupabaseServerClient();
-      const { data, error } = await supabaseClient
+      const { data, error } = await (supabaseClient as any)
         .from('news_sources')
         .select('id, title, content, source, created_at')
         .eq('is_active', true)
@@ -483,7 +483,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data.map(this.mapNewsSourceFromDB) || [];
+      return (data as any[])?.map((d: any) => this.mapNewsSourceFromDB(d)) || [];
     } catch (error) {
       devLog('Error fetching news sources:', error);
       return [];
@@ -493,9 +493,9 @@ export class RealTimeNewsService {
   async updateNewsSource(id: string, updates: Partial<NewsSource>): Promise<NewsSource | null> {
     try {
       const supabaseClient = await getSupabaseServerClient();
-      const { data, error } = await supabaseClient
+      const { data, error } = await (supabaseClient as any)
         .from('news_sources')
-        .update(this.mapNewsSourceToDB(updates))
+        .update(this.mapNewsSourceToDB(updates as any))
         .eq('id', id)
         .select()
         .single();

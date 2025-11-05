@@ -86,56 +86,56 @@ export class DataValidationPipeline {
       name: 'representative-required-fields',
       description: 'All required fields must be present',
       severity: 'error',
-      validator: (rep: NormalizedRepresentative) => !!(
+      validator: ((rep: NormalizedRepresentative) => !!(
         rep.id && rep.name && rep.party && rep.office && 
         rep.level && rep.jurisdiction
-      )
+      )) as any
     });
 
     this.addRule({
       name: 'representative-name-format',
       description: 'Name must be properly formatted',
       severity: 'error',
-      validator: (rep: NormalizedRepresentative) => {
+      validator: ((rep: NormalizedRepresentative) => {
         if (!rep.name) return false;
         const nameParts = rep.name.trim().split(' ');
         return nameParts.length >= 2 && nameParts.every(part => part.length > 0);
-      },
-      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
+      }) as any,
+      fixer: ((rep: NormalizedRepresentative) => Object.assign({}, rep, {
         name: rep.name.trim().replace(/\s+/g, ' ')
-      })
+      })) as any
     });
 
     this.addRule({
       name: 'representative-party-valid',
       description: 'Party must be a valid political party',
       severity: 'warning',
-      validator: (rep: NormalizedRepresentative) => {
+      validator: ((rep: NormalizedRepresentative) => {
         const validParties = ['Republican', 'Democrat', 'Independent', 'Green', 'Libertarian', 'Other'];
         return validParties.includes(rep.party) || rep.party === 'Unknown';
-      },
-      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
+      }) as any,
+      fixer: ((rep: NormalizedRepresentative) => Object.assign({}, rep, {
         party: this.normalizeParty(rep.party)
-      })
+      })) as any
     });
 
     this.addRule({
       name: 'representative-jurisdiction-format',
       description: 'Jurisdiction must be valid state code or US',
       severity: 'error',
-      validator: (rep: NormalizedRepresentative) => {
+      validator: ((rep: NormalizedRepresentative) => {
         if (rep.level === 'federal') {
           return rep.jurisdiction === 'US';
         }
         return /^[A-Z]{2}$/.test(rep.jurisdiction);
-      }
+      }) as any
     });
 
     this.addRule({
       name: 'representative-contact-format',
       description: 'Contact information must be properly formatted',
       severity: 'warning',
-      validator: (rep: NormalizedRepresentative) => {
+      validator: ((rep: NormalizedRepresentative) => {
         if (rep.contact.phone && !/^\+?[\d\s\-()]+$/.test(rep.contact.phone)) {
           return false;
         }
@@ -146,15 +146,15 @@ export class DataValidationPipeline {
           return false;
         }
         return true;
-      },
-      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
+      }) as any,
+      fixer: ((rep: NormalizedRepresentative) => Object.assign({}, rep, {
         contact: Object.assign({}, rep.contact, {
           phone: rep.contact.phone?.replace(/[^\d\s\-()]/g, ''),
           email: rep.contact.email?.toLowerCase().trim(),
           website: rep.contact.website?.startsWith('http') ? rep.contact.website : 
                    rep.contact.website ? `https://${rep.contact.website}` : rep.contact.website
         })
-      })
+      })) as any
     });
 
     // Bill validation rules
@@ -162,29 +162,29 @@ export class DataValidationPipeline {
       name: 'bill-required-fields',
       description: 'All required bill fields must be present',
       severity: 'error',
-      validator: (bill: NormalizedBill) => !!(
+      validator: ((bill: NormalizedBill) => !!(
         bill.id && bill.title && bill.billNumber && 
         bill.level && bill.jurisdiction
-      )
+      )) as any
     });
 
     this.addRule({
       name: 'bill-number-format',
       description: 'Bill number must follow proper format',
       severity: 'error',
-      validator: (bill: NormalizedBill) => {
+      validator: ((bill: NormalizedBill) => {
         if (!bill.billNumber) return false;
         // Federal bills: H.R. 1234, S. 1234, etc.
         // State bills: HB 1234, SB 1234, etc.
         return /^[A-Z\.]+\s*\d+/.test(bill.billNumber);
-      }
+      }) as any
     });
 
     this.addRule({
       name: 'bill-date-format',
       description: 'Dates must be valid ISO format',
       severity: 'error',
-      validator: (bill: NormalizedBill) => {
+      validator: ((bill: NormalizedBill) => {
         if (bill.introducedDate && isNaN(Date.parse(bill.introducedDate))) {
           return false;
         }
@@ -192,7 +192,7 @@ export class DataValidationPipeline {
           return false;
         }
         return true;
-      }
+      }) as any
     });
   }
 

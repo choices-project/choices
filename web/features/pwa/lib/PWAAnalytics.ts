@@ -623,7 +623,7 @@ class PWAAnalytics {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       // Use existing analytics_events table for offline analytics
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('analytics_events')
         .select('created_at, event_data')
         .eq('event_type', 'poll_created')
@@ -638,10 +638,10 @@ class PWAAnalytics {
 
       // Calculate offline usage rate by date
       const dailyStats = new Map<string, { offline: number; total: number }>();
-      data?.forEach(event => {
+      (data as any[])?.forEach((event: any) => {
         const eventData = event;
         const date = new Date(eventData.created_at).toISOString().split('T')[0];
-        if (date && eventData.event_data?.pwa_performance_type) {
+        if (date && (eventData.event_data as any)?.pwa_performance_type) {
           const stats = dailyStats.get(date) ?? { offline: 0, total: 0 };
           stats.total++;
           if (eventData.event_data.pwa_performance_type === 'offline_usage_time') {
