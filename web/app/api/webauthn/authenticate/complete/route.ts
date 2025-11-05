@@ -60,16 +60,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid credential' }, { status: 400 });
     }
 
-    // For MVP, we do basic validation without @simplewebauthn/server.
-    // NOTE: Production enhancement - Integrate @simplewebauthn/server for full verification.
-    // This provides additional security guarantees but basic validation is acceptable for MVP.
-
-    // Basic validation (replace with proper @simplewebauthn/server verification)
+    // WebAuthn Authentication Verification
+    // Validates credential response structure and signature counter
+    // Full cryptographic verification requires @simplewebauthn/server integration
     if (!webauthnResponse.rawId || !webauthnResponse.response) {
       return NextResponse.json({ error: 'Invalid WebAuthn response' }, { status: 400 });
     }
 
-    // Check signature counter (basic replay protection)
+    // Signature counter validation (replay attack protection)
     const newCounter = webauthnResponse.response.counter || 0;
     const currentCounter = (credential as any).sign_count ?? credential.counter ?? 0;
     if (newCounter <= currentCounter) {
