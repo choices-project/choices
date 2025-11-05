@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Calculate progress
-        const createdDate = new Date(platform.created_at)
+        const createdDate = new Date(platform.created_at || Date.now())
         const now = new Date()
         const daysSinceDeclaration = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
         

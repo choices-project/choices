@@ -895,8 +895,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   <Label htmlFor="type">Message Type</Label>
                   <Select
                     value={newMessage.type}
-                    onValueChange={(value: 'info' | 'warning' | 'error' | 'success') =>
-                      setNewMessage({ ...newMessage, type: value })
+                    onValueChange={(value) =>
+                      setNewMessage({ ...newMessage, type: value as 'info' | 'warning' | 'error' | 'success' })
                     }
                   >
                     <SelectTrigger id="type">
@@ -915,8 +915,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={newMessage.priority}
-                    onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') =>
-                      setNewMessage({ ...newMessage, priority: value })
+                    onValueChange={(value) =>
+                      setNewMessage({ ...newMessage, priority: value as 'low' | 'medium' | 'high' | 'critical' })
                     }
                   >
                     <SelectTrigger id="priority">

@@ -589,6 +589,7 @@ class PWAAnalytics {
       const dailyCounts = new Map<string, number>();
       data?.forEach(event => {
         const eventData = event;
+        if (!eventData.created_at) return;
         const date = new Date(eventData.created_at).toISOString().split('T')[0];
         if (date) {
           dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1);

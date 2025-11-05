@@ -76,12 +76,14 @@ export async function POST(req: Request) {
       .insert({
         user_id: userId,
         credential_id: credentialId,
-        public_key: Buffer.from(publicKey),
-        sign_count: counter,
-        aaguid,
-        transports,
-        backup_eligible: backupEligible,
-        backup_state: backupState,
+        public_key: Buffer.from(publicKey).toString('base64'),
+        counter: counter,
+        metadata: {
+          aaguid,
+          transports,
+          backup_eligible: backupEligible,
+          backup_state: backupState,
+        },
         last_used_at: new Date().toISOString()
       });
 

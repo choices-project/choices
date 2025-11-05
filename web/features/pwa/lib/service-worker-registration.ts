@@ -360,6 +360,10 @@ export async function sendMessage(message: any): Promise<any> {
       }
     };
     
+    if (!state.registration?.active) {
+      reject(new Error('No active service worker'));
+      return;
+    }
     state.registration.active.postMessage(message, [messageChannel.port2]);
   });
 }

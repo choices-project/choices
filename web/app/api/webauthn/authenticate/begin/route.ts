@@ -58,8 +58,8 @@ export async function POST(req: Request) {
     // Prepare allowCredentials
     const allowCredentials = credentials.map(cred => ({
       id: isoUint8Array.fromB64url(cred.credential_id),
-      type: 'public-key',
-      transports: cred.transports ?? undefined,
+      type: 'public-key' as const,
+      // transports not stored in DB schema, using default
     }));
 
     const rpId = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN ?? 'localhost';

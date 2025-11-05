@@ -232,7 +232,7 @@ export function sanitizePollTitleForUrl(title: string): string {
  */
 export function generatePollSummary(poll: Poll): string {
   const status = getPollStatusText(poll.status);
-  const method = getVotingMethodText(poll.voting_method);
+  const method = getVotingMethodText((poll.voting_method || 'single') as VotingMethod);
   const votes = `${poll.total_votes} votes`;
   
   return `${status} • ${method} • ${votes}`;

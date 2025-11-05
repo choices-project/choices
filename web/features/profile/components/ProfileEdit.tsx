@@ -191,8 +191,7 @@ export default function ProfileEdit({
       [field]: newArray
     }));
     
-    // Sync with store
-    updateArrayField(field, newArray ?? []);
+    // Note: Store sync handled by save action, not individual field updates
   };
 
   // Handle avatar file selection

@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       to: email,
       candidateName: platform.candidate_name,
       office: platform.office,
-      level: platform.level,
+      level: platform.level as 'federal' | 'state' | 'local',
       state: platform.state,
       filingDeadline: platform.filing_deadline ? new Date(platform.filing_deadline) : undefined,
       daysUntilDeadline: platform.filing_deadline 

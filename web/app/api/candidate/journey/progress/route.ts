@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     milestones.push('declaration_complete')
 
     // Calculate dates
-    const createdDate = new Date(platform.created_at)
+    const createdDate = new Date(platform.created_at || Date.now())
     const now = new Date()
     const daysSinceDeclaration = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
     

@@ -150,6 +150,7 @@ export async function register(
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
+          id: crypto.randomUUID(),
           user_id: authUser.id,
           username: data.username.toLowerCase(),
           email: data.email.toLowerCase(),
@@ -259,6 +260,7 @@ export async function register(
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
+          id: crypto.randomUUID(),
           user_id: authUser.id,
           username: data.username.toLowerCase(),
           email: data.email.toLowerCase(),
