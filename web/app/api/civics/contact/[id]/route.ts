@@ -369,12 +369,12 @@ export async function POST(
       .from('contact_messages')
       .insert({
         user_id: user.id, // Use authenticated user ID, not from request body
+        representative_id: validatedRepId,
         thread_id: threadId ?? crypto.randomUUID(), // Use thread ID if available
-        content: sanitizedMessagePreview ?? sanitizedSubject ?? '',
+        message: sanitizedMessagePreview ?? sanitizedSubject ?? '',
         subject: sanitizedSubject ?? 'Communication',
         status: 'sent',
-        priority: 'normal',
-        message_type: communication_type === 'email' ? 'email' : 'text'
+        priority: 'normal'
       })
       .select()
       .single();

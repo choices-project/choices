@@ -82,6 +82,7 @@ export default function SystemSettingsPage() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
   const [activeTab, setActiveTab] = useState('general');
   const [showHiddenFields, setShowHiddenFields] = useState(false);
 
@@ -159,15 +160,17 @@ export default function SystemSettingsPage() {
           setConfig(realConfig);
         } else {
           logger.error('Failed to fetch system status:', new Error(`HTTP ${response.status}`));
-          // Fall back to mock data if API fails
-          setConfig(getMockConfig());
+          // Show error state instead of fake data
+          setError(`API returned ${response.status}. Unable to load system configuration.`);
+          setConfig(null);
         }
       } catch (error) {
         // narrow 'unknown' → Error
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error('Error fetching system data:', err);
-        // Fall back to mock data if API fails
-        setConfig(getMockConfig());
+        // Show error state instead of fake data
+        setError('Unable to connect to admin API. Please check your connection and try again.');
+        setConfig(null);
       } finally {
         setLoading(false);
       }
@@ -176,58 +179,8 @@ export default function SystemSettingsPage() {
     fetchSystemData();
   }, []);
 
-  const getMockConfig = (): SystemConfig => ({
-    general: {
-      siteName: 'Choices Platform',
-      siteDescription: 'A secure and transparent voting platform',
-      adminEmail: 'admin@choices.com',
-      timezone: 'UTC',
-      language: 'en'
-    },
-    security: {
-      sessionTimeout: 3600,
-      maxLoginAttempts: 5,
-      requireEmailVerification: true,
-      enableTwoFactor: true,
-      passwordMinLength: 8
-    },
-    email: {
-      smtpHost: 'smtp.gmail.com',
-      smtpPort: 587,
-      smtpUser: 'noreply@choices.com',
-      smtpPassword: '********',
-      fromEmail: 'noreply@choices.com',
-      fromName: 'Choices Platform'
-    },
-    database: {
-      host: 'localhost',
-      port: 5432,
-      name: 'choicesdb',
-      user: 'choicesuser',
-      maxConnections: 100,
-      backupFrequency: 'daily',
-      schemaStatus: 'pending' as const,
-      lastMigration: '2025-08-26T02:42:56',
-      tableCount: 10,
-      connectionStatus: 'connected' as const,
-      cacheRefreshTime: '2025-08-26T02:42:56'
-    },
-    performance: {
-      cacheEnabled: true,
-      cacheDuration: 300,
-      compressionEnabled: true,
-      maxUploadSize: 10485760,
-      rateLimitEnabled: true,
-      rateLimitRequests: 100
-    },
-    notifications: {
-      emailNotifications: true,
-      pushNotifications: true,
-      adminAlerts: true,
-      userRegistrationAlerts: false,
-      systemErrorAlerts: true
-    }
-  });
+  // Removed getMockConfig() - no fake data shown to users
+  // System will show proper error states when API fails
 
   const handleSave = async () => {
     setSaving(true);

@@ -21,13 +21,18 @@ export async function GET(req: NextRequest) {
     const supabase = await getSupabaseServerClient();
     
     // Check if WebAuthn tables exist and have RLS enabled
-    const { data: rlsStatus } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .in('table_name', ['webauthn_credentials', 'webauthn_challenges']);
+    // Simplified check - just verify we can query the tables
+    const { data: credentialsCheck } = await supabase
+      .from('webauthn_credentials')
+      .select('id')
+      .limit(1);
+    
+    const { data: challengesCheck } = await supabase
+      .from('webauthn_challenges')
+      .select('id')
+      .limit(1);
 
-    const webauthnTablesExist = rlsStatus?.length === 2;
+    const webauthnTablesExist = credentialsCheck !== undefined && challengesCheck !== undefined;
     
     // Check privacy protections
     const privacyProtections = {

@@ -5,50 +5,29 @@ import { devLog } from '@/lib/utils/logger';
 
 import type { TrendingTopic, GeneratedPoll, SystemMetrics, BreakingNewsStory, PollContext } from '../types';
 
-// Removed mock data imports - using real data only
-// import { mockActivityFeed } from './mock-data';
-// import type { BreakingNewsStory, PollContext } from './mock-data';
 import { realTimeService } from './real-time-service';
 import { useAdminStore } from './store';
 
-const mockTrendingTopics: TrendingTopic[] = [
-  {
-    id: '1',
-    title: 'Climate Change Policy',
-    description: 'Analysis of climate change policy impacts and public opinion',
-    category: 'environment',
-    trending_score: 0.8,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-const mockGeneratedPolls: GeneratedPoll[] = [
-  {
-    id: '1',
-    title: 'Should renewable energy be prioritized over fossil fuels?',
-    description: 'Public opinion on renewable energy policy priorities',
-    options: ['Yes', 'No', 'Undecided'],
-    category: 'environment',
-    status: 'draft',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-const mockSystemMetrics: SystemMetrics = {
-  total_topics: 25,
-  total_polls: 45,
-  active_polls: 12,
-  system_health: 'healthy',
+/**
+ * Fallback values returned when admin APIs are unavailable.
+ * Empty arrays/objects instead of mock data to avoid misleading users.
+ */
+const emptyTrendingTopics: TrendingTopic[] = [];
+const emptyGeneratedPolls: GeneratedPoll[] = [];
+const emptySystemMetrics: SystemMetrics = {
+  total_topics: 0,
+  total_polls: 0,
+  active_polls: 0,
+  system_health: 'warning',
   last_updated: new Date().toISOString()
 };
 
-// Real-time news service disabled for now - using mock types
-
-// Remove duplicate devLog definition - using imported one from logger
-
-// API functions
+/**
+ * Fetches trending topics for admin review.
+ * Returns empty array on error instead of throwing.
+ * 
+ * @returns Trending topics or empty array if API fails
+ */
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   try {
     const response = await fetch('/api/admin/trending-topics');
@@ -57,13 +36,20 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
     }
     const data = await response.json();
     devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
-    return data.topics || mockTrendingTopics;
+    return data.topics || emptyTrendingTopics;
   } catch (error) {
-    devLog('Error fetching trending topics, using mock data', { error });
-    return mockTrendingTopics;
+    devLog('Error fetching trending topics - API unavailable', { error });
+    console.warn('⚠️ Admin API: Trending topics endpoint failed. Showing empty state.');
+    return emptyTrendingTopics;
   }
 };
 
+/**
+ * Fetches AI-generated polls awaiting admin approval.
+ * Returns empty array on error instead of throwing.
+ * 
+ * @returns Generated polls or empty array if API fails
+ */
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   try {
     const response = await fetch('/api/admin/generated-polls');
@@ -72,13 +58,20 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
     }
     const data = await response.json();
     devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
-    return data.polls || mockGeneratedPolls;
+    return data.polls || emptyGeneratedPolls;
   } catch (error) {
-    devLog('Error fetching generated polls, using mock data', { error });
-    return mockGeneratedPolls;
+    devLog('Error fetching generated polls - API unavailable', { error });
+    console.warn('⚠️ Admin API: Generated polls endpoint failed. Showing empty state.');
+    return emptyGeneratedPolls;
   }
 };
 
+/**
+ * Fetches system health metrics (topic counts, poll counts, health status).
+ * Returns empty metrics object on error instead of throwing.
+ * 
+ * @returns System metrics or empty object if API fails
+ */
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
     const response = await fetch('/api/admin/health?type=metrics');
@@ -87,10 +80,11 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
     }
     const data = await response.json();
     devLog('Fetched system metrics from API', { metrics: data.metrics });
-    return data.metrics || mockSystemMetrics;
+    return data.metrics || emptySystemMetrics;
   } catch (error) {
-    devLog('Error fetching system metrics, using mock data', { error });
-    return mockSystemMetrics;
+    devLog('Error fetching system metrics - API unavailable', { error });
+    console.warn('⚠️ Admin API: System metrics endpoint failed. Showing empty state.');
+    return emptySystemMetrics;
   }
 };
 
@@ -197,9 +191,9 @@ export const useTrendingTopics = () => {
       updateTrendingTopics(query.data);
       setLoading('topics', false);
       
-      // Initialize activity feed with empty data if no real data
-      if (query.data === mockTrendingTopics) {
-        updateActivityFeed([]);
+      // Warn if we got empty data (API likely failed)
+      if (query.data === emptyTrendingTopics || query.data.length === 0) {
+        console.warn('⚠️ Admin Dashboard: No trending topics data available. Check API endpoints.');
       }
       
       // Invalidate related queries when trending topics update

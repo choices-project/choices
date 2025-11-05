@@ -4,6 +4,8 @@ import { Plus, TrendingUp, Clock, Users, BarChart3, Search, Hash, Flame, Star, E
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { cn } from '@/lib/utils';
+
 // Import hashtag functionality
 import type { HashtagSearchQuery } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';

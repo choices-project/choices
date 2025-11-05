@@ -187,7 +187,13 @@ export class AnalyticsService {
   }
 
   /**
-   * Update poll demographic insights
+   * Calls RPC function to update poll demographic insights
+   * 
+   * Gracefully handles missing `update_poll_demographic_insights` function.
+   * Logs warning and continues if function doesn't exist (no throw).
+   * 
+   * @param pollId - Poll UUID
+   * @throws {Error} If database connection unavailable
    */
   async updatePollDemographicInsights(pollId: string): Promise<void> {
     try {
@@ -198,7 +204,7 @@ export class AnalyticsService {
 
       // Call database function to update insights
       try {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .rpc('update_poll_demographic_insights', { p_poll_id: pollId })
 
         if (error) {
@@ -224,7 +230,15 @@ export class AnalyticsService {
   }
 
   /**
-   * Update civic database entry for a user
+   * Updates civic database entry with user engagement metrics
+   * 
+   * Tracks polls participated, votes cast, engagement score, trust tier,
+   * and trust tier history. Gracefully handles missing `civic_database_entries`
+   * table by logging warning and continuing (no throw).
+   * 
+   * @param userId - User UUID
+   * @param _pollId - Reserved for future use
+   * @throws {Error} If database connection unavailable
    */
   async updateCivicDatabaseEntry(userId: string, _pollId?: string): Promise<void> {
     try {
@@ -258,7 +272,7 @@ export class AnalyticsService {
 
       // Check if civic database entry exists
       try {
-        const { data: existingEntry, error: selectError } = await supabase
+        const { data: existingEntry, error: selectError } = await (supabase as any)
           .from('civic_database_entries')
           .select('id, current_trust_tier, trust_tier_history, trust_tier_upgrade_date')
           .eq('stable_user_id', userId)
@@ -273,10 +287,10 @@ export class AnalyticsService {
           throw selectError
         }
 
-        const trustTierHistory = existingEntry?.trust_tier_history ?? []
+        const trustTierHistory = (existingEntry as any)?.trust_tier_history ?? []
         
         // Add new trust tier entry if changed
-        if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
+        if (!existingEntry || (existingEntry as any).current_trust_tier !== trustTierScore.trust_tier) {
           trustTierHistory.push({
             trust_tier: trustTierScore.trust_tier,
             upgrade_date: new Date().toISOString(),
@@ -290,7 +304,7 @@ export class AnalyticsService {
         }
 
         // Upsert civic database entry
-        const { error: upsertError } = await supabase
+        const { error: upsertError } = await (supabase as any)
           .from('civic_database_entries')
           .upsert({
             stable_user_id: userId,
@@ -300,9 +314,9 @@ export class AnalyticsService {
             average_engagement_score,
             current_trust_tier: trustTierScore.trust_tier,
             trust_tier_history: trustTierHistory,
-            trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
+            trust_tier_upgrade_date: (existingEntry as any)?.current_trust_tier !== trustTierScore.trust_tier 
               ? new Date().toISOString() 
-              : existingEntry?.trust_tier_upgrade_date
+              : (existingEntry as any)?.trust_tier_upgrade_date
           })
 
         if (upsertError) {

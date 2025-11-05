@@ -3,30 +3,34 @@ import React from 'react';
 
 import { devLog } from '@/lib/logger';
 
-import { mockActivityFeed } from './mock-data';
+// Removed unused import: mockActivityFeed
 import type { BreakingNewsStory, PollContext } from './mock-data';
 import { realTimeService } from './real-time-service';
 import type { TrendingTopic, GeneratedPoll, SystemMetrics } from './store';
 import { useAdminStore } from './store';
 
-// Real-time news service - using empty arrays when API fails
-// NOTE: Production should have real data. If you see this message,
-// check your admin API endpoints are working properly.
-
-// Fallback empty data (no fake data in production)
+/**
+ * Fallback values returned when admin APIs are unavailable.
+ * Empty arrays/objects instead of mock data to avoid misleading users.
+ */
 const emptyTrendingTopics: TrendingTopic[] = [];
 const emptyGeneratedPolls: GeneratedPoll[] = [];
 const emptySystemMetrics: SystemMetrics = {
   total_topics: 0,
   total_polls: 0,
   active_polls: 0,
-  system_health: 'warning', // Changed from 'unknown' to match type constraint
+  system_health: 'warning',
   last_updated: new Date().toISOString()
 };
 
 // Remove duplicate devLog definition - using imported one from logger
 
-// API functions
+/**
+ * Fetches trending topics for admin review.
+ * Returns empty array on error instead of throwing.
+ * 
+ * @returns Trending topics or empty array if API fails
+ */
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   try {
     const response = await fetch('/api/admin/trending-topics');
@@ -43,6 +47,12 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   }
 };
 
+/**
+ * Fetches AI-generated polls awaiting admin approval.
+ * Returns empty array on error instead of throwing.
+ * 
+ * @returns Generated polls or empty array if API fails
+ */
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   try {
     const response = await fetch('/api/admin/generated-polls');
@@ -59,6 +69,12 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   }
 };
 
+/**
+ * Fetches system health metrics (topic counts, poll counts, health status).
+ * Returns empty metrics object on error instead of throwing.
+ * 
+ * @returns System metrics or empty object if API fails
+ */
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
     const response = await fetch('/api/admin/system-metrics');

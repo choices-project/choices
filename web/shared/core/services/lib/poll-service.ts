@@ -220,13 +220,21 @@ const mockPolls: Poll[] = [
 // In-memory storage for user-generated polls (will be replaced by backend)
 const userPolls: Poll[] = [];
 
-// Configuration
+/**
+ * Poll service configuration.
+ * Mock data only enabled in test environment, disabled in production.
+ */
 const config = {
-  useMockData: true, // Toggle between mock and real data
+  useMockData: process.env.NODE_ENV === 'test', // Only use mock data in tests
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080',
   enableUserPolls: true, // Allow user-generated polls
-  mockDataEnabled: true // Keep mock data available for testing
+  mockDataEnabled: process.env.NODE_ENV !== 'production' // Disable mock data in production
 };
+
+// Safety check: Warn if mock data is used in production (should never happen)
+if (typeof window !== 'undefined' && config.useMockData && process.env.NODE_ENV === 'production') {
+  console.error('🚨 CRITICAL: Poll service using mock data in PRODUCTION! Check configuration.');
+}
 
 class PollService {
   constructor() {

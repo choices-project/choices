@@ -38,6 +38,12 @@ export const getPWAUtils = () => {
     installPwa: () => module.pwaManager.getPWAStatus().then(status => status.installable),
     isOffline: () => !navigator.onLine,
     registerServiceWorker: () => module.PWAUtils.registerServiceWorker(),
+    /**
+     * Unregisters all service workers and clears cache storage.
+     * Returns false on error instead of throwing.
+     * 
+     * @returns True if unregistered successfully, false otherwise
+     */
     unregisterServiceWorker: async () => {
       try {
         if ('serviceWorker' in navigator) {

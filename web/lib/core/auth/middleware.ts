@@ -187,10 +187,10 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
 
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
-        const { data: adminCheck, error: adminError } = await supabase
-          .rpc('is_admin', { user_id: user.id });
+        // Check is_admin field directly from user_profiles
+        const isAdmin = profile && !('error' in profile) ? (profile as UserProfile).is_admin : false;
 
-        if (adminError || !adminCheck) {
+        if (!isAdmin) {
           return NextResponse.json(
             { message: 'Admin access required - insufficient privileges' },
             { status: 403 }
@@ -258,16 +258,15 @@ export function withAuth(
     
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Use RLS function to check admin status
-    const { data: isAdmin } = await supabase
-      .rpc('is_admin', { user_id: user!.id });
-
+    // Check admin status from user_profiles
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('username')
+      .select('username, is_admin')
       .eq('user_id', String(user!.id))
       .single();
 
+    const isAdmin = profile && !('error' in profile) ? (profile as any).is_admin : false;
+    
     const context: AuthContext = {
       user: withOptional({
         id: user!.id,

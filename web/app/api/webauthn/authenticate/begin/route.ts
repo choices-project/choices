@@ -6,6 +6,14 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isoUint8Array } from '../../register/begin/route';
 
+/**
+ * POST /api/webauthn/authenticate/begin
+ * 
+ * Initiates WebAuthn authentication challenge.
+ * Returns 503 with password fallback info if feature disabled.
+ * 
+ * @returns {NextResponse} Challenge options or error with fallback
+ */
 export async function POST(req: Request) {
   try {
     // Check if WebAuthn is enabled - graceful degradation
@@ -29,7 +37,7 @@ export async function POST(req: Request) {
     // Get user's credentials
     const { data: credentials, error: credentialsError } = await supabase
       .from('webauthn_credentials')
-      .select('credential_id, transports')
+      .select('credential_id')
       .eq('user_id', userId);
 
     if (credentialsError) {

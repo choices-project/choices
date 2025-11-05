@@ -6,6 +6,14 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isoUint8Array } from '../../register/begin/route';
 
+/**
+ * POST /api/webauthn/authenticate/complete
+ * 
+ * Completes WebAuthn authentication by verifying challenge response.
+ * Returns 503 with password fallback info if feature disabled.
+ * 
+ * @returns {NextResponse} Success or error with fallback
+ */
 export async function POST(req: Request) {
   try {
     // Check if WebAuthn is enabled - graceful degradation

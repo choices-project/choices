@@ -242,11 +242,10 @@ export async function requireUserForAction(
     };
   }
 
-  // Check admin status
-  const { data: isAdmin } = await supabase
-    .rpc('is_admin', { input_user_id: user.id });
-
+  // Check admin status from profile
   const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
+  const isAdmin = userProfile?.is_admin ?? false;
+
   const userObj: User = withOptional({
     id: user.id,
     email: user.email ?? '',

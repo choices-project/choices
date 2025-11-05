@@ -34,6 +34,15 @@ import { logger } from '@/lib/utils/logger';
 
 import FeedItem from './FeedItem';
 import { PollCard } from '@/features/polls';
+import type { 
+  FeedItemWithScore, 
+  TrackEventData, 
+  EngagementMetadata,
+  RecommendedPoll,
+  PollHashtag,
+  HashtagAnalytic,
+  HashtagPollsFeed
+} from '../types/feed-types';
 
 type UnifiedFeedProps = {
   userId?: string;
@@ -105,7 +114,7 @@ function UnifiedFeed({
 
   // Local state
   const [activeTab, setActiveTab] = useState('feed');
-  const [hashtagPollsFeed, setHashtagPollsFeed] = useState<any | null>(null);
+  const [hashtagPollsFeed, setHashtagPollsFeed] = useState<HashtagPollsFeed | null>(null);
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -388,15 +397,15 @@ function UnifiedFeed({
     const userInterests = selectedHashtags.length > 0 ? selectedHashtags : [];
     
     if (userInterests.length > 0) {
-      const scoredItems = filtered.map((item: any) => {
-        const itemTags = item.hashtags ?? item.tags ?? [];
+      const scoredItems = filtered.map((feedItem): FeedItemWithScore => {
+        const itemTags = (feedItem as any).hashtags ?? (feedItem as any).tags ?? [];
         const score = calculatePersonalizationScore(userInterests, itemTags);
-        return { item, score };
+        return { item: feedItem as any, score };
       });
       
       // Sort by personalization score (highest first)
       scoredItems.sort((a, b) => b.score - a.score);
-      filtered = scoredItems.map(({ item }) => item);
+      filtered = scoredItems.map(({ item }) => item as any) as typeof filtered;
     }
 
     return filtered.slice(0, maxItems);
@@ -420,7 +429,7 @@ function UnifiedFeed({
   }, [onPollSelect]);
 
   // Analytics tracking (from EnhancedSocialFeed.tsx)
-  const trackEvent = useCallback((event: string, data?: any) => {
+  const trackEvent = useCallback((event: string, data?: TrackEventData) => {
     if (enableAnalytics) {
       logger.info('Analytics:', { event, data });
       
@@ -450,7 +459,7 @@ function UnifiedFeed({
   }, [enableAnalytics]);
 
   // Enhanced engagement tracking
-  const trackEngagement = useCallback((action: string, itemId: string, metadata?: any) => {
+  const trackEngagement = useCallback((action: string, itemId: string, metadata?: EngagementMetadata) => {
     trackEvent(`feed_item_${action}`, { itemId, ...metadata });
     
     // Update personalization score based on engagement
@@ -495,7 +504,7 @@ function UnifiedFeed({
   }, [bookmarkFeed, onBookmark, enableHaptics, trackEngagement, announceToScreenReader, setError]);
 
   // Social sharing hook
-  const socialSharing = useSocialSharing() as any;
+  const socialSharing = useSocialSharing();
 
   const handleShare = useCallback(async (itemId: string) => {
     console.log('[UnifiedFeed] handleShare called with itemId:', itemId);
@@ -504,7 +513,7 @@ function UnifiedFeed({
     }
     onShare?.(itemId);
     
-    const item = feeds.find((item: any) => item.id === itemId);
+    const item = feeds.find((feedItem) => feedItem.id === itemId);
     if (!item) {
       console.warn('Item not found for sharing:', itemId);
       return;
@@ -515,9 +524,13 @@ function UnifiedFeed({
     const shareUrl = (item as any).url || `${window.location.origin}/polls/${itemId}`;
     
     // Share using social sharing hook
-    if (typeof (socialSharing)?.share === 'function') {
-      await (socialSharing).share(shareUrl, (item as any).title, (item as any).description || (item as any).summary || '');
-    } else if (typeof socialSharing?.copyToClipboard === 'function') {
+    if (socialSharing && typeof socialSharing.share === 'function') {
+      await socialSharing.share({
+        url: shareUrl,
+        title: (item as any).title,
+        text: (item as any).description || (item as any).summary || ''
+      });
+    } else if (socialSharing && typeof socialSharing.copyToClipboard === 'function') {
       await socialSharing.copyToClipboard(shareUrl);
     }
     trackEngagement('shared', itemId);
@@ -1188,7 +1201,7 @@ function UnifiedFeed({
             {hashtagPollsFeed ? (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Personalized Polls</h3>
-                {hashtagPollsFeed.recommended_polls.map((poll: any) => (
+                {hashtagPollsFeed.recommended_polls.map((poll: RecommendedPoll) => (
                 <Card key={poll.poll_id} className="hover:shadow-md transition-shadow" data-testid="poll-card">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
@@ -1201,7 +1214,7 @@ function UnifiedFeed({
                         {/* Poll hashtags */}
                         {poll.hashtags && poll.hashtags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {poll.hashtags.map((hashtag: any) => (
+                            {poll.hashtags.map((hashtag: PollHashtag) => (
                               <Badge
                                 key={hashtag}
                                 variant="outline"
@@ -1263,7 +1276,7 @@ function UnifiedFeed({
         <TabsContent value="analytics" className="space-y-4">
           {enableAnalytics && hashtagPollsFeed?.hashtag_analytics ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {hashtagPollsFeed.hashtag_analytics.map((analytic: any) => (
+              {hashtagPollsFeed.hashtag_analytics.map((analytic: HashtagAnalytic) => (
                 <Card key={analytic.hashtag}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1289,7 +1302,7 @@ function UnifiedFeed({
                           {Math.round(analytic.user_interest_level * 100)}%
                         </span>
                       </div>
-                      {analytic.trending_position > 0 && (
+                      {analytic.trending_position && analytic.trending_position > 0 && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Trending:</span>
                           <span className="font-medium text-green-600">
