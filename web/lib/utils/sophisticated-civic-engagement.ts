@@ -400,20 +400,20 @@ export async function getTrendingCivicActions(
         description,
         action_type,
         category,
-        urgency_level,
-        target_representatives,
-        signature_count,
-        target_signatures,
-        status,
-        is_public,
         created_by,
         created_at,
         updated_at,
-        end_date
+        end_date,
+        status,
+        current_signatures,
+        required_signatures,
+        target_representative_id,
+        target_state,
+        target_district,
+        target_office
       `)
-      .eq('is_public', true)
       .eq('status', 'active')
-      .order('signature_count', { ascending: false })
+      .order('current_signatures', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -435,34 +435,34 @@ export async function getTrendingCivicActions(
     }
 
     // Calculate trending score and sort by trending algorithm
-    // Trending factors: signature growth rate, urgency level, recency
+    // Trending factors: signature growth rate, recency
     const now = Date.now();
-    const trendingActions = actions.map((action: SophisticatedCivicAction & { trendingScore?: number }) => {
-      const createdAt = new Date(action.created_at).getTime();
+    const trendingActions = actions.map((action: any) => {
+      const createdAt = new Date(action.created_at || Date.now()).getTime();
       const ageInHours = (now - createdAt) / (1000 * 60 * 60);
-      const signatureGrowthRate = action.signature_count / Math.max(ageInHours, 1);
-      
-      // Urgency multiplier
-      const urgencyMultiplier: Record<string, number> = {
-        'critical': 2.0,
-        'high': 1.5,
-        'medium': 1.0,
-        'low': 0.7
-      };
+      const signatureCount = action.current_signatures ?? 0;
+      const signatureGrowthRate = signatureCount / Math.max(ageInHours, 1);
       
       // Time decay factor (more recent = higher score)
       const timeDecay = Math.max(0, 1 - (ageInHours / (7 * 24))); // Decay over 7 days
       
       // Calculate trending score
-      const trendingScore = signatureGrowthRate * (urgencyMultiplier[action.urgency_level] ?? 1.0) * timeDecay;
+      const trendingScore = signatureGrowthRate * timeDecay;
       
       return {
         ...action,
+        // Map schema fields to expected format
+        signature_count: action.current_signatures ?? 0,
+        target_signatures: action.required_signatures ?? 1000,
+        target_representatives: action.target_representative_id ? [action.target_representative_id] : [],
+        urgency_level: 'medium' as any, // Default urgency
+        is_public: true,
+        metadata: {},
         trendingScore
       };
     }).sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0))
       .slice(0, limit)
-      .map(({ trendingScore: _trendingScore, ...action }) => action as SophisticatedCivicAction);
+      .map(({ trendingScore: _trendingScore, ...action }) => action as any);
 
     logger.info('Retrieved trending civic actions', { count: trendingActions.length, limit, category });
     

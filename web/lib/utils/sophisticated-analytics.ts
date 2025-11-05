@@ -315,7 +315,7 @@ export function calculateCivicEngagementMetrics(
   const activePetitions = petitions.length;
   const representativeInteractions = representativeContacts.length;
   const signatureCount = petitions.reduce((sum, event) => 
-    sum + (event.event_data.signature_count ?? 0), 0
+    sum + ((event.event_data as any)?.signature_count ?? 0), 0
   );
   
   const civicScore = calculateCivicScore(civicEvents);

@@ -118,6 +118,42 @@ export type Database = {
         }
         Relationships: []
       }
+      biometric_trust_scores: {
+        Row: {
+          confidence_level: number | null
+          created_at: string | null
+          credential_id: string | null
+          device_info: Json | null
+          factors: Json | null
+          id: string
+          trust_score: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_level?: number | null
+          created_at?: string | null
+          credential_id?: string | null
+          device_info?: Json | null
+          factors?: Json | null
+          id?: string
+          trust_score?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_level?: number | null
+          created_at?: string | null
+          credential_id?: string | null
+          device_info?: Json | null
+          factors?: Json | null
+          id?: string
+          trust_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bot_detection_logs: {
         Row: {
           created_at: string | null
@@ -404,6 +440,48 @@ export type Database = {
           target_state?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      civic_database_entries: {
+        Row: {
+          average_engagement_score: number | null
+          created_at: string | null
+          current_trust_tier: string | null
+          id: string
+          stable_user_id: string
+          total_polls_participated: number | null
+          total_votes_cast: number | null
+          trust_tier_history: Json | null
+          trust_tier_upgrade_date: string | null
+          updated_at: string | null
+          user_hash: string
+        }
+        Insert: {
+          average_engagement_score?: number | null
+          created_at?: string | null
+          current_trust_tier?: string | null
+          id?: string
+          stable_user_id: string
+          total_polls_participated?: number | null
+          total_votes_cast?: number | null
+          trust_tier_history?: Json | null
+          trust_tier_upgrade_date?: string | null
+          updated_at?: string | null
+          user_hash: string
+        }
+        Update: {
+          average_engagement_score?: number | null
+          created_at?: string | null
+          current_trust_tier?: string | null
+          id?: string
+          stable_user_id?: string
+          total_polls_participated?: number | null
+          total_votes_cast?: number | null
+          trust_tier_history?: Json | null
+          trust_tier_upgrade_date?: string | null
+          updated_at?: string | null
+          user_hash?: string
         }
         Relationships: []
       }
@@ -3521,6 +3599,13 @@ export type Database = {
           timestamp_value: string
         }[]
       }
+      get_heatmap: {
+        Args: { min_count?: number; prefixes: string[] }
+        Returns: {
+          count: number
+          geohash: string
+        }[]
+      }
       get_performance_recommendations: {
         Args: never
         Returns: {
@@ -3595,6 +3680,10 @@ export type Database = {
         Returns: string
       }
       update_hashtag_trending_scores: { Args: never; Returns: undefined }
+      update_poll_demographic_insights: {
+        Args: { p_poll_id: string }
+        Returns: undefined
+      }
       update_poll_statistics: { Args: never; Returns: undefined }
       update_trending_scores: { Args: never; Returns: undefined }
     }
