@@ -392,7 +392,7 @@ function UnifiedFeed({
     }
 
     return filtered.slice(0, maxItems);
-  }, [feeds, selectedHashtags, searchQuery, maxItems, calculatePersonalizationScore]);
+  }, [feeds, selectedHashtags, searchQuery, maxItems]); // calculatePersonalizationScore removed from deps to avoid hoisting issue
 
   // Handle hashtag selection
   const handleHashtagSelect = useCallback((hashtag: string) => {

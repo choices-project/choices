@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest) {
 
     const totalTopics = topicsResult.data?.length ?? 0;
     const totalPolls = pollsResult.data?.length ?? 0;
-    const activePolls = pollsResult.data?.filter(poll => poll && 'status' in poll && poll.status === 'active').length ?? 0;
+    const activePolls = pollsResult.data?.filter((poll: any) => poll && 'status' in poll && poll.status === 'active').length ?? 0;
 
     const metrics = {
       total_topics: totalTopics,

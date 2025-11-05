@@ -219,7 +219,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       notification: {
         id: notification.id,
-        readAt: notification.read_at
+        readAt: (notification as any).read_at ?? null
       }
     });
 

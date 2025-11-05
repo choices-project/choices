@@ -71,7 +71,8 @@ export async function POST(req: Request) {
 
     // Check signature counter (basic replay protection)
     const newCounter = webauthnResponse.response.counter || 0;
-    if (newCounter <= credential.sign_count) {
+    const currentCounter = (credential as any).sign_count ?? credential.counter ?? 0;
+    if (newCounter <= currentCounter) {
       return NextResponse.json({ error: 'Invalid signature counter' }, { status: 400 });
     }
 

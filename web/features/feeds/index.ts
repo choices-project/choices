@@ -26,7 +26,7 @@ export type {
 
 // Local types from components
 export type { 
-  FeedHashtagIntegration as FeedHashtagIntegrationType,
+  FeedHashtagIntegrationProps as FeedHashtagIntegrationType,
   HashtagFilter,
   HashtagSort
 } from './components/FeedHashtagIntegration';

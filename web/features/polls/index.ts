@@ -90,7 +90,7 @@ export type {
   PollDemographics,
   
   // Integration types
-  PollHashtagIntegration,
+  PollHashtagIntegrationRecord as PollHashtagIntegration,
   
   // Vote types
   Vote,
