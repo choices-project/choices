@@ -345,6 +345,28 @@ function UnifiedFeed({
   }, [showTrending, getTrendingHashtags]);
 
   /**
+   * Calculate personalization score for content matching.
+   * Compares user interests (hashtags they've selected) against content tags
+   * to determine relevance. Used for sorting feed items.
+   * 
+   * @param userInterests - Array of user's selected/followed hashtags
+   * @param contentTags - Array of tags associated with the content item
+   * @returns Score between 0-1, where 1 is perfect match
+   */
+  const calculatePersonalizationScore = useCallback((userInterests: string[], contentTags: string[]) => {
+    if (!userInterests.length || !contentTags.length) return 0;
+    
+    const matchingTags = contentTags.filter(tag => 
+      userInterests.some(interest => 
+        interest.toLowerCase().includes(tag.toLowerCase()) ||
+        tag.toLowerCase().includes(interest.toLowerCase())
+      )
+    );
+    
+    return matchingTags.length / Math.max(userInterests.length, contentTags.length);
+  }, []);
+
+  /**
    * Filtered and personalized feed items
    * 
    * Filters feed items by:
