@@ -12,45 +12,12 @@ import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import type { UserProfile, ProfileUpdateData as ProfileUpdateDataType } from '@/types/profile';
+import type { Representative } from '@/types/representative';
+import type { BaseStore } from './types';
 
-
-import type { UserProfile, BaseStore } from './types';
-
-// Profile editing types
-export type ProfileUpdateData = {
-  displayname: string;
-  bio: string;
-  username: string;
-  primaryconcerns: string[];
-  communityfocus: string[];
-  participationstyle: 'observer' | 'participant' | 'leader' | 'organizer';
-  privacysettings: {
-    profile_visibility: 'public' | 'private' | 'friends';
-    show_email: boolean;
-    show_activity: boolean;
-    allow_messages: boolean;
-    share_demographics: boolean;
-    allow_analytics: boolean;
-  };
-}
-
-export type Representative = {
-  id: string;
-  name: string;
-  title: string;
-  party: string;
-  district: string;
-  state: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  photo?: string;
-  socialMedia?: {
-    twitter?: string;
-    facebook?: string;
-    instagram?: string;
-  };
-}
+// Re-export types for convenience
+export type ProfileUpdateData = ProfileUpdateDataType;
 
 // User store state interface
 type UserStore = {
@@ -109,8 +76,8 @@ type UserStore = {
   setProfileEditData: (data: ProfileUpdateData) => void;
   updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
   updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => void;
-  updateArrayField: (field: 'primaryconcerns' | 'communityfocus', value: string) => void;
-  updatePrivacySetting: (setting: keyof ProfileUpdateData['privacysettings'], value: ProfileUpdateData['privacysettings'][keyof ProfileUpdateData['privacysettings']]) => void;
+  updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => void;
+  updatePrivacySetting: (setting: string, value: any) => void;
   setProfileEditing: (editing: boolean) => void;
   setProfileEditError: (field: string, error: string) => void;
   clearProfileEditError: (field: string) => void;
@@ -138,9 +105,6 @@ type UserStore = {
   // Actions - Profile
   setProfile: (profile: UserProfile | null) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
-  updatePreferences: (preferences: Partial<UserProfile['preferences']>) => void;
-  updateSettings: (settings: Partial<UserProfile['settings']>) => void;
-  updateMetadata: (metadata: Partial<UserProfile['metadata']>) => void;
   
   // Actions - Biometric
   setBiometricSupported: (supported: boolean) => void;
@@ -329,28 +293,11 @@ export const useUserStore = create<UserStore>()(
       
       updateProfile: (updates) => set((state) => {
         if (state.profile) {
-          state.profile = { ...state.profile, ...updates };
-          state.profile.metadata.updatedAt = new Date().toISOString();
-        }
-      }),
-      
-      updatePreferences: (preferences) => set((state) => {
-        if (state.profile) {
-          state.profile.preferences = { ...state.profile.preferences, ...preferences };
-          state.profile.metadata.updatedAt = new Date().toISOString();
-        }
-      }),
-      
-      updateSettings: (settings) => set((state) => {
-        if (state.profile) {
-          state.profile.settings = { ...state.profile.settings, ...settings };
-          state.profile.metadata.updatedAt = new Date().toISOString();
-        }
-      }),
-      
-      updateMetadata: (metadata) => set((state) => {
-        if (state.profile) {
-          state.profile.metadata = { ...state.profile.metadata, ...metadata };
+          state.profile = { 
+            ...state.profile, 
+            ...updates,
+            updated_at: new Date().toISOString()
+          };
         }
       }),
       
@@ -420,15 +367,15 @@ export const useUserStore = create<UserStore>()(
         if (state.profileEditData) {
           const currentArray = state.profileEditData[field] ?? [];
           const newArray = currentArray.includes(value)
-            ? currentArray.filter(item => item !== value)
+            ? currentArray.filter((item: string) => item !== value)
             : [...currentArray, value];
           state.profileEditData[field] = newArray;
         }
       }),
       
       updatePrivacySetting: (setting, value) => set((state) => {
-        if (state.profileEditData) {
-          (state.profileEditData.privacysettings as Record<string, unknown>)[setting] = value;
+        if (state.profileEditData && state.profileEditData.privacy_settings) {
+          (state.profileEditData.privacy_settings as Record<string, unknown>)[setting] = value;
         }
       }),
       
@@ -462,14 +409,14 @@ export const useUserStore = create<UserStore>()(
       }),
       
       addRepresentative: (representative) => set((state) => {
-        const existingIndex = state.representatives.findIndex(rep => rep.id === representative.id);
+        const existingIndex = state.representatives.findIndex(rep => String(rep.id) === String(representative.id));
         if (existingIndex === -1) {
           state.representatives.push(representative);
         }
       }),
       
       removeRepresentative: (id) => set((state) => {
-        state.representatives = state.representatives.filter(rep => rep.id !== id);
+        state.representatives = state.representatives.filter(rep => String(rep.id) !== String(id));
       }),
       
       setShowAddressForm: (show) => set((state) => {
@@ -579,8 +526,6 @@ export const useUser = () => useUserStore(state => state.user);
 export const useSession = () => useUserStore(state => state.session);
 export const useIsAuthenticated = () => useUserStore(state => state.isAuthenticated);
 export const useUserProfile = () => useUserStore(state => state.profile);
-export const useUserPreferences = () => useUserStore(state => state.profile?.preferences);
-export const useUserSettings = () => useUserStore(state => state.profile?.settings);
 export const useUserLoading = () => useUserStore(state => state.isLoading);
 export const useUserError = () => useUserStore(state => state.error);
 
@@ -652,9 +597,6 @@ export const useUserActions = () => {
     clearUser,
     setProfile,
     updateProfile,
-    updatePreferences,
-    updateSettings,
-    updateMetadata,
     setProfileLoading,
     setUpdating,
     setUserError,
@@ -702,17 +644,14 @@ export const useUserDisplayName = () => useUserStore(state => {
 });
 
 export const useUserAvatar = () => useUserStore(state => {
-  if (state.profile?.avatar) return state.profile.avatar;
-  if (state.user?.user_metadata?.avatar_url) return state.user.user_metadata.avatar_url;
+  if (state.profile?.avatar_url) return state.profile.avatar_url;
+  if (state.user?.user_metadata?.avatar_url) return state.user?.user_metadata.avatar_url;
   return null;
 });
 
+// Theme and notifications can be derived from privacy_settings or user metadata
 export const useUserTheme = () => useUserStore(state => {
-  return state.profile?.preferences?.theme ?? 'system';
-});
-
-export const useUserNotifications = () => useUserStore(state => {
-  return state.profile?.preferences?.notifications ?? true;
+  return state.user?.user_metadata?.theme ?? 'system';
 });
 
 // Profile editing selectors
@@ -736,21 +675,6 @@ export const useUserIsUploadingAvatar = () => useUserStore(state => state.isUplo
 
 // Store utilities
 export const userStoreUtils = {
-  /**
-   * Check if user has specific preference
-   */
-  hasPreference: (preference: keyof UserProfile['preferences']) => {
-    const state = useUserStore.getState();
-    return state.profile?.preferences?.[preference] ?? false;
-  },
-  
-  /**
-   * Check if user has specific setting
-   */
-  hasSetting: (setting: keyof UserProfile['settings']) => {
-    const state = useUserStore.getState();
-    return state.profile?.settings?.[setting] ?? false;
-  },
   
   /**
    * Get user's full profile with computed fields
@@ -783,10 +707,9 @@ export const userStoreUtils = {
     const state = useUserStore.getState();
     return {
       name: state.profile?.username ?? state.user?.email?.split('@')[0] ?? 'User',
-      avatar: state.profile?.avatar ?? state.user?.user_metadata?.avatar_url,
+      avatar: state.profile?.avatar_url ?? state.user?.user_metadata?.avatar_url,
       email: state.user?.email,
-      theme: state.profile?.preferences?.theme ?? 'system',
-      notifications: state.profile?.preferences?.notifications ?? true,
+      theme: state.user?.user_metadata?.theme ?? 'system',
     };
   }
 };
@@ -823,20 +746,6 @@ export const userStoreSubscriptions = {
     );
   },
   
-  /**
-   * Subscribe to preference changes
-   */
-  onPreferenceChange: (callback: (preferences: UserProfile['preferences']) => void) => {
-    return useUserStore.subscribe(
-      (state, prevState) => {
-        const preferences = state.profile?.preferences;
-        const prevPreferences = prevState.profile?.preferences;
-        if (preferences !== prevPreferences && preferences) {
-          callback(preferences);
-        }
-      }
-    );
-  }
 };
 
 // Store debugging utilities

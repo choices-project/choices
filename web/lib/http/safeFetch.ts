@@ -2,7 +2,7 @@
 // Created: 2025-01-16
 // Purpose: Type-safe fetch wrapper with discriminated union responses
 
-import type { ApiResult, ApiErr } from '../../types/api';
+import type { ApiResult, ApiErr } from '@/types/core/api';
 
 /**
  * Type-safe JSON fetch that returns discriminated union

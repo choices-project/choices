@@ -70,7 +70,7 @@ export async function GET(
     // Get representative basic information from representatives_core
     const { data: representative, error: repError } = await supabase
       .from('representatives_core')
-      .select('id, name, office, level, jurisdiction, party, primary_email, primary_phone, primary_website, data_quality_score, last_verified')
+      .select('id, name, office, level, state, district, party, primary_email, primary_phone, primary_website, data_quality_score, last_verified')
       .eq('id', validatedRepId)
       .single();
 
@@ -100,7 +100,8 @@ export async function GET(
         name: representative.name,
         office: representative.office,
         level: representative.level,
-        jurisdiction: representative.jurisdiction,
+        state: representative.state,
+        district: representative.district,
         party: representative.party
       },
       
@@ -368,7 +369,6 @@ export async function POST(
       .from('contact_messages')
       .insert({
         user_id: user.id, // Use authenticated user ID, not from request body
-        representative_id: validatedRepId,
         thread_id: threadId ?? crypto.randomUUID(), // Use thread ID if available
         content: sanitizedMessagePreview ?? sanitizedSubject ?? '',
         subject: sanitizedSubject,

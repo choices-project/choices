@@ -2,28 +2,45 @@
  * Poll Types
  * 
  * Type definitions for the polls system
+ * Based on database schema: polls, poll_options, votes tables
+ * 
+ * Status: ✅ ACTIVE
  */
 
-export type Poll = {
-  id: string
-  question: string
-  description?: string
-  poll_type: PollType
-  voting_method: VotingMethod
-  options: PollOption[]
-  settings: PollSettings
-  status: PollStatus
-  created_at: string
-  updated_at: string
-  created_by: string
-  expires_at?: string
-  closed_at?: string
-  total_votes: number
-  is_public: boolean
-  is_shareable: boolean
-  hashtags?: string[]
-  metadata?: Record<string, any>
-}
+import type { Database } from '@/types/database';
+
+// ============================================================================
+// BASE TYPES FROM DATABASE
+// ============================================================================
+
+export type PollRow = Database['public']['Tables']['polls']['Row'];
+export type PollInsert = Database['public']['Tables']['polls']['Insert'];
+export type PollUpdate = Database['public']['Tables']['polls']['Update'];
+
+export type PollOptionRow = Database['public']['Tables']['poll_options']['Row'];
+export type PollOptionInsert = Database['public']['Tables']['poll_options']['Insert'];
+export type PollOptionUpdate = Database['public']['Tables']['poll_options']['Update'];
+
+export type VoteRow = Database['public']['Tables']['votes']['Row'];
+export type VoteInsert = Database['public']['Tables']['votes']['Insert'];
+export type VoteUpdate = Database['public']['Tables']['votes']['Update'];
+
+// ============================================================================
+// DOMAIN TYPES (using base types)
+// ============================================================================
+
+// Primary Poll type - use DB type directly
+export type Poll = PollRow;
+
+// PollOption - use DB type directly  
+export type PollOption = PollOptionRow;
+
+// Vote - use DB type directly
+export type Vote = VoteRow;
+
+// ============================================================================
+// ENUM/UNION TYPES (derived from database values)
+// ============================================================================
 
 export type PollType = 
   | 'single_choice'
@@ -43,16 +60,15 @@ export type VotingMethod =
   | 'single-choice'
   | 'ranked-choice'
 
-export type PollOption = {
-  id: string
-  poll_id: string
-  text: string
-  description?: string
-  order: number
-  vote_count: number
-  created_at: string
-  metadata?: Record<string, any>
-}
+export type PollStatus = 
+  | 'draft'
+  | 'active'
+  | 'closed'
+  | 'archived'
+
+// ============================================================================
+// SETTINGS TYPES (JSON fields from database)
+// ============================================================================
 
 export type PollSettings = {
   allow_multiple_votes: boolean
@@ -82,23 +98,9 @@ export type TemplateSettings = {
   autoClose?: boolean
 }
 
-export type PollStatus = 
-  | 'draft'
-  | 'active'
-  | 'closed'
-  | 'archived'
-
-export type Vote = {
-  id: string
-  poll_id: string
-  option_id: string
-  user_id?: string
-  voter_session?: string
-  trust_tier?: string
-  weight: number
-  created_at: string
-  metadata?: Record<string, any>
-}
+// ============================================================================
+// DOMAIN-SPECIFIC TYPES
+// ============================================================================
 
 export type PollResults = {
   poll_id: string

@@ -70,11 +70,11 @@ export async function GET() {
       );
     }
 
-    // Get user profile from ia_users table
+    // Get user profile from user_profiles table
     const { data: userProfile, error: _profileError } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id, verification_tier, is_active')
-      .eq('stable_id', String(user.id))
+      .from('user_profiles')
+      .select('user_id, trust_tier, is_active')
+      .eq('user_id', user.id)
       .single();
 
     return NextResponse.json({
@@ -84,9 +84,9 @@ export async function GET() {
         email: user.email,
         created_at: user.created_at,
         profile: userProfile && !('error' in userProfile) ? {
-          stable_id: userProfile.stable_id,
-          verification_tier: userProfile.verification_tier,
-          is_active: userProfile.is_active
+          user_id: (userProfile as any).user_id,
+          trust_tier: (userProfile as any).trust_tier,
+          is_active: (userProfile as any).is_active
         } : null
       },
       instructions: {

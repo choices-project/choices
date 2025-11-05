@@ -75,38 +75,13 @@ export async function GET(request: NextRequest) {
       unreadOnly 
     });
 
-    let query = supabase
-      .from('notifications')
-      .select(`
-        id,
-        title,
-        message,
-        notification_type,
-        priority,
-        action_url,
-        metadata,
-        is_read,
-        read_at,
-        created_at,
-        updated_at,
-        notification_delivery_logs(delivery_method, delivery_status, delivery_timestamp)
-      `)
+    // Query notification_log (actual table schema)
+    const { data: notifications, error } = await supabase
+      .from('notification_log')
+      .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
-
-    // Apply filters
-    if (notificationType !== 'all') {
-      query = query.eq('notification_type', notificationType);
-    }
-    if (priority !== 'all') {
-      query = query.eq('priority', priority);
-    }
-    if (unreadOnly) {
-      query = query.eq('is_read', false);
-    }
-
-    const { data: notifications, error } = await query;
 
     if (error) {
       logger.error('Error fetching notifications:', error);
@@ -115,8 +90,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       notifications: notifications || [],
-      total: notifications?.length || 0,
-      filters: { notificationType, priority, unreadOnly }
+      total: notifications?.length || 0
     });
 
   } catch (error) {
@@ -160,21 +134,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Create notification with sophisticated features
+    // Create notification using actual notification_log schema
     const { data: notification, error: createError } = await supabase
-      .from('notifications')
+      .from('notification_log')
       .insert({
-        id: crypto.randomUUID(),
         user_id: user.id,
         title: validatedData.title,
-        message: validatedData.message,
-        notification_type: validatedData.notification_type,
-        priority: validatedData.priority ?? 'normal',
-        action_url: validatedData.action_url,
-        metadata: validatedData.metadata ?? {},
-        is_read: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        body: validatedData.message,
+        payload: validatedData.metadata ?? {},
+        status: 'sent'
       })
       .select()
       .single();
@@ -184,49 +152,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create notification' }, { status: 500 });
     }
 
-    // Create delivery log for tracking
-    await supabase
-      .from('notification_delivery_logs')
-      .insert({
-        notification_id: notification.id,
-        delivery_method: 'in_app',
-        delivery_status: 'sent',
-        delivery_timestamp: new Date().toISOString(),
-        retry_count: 0
-      });
-
-    // Track notification creation analytics
-    await supabase
-      .from('analytics_events')
-      .insert({
-        event_type: 'notification_created',
-        user_id: user.id,
-        session_id: crypto.randomUUID(),
-        event_data: {
-          notification_id: notification.id,
-          notification_type: notification.notification_type,
-          priority: notification.priority
-        },
-        ip_address: request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'),
-        user_agent: request.headers.get('user-agent'),
-        created_at: new Date().toISOString()
-      });
-
     logger.info('Notification created successfully', { 
       notificationId: notification.id, 
-      userId: user.id,
-      type: notification.notification_type 
+      userId: user.id
     });
 
     return NextResponse.json({
       notification: {
         id: notification.id,
         title: notification.title,
-        message: notification.message,
-        notificationType: notification.notification_type,
-        priority: notification.priority,
-        actionUrl: notification.action_url,
-        isRead: notification.is_read,
+        message: notification.body,
         createdAt: notification.created_at
       }
     }, { status: 201 });
@@ -254,13 +189,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Mark notification as read
+    // Mark notification as read in notification_log
     const { data: notification, error: updateError } = await supabase
-      .from('notifications')
+      .from('notification_log')
       .update({
-        is_read: true,
-        read_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status: 'read',
+        read_at: new Date().toISOString()
       })
       .eq('id', notificationId)
       .eq('user_id', user.id)
@@ -285,7 +219,6 @@ export async function PUT(request: NextRequest) {
       success: true,
       notification: {
         id: notification.id,
-        isRead: notification.is_read,
         readAt: notification.read_at
       }
     });

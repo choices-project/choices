@@ -13,6 +13,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/types/supabase';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import type { 
@@ -22,6 +23,9 @@ import type {
   Hashtag,
   HashtagCategory
 } from '../types';
+
+// Database types
+type HashtagFlagRow = Database['public']['Tables']['hashtag_flags']['Row'];
 
 // ============================================================================
 // MODERATION CONSTANTS
@@ -86,30 +90,30 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
     }
 
     // Transform hashtag_flags data to HashtagModeration format
-    const flags = data ?? [];
+    const flags = (data ?? []) as HashtagFlagRow[];
     const pendingFlags = flags.filter(flag => flag.status === 'pending');
     const moderationStatus = pendingFlags.length > 0 ? 'pending' : 
                            flags.length > 0 ? 'flagged' : 'approved';
 
     // Transform flags to match HashtagFlag type
-    const _transformedFlags: HashtagFlag[] = flags.map(flag => ({
+    const _transformedFlags: HashtagFlag[] = flags.map((flag: HashtagFlagRow) => ({
       id: flag.id,
       hashtag_id: flag.hashtag_id,
       user_id: flag.user_id,
-      flag_type: flag.flag_type,
+      flag_type: flag.flag_type as 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other',
       reason: flag.reason ?? '',
       created_at: flag.created_at ?? new Date().toISOString(),
       updated_at: flag.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
-      status: flag.status === 'approved' ? 'resolved' : 
-              flag.status === 'rejected' ? 'rejected' : 'pending'
+      status: (flag.status === 'approved' ? 'resolved' : 
+              flag.status === 'rejected' ? 'rejected' : 'pending') as 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged'
     }));
 
     const moderationData: HashtagModeration = {
       id: `moderation_${hashtagId}`,
       hashtag_id: hashtagId,
       status: moderationStatus,
-      created_at: flags[0]?.created_at ?? new Date().toISOString(),
-      updated_at: flags[0]?.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
+      created_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
+      updated_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
       human_review_required: pendingFlags.length > 0,
       moderation_reason: pendingFlags.length > 0 ? 'Pending review' : undefined
     };
@@ -163,16 +167,18 @@ export async function flagHashtag(
     }
 
     // Create the flag
+    const insertData: Database['public']['Tables']['hashtag_flags']['Insert'] = {
+      hashtag_id: hashtagId,
+      user_id: user.id,
+      flagged_by: user.id,
+      reason,
+      status: 'pending',
+      flag_type: 'inappropriate'
+    };
+    
     const result = await supabase
       .from('hashtag_flags')
-      .insert({
-        hashtag_id: hashtagId,
-        user_id: user.id,
-        flagged_by: user.id,
-        reason,
-        status: 'pending',
-        flag_type: 'inappropriate'
-      })
+      .insert(insertData as any)
       .select()
       .single();
     
@@ -190,15 +196,16 @@ export async function flagHashtag(
     await triggerAutoModeration(hashtagId);
 
     // Transform the returned data to match HashtagFlag type
+    const flagData = data as HashtagFlagRow;
     const transformedFlag: HashtagFlag = {
-      id: data.id,
-      hashtag_id: data.hashtag_id,
-      user_id: data.user_id,
-      flag_type: data.flag_type,
-      reason: data.reason ?? '',
-      created_at: data.created_at ?? new Date().toISOString(),
-      updated_at: data.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
-      status: data.status as 'pending' | 'resolved' | 'rejected'
+      id: flagData.id,
+      hashtag_id: flagData.hashtag_id,
+      user_id: flagData.user_id,
+      flag_type: flagData.flag_type as 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other',
+      reason: flagData.reason ?? '',
+      created_at: flagData.created_at ?? new Date().toISOString(),
+      updated_at: flagData.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
+      status: (flagData.status ?? 'pending') as 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged'
     };
 
     return {
@@ -234,13 +241,16 @@ export async function moderateHashtag(
     }
 
     // Update hashtag flags with moderation decision
+    const updateData: Database['public']['Tables']['hashtag_flags']['Update'] = {
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: userId
+    };
+    
     const { data, error } = await supabase
       .from('hashtag_flags')
-      .update({
-        status,
-        updated_at: new Date().toISOString()
-      })
-      .eq('hashtag', hashtagId)
+      .update(updateData as any)
+      .eq('hashtag_id', hashtagId)
       .eq('status', 'pending')
       .select();
 
@@ -261,11 +271,13 @@ export async function moderateHashtag(
         .eq('id', hashtagId)
         .single();
 
+      const hashtagUpdate: Database['public']['Tables']['hashtags']['Update'] = {
+        is_trending: false
+      };
+      
       await supabase
         .from('hashtags')
-        .update({ 
-          is_trending: false
-        })
+        .update(hashtagUpdate as any)
         .eq('id', hashtagId);
     }
 
@@ -379,13 +391,15 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
                                (flagCount ?? 0) >= 3;
 
     // Update hashtag flags with auto-moderation results
+    const autoUpdateData: Database['public']['Tables']['hashtag_flags']['Update'] = {
+      status: humanReviewRequired ? 'flagged' : 'approved',
+      reviewed_at: new Date().toISOString()
+    };
+    
     await supabase
       .from('hashtag_flags')
-      .update({
-        status: humanReviewRequired ? 'flagged' : 'approved',
-        updated_at: new Date().toISOString()
-      })
-      .eq('hashtag', hashtagId)
+      .update(autoUpdateData as any)
+      .eq('hashtag_id', hashtagId)
       .eq('status', 'pending');
 
     // Auto-approve if score is low and no flags
@@ -466,27 +480,30 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
     }
 
     // Filter for actual duplicates (similarity > 80%)
-    const duplicates = data?.filter(hashtag => {
+    const hashtagRows = (data ?? []) as Database['public']['Tables']['hashtags']['Row'][];
+    const duplicates = hashtagRows.filter(hashtag => {
       const existingNormalized = hashtag.name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const similarity = calculateSimilarity(normalizedName, existingNormalized);
       return similarity > MODERATION_CONSTANTS.DUPLICATE_THRESHOLD;
-    }) ?? [];
+    });
 
-    // Transform duplicates to handle null values
+    // Transform duplicates to Hashtag type
     const transformedDuplicates = duplicates.map(hashtag => ({
-      ...hashtag,
+      id: hashtag.id,
+      name: hashtag.name,
+      display_name: hashtag.name,
       description: hashtag.description ?? undefined,
-      category: (hashtag.category as HashtagCategory) ?? undefined,
-      created_by: undefined, // Field doesn't exist in hashtags table
-      follower_count: 0, // Field doesn't exist in hashtags table
+      category: (hashtag.category ?? 'general') as HashtagCategory,
+      created_by: hashtag.created_by ?? undefined,
+      follower_count: hashtag.follower_count ?? 0,
       usage_count: hashtag.usage_count ?? 0,
-      is_featured: false, // Field doesn't exist in hashtags table
+      is_featured: hashtag.is_featured ?? false,
       is_trending: hashtag.is_trending ?? false,
       is_verified: hashtag.is_verified ?? false,
-      trend_score: hashtag.trending_score ?? 0, // Use trending_score instead of trend_score
+      trend_score: hashtag.trending_score ?? 0,
       created_at: hashtag.created_at ?? new Date().toISOString(),
       updated_at: hashtag.updated_at ?? new Date().toISOString(),
-      metadata: undefined // Field doesn't exist in hashtags table
+      metadata: hashtag.metadata as Record<string, any> | undefined
     }));
 
     return {

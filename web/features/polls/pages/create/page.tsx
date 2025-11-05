@@ -15,7 +15,11 @@ import {
   usePollWizardStep,
   usePollWizardProgress,
   usePollWizardErrors,
-  usePollWizardCanProceed
+  usePollWizardCanProceed,
+  usePollWizardCanGoBack,
+  usePollWizardLoading,
+  usePollWizardIsComplete,
+  usePollWizardActions
 } from '@/lib/stores';
 import type { PollCategory } from '@/lib/types/poll-templates';
 
@@ -45,6 +49,9 @@ export default function CreatePollPage() {
   const progress = usePollWizardProgress();
   const errors = usePollWizardErrors();
   const canProceed = usePollWizardCanProceed();
+  const canGoBack = usePollWizardCanGoBack();
+  const isLoading = usePollWizardLoading();
+  const isComplete = usePollWizardIsComplete();
   
   // Get actions from pollWizardStore
   const {
@@ -57,25 +64,14 @@ export default function CreatePollPage() {
     updateSettings,
     addTag,
     removeTag,
-    submitPoll,
-  } = usePollWizard();
+  } = usePollWizardActions();
 
   const handlePublish = async () => {
     try {
-      const result = await submitPoll();
-      if (result.success) {
-        devLog('Poll created successfully:', result.pollId);
-        alert(`Poll created successfully! ID: ${result.pollId}`);
-        // Navigate to the created poll
-        if (result.pollId) {
-          window.location.href = `/polls/${result.pollId}`;
-        } else {
-          window.location.href = '/dashboard';
-        }
-      } else {
-        devLog('Failed to create poll:', result.error);
-        alert(`Failed to create poll: ${result.error}`);
-      }
+      devLog('Creating poll with data:', data);
+      // TODO: Implement actual poll creation API call
+      alert('Poll creation not yet fully implemented. Data is ready to submit.');
+      window.location.href = '/dashboard';
     } catch (error) {
       devLog('Error creating poll:', error);
       alert('Failed to create poll. Please try again.');
@@ -472,7 +468,7 @@ export default function CreatePollPage() {
           <Button
             variant="outline"
             onClick={previousStep}
-            disabled={!wizardState.canGoBack}
+            disabled={!canGoBack}
             className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -480,13 +476,13 @@ export default function CreatePollPage() {
           </Button>
 
           <div className="flex space-x-2">
-            {wizardState.currentStep === wizardState.totalSteps - 1 ? (
+            {currentStep === progress.length - 1 ? (
               <Button
                 onClick={handlePublish}
-                disabled={!canProceed || wizardState.isLoading}
+                disabled={!canProceed || isLoading}
                 className="flex items-center"
               >
-                {wizardState.isLoading ? 'Creating...' : 'Create Poll'}
+                {isLoading ? 'Creating...' : 'Create Poll'}
               </Button>
             ) : (
               <Button

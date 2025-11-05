@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "To apply the critical missing tables to your Supabase database:"
+echo ""
+echo "1. Open: https://supabase.com/dashboard/project/muqwrehywjrbaeerjgfb/editor"
+echo ""
+echo "2. Click 'SQL Editor' in left sidebar"
+echo ""
+echo "3. Click 'New Query'"
+echo ""
+echo "4. Copy and paste the following SQL:"
+echo ""
+cat CRITICAL_MISSING_TABLES.sql
+echo ""
+echo ""
+echo "5. Click 'Run' button"
+echo ""
+echo "6. Once successful, run: cd web && npm run types:generate"

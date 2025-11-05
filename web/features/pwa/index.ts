@@ -82,9 +82,8 @@ export const getPWAHooks = () => {
     };
   }
   
-  // Use existing superior PWA hooks
+  // Use existing superior PWA hooks  
   return Promise.resolve({
-    usePWA: () => import('@/hooks/usePWA').then(m => m.usePWA),
     usePWAUtils: () => import('@/features/pwa/hooks/usePWAUtils').then(m => m.usePWAUtils),
   });
 };

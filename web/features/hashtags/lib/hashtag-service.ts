@@ -12,7 +12,7 @@
 // import { logger } from '@/lib/utils/logger';
 
 // Temporary logger for development
-import type { Database } from '@/types/database';
+import type { Database } from '@/types/supabase';
 
 import { getSupabaseBrowserClient } from '../../../utils/supabase/client';
 import type {
@@ -180,13 +180,12 @@ export async function createHashtag(
       .from('hashtags')
       .insert({
         name: normalizedName,
-        display_name: name,
         description,
         category,
         usage_count: 0,
         follower_count: 0,
         is_trending: false,
-        trend_score: 0,
+        trending_score: 0,
         is_verified: false,
         is_featured: false
       })
@@ -217,12 +216,24 @@ export async function updateHashtag(
 ): Promise<HashtagApiResponse<Hashtag>> {
   const supabase = await supabaseClientPromise;
   try {
+    // Map Hashtag fields to database fields
+    const dbUpdates: Partial<Database['public']['Tables']['hashtags']['Update']> = {
+      ...(updates.name && { name: updates.name }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.category && { category: updates.category }),
+      ...(updates.usage_count !== undefined && { usage_count: updates.usage_count }),
+      ...(updates.follower_count !== undefined && { follower_count: updates.follower_count }),
+      ...(updates.is_trending !== undefined && { is_trending: updates.is_trending }),
+      ...(updates.trend_score !== undefined && { trending_score: updates.trend_score }),
+      ...(updates.is_verified !== undefined && { is_verified: updates.is_verified }),
+      ...(updates.is_featured !== undefined && { is_featured: updates.is_featured }),
+      ...(updates.metadata && { metadata: updates.metadata }),
+      updated_at: new Date().toISOString()
+    };
+    
     const result = await supabase
       .from('hashtags')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -375,11 +386,11 @@ export async function getTrendingHashtags(
     }
 
     // Transform to trending hashtags with additional metrics
-    const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags ?? []).map(async hashtag => {
+    const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags ?? []).map(async (hashtag) => {
       const transformedHashtag = transformHashtagData(hashtag);
       const trendingHashtag: TrendingHashtag = {
         hashtag: transformedHashtag,
-        trend_score: hashtag.trending_score ?? 0,
+        trend_score: (hashtag as HashtagRow).trending_score ?? 0,
         growth_rate: await calculateGrowthRate(transformedHashtag),
         peak_usage: await calculateUsage24h(transformedHashtag),
         time_period: '24h'
@@ -387,8 +398,8 @@ export async function getTrendingHashtags(
       
       // Store additional metrics for internal use (not part of TrendingHashtag type)
       (trendingHashtag as any).usage_7d = await calculateUsage7d(transformedHashtag);
-      (trendingHashtag as any).peak_position = await calculatePeakPosition(hashtag.id);
-      (trendingHashtag as any).current_position = await calculateCurrentPosition(hashtag.id);
+      (trendingHashtag as any).peak_position = await calculatePeakPosition((hashtag as HashtagRow).id);
+      (trendingHashtag as any).current_position = await calculateCurrentPosition((hashtag as HashtagRow).id);
       
       // Add category context metadata if available
       if (categoryMetadata && category) {
@@ -546,20 +557,23 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
       .single();
     
     if (currentHashtag) {
+      const updateData: Database['public']['Tables']['hashtags']['Update'] = {
+        follower_count: (currentHashtag.follower_count ?? 0) + 1
+      };
       await supabase
         .from('hashtags')
-        .update({ follower_count: (currentHashtag.follower_count ?? 0) + 1 })
+        .update(updateData)
         .eq('id', hashtagId);
     }
 
     return { success: true, data: {
-      ...data,
-      hashtag: transformHashtagData(data.hashtag),
-      followed_at: data.followed_at ?? new Date().toISOString(),
-      is_primary: data.is_primary ?? false,
-      usage_count: data.usage_count ?? 0,
-      last_used_at: data.last_used_at ?? new Date().toISOString(),
-      preferences: data.preferences ?? {}
+      ...(data as any),
+      hashtag: transformHashtagData((data as any).hashtag as HashtagRow),
+      followed_at: (data as any).followed_at ?? new Date().toISOString(),
+      is_primary: (data as any).is_primary ?? false,
+      usage_count: (data as any).usage_count ?? 0,
+      last_used_at: (data as any).last_used_at ?? new Date().toISOString(),
+      preferences: (data as any).preferences ?? {}
     } as unknown as UserHashtag };
   } catch (error) {
     return { 
@@ -598,9 +612,12 @@ export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResp
       .single();
     
     if (currentHashtag) {
+      const updateData: Database['public']['Tables']['hashtags']['Update'] = {
+        follower_count: Math.max((currentHashtag.follower_count ?? 0) - 1, 0)
+      };
       await supabase
         .from('hashtags')
-        .update({ follower_count: Math.max((currentHashtag.follower_count ?? 0) - 1, 0) })
+        .update(updateData)
         .eq('id', hashtagId);
     }
 
@@ -638,13 +655,13 @@ export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[
     }
 
     return { success: true, data: (data ?? []).map(item => ({
-      ...item,
-      hashtag: transformHashtagData(item.hashtag),
-      followed_at: item.followed_at ?? new Date().toISOString(),
-      is_primary: item.is_primary ?? false,
-      usage_count: item.usage_count ?? 0,
-      last_used_at: item.last_used_at ?? new Date().toISOString(),
-      preferences: item.preferences ?? {}
+      ...(item as any),
+      hashtag: transformHashtagData((item as any).hashtag as HashtagRow),
+      followed_at: (item as any).followed_at ?? new Date().toISOString(),
+      is_primary: (item as any).is_primary ?? false,
+      usage_count: (item as any).usage_count ?? 0,
+      last_used_at: (item as any).last_used_at ?? new Date().toISOString(),
+      preferences: (item as any).preferences ?? {}
     } as unknown as UserHashtag)) };
   } catch (error) {
     return { 
@@ -698,10 +715,10 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
 
     const statsResponse = {
       total_hashtags: stats?.length ?? 0,
-      trending_count: stats?.filter(s => s.is_trending).length ?? 0,
-      verified_count: stats?.filter(s => s.is_verified).length ?? 0,
+      trending_count: stats?.filter((s: HashtagRow) => s.is_trending).length ?? 0,
+      verified_count: stats?.filter((s: HashtagRow) => s.is_verified).length ?? 0,
       categories: {} as Record<HashtagCategory, number>,
-      top_hashtags: (stats?.slice(0, 10) as Hashtag[]) ?? [],
+      top_hashtags: (stats?.slice(0, 10).map(transformHashtagData) as Hashtag[]) ?? [],
       recent_activity: await getRecentActivity() as HashtagActivity[],
       system_health: {
         api_response_time: 0,
@@ -831,10 +848,10 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
 
     const integration = {
       user_id: userId,
-      primary_hashtags: userHashtags?.filter(uh => uh.is_primary).map(uh => uh.hashtag.name) ?? [],
-      interest_hashtags: userHashtags?.filter(uh => !uh.is_primary).map(uh => uh.hashtag.name) ?? [],
+      primary_hashtags: userHashtags?.filter((uh: any) => uh.is_primary).map((uh: any) => uh.hashtag.name) ?? [],
+      interest_hashtags: userHashtags?.filter((uh: any) => !uh.is_primary).map((uh: any) => uh.hashtag.name) ?? [],
       custom_hashtags: await getUserCustomHashtags(userId),
-      followed_hashtags: userHashtags?.map(uh => uh.hashtag.name) ?? [],
+      followed_hashtags: userHashtags?.map((uh: any) => uh.hashtag.name) ?? [],
       hashtag_preferences: (preferences ?? {
         user_id: userId,
         default_categories: [],

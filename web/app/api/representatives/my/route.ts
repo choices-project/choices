@@ -41,14 +41,26 @@ export async function GET(request: NextRequest) {
     const { data: followed, error: followedError } = await supabase
       .from('user_followed_representatives')
       .select(`
-        *,
-        representatives_core (
-          *,
-          representative_photos(*),
-          representative_contacts(*),
-          representative_social_media(*),
-          representative_activity(*),
-          representative_committees(*)
+        id,
+        notify_on_votes,
+        notify_on_committee_activity,
+        notify_on_public_statements,
+        notify_on_events,
+        notes,
+        tags,
+        created_at,
+        updated_at,
+        representatives_core!inner (
+          id,
+          name,
+          party,
+          office,
+          level,
+          state,
+          district,
+          primary_email,
+          primary_phone,
+          primary_website
         )
       `)
       .eq('user_id', user.id)
@@ -73,8 +85,8 @@ export async function GET(request: NextRequest) {
       logger.error('Error counting followed representatives:', countError);
     }
 
-    // Transform data to include both follow metadata and representative data
-    const representatives = (followed ?? []).map((follow) => ({
+    // Transform data with type assertion for complex join
+    const representatives = (followed ?? []).map((follow: any) => ({
       follow: {
         id: follow.id,
         notify_on_votes: follow.notify_on_votes,

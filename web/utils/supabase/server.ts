@@ -3,7 +3,7 @@ import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-import type { Database } from './database.types'
+import type { Database } from '@/types/supabase'
 
 // Environment validation
 const validateEnvironment = () => {

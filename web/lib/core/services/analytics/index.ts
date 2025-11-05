@@ -9,7 +9,9 @@
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Export the main AnalyticsService class
-export { AnalyticsService } from '@/lib/types/analytics';
+// Note: Using features/analytics implementation (canonical) instead of broken lib/types/analytics
+// The lib/types/analytics.ts uses non-existent DB tables and should be archived
+export { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 
 // Re-export analytics utilities conditionally
 export const getAnalyticsUtils = () => {

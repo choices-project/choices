@@ -216,10 +216,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
         isCompleted: false,
         isSkipped: false,
         isActive: false,
-        authData: {},
-        profileData: {},
-        valuesData: {},
-        preferencesData: {},
+        authData: {} as AuthData,
+        profileData: {} as ProfileData,
+        valuesData: {} as ValuesData,
+        preferencesData: {} as PreferencesData,
         progress: 0,
         completedSteps: [],
         skippedSteps: [],
@@ -315,10 +315,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
           completedSteps: [],
           skippedSteps: [],
           stepData: {},
-          authData: {},
-          profileData: {},
-          valuesData: {},
-          preferencesData: {},
+          authData: {} as AuthData,
+          profileData: {} as ProfileData,
+          valuesData: {} as ValuesData,
+          preferencesData: {} as PreferencesData,
           error: null
         }),
         
@@ -355,10 +355,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         clearAllData: () => set({
           stepData: {},
-          authData: {},
-          profileData: {},
-          valuesData: {},
-          preferencesData: {}
+          authData: {} as AuthData,
+          profileData: {} as ProfileData,
+          valuesData: {} as ValuesData,
+          preferencesData: {} as PreferencesData
         }),
         
         // Step management actions
@@ -385,7 +385,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         canProceedToNextStep: (step) => {
           const state = get();
-          const currentStepData = state.stepData[step];
+          const currentStepData = state.stepData[step] as any;
           const stepConfig = state.steps.find(s => s.id === step);
           
           if (!stepConfig?.required) return true;
@@ -411,7 +411,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         getStepValidationErrors: (step) => {
           const state = get();
-          const currentStepData = state.stepData[step];
+          const currentStepData = state.stepData[step] as any;
           const errors: string[] = [];
           
           switch (step) {

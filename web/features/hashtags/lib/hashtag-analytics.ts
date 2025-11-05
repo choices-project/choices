@@ -576,7 +576,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
     }
 
     const { data: userData, error: userError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('age_group, demographic_data')
       .in('id', userIds);
 
@@ -744,7 +744,7 @@ async function getProfileBasedSuggestions(userId: string, currentHashtagIds: str
   try {
     // Get user's profile data
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('interests, demographics, preferences')
       .eq('id', userId)
       .single();

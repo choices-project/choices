@@ -54,22 +54,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(mockDashboardData);
     }
 
-    // Fetch user's polls
+    // Fetch user's polls (using actual schema fields)
     const { data: userPolls, error: pollsError } = await supabase
       .from('polls')
-      .select(`
-        id,
-        title,
-        status,
-        created_at,
-        ends_at,
-        choices (
-          id,
-          text,
-          votes
-        )
-      `)
-      .eq('created_by', user?.userId)
+      .select('id, title, status, created_at, closed_at, total_votes')
+      .eq('created_by', user?.userId ?? '')
       .order('created_at', { ascending: false });
 
     if (pollsError) {
@@ -81,18 +70,18 @@ export async function GET(request: NextRequest) {
     const { data: userVotes, error: votesError } = await supabase
       .from('votes')
       .select('id, created_at, poll_id')
-      .eq('user_id', user?.userId);
+      .eq('user_id', user?.userId ?? '');
 
     if (votesError) {
       devLog('Error fetching user votes:', votesError);
       return NextResponse.json({ error: 'Failed to fetch user votes' }, { status: 500 });
     }
 
-    // Fetch user profile for trust score
+    // Fetch user profile (trust_tier, not trust_score in actual schema)
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('trust_score, created_at')
-      .eq('user_id', user?.userId)
+      .select('trust_tier, created_at')
+      .eq('user_id', user?.userId ?? '')
       .single();
 
     if (profileError) {
@@ -101,16 +90,16 @@ export async function GET(request: NextRequest) {
 
     // Calculate metrics
     const pollsCreated = userPolls?.length ?? 0;
-    const pollsActive = userPolls?.filter(poll => poll.status === 'active').length ?? 0;
+    const pollsActive = userPolls?.filter((poll: any) => poll.status === 'active').length ?? 0;
     const votesCast = userVotes?.length ?? 0;
-    const trustScore = userProfile?.trust_score ?? 0;
+    const trustScore = userProfile?.trust_tier ? parseInt(userProfile.trust_tier.replace('T', ''), 10) * 25 : 0;
 
     // Calculate participation rate (votes cast / polls available to vote on)
     const { data: allPolls, error: allPollsError } = await supabase
       .from('polls')
-      .select('id, status, created_at, ends_at')
+      .select('id, status, created_at, closed_at')
       .eq('status', 'active')
-      .gte('ends_at', new Date().toISOString());
+      .or('closed_at.is.null,closed_at.gte.' + new Date().toISOString());
 
     if (allPollsError) {
       logger.error('Error fetching active polls for participation calculation:', allPollsError instanceof Error ? allPollsError : new Error(String(allPollsError)));
@@ -179,15 +168,14 @@ export async function GET(request: NextRequest) {
     const favoriteCategories = ['Politics', 'Technology', 'Environment'];
 
     const dashboardData = {
-      userPolls: userPolls?.map(poll => ({
+      userPolls: userPolls?.map((poll: any) => ({
         id: poll.id,
         title: poll.title,
         status: poll.status,
-        totalvotes: poll.choices?.reduce((sum: number, choice: { votes: number }) => sum + choice.votes, 0) ?? 0,
+        totalvotes: poll.total_votes ?? 0,
         participation: Math.floor(Math.random() * 100),
         createdat: poll.created_at,
-        endsat: poll.ends_at,
-        choices: poll.choices ?? []
+        closedat: poll.closed_at
       })) ?? [],
       userMetrics: {
         pollsCreated,

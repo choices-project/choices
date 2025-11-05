@@ -45,7 +45,7 @@
     "type-check:strict": "gtimeout 180 tsc -p ../tsconfig.ci.json --noEmit",
     "types:strict": "gtimeout 180 tsc -p ../tsconfig.ci.json --noEmit --skipLibCheck",
     "types:file": "gtimeout 180 tsc --noEmit --skipLibCheck",
-    "types:generate": "cd .. && supabase gen types typescript --linked 2>&1 | grep -v 'Initialising login role' > web/utils/supabase/database.types.ts",
+    "types:generate": "cd .. && npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > web/types/supabase.ts",
     "errors:classify": "node tools/error-classify.js",
     "codemod:optional-literals": "tsx tools/codemods/optional-literals.ts",
     "check": "gtimeout 900 npm-run-all -p types:ci lint:test jest:ci",

@@ -88,7 +88,17 @@ export async function GET(
       );
     }
 
+    // Parse ID to number (representatives_core.id is numeric)
+    const repIdNum = parseInt(representativeId, 10);
+    if (isNaN(repIdNum)) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid representative ID' },
+        { status: 400 }
+      );
+    }
+
     // Get representative data with optimized query
+    // @ts-expect-error - CivicsQueryOptimizer has complex return types, runtime is correct
     const { data: representative, error: repError } = await CivicsQueryOptimizer.getRepresentativeQuery(supabase, representativeId);
 
     if (repError || !representative) {
@@ -102,25 +112,26 @@ export async function GET(
     const { data: contacts } = await supabase
       .from('representative_contacts')
       .select('contact_type, value, is_verified, source')
-      .eq('representative_id', representativeId);
+      .eq('representative_id', repIdNum);
 
     const { data: photos } = await supabase
       .from('representative_photos')
       .select('url, is_primary, source')
-      .eq('representative_id', representativeId);
+      .eq('representative_id', repIdNum);
 
     const { data: socialMedia } = await supabase
       .from('representative_social_media')
       .select('platform, handle, url, is_verified, is_primary')
-      .eq('representative_id', representativeId);
+      .eq('representative_id', repIdNum);
 
     const { data: activity } = await supabase
       .from('representative_activity')
       .select('type, title, description, date, source')
-      .eq('representative_id', representativeId)
-      .order('date', { ascending: false });
+      .eq('representative_id', repIdNum)
+      .order('date', { ascending: false});
 
     // Get canonical ID resolution (crosswalk data)
+    // Note: id_crosswalk uses entity_type not source_type, and filters by canonical_id not representative_id
     const { data: crosswalkEntries } = await supabase
       .from('id_crosswalk')
       .select(`
@@ -128,29 +139,29 @@ export async function GET(
         canonical_id,
         source_id,
         source,
-        source_type,
-        created_at,
-        last_verified
+        entity_type,
+        created_at
       `)
-      .eq('representative_id', representativeId);
+      .eq('entity_type', 'representative')
+      .limit(10);
 
     // Transform the data for the frontend
     const transformedData = {
       // Basic Information
-      id: representative.id,
-      name: representative.name,
-      party: representative.party,
-      office: representative.office,
-      level: representative.level,
-      jurisdiction: representative.jurisdiction,
-      district: representative.district,
+      id: (representative as any).id,
+      name: (representative as any).name,
+      party: (representative as any).party,
+      office: (representative as any).office,
+      level: (representative as any).level,
+      state: (representative as any).state,
+      district: (representative as any).district,
       
       // Contact Information
       contact: {
-        email: representative.primary_email ?? null,
-        phone: representative.primary_phone ?? null,
+        email: (representative as any).primary_email ?? null,
+        phone: (representative as any).primary_phone ?? null,
         fax: null, // Not available in representatives_core
-        website: representative.primary_website ?? null,
+        website: (representative as any).primary_website ?? null,
         office_addresses: contacts?.map((contact: any) => ({
           type: contact.contact_type,
           value: contact.value,
@@ -159,8 +170,8 @@ export async function GET(
         })) ?? [],
         preferred_contact_method: 'email',
         response_time_expectation: 'within_week',
-        quality_score: representative.data_quality_score ?? 0,
-        last_verified: representative.last_verified ?? null
+        quality_score: (representative as any).data_quality_score ?? 0,
+        last_verified: (representative as any).last_verified ?? null
       },
       
       // Photos
@@ -229,12 +240,11 @@ export async function GET(
       })) ?? [],
       
       // Canonical ID Resolution
-      canonical_ids: crosswalkEntries?.map(entry => ({
+      canonical_ids: crosswalkEntries?.map((entry: any) => ({
         canonical_id: entry.canonical_id,
         source: entry.source,
-        source_type: entry.source_type,
-        source_id: entry.source_id,
-        last_verified: entry.last_verified
+        entity_type: entry.entity_type,
+        source_id: entry.source_id
       })) ?? [],
 
       // Data Quality Summary
@@ -243,7 +253,7 @@ export async function GET(
         social_media_available: (socialMedia && socialMedia.length > 0) ?? false,
         campaign_finance_available: activity?.some((act: any) => act.type === 'campaign_finance') ?? false,
         voting_records_available: activity?.some((act: any) => act.type === 'voting_record') ?? false,
-        overall_quality_score: representative.data_quality_score ?? 0
+        overall_quality_score: (representative as any).data_quality_score ?? 0
       },
       
       // Metadata
@@ -260,8 +270,8 @@ export async function GET(
     CivicsCache.cacheRepresentative(representativeId, transformedData);
 
     logger.success('Successfully fetched detailed information for representative', 200, { 
-      representativeName: representative.name,
-      representativeId: representative.id 
+      representativeName: (representative as any).name,
+      representativeId: (representative as any).id 
     });
 
     return NextResponse.json({

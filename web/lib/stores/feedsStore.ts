@@ -11,10 +11,23 @@
 
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
+import type { Database } from '@/types/database';
 
 import { logger } from '@/lib/utils/logger';
 
-// Feed data types
+/**
+ * Database types for feeds
+ * 
+ * Note: feed_items.item_data is stored as Json in the database for flexibility.
+ * The FeedItem type below represents the unpacked/enriched structure.
+ * 
+ * @see Database['public']['Tables']['feed_items']['Row'] - Raw DB type
+ * @see Database['public']['Tables']['feeds']['Row'] - Feed container type
+ */
+type FeedItemRow = Database['public']['Tables']['feed_items']['Row'];
+type FeedRow = Database['public']['Tables']['feeds']['Row'];
+
+// Feed data types - enriched from database Json fields
 type FeedItem = {
   id: string;
   title: string;

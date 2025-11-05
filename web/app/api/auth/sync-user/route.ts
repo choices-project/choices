@@ -30,11 +30,11 @@ export async function POST() {
       email_confirmed: user.email_confirmed_at
     })
 
-    // Check if user already exists in ia_users table
+    // Check if user already exists in user_profiles table
     const { data: existingUser, error: checkError } = await supabaseClient
-      .from('ia_users')
-      .select('id, stable_id, email, verification_tier, is_active')
-      .eq('stable_id', String(user.id))
+      .from('user_profiles')
+      .select('id, user_id, email, trust_tier, created_at')
+      .eq('user_id', user.id)
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -43,50 +43,45 @@ export async function POST() {
     }
 
     if (existingUser && !('error' in existingUser)) {
-      devLog('User already exists in ia_users table')
+      devLog('User already exists in user_profiles table')
       return NextResponse.json({
         success: true,
         message: 'User already synced',
         user: {
-          id: existingUser.id,
-          stable_id: existingUser.stable_id,
-          email: existingUser.email,
-          verification_tier: existingUser.verification_tier,
-          is_active: existingUser.is_active
+          id: (existingUser as any).id,
+          user_id: (existingUser as any).user_id,
+          email: (existingUser as any).email,
+          trust_tier: (existingUser as any).trust_tier
         }
       })
     }
 
-    // Create user in ia_users table
+    // Create user in user_profiles table
     const { data: newUser, error: createError } = await supabaseClient
-      .from('ia_users')
+      .from('user_profiles')
       .insert({
-        stable_id: user.id,
-        email: user.email,
-        verification_tier: 'T0',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        user_id: user.id,
+        email: user.email ?? undefined,
+        trust_tier: 'T0'
       })
       .select()
       .single()
 
     if (createError) {
-      devLog('Error creating user in ia_users:', createError)
+      devLog('Error creating user in user_profiles:', createError)
       throw new Error('Failed to create user record')
     }
 
-    devLog('Successfully created user in ia_users table:', newUser)
+    devLog('Successfully created user in user_profiles table:', newUser)
 
     return NextResponse.json({
       success: true,
       message: 'User synced successfully',
       user: {
-        id: (newUser).id,
-        stable_id: (newUser).stable_id,
-        email: (newUser).email,
-        verification_tier: (newUser).verification_tier,
-        is_active: (newUser).is_active
+        id: (newUser as any).id,
+        user_id: (newUser as any).user_id,
+        email: (newUser as any).email,
+        trust_tier: (newUser as any).trust_tier
       }
     })
 

@@ -2,26 +2,23 @@
  * Database Types - Single Source of Truth
  * 
  * Re-exports the generated Supabase database types for convenience.
- * The source of truth is `@/utils/supabase/database.types.ts` (Supabase-generated).
  * 
- * DO NOT manually edit database.types.ts - it's regenerated from schema.
- * To regenerate: supabase gen types typescript --linked > utils/supabase/database.types.ts
+ * **CANONICAL LOCATION**: `@/types/supabase.ts` (Supabase-generated)
+ * 
+ * To regenerate:
+ *   npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > types/supabase.ts
  * 
  * Created: January 26, 2025
- * Updated: November 3, 2025 - Added poll_participation_analytics, performance tables
+ * Updated: November 5, 2025 - Consolidated to types/supabase.ts
  */
 
 // ============================================================================
 // SUPABASE-GENERATED TYPES (Source of Truth)
 // ============================================================================
 
-// ============================================================================
-// CONVENIENT TYPE ALIASES (Re-export from Database)
-// ============================================================================
+import type { Database } from '@/types/supabase'
 
-import type { Database } from '@/utils/supabase/database.types'
-
-export * from '@/utils/supabase/database.types'
+export * from '@/types/supabase'
 export type { 
   Database,
   Json,
@@ -29,7 +26,7 @@ export type {
   TablesInsert,
   TablesUpdate,
   Enums
-} from '@/utils/supabase/database.types'
+} from '@/types/supabase'
 
 // Core Tables
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']

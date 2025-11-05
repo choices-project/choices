@@ -15,9 +15,9 @@ const supabase = createClient(
 // 1. Specific field selection (instead of select('*'))
 export async function getOptimizedUserProfile(userId: string) {
   const { data, error } = await supabase
-    .from('ia_users')
-    .select('stable_id, verification_tier, is_active, created_at')
-    .eq('stable_id', userId)
+    .from('user_profiles')
+    .select('user_id, trust_tier, is_active, created_at')
+    .eq('user_id', userId)
     .single();
 
   if (error) {
@@ -31,8 +31,8 @@ export async function getOptimizedUserProfile(userId: string) {
 // 2. Batch operations for better performance
 export async function getOptimizedPolls(limit = 20) {
   const { data, error } = await supabase
-    .from('po_polls')
-    .select('poll_id, title, status, total_votes, created_at')
+    .from('polls')
+    .select('id, title, status, total_votes, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
     .limit(limit);

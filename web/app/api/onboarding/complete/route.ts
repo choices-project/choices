@@ -18,7 +18,7 @@ export async function POST() {
 
     // Mark onboarding as complete
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ 
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString()

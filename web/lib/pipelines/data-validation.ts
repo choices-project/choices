@@ -12,12 +12,12 @@ import type {
   NormalizedBill 
 } from './data-transformation';
 
-export type ValidationRule = {
+export type ValidationRule<T = unknown> = {
   name: string;
   description: string;
   severity: 'error' | 'warning' | 'info';
-  validator: (data: unknown) => boolean;
-  fixer?: (data: unknown) => unknown;
+  validator: (data: T) => boolean;
+  fixer?: (data: T) => T;
 }
 
 export type ValidationResult = {
@@ -70,7 +70,7 @@ export type DeduplicationResult = {
  * Data validation pipeline for government data
  */
 export class DataValidationPipeline {
-  private rules: Map<string, ValidationRule> = new Map();
+  private rules: Map<string, ValidationRule<any>> = new Map();
   private seenRecords: Map<string, Set<string>> = new Map();
 
   constructor() {
@@ -243,7 +243,7 @@ export class DataValidationPipeline {
               fixes.push({
                 field: error.field,
                 originalValue: error.value,
-                fixedValue: this.getFieldValue(fixed, ruleName),
+                fixedValue: this.getFieldValue(fixed as Record<string, unknown>, ruleName),
                 rule: ruleName
               });
             }
@@ -305,7 +305,7 @@ export class DataValidationPipeline {
               fixes.push({
                 field: error.field,
                 originalValue: error.value,
-                fixedValue: this.getFieldValue(fixed, ruleName),
+                fixedValue: this.getFieldValue(fixed as Record<string, unknown>, ruleName),
                 rule: ruleName
               });
             }
