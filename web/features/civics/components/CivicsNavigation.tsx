@@ -50,7 +50,7 @@ export default function CivicsNavigation({
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Civics 2.0</h1>
+                  <h1 className="text-xl font-bold text-gray-900">Civics</h1>
                   <p className="text-sm text-gray-500">Your Democratic Voice</p>
                 </div>
               </div>

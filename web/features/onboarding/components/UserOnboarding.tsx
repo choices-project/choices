@@ -156,7 +156,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Civics 2.0!</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Civics!</h1>
             <p className="text-gray-600 mb-8">
               Let&apos;s personalize your experience by finding your local representatives. 
               This helps us show you the most relevant political information.

@@ -234,7 +234,7 @@ export const declareCandidacy = createSecureServerAction(
     
     const { data: platformData, error: platformError } = await supabase
       .from('candidate_platforms')
-      .insert(platformInsert as CandidatePlatformInsert)
+      .insert(platformInsert as any) // Type assertion needed for complex Json fields
       .select()
       .single()
 
