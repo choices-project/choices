@@ -98,7 +98,7 @@ export const createPoll = createSecureServerAction(
     
     const { data: pollData, error: pollError } = await supabase
       .from('polls')
-      .insert(pollInsert)
+      .insert(pollInsert as any) // Type assertion needed due to complex poll schema
       .select('id')
 
     if (pollError) {

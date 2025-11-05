@@ -1,5 +1,5 @@
 /**
- * Civics 2.0 Social Feed Component
+ * Civics Social Feed Component
  * 
  * Instagram-like social feed for civic content
  * Features:

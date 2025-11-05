@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 env:
-  NODE_VERSION: '22.19.0'
-  NPM_VERSION: '10.9.3'
+  NODE_VERSION: '24.11.0'
+  NPM_VERSION: '11.6.1'
 
 jobs:
   # Code Quality Checks
@@ -64,7 +64,7 @@ jobs:
     - name: Run unit tests
       run: |
         cd web
-        npm run test:jest:ci
+        npm run jest:ci
 
     - name: Upload coverage
       uses: codecov/codecov-action@v3
@@ -124,6 +124,7 @@ jobs:
     - name: Run E2E tests
       run: |
         cd web
+        npx playwright install --with-deps chromium
         npm run test:e2e
 
     - name: Upload E2E results

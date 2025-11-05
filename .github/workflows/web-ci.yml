@@ -31,7 +31,7 @@ jobs:
         working-directory: web
     strategy:
       matrix:
-        node: [ "22.x" ]
+        node: [ "24.x" ]
     env:
       # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
@@ -48,9 +48,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.3")
+      # Ensure CI uses the same npm you pinned in package.json ("npm@11.6.1")
       - name: Use repo's npm version
-        run: npm i -g npm@10.9.3
+        run: npm i -g npm@11.6.1
 
       - name: Clean workspace
         run: rm -rf node_modules

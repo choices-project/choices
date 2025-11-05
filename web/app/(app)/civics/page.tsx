@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Civics 2.0 Main Page
+ * Civics Main Page
  * 
  * Beautiful, mobile-first civics platform with:
  * - Rich representative data
@@ -150,7 +150,7 @@ export default function Civics2Page() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Civics 2.0</h1>
+                  <h1 className="text-2xl font-bold text-white">Civics</h1>
                   <p className="text-blue-100 text-sm">Your Democratic Voice</p>
                 </div>
               </div>
