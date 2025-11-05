@@ -234,7 +234,7 @@ export class AnalyticsService {
       const total_polls_participated = analytics?.length ?? 0
       const total_votes_cast = analytics?.length ?? 0
       const average_engagement_score = analytics && analytics.length > 0 
-        ? analytics.reduce((sum, a) => sum + (a && 'trust_score' in a ? (a).trust_score : 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => sum + (a && 'trust_score' in a ? (a as any).trust_score : 0), 0) / analytics.length
         : 0
 
       // Get current trust tier
@@ -528,15 +528,15 @@ export class AnalyticsService {
         engagement_metrics: {
           total_polls_participated: analytics.length,
           total_votes_cast: analytics.length,
-          average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + ((a).trust_score ?? 0), 0) / analytics.length : 0,
-          last_activity: (latestAnalytics)?.created_at ?? new Date().toISOString()
+          average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + ((a as any).trust_score ?? 0), 0) / analytics.length : 0,
+          last_activity: (latestAnalytics as any)?.created_at ?? new Date().toISOString()
         },
         demographic_data: {
-          age_group: ((latestAnalytics)?.factors as TrustTierAnalyticsFactors)?.age_group,
-          geographic_region: ((latestAnalytics)?.factors as TrustTierAnalyticsFactors)?.geographic_region,
-          education_level: ((latestAnalytics)?.factors as TrustTierAnalyticsFactors)?.education_level,
-          income_bracket: ((latestAnalytics)?.factors as TrustTierAnalyticsFactors)?.income_bracket,
-          political_affiliation: ((latestAnalytics)?.factors as TrustTierAnalyticsFactors)?.political_affiliation
+          age_group: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.age_group,
+          geographic_region: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.geographic_region,
+          education_level: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.education_level,
+          income_bracket: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.income_bracket,
+          political_affiliation: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.political_affiliation
         }
       }
 

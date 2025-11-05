@@ -46,7 +46,7 @@ export default function CreatePollPage() {
   // Get state from pollWizardStore
   const data = usePollWizardData();
   const currentStep = usePollWizardStep();
-  const progress = usePollWizardProgress();
+  const progress: any[] = usePollWizardProgress() as any;
   const errors = usePollWizardErrors();
   const canProceed = usePollWizardCanProceed();
   const canGoBack = usePollWizardCanGoBack();

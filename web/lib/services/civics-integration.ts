@@ -158,7 +158,7 @@ export class CivicsIntegrationService {
       const committeeMap = new Map<number, RepresentativeCommittee[]>();
 
       for (const committee of committees ?? []) {
-        const repId = committee.openstates_people_data?.[0]?.id;
+        const repId = (committee.openstates_people_data as any)?.[0]?.id;
         if (!repId) continue;
 
         if (!committeeMap.has(repId)) {
@@ -171,9 +171,9 @@ export class CivicsIntegrationService {
           committee_name: committee.title ?? 'Unknown Committee',
           role: this.mapRoleType(committee.role_type),
           jurisdiction: committee.jurisdiction,
-          start_date: committee.start_date,
-          end_date: committee.end_date,
-          is_current: committee.is_current,
+          start_date: committee.start_date ?? undefined,
+          end_date: committee.end_date ?? undefined,
+          is_current: committee.is_current ?? false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
@@ -213,10 +213,10 @@ export class CivicsIntegrationService {
       const canonicalIds = reps.map(rep => rep.canonical_id).filter(Boolean);
       if (canonicalIds.length === 0) return new Map();
 
-      const { data: crosswalk, error } = await supabase
+      const { data: crosswalk, error} = await supabase
         .from('id_crosswalk')
         .select('*')
-        .in('canonical_id', canonicalIds);
+        .in('canonical_id', canonicalIds.filter((id): id is string => id !== null));
 
       if (error) {
         console.warn('Crosswalk data fetch error:', error);
@@ -454,7 +454,7 @@ export class CivicsIntegrationService {
       if (error) throw error;
 
       const total = stats?.length ?? 0;
-      const highQuality = stats?.filter(s => s.data_quality_score >= 80).length ?? 0;
+      const highQuality = stats?.filter(s => (s.data_quality_score ?? 0) >= 80).length ?? 0;
       const averageScore = total > 0 ? stats?.reduce((sum, s) => sum + (s.data_quality_score ?? 0), 0) / total : 0;
 
       const byState: Record<string, number> = {};

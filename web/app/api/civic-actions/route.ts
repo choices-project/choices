@@ -163,9 +163,9 @@ export async function POST(request: NextRequest) {
         action_type: validatedData.action_type,
         category: validatedData.category ?? 'general',
         target_representative_id: validatedData.target_representatives?.[0] ?? null,
-        target_state: validatedData.target_state ?? null,
-        target_district: validatedData.target_district ?? null,
-        target_office: validatedData.target_office ?? null,
+        target_state: (validatedData as any).target_state ?? null,
+        target_district: (validatedData as any).target_district ?? null,
+        target_office: (validatedData as any).target_office ?? null,
         current_signatures: 0,
         required_signatures: 100, // Default target
         status: 'active',

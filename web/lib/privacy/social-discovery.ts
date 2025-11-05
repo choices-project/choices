@@ -543,18 +543,18 @@ export class PrivacyAwareSocialDiscoveryManager {
     const centroids: PublicCentroid[] = [];
     
     // Simplified centroid computation
-    aggregatedData.forEach((data, index) => {
-      if (data.userCount >= this.kAnonymityThresholds.public) {
+    aggregatedData.forEach((data: any, index: number) => {
+      if ((data as any).userCount >= this.kAnonymityThresholds.public) {
         centroids.push({
           id: `centroid_${index}`,
-          coordinates: data.coordinates || [Math.random(), Math.random(), Math.random()],
-          userCount: data.userCount,
-          interests: data.interests || [],
-          averageRankings: data.averageRankings || {},
+          coordinates: (data as any).coordinates || [Math.random(), Math.random(), Math.random()],
+          userCount: (data as any).userCount,
+          interests: (data as any).interests || [],
+          averageRankings: (data as any).averageRankings || {},
           lastUpdated: new Date(),
           privacyMetadata: {
             kAnonymity: true,
-            aggregationLevel: this.getAggregationLevel(data.userCount)
+            aggregationLevel: this.getAggregationLevel((data as any).userCount)
           }
         });
       }
