@@ -58,7 +58,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'district-heatmap',
     name: 'District Engagement Heatmap',
     description: 'Geographic distribution of user engagement by congressional district',
-    component: null as any, // TODO: Wrap DistrictHeatmap component
+    component: null as any, // Component available when DistrictHeatmap is implemented
     icon: '🗺️',
     defaultConfig: {
       id: '',
@@ -136,7 +136,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'temporal-analysis',
     name: 'Temporal Analysis',
     description: 'Hour-of-day and day-of-week engagement patterns',
-    component: null as any, // TODO: Create component
+    component: null as any, // Component placeholder - implement when widget is needed
     icon: '🕐',
     defaultConfig: {
       id: '',
@@ -161,7 +161,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'trust-tier-comparison',
     name: 'Trust Tier Comparison',
     description: 'Compare behavior and engagement across trust tiers',
-    component: null as any, // TODO: Create component
+    component: null as any, // Component placeholder - implement when widget is needed
     icon: '🏆',
     defaultConfig: {
       id: '',
@@ -184,7 +184,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'kpi-card',
     name: 'KPI Card',
     description: 'Single key performance indicator display',
-    component: null as any, // TODO: Create component
+    component: null as any, // Component placeholder - implement when widget is needed
     icon: '📊',
     defaultConfig: {
       id: '',
@@ -209,7 +209,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'custom-table',
     name: 'Custom Data Table',
     description: 'Display raw data in tabular format with sorting and filtering',
-    component: null as any, // TODO: Create component
+    component: null as any, // Component placeholder - implement when widget is needed
     icon: '📋',
     defaultConfig: {
       id: '',
@@ -232,7 +232,7 @@ export const WIDGET_REGISTRY: WidgetRegistryType = {
     type: 'custom-query',
     name: 'Custom Query Builder',
     description: 'Build custom SQL queries with visual interface',
-    component: null as any, // TODO: Create component
+    component: null as any, // Component placeholder - implement when widget is needed
     icon: '🔍',
     defaultConfig: {
       id: '',
