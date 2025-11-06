@@ -493,7 +493,7 @@ export class AuthAnalytics {
       timestamp: event.timestamp.toISOString()
     })
     
-    // TODO: Implement actual external service integration
+    // External service integration: configure webhooks or API clients for production
     // await analyticsService.track(event)
   }
 

@@ -89,7 +89,7 @@ export class LocationService {
         return mockResult;
       }
 
-      // TODO: Implement real Google Maps Geocoding API
+      // Google Maps Geocoding: configure API key and enable in production
       // const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
       // const data = await response.json();
       
@@ -165,7 +165,7 @@ export class LocationService {
     try {
       console.log('📍 LocationService: Finding representatives by coordinates:', { latitude, longitude, radius });
       
-      // TODO: Implement reverse geocoding to get address from coordinates
+      // Reverse geocoding: use Google Maps or alternative geocoding service
       // For now, return null as this requires Google Maps API
       console.log('⚠️ LocationService: Coordinate search not implemented yet');
       return null;

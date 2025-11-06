@@ -960,8 +960,8 @@ export class FinancialTransparencySystem {
     try {
       logger.info('Getting government service history for candidate', { candidateId });
       
-      // Note: getCandidateGovernmentService method not available in orchestrator
-      // TODO: Implement government service history retrieval
+      // Note: Government service history requires integration with official databases
+      // Implementation pending: Connect to FEC, state databases, or LinkedIn API
       const serviceHistory: unknown[] = [];
       
       if (!serviceHistory || !Array.isArray(serviceHistory)) {

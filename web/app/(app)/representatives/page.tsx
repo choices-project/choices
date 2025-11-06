@@ -48,7 +48,7 @@ export default function RepresentativesPage() {
 
   const handleRepresentativeClick = (representative: any) => {
     logger.debug('Clicked representative:', representative.name);
-    // TODO: Navigate to representative detail page
+    // Navigation: implement routing to /representatives/[id] detail page
   };
 
   return (

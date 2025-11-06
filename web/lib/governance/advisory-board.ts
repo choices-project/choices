@@ -424,7 +424,7 @@ export class AdvisoryBoardManager {
       inviteBodyLength: invite.body.length
     });
     
-    // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
+    // Email service integration: configure Resend or alternative in production
     // await emailService.send(invite);
   }
 

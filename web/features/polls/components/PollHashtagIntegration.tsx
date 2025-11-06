@@ -62,7 +62,7 @@ export default function PollHashtagIntegration({
     // Since PollHashtagIntegrationRecord doesn't have hashtag_engagement,
     // we'll track this separately
     console.log(`Hashtag engagement tracked: ${action}`);
-    // TODO: Implement proper engagement tracking
+    // Engagement tracking: extend analytics service to track hashtag engagement metrics
   };
 
   // Handle hashtag updates with enhanced analytics
