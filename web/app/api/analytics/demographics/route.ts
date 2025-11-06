@@ -138,15 +138,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
         ttl: CACHE_TTL.DEMOGRAPHICS
       }
     });
-
-  } catch (error) {
-    logger.error('Demographics API error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 /**
  * Helper functions to extract demographic data safely

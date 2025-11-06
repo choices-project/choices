@@ -138,13 +138,5 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         ttl: CACHE_TTL.TRENDS
       }
     });
-
-  } catch (error) {
-    logger.error('Trends API error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 

@@ -162,15 +162,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         endDate: endDate?.toISOString()
       }
     });
-
-  } catch (error) {
-    logger.error('Error fetching audit logs', { error });
-    return NextResponse.json(
-      { error: 'Failed to fetch audit logs' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 /**
  * Example requests:

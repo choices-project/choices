@@ -53,10 +53,5 @@ export const GET = withErrorHandling(async () => {
         recentVotes: (votes || []) as any[]
       };
 
-      return NextResponse.json(response);
-    } catch (error) {
-      devLog('Error in demographics API:', error);
-      // Always return mock data as final fallback
-      return NextResponse.json(getMockDemographicsResponse());
-    }
-}
+    return successResponse(response);
+});

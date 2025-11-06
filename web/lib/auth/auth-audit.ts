@@ -1,9 +1,9 @@
 /**
  * Authentication Audit Logging
- * 
+ *
  * Specialized audit logging helpers for authentication events.
  * Provides convenient wrappers for common auth event patterns.
- * 
+ *
  * Features:
  * - Login attempt logging (success/failure)
  * - Logout logging
@@ -11,7 +11,7 @@
  * - Password change logging
  * - MFA event logging
  * - Session management logging
- * 
+ *
  * Created: November 7, 2025
  * Status: Production-ready
  */
@@ -22,7 +22,7 @@ import { createAuditLogService } from '@/lib/services/audit-log-service';
 
 /**
  * Log login attempt
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID (null for failed attempts)
  * @param email - Email address attempting login
@@ -31,7 +31,7 @@ import { createAuditLogService } from '@/lib/services/audit-log-service';
  * @param ipAddress - Client IP address
  * @param userAgent - Client user agent
  * @param metadata - Additional context
- * 
+ *
  * @example
  * ```typescript
  * await logLoginAttempt(supabase, user.id, email, true, 'email', ip, ua);
@@ -48,7 +48,7 @@ export async function logLoginAttempt(
   metadata?: Record<string, unknown>
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     success ? 'User Login Success' : 'User Login Failed',
@@ -70,7 +70,7 @@ export async function logLoginAttempt(
 
 /**
  * Log logout event
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID
  * @param ipAddress - Client IP address
@@ -83,7 +83,7 @@ export async function logLogout(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     'User Logout',
@@ -99,7 +99,7 @@ export async function logLogout(
 
 /**
  * Log user registration
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - New user ID
  * @param email - User email
@@ -116,7 +116,7 @@ export async function logRegistration(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     'User Registration',
@@ -137,7 +137,7 @@ export async function logRegistration(
 
 /**
  * Log password change
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID
  * @param success - Whether change succeeded
@@ -152,7 +152,7 @@ export async function logPasswordChange(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     success ? 'Password Changed' : 'Password Change Failed',
@@ -168,7 +168,7 @@ export async function logPasswordChange(
 
 /**
  * Log MFA/WebAuthn event
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID
  * @param eventType - Type of MFA event (enabled, disabled, verified, failed)
@@ -187,7 +187,7 @@ export async function logMFAEvent(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     `MFA ${eventType} - ${method}`,
@@ -207,7 +207,7 @@ export async function logMFAEvent(
 
 /**
  * Log session event
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID
  * @param eventType - Type of session event (created, refreshed, expired, invalidated)
@@ -224,7 +224,7 @@ export async function logSessionEvent(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logAuth(
     userId,
     `Session ${eventType}`,
@@ -244,7 +244,7 @@ export async function logSessionEvent(
 
 /**
  * Log account deletion
- * 
+ *
  * @param supabase - Supabase client
  * @param userId - User ID being deleted
  * @param email - User email
@@ -263,9 +263,9 @@ export async function logAccountDeletion(
   userAgent?: string
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   const isSelfDeletion = userId === deletedBy;
-  
+
   await audit.log(
     isSelfDeletion ? 'user_action' : 'admin_action',
     'Account Deleted',
@@ -290,7 +290,7 @@ export async function logAccountDeletion(
 
 /**
  * Log failed authentication attempt (rate limiting, suspicious activity)
- * 
+ *
  * @param supabase - Supabase client
  * @param email - Email attempting authentication
  * @param reason - Reason for failure
@@ -307,7 +307,7 @@ export async function logAuthSecurityEvent(
   metadata?: Record<string, unknown>
 ): Promise<void> {
   const audit = createAuditLogService(supabase);
-  
+
   await audit.logSecurityEvent(
     `Authentication Security Event: ${reason}`,
     'warning',

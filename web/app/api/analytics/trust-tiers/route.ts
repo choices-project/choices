@@ -154,13 +154,5 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
         key: cacheKey
       }
     });
-
-  } catch (error) {
-    logger.error('Trust tiers API error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 

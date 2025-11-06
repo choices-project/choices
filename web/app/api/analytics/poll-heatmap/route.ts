@@ -159,13 +159,5 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
         ttl: CACHE_TTL.POLL_HEATMAP
       }
     });
-
-  } catch (error) {
-    logger.error('Poll heatmap API error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 

@@ -108,49 +108,29 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .update({ last_active_at: new Date().toISOString() })
       .eq('id', platformId)
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email sent successfully',
-      emailType: type
-    })
-  } catch (error) {
-    logger.error('Send candidate email error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+  return successResponse({
+    message: 'Email sent successfully',
+    emailType: type
+  }, undefined, 201);
+});
 
 /**
  * GET /api/candidate/journey/send-email?platformId=...&type=welcome
  * Test endpoint for sending emails
  */
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const platformId = searchParams.get('platformId')
-    const type = searchParams.get('type') ?? 'welcome'
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const searchParams = request.nextUrl.searchParams
+  const platformId = searchParams.get('platformId')
+  const type = searchParams.get('type') ?? 'welcome'
 
-    if (!platformId) {
-      return NextResponse.json(
-        { error: 'Platform ID required' },
-        { status: 400 }
-      )
-    }
-
-    // Call POST handler logic
-    const mockRequest = {
-      json: async () => ({ platformId, type, skipAuth: true })
-    } as NextRequest
-
-    return await POST(mockRequest)
-  } catch (error) {
-    logger.error('Send candidate email GET error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (!platformId) {
+    return validationError({ platformId: 'Platform ID required' });
   }
-}
+
+  const mockRequest = {
+    json: async () => ({ platformId, type, skipAuth: true })
+  } as NextRequest
+
+  return await POST(mockRequest)
+});
 

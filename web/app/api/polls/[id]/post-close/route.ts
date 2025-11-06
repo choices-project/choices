@@ -8,26 +8,24 @@
  * Updated: September 15, 2025
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/polls/[id]/post-close - Enable post-close voting
-export async function POST(
+export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const pollId = id;
+) => {
+  const { id } = await params;
+  const pollId = id;
 
-    if (!pollId) {
-      throw new ValidationError('Poll ID is required');
-    }
+  if (!pollId) {
+    return validationError({ pollId: 'Poll ID is required' });
+  }
 
     const supabase = await getSupabaseServerClient();
     

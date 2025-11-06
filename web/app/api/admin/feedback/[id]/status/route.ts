@@ -1,6 +1,6 @@
 import type { NextRequest} from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError, validationError, notFoundError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -47,64 +47,41 @@ export const PATCH = withErrorHandling(async (
   const { status: newStatus } = body;
 
   if (!newStatus) {
-    return validationError({
-        { error: 'Status is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate status
-    const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
-    if (!validStatuses.includes(newStatus)) {
-      return NextResponse.json(
-        { error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
-
-    // Update feedback status
-    const { data: updatedFeedback, error: updateError } = await (supabaseClient as any)
-      .from('feedback')
-      .update({ 
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', feedbackId)
-      .select()
-      .single();
-
-    if (updateError) {
-      devLog('Error updating feedback status:', { error: updateError });
-      return NextResponse.json(
-        { error: 'Failed to update feedback status' },
-        { status: 500 }
-      );
-    }
-
-    if (!updatedFeedback) {
-      return NextResponse.json(
-        { error: 'Feedback not found' },
-        { status: 404 }
-      );
-    }
-
-    devLog('Feedback status updated successfully', { 
-      feedbackId, 
-      newStatus, 
-      updatedBy: user.id 
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: updatedFeedback,
-      message: 'Feedback status updated successfully'
-    });
-
-  } catch (error) {
-    devLog('Error in feedback status update API:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return validationError({ status: 'Status is required' });
   }
-}
+
+  const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+  if (!validStatuses.includes(newStatus)) {
+    return validationError({ status: 'Invalid status value' });
+  }
+
+  const { data: updatedFeedback, error: updateError } = await (supabaseClient as any)
+    .from('feedback')
+    .update({ 
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', feedbackId)
+    .select()
+    .single();
+
+  if (updateError) {
+    devLog('Error updating feedback status:', { error: updateError });
+    return errorResponse('Failed to update feedback status', 500);
+  }
+
+  if (!updatedFeedback) {
+    return notFoundError('Feedback not found');
+  }
+
+  devLog('Feedback status updated successfully', { 
+    feedbackId, 
+    newStatus, 
+    updatedBy: user.id 
+  });
+
+  return successResponse({
+    data: updatedFeedback,
+    message: 'Feedback status updated successfully'
+  });
+});

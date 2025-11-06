@@ -208,14 +208,5 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         },
       }
     });
-
-  } catch (error) {
-    devLog('Error in admin health API:', { error });
-    logger.error('Admin health API error:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Failed to fetch admin health data' },
-      { status: 500 }
-    );
-  }
-}
+});
 

@@ -121,12 +121,4 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         search
       }
     });
-
-  } catch (error) {
-    devLog('Error in admin feedback API:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});

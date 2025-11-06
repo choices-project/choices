@@ -39,18 +39,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       });
     }
 
-    return NextResponse.json(
-      { error: 'Invalid action' },
-      { status: 400 }
-    );
-  } catch (error) {
-    logger.error('Hashtags GET error', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return validationError({ action: 'Invalid action' });
+});
 
 /**
  * Handle hashtag actions (flag, approve, reject)
@@ -64,20 +54,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  * POST /api/hashtags?action=flag
  * POST /api/hashtags?action=approve&flagId=123
  */
-export async function POST(request: NextRequest) {
-  try {
-    const url = new URL(request.url);
-    const action = url.searchParams.get('action');
-    const flagId = url.searchParams.get('flagId');
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const action = url.searchParams.get('action');
+  const flagId = url.searchParams.get('flagId');
 
-    const supabase = await getSupabaseServerClient();
-            
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
+  const supabase = await getSupabaseServerClient();
+          
+  if (!supabase) {
+    return errorResponse('Supabase not configured', 500);
+  }
 
     // Flag a hashtag
     if (action === 'flag') {

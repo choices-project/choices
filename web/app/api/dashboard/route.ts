@@ -118,15 +118,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       fromCache: false,
       loadTime
     });
-
-  } catch (error) {
-    logger.error('Optimized dashboard API error:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 /**
  * ULTRA-OPTIMIZED: Single query to get all dashboard data

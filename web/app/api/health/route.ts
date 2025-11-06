@@ -487,25 +487,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Invalid type parameter
-    return NextResponse.json({
-      status: 'error',
-      error: 'Invalid type parameter. Valid types: basic, database, supabase, civics, all',
-      timestamp,
-      environment
-    }, { status: 400 });
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Health check error:', err);
-    
-    return NextResponse.json({
-      status: 'error',
-      error: 'Health check failed',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV ?? 'development'
-    }, { status: 500 });
-  }
-}
+  return validationError({
+    type: 'Invalid type parameter. Valid types: basic, database, supabase, civics, all'
+  });
+});
 
 // Handle unsupported methods
 export function POST() {
