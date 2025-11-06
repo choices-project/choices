@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
 import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/util/objects';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
@@ -93,15 +94,7 @@ export default function AuthPage() {
         formDataObj.append('password', formData.password);
 
         // Create context object for security
-        const context = {
-          ipAddress: undefined,
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-          userId: undefined,
-          isAuthenticated: false,
-          user: undefined,
-          error: undefined,
-          adminId: undefined
-        };
+        const context = withOptional({}, typeof window !== 'undefined' && window.navigator.userAgent ? { userAgent: window.navigator.userAgent } : undefined);
 
         const result = await register(formDataObj, context);
         if (result.ok) {

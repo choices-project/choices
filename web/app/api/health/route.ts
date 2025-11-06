@@ -440,7 +440,15 @@ export async function GET(request: NextRequest) {
 
         results.basic = basicResult.status === 'fulfilled' ? { ...basicResult.value, status: basicResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Basic check failed' };
         results.database = databaseResult.status === 'fulfilled' ? { ...databaseResult.value, status: databaseResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Database check failed' };
-        results.supabase = supabaseResult.status === 'fulfilled' ? { ...supabaseResult.value, status: supabaseResult.value.status as HealthStatus, error: supabaseResult.value.error ?? undefined } : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
+        
+        // Handle supabase result - only include error if it exists
+        const supabaseValue = supabaseResult.status === 'fulfilled' ? supabaseResult.value : null;
+        results.supabase = supabaseValue 
+          ? (supabaseValue.error 
+              ? { ...supabaseValue, status: supabaseValue.status as HealthStatus, error: supabaseValue.error }
+              : { ...supabaseValue, status: supabaseValue.status as HealthStatus })
+          : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
+        
         results.civics = civicsResult.status === 'fulfilled' ? { ...civicsResult.value, status: civicsResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Civics check failed' };
 
         // Determine overall status

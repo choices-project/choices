@@ -182,7 +182,7 @@ function extractDistrict(divisions: Record<string, any>): string | null {
   for (const [key, division] of Object.entries(divisions)) {
     if (key.includes('cd:') && division.name) {
       const match = key.match(/cd:(\d+)/);
-      return match ? match[1] : null;
+      return match ? match[1] ?? null : null;
     }
   }
   return null;
@@ -206,7 +206,7 @@ function extractCounty(divisions: Record<string, any>): string | null {
 function extractOCDDivisionId(divisions: Record<string, any>): string | null {
   // Return the first OCD division ID found
   const keys = Object.keys(divisions);
-  return keys.length > 0 ? keys[0] : null;
+  return keys.length > 0 ? (keys[0] ?? null) : null;
 }
 
 export async function POST(req: Request) {

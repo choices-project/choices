@@ -4,6 +4,7 @@ import { feedbackParser } from '@/lib/feedback/FeedbackParser';
 import type { InterestSuggestion } from '@/lib/feedback/FeedbackParser';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { undefinedToNull } from '@/lib/util/clean';
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
       const { error } = await supabase
         .from('feedback')
-        .insert(insertData);
+        .insert(undefinedToNull(insertData) as Record<string, unknown>);
 
       if (error) {
         devLog('Error storing feedback:', error);
