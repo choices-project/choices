@@ -2,9 +2,10 @@
  * Dashboard Layout Persistence API
  * 
  * Save and load customizable widget dashboard layouts.
- * Stores layouts in user_preferences table.
+ * Stores layouts in user_profiles table.
  * 
  * Created: November 5, 2025
+ * Updated: November 6, 2025 - Fixed table name (user_profiles)
  * Status: PRODUCTION
  */
 
