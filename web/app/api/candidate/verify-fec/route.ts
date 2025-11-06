@@ -1,42 +1,31 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
 import { createFECClient } from '@/lib/integrations/fec'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-/**
- * POST /api/candidate/verify-fec
- * Verify candidate filing with FEC API
- */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Get current user
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !authUser) {
+    return authError('Authentication required');
+  }
 
-    const body = await request.json()
-    const { platformId, fecId } = body
+  const body = await request.json()
+  const { platformId, fecId } = body
 
-    if (!platformId || !fecId) {
-      return NextResponse.json(
-        { error: 'Platform ID and FEC ID are required' },
-        { status: 400 }
-      )
-    }
+  if (!platformId || !fecId) {
+    return validationError({ 
+      platformId: !platformId ? 'Platform ID is required' : '',
+      fecId: !fecId ? 'FEC ID is required' : ''
+    });
+  }
 
     // Verify user owns the platform
     const { data: platform } = await supabase
@@ -45,20 +34,13 @@ export async function POST(request: NextRequest) {
       .eq('id', platformId)
       .single()
 
-    if (!platform || platform.user_id !== authUser.id) {
-      return NextResponse.json(
-        { error: 'Not authorized' },
-        { status: 403 }
-      )
-    }
+  if (!platform || platform.user_id !== authUser.id) {
+    return forbiddenError('Not authorized');
+  }
 
-    // Verify with FEC API (only for federal offices)
-    if (platform.level !== 'federal') {
-      return NextResponse.json(
-        { error: 'FEC verification only available for federal offices' },
-        { status: 400 }
-      )
-    }
+  if (platform.level !== 'federal') {
+    return validationError({ level: 'FEC verification only available for federal offices' });
+  }
 
     const fecClient = createFECClient()
     const fecCandidate = await fecClient.verifyCandidate(fecId)
@@ -93,87 +75,61 @@ export async function POST(request: NextRequest) {
       .update(updateData)
       .eq('id', platformId)
 
-    if (updateError) {
-      return NextResponse.json(
-        { error: 'Failed to update platform' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      verified: true,
-      candidate: {
-        name: fecCandidate.name,
-        party: fecCandidate.party_full,
-        office: fecCandidate.office_full,
-        state: fecCandidate.state,
-        district: fecCandidate.district,
-        status: fecCandidate.candidate_status,
-        active: isActive,
-        electionYears: fecCandidate.election_years
-      },
-      message: isActive 
-        ? 'Candidate verified and active in FEC database'
-        : 'Candidate found in FEC database but not active for current cycle'
-    })
-  } catch (error) {
-    logger.error('FEC verification error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (updateError) {
+    return errorResponse('Failed to update platform', 500);
   }
-}
 
-/**
- * GET /api/candidate/verify-fec?fecId=...
- * Public endpoint to check FEC candidate status
- */
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const fecId = searchParams.get('fecId')
+  return successResponse({
+    verified: true,
+    candidate: {
+      name: fecCandidate.name,
+      party: fecCandidate.party_full,
+      office: fecCandidate.office_full,
+      state: fecCandidate.state,
+      district: fecCandidate.district,
+      status: fecCandidate.candidate_status,
+      active: isActive,
+      electionYears: fecCandidate.election_years
+    },
+    message: isActive 
+      ? 'Candidate verified and active in FEC database'
+      : 'Candidate found in FEC database but not active for current cycle'
+  }, undefined, 201);
+});
 
-    if (!fecId) {
-      return NextResponse.json(
-        { error: 'FEC ID required' },
-        { status: 400 }
-      )
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const searchParams = request.nextUrl.searchParams
+  const fecId = searchParams.get('fecId')
 
-    const fecClient = createFECClient()
-    const candidate = await fecClient.verifyCandidate(fecId)
-
-    if (!candidate) {
-      return NextResponse.json({
-        found: false,
-        message: 'Candidate not found in FEC database'
-      })
-    }
-
-    const isActive = await fecClient.isCandidateActive(fecId)
-
-    return NextResponse.json({
-      found: true,
-      candidate: {
-        id: candidate.candidate_id,
-        name: candidate.name,
-        party: candidate.party_full,
-        office: candidate.office_full,
-        state: candidate.state,
-        district: candidate.district,
-        status: candidate.candidate_status,
-        active: isActive,
-        electionYears: candidate.election_years
-      }
-    })
-  } catch (error) {
-    logger.error('FEC lookup error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (!fecId) {
+    return validationError({ fecId: 'FEC ID required' });
   }
-}
+
+  const fecClient = createFECClient()
+  const candidate = await fecClient.verifyCandidate(fecId)
+
+  if (!candidate) {
+    return successResponse({
+      found: false,
+      message: 'Candidate not found in FEC database'
+    });
+  }
+
+  const isActive = await fecClient.isCandidateActive(fecId)
+
+  return successResponse({
+    found: true,
+    candidate: {
+      id: candidate.candidate_id,
+      name: candidate.name,
+      party: candidate.party_full,
+      office: candidate.office_full,
+      state: candidate.state,
+      district: candidate.district,
+      status: candidate.candidate_status,
+      active: isActive,
+      electionYears: candidate.election_years
+    }
+  });
+});
 
