@@ -5,13 +5,12 @@ import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-// Prevent static generation for auth page
-export const dynamic = 'force-dynamic';
-
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
 import { logger } from '@/lib/utils/logger';
-import { T } from '@/tests/registry/testIds';
+
+// Prevent static generation for auth page
+export const dynamic = 'force-dynamic';
 
 const PasskeyControls = dynamicImport(() => import('@/features/auth/components/PasskeyControls'), {
   ssr: false,
@@ -175,7 +174,7 @@ export default function AuthPage() {
           </button>
         </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid={T.AUTH.LOGIN_FORM}>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid="login-form">
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
               {error && (
@@ -262,7 +261,7 @@ export default function AuthPage() {
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                   placeholder="your@email.com"
-                      data-testid={T.login.email}
+                      data-testid="login-email"
                   aria-label="Email address"
                 />
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -290,7 +289,7 @@ export default function AuthPage() {
                   required
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                   placeholder="••••••••"
-                  data-testid={T.login.password}
+                  data-testid="login-password"
                   aria-label="Password"
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -359,7 +358,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                data-testid={T.submitButton}
+                data-testid="login-submit"
                 aria-busy="false"
               >
                 {isSignUp ? 'Sign Up' : 'Sign In'}

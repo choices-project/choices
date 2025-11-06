@@ -1,94 +1,114 @@
-# Deprecated API Endpoints - Consolidation November 2025
+# Deprecated API Endpoints - Consolidation
 
-**Date Deprecated**: November 5, 2025  
-**Reason**: API consolidation to eliminate duplication  
-**Total Deprecated**: 32 endpoints (22% of API surface)
-
----
-
-## Why These Were Deprecated
-
-This directory contains API endpoints that were duplicates or had overlapping functionality. They have been consolidated to:
-
-1. **Reduce API surface area** - Easier to maintain
-2. **Improve consistency** - Clear naming patterns
-3. **Better organization** - Logical endpoint grouping
-4. **Version control** - `/v1/` prefix for versioned APIs
+**Date**: November 6, 2025  
+**Status**: Consolidation in progress  
+**Purpose**: Backward compatibility during API consolidation
 
 ---
 
-## Consolidation Strategy
+## ⚠️ Warning
 
-### Civics Endpoints (8 deprecated)
-- Old: `/api/civics/*` → New: `/api/v1/civics/*` (versioned)
-- Old: `/api/civic-actions` → New: `/api/civics/actions` (consistent naming)
+**All endpoints in this directory are DEPRECATED and will be removed in a future release.**
 
-### Profile/User Endpoints (6 deprecated)
-- Old: `/api/user/profile` → New: `/api/profile` (shorter)
-- Old: `/api/user/preferences` → New: `/api/privacy/preferences` (privacy-specific)
-- Old: `/api/user/complete-onboarding` → New: `/api/onboarding/complete` (consistent)
-
-### Health Checks (5 deprecated)
-- Old: Multiple health endpoints → New: `/api/health` (comprehensive)
-- Old: `/api/database-status` → New: `/api/database-health` (descriptive)
-
-### Analytics (4 deprecated)
-- Old: `/api/analytics/route.ts`, `/api/analytics/summary` → New: `/api/analytics/enhanced` (feature-complete)
-- Old: `/api/analytics/unified/[id]` → New: `/api/analytics/enhanced-unified/[id]` (Redis caching)
-
-### Trending (3 deprecated)
-- Old: `/api/trending-polls`, `/api/polls/trending` → New: `/api/trending` (general)
-- Old: `/api/trending/hashtags` → New: `/api/hashtags` (simpler)
-
-### Dashboard (2 deprecated)
-- Old: `/api/dashboard/data` → New: `/api/dashboard` (includes data)
-
-### Admin Monitoring (2 deprecated)
-- Old: `/api/admin/system-status` → New: `/api/admin/system-metrics` (includes status)
-
-### Demographics (2 deprecated)
-- Old: `/api/demographics` → New: `/api/analytics/demographics` (organized)
+These endpoints now redirect to their canonical versions with proper HTTP redirects (307 Temporary Redirect for POST/PUT/DELETE, 301 Permanent Redirect for GET).
 
 ---
 
-## Redirect Routes
+## Migration Guide
 
-All deprecated endpoints have redirect routes in their original locations that forward to the new consolidated endpoints. This ensures **backward compatibility**.
+### For Developers
 
-Example redirect:
-```typescript
-// app/api/civics/by-state/route.ts
-import { NextResponse } from 'next/server';
+If you're using any endpoint in this directory, update your code to use the canonical version listed below.
 
-export async function GET(request: Request) {
-  // Redirect to versioned endpoint
-  const url = new URL(request.url);
-  url.pathname = url.pathname.replace('/api/civics/', '/api/v1/civics/');
-  return NextResponse.redirect(url, 308); // Permanent redirect
-}
+### Deprecation Timeline
+
+- **Phase 1** (Current): Endpoints moved here, redirects active
+- **Phase 2** (2 weeks): Deprecation warnings in response headers
+- **Phase 3** (1 month): Monitor usage via analytics
+- **Phase 4** (2 months): Remove if usage < 1% of traffic
+
+---
+
+## Deprecated Endpoints
+
+### Civics (8 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/civics/by-state` | `/api/v1/civics/by-state` | Redirect |
+| `/api/civics/representative/[id]` | `/api/v1/civics/representative/[id]` | Redirect |
+| `/api/civics/actions` | `/api/v1/civics/actions` | Redirect |
+| `/api/civic-actions` | `/api/v1/civics/actions` | Redirect |
+| `/api/district/[id]` | `/api/v1/civics/district/[id]` | Redirect |
+| `/api/representatives/search` | `/api/v1/civics/representatives/search` | Redirect |
+
+### Profile (6 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/user/profile` | `/api/profile` | Redirect |
+| `/api/user/preferences` | `/api/profile/preferences` | Redirect |
+| `/api/profile/data` | `/api/profile` | Redirect |
+| `/api/user/settings` | `/api/profile/settings` | Redirect |
+
+### Health/Status (4 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/health/civics` | `/api/health` | Redirect |
+| `/api/status` | `/api/health` | Redirect |
+| `/api/system/health` | `/api/health` | Redirect |
+
+### Analytics (4 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/analytics/enhanced` | `/api/analytics` | Redirect |
+| `/api/analytics/unified/[id]` | `/api/analytics/poll/[id]` | Redirect |
+| `/api/analytics/summary` | `/api/analytics` | Redirect |
+
+### Trending (3 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/trending-polls` | `/api/trending?type=polls` | Redirect |
+| `/api/polls/trending` | `/api/trending?type=polls` | Redirect |
+
+### Dashboard (3 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/dashboard/feed` | `/api/feed` | Redirect |
+| `/api/dashboard/summary` | `/api/dashboard` | Redirect |
+
+### Admin (2 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/admin/stats` | `/api/admin/dashboard` | Redirect |
+
+### Demographics (2 endpoints)
+| Deprecated | Canonical | Status |
+|------------|-----------|--------|
+| `/api/user/demographics` | `/api/analytics/demographics` | Redirect |
+
+---
+
+## Response Headers
+
+All deprecated endpoints include these headers:
+
+```
+Deprecation: true
+Sunset: 2026-01-06T00:00:00Z
+Link: <https://choices.app/api/v1/canonical>; rel="canonical"
+Warning: 299 - "This API endpoint is deprecated. Use /api/v1/canonical instead."
 ```
 
 ---
 
-## Migration Timeline
+## Monitoring
 
-1. **Phase 1** (Nov 5, 2025): Endpoints moved to `_deprecated-consolidation/`, redirects created
-2. **Phase 2** (Dec 2025): Update all client code to use new endpoints
-3. **Phase 3** (Jan 2026): Remove redirects, delete deprecated endpoints entirely
-
----
-
-## For Developers
-
-**DO NOT** add new code to files in this directory. These are deprecated and will be removed.
-
-If you need functionality from a deprecated endpoint:
-1. Check the README in its category folder
-2. Find the new consolidated endpoint
-3. Update your code to use the new endpoint
-4. Test thoroughly
+Usage of deprecated endpoints is tracked in:
+- Application logs (`logger.warn`)
+- Analytics dashboard (`/admin/api-usage`)
+- Supabase analytics
 
 ---
 
-**Questions?** See `/scratch/library-audit-nov2025/API_DUPLICATION_AUDIT.md` for complete details.
+## Questions?
 
+See full consolidation plan: `scratch/library-audit-nov2025/API_CONSOLIDATION_PLAN.md`
