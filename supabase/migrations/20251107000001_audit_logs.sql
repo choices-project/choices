@@ -116,9 +116,11 @@ CREATE POLICY "Admins can view all audit logs"
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM public.user_roles
+      SELECT 1
+      FROM public.user_roles
+      JOIN public.roles ON user_roles.role_id = roles.id
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND roles.name = 'admin'
     )
   );
 

@@ -1,34 +1,19 @@
-// WebAuthn Trust Score API
-// Provides trust score and security metrics for user's WebAuthn credentials
-// Created: October 2, 2025
-
-import { NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
+export const GET = withErrorHandling(async () => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Always require real authentication - no E2E bypasses for security
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
     // Fetch user's WebAuthn credentials for trust score calculation
     const { data: credentials, error: credentialsError } = await supabase
@@ -46,36 +31,23 @@ export async function GET() {
       `)
       .eq('user_id', user.id);
 
-    if (credentialsError) {
-      logger.error('Failed to fetch WebAuthn credentials for trust score:', credentialsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch credentials' },
-        { status: 500 }
-      );
-    }
-
-    // Calculate trust score based on various factors
-    const trustScore = calculateTrustScore(credentials || []);
-
-    logger.info('WebAuthn trust score calculated', { 
-      userId: user.id, 
-      trustScore: trustScore.overall,
-      credentialCount: credentials?.length || 0 
-    });
-
-    return NextResponse.json({
-      success: true,
-      trust_score: trustScore
-    });
-
-  } catch (error) {
-    logger.error('WebAuthn trust score endpoint error:', error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (credentialsError) {
+    logger.error('Failed to fetch WebAuthn credentials for trust score:', credentialsError);
+    return errorResponse('Failed to fetch credentials', 500);
   }
-}
+
+  const trustScore = calculateTrustScore(credentials || []);
+
+  logger.info('WebAuthn trust score calculated', { 
+    userId: user.id, 
+    trustScore: trustScore.overall,
+    credentialCount: credentials?.length || 0 
+  });
+
+  return successResponse({
+    trust_score: trustScore
+  });
+});
 
 function calculateTrustScore(credentials: any[]): {
   overall: number;

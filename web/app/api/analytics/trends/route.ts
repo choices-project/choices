@@ -17,7 +17,7 @@
 import type { NextRequest } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
@@ -29,11 +29,31 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const allowT3 = true;
   if (!canAccessAnalytics(user, allowT3)) {
-    logAnalyticsAccess(user, 'trends-api', false);
+    await logAnalyticsAccessToDatabase(
+      supabase,
+      user,
+      '/api/analytics/trends',
+      false,
+      {
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+        metadata: { endpoint: 'trends', access_level: 'admin_or_t3' }
+      }
+    );
     return forbiddenError('Unauthorized - Admin or T3 required');
   }
 
-  logAnalyticsAccess(user, 'trends-api', true);
+  await logAnalyticsAccessToDatabase(
+    supabase,
+    user,
+    '/api/analytics/trends',
+    true,
+    {
+      ipAddress: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: { endpoint: 'trends', access_level: 'admin_or_t3' }
+    }
+  );
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;

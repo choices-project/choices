@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server';
 
+import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getRedisClient } from '@/lib/cache/redis-client';
+import { createAuditLogService } from '@/lib/services/audit-log-service';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -99,6 +101,19 @@ export async function GET(request: NextRequest) {
     // Authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      // Log failed authentication attempt
+      const auditLog = createAuditLogService(supabase);
+      await auditLog.logSecurityEvent(
+        'Unauthorized Dashboard Access',
+        'warning',
+        '/api/admin/dashboard',
+        {
+          ipAddress: request.headers.get('x-forwarded-for') || undefined,
+          userAgent: request.headers.get('user-agent') || undefined,
+          metadata: { reason: 'no_auth' }
+        }
+      );
+      
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -115,11 +130,44 @@ export async function GET(request: NextRequest) {
     const isAdmin = profile?.is_admin ?? false;
 
     if (!isAdmin) {
+      // Log forbidden access attempt
+      await logAnalyticsAccessToDatabase(
+        supabase,
+        user,
+        '/api/admin/dashboard',
+        false,
+        {
+          ipAddress: request.headers.get('x-forwarded-for') || undefined,
+          userAgent: request.headers.get('user-agent') || undefined,
+          metadata: { 
+            reason: 'not_admin',
+            user_email: user.email
+          }
+        }
+      );
+      
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
       );
     }
+    
+    // Log successful admin dashboard access
+    await logAnalyticsAccessToDatabase(
+      supabase,
+      user,
+      '/api/admin/dashboard',
+      true,
+      {
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+        metadata: {
+          includes: includes,
+          use_cache: useCache,
+          admin_email: user.email
+        }
+      }
+    );
 
     const _adminId = user.id;
     const cache = await getRedisClient();
