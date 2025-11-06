@@ -75,15 +75,27 @@ export const POST = withErrorHandling(async (
     // Validate vote data based on voting method
     if (pollData.voting_method === 'approval') {
       if (!approvals || !Array.isArray(approvals) || approvals.length === 0) {
-        throw new ValidationError('At least one approval is required for approval voting')
+        return validationError({ approvals: 'At least one approval is required for approval voting' });
       }
     } else if (pollData.voting_method === 'multiple') {
       if (!selections || !Array.isArray(selections) || selections.length === 0) {
-        throw new ValidationError('At least one selection is required for multiple choice voting')
+        return validationError({ selections: 'At least one selection is required for multiple choice voting' });
       }
-    } else {
+    } else if (pollData.voting_method === 'ranked') {
+      if (!rankings || !Array.isArray(rankings) || rankings.length === 0) {
+        return validationError({ rankings: 'Rankings are required for ranked choice voting' });
+      }
+    } else if (pollData.voting_method === 'quadratic') {
+      if (!credits || typeof credits !== 'object') {
+        return validationError({ credits: 'Vote credits are required for quadratic voting' });
+      }
+    } else if (pollData.voting_method === 'range') {
+      if (!scores || typeof scores !== 'object') {
+        return validationError({ scores: 'Scores are required for range voting' });
+      }
+    } else if (pollData.voting_method === 'single') {
       if (!choice || typeof choice !== 'number' || choice < 1) {
-        throw new ValidationError('Valid choice is required')
+        return validationError({ choice: 'Valid choice is required for single choice voting' });
       }
     }
 
@@ -154,12 +166,104 @@ export const POST = withErrorHandling(async (
         voteId: 'multiple-choice-vote',
         privacyLevel: privacy_level
       })
-    } else {
-      // Single choice voting (standard method)
-      if (!choice || typeof choice !== 'number' || choice < 1) {
-        return validationError({ choice: 'Valid choice is required for single choice voting' });
+    } else if (pollData.voting_method === 'ranked') {
+      // Ranked choice voting - store rankings array
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          option_id: rankings[0] ?? '', // First choice as primary
+          voting_method: 'ranked',
+          vote_data: { rankings }, // Full ranking array
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing ranked choice vote:', { error: voteError.message })
+        return errorResponse('Failed to submit ranked choice vote', 500);
       }
 
+      // Record analytics
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        devLog('Analytics recording failed for vote:', { error: analyticsError });
+      }
+
+      return successResponse({
+        message: 'Ranked choice vote submitted successfully',
+        pollId,
+        voteId: 'ranked-choice-vote',
+        privacyLevel: privacy_level
+      })
+    } else if (pollData.voting_method === 'quadratic') {
+      // Quadratic voting - store credits allocation
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          option_id: Object.keys(credits)[0] ?? '', // First credited option as primary
+          voting_method: 'quadratic',
+          vote_data: { credits }, // Credit allocation per option
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing quadratic vote:', { error: voteError.message })
+        return errorResponse('Failed to submit quadratic vote', 500);
+      }
+
+      // Record analytics
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        devLog('Analytics recording failed for vote:', { error: analyticsError });
+      }
+
+      return successResponse({
+        message: 'Quadratic vote submitted successfully',
+        pollId,
+        voteId: 'quadratic-vote',
+        privacyLevel: privacy_level
+      })
+    } else if (pollData.voting_method === 'range') {
+      // Range/score voting - store scores for each option
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          option_id: Object.keys(scores)[0] ?? '', // First scored option as primary
+          voting_method: 'range',
+          vote_data: { scores }, // Score per option
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing range vote:', { error: voteError.message })
+        return errorResponse('Failed to submit range vote', 500);
+      }
+
+      // Record analytics
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        devLog('Analytics recording failed for vote:', { error: analyticsError });
+      }
+
+      return successResponse({
+        message: 'Range vote submitted successfully',
+        pollId,
+        voteId: 'range-vote',
+        privacyLevel: privacy_level
+      })
+    } else if (pollData.voting_method === 'single') {
+      // Single choice voting (standard method)
       const { error: voteError } = await supabaseClient
         .from('votes')
         .insert({
@@ -189,6 +293,11 @@ export const POST = withErrorHandling(async (
         voteId: 'single-choice-vote',
         privacyLevel: privacy_level
       })
+    } else {
+      // Unsupported voting method
+      return validationError({ 
+        voting_method: `Voting method '${pollData.voting_method}' is not supported. Supported: single, approval, multiple, ranked, quadratic, range` 
+      });
     }
 });
 
