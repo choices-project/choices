@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If no layout found, return 404
-    if (!preferences || !preferences.dashboard_layout) {
+    if (!profile || !profile.dashboard_layout) {
       return NextResponse.json(
         { ok: false, error: 'No layout found' },
         { status: 404 }
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      ...preferences.dashboard_layout,
+      ...profile.dashboard_layout,
     });
 
   } catch (error) {
