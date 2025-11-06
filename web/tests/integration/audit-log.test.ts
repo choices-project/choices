@@ -1,13 +1,13 @@
 /**
  * Audit Log Integration Tests
- * 
+ *
  * Tests the complete audit logging system including:
  * - Database storage
  * - Service layer
  * - API integration
  * - RLS policies
  * - Statistics and search
- * 
+ *
  * Created: November 7, 2025
  */
 
@@ -109,7 +109,7 @@ describe('Audit Log System', () => {
       );
 
       expect(Array.isArray(stats)).toBe(true);
-      
+
       if (stats.length > 0) {
         expect(stats[0]).toHaveProperty('event_type');
         expect(stats[0]).toHaveProperty('severity');
@@ -126,7 +126,7 @@ describe('Audit Log System', () => {
       });
 
       expect(Array.isArray(logs)).toBe(true);
-      
+
       if (logs.length > 0) {
         expect(logs[0].event_type).toBe('user_action');
       }
@@ -139,7 +139,7 @@ describe('Audit Log System', () => {
       });
 
       expect(Array.isArray(logs)).toBe(true);
-      
+
       if (logs.length > 0) {
         expect(logs[0].severity).toBe('warning');
       }
@@ -172,7 +172,7 @@ describe('Audit Log System', () => {
     it('should return audit logs for admin users', async () => {
       // This test requires authentication
       // In a real test, you would authenticate as an admin user
-      
+
       const response = await fetch(`${SUPABASE_URL.replace('https://', 'http://')}/api/admin/audit-logs?limit=10`, {
         headers: {
           'Content-Type': 'application/json'
@@ -186,7 +186,7 @@ describe('Audit Log System', () => {
     it('should return statistics when requested', async () => {
       // This test requires authentication
       // In a real test, you would authenticate as an admin user
-      
+
       const response = await fetch(`${SUPABASE_URL.replace('https://', 'http://')}/api/admin/audit-logs?stats=true`, {
         headers: {
           'Content-Type': 'application/json'
@@ -234,7 +234,7 @@ describe('Audit Log System', () => {
 
 /**
  * Manual Test Examples
- * 
+ *
  * Run these in your application to verify audit logging:
  */
 
@@ -245,7 +245,7 @@ async function testAnalyticsAccess() {
       'Authorization': 'Bearer YOUR_TOKEN'
     }
   });
-  
+
   console.log('Analytics access logged:', response.status);
 }
 
@@ -256,7 +256,7 @@ async function testAdminDashboard() {
       'Authorization': 'Bearer YOUR_ADMIN_TOKEN'
     }
   });
-  
+
   console.log('Admin dashboard access logged:', response.status);
 }
 
@@ -267,7 +267,7 @@ async function viewAuditLogs() {
       'Authorization': 'Bearer YOUR_ADMIN_TOKEN'
     }
   });
-  
+
   const data = await response.json();
   console.log('Audit logs:', data);
 }
@@ -279,7 +279,7 @@ async function getAuditStats() {
       'Authorization': 'Bearer YOUR_ADMIN_TOKEN'
     }
   });
-  
+
   const data = await response.json();
   console.log('Audit statistics:', data);
 }

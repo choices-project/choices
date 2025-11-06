@@ -1,11 +1,9 @@
-// app/api/v1/civics/coverage-dashboard/route.ts
-// Coverage and freshness dashboard for observability
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
 type RepresentativeData = {
@@ -28,16 +26,12 @@ type FreshnessData = {
   stale: number;
 };
 
-export async function GET(request: NextRequest) {
-  // Create Supabase client at request time (not module level) to avoid build-time errors
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json(
-      { error: 'Supabase configuration missing' },
-      { status: 500 }
-    );
+    return errorResponse('Supabase configuration missing', 500);
   }
   
   const supabase = createClient(
@@ -45,8 +39,6 @@ export async function GET(request: NextRequest) {
     supabaseKey,
     { auth: { persistSession: false } }
   );
-  
-  try {
     // Log coverage dashboard request for audit trail
     logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
     
