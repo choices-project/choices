@@ -1,46 +1,28 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { 
   shouldSendReminder,
   type JourneyStage,
   type JourneyMilestone
 } from '@/lib/candidate/journey-tracker'
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-/**
- * GET /api/cron/candidate-reminders
- * 
- * Scheduled cron job to send reminder emails to candidates.
- * Runs daily (configure in Vercel Cron Jobs).
- * 
- * Vercel Cron Configuration:
- * - Path: /api/cron/candidate-reminders
- * - Schedule: 0 9 * * * (daily at 9 AM UTC)
- */
-export async function GET(request: NextRequest) {
-  try {
-    // Verify this is a cron job request (Vercel adds header)
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      // For local testing, allow if no secret set
-      if (process.env.CRON_SECRET) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        )
-      }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (process.env.CRON_SECRET) {
+      return authError('Unauthorized - Invalid cron secret');
     }
+  }
 
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
     // Get all active candidate platforms
     const { data: platforms, error: platformsError } = await supabase
@@ -53,21 +35,17 @@ export async function GET(request: NextRequest) {
       .neq('filing_status', 'verified') // Don't send to verified candidates
       .order('created_at', { ascending: true })
 
-    if (platformsError) {
-      logger.error('Failed to fetch platforms:', platformsError instanceof Error ? platformsError : new Error(String(platformsError)))
-      return NextResponse.json(
-        { error: 'Failed to fetch platforms' },
-        { status: 500 }
-      )
-    }
+  if (platformsError) {
+    logger.error('Failed to fetch platforms:', platformsError instanceof Error ? platformsError : new Error(String(platformsError)))
+    return errorResponse('Failed to fetch platforms', 500);
+  }
 
-    if (!platforms || platforms.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'No candidates need reminders',
-        sent: 0
-      })
-    }
+  if (!platforms || platforms.length === 0) {
+    return successResponse({
+      message: 'No candidates need reminders',
+      sent: 0
+    });
+  }
 
     const results = {
       checked: platforms.length,
@@ -234,20 +212,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Processed ${results.checked} candidates`,
-      ...results
-    })
-  } catch (error) {
-    logger.error('Cron job error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
-  }
-}
+  return successResponse({
+    message: `Processed ${results.checked} candidates`,
+    ...results
+  });
+});
 
