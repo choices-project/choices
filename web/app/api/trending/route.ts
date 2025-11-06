@@ -13,8 +13,9 @@
  * POST /api/trending?type=hashtags - Track hashtags
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
 import { logger , devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -57,27 +58,25 @@ type _TopicData = {
   };
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') ?? 'polls';
-    const limit = parseInt(searchParams.get('limit') ?? '10');
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') ?? 'polls';
+  const limit = parseInt(searchParams.get('limit') ?? '10');
 
-    switch (type) {
-      case 'polls':
-        return await getTrendingPolls(limit);
-      
-      case 'hashtags':
-        return await getTrendingHashtags(request, limit);
-      
-      case 'topics':
-        return await getTrendingTopics(limit);
-      
-      default:
-        return NextResponse.json(
-          { error: 'Invalid type. Use "polls", "hashtags", or "topics"' },
-          { status: 400 }
-        );
+  switch (type) {
+    case 'polls':
+      return await getTrendingPolls(limit);
+    
+    case 'hashtags':
+      return await getTrendingHashtags(request, limit);
+    
+    case 'topics':
+      return await getTrendingTopics(limit);
+    
+    default:
+      return validationError({ 
+        type: 'Invalid type. Use "polls", "hashtags", or "topics"' 
+      });
     }
 
   } catch (error) {

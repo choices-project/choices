@@ -14,8 +14,9 @@
  * Status: ✅ ACTIVE
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -60,24 +61,18 @@ type DashboardData = {
   generatedAt: string;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const startTime = Date.now();
   
-  try {
-    const { searchParams } = new URL(request.url);
-    const useCache = searchParams.get('cache') !== 'false';
+  const { searchParams } = new URL(request.url);
+  const useCache = searchParams.get('cache') !== 'false';
 
-    // Get Supabase client with connection pooling
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
