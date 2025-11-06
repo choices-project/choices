@@ -15,9 +15,10 @@
  * GET /api/health?type=all - All health checks
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
+import { withErrorHandling, successResponse, rateLimitError } from '@/lib/api';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -34,29 +35,24 @@ type HealthResult = {
   details?: any;
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const url = new URL(request.url);
-    const type = url.searchParams.get('type') ?? 'basic';
-    
-    // Apply rate limiting for database and all checks
-    if (type === 'database' || type === 'all') {
-      const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-      const userAgent = request.headers.get('user-agent');
-      const rateLimitOptions: any = {};
-      if (userAgent) rateLimitOptions.userAgent = userAgent;
-      const rateLimitResult = await apiRateLimiter.checkLimit(
-        ip,
-        '/api/health',
-        rateLimitOptions
-      );
-      if (!rateLimitResult.allowed) {
-        return NextResponse.json(
-          { error: 'Rate limit exceeded' },
-          { status: 429 }
-        );
-      }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const type = url.searchParams.get('type') ?? 'basic';
+  
+  if (type === 'database' || type === 'all') {
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+    const userAgent = request.headers.get('user-agent');
+    const rateLimitOptions: any = {};
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
+    const rateLimitResult = await apiRateLimiter.checkLimit(
+      ip,
+      '/api/health',
+      rateLimitOptions
+    );
+    if (!rateLimitResult.allowed) {
+      return rateLimitError('Rate limit exceeded');
     }
+  }
 
     const timestamp = new Date().toISOString();
     const environment = process.env.NODE_ENV ?? 'development';

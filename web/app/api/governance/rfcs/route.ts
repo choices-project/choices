@@ -1,45 +1,26 @@
-/**
- * RFC Management API Endpoint
- * 
- * Provides endpoints for managing Request for Comments (RFC) system.
- */
+import { type NextRequest } from 'next/server';
 
-import { type NextRequest, NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { RFCManager } from '@/lib/governance/rfcs';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action') ?? 'list';
-    
-    switch (action) {
-      case 'list': {
-        const rfcs = await RFCManager.getPublicRFCs();
-        return NextResponse.json({
-          success: true,
-          data: rfcs,
-          timestamp: new Date().toISOString()
-        });
-      }
-        
-      default:
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid action parameter'
-        }, { status: 400 });
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action') ?? 'list';
+  
+  switch (action) {
+    case 'list': {
+      const rfcs = await RFCManager.getPublicRFCs();
+      return successResponse({
+        data: rfcs,
+        timestamp: new Date().toISOString()
+      });
     }
-  } catch (error) {
-    logger.error('Failed to get RFCs', { error: error instanceof Error ? error.message : 'Unknown error' });
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to retrieve RFCs',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+      
+    default:
+      return validationError({ action: 'Invalid action parameter' });
   }
-}
+});
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,14 +1,11 @@
-// NextRequest import removed - not used
-import { NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  try {
+export const GET = withErrorHandling(async () => {
     const supabase = await getSupabaseServerClient();
     
     // Get total users

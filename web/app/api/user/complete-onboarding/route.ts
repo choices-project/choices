@@ -1,31 +1,26 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
-  try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+export const POST = withErrorHandling(async (req: NextRequest) => {
+  const supabase = getSupabaseServerClient();
+  
+  if (!supabase) {
+    return errorResponse('Supabase client not available', 500);
+  }
 
-    const supabaseClient = await supabase;
+  const supabaseClient = await supabase;
 
-    // Get current user from Supabase Auth
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    
-    if (authError || !user) {
-      logger.warn('User not authenticated for onboarding completion')
-      return NextResponse.redirect(new URL('/login', req.url), { status: 303 })
-    }
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+  
+  if (userError || !user) {
+    logger.warn('User not authenticated for onboarding completion')
+    return authError('Authentication required');
+  }
 
     // Handle both form data and JSON requests
     const contentType = req.headers.get('content-type')
