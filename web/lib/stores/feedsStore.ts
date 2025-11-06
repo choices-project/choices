@@ -920,7 +920,7 @@ export const feedsStoreDebug = {
   logFeedsByCategory: () => {
     const state = useFeedsStore.getState();
     const byCategory = state.feeds.reduce((acc, feed) => {
-      acc[feed.category] = (acc[feed.category] || 0) + 1;
+      acc[feed.category] = (acc[feed.category] ?? 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     logger.debug('Feeds by Category', byCategory);

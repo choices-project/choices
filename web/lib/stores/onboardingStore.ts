@@ -326,7 +326,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         updateFormData: (step, data) => set((state) => ({
           stepData: {
             ...state.stepData,
-            [step]: { ...(state.stepData[step] || {}), ...data }
+            [step]: { ...(state.stepData[step] ?? {}), ...data }
           }
         })),
         
@@ -504,13 +504,13 @@ export const useOnboardingStore = create<OnboardingStore>()(
             const data = await response.json();
             
             set({
-              currentStep: data.currentStep || 0,
-              progress: data.progress || 0,
-              stepData: data.stepData || {},
-              authData: data.authData || {},
-              profileData: data.profileData || {},
-              valuesData: data.valuesData || {},
-              preferencesData: data.preferencesData || {},
+              currentStep: data.currentStep ?? 0,
+              progress: data.progress ?? 0,
+              stepData: data.stepData ?? {},
+              authData: data.authData ?? {},
+              profileData: data.profileData ?? {},
+              valuesData: data.valuesData ?? {},
+              preferencesData: data.preferencesData ?? {},
             });
             
             logger.info('Onboarding progress loaded', {
@@ -708,7 +708,7 @@ export const useOnboardingStats = () => {
 };
 
 export const useCurrentStepData = () => useOnboardingStore(state => 
-  state.stepData[state.currentStep] || {}
+  state.stepData[state.currentStep] ?? {}
 );
 
 export const useStepValidation = (step: number) => useOnboardingStore(state => ({
@@ -740,7 +740,7 @@ export const onboardingStoreUtils = {
    */
   getStepData: (step: number) => {
     const state = useOnboardingStore.getState();
-    return state.stepData[step] || {};
+    return state.stepData[step] ?? {};
   },
   
   /**
@@ -765,7 +765,7 @@ export const onboardingStoreUtils = {
   getNextIncompleteStep: () => {
     const state = useOnboardingStore.getState();
     const incompleteSteps = state.steps.filter(step => !step.completed && !step.skipped);
-    return incompleteSteps[0] || null;
+    return incompleteSteps[0] ?? null;
   }
 };
 

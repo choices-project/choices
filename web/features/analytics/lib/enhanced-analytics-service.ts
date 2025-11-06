@@ -544,8 +544,8 @@ export class EnhancedAnalyticsService {
         averageSessionDuration,
         featureAdoption,
         systemHealthStatus,
-        recentFeedback: recentFeedback.data || [],
-        activeSiteMessages: activeSiteMessages.data || []
+        recentFeedback: recentFeedback.data ?? [],
+        activeSiteMessages: activeSiteMessages.data ?? []
       };
     } catch (error) {
       logger.error('Comprehensive analytics error:', error);

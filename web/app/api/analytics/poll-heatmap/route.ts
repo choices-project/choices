@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
       return {
         poll_id: poll.id,
         title: poll.title,
-        category: (poll.hashtags && poll.hashtags[0]) || 'general',
+        category: (poll.hashtags && poll.hashtags[0]) ?? 'general',
         total_votes: totalVotes,
         unique_voters: uniqueVoters,
         engagement_score: engagementScore,
@@ -141,10 +141,10 @@ export async function GET(request: NextRequest) {
     const categories = Array.from(new Set(pollMetrics.map(p => p.category))).sort();
 
         logger.info('Poll heatmap data generated', {
-          category: category || 'all',
+          category: category ?? 'all',
           limit,
           pollsReturned: sortedPolls.length,
-          totalVotesAnalyzed: allVotes?.length || 0
+          totalVotesAnalyzed: allVotes?.length ?? 0
         });
 
         return {

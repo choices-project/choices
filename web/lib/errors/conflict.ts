@@ -16,7 +16,7 @@ export class ConflictError extends ApplicationError {
 
 export class DuplicateVoteError extends ApplicationError {
   constructor(pollId: string, userId: string, details?: ErrorDetails) {
-    super(`User has already voted on poll '${pollId}'`, 409, 'DUPLICATE_VOTE', withOptional(details || {}, {
+    super(`User has already voted on poll '${pollId}'`, 409, 'DUPLICATE_VOTE', withOptional(details ?? {}, {
       field: 'pollId',
       value: pollId,
       context: { userId }
@@ -26,7 +26,7 @@ export class DuplicateVoteError extends ApplicationError {
 
 export class PollAlreadyExistsError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Poll with ID '${pollId}' already exists`, 409, 'POLL_ALREADY_EXISTS', withOptional(details || {}, {
+    super(`Poll with ID '${pollId}' already exists`, 409, 'POLL_ALREADY_EXISTS', withOptional(details ?? {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -35,7 +35,7 @@ export class PollAlreadyExistsError extends ApplicationError {
 
 export class UserAlreadyExistsError extends ApplicationError {
   constructor(identifier: string, details?: ErrorDetails) {
-    super(`User with identifier '${identifier}' already exists`, 409, 'USER_ALREADY_EXISTS', withOptional(details || {}, {
+    super(`User with identifier '${identifier}' already exists`, 409, 'USER_ALREADY_EXISTS', withOptional(details ?? {}, {
       field: 'identifier',
       value: identifier
     }));
@@ -44,7 +44,7 @@ export class UserAlreadyExistsError extends ApplicationError {
 
 export class PasskeyAlreadyRegisteredError extends ApplicationError {
   constructor(userId: string, details?: ErrorDetails) {
-    super(`User '${userId}' already has a passkey registered`, 409, 'PASSKEY_ALREADY_REGISTERED', withOptional(details || {}, {
+    super(`User '${userId}' already has a passkey registered`, 409, 'PASSKEY_ALREADY_REGISTERED', withOptional(details ?? {}, {
       field: 'userId',
       value: userId
     }));

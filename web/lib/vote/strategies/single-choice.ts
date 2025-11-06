@@ -131,7 +131,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
         {
           privacyLevel,
           choice: voteData.choice,
-          optionText: poll.options[voteData.choice || 0]
+          optionText: poll.options[voteData.choice ?? 0]
         }
       );
 

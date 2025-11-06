@@ -996,7 +996,7 @@ export const votingStoreDebug = {
   logElectionsByType: () => {
     const state = useVotingStore.getState();
     const byType = state.elections.reduce((acc, election) => {
-      acc[election.type] = (acc[election.type] || 0) + 1;
+      acc[election.type] = (acc[election.type] ?? 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     logger.debug('Elections by Type', byType);

@@ -16,7 +16,7 @@ export class InternalServerError extends ApplicationError {
 
 export class DatabaseError extends ApplicationError {
   constructor(operation: string, details?: ErrorDetails) {
-    super(`Database error during ${operation}`, 500, 'DATABASE_ERROR', withOptional(details || {}, {
+    super(`Database error during ${operation}`, 500, 'DATABASE_ERROR', withOptional(details ?? {}, {
       constraint: operation
     }));
   }
@@ -24,7 +24,7 @@ export class DatabaseError extends ApplicationError {
 
 export class ExternalServiceError extends ApplicationError {
   constructor(service: string, details?: ErrorDetails) {
-    super(`External service '${service}' is unavailable`, 500, 'EXTERNAL_SERVICE_ERROR', withOptional(details || {}, {
+    super(`External service '${service}' is unavailable`, 500, 'EXTERNAL_SERVICE_ERROR', withOptional(details ?? {}, {
       field: 'service',
       value: service
     }));
@@ -33,7 +33,7 @@ export class ExternalServiceError extends ApplicationError {
 
 export class VoteProcessingError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error processing vote for poll '${pollId}'`, 500, 'VOTE_PROCESSING_ERROR', withOptional(details || {}, {
+    super(`Error processing vote for poll '${pollId}'`, 500, 'VOTE_PROCESSING_ERROR', withOptional(details ?? {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -42,7 +42,7 @@ export class VoteProcessingError extends ApplicationError {
 
 export class ResultsCalculationError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error calculating results for poll '${pollId}'`, 500, 'RESULTS_CALCULATION_ERROR', withOptional(details || {}, {
+    super(`Error calculating results for poll '${pollId}'`, 500, 'RESULTS_CALCULATION_ERROR', withOptional(details ?? {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -51,7 +51,7 @@ export class ResultsCalculationError extends ApplicationError {
 
 export class ConfigurationError extends ApplicationError {
   constructor(configKey: string, details?: ErrorDetails) {
-    super(`Configuration error for '${configKey}'`, 500, 'CONFIGURATION_ERROR', withOptional(details || {}, {
+    super(`Configuration error for '${configKey}'`, 500, 'CONFIGURATION_ERROR', withOptional(details ?? {}, {
       field: 'configKey',
       value: configKey
     }));

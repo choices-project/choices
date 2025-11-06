@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
-    const range = searchParams.get('range') || '7d';
+    const range = searchParams.get('range') ?? '7d';
     
     const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
 

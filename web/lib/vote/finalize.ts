@@ -284,7 +284,7 @@ export class FinalizePollManager {
         return [];
       }
 
-      return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) || [], closeAt);
+      return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) ?? [], closeAt);
     } catch (error) {
       logger.error('Error in getOfficialBallots:', error);
       return [];

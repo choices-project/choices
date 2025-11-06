@@ -51,7 +51,7 @@ export class PrivacyAwareQueryBuilder {
       throw new Error('Privacy filter query failed');
     }
 
-    const optedInUserIds = optedInUsers?.map(u => u.id) || [];
+    const optedInUserIds = optedInUsers?.map(u => u.id) ?? [];
 
     // Log privacy filtering
     logger.debug('Privacy filter applied', {
@@ -86,7 +86,7 @@ export class PrivacyAwareQueryBuilder {
       throw new Error('Privacy filter query failed');
     }
 
-    const optedInUserIds = optedInUsers?.map(u => u.id) || [];
+    const optedInUserIds = optedInUsers?.map(u => u.id) ?? [];
 
     // Build votes query
     let votesQuery = this.supabase
@@ -129,8 +129,8 @@ export class PrivacyAwareQueryBuilder {
       .from('user_profiles')
       .select('id', { count: 'exact', head: true });
 
-    const optedInCount = users?.length || 0;
-    const optedOutCount = (totalUsers || 0) - optedInCount;
+    const optedInCount = users?.length ?? 0;
+    const optedOutCount = (totalUsers ?? 0) - optedInCount;
 
     logger.info('Demographics privacy filter', {
       totalUsers,
@@ -140,8 +140,8 @@ export class PrivacyAwareQueryBuilder {
     });
 
     return {
-      users: users || [],
-      totalUsers: totalUsers || 0,
+      users: users ?? [],
+      totalUsers: totalUsers ?? 0,
       optedInCount,
       optedOutCount
     };
@@ -223,7 +223,7 @@ export async function getPrivacyOptOutCount(
     .select('id', { count: 'exact', head: true })
     .or('privacy_settings->collectAnalytics.eq.true,privacy_settings.is.null');
 
-  return (totalUsers || 0) - (optedInUsers || 0);
+  return (totalUsers ?? 0) - (optedInUsers ?? 0);
 }
 
 /**
@@ -243,8 +243,8 @@ export function privacyAwareAggregate<T extends Record<string, any>>(
   const groups = new Map<string, number>();
   
   data.forEach(item => {
-    const category = String(item[groupByField] || 'Unknown');
-    groups.set(category, (groups.get(category) || 0) + 1);
+    const category = String(item[groupByField] ?? 'Unknown');
+    groups.set(category, (groups.get(category) ?? 0) + 1);
   });
 
   // Convert to array

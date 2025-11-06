@@ -301,7 +301,7 @@ export const usePollsStore = create<PollsStore>()(
                 poll.id === pollId 
                   ? {
                       ...poll,
-                      total_votes: (poll.total_votes || 0) + 1,
+                      total_votes: (poll.total_votes ?? 0) + 1,
                       updated_at: new Date().toISOString()
                     }
                   : poll
@@ -347,7 +347,7 @@ export const usePollsStore = create<PollsStore>()(
                 poll.id === pollId 
                   ? {
                       ...poll,
-                      total_votes: Math.max(0, (poll.total_votes || 0) - 1),
+                      total_votes: Math.max(0, (poll.total_votes ?? 0) - 1),
                       updated_at: new Date().toISOString()
                     }
                   : poll
@@ -681,7 +681,7 @@ export const pollsStoreUtils = {
     const state = usePollsStore.getState();
     return state.polls
       .filter(poll => poll.status === 'active')
-      .sort((a, b) => (b.total_votes || 0) - (a.total_votes || 0))
+      .sort((a, b) => (b.total_votes ?? 0) - (a.total_votes ?? 0))
       .slice(0, limit);
   },
   
@@ -692,8 +692,8 @@ export const pollsStoreUtils = {
     const state = usePollsStore.getState();
     return state.polls
       .sort((a, b) => {
-        const dateA = new Date(a.created_at || 0).getTime();
-        const dateB = new Date(b.created_at || 0).getTime();
+        const dateA = new Date(a.created_at ?? 0).getTime();
+        const dateB = new Date(b.created_at ?? 0).getTime();
         return dateB - dateA;
       })
       .slice(0, limit);

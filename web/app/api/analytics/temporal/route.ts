@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
-    const range = searchParams.get('range') || '30d';
+    const range = searchParams.get('range') ?? '30d';
     const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
 
     // Generate cache key
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       
       // Velocity (activity per date)
       const dateKey = date.toISOString().split('T')[0];
-      velocityByDate.set(dateKey, (velocityByDate.get(dateKey) || 0) + 1);
+      velocityByDate.set(dateKey, (velocityByDate.get(dateKey) ?? 0) + 1);
     });
 
     // Format hourly data
@@ -135,11 +135,11 @@ export async function GET(request: NextRequest) {
       curr.activity > max.activity ? curr : max
     , daily[0]);
 
-    const avgActivity = (votes?.length || 0) / days;
+    const avgActivity = (votes?.length ?? 0) / days;
 
     logger.info('Temporal data generated', {
       range,
-      totalVotes: votes?.length || 0,
+      totalVotes: votes?.length ?? 0,
       peakHour: peakHour.label,
       peakDay: peakDay.day
     });

@@ -211,7 +211,7 @@ export class RankedStrategy implements VotingStrategy {
         
         winner = maxEntry[0];
         winnerVotes = maxEntry[1];
-        winnerPercentage = finalRound.percentages[winner] || 0;
+        winnerPercentage = finalRound.percentages[winner] ?? 0;
       }
 
       // Calculate option votes and percentages
@@ -273,7 +273,7 @@ export class RankedStrategy implements VotingStrategy {
           calculationTime: Date.now() - startTime,
           hasWinner: winner !== undefined,
           totalRounds: runoffRounds.length,
-          isTie: winnerVotes > 0 && Object.values(finalRound?.votes || {}).filter(v => v === winnerVotes).length > 1
+          isTie: winnerVotes > 0 && Object.values(finalRound?.votes ?? {}).filter(v => v === winnerVotes).length > 1
         }
       };
 

@@ -261,7 +261,7 @@ const DemographicsStep: React.FC<{
                   ...demographics,
                   location: {
                     state: district.state,
-                    district: district.district || undefined,
+                    district: district.district ?? undefined,
                     quantized: true
                   }
                 });
@@ -296,7 +296,7 @@ const DemographicsStep: React.FC<{
                   Age Range
                 </label>
                 <select
-                  value={demographics?.age_range || ''}
+                  value={demographics?.age_range ?? ''}
                   onChange={(e) => setDemographics({
                     ...demographics,
                     age_range: e.target.value as UserDemographics['age_range']
@@ -318,7 +318,7 @@ const DemographicsStep: React.FC<{
                   Education Level
                 </label>
                 <select
-                  value={demographics?.education || ''}
+                  value={demographics?.education ?? ''}
                   onChange={(e) => setDemographics({
                     ...demographics,
                     education: e.target.value as UserDemographics['education']
@@ -338,7 +338,7 @@ const DemographicsStep: React.FC<{
                   Political Engagement
                 </label>
                 <select
-                  value={demographics?.political_engagement || ''}
+                  value={demographics?.political_engagement ?? ''}
                   onChange={(e) => setDemographics({
                     ...demographics,
                     political_engagement: e.target.value as UserDemographics['political_engagement']
@@ -772,7 +772,7 @@ const CompleteStep: React.FC<{
               <div className="text-2xl mb-2">🏛️</div>
               <h4 className="font-semibold text-gray-900">Your Representatives</h4>
               <p className="text-sm text-gray-600">
-                Based on your location: {demographics?.location?.state || 'Not specified'}
+                Based on your location: {demographics?.location?.state ?? 'Not specified'}
               </p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -982,7 +982,7 @@ const BalancedOnboardingFlow: React.FC = () => {
         <PrivacyStep
           onNext={handleNext}
           onBack={handleBack}
-          privacy={(onboardingData?.preferencesData as PrivacyPreferences) || { location_sharing: 'disabled', demographic_sharing: 'disabled', analytics_sharing: 'disabled' }}
+          privacy={(onboardingData?.preferencesData as PrivacyPreferences) ?? { location_sharing: 'disabled', demographic_sharing: 'disabled', analytics_sharing: 'disabled' }}
           setPrivacy={(privacy) => updateFormData(2, { privacy })}
         />
       )}
@@ -991,7 +991,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleNext}
-          demographics={(onboardingData?.valuesData as UserDemographics) || {}}
+          demographics={(onboardingData?.valuesData as UserDemographics) ?? {}}
           setDemographics={(demographics) => updateFormData(0, { demographics })}
         />
       )}
@@ -1003,14 +1003,14 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleSkip}
-          profile={onboardingData?.profileData || {}}
+          profile={onboardingData?.profileData ?? {}}
           onUpdate={(profile) => updateFormData(0, { profile })}
         />
       )}
       {currentStep === 5 && (
         <CompleteStep 
           onFinish={handleFinish}
-          demographics={(onboardingData?.valuesData as UserDemographics) || {}}
+          demographics={(onboardingData?.valuesData as UserDemographics) ?? {}}
         />
       )}
       </main>
