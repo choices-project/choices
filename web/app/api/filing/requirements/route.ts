@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
 import { 
   getFilingRequirements, 
@@ -6,47 +6,30 @@ import {
   getFilingChecklist,
   type OfficeType
 } from '@/lib/filing/filing-requirements'
+import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 
-/**
- * Type guard for OfficeType
- */
 function isOfficeType(value: string | null): value is OfficeType {
   return value === 'federal' || value === 'state' || value === 'local'
 }
 
-/**
- * GET /api/filing/requirements
- * Get filing requirements for a specific office and jurisdiction
- * 
- * Query parameters:
- * - level: 'federal' | 'state' | 'local'
- * - office: Office name (e.g., "U.S. House of Representatives")
- * - state: State code (optional, for state/local offices)
- * - electionDate: ISO date string (optional, for deadline calculation)
- */
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const levelParam = searchParams.get('level')
-    const office = searchParams.get('office')
-    const state = searchParams.get('state') ?? undefined
-    const electionDateStr = searchParams.get('electionDate')
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const searchParams = request.nextUrl.searchParams
+  const levelParam = searchParams.get('level')
+  const office = searchParams.get('office')
+  const state = searchParams.get('state') ?? undefined
+  const electionDateStr = searchParams.get('electionDate')
 
-    if (!levelParam || !office) {
-      return NextResponse.json(
-        { error: 'Level and office are required' },
-        { status: 400 }
-      )
-    }
+  if (!levelParam || !office) {
+    return validationError({ 
+      level: !levelParam ? 'Level is required' : '',
+      office: !office ? 'Office is required' : ''
+    });
+  }
 
-    // Validate level is a valid OfficeType
-    if (!isOfficeType(levelParam)) {
-      return NextResponse.json(
-        { error: 'Invalid level. Must be: federal, state, or local' },
-        { status: 400 }
-      )
-    }
+  if (!isOfficeType(levelParam)) {
+    return validationError({ level: 'Invalid level. Must be: federal, state, or local' });
+  }
 
     const requirement = getFilingRequirements(levelParam, office, state)
 
@@ -72,20 +55,13 @@ export async function GET(request: NextRequest) {
     // Get checklist
     const checklist = getFilingChecklist(requirement)
 
-    return NextResponse.json({
-      found: true,
-      requirement: {
-        ...requirement,
-        calculatedDeadline: calculatedDeadline?.toISOString() ?? null,
-        checklist
-      }
-    })
-  } catch (error) {
-    logger.error('Filing requirements lookup error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+  return successResponse({
+    found: true,
+    requirement: {
+      ...requirement,
+      calculatedDeadline: calculatedDeadline?.toISOString() ?? null,
+      checklist
+    }
+  });
+});
 
