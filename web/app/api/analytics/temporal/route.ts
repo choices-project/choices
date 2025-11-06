@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
 
     (votes || []).forEach((vote: any) => {
       const date = new Date(vote.created_at);
+      if (isNaN(date.getTime())) return; // Skip invalid dates
       
       // Hour of day (0-23)
       const hour = date.getHours();
@@ -93,7 +94,9 @@ export async function GET(request: NextRequest) {
       
       // Velocity (activity per date)
       const dateKey = date.toISOString().split('T')[0];
-      velocityByDate.set(dateKey, (velocityByDate.get(dateKey) ?? 0) + 1);
+      if (dateKey) {
+        velocityByDate.set(dateKey, (velocityByDate.get(dateKey) ?? 0) + 1);
+      }
     });
 
     // Format hourly data
@@ -127,13 +130,13 @@ export async function GET(request: NextRequest) {
       .slice(-30); // Last 30 days
 
     // Calculate insights
-    const peakHour = hourly.reduce((max, curr) => 
+    const peakHour = hourly.length > 0 ? hourly.reduce((max, curr) => 
       curr.activity > max.activity ? curr : max
-    , hourly[0]);
+    , hourly[0]!) : { hour: 0, activity: 0, label: '12 AM' };
 
-    const peakDay = daily.reduce((max, curr) => 
+    const peakDay = daily.length > 0 ? daily.reduce((max, curr) => 
       curr.activity > max.activity ? curr : max
-    , daily[0]);
+    , daily[0]!) : { day: 'Monday', activity: 0, dayIndex: 0 };
 
     const avgActivity = (votes?.length ?? 0) / days;
 

@@ -96,7 +96,7 @@ export default function CandidateDashboardPage() {
       </div>
 
       {/* Journey Progress - Show for most recent platform */}
-      {platforms.length > 0 && (
+      {platforms.length > 0 && platforms[0] && (
         <div className="mb-8">
           <JourneyProgress platformId={platforms[0].id} />
         </div>

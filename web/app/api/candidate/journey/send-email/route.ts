@@ -6,6 +6,7 @@ import {
 } from '@/lib/services/email/candidate-journey-emails'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withOptional } from '@/lib/util/objects'
 
 /**
  * POST /api/candidate/journey/send-email
@@ -88,22 +89,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare email data
-    const emailData = {
+    const baseEmailData = {
       to: email,
       candidateName: platform.candidate_name,
       office: platform.office,
       level: platform.level as 'federal' | 'state' | 'local',
       state: platform.state,
-      filingDeadline: platform.filing_deadline ? new Date(platform.filing_deadline) : undefined,
-      daysUntilDeadline: platform.filing_deadline 
-        ? Math.ceil((new Date(platform.filing_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : undefined,
       dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/candidate/dashboard`,
       platformId: platform.id
+    };
+
+    const optionalData: Record<string, unknown> = {};
+    if (platform.filing_deadline) {
+      optionalData.filingDeadline = new Date(platform.filing_deadline);
+      optionalData.daysUntilDeadline = Math.ceil(
+        (new Date(platform.filing_deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
     }
 
+    const emailData = withOptional(baseEmailData, optionalData);
+
     // Send email
-    const result = await sendCandidateJourneyEmail(type as EmailType, emailData)
+    const result = await sendCandidateJourneyEmail(type as EmailType, emailData as typeof baseEmailData & { filingDeadline?: Date; daysUntilDeadline?: number })
 
     if (!result.success) {
       return NextResponse.json(

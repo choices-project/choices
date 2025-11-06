@@ -75,7 +75,10 @@ export async function GET(request: NextRequest) {
     const trendsByDate = new Map<string, { votes: number; voters: Set<string> }>();
     
     (votes || []).forEach((vote: any) => {
-      const date = new Date(vote.created_at).toISOString().split('T')[0];
+      const voteDate = new Date(vote.created_at);
+      if (isNaN(voteDate.getTime())) return; // Skip invalid dates
+      const date = voteDate.toISOString().split('T')[0];
+      if (!date) return; // Skip if date string is invalid
       
       if (!trendsByDate.has(date)) {
         trendsByDate.set(date, { votes: 0, voters: new Set() });
