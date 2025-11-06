@@ -1,57 +1,40 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { 
   sendCandidateJourneyEmail,
   type EmailType 
 } from '@/lib/services/email/candidate-journey-emails'
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError } from '@/lib/api';
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-/**
- * POST /api/candidate/journey/send-email
- * Send candidate journey email
- * 
- * Used for:
- * - Manual testing
- * - Scheduled reminders (via cron)
- * - Triggered events (post-declaration, etc.)
- */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Get current user (for manual sends)
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    const body = await request.json()
-    const { 
-      type, 
-      platformId, 
-      to, // Optional override
-      skipAuth = false // For cron jobs
-    } = body
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  const body = await request.json()
+  const { 
+    type, 
+    platformId, 
+    to,
+    skipAuth = false
+  } = body
 
-    if (!type || !platformId) {
-      return NextResponse.json(
-        { error: 'Type and platformId are required' },
-        { status: 400 }
-      )
-    }
+  if (!type || !platformId) {
+    return validationError({
+      type: !type ? 'Type is required' : '',
+      platformId: !platformId ? 'Platform ID is required' : ''
+    });
+  }
 
-    // For manual sends, require auth
-    if (!skipAuth && (!authUser || authError)) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  if (!skipAuth && (!authUser || userError)) {
+    return authError('Authentication required');
+  }
 
     // Get platform
     const { data: platform, error: platformError } = await supabase
