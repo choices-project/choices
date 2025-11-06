@@ -1,21 +1,13 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
-/**
- * Privacy Status Endpoint
- * 
- * Returns privacy protection status for WebAuthn and other systems
- * Used by privacy status badge component
- */
-
-export async function GET(req: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (req: NextRequest) => {
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
     
     // Check RLS on sensitive tables
@@ -48,33 +40,20 @@ export async function GET(req: NextRequest) {
     const allGood = Object.values(privacyProtections).every(Boolean);
     const someGood = Object.values(privacyProtections).some(Boolean);
     
-    return NextResponse.json({
-      status: allGood ? 'active' : someGood ? 'partial' : 'inactive',
-      protections: privacyProtections,
-      badge: {
-        color: allGood ? 'green' : someGood ? 'yellow' : 'red',
-        label: allGood ? 'Privacy protections: ON' : 
-               someGood ? 'Privacy protections: PARTIAL' : 
-               'Privacy protections: CHECK SETTINGS'
-      },
-      details: {
-        webauthnEnabled: enabled,
-        rpId: rpID,
-        allowedOrigins: allowedOrigins,
-        tablesExist: webauthnTablesExist
-      }
-    });
-
-  } catch (error) {
-    logger.error('Privacy status error', { error });
-    return NextResponse.json({
-      status: 'inactive',
-      protections: {},
-      badge: {
-        color: 'red',
-        label: 'Privacy protections: ERROR'
-      },
-      error: 'Failed to check privacy status'
-    }, { status: 500 });
-  }
-}
+  return successResponse({
+    status: allGood ? 'active' : someGood ? 'partial' : 'inactive',
+    protections: privacyProtections,
+    badge: {
+      color: allGood ? 'green' : someGood ? 'yellow' : 'red',
+      label: allGood ? 'Privacy protections: ON' : 
+             someGood ? 'Privacy protections: PARTIAL' : 
+             'Privacy protections: CHECK SETTINGS'
+    },
+    details: {
+      webauthnEnabled: enabled,
+      rpId: rpID,
+      allowedOrigins: allowedOrigins,
+      tablesExist: webauthnTablesExist
+    }
+  });
+});

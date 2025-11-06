@@ -5,28 +5,18 @@
  * user preferences, and system health.
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled',
-        features: {
-          pwa: false,
-          offlineVoting: false,
-          pushNotifications: false,
-          backgroundSync: false
-        }
-      }, { status: 403 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
+  }
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

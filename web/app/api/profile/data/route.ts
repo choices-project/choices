@@ -11,61 +11,36 @@
  * Status: ✅ ACTIVE - PRODUCTION READY
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * DELETE /api/profile/data?type=<dataType>
- * 
- * Deletes specific category of user data from ACTUAL database tables
- * 
- * Supported data types:
- * - location: Location data (stored in demographics field)
- * - voting: Voting history (votes table)
- * - interests: Hashtag interests (user_hashtags table + analytics_events)
- * - feed-interactions: Feed likes, reads, bookmarks (feed_interactions table)
- * - analytics: Analytics events (analytics_events table)
- * - representatives: Representative interaction history (analytics_events)
- * - search: Search history (analytics_events with event_type='search')
- */
-export async function DELETE(request: NextRequest) {
-  try {
-    // Get authenticated user
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  
+  if (!supabase) {
+    return errorResponse('Supabase not configured', 500);
+  }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-    
-    const user = session.user;
-    const userId = user.id;
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session?.user) {
+    return authError('User not authenticated');
+  }
+  
+  const user = session.user;
+  const userId = user.id;
 
-    // Get data type from query parameter
-    const { searchParams } = new URL(request.url);
-    const dataType = searchParams.get('type');
+  const { searchParams } = new URL(request.url);
+  const dataType = searchParams.get('type');
 
-    if (!dataType) {
-      return NextResponse.json(
-        { success: false, error: 'Data type parameter required' },
-        { status: 400 }
-      );
-    }
+  if (!dataType) {
+    return validationError({ type: 'Data type parameter required' });
+  }
 
     logger.info('Specific data deletion requested', { userId, dataType });
 
@@ -243,31 +218,14 @@ export async function DELETE(request: NextRequest) {
       }
 
       default:
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: `Unknown data type: ${dataType}. Supported types: location, voting, interests, feed-interactions, analytics, representatives, search` 
-          },
-          { status: 400 }
-        );
+        return validationError({ 
+          type: `Unknown data type: ${dataType}. Supported types: location, voting, interests, feed-interactions, analytics, representatives, search` 
+        });
     }
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       message: deletionResult.description,
       deletedCount: deletionResult.count,
       dataType: dataType
     });
-
-  } catch (error) {
-    logger.error('Specific data deletion failed', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete data' 
-      },
-      { status: 500 }
-    );
-  }
-}
+});

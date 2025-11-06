@@ -1,27 +1,26 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const includeExpired = searchParams.get('includeExpired') === 'true'
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url)
+  const includeExpired = searchParams.get('includeExpired') === 'true'
 
+  try {
     const messages = await getActiveSiteMessages(includeExpired)
-    return NextResponse.json(messages)
+    return successResponse(messages);
   } catch (error) {
-    // Fail gracefully - return empty array instead of 500 error
-    logger.warn('Error fetching public site messages (non-critical):', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json({
+    logger.warn('Error fetching site messages (returning empty):', error instanceof Error ? error : new Error(String(error)))
+    return successResponse({
       messages: [],
       count: 0,
       timestamp: new Date().toISOString()
-    })
+    });
   }
-}
+});
 
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
