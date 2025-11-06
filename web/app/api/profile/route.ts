@@ -16,6 +16,7 @@ import { z } from 'zod';
 
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { undefinedToNull } from '@/lib/util/clean';
 
 
 
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
       }
     const { data, error } = await supabase
       .from('user_profiles')
-      .update(parsedProfile.data)
+      .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
       .eq('user_id', user.id)
       .select();
     if (error) {
@@ -242,13 +243,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid interests data', details: parsedInterests.error.issues }, { status: 400 });
       }
       // FUNCTIONALITY MERGED INTO user_profiles - update profile with interests
+      const updateData: Record<string, unknown> = {};
+      if (parsedInterests.data.categories) {
+        updateData.primary_concerns = parsedInterests.data.categories;
+      }
+      if (parsedInterests.data.keywords) {
+        updateData.community_focus = parsedInterests.data.keywords;
+      }
       const { data, error } = await supabase
         .from('user_profiles')
-        .update({
-          primary_concerns: parsedInterests.data.categories,
-          community_focus: parsedInterests.data.keywords,
-          primary_hashtags: parsedInterests.data.topics
-        })
+        .update(updateData)
         .eq('user_id', user.id)
         .select();
       if (error) {
@@ -479,7 +483,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .update({ ...parsedProfile.data, updated_at: new Date().toISOString() })
+      .update(undefinedToNull({ ...parsedProfile.data, updated_at: new Date().toISOString() }) as Record<string, unknown>)
       .eq('id', user.id)
       .select();
 

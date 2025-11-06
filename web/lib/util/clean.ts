@@ -6,6 +6,28 @@
  */
 
 /**
+ * Convert undefined to null for Supabase compatibility
+ * Supabase expects null for optional fields, not undefined
+ */
+export function undefinedToNull<T extends Record<string, unknown>>(obj: T): {
+  [K in keyof T]: T[K] extends undefined ? null : T[K] extends Record<string, unknown> ? ReturnType<typeof undefinedToNull<T[K]>> : T[K] extends (infer U)[] ? U[] : T[K]
+} {
+  if (Array.isArray(obj)) {
+    return obj.map(undefinedToNull) as never
+  }
+  
+  if (obj && typeof obj === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(obj)) {
+      out[k] = v === undefined ? null : (typeof v === 'object' && v !== null ? undefinedToNull(v as Record<string, unknown>) : v)
+    }
+    return out as never
+  }
+  
+  return obj as never
+}
+
+/**
  * Recursively strips undefined values from objects and arrays
  * Essential for DB writes and object construction with exactOptionalPropertyTypes
  */
