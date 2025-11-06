@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
     }
 
     const chal = chalRows[0];
+    if (!chal) {
+      return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
+    }
 
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
@@ -103,10 +106,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark challenge as used
-    await supabase
-      .from('webauthn_challenges')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', chal.id);
+    if (chal) {
+      await supabase
+        .from('webauthn_challenges')
+        .update({ used_at: new Date().toISOString() })
+        .eq('id', chal.id);
+    }
 
     logger.info('WebAuthn registration verified (native)', { userId: user.id });
 

@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
     }
 
     const chal = chalRows[0];
+    if (!chal) {
+      return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
+    }
 
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
@@ -73,6 +76,9 @@ export async function POST(req: NextRequest) {
     }
 
     const cred = creds[0];
+    if (!cred) {
+      return NextResponse.json({ error: 'Credential not found' }, { status: 400 });
+    }
 
     // Get current request origin
     const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';

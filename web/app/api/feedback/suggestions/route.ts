@@ -32,23 +32,28 @@ export async function POST(request: NextRequest) {
     // Store in database
     const supabase = await getSupabaseServerClient();
     if (supabase) {
+      const insertData: Record<string, unknown> = {
+        id: parsedFeedback.id,
+        user_id: parsedFeedback.metadata.userId,
+        feedback_type: parsedFeedback.type,
+        type: parsedFeedback.type,
+        title: parsedFeedback.title,
+        description: parsedFeedback.description,
+        sentiment: parsedFeedback.sentiment,
+        priority: parsedFeedback.priority,
+        tags: parsedFeedback.tags,
+        metadata: parsedFeedback.metadata,
+        status: 'pending',
+        created_at: parsedFeedback.metadata.timestamp
+      };
+      
+      if (parsedFeedback.aiAnalysis) {
+        insertData.ai_analysis = parsedFeedback.aiAnalysis;
+      }
+
       const { error } = await supabase
         .from('feedback')
-        .insert({
-          id: parsedFeedback.id,
-          user_id: parsedFeedback.metadata.userId,
-          feedback_type: parsedFeedback.type,
-          type: parsedFeedback.type,
-          title: parsedFeedback.title,
-          description: parsedFeedback.description,
-          sentiment: parsedFeedback.sentiment,
-          priority: parsedFeedback.priority,
-          tags: parsedFeedback.tags,
-          metadata: parsedFeedback.metadata,
-          ai_analysis: parsedFeedback.aiAnalysis,
-          status: 'pending',
-          created_at: parsedFeedback.metadata.timestamp
-        });
+        .insert(insertData);
 
       if (error) {
         devLog('Error storing feedback:', error);

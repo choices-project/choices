@@ -373,7 +373,7 @@ export async function PUT(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .update(parsedProfile.data)
+      .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
       .eq('id', user.id)
       .select();
 
