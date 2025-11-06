@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-import { logger } from '@/lib/utils/logger';
 import { useIsAuthenticated, useUserStore } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 'use client';
 

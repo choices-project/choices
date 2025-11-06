@@ -46,4 +46,22 @@ export default defineConfig({
       },
     },
   ],
+
+  webServer: {
+    command: 'npm run dev',
+    port: 3000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    env: {
+      NODE_ENV: 'test',
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key',
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'test-secret',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      PRIVACY_PEPPER_DEV: 'dev-pepper-consistent-for-testing-12345678901234567890',
+      PRIVACY_PEPPER_CURRENT: 'hex:' + 'ab'.repeat(32),
+      PRIVACY_PEPPER_PREVIOUS: 'hex:' + 'cd'.repeat(32),
+    },
+  },
 })

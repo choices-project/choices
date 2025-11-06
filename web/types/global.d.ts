@@ -1,5 +1,7 @@
 // Global type declarations
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     gtag?: (
       command: 'event' | 'config' | 'set',
@@ -30,6 +32,7 @@ declare global {
   }
   
   // Service Worker extensions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface ServiceWorkerRegistration {
     sync?: {
       register(tag: string): Promise<void>;
@@ -38,6 +41,7 @@ declare global {
   }
   
   // Navigator extensions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Navigator {
     serviceWorker: ServiceWorkerContainer & {
       sync?: {

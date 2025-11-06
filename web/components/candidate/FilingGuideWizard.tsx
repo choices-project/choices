@@ -111,7 +111,7 @@ export function FilingGuideWizard({
       content: (
         <div className="space-y-4">
           <p className="text-gray-700">
-            Before filing, it's important to understand the specific requirements for your office and jurisdiction.
+            Before filing, it{`'`}s important to understand the specific requirements for your office and jurisdiction.
           </p>
           
           {/* Show actual requirements if available */}
