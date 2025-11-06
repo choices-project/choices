@@ -457,8 +457,9 @@ export const useUserStore = create<UserStore>()(
             // 🔒 PRIVACY: Only store address if:
             // 1. User has opted in to location collection, OR
             // 2. Temporary flag is false and we have consent
-            const profile = state.profile;
-            const canStoreLocation = profile?.privacy_settings?.collectLocationData === true;
+            const canStoreLocation: boolean = Boolean(
+              (state.profile as any)?.privacy_settings?.collectLocationData
+            );
             
             // Always update representatives (they requested them)
             state.representatives = representatives;

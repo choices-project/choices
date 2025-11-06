@@ -26,13 +26,24 @@ export type {
   WidgetConfig,
   WidgetProps,
   WidgetComponent,
-  WidgetRegistration,
+  WidgetRegistryEntry,
   DashboardConfig,
   WidgetDataResponse,
-  QueryBuilderConfig,
-  PermissionLevel,
-  ExportFormat
+  DashboardLayout,
+  WidgetMetadata,
+  WidgetState,
+  WidgetAction,
+  LayoutPreset,
+  Breakpoint,
+  WidgetPosition,
+  WidgetSettings,
 } from './types/widget';
+
+// Widget System
+export { WidgetDashboard, default as WidgetDashboardDefault } from './components/widgets/WidgetDashboard';
+export { WidgetGrid } from './components/widgets/WidgetGrid';
+export { WidgetRenderer } from './components/widgets/WidgetRenderer';
+export { WidgetSelector } from './components/widgets/WidgetSelector';
 
 // Widget Registry
 export { 
@@ -42,3 +53,18 @@ export {
   getAccessibleWidgets,
   generateWidgetId
 } from './lib/widgetRegistry';
+
+// Widget Presets
+export {
+  LAYOUT_PRESETS,
+  getAllPresets,
+  getPreset,
+  getPresetsByCategory,
+  getDefaultPreset
+} from './lib/widgetPresets';
+
+// Widget Store
+export { useWidgetStore, selectIsEditing, selectCurrentLayout, selectAllWidgets, selectSelectedWidget } from './stores/widgetStore';
+
+// Widget Hooks
+export { useWidgetKeyboardShortcuts } from './hooks/useWidgetKeyboardShortcuts';

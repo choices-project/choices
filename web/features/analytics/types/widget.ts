@@ -1,21 +1,28 @@
 /**
  * Widget System Types
  * 
- * Core type definitions for the modular analytics widget system.
- * Every widget follows these interfaces for consistency and flexibility.
+ * Comprehensive type definitions for the analytics widget system.
+ * Supports drag-and-drop, customization, and persistence.
  * 
  * Created: November 5, 2025
- * Status: ✅ Foundation for customizable analytics
+ * Status: PRODUCTION
  */
 
-import { ReactElement } from 'react';
+import type { Layout as GridLayout } from 'react-grid-layout';
 
-/**
- * Widget Types - Add new types here as you create new widgets
- */
-export type WidgetType =
+// ============================================================================
+// WIDGET TYPES
+// ============================================================================
+
+export type WidgetType = 
+  | 'trends'
+  | 'demographics'
+  | 'temporal'
+  | 'trust-tiers'
   | 'poll-heatmap'
   | 'district-heatmap'
+  | 'custom'
+  // OLD widget registry types (for backward compatibility)
   | 'trends-chart'
   | 'demographics-chart'
   | 'temporal-analysis'
@@ -24,156 +31,243 @@ export type WidgetType =
   | 'custom-table'
   | 'custom-query';
 
-/**
- * Widget Size - Determines grid layout size
- */
-export type WidgetSize = 'small' | 'medium' | 'large' | 'full';
+export type WidgetSize = {
+  w: number; // Width in grid units (12-column grid)
+  h: number; // Height in grid units (1 unit = ~100px)
+};
 
-/**
- * Permission Level - Who can access this widget
- */
-export type PermissionLevel = 'admin' | 'T3' | 'T2' | 'T1' | 'public';
+export type WidgetPosition = {
+  x: number; // X position in grid units
+  y: number; // Y position in grid units
+};
 
-/**
- * Export Formats
- */
-export type ExportFormat = 'csv' | 'json' | 'png' | 'pdf';
+// ============================================================================
+// WIDGET CONFIGURATION
+// ============================================================================
 
-/**
- * Widget Configuration
- * Stored in database, defines how widget behaves
- */
-export type WidgetConfig = {
+export interface BaseWidgetConfig {
   id: string;
   type: WidgetType;
   title: string;
   description?: string;
-  size: WidgetSize;
-  position: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
-  filters: Record<string, any>;
-  refreshInterval?: number; // Auto-refresh in milliseconds
-  exportFormats: ExportFormat[];
-  requiresPermission: PermissionLevel;
-  customSettings?: Record<string, any>; // Widget-specific settings
-  created_at?: string;
-  updated_at?: string;
-};
-
-/**
- * Widget Props Interface
- * Every widget component must accept these props
- */
-export interface WidgetProps<TData = any> {
-  config: WidgetConfig;
-  data?: TData;
-  isLoading?: boolean;
-  error?: string | null;
-  onConfigChange: (config: Partial<WidgetConfig>) => void;
-  onExport: (format: ExportFormat) => Promise<void>;
-  onRefresh: () => Promise<void>;
-  className?: string;
+  icon?: string;
+  enabled: boolean;
 }
 
-/**
- * Widget Component Type
- * Type signature for widget components
- */
-export type WidgetComponent<TData = any> = (
-  props: WidgetProps<TData>
-) => ReactElement;
+export interface WidgetLayoutConfig extends BaseWidgetConfig {
+  position: WidgetPosition;
+  size: WidgetSize;
+  minSize?: WidgetSize;
+  maxSize?: WidgetSize;
+  static?: boolean; // Cannot be moved/resized
+}
 
-/**
- * Widget Registration
- * Metadata about each widget type for the registry
- */
+export interface WidgetSettings {
+  // Common settings
+  refreshInterval?: number; // Auto-refresh in seconds
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  
+  // Widget-specific settings
+  filters?: Record<string, any>;
+  displayOptions?: Record<string, any>;
+  customizations?: Record<string, any>;
+}
+
+export interface WidgetConfig extends WidgetLayoutConfig {
+  settings: WidgetSettings;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// DASHBOARD LAYOUT
+// ============================================================================
+
+export type Breakpoint = 'lg' | 'md' | 'sm' | 'xs';
+
+export interface DashboardLayout {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  widgets: WidgetConfig[];
+  
+  // Responsive layouts for different breakpoints
+  breakpoints?: {
+    lg?: GridLayout[];
+    md?: GridLayout[];
+    sm?: GridLayout[];
+    xs?: GridLayout[];
+  };
+  
+  isDefault: boolean;
+  isPreset: boolean; // System preset vs user-created
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// WIDGET METADATA
+// ============================================================================
+
+export interface WidgetMetadata {
+  type: WidgetType;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'overview' | 'detailed' | 'engagement' | 'geographic';
+  
+  // Default configuration
+  defaultSize: WidgetSize;
+  minSize: WidgetSize;
+  maxSize?: WidgetSize;
+  
+  // Capabilities
+  capabilities: {
+    resizable: boolean;
+    draggable: boolean;
+    configurable: boolean;
+    exportable: boolean;
+  };
+  
+  // Data requirements
+  dataRequirements?: {
+    adminOnly?: boolean;
+    permissions?: string[];
+    features?: string[];
+  };
+}
+
+// ============================================================================
+// WIDGET REGISTRY
+// ============================================================================
+
+export interface WidgetRegistryEntry {
+  metadata: WidgetMetadata;
+  component: React.ComponentType<WidgetProps>;
+  configComponent?: React.ComponentType<WidgetConfigProps>;
+}
+
+export type WidgetRegistry = Map<WidgetType, WidgetRegistryEntry>;
+
+// For the OLD widget registry system that uses a plain object (Record)
 export type WidgetRegistration = {
   type: WidgetType;
   name: string;
   description: string;
-  component: WidgetComponent;
-  icon?: string;
-  defaultConfig: Partial<WidgetConfig>;
-  dataSource: string; // Which API endpoint
-  supportedExports: ExportFormat[];
-  requiredPermission: PermissionLevel;
-  category: 'polls' | 'users' | 'districts' | 'general';
+  component: any;
+  icon: string;
+  defaultConfig: any;
+  dataSource: string;
+  supportedExports: string[];
+  requiredPermission: string;
+  category: string;
 };
 
-/**
- * Dashboard Configuration
- * Stores complete dashboard layout and widgets
- */
-export type DashboardConfig = {
+export type WidgetRegistryType = Partial<Record<WidgetType, WidgetRegistration>>;
+
+// ============================================================================
+// WIDGET COMPONENT PROPS
+// ============================================================================
+
+export interface WidgetProps {
+  id: string;
+  config: WidgetConfig;
+  onConfigChange?: (config: Partial<WidgetConfig>) => void;
+  onRemove?: () => void;
+  isLoading?: boolean;
+  error?: Error;
+}
+
+export interface WidgetConfigProps {
+  config: WidgetConfig;
+  onChange: (settings: Partial<WidgetSettings>) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+// ============================================================================
+// WIDGET ACTIONS
+// ============================================================================
+
+export type WidgetAction = 
+  | { type: 'ADD_WIDGET'; payload: WidgetConfig }
+  | { type: 'REMOVE_WIDGET'; payload: { id: string } }
+  | { type: 'UPDATE_WIDGET'; payload: { id: string; changes: Partial<WidgetConfig> } }
+  | { type: 'MOVE_WIDGET'; payload: { id: string; position: WidgetPosition } }
+  | { type: 'RESIZE_WIDGET'; payload: { id: string; size: WidgetSize } }
+  | { type: 'LOAD_LAYOUT'; payload: DashboardLayout }
+  | { type: 'SAVE_LAYOUT'; payload: Partial<DashboardLayout> }
+  | { type: 'RESET_LAYOUT' }
+  | { type: 'APPLY_PRESET'; payload: { presetId: string } };
+
+// ============================================================================
+// WIDGET STATE
+// ============================================================================
+
+export interface WidgetState {
+  layouts: DashboardLayout[];
+  currentLayout: DashboardLayout | null;
+  widgets: Map<string, WidgetConfig>;
+  
+  // UI state
+  isEditing: boolean;
+  selectedWidgetId: string | null;
+  isDragging: boolean;
+  
+  // History for undo/redo
+  history: DashboardLayout[];
+  historyIndex: number;
+}
+
+// ============================================================================
+// LAYOUT PRESETS
+// ============================================================================
+
+export interface LayoutPreset {
   id: string;
   name: string;
   description: string;
-  owner_id: string;
-  widgets: WidgetConfig[];
-  layout: {
-    cols: number;
-    rowHeight: number;
-    breakpoints: Record<string, number>;
-  };
-  is_template: boolean;
-  is_public: boolean;
-  created_at: string;
-  updated_at: string;
+  thumbnail?: string;
+  layout: Omit<DashboardLayout, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
+  category: 'executive' | 'detailed' | 'mobile' | 'custom';
+}
+
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
+
+export type WidgetError = {
+  widgetId: string;
+  error: Error;
+  timestamp: Date;
 };
 
-/**
- * Widget Data Response
- * Standard API response format for widget data
- */
+export type WidgetLoadingState = {
+  widgetId: string;
+  isLoading: boolean;
+};
+
+// ============================================================================
+// BACKWARD COMPATIBILITY TYPES
+// ============================================================================
+
+export type WidgetComponent<TData = any> = React.ComponentType<WidgetProps>;
+export type DashboardConfig = DashboardLayout;
 export type WidgetDataResponse<TData = any> = {
   ok: boolean;
   data: TData;
-  cached: boolean;
-  cache_expires_at?: string;
-  query_time_ms: number;
+  cached?: boolean;
   error?: string;
 };
 
-/**
- * Query Builder Types
- * For custom query widgets
- */
-export type QueryBuilderConfig = {
-  dataSource: 'polls' | 'votes' | 'users' | 'civic_actions';
-  fields: string[];
-  filters: QueryFilter[];
-  groupBy?: string[];
-  aggregations?: Aggregation[];
-  orderBy?: OrderBy[];
-  limit?: number;
-  offset?: number;
+// ============================================================================
+// EXPORT ALL TYPES
+// ============================================================================
+
+export type {
+  GridLayout // Re-export from react-grid-layout
 };
-
-export type QueryFilter = {
-  field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'gt' | 'lt' | 'gte' | 'lte' | 'between' | 'in';
-  value: any;
-  logicalOperator?: 'AND' | 'OR';
-};
-
-export type Aggregation = {
-  function: 'count' | 'sum' | 'avg' | 'min' | 'max' | 'distinct';
-  field: string;
-  alias: string;
-};
-
-export type OrderBy = {
-  field: string;
-  direction: 'asc' | 'desc';
-};
-
-/**
- * Widget Registry Entry
- * Maps widget type to its metadata
- */
-export type WidgetRegistry = Record<WidgetType, WidgetRegistration>;
-

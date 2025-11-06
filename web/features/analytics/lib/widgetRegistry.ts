@@ -9,7 +9,7 @@
  */
 
 import { lazy } from 'react';
-import type { WidgetRegistry, WidgetType } from '../types/widget';
+import type { WidgetRegistryType, WidgetType } from '../types/widget';
 
 // Lazy load widget components for better performance
 const PollHeatmap = lazy(() => import('../components/PollHeatmap'));
@@ -26,7 +26,7 @@ const DemographicsChart = lazy(() => import('../components/DemographicsChart'));
  * 3. Add entry to this registry
  * 4. Done! It's now available in dashboard builder
  */
-export const WIDGET_REGISTRY: WidgetRegistry = {
+export const WIDGET_REGISTRY: WidgetRegistryType = {
   'poll-heatmap': {
     type: 'poll-heatmap',
     name: 'Poll Engagement Heatmap',
