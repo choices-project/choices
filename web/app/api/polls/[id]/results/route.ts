@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const { searchParams } = new URL(request.url);
     const trustTier = searchParams.get('tier');
     
@@ -27,12 +27,9 @@ export async function GET(
       .eq('is_public', true)
       .single();
 
-    if (pollError || !poll) {
-      return NextResponse.json(
-        { error: 'Poll not found' }, 
-        { status: 404 }
-      );
-    }
+  if (pollError || !poll) {
+    return notFoundError('Poll not found');
+  }
 
     // Get results with optional trust tier filter
     const { data: results, error: resultsError } = await supabase
@@ -41,26 +38,15 @@ export async function GET(
         p_trust_tier: trustTier ? parseInt(trustTier) : null
       });
 
-    if (resultsError) {
-      logger.error('Results query error:', resultsError);
-      return NextResponse.json(
-        { error: 'Failed to get results' }, 
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      poll_id: id,
-      trust_tier_filter: trustTier ? parseInt(trustTier) : null,
-      results: results || [],
-      total_votes: results?.reduce((sum: number, r: any) => sum + r.vote_count, 0) || 0
-    });
-
-  } catch (error) {
-    logger.error('Poll results error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
+  if (resultsError) {
+    logger.error('Results query error:', resultsError);
+    return errorResponse('Failed to get results', 500);
   }
-}
+
+  return successResponse({
+    poll_id: id,
+    trust_tier_filter: trustTier ? parseInt(trustTier) : null,
+    results: results || [],
+    total_votes: results?.reduce((sum: number, r: any) => sum + r.vote_count, 0) || 0
+  });
+});
