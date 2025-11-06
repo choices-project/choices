@@ -88,7 +88,7 @@ export const CACHEABLE_API_ROUTES = [
 export const UNCACHEABLE_API_ROUTES = [
   '/api/auth',
   '/api/admin',
-  '/api/polls/*/vote',     // Voting must be real-time
+  '/api/polls/*/vote',     // Voting must be real-time (handles all 6 voting methods)
   '/api/polls/*/close',    // Poll operations
   '/api/polls/*/lock',
   '/api/profile',          // CONSOLIDATED: Profile updates/deletes via POST/PUT/PATCH/DELETE

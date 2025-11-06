@@ -176,7 +176,7 @@ export class OfflineOutbox {
     formData.append('optionIds', JSON.stringify(vote.optionIds))
     formData.append('anonymous', vote.anonymous.toString())
 
-    const response = await fetch('/api/vote', {
+    const response = await fetch(`/api/polls/${payload.pollId}/vote`, {
       method: 'POST',
       body: formData,
       headers: {

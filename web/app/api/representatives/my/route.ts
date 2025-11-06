@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
-  
+
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required');
   }

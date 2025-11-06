@@ -11,15 +11,15 @@ export const POST = withErrorHandling(async (
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
-  
+
   if (isNaN(representativeId)) {
     return validationError({ id: 'Invalid representative ID' });
   }
 
   const supabase = await getSupabaseServerClient();
-  
+
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required');
   }
@@ -44,9 +44,9 @@ export const POST = withErrorHandling(async (
       .single();
 
   if (existing) {
-    return successResponse({ 
+    return successResponse({
       message: 'Already following this representative',
-      following: true 
+      following: true
     });
   }
 
@@ -86,15 +86,15 @@ export const DELETE = withErrorHandling(async (
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
-  
+
   if (isNaN(representativeId)) {
     return validationError({ id: 'Invalid representative ID' });
   }
 
   const supabase = await getSupabaseServerClient();
-  
+
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required');
   }
@@ -127,15 +127,15 @@ export const GET = withErrorHandling(async (
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
-  
+
   if (isNaN(representativeId)) {
     return validationError({ id: 'Invalid representative ID' });
   }
 
   const supabase = await getSupabaseServerClient();
-  
+
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required');
   }
