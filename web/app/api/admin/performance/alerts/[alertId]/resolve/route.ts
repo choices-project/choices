@@ -1,46 +1,27 @@
-// Admin Performance Alert Resolution API
-// Allows admins to resolve performance alerts
-// Created: October 2, 2025
-
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { withErrorHandling, successResponse, notFoundError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-export async function POST(
+export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ alertId: string }> }
-) {
-  try {
-    const { alertId } = await params;
-    // Admin authentication
-    const authGate = await requireAdminOr401();
-    if (authGate) return authGate;
+) => {
+  const { alertId } = await params;
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
 
-    // Resolve the alert
-    const resolved = performanceMonitor.resolveAlert(alertId);
+  const resolved = performanceMonitor.resolveAlert(alertId);
 
-    if (!resolved) {
-      return NextResponse.json(
-        { error: 'Alert not found' },
-        { status: 404 }
-      );
-    }
-
-    logger.info('Performance alert resolved', { alertId });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Alert resolved successfully'
-    });
-
-  } catch (error) {
-    logger.error('Error resolving performance alert:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (!resolved) {
+    return notFoundError('Alert not found');
   }
-}
+
+  logger.info('Performance alert resolved', { alertId });
+
+  return successResponse({
+    message: 'Alert resolved successfully'
+  });
+});
