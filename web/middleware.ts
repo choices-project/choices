@@ -1,26 +1,23 @@
-// Import SSR polyfills first
-import './ssr-polyfills'
-
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { 
-  getSecurityConfig, 
-  buildCSPHeader as buildCSPHeaderFromConfig, 
-  isBlockedUserAgent, 
-  anonymizeIP 
+import {
+  getSecurityConfig,
+  buildCSPHeader as buildCSPHeaderFromConfig,
+  isBlockedUserAgent,
+  anonymizeIP
 } from '@/lib/core/security/config'
 
 /**
  * Security Middleware
  * Implements comprehensive security headers and CSP policies
- * 
+ *
  * Security Features:
  * - Content Security Policy (CSP)
  * - Security headers (HSTS, X-Frame-Options, etc.)
  * - Rate limiting for sensitive endpoints
  * - Request validation and sanitization
- * 
+ *
  * Created: 2025-08-27
  * Status: Critical security enhancement
  */
@@ -38,21 +35,21 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 function shouldBypassForE2E(req: NextRequest): boolean {
   const E2E_HEADER = 'x-e2e-bypass';
   const E2E_COOKIE = 'E2E';
-  
+
   // Environment-based bypass
   const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
-  
+
   // Multiple bypass methods for browser compatibility
   const byHeader = req.headers.get(E2E_HEADER) === '1';
   const byQuery = req.nextUrl.searchParams.get('e2e') === '1';
   const byCookie = req.cookies.get(E2E_COOKIE)?.value === '1';
-  
+
   // Local development bypass
   const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
   const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))
-  
+
   const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
-  
+
   return Boolean(!rateLimitEnabled ||
          bypass ||
          byHeader ||
@@ -67,15 +64,15 @@ function shouldBypassForE2E(req: NextRequest): boolean {
 function checkRateLimit(ip: string, path: string, req: NextRequest): boolean {
   // Bypass rate limiting for E2E tests
   if (shouldBypassForE2E(req)) return true
-  
+
   const now = Date.now()
   const key = `${ip}:${path}`
   const record = rateLimitStore.get(key)
-  
+
   // Get rate limit for this endpoint
-  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints)[path] ?? 
+  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints)[path] ??
                      SECURITY_CONFIG.rateLimit.maxRequests
-  
+
   if (!record || now > record.resetTime) {
     // Reset or create new record
     rateLimitStore.set(key, {
@@ -84,11 +81,11 @@ function checkRateLimit(ip: string, path: string, req: NextRequest): boolean {
     })
     return true
   }
-  
+
   if (record.count >= maxRequests) {
     return false // Rate limit exceeded
   }
-  
+
   // Increment count
   record.count++
   return true
@@ -108,13 +105,13 @@ function getClientIP(request: NextRequest): string {
       return firstIP.trim()
     }
   }
-  
+
   // Check for real IP header
   const realIP = request.headers.get('x-real-ip')
   if (realIP) {
     return realIP
   }
-  
+
   // Fallback to connection remote address
   return request.ip ?? 'unknown'
 }
@@ -125,30 +122,30 @@ function getClientIP(request: NextRequest): string {
 function validateRequest(request: NextRequest): { valid: boolean; reason?: string } {
   const _url = request.nextUrl
   const method = request.method
-  
+
   // Block suspicious requests
   if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
     const contentType = request.headers.get('content-type')
-    
+
     // Require proper content type for POST requests
-    if (method === 'POST' && !SECURITY_CONFIG.validation.allowedContentTypes.some(type => 
+    if (method === 'POST' && !SECURITY_CONFIG.validation.allowedContentTypes.some(type =>
         contentType?.includes(type))) {
       return { valid: false, reason: 'Invalid content type' }
     }
-    
+
     // Check for suspicious user agents
     const userAgent = request.headers.get('user-agent')
     if (userAgent && isBlockedUserAgent(userAgent, SECURITY_CONFIG.validation)) {
       return { valid: false, reason: 'Suspicious user agent' }
     }
   }
-  
+
   return { valid: true }
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
+
   // MAINTENANCE MODE CHECK - This must be first!
   if (process.env.NEXT_PUBLIC_MAINTENANCE === "1") {
     return new NextResponse(
@@ -164,7 +161,7 @@ export function middleware(request: NextRequest) {
       }
     );
   }
-  
+
   // Skip middleware for static files and API routes that don't need security headers
   if (
     pathname.startsWith('/_next/') ||
@@ -177,7 +174,7 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next()
   }
-  
+
   // Validate request
   const validation = validateRequest(request)
   if (!validation.valid) {
@@ -186,46 +183,46 @@ export function middleware(request: NextRequest) {
       path: pathname,
       userAgent: request.headers.get('user-agent')
     })
-    
+
     return new NextResponse('Forbidden', { status: 403 })
   }
-  
+
   // Check rate limiting for sensitive endpoints (only if enabled)
   const clientIP = getClientIP(request)
   const isSensitiveEndpoint = Object.keys(SECURITY_CONFIG.rateLimit.sensitiveEndpoints)
     .some(endpoint => pathname.startsWith(endpoint))
-  
+
   if (SECURITY_CONFIG.rateLimit.enabled && isSensitiveEndpoint && !checkRateLimit(clientIP, pathname, request)) {
     console.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
-    
-    return new NextResponse('Too Many Requests', { 
+
+    return new NextResponse('Too Many Requests', {
       status: 429,
       headers: {
         'Retry-After': '900' // 15 minutes
       }
     })
   }
-  
+
   // Create response
   const response = NextResponse.next()
-  
+
   // Add security headers
   Object.entries(SECURITY_CONFIG.headers).forEach(([header, value]) => {
     response.headers.set(header, value)
   })
-  
+
   // Add CSP header
   response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(SECURITY_CONFIG.csp))
-  
+
   // Add HSTS header (only for HTTPS)
-  if (request.headers.get('x-forwarded-proto') === 'https' || 
+  if (request.headers.get('x-forwarded-proto') === 'https' ||
       process.env.NODE_ENV === 'production') {
     response.headers.set(
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'
     )
   }
-  
+
   // Add security logging
   if (process.env.NODE_ENV === 'production') {
     const logIP = SECURITY_CONFIG.privacy.anonymizeIPs ? anonymizeIP(clientIP) : clientIP
@@ -237,7 +234,7 @@ export function middleware(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
   }
-  
+
   return response
 }
 

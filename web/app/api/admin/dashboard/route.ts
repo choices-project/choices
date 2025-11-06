@@ -1,16 +1,4 @@
-/**
- * @fileoverview Admin Dashboard API
- * 
- * Admin dashboard endpoint providing platform metrics, user statistics,
- * and administrative data with caching and query optimization.
- * 
- * @author Choices Platform Team
- * @created 2025-10-24
- * @version 2.0.0
- * @since 1.0.0
- */
-
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
@@ -80,19 +68,19 @@ type AdminDashboardData = {
 
 /**
  * Get admin dashboard data
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} [request.searchParams.include] - Data sections to include (default: 'all')
  * @param {boolean} [request.searchParams.cache] - Whether to use cache (default: true)
  * @returns {Promise<NextResponse>} Admin dashboard data
- * 
+ *
  * @example
  * GET /api/admin/dashboard
  * GET /api/admin/dashboard?include=overview,analytics&cache=false
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     const { searchParams } = new URL(request.url);
     const include = searchParams.get('include') ?? 'all';
@@ -123,7 +111,7 @@ export async function GET(request: NextRequest) {
       .select('is_admin')
       .eq('user_id', user.id)
       .single();
-    
+
     const isAdmin = profile?.is_admin ?? false;
 
     if (!isAdmin) {
@@ -223,7 +211,7 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
   const cacheKey = 'admin:overview';
   const cache = await getRedisClient();
   const cacheTTLSeconds = 60 * 5;
-  
+
   // Check cache first
   const cached = await cache.get(cacheKey);
   if (cached && typeof cached === 'object' && 'total_users' in cached && 'total_polls' in cached) {
@@ -271,7 +259,7 @@ async function loadAdminAnalytics(_supabase: any) {
   const cacheKey = 'admin:analytics';
   const cache = await getRedisClient();
   const cacheTTLSeconds = 60 * 10;
-  
+
   // Check cache first
   const cached = await cache.get(cacheKey);
   if (cached) {
@@ -328,7 +316,7 @@ async function loadSystemHealth(supabase: any) {
   const cacheKey = 'admin:system_health';
   const cache = await getRedisClient();
   const _cacheTTLSeconds = 60;
-  
+
   // Check cache first
   const cached = await cache.get(cacheKey);
   if (cached) {
@@ -340,7 +328,7 @@ async function loadSystemHealth(supabase: any) {
     const startTime = Date.now();
     const { error: dbError } = await supabase.from('user_profiles').select('id').limit(1);
     const dbLatency = Date.now() - startTime;
-    
+
     const result = {
       status: dbError ? 'degraded' : 'operational',
       database_latency_ms: dbLatency,
@@ -370,7 +358,7 @@ async function loadRecentActivity(supabase: any) {
   const cacheKey = 'admin:recent_activity';
   const cache = await getRedisClient();
   const cacheTTLSeconds = 60 * 2;
-  
+
   // Check cache first
   const cached = await cache.get(cacheKey);
   if (cached) {

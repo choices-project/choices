@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import React, { Suspense, useEffect, useState } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import { get, ApiError, type UserProfile } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 // Use PersonalDashboard as the main dashboard component
@@ -22,44 +23,43 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Server-side authentication check using profile API
+  // Server-side authentication check using profile API with typed client
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
         logger.debug('🔍 Dashboard: Checking server-side authentication...');
-        
-        const response = await fetch('/api/profile', {
-          credentials: 'include',
-        });
-        
-        if (response.ok) {
-          const profileData = await response.json();
-          const hasProfile = !!profileData.profile;
-          logger.debug('🔍 Dashboard: Server auth result:', { hasProfile, userId: profileData.profile?.user_id });
-          
-          setIsAuthenticated(hasProfile);
-          setIsLoading(false);
-          
-          if (!hasProfile) {
-            logger.debug('🚨 Dashboard: No profile found - redirecting to login');
-            router.push('/auth');
-          }
-        } else {
-          logger.debug('🚨 Dashboard: Profile API failed - redirecting to login');
-          setIsAuthenticated(false);
-          setIsLoading(false);
+
+        const profileData = await get<{ profile: UserProfile | null }>('/api/profile');
+        const hasProfile = !!profileData.profile;
+        logger.debug('🔍 Dashboard: Server auth result:', { hasProfile, userId: profileData.profile?.user_id });
+
+        setIsAuthenticated(hasProfile);
+        setIsLoading(false);
+
+        if (!hasProfile) {
+          logger.debug('🚨 Dashboard: No profile found - redirecting to login');
           router.push('/auth');
         }
       } catch (error) {
         logger.debug('❌ Dashboard: Authentication check failed:', error);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        router.push('/auth');
+
+        if (error instanceof ApiError && error.isAuthError()) {
+          logger.debug('🚨 Dashboard: Auth error - redirecting to login');
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          router.push('/auth');
+        } else {
+          // Other errors - show error but don't redirect immediately
+          logger.error('Dashboard error:', error);
+          setIsAuthenticated(false);
+          setIsLoading(false);
+        }
       }
     };
 
     checkAuthentication();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount, router is stable
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -87,7 +87,7 @@ export default function DashboardPage() {
     <>
       {/* 🔒 Cohesive Dashboard Navigation */}
       <DashboardNavigation />
-      
+
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
@@ -97,7 +97,7 @@ export default function DashboardPage() {
           <PersonalDashboard />
         </div>
       </Suspense>
-      
+
       {/* 🔒 Mobile Navigation */}
       <MobileDashboardNav />
     </>

@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/hashtag-trending-notifications",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 18 * * *"
     }
   ]
 }

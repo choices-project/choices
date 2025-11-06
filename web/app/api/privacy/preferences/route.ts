@@ -1,24 +1,23 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  try {
-    const supabase = await getSupabaseServerClient()
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
-    }
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withErrorHandling(async () => {
+  const supabase = await getSupabaseServerClient()
+  
+  if (!supabase) {
+    return errorResponse('Database connection failed', 500);
+  }
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
     // Get privacy preferences
     const { data: preferences, error: preferencesError } = await (supabase as any)
@@ -27,10 +26,10 @@ export async function GET() {
       .eq('user_id', String(user.id))
       .single()
 
-    if (preferencesError && preferencesError.code !== 'PGRST116') {
-      devLog('Error fetching privacy preferences:', preferencesError)
-      return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 })
-    }
+  if (preferencesError && preferencesError.code !== 'PGRST116') {
+    devLog('Error fetching privacy preferences:', preferencesError)
+    return errorResponse('Failed to fetch preferences', 500);
+  }
 
     // Return default preferences if none exist
     const defaultPreferences = {
@@ -47,14 +46,10 @@ export async function GET() {
       updated_at: new Date().toISOString()
     }
 
-    return NextResponse.json({
-      preferences: preferences ?? defaultPreferences
-    })
-  } catch (error) {
-    devLog('Error in privacy preferences GET:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return successResponse({
+    preferences: preferences ?? defaultPreferences
+  });
+});
 
 export async function POST(request: NextRequest) {
   try {

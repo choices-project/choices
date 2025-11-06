@@ -1,13 +1,12 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') ?? '3')
     
@@ -35,10 +34,10 @@ export async function GET(request: NextRequest) {
       .order('total_votes', { ascending: false })
       .limit(limit)
     
-    if (error) {
-      logger.error('Error fetching trending polls:', error)
-      return NextResponse.json({ polls: [] }, { status: 500 })
-    }
+  if (error) {
+    logger.error('Error fetching trending polls:', error)
+    return errorResponse('Failed to fetch trending polls', 500);
+  }
     
     // Transform data for frontend
     const transformedPolls = polls.map(poll => ({
@@ -57,14 +56,8 @@ export async function GET(request: NextRequest) {
       })) ?? []
     })) ?? []
     
-    return NextResponse.json({ polls: transformedPolls })
-    
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-    logger.error('Error in trending polls API:', err)
-    return NextResponse.json({ polls: [] }, { status: 500 })
-  }
-}
+  return successResponse({ polls: transformedPolls });
+});
 
 function getTimeRemaining(endDate: string | null): string {
   if (!endDate) return 'No end date'

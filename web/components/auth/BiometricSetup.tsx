@@ -8,13 +8,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { devLog } from '@/lib/utils/logger'
 import {
   registerBiometric,
   isWebAuthnSupported, 
   isBiometricAvailable,
   getUserCredentials
-} from '@/lib/webauthn/client'
+} from '@/features/auth/lib/webauthn/client'
+import { devLog } from '@/lib/utils/logger'
 
 // Context for sharing biometric setup state
 const BiometricSetupContext = createContext<{

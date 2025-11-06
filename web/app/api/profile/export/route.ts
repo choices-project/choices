@@ -7,11 +7,13 @@
  * 🔒 PRIVACY: Only exports data user has opted in to collect
  * 
  * Created: November 5, 2025
+ * Updated: November 6, 2025 - Modernized with standardized responses
  * Status: ✅ ACTIVE - PRODUCTION READY
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import type { PrivacySettings } from '@/types/profile';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -29,26 +31,19 @@ export const dynamic = 'force-dynamic';
  * - Privacy settings (always included)
  * - Optional data based on privacy opt-ins
  */
-export async function POST(_request: NextRequest) {
-  try {
-    // Get authenticated user
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
+export const POST = withErrorHandling(async (_request: NextRequest) => {
+  // Get authenticated user
+  const supabase = await getSupabaseServerClient();
+  
+  if (!supabase) {
+    return errorResponse('Supabase not configured', 500);
+  }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { success: false, error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session?.user) {
+    return authError('User not authenticated');
+  }
     
     const user = session.user;
     const userId = user.id;
@@ -62,13 +57,10 @@ export async function POST(_request: NextRequest) {
       .eq('id', userId)
       .single();
 
-    if (profileError) {
-      logger.error('Failed to fetch profile for export', profileError);
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch profile data' },
-        { status: 500 }
-      );
-    }
+  if (profileError) {
+    logger.error('Failed to fetch profile for export', profileError);
+    return errorResponse('Failed to fetch profile data', 500);
+  }
 
     const privacySettings = profile?.privacy_settings as PrivacySettings | null;
 
@@ -253,28 +245,16 @@ export async function POST(_request: NextRequest) {
       }
     };
 
-    logger.info('Data export completed successfully', {
-      userId,
-      categoriesIncluded: Object.keys(exportData).length - 1, // -1 for summary
-      totalDataPoints: totalDataPoints,
-      privacyOptIns: exportData.summary.privacyOptIns
-    });
+  logger.info('Data export completed successfully', {
+    userId,
+    categoriesIncluded: Object.keys(exportData).length - 1, // -1 for summary
+    totalDataPoints: totalDataPoints,
+    privacyOptIns: exportData.summary.privacyOptIns
+  });
 
-    return NextResponse.json({
-      success: true,
-      data: exportData,
-      exportedAt: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('Data export failed', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to export data' 
-      },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse(exportData, {
+    exportedAt: new Date().toISOString(),
+    categoriesIncluded: Object.keys(exportData).length - 1,
+    totalDataPoints
+  });
+});

@@ -1,17 +1,17 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
+import { withErrorHandling, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   // Single admin gate - returns 401 if not admin
   const authGate = await requireAdminOr401()
   if (authGate) return authGate
   
-  try {
     const supabase = await getSupabaseServerClient();
 
     // Get query parameters
@@ -54,13 +54,10 @@ export async function GET(request: NextRequest) {
 
     const { data: users, error, count } = await query
 
-    if (error) {
-      logger.error('Error fetching users:', error)
-      return NextResponse.json(
-        { message: 'Failed to fetch users' },
-        { status: 500 }
-      )
-    }
+  if (error) {
+    logger.error('Error fetching users:', error)
+    return errorResponse('Failed to fetch users', 500);
+  }
 
     return NextResponse.json({
       users,
@@ -70,19 +67,8 @@ export async function GET(request: NextRequest) {
         total: count ?? 0,
         pages: Math.ceil((count ?? 0) / limit),
       },
-    })
-
-  } catch (error) {
-    // narrow 'unknown' → Error
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Admin users API error:', err)
-    
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+    });
+});
 
 export async function PUT(request: NextRequest) {
   // Single admin gate - returns 401 if not admin

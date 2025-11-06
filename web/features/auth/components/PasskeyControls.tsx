@@ -1,8 +1,6 @@
 'use client';
 import * as React from 'react';
 
-import { T } from '@/tests/registry/testIds';
-
 export function PasskeyControls() {
   const [mode, setMode] = React.useState<'idle'|'register'|'login'|'viewing'|'crossDevice'|'biometric'>('idle');
   const [credentials, setCredentials] = React.useState<Array<{id: string, name: string}>>([]);
@@ -70,14 +68,14 @@ export function PasskeyControls() {
       {/* Main buttons */}
       <div className="space-x-2">
         <button 
-          data-testid={T.WEBAUTHN.WEBAUTHN_REGISTER} 
+          data-testid="webauthn-register" 
           className="btn" 
           onClick={handleRegister}
         >
           Register a passkey
         </button>
         <button 
-          data-testid={T.WEBAUTHN.login} 
+          data-testid="webauthn-login" 
           className="btn" 
           onClick={handleLogin}
         >
@@ -101,13 +99,13 @@ export function PasskeyControls() {
 
       {/* Registration prompt */}
       {mode === 'register' && (
-        <div data-testid={T.WEBAUTHN.prompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
+        <div data-testid="webauthn-prompt" role="dialog" aria-modal="true" className="modal p-4 border rounded">
           <p>Registering passkey…</p>
           <div className="space-x-2 mt-4">
-            <button data-testid={T.WEBAUTHN.biometricButton} className="btn" onClick={handleBiometricAuth}>
+            <button data-testid="webauthn-biometric-button" className="btn" onClick={handleBiometricAuth}>
               Use biometrics
             </button>
-            <button data-testid={T.WEBAUTHN.crossDeviceButton} className="btn" onClick={handleCrossDeviceAuth}>
+            <button data-testid="webauthn-cross-device-button" className="btn" onClick={handleCrossDeviceAuth}>
               Use another device
             </button>
             <button data-testid="complete-registration-button" className="btn" onClick={handleCompleteRegistration}>
@@ -117,16 +115,16 @@ export function PasskeyControls() {
               Cancel
             </button>
           </div>
-          <div data-testid={T.WEBAUTHN.qr} className="qr-placeholder w-32 h-32 bg-gray-200 mt-4" />
+          <div data-testid="webauthn-qr" className="qr-placeholder w-32 h-32 bg-gray-200 mt-4" />
         </div>
       )}
 
       {/* Authentication prompt */}
       {mode === 'login' && (
-        <div data-testid={T.WEBAUTHN.authPrompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
+        <div data-testid="webauthn-auth-prompt" role="dialog" aria-modal="true" className="modal p-4 border rounded">
           <p>Authenticate with passkey…</p>
           <div className="space-x-2 mt-4">
-            <button data-testid={T.WEBAUTHN.biometricButton} className="btn" onClick={handleBiometricAuth}>
+            <button data-testid="webauthn-biometric-button" className="btn" onClick={handleBiometricAuth}>
               Use biometrics
             </button>
             <button data-testid="complete-authentication-button" className="btn" onClick={handleCompleteAuthentication}>
@@ -141,7 +139,7 @@ export function PasskeyControls() {
 
       {/* Biometric prompt */}
       {mode === 'biometric' && (
-        <div data-testid={T.WEBAUTHN.biometricPrompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
+        <div data-testid="webauthn-biometric-prompt" role="dialog" aria-modal="true" className="modal p-4 border rounded">
           <p>Biometric authentication…</p>
           <div className="space-x-2 mt-4">
             <button data-testid="complete-biometric-auth-button" className="btn" onClick={handleCompleteAuthentication}>
@@ -158,7 +156,7 @@ export function PasskeyControls() {
       {mode === 'crossDevice' && (
         <div className="modal p-4 border rounded">
           <p>Cross-device authentication…</p>
-          <div data-testid={T.WEBAUTHN.qr} className="qr-placeholder w-32 h-32 bg-gray-200 mt-4" />
+          <div data-testid="webauthn-qr" className="qr-placeholder w-32 h-32 bg-gray-200 mt-4" />
           <div className="space-x-2 mt-4">
             <button data-testid="simulate-qr-scan-button" className="btn">
               Simulate QR scan
@@ -248,12 +246,12 @@ export function PasskeyControls() {
         </div>
       )}
       {error === 'network-error' && (
-        <div data-testid={T.WEBAUTHN.networkError} className="p-4 bg-red-50 border border-red-200 rounded">
+        <div data-testid="webauthn-network-error" className="p-4 bg-red-50 border border-red-200 rounded">
           Network error
         </div>
       )}
       {error === 'server-error' && (
-        <div data-testid={T.WEBAUTHN.serverError} className="p-4 bg-red-50 border border-red-200 rounded">
+        <div data-testid="webauthn-server-error" className="p-4 bg-red-50 border border-red-200 rounded">
           Server error
         </div>
       )}

@@ -1,55 +1,50 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
 import { getUser } from '@/lib/core/auth/middleware'
-// import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
 import { AnalyticsService } from '@/lib/services/analytics'
-import { 
-  ValidationError, 
-  AuthenticationError, 
-  NotFoundError,
-  createErrorResponse
-} from '@/lib/utils/error-handler'
+import {
+  withErrorHandling,
+  successResponse,
+  authError,
+  validationError,
+  notFoundError,
+  errorResponse
+} from '@/lib/api'
 import { devLog, logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic';
 
-
 // POST /api/polls/[id]/vote - Submit a vote (authenticated users only)
-export async function POST(
+export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const { id } = await params;
     const pollId = id;
     devLog('Vote submission attempt for poll:', { pollId })
     devLog('POST vote API called with pollId:', { pollId });
 
-    if (!pollId) {
-      throw new ValidationError('Poll ID is required')
-    }
+  if (!pollId) {
+    return validationError({ pollId: 'Poll ID is required' });
+  }
 
-    // E2E tests should use real authentication - no bypasses needed
-    const supabase = await getSupabaseServerClient();
-    
-    // Always require real authentication
-    let user;
-    try {
-      user = await getUser();
-    } catch (error) {
-      logger.error('Authentication error during vote:', error instanceof Error ? error : new Error(String(error)));
-      throw new AuthenticationError('Authentication required to vote')
-    }
+  const supabase = await getSupabaseServerClient();
 
-    // Check if user is authenticated
-    if (!user) {
-      throw new AuthenticationError('Authentication required to vote')
-    }
+  let user;
+  try {
+    user = await getUser();
+  } catch (error) {
+    logger.error('Authentication error during vote:', error instanceof Error ? error : new Error(String(error)));
+    return authError('Authentication required to vote');
+  }
+
+  if (!user) {
+    return authError('Authentication required to vote');
+  }
 
     const supabaseClient = supabase;
-    
+
     // Verify user is active - always check for real users
     const { data: userProfile } = await supabaseClient
       .from('user_profiles')
@@ -108,17 +103,22 @@ export async function POST(
 
       if (voteError) {
         devLog('Error storing approval vote:', { error: voteError.message })
-        throw new Error('Failed to submit approval vote')
+        return errorResponse('Failed to submit approval vote', 500);
       }
 
-      // Return success response
-      return NextResponse.json({
-        success: true,
+      // Record analytics
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        devLog('Analytics recording failed for vote:', { error: analyticsError });
+      }
+
+      return successResponse({
         message: 'Approval vote submitted successfully',
         pollId,
         voteId: 'approval-vote',
-        privacyLevel: privacy_level,
-        responseTime: Date.now() - Date.now()
+        privacyLevel: privacy_level
       })
     } else if (pollData.voting_method === 'multiple') {
       // For multiple choice voting, store the selections in vote_data
@@ -135,7 +135,7 @@ export async function POST(
 
       if (voteError) {
         devLog('Error storing multiple choice vote:', { error: voteError.message })
-        throw new Error('Failed to submit multiple choice vote')
+        return errorResponse('Failed to submit multiple choice vote', 500);
       }
 
       // Record analytics for the vote
@@ -148,43 +148,49 @@ export async function POST(
         // Don't fail the vote if analytics fails
       }
 
-      // Return success response
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         message: 'Multiple choice vote submitted successfully',
         pollId,
         voteId: 'multiple-choice-vote',
-        privacyLevel: privacy_level,
-        responseTime: Date.now() - Date.now()
+        privacyLevel: privacy_level
       })
     } else {
-      // Advanced voting methods not yet implemented
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Advanced voting methods are not yet available',
-          message: `Voting method '${pollData.voting_method}' is not supported. Supported methods: single, approval, multiple.`
-        },
-        { status: 400 }
-      );
-    }
+      // Single choice voting (standard method)
+      if (!choice || typeof choice !== 'number' || choice < 1) {
+        return validationError({ choice: 'Valid choice is required for single choice voting' });
+      }
 
-  } catch (error) {
-    logger.error('POST Vote API error:', error instanceof Error ? error : new Error(String(error)));
-    
-    // Simple error response for debugging
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    return NextResponse.json(
-      { 
-        error: 'Debug error',
-        details: errorMessage,
-        stack: errorStack
-      },
-      { status: 500 }
-    )
-  }
-}
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          option_id: choice.toString(),
+          voting_method: 'single',
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing single choice vote:', { error: voteError.message })
+        return errorResponse('Failed to submit vote', 500);
+      }
+
+      // Record analytics
+      try {
+        const analyticsService = AnalyticsService.getInstance()
+        await analyticsService.recordPollAnalytics(user.id, pollId)
+      } catch (analyticsError: any) {
+        devLog('Analytics recording failed for vote:', { error: analyticsError });
+      }
+
+      return successResponse({
+        message: 'Vote submitted successfully',
+        pollId,
+        voteId: 'single-choice-vote',
+        privacyLevel: privacy_level
+      })
+    }
+});
 
 // HEAD /api/polls/[id]/vote - Check if user has voted (returns boolean only)
 export async function HEAD(
@@ -205,7 +211,7 @@ export async function HEAD(
     // Get user - always require real authentication
     const { data: auth } = await supabase.auth.getUser()
     const user = auth?.user
-    
+
     if (!user) {
       return new NextResponse(null, { status: 204 }) // unauth => not voted
     }
@@ -222,8 +228,8 @@ export async function HEAD(
       return new NextResponse(null, { status: 204 })
     }
 
-    return new NextResponse(null, { 
-      status: count && count > 0 ? 200 : 204 
+    return new NextResponse(null, {
+      status: count && count > 0 ? 200 : 204
     })
 
   } catch {
@@ -246,14 +252,14 @@ export async function GET(
     }
 
     const supabase = await getSupabaseServerClient()
-    
+
     if (!supabase) {
       throw new Error('Supabase client not available')
     }
 
     // Always require real authentication - no E2E bypasses
     const user = await getUser()
-    
+
     if (!user) {
       return NextResponse.json(
         { has_voted: false },

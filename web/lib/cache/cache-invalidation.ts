@@ -68,6 +68,7 @@ export class CacheInvalidationManager {
   private dependencies: Map<string, CacheDependency> = new Map()
   private eventQueue: Array<{ event: InvalidationEvent; data: any; timestamp: number }> = []
   private isProcessing: boolean = false
+  private processorInterval: NodeJS.Timeout | null = null
 
   constructor(redisClient: RedisClient, strategyManager: CacheStrategyManager) {
     this.redisClient = redisClient
@@ -220,7 +221,12 @@ export class CacheInvalidationManager {
    * Process invalidation events
    */
   private async startEventProcessor(): Promise<void> {
-    setInterval(async () => {
+    // Clear any existing processor
+    if (this.processorInterval) {
+      clearInterval(this.processorInterval)
+    }
+
+    this.processorInterval = setInterval(async () => {
       if (this.isProcessing || this.eventQueue.length === 0) {
         return
       }
@@ -334,14 +340,16 @@ export class CacheInvalidationManager {
     let expandedPattern = pattern
 
     // Replace common placeholders
+    // Note: Only replaces the FIRST occurrence of '*'
+    // Multiple wildcards in same pattern need sequential replacement
     if (data.poll_id) {
-      expandedPattern = expandedPattern.replace('*', data.poll_id)
+      expandedPattern = expandedPattern.replace(/\*/, data.poll_id)
     }
     if (data.user_id) {
-      expandedPattern = expandedPattern.replace('*', data.user_id)
+      expandedPattern = expandedPattern.replace(/\*/, data.user_id)
     }
     if (data.category) {
-      expandedPattern = expandedPattern.replace('*', data.category)
+      expandedPattern = expandedPattern.replace(/\*/, data.category)
     }
 
     return expandedPattern
@@ -354,14 +362,16 @@ export class CacheInvalidationManager {
     return tags.map(tag => {
       let expandedTag = tag
 
+      // Replace placeholders with actual values
+      // Only replaces first occurrence - for multiple wildcards, use {poll_id}, {user_id} syntax
       if (data.poll_id) {
-        expandedTag = expandedTag.replace('*', data.poll_id)
+        expandedTag = expandedTag.replace(/\*/, data.poll_id)
       }
       if (data.user_id) {
-        expandedTag = expandedTag.replace('*', data.user_id)
+        expandedTag = expandedTag.replace(/\*/, data.user_id)
       }
       if (data.category) {
-        expandedTag = expandedTag.replace('*', data.category)
+        expandedTag = expandedTag.replace(/\*/, data.category)
       }
 
       return expandedTag
@@ -517,6 +527,18 @@ export class CacheInvalidationManager {
     this.dependencies.clear()
     this.eventQueue = []
     logger.info('Cache invalidation manager cleared')
+  }
+
+  /**
+   * Stop the event processor and clean up resources
+   */
+  destroy(): void {
+    if (this.processorInterval) {
+      clearInterval(this.processorInterval)
+      this.processorInterval = null
+    }
+    this.clear()
+    logger.info('Cache invalidation manager destroyed')
   }
 }
 

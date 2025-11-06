@@ -322,10 +322,10 @@ export const VALIDATION_RULES = {
 
 export const API_ENDPOINTS = {
   profile: '/api/profile',
-  profileUpdate: '/api/profile/update',
+  profileUpdate: '/api/profile', // CONSOLIDATED: Use POST/PUT/PATCH on main profile endpoint
   profileAvatar: '/api/profile/avatar',
   profileExport: '/api/profile/export',
-  profileDelete: '/api/profile/delete',
+  profileDelete: '/api/profile', // CONSOLIDATED: Use DELETE on main profile endpoint
   userProfile: '/api/user/profile',
 } as const;
 

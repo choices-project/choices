@@ -1,6 +1,12 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest} from 'next/server';
 
+import { 
+  withErrorHandling,
+  successResponse,
+  rateLimitError,
+  validationError,
+  notFoundError
+} from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
@@ -9,8 +15,7 @@ import { getSupabaseServerClient, type Database } from '@/utils/supabase/server'
 // Use generated types from Supabase - automatically stays in sync with your database schema
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withErrorHandling(async (request: NextRequest) => {
     // CSRF protection is handled by Next.js middleware in production
     // For now, we'll skip CSRF validation in test environment
 
@@ -24,10 +29,7 @@ export async function POST(request: NextRequest) {
     );
     
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { message: 'Too many login attempts. Please try again later.' },
-        { status: 429 }
-      )
+      return rateLimitError('Too many login attempts. Please try again later.');
     }
 
     // Validate request
@@ -36,10 +38,10 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email || !password) {
-      return NextResponse.json(
-        { message: 'Email and password are required' },
-        { status: 400 }
-      )
+      return validationError(
+        { email: !email ? 'Email is required' : '', password: !password ? 'Password is required' : '' },
+        'Email and password are required'
+      );
     }
 
     // Use Supabase Auth for authentication
@@ -55,10 +57,7 @@ export async function POST(request: NextRequest) {
 
     if (authError || !authData.user) {
       logger.warn('Login failed', { email, error: authError?.message })
-      return NextResponse.json(
-        { message: 'Invalid email or password' },
-        { status: 401 }
-      )
+      return authError('Invalid email or password');
     }
 
     // Get user profile for additional data
@@ -70,10 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (profileError || !profile) {
       logger.warn('User profile not found after login', { userId: authData.user.id })
-      return NextResponse.json(
-        { message: 'User profile not found' },
-        { status: 404 }
-      )
+      return notFoundError('User profile not found');
     }
 
     // User profile loaded successfully
@@ -86,9 +82,8 @@ export async function POST(request: NextRequest) {
       displayName
     })
 
-    // Create response with user data
-    const response = NextResponse.json({
-      success: true,
+    // Create standardized response with user data
+    const response = successResponse({
       user: {
         id: authData.user.id,
         email: authData.user.email,
@@ -126,12 +121,4 @@ export async function POST(request: NextRequest) {
     }
 
     return response
-
-  } catch (error) {
-    logger.error('Login error', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+});

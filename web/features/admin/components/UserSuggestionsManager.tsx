@@ -59,10 +59,13 @@ export default function UserSuggestionsManager() {
       if (filter.status) params.append('status', filter.status);
       if (filter.sentiment) params.append('sentiment', filter.sentiment);
       
-      const response = await fetch(`/api/feedback/suggestions?${params}`);
+      // Use main feedback endpoint with type filter for suggestions
+      params.append('type', 'feature'); // Suggestions are stored as feature requests
+      const response = await fetch(`/api/feedback?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setSuggestions(data.suggestions || []);
+        // Main feedback endpoint returns { feedback: [...] } not { suggestions: [...] }
+        setSuggestions(data.feedback || data.suggestions || []);
       }
     } catch (error) {
       console.error('Failed to load user suggestions:', error);

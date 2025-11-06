@@ -75,9 +75,8 @@ export const CACHEABLE_API_ROUTES = [
   '/api/civics',
   '/api/feeds',
   '/api/hashtags',
-  '/api/trending/hashtags',
-  '/api/dashboard',
-  '/api/dashboard/data',
+  '/api/trending',              // CONSOLIDATED: Handles hashtags, polls, and topics
+  '/api/dashboard',             // CONSOLIDATED: Includes all dashboard data
   '/api/profile',
   '/api/user/profile',
 ] as const;
@@ -92,7 +91,7 @@ export const UNCACHEABLE_API_ROUTES = [
   '/api/polls/*/vote',     // Voting must be real-time
   '/api/polls/*/close',    // Poll operations
   '/api/polls/*/lock',
-  '/api/profile/update',   // Profile updates
+  '/api/profile',          // CONSOLIDATED: Profile updates/deletes via POST/PUT/PATCH/DELETE
   '/api/contact/messages', // Messaging
   '/api/pwa/offline/sync', // Sync operations
 ] as const;

@@ -20,7 +20,7 @@ import {
   withIdempotency, 
   generateIdempotencyKey,
   type IdempotencyOptions 
-} from '@/lib/core/auth/idempotency'
+} from '@/lib/core/auth/idempotency-atomic'
 import { 
   setSessionCookie, 
   rotateSessionToken,

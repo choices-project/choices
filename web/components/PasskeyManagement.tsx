@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { beginRegister } from '@/features/auth/lib/webauthn/client';
 import { logger } from '@/lib/utils/logger';
-import { beginRegister } from '@/lib/webauthn/client';
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 

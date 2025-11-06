@@ -5,44 +5,31 @@
  * Used for E2E testing and debugging
  * 
  * Created: January 23, 2025
+ * Updated: November 6, 2025 - Modernized
  * Status: ✅ ACTIVE
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { featureFlagManager } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/utils/logger';
 
-export async function GET(_request: NextRequest) {
-  try {
-    // Get all feature flags
-    const allFlags = featureFlagManager.getAllFlags();
-    const enabledFlags = featureFlagManager.getEnabledFlags();
-    const disabledFlags = featureFlagManager.getDisabledFlags();
-    
-    // Get system info
-    const systemInfo = featureFlagManager.getSystemInfo();
-    
-    return NextResponse.json({
-      success: true,
-      flags: allFlags,
-      enabledFlags,
-      disabledFlags,
-      systemInfo,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error fetching feature flags:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch feature flags',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  // Get all feature flags
+  const allFlags = featureFlagManager.getAllFlags();
+  const enabledFlags = featureFlagManager.getEnabledFlags();
+  const disabledFlags = featureFlagManager.getDisabledFlags();
+  
+  // Get system info
+  const systemInfo = featureFlagManager.getSystemInfo();
+  
+  return successResponse({
+    flags: allFlags,
+    enabledFlags,
+    disabledFlags,
+    systemInfo
+  });
+});
 
 export async function PATCH(request: NextRequest) {
   try {

@@ -1,59 +1,69 @@
-import fs from 'fs';
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
+/**
+ * Playwright Global Setup
+ * 
+ * Runs once before all E2E tests.
+ * Creates test users automatically using service role key.
+ */
 
-import { chromium } from '@playwright/test';
-import { config } from 'dotenv';
+import { chromium, type FullConfig } from '@playwright/test';
 
-// Load environment variables
-config({ path: '.env.local' });
+import { createAllTestUsers } from './create-test-users';
 
-export default async function globalSetup() {
-  console.log('🚀 Starting E2E global setup...');
-  
-  // 1) Seed test users
-  console.log('🌱 Seeding test users...');
+async function globalSetup(config: FullConfig) {
+  console.log('\n═══════════════════════════════════════════════════════');
+  console.log('🎭 Playwright E2E Test Setup');
+  console.log('═══════════════════════════════════════════════════════\n');
+
   try {
-    execFileSync(process.execPath, [path.resolve('scripts/test-seed.ts')], {
-      env: { 
-        ...process.env, 
-        NODE_ENV: 'test', 
-        E2E: '1',
-        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
-      },
-      stdio: 'inherit'
-    });
-    console.log('✅ Test users seeded successfully');
+    // 1. Create test users
+    console.log('📝 Step 1: Setting up test users...');
+    await createAllTestUsers();
+
+    // 2. Verify server is accessible
+    console.log('\n📡 Step 2: Verifying test server...');
+    const baseURL = config.projects[0]?.use?.baseURL || 'http://127.0.0.1:3000';
+    
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    
+    try {
+      // Wait for server to be ready (with timeout)
+      let retries = 0;
+      const maxRetries = 30;
+      
+      while (retries < maxRetries) {
+        try {
+          const response = await page.goto(baseURL, { 
+            waitUntil: 'domcontentloaded',
+            timeout: 5000 
+          });
+          
+          if (response?.ok()) {
+            console.log(`✅ Server is ready at ${baseURL}`);
+            break;
+          }
+        } catch (error) {
+          retries++;
+          if (retries >= maxRetries) {
+            throw new Error(`Server not accessible after ${maxRetries} attempts`);
+          }
+          console.log(`   Waiting for server... (attempt ${retries}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    } finally {
+      await browser.close();
+    }
+
+    console.log('\n═══════════════════════════════════════════════════════');
+    console.log('✅ Setup Complete - Ready to run tests!');
+    console.log('═══════════════════════════════════════════════════════\n');
+
   } catch (error) {
-    console.error('❌ Failed to seed test users:', error);
+    console.error('\n❌ Global setup failed:', error);
+    console.error('\n═══════════════════════════════════════════════════════\n');
     throw error;
   }
-
-  // 2) Login once and save state
-  console.log('🔐 Creating pre-authenticated session...');
-  const storagePath = path.resolve(__dirname, '../.storage/admin.json');
-  fs.mkdirSync(path.dirname(storagePath), { recursive: true });
-
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ baseURL: 'http://127.0.0.1:3000' });
-  
-  // Block analytics and other third-party requests to speed up tests
-  await page.route('**/*analytics*', route => route.abort());
-  await page.route('**/*google-analytics*', route => route.abort());
-  await page.route('**/*googletagmanager*', route => route.abort());
-  
-  try {
-    // For now, just create an empty storage state since login page has import issues
-    // TODO: Fix login page import errors and re-enable pre-authentication
-    await page.context().storageState({ path: storagePath });
-    console.log('✅ Empty storage state created (login page has import issues)');
-  } catch (error) {
-    console.error('❌ Failed to create storage state:', error);
-    throw error;
-  } finally {
-    await browser.close();
-  }
-  
-  console.log('🎉 E2E global setup completed!');
 }
+
+export default globalSetup;

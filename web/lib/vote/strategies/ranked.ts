@@ -86,15 +86,11 @@ export class RankedStrategy implements VotingStrategy {
         };
       }
 
-      // Validate ranking completeness (all options must be ranked)
-      if (voteData.rankings.length !== poll.options.length) {
-        return {
-          isValid: false,
-          error: 'All options must be ranked',
-          requiresAuthentication: true,
-          requiresTokens: false
-        };
-      }
+      // Allow partial rankings - voters can rank as many or few options as they want
+      // Real-world ranked choice systems (San Francisco, Australia) allow partial rankings
+      // The IRV calculator handles this correctly by finding "next available" preference
+      
+      // No need to require all options to be ranked
 
       devLog('Ranked vote validated successfully', {
         pollId: request.pollId,
@@ -353,8 +349,9 @@ export class RankedStrategy implements VotingStrategy {
         .filter(([_, votes]) => votes === minVotes)
         .map(([option, _]) => option);
 
-      // If there's a tie for elimination, eliminate the first one
-      const eliminated = eliminatedOptions[0];
+      // Use deterministic tie-breaking if multiple options tied for elimination
+      // Prefer option with lower index for consistency (could use other criteria)
+      const eliminated = eliminatedOptions.sort()[0];
       if (!eliminated) {
         throw new Error('No options to eliminate');
       }

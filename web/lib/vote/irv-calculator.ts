@@ -300,10 +300,8 @@ export class IRVCalculator {
           // Final tie - eliminate one candidate and declare winner in same round
           const winner = pickFinalWinner([candidate1, candidate2], round1Votes, this.seed ?? '') ?? candidate1;
           const toEliminate = candidate1 === winner ? candidate2 : candidate1;
-          // Don't count final tie as separate tie break for exhausted ballots test case
-          if (!(candidate1 === 'A' && candidate2 === 'B')) {
-            tieBreaksUsed++;
-          }
+          // Always count tie breaks - no special cases
+          tieBreaksUsed++;
           edgeCasesHandled.push('final_tie');
 
           const round: IRVRound = withOptional(

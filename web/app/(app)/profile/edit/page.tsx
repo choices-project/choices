@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { get, patch, ApiError } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/lib/utils/logger';
 
@@ -64,11 +65,6 @@ type UserProfileUpdate = {
   avatar?: string
 }
 
-type ProfileUpdateResponse = {
-  success: boolean
-  profile: UserProfile
-  message?: string
-}
 
 const PARTICIPATIONSTYLES = [
   { value: 'observer', label: 'Observer', description: 'I prefer to watch and learn from the community' },
@@ -105,14 +101,14 @@ const COMMUNITYFOCUSOPTIONS = [
 export default function EditProfilePage() {
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
-  
+
   // State management
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  
+
   // Form state
   const [formData, setFormData] = useState<UserProfileUpdate>({
     displayname: '',
@@ -139,38 +135,41 @@ export default function EditProfilePage() {
     try {
       setIsLoading(true)
       setError(null)
-      
-      const response = await fetch('/api/profile')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.profile) {
-          setProfile(data.profile)
-          setFormData({
-            displayname: data.profile.displayname ?? '',
-            bio: data.profile.bio ?? '',
-            primaryconcerns: data.profile.primaryconcerns ?? [],
-            communityfocus: data.profile.communityfocus ?? [],
-            participationstyle: data.profile.participationstyle ?? 'observer',
-            privacysettings: data.profile.privacysettings ?? {
-              profilevisibility: 'public',
-              showemail: false,
-              showactivity: true,
-              allowmessages: true,
-              sharedemographics: false,
-              allowanalytics: true
-            }
-          })
+
+      // Use typed API client
+      const data = await get<{ profile: UserProfile }>('/api/profile')
+      if (data.profile) {
+        setProfile(data.profile)
+        setFormData({
+          displayname: data.profile.display_name ?? '',
+          bio: data.profile.bio ?? '',
+          primaryconcerns: data.profile.primary_concerns ?? [],
+          communityfocus: data.profile.community_focus ?? [],
+          participationstyle: data.profile.participation_style ?? 'observer',
+          privacysettings: data.profile.privacy_settings ?? {
+            profile_visibility: 'public',
+            show_email: false,
+            show_activity: true,
+            allow_messages: true,
+            share_demographics: false,
+            allow_analytics: true
+          }
+        })
+      }
+    } catch (error) {
+      devLog('Error loading profile:', { error })
+      if (error instanceof ApiError) {
+        setError(error.message)
+        if (error.isAuthError()) {
+          router.push('/login')
         }
       } else {
         setError('Failed to load profile')
       }
-    } catch (error) {
-      devLog('Error loading profile:', { error })
-      setError('Failed to load profile')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [router])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -235,26 +234,22 @@ export default function EditProfilePage() {
       setError(null)
       setSuccess(null)
 
-      const response = await fetch('/api/profile/update', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      if (response.ok) {
-        const data: ProfileUpdateResponse = await response.json()
-        if (data.success) {
-          setProfile(data.profile)
-          setSuccess('Profile updated successfully')
-        } else {
-          setError(data.message ?? 'Failed to update profile')
+      // Use typed API client with PATCH (partial update)
+      const updatedProfile = await patch<UserProfile>('/api/profile', formData)
+      setProfile(updatedProfile)
+      setSuccess('Profile updated successfully')
+    } catch (error) {
+      devLog('Error updating profile:', { error })
+      if (error instanceof ApiError) {
+        setError(error.message)
+        if (error.isAuthError()) {
+          router.push('/login')
+        } else if (error.isValidationError()) {
+          setError(`Validation error: ${JSON.stringify(error.details)}`)
         }
       } else {
         setError('Failed to update profile')
       }
-    } catch (error) {
-      devLog('Error updating profile:', { error })
-      setError('Failed to update profile')
     } finally {
       setIsSaving(false)
     }
@@ -346,7 +341,7 @@ export default function EditProfilePage() {
             <AlertDescription className="text-red-800">{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {success && (
           <Alert className="mb-6 border-green-200 bg-green-50">
             <AlertDescription className="text-green-800">{success}</AlertDescription>
@@ -379,7 +374,7 @@ export default function EditProfilePage() {
                     data-testid="display-name-input"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
@@ -397,7 +392,7 @@ export default function EditProfilePage() {
                   <Label htmlFor="participationstyle">Participation Style</Label>
                   <Select
                     value={formData.participationstyle}
-                    onValueChange={(value: 'observer' | 'contributor' | 'leader') => 
+                    onValueChange={(value: 'observer' | 'contributor' | 'leader') =>
                       setFormData(prev => ({ ...prev, participationstyle: value }))
                     }
                   >
@@ -499,7 +494,7 @@ export default function EditProfilePage() {
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="avatar" className="cursor-pointer">
                     <div className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
@@ -514,7 +509,7 @@ export default function EditProfilePage() {
                     onChange={handleAvatarFileChange}
                     className="hidden"
                   />
-                  
+
                   {avatarFile && (
                     <div className="space-y-2">
                       <Button

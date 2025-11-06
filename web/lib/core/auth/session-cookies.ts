@@ -39,15 +39,20 @@ const DEFAULT_SESSION_OPTIONS: Required<SessionOptions> = {
  * Generate a new JWT token for session
  */
 export function generateSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'>): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    logger.error('JWT_SECRET environment variable is not set')
+    throw new Error('Server configuration error: JWT_SECRET missing')
+  }
+
   const now = Math.floor(Date.now() / 1000)
   const tokenPayload: SessionPayload = Object.assign({}, payload, {
     iat: now,
     exp: now + DEFAULT_SESSION_OPTIONS.maxAge
   })
 
-  return jwt.sign(tokenPayload, process.env.JWT_SECRET!, {
-    algorithm: 'HS256',
-    expiresIn: DEFAULT_SESSION_OPTIONS.maxAge
+  return jwt.sign(tokenPayload, secret, {
+    algorithm: 'HS256'
   })
 }
 
@@ -56,7 +61,13 @@ export function generateSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'
  */
 export function verifySessionToken(token: string): SessionPayload | null {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!, {
+    const secret = process.env.JWT_SECRET
+    if (!secret) {
+      logger.error('JWT_SECRET environment variable is not set')
+      return null
+    }
+
+    const decoded = jwt.verify(token, secret, {
       algorithms: ['HS256']
     }) as SessionPayload
 

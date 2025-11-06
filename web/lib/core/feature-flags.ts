@@ -5,9 +5,14 @@
 
 import { withOptional } from '@/lib/util/objects';
 
+// Defensive check for module loading - log if this file is being loaded
+if (typeof window !== 'undefined') {
+  console.log('[FEATURE_FLAGS] Module loading on client');
+}
+
 export const FEATURE_FLAGS = {
   // ===== CORE MVP FEATURES (Always Enabled) =====
-  WEBAUTHN: true,
+  // WEBAUTHN removed - always enabled, core to application
   PWA: true,
   ADMIN: true,
   FEEDBACK_WIDGET: true,        // CRITICAL: User feedback collection widget
@@ -129,8 +134,8 @@ function notifySubscribers() {
 
 export function isFeatureEnabled<K extends string>(key: K): boolean {
   const normalizedKey = normalize(key);
-  if (normalizedKey && normalizedKey in FEATURE_FLAGS) {
-    return FEATURE_FLAGS[normalizedKey];
+  if (normalizedKey && FEATURE_FLAGS && normalizedKey in FEATURE_FLAGS) {
+    return FEATURE_FLAGS?.[normalizedKey] === true;
   }
   // Unknown flags default to false but don't crash
   return false;
@@ -198,8 +203,8 @@ export const featureFlagManager = {
   },
   get: (key: string | FeatureFlagKey): boolean => {
     const normalizedKey = normalize(String(key));
-    if (normalizedKey && normalizedKey in mutableFlags) {
-      return mutableFlags[normalizedKey] ?? false;
+    if (normalizedKey && mutableFlags && normalizedKey in mutableFlags) {
+      return mutableFlags?.[normalizedKey] ?? false;
     }
     return false;
   },
@@ -219,8 +224,8 @@ export const featureFlagManager = {
   },
   isEnabled: (key: string | FeatureFlagKey): boolean => {
     const normalizedKey = normalize(String(key));
-    if (normalizedKey && normalizedKey in mutableFlags) {
-      return mutableFlags[normalizedKey] ?? false;
+    if (normalizedKey && mutableFlags && normalizedKey in mutableFlags) {
+      return mutableFlags?.[normalizedKey] ?? false;
     }
     return false;
   },

@@ -6,7 +6,6 @@ import * as React from 'react'
 
 import { register as serverRegister } from '@/app/actions/register'
 import { PasskeyButton } from '@/components/PasskeyButton'
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 
 
 export default function RegisterPage() {
@@ -15,7 +14,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = React.useState(false)
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>('passkey')
   const [hydrated, setHydrated] = React.useState(false)
-  
+
   React.useEffect(() => setHydrated(true), [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -60,7 +59,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Hydration sentinel so the test can safely proceed */}
         <div data-testid="register-hydrated" hidden>{hydrated ? '1' : '0'}</div>
-        
+
         <div className="text-center">
           <h1 className="mt-6 text-4xl font-extrabold text-gray-900">
             Create your account
@@ -75,35 +74,33 @@ export default function RegisterPage() {
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-4">Choose how you&apos;d like to sign up:</p>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-3">
-            {/* Passkey Registration Option - Primary */}
-            {FEATURE_FLAGS.WEBAUTHN && (
-              <button
-                type="button"
-                onClick={() => setRegistrationMethod('passkey')}
-                className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
-                  registrationMethod === 'passkey'
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
-                  <div className="text-left">
-                    <div className="font-medium text-gray-900">Passkey Account (Recommended)</div>
-                    <div className="text-sm text-gray-500">Secure, passwordless authentication with biometrics</div>
-                  </div>
-                  {registrationMethod === 'passkey' && (
-                    <div className="ml-auto">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Recommended
-                      </span>
-                    </div>
-                  )}
+            {/* Passkey Registration Option - Primary (always enabled) */}
+            <button
+              type="button"
+              onClick={() => setRegistrationMethod('passkey')}
+              className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
+                registrationMethod === 'passkey'
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">Passkey Account (Recommended)</div>
+                  <div className="text-sm text-gray-500">Secure, passwordless authentication with biometrics</div>
                 </div>
-              </button>
-            )}
+                {registrationMethod === 'passkey' && (
+                  <div className="ml-auto">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Recommended
+                    </span>
+                  </div>
+                )}
+              </div>
+            </button>
 
             {/* Password Registration Option - Secondary */}
             <button
@@ -138,7 +135,7 @@ export default function RegisterPage() {
           {error && (
             <p role="alert" data-testid="register-error" className="text-red-600 text-sm">{error}</p>
           )}
-          
+
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
               <div className="flex">
@@ -196,7 +193,7 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
-            
+
             {success && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
                 <div className="flex">
@@ -236,7 +233,7 @@ export default function RegisterPage() {
                 onSuccess={handlePasskeySuccess}
                 onError={(error: string) => setError(error)}
               />
-              
+
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}

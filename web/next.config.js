@@ -146,20 +146,44 @@ const nextConfig = {
 
     // Bundle size optimizations
     if (!isServer) {
-      // Optimize bundle splitting - balanced approach
+      // More aggressive code splitting for both dev and prod
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
-          minSize: 20000, // 20KB minimum chunk size
-          maxSize: 244000, // 250KB maximum chunk size
+          minSize: 10000, // 10KB minimum
+          maxSize: 200000, // 200KB maximum - force splitting
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
           cacheGroups: {
-            // React and Next.js framework
-            framework: {
-              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              name: 'framework',
+            // React core - split from react-dom
+            react: {
+              test: /[\\/]node_modules[\\/]react[\\/]/,
+              name: 'react',
+              priority: 50,
+              enforce: true,
+            },
+            // React-dom separately (it's huge in dev)
+            reactDom: {
+              test: /[\\/]node_modules[\\/]react-dom[\\/]/,
+              name: 'react-dom',
+              priority: 50,
+              enforce: true,
+              maxSize: 500000, // Allow larger for dev builds
+            },
+            // Next.js framework - split into smaller chunks
+            nextFramework: {
+              test: /[\\/]node_modules[\\/]next[\\/]/,
+              name(module) {
+                const match = module.context.match(/[\\/]node_modules[\\/]next[\\/](.*?)[\\/]/);
+                if (match && match[1]) {
+                  return `next-${match[1]}`;
+                }
+                return 'next-core';
+              },
               priority: 40,
               enforce: true,
+              maxSize: 200000,
             },
             // UI libraries
             ui: {
@@ -175,36 +199,56 @@ const nextConfig = {
               priority: 25,
               enforce: true,
             },
-            // Large libraries that should be code-split
-            heavy: {
-              test: /[\\/]node_modules[\\/](recharts|framer-motion)[\\/]/,
-              name: 'heavy',
-              chunks: 'async',
+            // Charts library (heavy)
+            recharts: {
+              test: /[\\/]node_modules[\\/]recharts[\\/]/,
+              name: 'recharts',
+              chunks: 'async', // Only load when needed
               priority: 20,
             },
-            // Other vendor libraries
-            vendor: {
+            // Motion library (heavy)
+            motion: {
+              test: /[\\/]node_modules[\\/](framer-motion|motion)[\\/]/,
+              name: 'motion',
+              chunks: 'async', // Only load when needed
+              priority: 20,
+            },
+            // Other vendor libraries - split by package
+            vendors: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
+              name(module) {
+                const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+                if (match && match[1]) {
+                  return `vendor-${match[1].replace('@', '')}`;
+                }
+                return 'vendors';
+              },
               priority: 10,
               reuseExistingChunk: true,
+              maxSize: 150000,
             },
             // Common application code
             common: {
               minChunks: 2,
               priority: 5,
               reuseExistingChunk: true,
+              maxSize: 100000,
             }
           }
-        }
+        },
+        // Minimize runtime overhead
+        runtimeChunk: {
+          name: 'runtime',
+        },
       }
 
-      // Performance hints
+      // More lenient performance hints for development
+      const isDev = process.env.NODE_ENV === 'development';
       config.performance = {
         ...config.performance,
-        hints: 'warning',
-        maxEntrypointSize: 512000, // 500KB
-        maxAssetSize: 512000, // 500KB
+        hints: isDev ? false : 'warning', // Disable warnings in dev
+        maxEntrypointSize: isDev ? 5000000 : 512000, // 5MB in dev, 500KB in prod
+        maxAssetSize: isDev ? 1000000 : 512000, // 1MB in dev, 500KB in prod
       }
     }
 

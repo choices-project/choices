@@ -1,23 +1,23 @@
 /**
  * Representatives API Endpoint
- * 
+ *
  * Provides REST API access to representative data from the database
- * 
+ *
  * Created: October 28, 2025
+ * Updated: November 6, 2025 - Modernized
  * Status: ✅ PRODUCTION
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { civicsIntegration } from '@/lib/services/civics-integration';
-import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
-    
+
     // Parse query parameters
     const limit = parseInt(searchParams.get('limit') ?? '20');
     const offset = parseInt(searchParams.get('offset') ?? '0');
@@ -36,29 +36,14 @@ export async function GET(request: NextRequest) {
     if (level) query.level = level as 'federal' | 'state' | 'local';
     if (search) query.query = search;
 
-    // Use civics integration for real data with committee information
-    const result = await civicsIntegration.getRepresentatives(query);
+  // Use civics integration for real data with committee information
+  const result = await civicsIntegration.getRepresentatives(query);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        representatives: result.representatives,
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        hasMore: result.hasMore
-      }
-    });
-
-  } catch (error) {
-    logger.error('API error:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    representatives: result.representatives,
+    total: result.total,
+    page: result.page,
+    limit: result.limit,
+    hasMore: result.hasMore
+  });
+});

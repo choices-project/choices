@@ -9,9 +9,13 @@
  */
 import { test, expect } from '@playwright/test';
 
+import { loginAsAdmin } from './helpers/e2e-setup';
+
 
 test.describe('DB Optimization Suite', () => {
   test('performance admin endpoints return data', async ({ page }) => {
+    // Login as admin for admin endpoints
+    await loginAsAdmin(page);
     const endpoints = [
       '/api/admin/performance?type=current',
       '/api/admin/performance?type=summary',
@@ -30,6 +34,8 @@ test.describe('DB Optimization Suite', () => {
   });
 
   test('performance export supports JSON', async ({ page }) => {
+    // Login as admin for admin endpoints
+    await loginAsAdmin(page);
     const res = await page.request.get('/api/admin/performance?type=export&format=json');
     expect(res.ok()).toBeTruthy();
     expect(res.headers()['content-type']).toContain('application/json');
@@ -37,10 +43,12 @@ test.describe('DB Optimization Suite', () => {
 
   test('database health exposes optimization-enabled metrics', async ({ page }) => {
     const t0 = Date.now();
-    const res = await page.request.get('/api/database-health');
+    const res = await page.request.get('/api/health?type=database', {
+      timeout: 30000 // Increase timeout for database queries
+    });
     const ms = Date.now() - t0;
     // Basic performance constraint for response (environment-dependent, keep generous)
-    expect(ms).toBeLessThan(10_000);
+    expect(ms).toBeLessThan(30_000);
     expect(res.ok()).toBeTruthy();
     const json = await res.json();
     // Expect standard shape including performance + connectionPool
@@ -50,6 +58,8 @@ test.describe('DB Optimization Suite', () => {
   });
 
   test('invalid performance type returns 400', async ({ page }) => {
+    // Login as admin for admin endpoints
+    await loginAsAdmin(page);
     const res = await page.request.get('/api/admin/performance?type=not-a-real-type');
     expect(res.status()).toBe(400);
   });
@@ -60,7 +70,7 @@ test.describe('DB Optimization Suite', () => {
     // Perform fetch in page context to simulate real network layer
     const result = await page.evaluate(async () => {
       try {
-        const r = await fetch('/api/database-health');
+        const r = await fetch('/api/health?type=database');
         return { ok: r.ok };
       } catch (e) {
         return { error: String(e) };

@@ -1,18 +1,19 @@
 /**
  * @fileoverview Feeds API
- * 
+ *
  * Feed management API providing poll feeds with filtering,
  * sorting, and engagement metrics.
- * 
+ *
+ * Updated: November 6, 2025 - Modernized
  * @author Choices Platform Team
  * @created 2025-10-24
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, rateLimitError, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Get feed items
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} [request.searchParams.limit] - Number of items to return (default: 20)
  * @param {string} [request.searchParams.category] - Category filter (default: 'all')
@@ -29,49 +30,47 @@ export const dynamic = 'force-dynamic';
  * @param {string} [request.searchParams.district] - District filter (e.g., "CA-12")
  * @param {boolean} [request.searchParams.includeAnalytics] - Include analytics data
  * @returns {Promise<NextResponse>} Feed data response
- * 
+ *
  * @example
  * GET /api/feeds?limit=10&category=politics&sort=trending&district=CA-12
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Rate limit request per IP for feeds
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
-    const userAgent = request.headers.get('user-agent');
-    const rateLimitOptions: any = { maxRequests: 100, windowMs: 60 * 1000 };
-    if (userAgent) rateLimitOptions.userAgent = userAgent;
-    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/feeds', rateLimitOptions);
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  // Rate limit request per IP for feeds
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
+  const userAgent = request.headers.get('user-agent');
+  const rateLimitOptions: any = { maxRequests: 100, windowMs: 60 * 1000 };
+  if (userAgent) rateLimitOptions.userAgent = userAgent;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/feeds', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Rate limit exceeded');
+  }
 
     const supabaseClient = await getSupabaseServerClient();
-    
+
     if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
+      return errorResponse('Supabase client not available', 500);
     }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') ?? '20');
     const category = searchParams.get('category') ?? 'all';
     const district = searchParams.get('district');
+    const sort = searchParams.get('sort') ?? 'trending';
 
-    devLog('Fetching feed items (polls)...', { limit, category, district });
+    devLog('Fetching feed items (polls)...', { limit, category, district, sort });
 
     // Fetch active polls with sophisticated engagement features
-    const pollsQuery = (supabaseClient as any)
+    let pollsQuery = (supabaseClient as any)
       .from('polls')
       .select(`
-        id, 
-        title, 
-        description, 
-        total_votes, 
-        status, 
-        created_at, 
-        hashtags, 
+        id,
+        title,
+        description,
+        category,
+        total_votes,
+        status,
+        created_at,
+        hashtags,
         primary_hashtag,
         engagement_score,
         participation_rate,
@@ -88,22 +87,38 @@ export async function GET(request: NextRequest) {
       `)
       .eq('status', 'active');
 
+    // Apply category filtering
+    if (category && category !== 'all') {
+      pollsQuery = pollsQuery.eq('category', category);
+    }
+
     // Note: Polls don't have district field directly. They're platform-wide.
     // District filtering will be applied to civic_actions below.
 
-    const { data: polls, error: pollsError} = await pollsQuery
-      .order('trending_score', { ascending: false })
-      .order('engagement_score', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (pollsError) {
-      devLog('Error fetching polls:', { error: pollsError });
-      return NextResponse.json(
-        { error: 'Failed to fetch feed items' },
-        { status: 500 }
-      );
+    // Apply sorting
+    switch (sort) {
+      case 'trending':
+        pollsQuery = pollsQuery.order('trending_score', { ascending: false, nullsFirst: false });
+        break;
+      case 'engagement':
+        pollsQuery = pollsQuery.order('engagement_score', { ascending: false, nullsFirst: false });
+        break;
+      case 'newest':
+        pollsQuery = pollsQuery.order('created_at', { ascending: false });
+        break;
+      case 'popular':
+        pollsQuery = pollsQuery.order('total_votes', { ascending: false });
+        break;
+      default:
+        pollsQuery = pollsQuery.order('trending_score', { ascending: false, nullsFirst: false });
     }
+
+    const { data: polls, error: pollsError} = await pollsQuery.limit(limit);
+
+  if (pollsError) {
+    devLog('Error fetching polls:', { error: pollsError });
+    return errorResponse('Failed to fetch feed items', 500);
+  }
 
     // Fetch civic actions (district-specific content)
     let civicActionsQuery = (supabaseClient as any)
@@ -238,49 +253,22 @@ export async function GET(request: NextRequest) {
     const feedItems = [...pollFeedItems, ...civicActionFeedItems]
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
-    devLog('Feed items loaded:', { 
+    devLog('Feed items loaded:', {
       polls: pollFeedItems.length,
       civicActions: civicActionFeedItems.length,
       total: feedItems.length,
-      district 
+      district
     });
 
-    return NextResponse.json({
-      success: true,
-      feeds: feedItems,
-      count: feedItems.length,
-      filters: {
-        district: district ?? null
-      },
-      message: 'Feed items loaded successfully'
-    });
+  return successResponse({
+    feeds: feedItems,
+    count: feedItems.length,
+    filters: {
+      category: category || 'all',
+      district: district ?? null,
+      sort
+    }
+  });
+});
 
-  } catch (error) {
-    devLog('Error in feeds API:', { error });
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : String(error)
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/feeds - Create or update feed items (for testing)
-export async function POST(request: NextRequest) {
-  try {
-    // Category filtering not yet implemented
-    // const _body = await request.json(); // Unused for now
-
-    // For now, just return the same data as GET
-    return GET(request);
-
-  } catch (error) {
-    devLog('Error in feeds POST API:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+// POST is not needed for feeds - use GET with query params

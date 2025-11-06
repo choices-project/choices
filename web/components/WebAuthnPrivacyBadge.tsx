@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 
-import { getPrivacyStatus } from '@/lib/webauthn/client';
+import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
 
 type PrivacyStatus = {
   status: 'active' | 'partial' | 'inactive';

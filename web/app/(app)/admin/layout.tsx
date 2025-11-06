@@ -1,10 +1,12 @@
 /**
  * Admin Layout
- * 
+ *
  * Main layout for all admin pages with server-side admin authentication guard.
+ *
+ * SECURITY: No authentication bypass - all admin access requires valid admin user.
+ * E2E tests must authenticate using real test admin accounts.
  */
 
-import { headers } from 'next/headers';
 import React from 'react';
 
 import { getAdminUser } from '@/features/auth/lib/admin-auth';
@@ -14,35 +16,15 @@ import { AdminLayout } from './layout/AdminLayout';
 // Force dynamic rendering for admin pages
 export const dynamic = 'force-dynamic';
 
-/**
- * Check if the request is in E2E test mode
- */
-function isE2EMode(headersList: Headers): boolean {
-  const e2eBypass = headersList.get('x-e2e-bypass') === '1';
-  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.E2E === '1';
-  return e2eBypass || isTestEnv;
-}
-
 export default async function AdminLayoutPage({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const headersList = await headers();
-  
-  // Check for E2E bypass mode
-  const isE2E = isE2EMode(headersList);
-  
   // Server-side admin check - this is the authoritative gate
+  // NO BYPASS: All requests must have valid authenticated admin user
   const user = await getAdminUser() as { id: string; email?: string } | null;
-  
-  // In E2E mode, bypass admin check and allow access
-  if (isE2E && !user) {
-    console.log('[Admin Layout] E2E mode detected - bypassing admin check');
-    // Render children directly in E2E mode without AdminLayout wrapper
-    return <>{children}</>;
-  }
-  
+
   if (!user) {
     // For E2E tests, show access denied page instead of redirecting
     // This allows tests to see the access denied message
@@ -61,7 +43,7 @@ export default async function AdminLayoutPage({
               Access Denied
             </div>
             <div className="mt-6">
-              <a 
+              <a
                 href="/dashboard"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -76,7 +58,7 @@ export default async function AdminLayoutPage({
       </div>
     );
   }
-  
+
   // User is authenticated and is admin - render admin layout
   return <AdminLayout>{children}</AdminLayout>;
 }

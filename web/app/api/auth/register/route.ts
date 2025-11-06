@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest} from 'next/server';
 
+import {
+  withErrorHandling,
+  successResponse,
+  rateLimitError,
+  validationError,
+  errorResponse
+} from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { 
-
-
   validateCsrfProtection, 
   createCsrfErrorResponse 
 } from '../_shared'
 
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withErrorHandling(async (request: NextRequest) => {
     // Validate CSRF protection for state-changing operation
     if (!(await validateCsrfProtection(request))) {
       return createCsrfErrorResponse()
@@ -31,10 +35,7 @@ export async function POST(request: NextRequest) {
     );
     
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { message: 'Too many registration attempts. Please try again later.' },
-        { status: 429 }
-      )
+      return rateLimitError('Too many registration attempts. Please try again later.');
     }
 
     // Validate request
@@ -43,26 +44,25 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email || !password || !username) {
-      return NextResponse.json(
-        { message: 'Email, password, and username are required' },
-        { status: 400 }
-      )
+      return validationError({
+        email: !email ? 'Email is required' : '',
+        password: !password ? 'Password is required' : '',
+        username: !username ? 'Username is required' : ''
+      }, 'Email, password, and username are required');
     }
 
     // Validate username format
     if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
-      return NextResponse.json(
-        { message: 'Username must be 3-20 characters, letters, numbers, hyphens, and underscores only' },
-        { status: 400 }
-      )
+      return validationError({
+        username: 'Username must be 3-20 characters, letters, numbers, hyphens, and underscores only'
+      });
     }
 
     // Validate password strength
     if (password.length < 8) {
-      return NextResponse.json(
-        { message: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      )
+      return validationError({
+        password: 'Password must be at least 8 characters long'
+      });
     }
 
     // Use Supabase Auth for registration
@@ -131,10 +131,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       })
       
-      return NextResponse.json(
-        { message: 'Registration failed. Please try again.' },
-        { status: 500 }
-      )
+      return errorResponse('Registration failed. Please try again.', 500);
     }
 
     logger.info('User registered successfully', { 
@@ -143,8 +140,7 @@ export async function POST(request: NextRequest) {
       username 
     })
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       user: {
         id: authData.user.id,
         email: authData.user.email,
@@ -156,13 +152,5 @@ export async function POST(request: NextRequest) {
       session: authData.session,
       token: authData.session?.access_token, // Add token field for E2E compatibility
       message: 'Registration successful. Please check your email to verify your account.'
-    })
-
-  } catch (error) {
-    logger.error('Registration error', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+    }, undefined, 201);
+});

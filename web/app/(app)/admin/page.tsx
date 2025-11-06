@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   const checkAdminStatus = useCallback(async () => {
     try {
       // Check if user is admin by calling admin API
-      const response = await fetch('/api/admin/system-status', {
+      const response = await fetch('/api/admin/health?type=status', {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       setLoading(true)
       
       // Fetch real stats from API - no auth headers needed, server handles auth
-      const response = await fetch('/api/admin/system-status', {
+      const response = await fetch('/api/admin/health?type=all', {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -88,13 +88,18 @@ export default function AdminDashboard() {
       if (response.ok) {
         const systemData = await response.json()
         
+        // Parse consolidated admin/health response (type=all)
+        // Response structure: { metrics: {...}, status: {...} }
+        const metrics = systemData.metrics || {}
+        const status = systemData.status || {}
+        
         setStats({
-          totalUsers: systemData.users.totalUsers,
-          totalPolls: systemData.polls.totalPolls,
-          totalVotes: systemData.polls.totalVotes,
-          activePolls: systemData.polls.activePolls,
-          adminUsers: systemData.users.adminUsers,
-          systemHealth: systemData.health.systemHealth
+          totalUsers: metrics.total_users || 0,
+          totalPolls: metrics.total_polls || 0,
+          totalVotes: metrics.total_votes || 0,
+          activePolls: metrics.active_polls || 0,
+          adminUsers: 0, // Not provided in new structure
+          systemHealth: status.ok ? 'healthy' : 'warning'
         })
       } else {
         logger.error('Failed to fetch admin stats:', new Error(`HTTP ${response.status}`))

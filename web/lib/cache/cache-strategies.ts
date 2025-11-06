@@ -53,6 +53,8 @@ export class CacheStrategyManager {
   private config: StrategyConfig
   private writeBehindQueue: Map<string, any> = new Map()
   private writeThroughQueue: Map<string, any> = new Map()
+  private writeBehindInterval: NodeJS.Timeout | null = null
+  private writeThroughInterval: NodeJS.Timeout | null = null
 
   constructor(redisClient: RedisClient, config?: Partial<StrategyConfig>) {
     this.redisClient = redisClient
@@ -444,7 +446,12 @@ export class CacheStrategyManager {
    * Background processor for write-behind operations
    */
   private startWriteBehindProcessor(): void {
-    setInterval(async () => {
+    // Clear any existing processor
+    if (this.writeBehindInterval) {
+      clearInterval(this.writeBehindInterval)
+    }
+
+    this.writeBehindInterval = setInterval(async () => {
       if (this.writeBehindQueue.size === 0) {
         return
       }
@@ -474,7 +481,12 @@ export class CacheStrategyManager {
    * Background processor for write-through operations
    */
   private startWriteThroughProcessor(): void {
-    setInterval(async () => {
+    // Clear any existing processor
+    if (this.writeThroughInterval) {
+      clearInterval(this.writeThroughInterval)
+    }
+
+    this.writeThroughInterval = setInterval(async () => {
       if (this.writeThroughQueue.size === 0) {
         return
       }
@@ -520,6 +532,22 @@ export class CacheStrategyManager {
     this.writeBehindQueue.clear()
     this.writeThroughQueue.clear()
     logger.info('Cache strategy queues cleared')
+  }
+
+  /**
+   * Stop all background processors and clean up resources
+   */
+  destroy(): void {
+    if (this.writeBehindInterval) {
+      clearInterval(this.writeBehindInterval)
+      this.writeBehindInterval = null
+    }
+    if (this.writeThroughInterval) {
+      clearInterval(this.writeThroughInterval)
+      this.writeThroughInterval = null
+    }
+    this.clearQueues()
+    logger.info('Cache strategy manager destroyed')
   }
 }
 

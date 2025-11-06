@@ -1,57 +1,42 @@
-// NextRequest import removed - not used
-import { NextResponse } from 'next/server'
-
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-export async function POST() {
-  try {
-    const supabase = getSupabaseServerClient()
-    const supabaseClient = await supabase
+export const POST = withErrorHandling(async () => {
+  const supabase = getSupabaseServerClient()
+  const supabaseClient = await supabase
 
-    // Sign out with Supabase Auth
-    const { error } = await supabaseClient.auth.signOut()
+  // Sign out with Supabase Auth
+  const { error } = await supabaseClient.auth.signOut()
 
-    if (error) {
-      logger.warn('Logout error', { error: error.message })
-      return NextResponse.json(
-        { message: 'Logout failed' },
-        { status: 500 }
-      )
-    }
-
-    logger.info('User logged out successfully')
-
-    // Create response
-    const response = NextResponse.json({
-      success: true,
-      message: 'Logged out successfully'
-    })
-
-    // Clear Supabase session cookies
-    response.cookies.set('sb-access-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0
-    })
-    
-    response.cookies.set('sb-refresh-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0
-    })
-
-    return response
-
-  } catch (error) {
-    logger.error('Logout error', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
+  if (error) {
+    logger.warn('Logout error', { error: error.message })
+    return errorResponse('Logout failed', 500);
   }
-}
+
+  logger.info('User logged out successfully')
+
+  // Create response
+  const response = successResponse({
+    message: 'Logged out successfully'
+  })
+
+  // Clear Supabase session cookies
+  response.cookies.set('sb-access-token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0
+  })
+
+  response.cookies.set('sb-refresh-token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0
+  })
+
+  return response
+});

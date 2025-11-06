@@ -1,23 +1,30 @@
 /**
  * @fileoverview Polls API
- * 
+ *
  * Poll management API providing poll creation, retrieval, and management
  * with features including auto-locking, moderation, and analytics.
- * 
+ *
+ * Updated: November 6, 2025 - Modernized with standardized responses
  * @author Choices Platform Team
  * @created 2025-10-24
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import {
+  withErrorHandling,
+  successResponse,
+  authError,
+  errorResponse
+} from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 /**
  * Get polls with filtering and sorting
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} [request.searchParams.status] - Filter by poll status (active, closed, trending)
  * @param {string} [request.searchParams.category] - Filter by poll category
@@ -27,17 +34,16 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
  * @param {number} [request.searchParams.limit] - Number of polls to return (default: 20)
  * @param {number} [request.searchParams.offset] - Number of polls to skip (default: 0)
  * @returns {Promise<NextResponse>} Poll data response
- * 
+ *
  * @example
  * GET /api/polls?status=trending&category=politics&sort=popular
  */
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Database not available', 500);
+  }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -120,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       logger.error('Error fetching polls:', error);
-      return NextResponse.json({ error: 'Failed to fetch polls' }, { status: 500 });
+      return errorResponse('Failed to fetch polls', 500);
     }
 
     // Fetch user profiles for polls that have created_by
@@ -132,7 +138,7 @@ export async function GET(request: NextRequest) {
           .from('user_profiles')
           .select('user_id, username, display_name, is_admin')
           .in('user_id', userIds);
-        
+
         if (!profilesError && profiles) {
           userProfiles = profiles.reduce((acc, profile) => {
             acc[profile.user_id] = profile;
@@ -152,7 +158,7 @@ export async function GET(request: NextRequest) {
           .eq('is_trending', true)
           .order('trend_score', { ascending: false })
           .limit(10);
-        
+
         if (!hashtagError && hashtagData) {
           trendingHashtags = (hashtagData as any[]).map((th: any) => ({
             hashtag: th,
@@ -198,7 +204,7 @@ export async function GET(request: NextRequest) {
         const trendingPositions = pollHashtags
           .map((hashtag: string) => trendingHashtags.findIndex((th: any) => th.hashtag.name === hashtag) + 1)
           .filter((pos: number) => pos > 0);
-        
+
         if (trendingPositions.length > 0) {
           (basePoll as any).trending_position = Math.min(...trendingPositions);
         }
@@ -221,35 +227,32 @@ export async function GET(request: NextRequest) {
       transformedPolls = transformedPolls.filter(poll => (poll as any).trending_position && (poll as any).trending_position > 0);
     }
 
-    logger.info('Polls fetched successfully', { 
-      count: transformedPolls.length, 
+    logger.info('Polls fetched successfully', {
+      count: transformedPolls.length,
       filters: { status, category, hashtags, search, sort },
       includeHashtagData,
       includeAnalytics
     });
 
-    return NextResponse.json({
+    return successResponse({
       polls: transformedPolls,
-      pagination: {
-        limit,
-        offset,
-        total: transformedPolls.length
-      },
       analytics: includeAnalytics ? {
         trendingHashtags: trendingHashtags.slice(0, 10),
         totalHashtags: trendingHashtags.length
       } : undefined
+    }, {
+      pagination: {
+        limit,
+        offset,
+        total: transformedPolls.length,
+        hasMore: transformedPolls.length === limit
+      }
     });
-
-  } catch (error) {
-    logger.error('GET /api/polls error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});
 
 /**
  * Create a new poll
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} request.body.title - Poll title
  * @param {string} [request.body.description] - Poll description
@@ -259,7 +262,7 @@ export async function GET(request: NextRequest) {
  * @param {Array<string>} [request.body.tags] - Poll tags
  * @param {Object} [request.body.settings] - Poll settings
  * @returns {Promise<NextResponse>} Created poll data
- * 
+ *
  * @example
  * POST /api/polls
  * {
@@ -268,24 +271,23 @@ export async function GET(request: NextRequest) {
  *   "options": ["Education", "Healthcare", "Infrastructure"]
  * }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Database not available', 500);
+  }
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated');
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
+  // Check authentication
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    logger.warn('User not authenticated');
+    return authError('Authentication required');
+  }
 
     const body = await request.json();
-    const { 
-      title, 
+    const {
+      title,
       description,
       question,
       options,
@@ -297,13 +299,16 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!title || !question || !options || !Array.isArray(options) || options.length < 2) {
-      return NextResponse.json({ 
-        error: 'Title, question, and at least 2 options are required' 
-      }, { status: 400 });
+      return errorResponse(
+        'Title, question, and at least 2 options are required',
+        400,
+        { title: !title, question: !question, options: !options || options.length < 2 },
+        'VALIDATION_ERROR'
+      );
     }
 
     // Create sophisticated poll with enhanced features
-    const autoLockAt = settings?.autoLockDuration 
+    const autoLockAt = settings?.autoLockDuration
       ? new Date(Date.now() + settings.autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
@@ -318,7 +323,7 @@ export async function POST(request: NextRequest) {
         created_by: user.id,
         status: 'active',
         visibility: 'public',
-        
+
         // Sophisticated poll features
         auto_lock_at: autoLockAt,
         lock_duration: settings?.autoLockDuration ?? null,
@@ -333,7 +338,7 @@ export async function POST(request: NextRequest) {
         participation_rate: 0,
         total_views: 0,
         participation: 0,
-        
+
         // Advanced settings
         poll_settings: {
           allow_anonymous: settings?.allowAnonymousVotes !== false,
@@ -363,7 +368,7 @@ export async function POST(request: NextRequest) {
 
     if (pollError) {
       logger.error('Error creating poll:', pollError);
-      return NextResponse.json({ error: 'Failed to create poll' }, { status: 500 });
+      return errorResponse('Failed to create poll', 500, pollError.message);
     }
 
     // Create poll options
@@ -384,7 +389,7 @@ export async function POST(request: NextRequest) {
       logger.error('Error creating poll options:', optionsError);
       // Clean up the poll if options creation fails
       await supabase.from('polls').delete().eq('id', poll.id);
-      return NextResponse.json({ error: 'Failed to create poll options' }, { status: 500 });
+      return errorResponse('Failed to create poll options', 500, optionsError.message);
     }
 
     // Track poll creation analytics
@@ -436,32 +441,25 @@ export async function POST(request: NextRequest) {
         ]);
     }
 
-    logger.info('Poll created successfully with analytics tracking', { 
-      pollId: poll.id, 
-      title: poll.title, 
+    logger.info('Poll created successfully with analytics tracking', {
+      pollId: poll.id,
+      title: poll.title,
       authorId: user.id,
       analyticsEventId: analyticsEvent?.id
     });
 
-    return NextResponse.json({
-      poll: {
-        id: poll.id,
-        title: poll.title,
-        description: poll.description,
-        category: poll.category,
-        status: poll.status,
-        autoLockAt: poll.auto_lock_at,
-        moderationStatus: poll.moderation_status,
-        privacyLevel: poll.privacy_level,
-        isVerified: poll.is_verified,
-        isFeatured: poll.is_featured,
-        engagementScore: poll.engagement_score,
-        createdAt: poll.created_at
-      }
-    }, { status: 201 });
-
-  } catch (error) {
-    logger.error('POST /api/polls error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+    return successResponse({
+      id: poll.id,
+      title: poll.title,
+      description: poll.description,
+      category: poll.category,
+      status: poll.status,
+      autoLockAt: poll.auto_lock_at,
+      moderationStatus: poll.moderation_status,
+      privacyLevel: poll.privacy_level,
+      isVerified: poll.is_verified,
+      isFeatured: poll.is_featured,
+      engagementScore: poll.engagement_score,
+      createdAt: poll.created_at
+    }, undefined, 201);
+});

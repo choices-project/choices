@@ -6,7 +6,6 @@ import * as React from 'react'
 
 import { register as serverRegister } from '@/app/actions/register'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { logger } from '@/lib/utils/logger'
 
 
@@ -160,33 +159,31 @@ export default function RegisterPage() {
           </div>
           
           <div className="grid grid-cols-1 gap-3">
-            {/* Passkey Registration Option - Primary */}
-            {FEATURE_FLAGS.WEBAUTHN && (
-              <button
-                type="button"
-                onClick={() => setRegistrationMethod('passkey')}
-                className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
-                  registrationMethod === 'passkey'
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
-                  <div className="text-left">
-                    <div className="font-medium text-gray-900">Passkey Account (Recommended)</div>
-                    <div className="text-sm text-gray-500">Secure, passwordless authentication with biometrics</div>
-                  </div>
-                  {registrationMethod === 'passkey' && (
-                    <div className="ml-auto">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Recommended
-                      </span>
-                    </div>
-                  )}
+            {/* Passkey Registration Option - Primary (always enabled) */}
+            <button
+              type="button"
+              onClick={() => setRegistrationMethod('passkey')}
+              className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
+                registrationMethod === 'passkey'
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">Passkey Account (Recommended)</div>
+                  <div className="text-sm text-gray-500">Secure, passwordless authentication with biometrics</div>
                 </div>
-              </button>
-            )}
+                {registrationMethod === 'passkey' && (
+                  <div className="ml-auto">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Recommended
+                    </span>
+                  </div>
+                )}
+              </div>
+            </button>
 
             {/* Password Registration Option - Secondary */}
             <button

@@ -1,14 +1,11 @@
-// NextRequest import removed - not used
-import { NextResponse } from 'next/server'
-
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  try {
-    const supabase = await getSupabaseServerClient()
+export const GET = withErrorHandling(async () => {
+  const supabase = await getSupabaseServerClient()
     
     // Get total polls
     const { count: totalPolls, error: pollsError } = await supabase
@@ -44,19 +41,9 @@ export async function GET() {
       logger.error('Error fetching active users:', usersError)
     }
     
-    return NextResponse.json({
-      totalPolls: totalPolls ?? 0,
-      totalVotes: totalVotes,
-      activeUsers: activeUsers ?? 0
-    })
-    
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-    logger.error('Error in public stats API:', err)
-    return NextResponse.json({
-      totalPolls: 0,
-      totalVotes: 0,
-      activeUsers: 0
-    }, { status: 500 })
-  }
-}
+  return successResponse({
+    totalPolls: totalPolls ?? 0,
+    totalVotes: totalVotes,
+    activeUsers: activeUsers ?? 0
+  });
+});

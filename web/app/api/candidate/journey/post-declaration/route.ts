@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !authUser) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Send welcome email with next steps
+    // Welcome email sending for candidate journey
     // For now, just log and return success
     // Email implementation would go here:
     // - Welcome email template

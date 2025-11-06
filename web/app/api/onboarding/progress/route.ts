@@ -1,26 +1,25 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(): Promise<NextResponse> {
-  try {
-    const supabase = getSupabaseServerClient()
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
-    }
-    
-    const supabaseClient = await supabase;
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withErrorHandling(async (): Promise<any> => {
+  const supabase = getSupabaseServerClient()
+
+  if (!supabase) {
+    return errorResponse('Database connection failed', 500);
+  }
+
+  const supabaseClient = await supabase;
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
     // Get onboarding progress
     const { data: progress, error: progressError } = await (supabaseClient as any)
@@ -29,10 +28,10 @@ export async function GET(): Promise<NextResponse> {
       .eq('user_id', String(user.id))
       .single()
 
-    if (progressError && progressError.code !== 'PGRST116') {
-      devLog('Error fetching onboarding progress:', progressError)
-      return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 })
-    }
+  if (progressError && progressError.code !== 'PGRST116') {
+    devLog('Error fetching onboarding progress:', progressError)
+    return errorResponse('Failed to fetch progress', 500);
+  }
 
     // Get user profile for additional onboarding data
     const { data: profile, error: profileError } = await supabaseClient
@@ -45,53 +44,48 @@ export async function GET(): Promise<NextResponse> {
       devLog('Error fetching user profile:', profileError)
     }
 
-    return NextResponse.json({
-      progress: progress ?? {
-        user_id: user.id,
-        current_step: 'welcome',
-        completed_steps: [],
-        step_data: {},
-        started_at: null,
-        last_activity_at: null,
-        completed_at: null,
-        total_time_minutes: null
-      },
-      profile: profile ?? {
-        onboarding_completed: false,
-        onboarding_step: 'welcome',
-        privacy_level: 'medium',
-        profile_visibility: 'public',
-        data_sharing_preferences: { analytics: true, research: false, contact: false, marketing: false }
-      }
-    })
-  } catch (error) {
-    devLog('Error in onboarding progress GET:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  return successResponse({
+    progress: progress ?? {
+      user_id: user.id,
+      current_step: 'welcome',
+      completed_steps: [],
+      step_data: {},
+      started_at: null,
+      last_activity_at: null,
+      completed_at: null,
+      total_time_minutes: null
+    },
+    profile: profile ?? {
+      onboarding_completed: false,
+      onboarding_step: 'welcome',
+      privacy_level: 'medium',
+      profile_visibility: 'public',
+      data_sharing_preferences: { analytics: true, research: false, contact: false, marketing: false }
+    }
+  });
+});
+
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = getSupabaseServerClient()
+
+  if (!supabase) {
+    return errorResponse('Database connection failed', 500);
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = getSupabaseServerClient()
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
-    }
-    
-    const supabaseClient = await supabase;
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const supabaseClient = await supabase;
 
-    const body = await request.json()
-    const { step, data, action } = body
+  // Get current user
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
-    if (!step) {
-      return NextResponse.json({ error: 'Step is required' }, { status: 400 })
-    }
+  const body = await request.json()
+  const { step, data, action } = body
+
+  if (!step) {
+    return validationError({ step: 'Step is required' });
+  }
 
     let updatedProgress: any = null;
     let progressError: any = null;
@@ -147,21 +141,16 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+        return validationError({ action: 'Invalid action. Use: start, update, or complete' });
     }
 
     if (progressError && progressError.code !== 'PGRST116') {
       devLog('Error fetching updated progress:', progressError)
     }
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       progress: updatedProgress,
       message: `Onboarding ${action} successful`
-    })
-  } catch (error) {
-    devLog('Error in onboarding progress POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+    });
+});
 

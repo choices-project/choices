@@ -110,8 +110,20 @@ export class DifferentialPrivacyManager {
    * @returns Laplace noise value
    */
   laplaceNoise(epsilon: number): number {
+    // Protect against division by zero
+    if (epsilon <= 0 || !isFinite(epsilon)) {
+      throw new Error(`Invalid epsilon value: ${epsilon}. Epsilon must be positive and finite.`);
+    }
+
     const u = Math.random() - 0.5;
-    return -(1 / epsilon) * Math.sign(u) * Math.log(1 - 2 * Math.abs(u));
+    // Prevent log(0) which would be -Infinity
+    const absU = Math.abs(u);
+    if (absU >= 0.5) {
+      // This should never happen with Math.random(), but defensive programming
+      throw new Error('Random value out of expected range');
+    }
+    
+    return -(1 / epsilon) * Math.sign(u) * Math.log(1 - 2 * absU);
   }
 
   /**
@@ -144,6 +156,10 @@ export class DifferentialPrivacyManager {
    * @returns Array of noisy counts
    */
   dpCounts(counts: number[], epsilon: number = this.config.defaultEpsilon): DPCountResult[] {
+    if (counts.length === 0) {
+      return [];
+    }
+
     const epsilonPerCount = epsilon / counts.length;
     
     return counts.map(count => this.dpCount(count, epsilonPerCount));

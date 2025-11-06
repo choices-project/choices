@@ -1,59 +1,40 @@
-/**
- * Hashtag Trending Notifications Cron Job
- * 
- * Checks for trending hashtags and notifies users who follow them.
- * Runs periodically via cron trigger.
- * 
- * Created: November 03, 2025
- */
-
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Cron job to send trending hashtag notifications
- * 
- * Algorithm:
- * 1. Find hashtags that recently became trending (is_trending = true, trending_since < 1 hour ago)
- * 2. For each trending hashtag, find users who follow it
- * 3. Create notification for each user (if they haven't been notified recently)
- * 4. Track notification sent to avoid spamming
- */
-export async function GET(request: NextRequest) {
-  try {
-    // Verify this is a legitimate cron request (basic auth check)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      logger.warn('Unauthorized cron attempt for hashtag notifications');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    logger.warn('Unauthorized cron attempt for hashtag notifications');
+    return authError('Unauthorized');
+  }
 
     const supabase = await getSupabaseServerClient();
 
     logger.info('Starting hashtag trending notifications cron job');
 
-    // 1. Find recently trending hashtags (became trending in last hour)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // 1. Find recently trending hashtags (became trending in last day)
+    // Since this now runs daily, check for hashtags that became trending since last run
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: trendingHashtags, error: hashtagError } = await supabase
       .from('hashtags')
       .select('id, name, trending_score, usage_count')
       .eq('is_trending', true)
-      .gte('updated_at', oneHourAgo)  // Recently updated to trending
+      .gte('updated_at', oneDayAgo)  // Recently updated to trending (last 24 hours)
       .order('trending_score', { ascending: false })
       .limit(20);
 
-    if (hashtagError) {
-      logger.error('Error fetching trending hashtags:', hashtagError);
-      return NextResponse.json({ error: 'Failed to fetch trending hashtags' }, { status: 500 });
-    }
+  if (hashtagError) {
+    logger.error('Error fetching trending hashtags:', hashtagError);
+    return errorResponse('Failed to fetch trending hashtags', 500);
+  }
 
     if (!trendingHashtags || trendingHashtags.length === 0) {
       logger.info('No new trending hashtags found');
@@ -132,18 +113,9 @@ export async function GET(request: NextRequest) {
 
     logger.info(`Hashtag trending notifications complete - sent ${totalNotificationsSent} notifications`);
 
-    return NextResponse.json({
-      success: true,
-      trendingHashtagsProcessed: trendingHashtags.length,
-      notificationsSent: totalNotificationsSent
-    });
-
-  } catch (error) {
-    logger.error('Hashtag trending notifications cron error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
-  }
-}
+  return successResponse({
+    trendingHashtagsProcessed: trendingHashtags.length,
+    notificationsSent: totalNotificationsSent
+  });
+});
 

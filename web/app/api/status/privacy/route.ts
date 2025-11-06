@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { logger } from '@/lib/utils/logger';
-import { getRPIDAndOrigins } from '@/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Force dynamic rendering for this route

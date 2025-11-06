@@ -20,14 +20,14 @@ import {
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
-import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
+import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { 
   useAnalyticsActions,
   useAnalyticsLoading,
   useAnalyticsError
 } from '@/lib/stores/analyticsStore'
-import { devLog } from '@/lib/utils/logger'
+import { logger , devLog } from '@/lib/utils/logger'
 
 type UserJourney = {
   currentPage?: string
@@ -136,8 +136,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
     })
   }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
 
+  // Safety check - prevent crash if FEATURE_FLAGS fails to load
+  // This can happen in test environments or if there's a bundling issue
+  if (typeof FEATURE_FLAGS === 'undefined' || !FEATURE_FLAGS) {
+    logger.warn('FEATURE_FLAGS not loaded in EnhancedFeedbackWidget, widget disabled');
+    return null;
+  }
+
   // Check feature flag after hooks
-  if (!FEATURE_FLAGS.FEEDBACK_WIDGET) {
+  if (!FEATURE_FLAGS?.FEEDBACK_WIDGET) {
     return null
   }
 
@@ -395,6 +402,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
       <motion.button
         onClick={handleOpen}
         className="fixed bottom-6 right-6 z-40 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        data-testid="feedback-widget-button"
+        aria-label="Open feedback"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0, y: 20 }}

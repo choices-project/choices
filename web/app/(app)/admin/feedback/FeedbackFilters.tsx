@@ -3,7 +3,7 @@
 import { Search, X } from 'lucide-react';
 import React from 'react';
 
-import { stripUndefinedDeep } from '@/lib/utils/clean';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 
 type Filters = {

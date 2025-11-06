@@ -223,32 +223,22 @@ export class GeographicElectoralFeed {
       const electionData = await orchestrator.getUpcomingElections(location);
       
       if (electionData && Array.isArray(electionData)) {
-        return Promise.all(electionData.map(async (election: unknown) => {
-          if (election && typeof election === 'object') {
-            const race = election as Record<string, unknown>;
-            return {
-              raceId: (race.raceId as string) ?? '',
-              office: (race.office as string) ?? '',
-              jurisdiction: (race.jurisdiction as string) ?? '',
-              electionDate: (race.electionDate as string) ?? '',
-              incumbent: (race.incumbent as Representative) ?? await this.getMockRepresentative('Unknown'),
-              challengers: (race.challengers as Representative[]) ?? [],
-              allCandidates: (race.allCandidates as Candidate[]) ?? [],
-              keyIssues: (race.keyIssues as string[]) ?? [],
-              campaignFinance: (race.campaignFinance as CampaignFinance) ?? await this.getMockCampaignFinance('unknown'),
-              pollingData: race.pollingData ?? null,
-              voterRegistrationDeadline: (race.voterRegistrationDeadline as string) ?? '',
-              earlyVotingStart: (race.earlyVotingStart as string) ?? '',
-              absenteeBallotDeadline: (race.absenteeBallotDeadline as string) ?? '',
-              recentActivity: [],
-              constituentQuestions: 0,
-              candidateResponses: 0,
-              status: 'upcoming' as const,
-              importance: 'medium' as const
-            };
-          }
-          return this.getMockElectoralRace();
-        }));
+        // Use runtime validation instead of unsafe type casts
+        const { parseArrayFiltered } = await import('./schemas')
+        const { ElectoralRaceSchema } = await import('./schemas')
+        
+        const validRaces = parseArrayFiltered(
+          ElectoralRaceSchema,
+          electionData,
+          'getUpcomingElections'
+        )
+        
+        // If no valid races, return mock data
+        if (validRaces.length === 0) {
+          return [await this.getMockElectoralRace()]
+        }
+        
+        return validRaces
       }
       
       // Fallback to mock data if no real data available

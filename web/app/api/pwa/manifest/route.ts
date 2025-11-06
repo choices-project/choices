@@ -1,26 +1,14 @@
-/**
- * PWA Manifest API Endpoint
- * 
- * Serves the web app manifest with dynamic configuration.
- * This allows for environment-specific manifest customization.
- */
+import type { NextRequest } from 'next/server';
 
-import { type NextRequest, NextResponse } from 'next/server';
-
+import { withErrorHandling, forbiddenError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
+  }
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') ?? 'json';
@@ -169,17 +157,7 @@ export async function GET(request: NextRequest) {
       responseObj.headers.set('Content-Type', 'application/manifest+json');
     } else {
       responseObj.headers.set('Content-Type', 'application/json');
-    }
-    
-    return responseObj;
-
-  } catch (error) {
-    logger.error('PWA: Failed to serve manifest:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to serve manifest',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
   }
-}
+  
+  return responseObj;
+});

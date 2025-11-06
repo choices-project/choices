@@ -5,11 +5,13 @@
  * Supports real-time messaging, message status updates, and delivery tracking.
  * 
  * Created: January 23, 2025
- * Status: ✅ IMPLEMENTATION READY
+ * Updated: November 6, 2025 - Modernized
+ * Status: ✅ PRODUCTION READY
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, rateLimitError } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import {
   sanitizeMessageContent,
@@ -62,30 +64,22 @@ type _MessageResponse = {
 // POST - Create New Message
 // ============================================================================
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async (request: NextRequest) => {
   const startTime = Date.now();
   
-  try {
-    // Rate limiting: 10 messages per minute per user
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const userAgent = request.headers.get('user-agent');
-    const rateLimitOptions: any = {};
-    if (userAgent) rateLimitOptions.userAgent = userAgent;
-    const rateLimitResult = await apiRateLimiter.checkLimit(
-      ip,
-      '/api/contact/messages',
-      rateLimitOptions
-    );
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Too many messages. Please wait before sending another message.',
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
-        },
-        { status: 429 }
-      );
-    }
+  // Rate limiting: 10 messages per minute per user
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent');
+  const rateLimitOptions: any = {};
+  if (userAgent) rateLimitOptions.userAgent = userAgent;
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    ip,
+    '/api/contact/messages',
+    rateLimitOptions
+  );
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Too many messages. Please wait before sending another message.');
+  }
 
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
@@ -355,16 +349,7 @@ export async function POST(request: NextRequest) {
       threadId: finalThreadId,
       responseTime
     });
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error creating message:', new Error(err?.message ?? 'Unknown error'), { error: err });
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 // ============================================================================
 // GET - Retrieve User Messages

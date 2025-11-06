@@ -1,19 +1,28 @@
 /**
  * @fileoverview Notifications API
- * 
+ *
  * Notification management API providing user notifications,
  * delivery tracking, and read status management.
- * 
+ *
+ * Updated: November 6, 2025 - Modernized with standardized responses
  * @author Choices Platform Team
  * @created 2025-10-24
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 
+import {
+  withErrorHandling,
+  successResponse,
+  authError,
+  errorResponse,
+  validationError,
+  notFoundError,
+  parseBody
+} from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -23,10 +32,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Validation schema for sophisticated notifications
- * 
+ *
  * Ensures proper data structure for notifications with comprehensive
  * validation for types, priorities, and metadata.
- * 
+ *
  * @const {z.ZodObject} NotificationSchema
  */
 const NotificationSchema = z.object({
@@ -40,39 +49,38 @@ const NotificationSchema = z.object({
 
 /**
  * Get user notifications
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} [request.searchParams.limit] - Number of notifications to return (default: 20)
  * @param {string} [request.searchParams.type] - Notification type filter (default: 'all')
  * @param {string} [request.searchParams.priority] - Priority level filter (default: 'all')
  * @param {boolean} [request.searchParams.unread_only] - Show only unread notifications
  * @returns {Promise<NextResponse>} Notifications data
- * 
+ *
  * @example
  * GET /api/notifications?priority=high&unread_only=true&limit=10
  */
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const { searchParams } = new URL(request.url);
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const { searchParams } = new URL(request.url);
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
     const limit = parseInt(searchParams.get('limit') ?? '20');
     const notificationType = searchParams.get('type') ?? 'all';
     const priority = searchParams.get('priority') ?? 'all';
     const unreadOnly = searchParams.get('unread_only') === 'true';
 
-    logger.info('Fetching notifications', { 
-      userId: user.id, 
-      limit, 
-      notificationType, 
-      priority, 
-      unreadOnly 
+    logger.info('Fetching notifications', {
+      userId: user.id,
+      limit,
+      notificationType,
+      priority,
+      unreadOnly
     });
 
     // Query notification_log (actual table schema)
@@ -83,25 +91,20 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      logger.error('Error fetching notifications:', error);
-      return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      notifications: notifications || [],
-      total: notifications?.length || 0
-    });
-
-  } catch (error) {
-    logger.error('Notifications GET error:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (error) {
+    logger.error('Error fetching notifications:', error);
+    return errorResponse('Failed to fetch notifications', 500);
   }
-}
+
+  return successResponse({
+    notifications: notifications || [],
+    total: notifications?.length || 0
+  });
+});
 
 /**
  * Create a new notification
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} request.body.title - Notification title
  * @param {string} request.body.message - Notification message
@@ -110,7 +113,7 @@ export async function GET(request: NextRequest) {
  * @param {string} [request.body.action_url] - Optional action URL
  * @param {Object} [request.body.metadata] - Additional notification metadata
  * @returns {Promise<NextResponse>} Created notification data
- * 
+ *
  * @example
  * POST /api/notifications
  * {
@@ -120,19 +123,19 @@ export async function GET(request: NextRequest) {
  *   "priority": "high"
  * }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const body = await request.json();
-    
-    // Validate input
-    const validatedData = NotificationSchema.parse(body);
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+
+  // Parse and validate body
+  const bodyResult = await parseBody(request, NotificationSchema);
+  if (!bodyResult.success) return bodyResult.error;
+  const validatedData = bodyResult.data;
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
     // Create notification using actual notification_log schema
     const { data: notification, error: createError } = await supabase
@@ -147,47 +150,39 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (createError) {
-      logger.error('Error creating notification:', createError);
-      return NextResponse.json({ error: 'Failed to create notification' }, { status: 500 });
-    }
-
-    logger.info('Notification created successfully', { 
-      notificationId: notification.id, 
-      userId: user.id
-    });
-
-    return NextResponse.json({
-      notification: {
-        id: notification.id,
-        title: notification.title,
-        message: notification.body,
-        createdAt: notification.created_at
-      }
-    }, { status: 201 });
-
-  } catch (error) {
-    logger.error('Notifications POST error:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (createError) {
+    logger.error('Error creating notification:', createError);
+    return errorResponse('Failed to create notification', 500);
   }
-}
+
+  logger.info('Notification created successfully', {
+    notificationId: notification.id,
+    userId: user.id
+  });
+
+  return successResponse({
+    id: notification.id,
+    title: notification.title,
+    message: notification.body,
+    createdAt: notification.created_at
+  }, undefined, 201);
+});
 
 // PUT /api/notifications - Mark notification as read
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const body = await request.json();
-    const { notificationId } = body;
-    
-    if (!notificationId) {
-      return NextResponse.json({ error: 'Notification ID is required' }, { status: 400 });
-    }
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const body = await request.json();
+  const { notificationId } = body;
+
+  if (!notificationId) {
+    return validationError({ notificationId: 'Notification ID is required' });
+  }
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
 
     // Mark notification as read in notification_log
     const { data: notification, error: updateError } = await supabase
@@ -201,30 +196,22 @@ export async function PUT(request: NextRequest) {
       .select()
       .single();
 
-    if (updateError) {
-      logger.error('Error updating notification:', updateError);
-      return NextResponse.json({ error: 'Failed to update notification' }, { status: 500 });
-    }
-
-    if (!notification) {
-      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
-    }
-
-    logger.info('Notification marked as read', { 
-      notificationId: notification.id, 
-      userId: user.id 
-    });
-
-    return NextResponse.json({
-      success: true,
-      notification: {
-        id: notification.id,
-        readAt: (notification as any).read_at ?? null
-      }
-    });
-
-  } catch (error) {
-    logger.error('Notifications PUT error:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (updateError) {
+    logger.error('Error updating notification:', updateError);
+    return errorResponse('Failed to update notification', 500);
   }
-}
+
+  if (!notification) {
+    return notFoundError('Notification not found');
+  }
+
+  logger.info('Notification marked as read', {
+    notificationId: notification.id,
+    userId: user.id
+  });
+
+  return successResponse({
+    id: notification.id,
+    readAt: (notification as any).read_at ?? null
+  });
+});
