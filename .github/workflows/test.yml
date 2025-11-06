@@ -51,8 +51,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -128,8 +130,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -191,8 +195,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -246,8 +252,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -304,8 +312,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules

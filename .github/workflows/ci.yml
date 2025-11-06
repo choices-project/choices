@@ -32,8 +32,10 @@ jobs:
     - name: Setup gtimeout compatibility (Linux uses 'timeout')
       run: |
         if ! command -v gtimeout &> /dev/null; then
-          sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
         fi
+        which gtimeout || which timeout
 
     - name: Install dependencies
       run: |
@@ -65,6 +67,17 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+
+    - name: Use repo's npm version
+      run: npm i -g npm@${{ env.NPM_VERSION }}
+
+    - name: Setup gtimeout compatibility (Linux uses 'timeout')
+      run: |
+        if ! command -v gtimeout &> /dev/null; then
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
+        fi
+        which gtimeout || which timeout
 
     - name: Install dependencies
       run: |
@@ -110,6 +123,17 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
+    - name: Use repo's npm version
+      run: npm i -g npm@${{ env.NPM_VERSION }}
+
+    - name: Setup gtimeout compatibility (Linux uses 'timeout')
+      run: |
+        if ! command -v gtimeout &> /dev/null; then
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
+        fi
+        which gtimeout || which timeout
+
     - name: Install dependencies
       run: |
         cd web
@@ -138,7 +162,7 @@ jobs:
         npm run test:e2e
 
     - name: Upload E2E results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: playwright-report

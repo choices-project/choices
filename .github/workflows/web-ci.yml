@@ -55,8 +55,10 @@ jobs:
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then
-            sudo ln -s $(which timeout) /usr/local/bin/gtimeout || echo 'gtimeout alias created'
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
           fi
+          which gtimeout || which timeout
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -65,7 +67,9 @@ jobs:
         run: npm run ci:install
 
       - name: Lockfile unchanged
-        run: git diff --exit-code web/package-lock.json
+        run: |
+          cd ..
+          git diff --exit-code web/package-lock.json
 
       - name: Debug Next.js version
         run: node -e "console.log('Next.js version:', require('next/package.json').version)"
