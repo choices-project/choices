@@ -1,18 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-export async function POST(request: NextRequest) {
-  try {
-    const { poll_id, option_id, voter_session } = await request.json();
-    
-    if (!poll_id || !option_id || !voter_session) {
-      return NextResponse.json(
-        { error: 'Missing required fields' }, 
-        { status: 400 }
-      );
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const { poll_id, option_id, voter_session } = await request.json();
+  
+  if (!poll_id || !option_id || !voter_session) {
+    return validationError({
+      poll_id: !poll_id ? 'Poll ID is required' : '',
+      option_id: !option_id ? 'Option ID is required' : '',
+      voter_session: !voter_session ? 'Voter session is required' : ''
+    });
+  }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,42 +29,31 @@ export async function POST(request: NextRequest) {
       .eq('is_shareable', true)
       .single();
 
-    if (pollError || !poll) {
-      return NextResponse.json(
-        { error: 'Poll not found or not shareable' }, 
-        { status: 404 }
-      );
-    }
+  if (pollError || !poll) {
+    return notFoundError('Poll not found or not shareable');
+  }
 
-    // Check if option exists for this poll
-    const { data: option, error: optionError } = await supabase
-      .from('poll_options')
-      .select('id')
-      .eq('id', option_id)
-      .eq('poll_id', poll_id)
-      .single();
+  const { data: option, error: optionError } = await supabase
+    .from('poll_options')
+    .select('id')
+    .eq('id', option_id)
+    .eq('poll_id', poll_id)
+    .single();
 
-    if (optionError || !option) {
-      return NextResponse.json(
-        { error: 'Invalid option for this poll' }, 
-        { status: 400 }
-      );
-    }
+  if (optionError || !option) {
+    return validationError({ option_id: 'Invalid option for this poll' });
+  }
 
-    // Check for duplicate vote from same session
-    const { data: existingVote } = await supabase
-      .from('votes')
-      .select('id')
-      .eq('poll_id', poll_id)
-      .eq('voter_session', voter_session)
-      .single();
+  const { data: existingVote } = await supabase
+    .from('votes')
+    .select('id')
+    .eq('poll_id', poll_id)
+    .eq('voter_session', voter_session)
+    .single();
 
-    if (existingVote) {
-      return NextResponse.json(
-        { error: 'You have already voted on this poll' }, 
-        { status: 409 }
-      );
-    }
+  if (existingVote) {
+    return errorResponse('You have already voted on this poll', 409);
+  }
 
     // Create anonymous vote (equal weight)
     const { data: vote, error: voteError } = await supabase
@@ -78,25 +68,13 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (voteError) {
-      logger.error('Vote creation error', { error: voteError });
-      return NextResponse.json(
-        { error: 'Failed to record vote' }, 
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      vote_id: vote.id,
-      message: 'Vote recorded successfully'
-    });
-
-  } catch (error) {
-    logger.error('Anonymous voting error', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
+  if (voteError) {
+    logger.error('Vote creation error', { error: voteError });
+    return errorResponse('Failed to record vote', 500);
   }
-}
+
+  return successResponse({
+    vote_id: vote.id,
+    message: 'Vote recorded successfully'
+  }, undefined, 201);
+});

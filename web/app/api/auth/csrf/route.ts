@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 
 export const GET = withErrorHandling(async () => {
-  const logger = createApiLogger('/api/auth/csrf', 'GET');
+  const _logger = createApiLogger('/api/auth/csrf', 'GET');
   
   // Get or create CSRF token
   const csrfToken = await getOrSetCsrfCookie();

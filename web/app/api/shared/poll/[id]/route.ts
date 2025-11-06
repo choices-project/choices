@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, notFoundError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -36,12 +36,9 @@ export async function GET(
       .eq('is_shareable', true)
       .single();
 
-    if (pollError) {
-      return NextResponse.json(
-        { error: 'Poll not found or not shareable' }, 
-        { status: 404 }
-      );
-    }
+  if (pollError) {
+    return notFoundError('Poll not found or not shareable');
+  }
 
     // Get current results (equal weight)
     const { data: results } = await supabase
@@ -50,16 +47,8 @@ export async function GET(
         p_trust_tier: null // All tiers
       });
 
-    return NextResponse.json({
-      ...poll,
-      results: results ?? []
-    });
-
-  } catch (error) {
-    logger.error('Shared poll API error', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    ...poll,
+    results: results ?? []
+  });
+});

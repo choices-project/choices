@@ -18,7 +18,7 @@
 import type { NextRequest } from 'next/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, errorResponse } from '@/lib/api';
 import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

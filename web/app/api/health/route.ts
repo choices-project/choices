@@ -15,7 +15,7 @@
  * GET /api/health?type=all - All health checks
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 import { withErrorHandling, successResponse, rateLimitError } from '@/lib/api';

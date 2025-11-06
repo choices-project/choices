@@ -13,7 +13,7 @@
  * POST /api/trending?type=hashtags - Track hashtags
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';

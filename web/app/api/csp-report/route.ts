@@ -12,8 +12,8 @@
  */
 
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -33,14 +33,13 @@ type CSPReport = {
   'csp-report': CSPViolation;
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const report: CSPReport = await request.json();
-    const violation = report['csp-report'];
-    
-    if (!violation) {
-      return NextResponse.json({ status: 'invalid' }, { status: 400 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const report: CSPReport = await request.json();
+  const violation = report['csp-report'];
+  
+  if (!violation) {
+    return successResponse({ status: 'invalid' });
+  }
 
     // Extract metadata
     const metadata = {
@@ -86,15 +85,8 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    return NextResponse.json({ status: 'received' }, { status: 200 });
-    
-  } catch (error) {
-    logger.error('Error processing CSP violation report', { error });
-    
-    // Still return 200 to prevent browser from retrying
-    return NextResponse.json({ status: 'error' }, { status: 200 });
-  }
-}
+  return successResponse({ status: 'received' });
+});
 
 /**
  * Determine severity of CSP violation

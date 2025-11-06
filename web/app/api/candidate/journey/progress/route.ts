@@ -1,16 +1,17 @@
-import { type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
+import type { 
+  JourneyStage, 
+  JourneyMilestone
+} from '@/lib/candidate/journey-tracker'
 import { 
-  type JourneyStage, 
-  type JourneyMilestone,
   getJourneyChecklist,
   getNextAction,
   shouldSendReminder,
   calculateProgress
 } from '@/lib/candidate/journey-tracker'
-import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
 import { withOptional } from '@/lib/util/objects'
-import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const GET = withErrorHandling(async (request: NextRequest) => {

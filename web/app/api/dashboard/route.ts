@@ -14,7 +14,7 @@
  * Status: ✅ ACTIVE
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { getRedisClient } from '@/lib/cache/redis-client';
