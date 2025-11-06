@@ -38,10 +38,10 @@ export const GET = withErrorHandling(async () => {
 
   const trustScore = calculateTrustScore(credentials || []);
 
-  logger.info('WebAuthn trust score calculated', { 
-    userId: user.id, 
+  logger.info('WebAuthn trust score calculated', {
+    userId: user.id,
     trustScore: trustScore.overall,
-    credentialCount: credentials?.length || 0 
+    credentialCount: credentials?.length || 0
   });
 
   return successResponse({
@@ -72,25 +72,25 @@ function calculateTrustScore(credentials: any[]): {
   const deviceDiversityScore = Math.min(deviceTypes.size * 25, 100); // Max 100 for 4+ device types
 
   // Factor 3: Recent Usage (recent activity = higher trust)
-  const recentCredentials = credentials.filter(c => 
+  const recentCredentials = credentials.filter(c =>
     c.last_used_at && new Date(c.last_used_at) > thirtyDaysAgo
   );
-  const recentUsageScore = credentials.length > 0 
-    ? (recentCredentials.length / credentials.length) * 100 
+  const recentUsageScore = credentials.length > 0
+    ? (recentCredentials.length / credentials.length) * 100
     : 0;
 
   // Factor 4: Backup Status (backup eligible credentials = higher trust)
   const backupEligibleCount = credentials.filter(c => c.backup_eligible).length;
-  const backupStatusScore = credentials.length > 0 
-    ? (backupEligibleCount / credentials.length) * 100 
+  const backupStatusScore = credentials.length > 0
+    ? (backupEligibleCount / credentials.length) * 100
     : 0;
 
   // Factor 5: Security Features (platform authenticators = higher trust)
-  const platformCredentials = credentials.filter(c => 
+  const platformCredentials = credentials.filter(c =>
     c.transports?.includes('internal') || c.device_info?.authenticator_type === 'platform'
   );
-  const securityFeaturesScore = credentials.length > 0 
-    ? (platformCredentials.length / credentials.length) * 100 
+  const securityFeaturesScore = credentials.length > 0
+    ? (platformCredentials.length / credentials.length) * 100
     : 0;
 
   // Calculate overall score (weighted average)
@@ -104,21 +104,21 @@ function calculateTrustScore(credentials: any[]): {
 
   // Generate recommendations
   const recommendations: string[] = [];
-  
+
   if (credentialCount === 0) {
     recommendations.push('Add your first passkey to improve security');
   } else if (credentialCount === 1) {
     recommendations.push('Add a backup passkey for better security');
   }
-  
+
   if (deviceDiversityScore < 50) {
     recommendations.push('Add passkeys from different devices for better security');
   }
-  
+
   if (recentUsageScore < 50) {
     recommendations.push('Use your passkeys more frequently to maintain security');
   }
-  
+
   if (backupStatusScore < 50) {
     recommendations.push('Enable backup for your passkeys to prevent lockout');
   }
