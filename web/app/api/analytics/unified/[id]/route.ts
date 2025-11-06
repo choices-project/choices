@@ -50,21 +50,24 @@ function parseAnalysisWindow(window: string): number {
   // Handle "24 hours", "7 days", "1 week" format
   const parts = normalized.split(/\s+/);
   if (parts.length >= 2) {
-    const value = parseInt(parts[0], 10);
+    const valueStr = parts[0];
     const unit = parts[1];
     
-    if (!isNaN(value) && unit) {
-      if (unit.startsWith('hour')) {
-        return value * 60 * 60 * 1000;
-      }
-      if (unit.startsWith('day')) {
-        return value * 24 * 60 * 60 * 1000;
-      }
-      if (unit.startsWith('week')) {
-        return value * 7 * 24 * 60 * 60 * 1000;
-      }
-      if (unit.startsWith('month')) {
-        return value * 30 * 24 * 60 * 60 * 1000;
+    if (valueStr && unit) {
+      const value = parseInt(valueStr, 10);
+      if (!isNaN(value)) {
+        if (unit.startsWith('hour')) {
+          return value * 60 * 60 * 1000;
+        }
+        if (unit.startsWith('day')) {
+          return value * 24 * 60 * 60 * 1000;
+        }
+        if (unit.startsWith('week')) {
+          return value * 7 * 24 * 60 * 60 * 1000;
+        }
+        if (unit.startsWith('month')) {
+          return value * 30 * 24 * 60 * 60 * 1000;
+        }
       }
     }
   }

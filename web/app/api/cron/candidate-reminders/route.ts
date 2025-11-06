@@ -8,6 +8,7 @@ import {
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withOptional } from '@/lib/util/objects'
 
 /**
  * GET /api/cron/candidate-reminders
@@ -124,18 +125,24 @@ export async function GET(request: NextRequest) {
           daysUntilDeadline = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
         }
 
-        const progress = {
+        const baseProgress = {
           platformId: platform.id,
           userId: platform.user_id,
           currentStage,
           milestones,
           lastActiveAt: platform.last_active_at ? new Date(platform.last_active_at) : createdDate,
-          daysSinceDeclaration,
-          daysUntilDeadline
+          daysSinceDeclaration
+        };
+
+        const optionalProgress: Record<string, unknown> = {};
+        if (daysUntilDeadline !== undefined) {
+          optionalProgress.daysUntilDeadline = daysUntilDeadline;
         }
 
+        const progress = withOptional(baseProgress, optionalProgress);
+
         // Check if reminder needed
-        const reminder = shouldSendReminder(progress)
+        const reminder = shouldSendReminder(progress as typeof baseProgress & { daysUntilDeadline?: number })
 
         if (!reminder?.shouldSend) {
           results.skipped++
@@ -171,20 +178,28 @@ export async function GET(request: NextRequest) {
         const emailType = emailTypeMap[reminder.reminderType] ?? 'check_in'
 
         // Prepare email data
-        const emailData = {
+        const baseEmailData = {
           to: email,
           candidateName: platform.candidate_name,
           office: platform.office,
           level: platform.level as 'federal' | 'state' | 'local',
           state: platform.state,
-          filingDeadline: platform.filing_deadline ? new Date(platform.filing_deadline) : undefined,
-          daysUntilDeadline,
           dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/candidate/dashboard`,
           platformId: platform.id
+        };
+
+        const optionalEmailData: Record<string, unknown> = {};
+        if (platform.filing_deadline) {
+          optionalEmailData.filingDeadline = new Date(platform.filing_deadline);
+        }
+        if (daysUntilDeadline !== undefined) {
+          optionalEmailData.daysUntilDeadline = daysUntilDeadline;
         }
 
+        const emailData = withOptional(baseEmailData, optionalEmailData);
+
         // Send email
-        const emailResult = await sendCandidateJourneyEmail(emailType, emailData)
+        const emailResult = await sendCandidateJourneyEmail(emailType, emailData as typeof baseEmailData & { filingDeadline?: Date; daysUntilDeadline?: number })
 
         if (emailResult.success) {
           // Update last reminder sent
