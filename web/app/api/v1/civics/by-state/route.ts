@@ -1,22 +1,17 @@
-// app/api/v1/civics/by-state/route.ts
-// Versioned API endpoint for representatives by state with field selection
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-// Force dynamic rendering since we use request.url
 export const dynamic = 'force-dynamic';
-export async function GET(request: NextRequest) {
-  // Create Supabase client at request time (not module level) to avoid build-time errors
+
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json(
-      { error: 'Supabase configuration missing' },
-      { status: 500 }
-    );
+    return errorResponse('Supabase configuration missing', 500);
   }
   
   const supabase = createClient(
@@ -24,8 +19,6 @@ export async function GET(request: NextRequest) {
     supabaseKey,
     { auth: { persistSession: false } }
   );
-  
-  try {
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
     const level = searchParams.get('level');
@@ -33,12 +26,9 @@ export async function GET(request: NextRequest) {
     const include = searchParams.get('include')?.split(',') ?? [];
     const limit = parseInt(searchParams.get('limit') ?? '50');
 
-    if (!state) {
-      return NextResponse.json(
-        { error: 'State parameter is required' },
-        { status: 400 }
-      );
-    }
+  if (!state) {
+    return validationError({ state: 'State parameter is required' });
+  }
 
     // Build query
     let query = supabase
@@ -176,19 +166,19 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    return NextResponse.json(responseData, {
-      headers: {
-        'ETag': `"${state}-${level}-${Date.now()}"`,
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
-        'Content-Type': 'application/json'
-      }
-    });
-
-  } catch (error) {
-    logger.error('Error fetching representatives by state:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const response = successResponse({
+    ok: true,
+    count: finalResponse.length,
+    data: finalResponse,
+    attribution: {
+      fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
+      votes: include.includes('votes') ? 'GovTrack.us' : undefined,
+      contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
+    }
+  });
+  
+  response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
+  response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+  
+  return response;
+});

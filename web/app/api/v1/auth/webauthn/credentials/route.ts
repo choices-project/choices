@@ -1,34 +1,21 @@
-// WebAuthn Credentials Management API
-// Lists and manages user WebAuthn credentials
-// Created: October 2, 2025
+import { type NextRequest } from 'next/server';
 
-import { type NextRequest, NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(): Promise<NextResponse> {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
+export const GET = withErrorHandling(async (): Promise<any> => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Always require real authentication - no E2E bypasses for security
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
     // Fetch user's WebAuthn credentials
     const { data: credentials, error: credentialsError } = await supabase
