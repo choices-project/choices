@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
 import { 
   type JourneyStage, 
@@ -8,43 +8,29 @@ import {
   shouldSendReminder,
   calculateProgress
 } from '@/lib/candidate/journey-tracker'
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-/**
- * GET /api/candidate/journey/progress
- * Get candidate journey progress
- */
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Get current user
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !authUser) {
+    return authError('Authentication required');
+  }
 
-    const searchParams = request.nextUrl.searchParams
-    const platformId = searchParams.get('platformId')
+  const searchParams = request.nextUrl.searchParams
+  const platformId = searchParams.get('platformId')
 
-    if (!platformId) {
-      return NextResponse.json(
-        { error: 'Platform ID required' },
-        { status: 400 }
-      )
-    }
+  if (!platformId) {
+    return validationError({ platformId: 'Platform ID required' });
+  }
 
     // Get platform
     const { data: platform, error: platformError } = await supabase
@@ -54,12 +40,9 @@ export async function GET(request: NextRequest) {
       .eq('user_id', authUser.id)
       .single()
 
-    if (platformError || !platform) {
-      return NextResponse.json(
-        { error: 'Platform not found' },
-        { status: 404 }
-      )
-    }
+  if (platformError || !platform) {
+    return notFoundError('Platform not found');
+  }
 
     // Determine current stage
     let currentStage: JourneyStage = 'declared'
@@ -125,96 +108,56 @@ export async function GET(request: NextRequest) {
     // Calculate progress
     const progressPercent = calculateProgress(progress, checklist)
 
-    return NextResponse.json({
-      progress,
-      checklist,
-      nextAction,
-      reminder,
-      progressPercent,
-      stage: currentStage
-    })
-  } catch (error) {
-    logger.error('Journey progress error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  return successResponse({
+    progress,
+    checklist,
+    nextAction,
+    reminder,
+    progressPercent,
+    stage: currentStage
+  });
+});
+
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
   }
-}
 
-/**
- * POST /api/candidate/journey/progress
- * Update journey progress (checklist item completion, etc.)
- */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
-
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const _body = await request.json()
-    const { platformId, milestone: _milestone, checklistItemId: _checklistItemId } = _body
-
-    if (!platformId) {
-      return NextResponse.json(
-        { error: 'Platform ID required' },
-        { status: 400 }
-      )
-    }
-
-    // Verify ownership
-    const { data: platform } = await supabase
-      .from('candidate_platforms')
-      .select('user_id')
-      .eq('id', platformId)
-      .single()
-
-    if (!platform || platform.user_id !== authUser.id) {
-      return NextResponse.json(
-        { error: 'Not authorized' },
-        { status: 403 }
-      )
-    }
-
-    // Update last_active_at
-    const { error: updateError } = await supabase
-      .from('candidate_platforms')
-      .update({ last_active_at: new Date().toISOString() })
-      .eq('id', platformId)
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: 'Failed to update progress' },
-        { status: 500 }
-      )
-    }
-
-    // In future, could store milestones/checklist in separate table
-    // For now, just update last_active_at
-
-    return NextResponse.json({
-      success: true,
-      message: 'Progress updated'
-    })
-  } catch (error) {
-    logger.error('Update journey progress error:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !authUser) {
+    return authError('Authentication required');
   }
-}
+
+  const _body = await request.json()
+  const { platformId, milestone: _milestone, checklistItemId: _checklistItemId } = _body
+
+  if (!platformId) {
+    return validationError({ platformId: 'Platform ID required' });
+  }
+
+  const { data: platform } = await supabase
+    .from('candidate_platforms')
+    .select('user_id')
+    .eq('id', platformId)
+    .single()
+
+  if (!platform || platform.user_id !== authUser.id) {
+    return forbiddenError('Not authorized');
+  }
+
+  const { error: updateError } = await supabase
+    .from('candidate_platforms')
+    .update({ last_active_at: new Date().toISOString() })
+    .eq('id', platformId)
+
+  if (updateError) {
+    return errorResponse('Failed to update progress', 500);
+  }
+
+  return successResponse({
+    message: 'Progress updated'
+  });
+});
 
