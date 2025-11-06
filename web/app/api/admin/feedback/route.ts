@@ -1,21 +1,17 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const authGate = await requireAdminOr401()
   if (authGate) return authGate
   
-  // Get admin user info
   const adminUser = await getAdminUser()
-  
-  try {
     
     // Get Supabase client
     const supabase = await getSupabaseAdminClient();

@@ -8,24 +8,20 @@
  * Status: In Progress
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if request is from admin (in production, add proper auth)
-    const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
-    const isAdmin = request.headers.get('x-admin-key') === adminKey;
-    
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
+  const isAdmin = request.headers.get('x-admin-key') === adminKey;
+  
+  if (!isAdmin) {
+    return authError('Admin authentication required');
+  }
 
     // Get metrics from Upstash-backed rate limiter
     const metrics = await upstashRateLimiter.getMetrics();

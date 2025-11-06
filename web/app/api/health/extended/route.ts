@@ -12,20 +12,16 @@
  * Status: ✅ PRODUCTION
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * GET /api/health/extended
- * Comprehensive health check with detailed metrics
- */
-export async function GET(_request: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (_request: NextRequest) => {
     const timestamp = new Date().toISOString();
     const environment = process.env.NODE_ENV ?? 'development';
 
@@ -98,24 +94,14 @@ export async function GET(_request: NextRequest) {
       }
     };
 
-    // Determine overall status code
-    const statusCode = health.status === 'unhealthy' ? 503 : health.status === 'degraded' ? 200 : 200;
-
-    return NextResponse.json(health, { status: statusCode });
-
-  } catch (error) {
-    logger.error('Error in extended health check:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      {
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
-        checks: {}
-      },
-      { status: 500 }
-    );
+  const statusCode = health.status === 'unhealthy' ? 503 : 200;
+  
+  const response = successResponse(health);
+  if (health.status === 'unhealthy') {
+    return new Response(response.body, { status: 503, headers: response.headers });
   }
-}
+  return response;
+});
 
 /**
  * Check database connection health

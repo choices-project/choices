@@ -15,7 +15,8 @@
  * Status: ✅ Production-ready
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';

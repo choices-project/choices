@@ -162,7 +162,7 @@ export function FilingGuideWizard({
           {!requirements && (
             <>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">What You'll Learn:</h4>
+                <h4 className="font-semibold mb-2">What You&apos;ll Learn:</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
                   <li>Eligibility requirements (age, residency, citizenship)</li>
                   <li>Required forms and documents</li>
@@ -173,7 +173,7 @@ export function FilingGuideWizard({
               </div>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Tip:</strong> Requirements vary by jurisdiction. Make sure you're following the rules for your specific office and location.
+                  <strong>Tip:</strong> Requirements vary by jurisdiction. Make sure you&apos;re following the rules for your specific office and location.
                 </p>
               </div>
             </>
@@ -195,11 +195,11 @@ export function FilingGuideWizard({
             <div className="border rounded-lg p-4">
               <h4 className="font-semibold mb-2 flex items-center">
                 <FileText className="w-4 h-4 mr-2" />
-                Documents You'll Need
+                Documents You&apos;ll Need
               </h4>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
                 <li>Proof of citizenship (birth certificate, passport)</li>
-                <li>Proof of residency (driver's license, utility bill)</li>
+                <li>Proof of residency (driver&apos;s license, utility bill)</li>
                 <li>Financial disclosure forms (if required)</li>
                 <li>Campaign finance organization documents</li>
                 <li>Petition signatures (if required)</li>
@@ -226,7 +226,7 @@ export function FilingGuideWizard({
       content: (
         <div className="space-y-4">
           <p className="text-gray-700">
-            Now it's time to file through the official election authority. Follow the steps carefully.
+            Now it&apos;s time to file through the official election authority. Follow the steps carefully.
           </p>
           
           {/* Show actual filing portal if available */}
@@ -291,7 +291,7 @@ export function FilingGuideWizard({
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">
               <AlertCircle className="w-4 h-4 inline mr-1" />
-              <strong>Important:</strong> After filing, return here to verify your filing. You'll need your official filing ID or confirmation number.
+              <strong>Important:</strong> After filing, return here to verify your filing. You&apos;ll need your official filing ID or confirmation number.
             </p>
           </div>
         </div>
@@ -305,16 +305,16 @@ export function FilingGuideWizard({
       content: (
         <div className="space-y-4">
           <p className="text-gray-700">
-            Once you've filed officially, verify your filing with us to update your candidate status.
+            Once you&apos;ve filed officially, verify your filing with us to update your candidate status.
           </p>
           <div className="border rounded-lg p-4">
             <h4 className="font-semibold mb-2">What to Do Next:</h4>
             <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
               <li>Get your official filing ID or confirmation number from the election authority</li>
               <li>Return to your candidate dashboard</li>
-              <li>Enter your filing information in the "Official Filing" section</li>
+              <li>Enter your filing information in the &ldquo;Official Filing&rdquo; section</li>
               <li>Upload proof of filing document (optional but recommended)</li>
-              <li>Click "Verify with FEC" if filing for federal office</li>
+              <li>Click &ldquo;Verify with FEC&rdquo; if filing for federal office</li>
             </ol>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
+import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -32,14 +32,11 @@ async function getColumns(supabase: SupabaseClient, table: string): Promise<stri
   return cols;
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    // For API routes, we need to handle admin auth differently
-    // This is a placeholder - implement proper admin auth for API routes
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) {
+    return authError('Admin authorization required');
+  }
 
     const url = new URL(req.url);
     const refresh = url.searchParams.get('refresh') === 'true';
@@ -81,21 +78,19 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const ok = results.every((r) => r.ok);
-    return NextResponse.json(
-      {
-        ok,
-        results,
-        meta: {
-          generatedAt: new Date().toISOString(),
-          refreshApplied: refresh,
-        },
-      },
-      { status: ok ? 200 : 422 }
-    );
-  } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err);
-    logger.error('Schema-status failed', err instanceof Error ? err : new Error(reason));
-    return NextResponse.json({ ok: false, error: reason }, { status: 500 });
+  const ok = results.every((r) => r.ok);
+  
+  const response = successResponse({
+    ok,
+    results,
+    meta: {
+      generatedAt: new Date().toISOString(),
+      refreshApplied: refresh,
+    },
+  });
+  
+  if (!ok) {
+    return new Response(response.body, { status: 422, headers: response.headers });
   }
-}
+  return response;
+});

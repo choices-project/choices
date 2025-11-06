@@ -42,7 +42,6 @@ commonIcons.forEach(iconName => {
 });
 
 // Export all mocked icons
-// eslint-disable-next-line no-undef
 module.exports = {
   ...iconMocks,
   // Default export for dynamic imports

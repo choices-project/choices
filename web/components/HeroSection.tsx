@@ -396,7 +396,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* CSS for grid pattern */}
-      <style jsx>{`
+      <style jsx={true}>{`
         .bg-grid-pattern {
           background-image: 
             linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
