@@ -7,53 +7,34 @@
  * Created: January 18, 2025
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { getAllFeatureFlags, setFeatureFlags } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET() {
-  try {
-    const flags = await getAllFeatureFlags();
-    
-    return NextResponse.json({
-      flags,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
-    });
-  } catch (error) {
-    logger.error('Error getting feature flags', { error });
-    return NextResponse.json(
-      { error: 'Failed to get feature flags' },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withErrorHandling(async () => {
+  const flags = await getAllFeatureFlags();
+  
+  return successResponse({
+    flags,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { flags } = body;
-    
-    if (!flags || typeof flags !== 'object') {
-      return NextResponse.json(
-        { error: 'Invalid flags data' },
-        { status: 400 }
-      );
-    }
-    
-    await setFeatureFlags(flags);
-    
-    return NextResponse.json({
-      success: true,
-      flags: await getAllFeatureFlags(),
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error setting feature flags', { error });
-    return NextResponse.json(
-      { error: 'Failed to set feature flags' },
-      { status: 500 }
-    );
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const body = await request.json();
+  const { flags } = body;
+  
+  if (!flags || typeof flags !== 'object') {
+    return validationError({ flags: 'Invalid flags data' });
   }
-}
+  
+  await setFeatureFlags(flags);
+  
+  return successResponse({
+    flags: await getAllFeatureFlags(),
+    timestamp: new Date().toISOString()
+  }, undefined, 201);
+});

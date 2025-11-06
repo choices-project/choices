@@ -5,22 +5,18 @@
  * This endpoint is critical for the PWA offline functionality.
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
+  }
 
     const body = await request.json();
     const { votes, deviceId, timestamp } = body;
@@ -28,12 +24,9 @@ export async function POST(request: NextRequest) {
     // Log sync attempt for audit trail
     logger.info('Offline sync attempt', { deviceId, timestamp });
 
-    if (!votes || !Array.isArray(votes)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid votes data'
-      }, { status: 400 });
-    }
+  if (!votes || !Array.isArray(votes)) {
+    return validationError({ votes: 'Invalid votes data' });
+  }
 
     logger.info(`PWA: Syncing ${votes.length} offline votes from device ${deviceId}`);
 
@@ -77,24 +70,13 @@ export async function POST(request: NextRequest) {
 
     logger.info(`PWA: Sync completed - ${successCount} successful, ${failureCount} failed`);
 
-    return NextResponse.json({
-      success: true,
-      syncedCount: successCount,
-      failedCount: failureCount,
-      results,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('PWA: Offline sync failed:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to sync offline data',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
-  }
-}
+  return successResponse({
+    syncedCount: successCount,
+    failedCount: failureCount,
+    results,
+    timestamp: new Date().toISOString()
+  }, undefined, 201);
+});
 
 export async function GET(request: NextRequest) {
   try {
