@@ -216,7 +216,7 @@ export default function TemporalAnalysisChart({
         <CardContent>
           <div className="flex items-center justify-center h-64 text-red-600">
             <AlertCircle className="h-5 w-5 mr-2" />
-            <span>{error || 'No data available'}</span>
+            <span>{error ?? 'No data available'}</span>
           </div>
         </CardContent>
       </Card>

@@ -42,7 +42,7 @@ export function isT3User(user: User | null): boolean {
   
   // Check for T3 trust tier in metadata
   const trustTier = 
-    user.user_metadata?.trust_tier ||
+    user.user_metadata?.trust_tier ??
     user.app_metadata?.trust_tier;
   
   return trustTier === 'T3';
@@ -73,7 +73,7 @@ export function getUserRole(user: User | null): UserRole {
   if (isAdmin(user)) return 'admin';
   
   const trustTier = 
-    user.user_metadata?.trust_tier ||
+    user.user_metadata?.trust_tier ??
     user.app_metadata?.trust_tier;
   
   switch (trustTier) {
@@ -95,7 +95,7 @@ export function logAnalyticsAccess(
   granted: boolean
 ): void {
   const role = getUserRole(user);
-  const userId = user?.id || 'anonymous';
+  const userId = user?.id ?? 'anonymous';
   
   logger.info('Analytics access attempt', {
     userId,

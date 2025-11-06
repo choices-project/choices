@@ -109,8 +109,8 @@ export async function DELETE(request: NextRequest) {
         }
         
         deletionResult = {
-          count: count || 0,
-          description: `Deleted ${count || 0} voting records`
+          count: count ?? 0,
+          description: `Deleted ${count ?? 0} voting records`
         };
         logger.info('Voting history deleted successfully', { userId, count });
         break;
@@ -139,10 +139,10 @@ export async function DELETE(request: NextRequest) {
           logger.warn('Failed to delete hashtag analytics events', analyticsError);
         }
         
-        const totalCount = (count || 0) + (analyticsCount || 0);
+        const totalCount = (count ?? 0) + (analyticsCount ?? 0);
         deletionResult = {
           count: totalCount,
-          description: `Deleted ${count || 0} hashtag interests and ${analyticsCount || 0} analytics events`
+          description: `Deleted ${count ?? 0} hashtag interests and ${analyticsCount ?? 0} analytics events`
         };
         logger.info('Hashtag interests deleted successfully', { userId, hashtagCount: count, analyticsCount });
         break;
@@ -171,10 +171,10 @@ export async function DELETE(request: NextRequest) {
           logger.warn('Failed to delete feed analytics events', analyticsError);
         }
         
-        const totalCount = (count || 0) + (analyticsCount || 0);
+        const totalCount = (count ?? 0) + (analyticsCount ?? 0);
         deletionResult = {
           count: totalCount,
-          description: `Deleted ${count || 0} feed interactions and ${analyticsCount || 0} analytics events`
+          description: `Deleted ${count ?? 0} feed interactions and ${analyticsCount ?? 0} analytics events`
         };
         logger.info('Feed interactions deleted successfully', { userId, feedCount: count, analyticsCount });
         break;
@@ -193,8 +193,8 @@ export async function DELETE(request: NextRequest) {
         }
         
         deletionResult = {
-          count: count || 0,
-          description: `Deleted ${count || 0} analytics events`
+          count: count ?? 0,
+          description: `Deleted ${count ?? 0} analytics events`
         };
         logger.info('Analytics data deleted successfully', { userId, count });
         break;

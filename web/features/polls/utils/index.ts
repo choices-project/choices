@@ -175,7 +175,7 @@ export function calculateOptionPercentage(votes: number, totalVotes: number): nu
  * Sort poll options by vote count
  */
 export function sortOptionsByVotes(options: PollOption[]): PollOption[] {
-  return [...options].sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0));
+  return [...options].sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
 }
 
 /**
@@ -232,7 +232,7 @@ export function sanitizePollTitleForUrl(title: string): string {
  */
 export function generatePollSummary(poll: Poll): string {
   const status = getPollStatusText(poll.status);
-  const method = getVotingMethodText((poll.voting_method || 'single') as VotingMethod);
+  const method = getVotingMethodText((poll.voting_method ?? 'single') as VotingMethod);
   const votes = `${poll.total_votes} votes`;
   
   return `${status} • ${method} • ${votes}`;

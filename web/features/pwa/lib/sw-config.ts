@@ -140,7 +140,7 @@ export const PUSH_CONFIG = {
    * This should be generated and stored in environment variables
    * For now, using placeholder - MUST BE REPLACED in production
    */
-  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
   
   /**
    * Default notification options

@@ -251,7 +251,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         demographicGroup: `${breakdown.ageGroup} ${breakdown.education}`,
         userCount: breakdown.userCount,
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.loggedIn
-      })) || [];
+      })) ?? [];
 
     return crossDemographicInsights.filter((insight) => insight.privacyProtected);
   }
@@ -280,7 +280,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         geographicArea: breakdown.area,
         userCount: breakdown.userCount,
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.public
-      })) || [];
+      })) ?? [];
 
     return geographicInsights.filter((insight) => insight.privacyProtected);
   }
@@ -309,7 +309,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         interestCategory: breakdown.interest,
         userCount: breakdown.userCount,
         privacyProtected: breakdown.userCount >= this.kAnonymityThresholds.loggedIn
-      })) || [];
+      })) ?? [];
 
     return crossInterestInsights.filter((insight) => insight.privacyProtected);
   }
@@ -491,7 +491,7 @@ export class PrivacyAwareSocialDiscoveryManager {
 
   private async getAggregatedInsights(interests: string[], pollId: string): Promise<AggregatedInsight[]> {
     // Get aggregated insights from storage
-    const insights = this.aggregatedInsights.get(pollId) || [];
+    const insights = this.aggregatedInsights.get(pollId) ?? [];
     
     // Filter by interests
     return insights.filter(insight => 
@@ -547,10 +547,10 @@ export class PrivacyAwareSocialDiscoveryManager {
       if ((data).userCount >= this.kAnonymityThresholds.public) {
         centroids.push({
           id: `centroid_${index}`,
-          coordinates: (data).coordinates || [Math.random(), Math.random(), Math.random()],
+          coordinates: (data).coordinates ?? [Math.random(), Math.random(), Math.random()],
           userCount: (data).userCount,
-          interests: (data).interests || [],
-          averageRankings: (data).averageRankings || {},
+          interests: (data).interests ?? [],
+          averageRankings: (data).averageRankings ?? {},
           lastUpdated: new Date(),
           privacyMetadata: {
             kAnonymity: true,

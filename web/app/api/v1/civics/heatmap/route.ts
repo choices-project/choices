@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const stateFilter = searchParams.get('state');
-    const levelFilter = searchParams.get('level') || 'federal';
-    const minCount = parseInt(searchParams.get('min_count') || String(K_ANONYMITY_THRESHOLD));
+    const levelFilter = searchParams.get('level') ?? 'federal';
+    const minCount = parseInt(searchParams.get('min_count') ?? String(K_ANONYMITY_THRESHOLD));
 
     // Generate cache key
     const cacheKey = generateCacheKey(CACHE_PREFIX.DISTRICT_HEATMAP, { 
@@ -113,15 +113,15 @@ export async function GET(request: NextRequest) {
         // Parse district key
         const parts = districtKey.split('-');
         const state = parts[0];
-        const districtNum = parts[1] || 'At-Large';
+        const districtNum = parts[1] ?? 'At-Large';
 
         // Count civic actions for this district
-        const actionCount = (civicActions || []).filter((a: any) => 
+        const actionCount = (civicActions ?? []).filter((a: any) => 
           a.target_district === districtKey
         ).length;
 
         // Count representatives for this district
-        const repCount = (representatives || []).filter((r: any) => {
+        const repCount = (representatives ?? []).filter((r: any) => {
           if (!r.district) return false;
           const repDistrict = typeof r.district === 'string' ? r.district : '';
           return repDistrict === districtKey || repDistrict.includes(state);
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     logger.info('District heatmap generated', {
       districtsReturned: heatmap.length,
-      stateFilter: stateFilter || 'all',
+      stateFilter: stateFilter ?? 'all',
       levelFilter,
       minCount
     });

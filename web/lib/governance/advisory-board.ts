@@ -377,7 +377,7 @@ export class AdvisoryBoardManager {
    */
   private async processActionItems(actionItems: ActionItem[]): Promise<void> {
     for (const actionItem of actionItems) {
-      const existingItems = this.actionItems.get(actionItem.assignedTo) || [];
+      const existingItems = this.actionItems.get(actionItem.assignedTo) ?? [];
       existingItems.push(actionItem);
       this.actionItems.set(actionItem.assignedTo, existingItems);
     }

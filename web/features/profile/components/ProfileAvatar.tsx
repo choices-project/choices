@@ -161,7 +161,7 @@ export default function ProfileAvatar({
               alt={display_name ?? 'User'} 
             />
             <AvatarFallback className="text-lg">
-              {getInitials(display_name || 'User')}
+              {getInitials(display_name ?? 'User')}
             </AvatarFallback>
           </Avatar>
           {finalLoading && (

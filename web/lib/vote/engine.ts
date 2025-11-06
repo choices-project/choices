@@ -169,7 +169,7 @@ export class VoteEngine {
         return withOptional(
           {
             success: false,
-            message: validation.error || 'Vote validation failed',
+            message: validation.error ?? 'Vote validation failed',
             pollId: request.pollId,
             responseTime: Date.now() - startTime
           },

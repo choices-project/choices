@@ -113,7 +113,7 @@ export async function verifyCredentialRegistration(
       credentialId: credential.credential.id,
       publicKey: credential.credential.publicKey.buffer,
       counter: credential.credential.counter,
-      transports: response.response.transports || [],
+      transports: response.response.transports ?? [],
       backupEligible: credential.credentialBackedUp,
       backupState: credential.credentialBackedUp,
       aaguid: credential.aaguid,
@@ -156,7 +156,7 @@ export async function verifyCredentialAuthentication(
         id: credentialData.credentialId,
         publicKey: new Uint8Array(publicKey),
         counter: credentialData.counter,
-        transports: credentialData.transports || []
+        transports: credentialData.transports ?? []
       },
       requireUserVerification: true,
     };

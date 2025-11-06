@@ -49,7 +49,7 @@ export default function PrivacySettingsPage({
   onUpdate
 }: PrivacySettingsPageProps) {
   const [settings, setSettings] = useState<PrivacySettings>(
-    currentSettings || getDefaultPrivacySettings()
+    currentSettings ?? getDefaultPrivacySettings()
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

@@ -342,7 +342,7 @@ export function validateBatch<T extends Record<string, unknown>>(
     if (validationResult.success && validationResult.data !== undefined) {
       (result as Record<string, unknown>)[key] = validationResult.data;
     } else {
-      errors.push(`${key}: ${validationResult.error || 'Unknown error'}`);
+      errors.push(`${key}: ${validationResult.error ?? 'Unknown error'}`);
     }
   }
 
