@@ -17,29 +17,24 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(_request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    // Access control - Admin only
-    if (!canAccessAnalytics(user, false)) {
-      logAnalyticsAccess(user, 'trust-tiers-api', false);
-      return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+  if (!canAccessAnalytics(user, false)) {
+    logAnalyticsAccess(user, 'trust-tiers-api', false);
+    return forbiddenError('Unauthorized - Admin access required');
+  }
 
-    logAnalyticsAccess(user, 'trust-tiers-api', true);
+  logAnalyticsAccess(user, 'trust-tiers-api', true);
 
     // Generate cache key
     const cacheKey = generateCacheKey(CACHE_PREFIX.TRUST_TIERS);

@@ -17,29 +17,24 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export const GET = withErrorHandling(async (request: NextRequest): Promise<any> => {
+  const supabase = await getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    // Access control - Admin only
-    if (!canAccessAnalytics(user, false)) {
-      logAnalyticsAccess(user, 'poll-heatmap-api', false);
-      return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+  if (!canAccessAnalytics(user, false)) {
+    logAnalyticsAccess(user, 'poll-heatmap-api', false);
+    return forbiddenError('Unauthorized - Admin access required');
+  }
 
-    logAnalyticsAccess(user, 'poll-heatmap-api', true);
+  logAnalyticsAccess(user, 'poll-heatmap-api', true);
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
