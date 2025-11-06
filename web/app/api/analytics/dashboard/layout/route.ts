@@ -30,9 +30,9 @@ export async function GET(request: NextRequest) {
 
     const supabase = await getSupabaseServerClient();
     
-    // Get user's dashboard layout from preferences
-    const { data: preferences, error } = await (supabase as any)
-      .from('user_preferences')
+    // Get user's dashboard layout from user_profiles
+    const { data: profile, error } = await (supabase as any)
+      .from('user_profiles')
       .select('dashboard_layout')
       .eq('user_id', userId)
       .single();

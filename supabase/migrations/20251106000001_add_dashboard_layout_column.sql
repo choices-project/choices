@@ -8,24 +8,24 @@
  * Migration ID: 20251106000001
  */
 
--- Add dashboard_layout column to user_preferences
-ALTER TABLE user_preferences 
+-- Add dashboard_layout column to user_profiles
+ALTER TABLE user_profiles 
 ADD COLUMN IF NOT EXISTS dashboard_layout JSONB DEFAULT NULL;
 
 -- Add dashboard mode preference column
-ALTER TABLE user_preferences 
+ALTER TABLE user_profiles 
 ADD COLUMN IF NOT EXISTS analytics_dashboard_mode TEXT DEFAULT 'classic' 
 CHECK (analytics_dashboard_mode IN ('classic', 'widget'));
 
 -- Add index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_user_preferences_dashboard_layout 
-ON user_preferences USING gin (dashboard_layout);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_dashboard_layout 
+ON user_profiles USING gin (dashboard_layout);
 
 -- Add comments
-COMMENT ON COLUMN user_preferences.dashboard_layout IS 
+COMMENT ON COLUMN user_profiles.dashboard_layout IS 
 'Stores user customizable widget dashboard layout configuration (widgets, positions, sizes, breakpoints)';
 
-COMMENT ON COLUMN user_preferences.analytics_dashboard_mode IS 
+COMMENT ON COLUMN user_profiles.analytics_dashboard_mode IS 
 'User preference for analytics dashboard mode: classic (tabbed) or widget (customizable)';
 
 -- Example dashboard_layout structure:

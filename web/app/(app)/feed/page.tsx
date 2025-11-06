@@ -21,6 +21,9 @@ import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useUserStore } from '@/lib/stores';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
+
 export default function FeedPage() {
   const user = useUserStore(state => state.user);
   const userDistrict = useFormattedDistrict();

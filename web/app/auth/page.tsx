@@ -1,16 +1,19 @@
 'use client';
 
 import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+
+// Prevent static generation for auth page
+export const dynamic = 'force-dynamic';
 
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
 import { logger } from '@/lib/utils/logger';
 import { T } from '@/tests/registry/testIds';
 
-const PasskeyControls = dynamic(() => import('@/features/auth/components/PasskeyControls'), {
+const PasskeyControls = dynamicImport(() => import('@/features/auth/components/PasskeyControls'), {
   ssr: false,
   loading: () => <div className="text-center text-sm text-gray-500">Loading authentication options...</div>
 });
