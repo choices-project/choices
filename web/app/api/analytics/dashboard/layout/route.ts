@@ -10,26 +10,18 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-// ============================================================================
-// GET - Load Dashboard Layout
-// ============================================================================
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: 'userId required' },
-        { status: 400 }
-      );
-    }
+  if (!userId) {
+    return validationError({ userId: 'userId required' });
+  }
 
     const supabase = await getSupabaseServerClient();
     
@@ -40,50 +32,27 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      logger.error('Failed to fetch dashboard layout', { error, userId });
-      return NextResponse.json(
-        { ok: false, error: 'Failed to fetch layout' },
-        { status: 500 }
-      );
-    }
-
-    // If no layout found, return 404
-    if (!profile?.dashboard_layout) {
-      return NextResponse.json(
-        { ok: false, error: 'No layout found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      ok: true,
-      ...profile.dashboard_layout,
-    });
-
-  } catch (error) {
-    logger.error('GET /api/analytics/dashboard/layout error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (error && error.code !== 'PGRST116') {
+    logger.error('Failed to fetch dashboard layout', { error, userId });
+    return errorResponse('Failed to fetch layout', 500);
   }
-}
 
-// ============================================================================
-// POST - Save Dashboard Layout
-// ============================================================================
+  if (!profile?.dashboard_layout) {
+    return notFoundError('No layout found');
+  }
 
-export async function POST(request: NextRequest) {
-  try {
-    const layout = await request.json();
+  return successResponse({
+    ok: true,
+    ...profile.dashboard_layout,
+  });
+});
 
-    if (!layout.userId) {
-      return NextResponse.json(
-        { ok: false, error: 'userId required' },
-        { status: 400 }
-      );
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const layout = await request.json();
+
+  if (!layout.userId) {
+    return validationError({ userId: 'userId required' });
+  }
 
     const supabase = await getSupabaseServerClient();
     
@@ -105,45 +74,26 @@ export async function POST(request: NextRequest) {
       })
       .eq('user_id', layout.userId);
 
-    if (error) {
-      logger.error('Failed to save dashboard layout', { error, userId: layout.userId });
-      return NextResponse.json(
-        { ok: false, error: 'Failed to save layout' },
-        { status: 500 }
-      );
-    }
-
-    logger.info('Dashboard layout saved', { userId: layout.userId, widgetCount: layout.widgets?.length });
-
-    return NextResponse.json({
-      ok: true,
-      message: 'Layout saved successfully',
-    });
-
-  } catch (error) {
-    logger.error('POST /api/analytics/dashboard/layout error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (error) {
+    logger.error('Failed to save dashboard layout', { error, userId: layout.userId });
+    return errorResponse('Failed to save layout', 500);
   }
-}
 
-// ============================================================================
-// DELETE - Delete Dashboard Layout (Reset to Default)
-// ============================================================================
+  logger.info('Dashboard layout saved', { userId: layout.userId, widgetCount: layout.widgets?.length });
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+  return successResponse({
+    ok: true,
+    message: 'Layout saved successfully',
+  }, undefined, 201);
+});
 
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: 'userId required' },
-        { status: 400 }
-      );
-    }
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+
+  if (!userId) {
+    return validationError({ userId: 'userId required' });
+  }
 
     const supabase = await getSupabaseServerClient();
     
@@ -153,27 +103,16 @@ export async function DELETE(request: NextRequest) {
       .update({ dashboard_layout: null })
       .eq('user_id', userId);
 
-    if (error) {
-      logger.error('Failed to delete dashboard layout', { error, userId });
-      return NextResponse.json(
-        { ok: false, error: 'Failed to delete layout' },
-        { status: 500 }
-      );
-    }
-
-    logger.info('Dashboard layout deleted', { userId });
-
-    return NextResponse.json({
-      ok: true,
-      message: 'Layout reset to default',
-    });
-
-  } catch (error) {
-    logger.error('DELETE /api/analytics/dashboard/layout error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+  if (error) {
+    logger.error('Failed to delete dashboard layout', { error, userId });
+    return errorResponse('Failed to delete layout', 500);
   }
-}
+
+  logger.info('Dashboard layout deleted', { userId });
+
+  return successResponse({
+    ok: true,
+    message: 'Layout reset to default',
+  });
+});
 

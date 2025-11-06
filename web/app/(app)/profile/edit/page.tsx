@@ -253,7 +253,7 @@ export default function EditProfilePage() {
     } finally {
       setIsSaving(false)
     }
-  }, [formData])
+  }, [formData, router])
 
   const handleConcernToggle = useCallback((concern: string) => {
     setFormData(prev => ({

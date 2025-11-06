@@ -13,9 +13,11 @@
  * Status: ✅ Production-ready
  */
 
-import type { User } from '@supabase/supabase-js';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/utils/logger';
+import type { AuditLogOptions } from '@/lib/services/audit-log-service';
+import { createAuditLogService } from '@/lib/services/audit-log-service';
 
 export type UserRole = 'admin' | 'T3' | 'T2' | 'T1' | 'T0' | 'guest';
 
@@ -126,7 +128,64 @@ export function logAnalyticsAccess(
   });
   
   // Note: Audit logs are persisted via logger infrastructure
-  // For database storage, configure logger to write to audit_logs table
+  // For database storage, use logAnalyticsAccessToDatabase with Supabase client
+}
+
+/**
+ * Log analytics access to database with full audit trail
+ * 
+ * Enhanced version that stores logs in the audit_logs table for compliance.
+ * Use this in API routes where you have access to the Supabase client.
+ * 
+ * @param supabase - Supabase client instance
+ * @param user - Supabase user object (null for anonymous)
+ * @param resource - API endpoint or resource path being accessed
+ * @param granted - Whether access was granted (true) or denied (false)
+ * @param options - Additional audit log options
+ * 
+ * @example
+ * ```typescript
+ * // In an API route
+ * await logAnalyticsAccessToDatabase(
+ *   supabase,
+ *   user,
+ *   '/api/analytics/trends',
+ *   true,
+ *   { ipAddress: request.headers.get('x-forwarded-for') }
+ * );
+ * ```
+ */
+export async function logAnalyticsAccessToDatabase(
+  supabase: SupabaseClient,
+  user: User | null,
+  resource: string,
+  granted: boolean,
+  options?: AuditLogOptions
+): Promise<void> {
+  const role = getUserRole(user);
+  const userId = user?.id ?? null;
+  
+  // Create audit log service
+  const auditService = createAuditLogService(supabase);
+  
+  // Log to database
+  await auditService.logAnalyticsAccess(
+    userId,
+    resource,
+    granted,
+    role,
+    options
+  );
+  
+  // Also log to application logger for immediate monitoring
+  logger.info('Analytics access attempt', {
+    userId,
+    role,
+    resource,
+    granted,
+    timestamp: new Date().toISOString(),
+    type: 'analytics_access'
+  });
 }
 
 /**

@@ -11,6 +11,7 @@
 'use client';
 
 import { MapPin, Users, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
 import { RepresentativeList  } from '@/components/representative/RepresentativeList';
@@ -29,6 +30,7 @@ import { logger } from '@/lib/utils/logger';
 import type { RepresentativeSearchQuery } from '@/types/representative';
 
 export default function RepresentativesPage() {
+  const router = useRouter();
   const searchResults = useRepresentativeSearchResults();
   const loading = useRepresentativeLoading();
   const error = useRepresentativeError();
@@ -47,8 +49,8 @@ export default function RepresentativesPage() {
   };
 
   const handleRepresentativeClick = (representative: any) => {
-    logger.debug('Clicked representative:', representative.name);
-    // Navigation: implement routing to /representatives/[id] detail page
+    logger.debug('Navigating to representative:', representative.name);
+    router.push(`/representatives/${representative.id}`);
   };
 
   return (
