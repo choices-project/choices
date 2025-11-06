@@ -8,32 +8,31 @@
  * Status: ✅ Production-ready (Native implementation)
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyRegistrationResponse } from '@/features/auth/lib/webauthn/native/server';
+import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
-  try {
-    // Disable during build time
-    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-      return NextResponse.json({ error: 'WebAuthn routes disabled during build' }, { status: 503 });
-    }
+export const POST = withErrorHandling(async (req: NextRequest) => {
+  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+    return errorResponse('WebAuthn routes disabled during build', 503);
+  }
 
-    const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
-    if (!enabled) {
-      return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
-    }
+  const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
+  if (!enabled) {
+    return forbiddenError('Passkeys disabled on preview');
+  }
 
-    const supabase = await getSupabaseServerClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const supabase = await getSupabaseServerClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    return authError('Authentication required');
+  }
 
     const body = await req.json();
 

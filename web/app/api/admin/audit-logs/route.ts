@@ -16,47 +16,25 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
+import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError } from '@/lib/api';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * GET /api/admin/audit-logs
- * 
- * Query Parameters:
- * - eventType: Filter by event type
- * - severity: Filter by severity level
- * - userId: Filter by specific user
- * - startDate: Start date (ISO string)
- * - endDate: End date (ISO string)
- * - resource: Filter by resource path
- * - limit: Number of results (default: 50, max: 500)
- * - offset: Pagination offset (default: 0)
- * - stats: If 'true', return statistics instead of logs
- */
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database connection not available' },
-      { status: 500 }
-    );
+    return errorResponse('Database connection not available', 500);
   }
 
-  try {
-    // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
     // Check if user is admin
     const { data: userRoleData } = await supabase

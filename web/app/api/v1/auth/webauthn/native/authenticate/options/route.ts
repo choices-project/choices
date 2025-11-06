@@ -5,37 +5,30 @@
  * Replaces @simplewebauthn/server with native implementation
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { 
   generateAuthenticationOptions,
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
+import { withErrorHandling, successResponse, authError, forbiddenError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * WebAuthn Authentication Options
- * 
- * Generates authentication options for discoverable credentials
- * Username-less UX with userVerification required
- */
+export const POST = withErrorHandling(async (req: NextRequest) => {
+  const { enabled, rpID } = getRPIDAndOrigins(req);
+  if (!enabled) {
+    return forbiddenError('Passkeys disabled on preview');
+  }
 
-export async function POST(req: NextRequest) {
-  try {
-    const { enabled, rpID } = getRPIDAndOrigins(req);
-    if (!enabled) {
-      return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
-    }
-
-    const supabase = await getSupabaseServerClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const supabase = await getSupabaseServerClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    return authError('Authentication required');
+  }
 
     // Generate native authentication options
     const options = generateAuthenticationOptions(rpID);
