@@ -1,19 +1,13 @@
-// Admin Performance Monitoring API
-// Provides real-time performance metrics, alerts, and optimization recommendations
-// Created: October 2, 2025
-
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Admin authentication
-    const authGate = await requireAdminOr401();
-    if (authGate) return authGate;
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -38,51 +32,30 @@ export async function GET(request: NextRequest) {
       alertsCount: alerts.length
     });
 
-    return NextResponse.json({
-      success: true,
-      data: performanceReport,
-      systemHealth,
-      alerts: alerts.filter(a => !a.resolved)
-    });
+  return successResponse({
+    data: performanceReport,
+    systemHealth,
+    alerts: alerts.filter(a => !a.resolved)
+  });
+});
 
-  } catch (error) {
-    logger.error('Error in performance monitoring API:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
 
-export async function POST(request: NextRequest) {
-  try {
-    // Admin authentication
-    const authGate = await requireAdminOr401();
-    if (authGate) return authGate;
+  const body = await request.json();
+  const { operation, duration, success, error, metadata } = body;
 
-    const body = await request.json();
-    const { operation, duration, success, error, metadata } = body;
+  performanceMonitor.trackOperation(operation, duration, success, error, metadata);
 
-    // Track performance metric
-    performanceMonitor.trackOperation(operation, duration, success, error, metadata);
+  logger.info('Performance metric recorded', {
+    operation,
+    duration,
+    success,
+    error
+  });
 
-    logger.info('Performance metric recorded', {
-      operation,
-      duration,
-      success,
-      error
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Performance metric recorded'
-    });
-
-  } catch (error) {
-    logger.error('Error recording performance metric:', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    message: 'Performance metric recorded'
+  }, undefined, 201);
+});
