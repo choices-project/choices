@@ -101,15 +101,18 @@ export class NetworkOptimizer {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const response = await fetch(url, {
+        const fetchOptions: RequestInit = {
           method,
           headers: {
             'Content-Type': 'application/json',
             ...headers,
           },
-          body: body ? JSON.stringify(body) : undefined,
           signal: controller.signal,
-        });
+        };
+        if (body) {
+          fetchOptions.body = JSON.stringify(body);
+        }
+        const response = await fetch(url, fetchOptions);
 
         clearTimeout(timeoutId);
 

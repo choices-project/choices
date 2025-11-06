@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { feedbackParser } from '@/lib/feedback/FeedbackParser';
 import type { InterestSuggestion } from '@/lib/feedback/FeedbackParser';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 import { withOptional } from '@/lib/util/objects';
 

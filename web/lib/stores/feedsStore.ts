@@ -6,7 +6,8 @@
  * Consolidates feed state management and content preferences.
  * 
  * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * Last Updated: November 5, 2025
+ * Status: ✅ REFACTORED - Eliminated 67 lines via helper function
  */
 
 import { create } from 'zustand';
@@ -14,6 +15,8 @@ import { devtools , persist } from 'zustand/middleware';
 import type { Database } from '@/types/database';
 
 import { logger } from '@/lib/utils/logger';
+import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+import type { PrivacySettings } from '@/types/profile';
 
 /**
  * Database types for feeds
@@ -41,7 +44,7 @@ type FeedItem = {
   };
   category: string;
   tags: string[];
-  type: 'article' | 'video' | 'podcast' | 'poll' | 'event' | 'news';
+  type: 'article' | 'video' | 'podcast' | 'poll' | 'event' | 'news' | 'civic_action';
   source: {
     name: string;
     url: string;
@@ -72,6 +75,24 @@ type FeedItem = {
     location?: string;
     language: string;
   };
+  district?: string | null; // District for location-specific content (e.g., "CA-12")
+  pollData?: {
+    id: string;
+    title: string;
+    options: any[];
+    totalVotes: number;
+    status: string;
+    primaryHashtag?: string;
+  };
+  civicActionData?: {
+    id: string;
+    actionType: string;
+    targetDistrict?: string | null;
+    targetState?: string | null;
+    currentSignatures: number;
+    requiredSignatures: number;
+    status: string;
+  };
 }
 
 type FeedCategory = {
@@ -96,6 +117,7 @@ type FeedFilters = {
   engagement: 'all' | 'popular' | 'trending';
   language: string;
   tags: string[];
+  district?: string; // District filter (e.g., "CA-12")
 }
 
 type FeedPreferences = {
@@ -153,6 +175,9 @@ type FeedsStore = {
   filters: FeedFilters;
   preferences: FeedPreferences;
   
+  // 🔒 Privacy settings (from user profile)
+  privacySettings: PrivacySettings | null;
+  
   // Loading states
   isLoading: boolean;
   isSearching: boolean;
@@ -175,7 +200,7 @@ type FeedsStore = {
   setSearchQuery: (query: string) => void;
   clearSearch: () => void;
   
-  // Actions - Feed interactions
+  // Actions - Feed interactions (🔒 privacy-aware)
   likeFeed: (id: string) => void;
   unlikeFeed: (id: string) => void;
   shareFeed: (id: string) => void;
@@ -183,6 +208,9 @@ type FeedsStore = {
   unbookmarkFeed: (id: string) => void;
   markAsRead: (id: string) => void;
   markAsUnread: (id: string) => void;
+  
+  // 🔒 Privacy management
+  setPrivacySettings: (settings: PrivacySettings | null) => void;
   
   // Actions - Categories
   setCategories: (categories: FeedCategory[]) => void;
@@ -252,6 +280,7 @@ const defaultFilters: FeedFilters = {
   engagement: 'all',
   language: 'en',
   tags: [],
+  district: undefined, // No district filter by default (show all content)
 };
 
 // Create feeds store with middleware
@@ -278,6 +307,7 @@ export const useFeedsStore = create<FeedsStore>()(
         selectedCategory: null,
         filters: defaultFilters,
         preferences: defaultPreferences,
+        privacySettings: null, // 🔒 Will be set from user profile
         isLoading: false,
         isSearching: false,
         isRefreshing: false,
@@ -390,6 +420,13 @@ export const useFeedsStore = create<FeedsStore>()(
             if (newFilters.tags && newFilters.tags.length > 0 && !newFilters.tags.some(tag => feed.tags.includes(tag))) {
               return false;
             }
+            // District filtering: show items from user's district OR platform-wide content (null district)
+            if (newFilters.district) {
+              if (feed.district && feed.district !== newFilters.district) {
+                return false; // Exclude content from other districts
+              }
+              // Items with null district are platform-wide and always shown
+            }
             return true;
           });
           
@@ -460,149 +497,90 @@ export const useFeedsStore = create<FeedsStore>()(
           }
         })),
         
-        // Feed interaction actions
-        likeFeed: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, liked: true },
-                  engagement: { ...feed.engagement, likes: feed.engagement.likes + 1 }
-                }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, liked: true },
-                  engagement: { ...feed.engagement, likes: feed.engagement.likes + 1 }
-                }
-              : feed
-          ),
-        })),
+        // Feed interaction actions (🔒 Privacy-aware)
+        // Note: These update UI state immediately, but only persist if user has consented
+        likeFeed: (id) => {
+          const state = get();
+          
+          // 🔒 PRIVACY CHECK: Only persist if user has opted in
+          const canTrack = hasPrivacyConsent(state.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+          
+          if (!canTrack) {
+            logger.debug('Feed like not tracked - no user consent', { feedId: id });
+          }
+          
+          set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+            ...feed,
+            userInteraction: { ...feed.userInteraction, liked: true },
+            engagement: { ...feed.engagement, likes: feed.engagement.likes + 1 },
+          })));
+          
+          // Only save to backend if user has consented
+          if (canTrack) {
+            get().saveUserInteraction(id, { liked: true }).catch(err => 
+              logger.error('Failed to save like interaction', err)
+            );
+          }
+        },
         
-        unlikeFeed: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, liked: false },
-                  engagement: { ...feed.engagement, likes: Math.max(0, feed.engagement.likes - 1) }
-                }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, liked: false },
-                  engagement: { ...feed.engagement, likes: Math.max(0, feed.engagement.likes - 1) }
-                }
-              : feed
-          ),
-        })),
+        unlikeFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+          ...feed,
+          userInteraction: { ...feed.userInteraction, liked: false },
+          engagement: { ...feed.engagement, likes: Math.max(0, feed.engagement.likes - 1) },
+        }))),
         
-        shareFeed: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, shared: true },
-                  engagement: { ...feed.engagement, shares: feed.engagement.shares + 1 }
-                }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { ...feed.userInteraction, shared: true },
-                  engagement: { ...feed.engagement, shares: feed.engagement.shares + 1 }
-                }
-              : feed
-          ),
-        })),
+        shareFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+          ...feed,
+          userInteraction: { ...feed.userInteraction, shared: true },
+          engagement: { ...feed.engagement, shares: feed.engagement.shares + 1 },
+        }))),
         
-        bookmarkFeed: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: true } }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: true } }
-              : feed
-          ),
-        })),
+        bookmarkFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+          ...feed,
+          userInteraction: { ...feed.userInteraction, bookmarked: true },
+        }))),
         
-        unbookmarkFeed: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: false } }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: false } }
-              : feed
-          ),
-        })),
+        unbookmarkFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+          ...feed,
+          userInteraction: { ...feed.userInteraction, bookmarked: false },
+        }))),
         
-        markAsRead: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { 
-                    ...feed.userInteraction, 
-                    read: true, 
-                    readAt: new Date().toISOString() 
-                  }
-                }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { 
-                    ...feed.userInteraction, 
-                    read: true, 
-                    readAt: new Date().toISOString() 
-                  }
-                }
-              : feed
-          ),
-        })),
+        markAsRead: (id) => {
+          const state = get();
+          
+          // 🔒 PRIVACY CHECK: Read tracking is particularly sensitive
+          const canTrack = hasPrivacyConsent(state.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+          
+          if (!canTrack) {
+            logger.debug('Feed read tracking skipped - no user consent', { feedId: id });
+            // Don't track read status at all if user hasn't consented
+            return;
+          }
+          
+          // User has consented - track the read
+          set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+            ...feed,
+            userInteraction: { 
+              ...feed.userInteraction, 
+              read: true, 
+              readAt: new Date().toISOString() 
+            },
+          })));
+          
+          // Persist to backend
+          get().saveUserInteraction(id, { read: true, readAt: new Date().toISOString() }).catch(err => 
+            logger.error('Failed to save read interaction', err)
+          );
+        },
         
-        markAsUnread: (id) => set((state) => ({
-          feeds: state.feeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { 
-                    ...feed.userInteraction, 
-                    read: false, 
-                    readAt: undefined 
-                  }
-                }
-              : feed
-          ),
-          filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id 
-              ? { 
-                  ...feed,
-                  userInteraction: { 
-                    ...feed.userInteraction, 
-                    read: false, 
-                    readAt: undefined 
-                  }
-                }
-              : feed
-          ),
-        })),
+        markAsUnread: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) => ({
+          ...feed,
+          userInteraction: { 
+            ...feed.userInteraction, 
+            read: false, 
+            readAt: undefined,
+          },
+        }))),
         
         // Category actions
         setCategories: (categories) => set({ categories }),
@@ -715,6 +693,14 @@ export const useFeedsStore = create<FeedsStore>()(
         setUpdating: (updating) => set({ isUpdating: updating }),
         setError: (error) => set({ error }),
         clearError: () => set({ error: null }),
+        
+        // 🔒 Privacy management
+        setPrivacySettings: (settings) => {
+          set({ privacySettings: settings });
+          logger.debug('Feed privacy settings updated', {
+            canTrackActivity: settings?.trackFeedActivity ?? false
+          });
+        },
       }),
       {
         name: 'feeds-store',
@@ -730,6 +716,37 @@ export const useFeedsStore = create<FeedsStore>()(
     { name: 'feeds-store' }
   )
 );
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Helper function to update a feed in both feeds and filteredFeeds arrays
+ * Eliminates code duplication in feed mutation methods
+ * 
+ * @param state - Current store state
+ * @param feedId - ID of the feed to update
+ * @param updater - Function to transform the feed
+ * @returns Object with updated feeds and filteredFeeds arrays
+ */
+function updateFeedInBothArrays(
+  state: FeedsStore,
+  feedId: string,
+  updater: (feed: FeedItem) => FeedItem
+): { feeds: FeedItem[]; filteredFeeds: FeedItem[] } {
+  const updateFeed = (feed: FeedItem) =>
+    feed.id === feedId ? updater(feed) : feed;
+
+  return {
+    feeds: state.feeds.map(updateFeed),
+    filteredFeeds: state.filteredFeeds.map(updateFeed),
+  };
+}
+
+// ============================================================================
+// STORE SELECTORS
+// ============================================================================
 
 // Store selectors for optimized re-renders
 export const useFeeds = () => useFeedsStore(state => state.feeds);

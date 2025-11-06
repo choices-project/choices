@@ -3,7 +3,7 @@
  * Captures comprehensive user journey data for AI analysis and diagnosis
  */
 
-import { devLog } from '../logger'
+import { devLog } from '@/lib/utils/logger'
 import { withOptional } from '../util/objects'
 
 export type UserJourney = {

@@ -149,7 +149,7 @@ export function RepresentativeGrid({
           onContact={(rep) => {
             console.log('Contact:', rep.name);
           }}
-            onClick={onRepresentativeClick ? () => onRepresentativeClick(representative) : undefined}
+          {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
         />
       ))}
     </div>

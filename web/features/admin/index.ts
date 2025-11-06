@@ -4,7 +4,7 @@
  * Feature exports for admin functionality
  * Types are now centralized in /web/types/
  * 
- * Updated: October 26, 2025
+ * Updated: November 5, 2025
  * Status: ✅ REFACTORED
  */
 
@@ -13,6 +13,7 @@ export { default as ComprehensiveAdminDashboard } from './components/Comprehensi
 export { default as AdminDashboard } from './components/AdminDashboard';
 export { default as PerformanceDashboard } from './components/PerformanceDashboard';
 export { default as AnalyticsPanel } from './components/AnalyticsPanel';
+export { default as DistrictHeatmap } from './components/DistrictHeatmap';
 
 // Admin Hooks
 export * from './lib/hooks';

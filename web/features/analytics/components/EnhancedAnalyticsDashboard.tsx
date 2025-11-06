@@ -1,7 +1,14 @@
 /**
  * Enhanced Analytics Dashboard Component
- * Integrates new schema capabilities with existing analytics
+ * 
+ * Comprehensive analytics dashboard combining:
+ * - System monitoring (real-time, health)
+ * - Business intelligence (trends, demographics, heatmaps)
+ * - Trust tier analysis
+ * - Geographic engagement
+ * 
  * Created: 2025-10-27
+ * Enhanced: 2025-11-05 - Added visualization charts, access control, privacy filters
  */
 
 import { 
@@ -18,16 +25,29 @@ import {
   Shield,
   Zap,
   Database,
-  BarChart3
+  BarChart3,
+  MapPin,
+  Flame,
+  Clock
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { logger } from '@/lib/utils/logger';
+import { useUserStore } from '@/lib/stores';
+import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
+import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 
 import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
+import TrendsChart from './TrendsChart';
+import DemographicsChart from './DemographicsChart';
+import TemporalAnalysisChart from './TemporalAnalysisChart';
+import TrustTierComparisonChart from './TrustTierComparisonChart';
+import PollHeatmap from './PollHeatmap';
+import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
 
 
 type EnhancedAnalyticsDashboardProps = {
@@ -47,6 +67,19 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   enableNewSchema = true,
   className = ''
 }) => {
+  // Responsive hooks
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  
+  // Access Control - Admin Only
+  const currentUser = useUserStore(state => state.user);
+  const hasAccess = canAccessAnalytics(currentUser, false);
+  
+  // Log access attempt
+  useEffect(() => {
+    logAnalyticsAccess(currentUser, 'enhanced-analytics-dashboard', hasAccess);
+  }, [currentUser, hasAccess]);
+
   const {
     data,
     loading,
@@ -68,6 +101,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const [systemHealth, setSystemHealth] = useState<any[]>([]);
   const [siteMessages, setSiteMessages] = useState<any[]>([]);
   const [showDetails, setShowDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Load additional data
   useEffect(() => {
@@ -95,6 +129,11 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
       enableNewSchema
     });
   }, [trackFeatureUsage, pollId, userId, enableNewSchema]);
+
+  // Block unauthorized users
+  if (!hasAccess) {
+    return <UnauthorizedAccess />;
+  }
 
   if (loading && !data) {
     return (
@@ -130,24 +169,35 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   }
 
   return (
-    <div className={`space-y-6 p-6 ${className}`}>
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Enhanced Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
-            {enableNewSchema ? 'Powered by new schema capabilities' : 'Standard analytics view'}
-            {lastUpdated && ` • Last updated: ${lastUpdated.toLocaleTimeString()}`}
+    <div className={`space-y-4 md:space-y-6 p-4 md:p-6 ${className}`}>
+      {/* Header - Mobile Optimized */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Analytics Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            {isMobile ? (
+              <>Monitoring & Insights{lastUpdated && ` • ${lastUpdated.toLocaleTimeString()}`}</>
+            ) : (
+              <>System monitoring • Business intelligence • User insights
+              {lastUpdated && ` • Updated: ${lastUpdated.toLocaleTimeString()}`}</>
+            )}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap md:flex-nowrap">
           <Button 
             onClick={() => setShowDetails(!showDetails)}
             variant="outline"
+            size={isMobile ? "sm" : "default"}
+            className="flex-1 md:flex-none"
           >
             {showDetails ? 'Hide' : 'Show'} Details
           </Button>
-          <Button onClick={refresh} disabled={loading}>
+          <Button 
+            onClick={refresh} 
+            disabled={loading}
+            size={isMobile ? "sm" : "default"}
+            className="flex-1 md:flex-none"
+          >
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
             Refresh
           </Button>
@@ -156,6 +206,10 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 
       {/* Status Badges */}
       <div className="flex gap-2 flex-wrap">
+        <Badge variant="default" className="bg-green-100 text-green-800">
+          <Shield className="h-3 w-3 mr-1" />
+          Admin Access
+        </Badge>
         {enableNewSchema && (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <Database className="h-3 w-3 mr-1" />
@@ -175,6 +229,44 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
           </Badge>
         )}
       </div>
+
+      {/* Tabbed Interface - Mobile Optimized */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 md:mt-6">
+        <TabsList className={`grid w-full ${
+          isMobile 
+            ? 'grid-cols-2 gap-1' 
+            : isTablet 
+              ? 'grid-cols-3' 
+              : 'grid-cols-6'
+        }`}>
+          <TabsTrigger value="overview" className={isMobile ? "text-xs" : ""}>
+            <Activity className="h-4 w-4 mr-1 md:mr-2" />
+            {isMobile ? 'Over.' : 'Overview'}
+          </TabsTrigger>
+          <TabsTrigger value="trends" className={isMobile ? "text-xs" : ""}>
+            <TrendingUp className="h-4 w-4 mr-1 md:mr-2" />
+            Trends
+          </TabsTrigger>
+          <TabsTrigger value="heatmaps" className={isMobile ? "text-xs" : ""}>
+            <Flame className="h-4 w-4 mr-1 md:mr-2" />
+            {isMobile ? 'Heat' : 'Heatmaps'}
+          </TabsTrigger>
+          <TabsTrigger value="demographics" className={isMobile ? "text-xs" : ""}>
+            <Users className="h-4 w-4 mr-1 md:mr-2" />
+            {isMobile ? 'Demo' : 'Demographics'}
+          </TabsTrigger>
+          <TabsTrigger value="temporal" className={isMobile ? "text-xs" : ""}>
+            <Clock className="h-4 w-4 mr-1 md:mr-2" />
+            {isMobile ? 'Time' : 'Temporal'}
+          </TabsTrigger>
+          <TabsTrigger value="trust" className={isMobile ? "text-xs" : ""}>
+            <Shield className="h-4 w-4 mr-1 md:mr-2" />
+            Trust
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab - Existing Content */}
+        <TabsContent value="overview" className="mt-6 space-y-6">
 
       {/* Core Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -399,6 +491,46 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        {/* Trends Tab */}
+        <TabsContent value="trends" className="mt-6">
+          <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+            <TrendsChart />
+          </Suspense>
+        </TabsContent>
+
+        {/* Heatmaps Tab */}
+        <TabsContent value="heatmaps" className="mt-6 space-y-6">
+          <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DistrictHeatmap />
+              <PollHeatmap />
+            </div>
+          </Suspense>
+        </TabsContent>
+
+        {/* Demographics Tab */}
+        <TabsContent value="demographics" className="mt-6">
+          <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+            <DemographicsChart />
+          </Suspense>
+        </TabsContent>
+
+        {/* Temporal Tab */}
+        <TabsContent value="temporal" className="mt-6">
+          <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+            <TemporalAnalysisChart />
+          </Suspense>
+        </TabsContent>
+
+        {/* Trust Tiers Tab */}
+        <TabsContent value="trust" className="mt-6">
+          <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+            <TrustTierComparisonChart />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

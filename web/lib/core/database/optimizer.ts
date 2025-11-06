@@ -9,7 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { smartCache } from '@/lib/database/smart-cache'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { minimalTelemetry } from '@/lib/telemetry/minimal'
 import { DatabaseSchemas } from '@/lib/validation/schemas'
 import {

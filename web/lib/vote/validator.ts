@@ -9,7 +9,7 @@
  */
 
 import { getSupabaseServerClient } from '../../utils/supabase/server';
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 
 import type { 
   VoteData, 

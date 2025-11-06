@@ -68,11 +68,13 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting: 10 messages per minute per user
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const userAgent = request.headers.get('user-agent') ?? undefined;
+    const userAgent = request.headers.get('user-agent');
+    const rateLimitOptions: any = {};
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
     const rateLimitResult = await apiRateLimiter.checkLimit(
       ip,
       '/api/contact/messages',
-      { userAgent }
+      rateLimitOptions
     );
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

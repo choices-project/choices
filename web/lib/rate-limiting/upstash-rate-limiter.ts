@@ -195,7 +195,7 @@ class UpstashRateLimiter {
       user_agent: violation.userAgent
     }, {
       ipAddress: violation.ip,
-      userAgent: violation.userAgent
+      ...(violation.userAgent && { userAgent: violation.userAgent })
     });
 
     logger.warn('Rate limit violation recorded', {

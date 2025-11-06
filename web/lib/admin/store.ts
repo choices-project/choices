@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Types
 export type Notification = {

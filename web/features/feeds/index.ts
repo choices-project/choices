@@ -24,12 +24,16 @@ export type {
   TouchState
 } from '@/features/civics/lib/types/civics-types';
 
-// Local types from components
+// Local types
 export type { 
-  FeedHashtagIntegrationProps as FeedHashtagIntegrationType,
-  HashtagFilter,
-  HashtagSort
-} from './components/FeedHashtagIntegration';
+  FeedItemWithScore,
+  TrackEventData,
+  EngagementMetadata,
+  RecommendedPoll,
+  PollHashtag,
+  HashtagAnalytic,
+  HashtagPollsFeed as HashtagPollsFeedData
+} from './types/feed-types';
 
 // Lib utilities
 export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/TrendingHashtags';
@@ -46,23 +50,43 @@ export {
 export { default as HashtagPollsFeed } from './components/HashtagPollsFeed';
 
 // Unified Feed Component (RECOMMENDED)
-export { default as UnifiedFeed } from './components/UnifiedFeed';
+export { default as UnifiedFeedRefactored } from './components/UnifiedFeedRefactored';
+export { default as FeedCore } from './components/core/FeedCore';
+export { default as FeedDataProvider } from './components/providers/FeedDataProvider';
 
-// Legacy Components (DEPRECATED - Use UnifiedFeed instead)
-export { default as SocialFeed } from './components/SocialFeed';
-export { default as EnhancedSocialFeed } from './components/EnhancedSocialFeed';
-export { default as FeedHashtagIntegration } from './components/FeedHashtagIntegration';
+// Optional enhancers
+export { default as FeedPWAEnhancer } from './components/enhancers/FeedPWAEnhancer';
+export { default as FeedRealTimeUpdates } from './components/enhancers/FeedRealTimeUpdates';
+
+// Hooks
+export { useFeedAnalytics } from './hooks/useFeedAnalytics';
+
+// Note: Feed state management is handled by:
+// - FeedDataProvider component (render props pattern)
+// - useHashtagStore from @/lib/stores/hashtagStore (hashtag management)
+// - useFeedsStore from @/lib/stores/feedsStore (feed state)
+// These provide all functionality previously planned for useFeed, useHashtags, etc.
+
+// Server-side Services - DO NOT EXPORT
+// InterestBasedPollFeed is server-side only (uses 'server-only' package)
+// Import directly from './lib/interest-based-feed' in API routes only
+// Types can be exported:
+export type { 
+  PersonalizedPollFeed,
+  PollRecommendation,
+  InterestMatch,
+  UserInterests
+} from './lib/interest-based-feed';
+
+// Utility Components
 export { default as FeedItem } from './components/FeedItem';
 export { default as InfiniteScroll } from './components/InfiniteScroll';
 
-// Hooks - TODO: Implement these hooks
-// See GitHub Issue for feed hooks implementation
-// - useFeed: Hook for managing feed state
-// - useHashtags: Hook for hashtag management
-// - useFeedPersonalization: Hook for personalized feed recommendations
-// export { useFeed } from './hooks/useFeed'
-// export { useHashtags } from './hooks/useHashtags'
-// export { useFeedPersonalization } from './hooks/useFeedPersonalization'
-
-// Services - TODO: Fix hydration issue in InterestBasedPollFeed
-// export { InterestBasedPollFeed } from './lib/interest-based-feed'
+// Legacy Components - ARCHIVED
+// These components have been moved to _archived/ directory
+// They are replaced by the new modular architecture above
+// Do not use these in new code - see _archived/README.md for migration guide
+// - UnifiedFeed (old monolith) → Use UnifiedFeedRefactored
+// - SocialFeed → Use UnifiedFeedRefactored
+// - EnhancedSocialFeed → Use UnifiedFeedRefactored + FeedPWAEnhancer
+// - FeedHashtagIntegration → Built into FeedDataProvider

@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 import {
   registerBiometric,
   isWebAuthnSupported, 

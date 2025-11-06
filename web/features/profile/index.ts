@@ -38,6 +38,12 @@ export { default as ProfileAvatar } from './components/ProfileAvatar';
 /** Hashtag integration component */
 export { default as ProfileHashtagIntegration } from './components/ProfileHashtagIntegration';
 
+/** 🔒 Privacy dashboard component - View and manage all collected data */
+export { default as MyDataDashboard } from './components/MyDataDashboard';
+
+/** 🔒 Privacy settings page - Edit all 16 privacy controls */
+export { default as PrivacySettingsPage } from './components/PrivacySettingsPage';
+
 // ============================================================================
 // HOOK EXPORTS
 // ============================================================================
@@ -169,6 +175,8 @@ export const PROFILE_FEATURE_METADATA = {
     'ProfilePage',
     'ProfileEdit', 
     'ProfileAvatar',
+    'MyDataDashboard', // 🔒 Privacy dashboard
+    'PrivacySettingsPage', // 🔒 Privacy settings
   ],
   hooks: [
     'useProfile',

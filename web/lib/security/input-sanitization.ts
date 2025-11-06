@@ -196,8 +196,7 @@ export function validateThreadId(threadId: unknown): {
 } {
   if (threadId === null || threadId === undefined || threadId === '') {
     return {
-      isValid: true,
-      parsedId: undefined,
+      isValid: true
     };
   }
 

@@ -8,7 +8,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -151,7 +151,7 @@ async function getTargetSubscriptions(targetUsers?: string[], targetType: string
   // This would typically query your database for active subscriptions
   // For now, we'll return mock data
   
-  console.log(`Getting subscriptions for target type: ${targetType}`);
+  logger.debug('Getting subscriptions for target type', { targetType });
   
   if (targetUsers && targetUsers.length > 0) {
     // Return subscriptions for specific users

@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { logger } from '@/lib/utils/logger';
 
 // Types for OpenSecrets API responses
 export type OpenSecretsCandidate = {
@@ -199,7 +199,7 @@ export class OpenSecretsClient {
     const startTime = Date.now();
     
     try {
-      dev.logger.debug('Making OpenSecrets API request', {
+      logger.debug('Making OpenSecrets API request', {
         endpoint,
         params,
         url: url.toString().replace(this.config.apiKey, '***'),
@@ -245,7 +245,7 @@ export class OpenSecretsClient {
         );
       }
 
-      dev.logger.debug('OpenSecrets API response received', {
+      logger.debug('OpenSecrets API response received', {
         endpoint,
         responseTime,
         status: response.status,
@@ -270,7 +270,7 @@ export class OpenSecretsClient {
         );
       }
 
-      dev.logger.error('OpenSecrets API request failed', {
+      logger.error('OpenSecrets API request failed', {
         endpoint,
         error: error instanceof Error ? error.message : 'Unknown error',
         responseTime

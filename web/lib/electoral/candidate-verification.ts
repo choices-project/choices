@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { logger } from '@/lib/utils/logger';
 
 // Verification and access types
 export type CandidateVerification = {
@@ -163,7 +163,7 @@ export class CandidateVerificationSystem {
     };
   }): Promise<CandidateOnboarding> {
     try {
-      dev.logger.info('Starting candidate verification', { candidateId, candidateInfo });
+      logger.info('Starting candidate verification', { candidateId, candidateInfo });
 
       const onboarding: CandidateOnboarding = {
         candidateId,
@@ -213,7 +213,7 @@ export class CandidateVerificationSystem {
       return onboarding;
 
     } catch (error) {
-      dev.logger.error('Failed to start candidate verification', { candidateId, error });
+      logger.error('Failed to start candidate verification', { candidateId, error });
       throw new Error(`Failed to start verification: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -223,19 +223,19 @@ export class CandidateVerificationSystem {
    */
   async verifyByGovernmentEmail(candidateId: string, govEmail: string): Promise<boolean> {
     try {
-      dev.logger.info('Verifying candidate by government email', { candidateId, govEmail });
+      logger.info('Verifying candidate by government email', { candidateId, govEmail });
 
       // Check if email domain is valid government domain
       const isValidGovDomain = this.isValidGovernmentDomain(govEmail);
       if (!isValidGovDomain) {
-        dev.logger.warn('Invalid government email domain', { candidateId, govEmail });
+        logger.warn('Invalid government email domain', { candidateId, govEmail });
         return false;
       }
 
       // Send verification email
       const verificationSent = await this.sendVerificationEmail(govEmail);
       if (!verificationSent) {
-        dev.logger.error('Failed to send verification email', { candidateId, govEmail });
+        logger.error('Failed to send verification email', { candidateId, govEmail });
         return false;
       }
 
@@ -245,7 +245,7 @@ export class CandidateVerificationSystem {
       return true;
 
     } catch (error) {
-      dev.logger.error('Failed to verify by government email', { candidateId, error });
+      logger.error('Failed to verify by government email', { candidateId, error });
       return false;
     }
   }
@@ -260,12 +260,12 @@ export class CandidateVerificationSystem {
     filingDate: string;
   }): Promise<boolean> {
     try {
-      dev.logger.info('Verifying candidate by official filing', { candidateId, filingInfo });
+      logger.info('Verifying candidate by official filing', { candidateId, filingInfo });
 
       // Verify filing exists and is valid
       const filingValid = await this.validateOfficialFiling(filingInfo);
       if (!filingValid) {
-        dev.logger.warn('Invalid official filing', { candidateId, filingInfo });
+        logger.warn('Invalid official filing', { candidateId, filingInfo });
         return false;
       }
 
@@ -275,7 +275,7 @@ export class CandidateVerificationSystem {
       return true;
 
     } catch (error) {
-      dev.logger.error('Failed to verify by filing', { candidateId, error });
+      logger.error('Failed to verify by filing', { candidateId, error });
       return false;
     }
   }
@@ -285,7 +285,7 @@ export class CandidateVerificationSystem {
    */
   async grantEqualAccess(candidateId: string): Promise<EqualAccessPlatform> {
     try {
-      dev.logger.info('Granting equal platform access', { candidateId });
+      logger.info('Granting equal platform access', { candidateId });
 
       const equalAccess: EqualAccessPlatform = {
         candidateId,
@@ -337,12 +337,12 @@ export class CandidateVerificationSystem {
         this.verifiedCandidates.set(candidateId, verification);
       }
 
-      dev.logger.info('Equal platform access granted', { candidateId });
+      logger.info('Equal platform access granted', { candidateId });
 
       return equalAccess;
 
     } catch (error) {
-      dev.logger.error('Failed to grant equal access', { candidateId, error });
+      logger.error('Failed to grant equal access', { candidateId, error });
       throw new Error(`Failed to grant equal access: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -356,7 +356,7 @@ export class CandidateVerificationSystem {
     filingId?: string;
   }): Promise<OfficialChannel> {
     try {
-      dev.logger.info('Creating official communication channel', { candidateId, channelInfo });
+      logger.info('Creating official communication channel', { candidateId, channelInfo });
 
       const channel: OfficialChannel = {
         candidateId,
@@ -386,12 +386,12 @@ export class CandidateVerificationSystem {
       // Save official channel
       this.officialChannels.set(candidateId, channel);
 
-      dev.logger.info('Official communication channel created', { candidateId });
+      logger.info('Official communication channel created', { candidateId });
 
       return channel;
 
     } catch (error) {
-      dev.logger.error('Failed to create official channel', { candidateId, error });
+      logger.error('Failed to create official channel', { candidateId, error });
       throw new Error(`Failed to create official channel: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

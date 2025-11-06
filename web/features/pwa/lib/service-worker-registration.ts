@@ -58,7 +58,7 @@ const state: RegistrationState = {
   registration: null,
   isRegistered: false,
   isUpdateAvailable: false,
-  isOffline: !navigator.onLine,
+  isOffline: typeof window !== 'undefined' && typeof navigator !== 'undefined' ? !navigator.onLine : false,
 };
 
 /**

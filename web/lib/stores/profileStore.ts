@@ -108,7 +108,7 @@ type ProfileStore = {
 // Create profile store with middleware
 export const useProfileStore = create<ProfileStore>()(
   devtools(
-    persist(
+    (persist as any)(
       immer((set, get) => ({
         // Initial state
         profile: null,
@@ -129,26 +129,26 @@ export const useProfileStore = create<ProfileStore>()(
         privacySettings: null,
 
         // Base store actions
-        setLoading: (loading) => set((state) => {
+        setLoading: (loading: boolean) => set((state: any) => {
           state.isLoading = loading;
         }),
 
-        setError: (error) => set((state) => {
+        setError: (error: string | null) => set((state: any) => {
           state.error = error;
         }),
 
-        clearError: () => set((state) => {
+        clearError: () => set((state: any) => {
           state.error = null;
         }),
 
         // Profile data actions
-        setProfile: (profile) => set((state) => {
+        setProfile: (profile: ProfileUser | null) => set((state: ProfileStore) => {
           state.profile = profile;
           state.isProfileLoaded = !!profile;
           // Profile completeness will be updated elsewhere
         }),
 
-        setUserProfile: (userProfile) => set((state) => {
+        setUserProfile: (userProfile: UserProfile | null) => set((state: any) => {
           state.userProfile = userProfile;
           if (userProfile) {
             // Handle preferences and privacy settings safely
@@ -159,8 +159,8 @@ export const useProfileStore = create<ProfileStore>()(
         }),
 
         // Profile update action
-        updateProfile: async (updates) => {
-          set((state) => {
+        updateProfile: async (updates: ProfileUpdateData) => {
+          set((state: any) => {
             state.isUpdating = true;
             state.error = null;
           });
@@ -171,20 +171,20 @@ export const useProfileStore = create<ProfileStore>()(
             const result = await updateProfileService(updates);
 
             if (result.success && result.data) {
-              set((state) => {
-                state.profile = result.data as any;
+              set((state: ProfileStore) => {
+                state.profile = result.data ?? null;
                 state.isUpdating = false;
               });
               return true;
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to update profile';
                 state.isUpdating = false;
               });
               return false;
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to update profile';
               state.isUpdating = false;
             });
@@ -193,8 +193,8 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         // Preferences update
-        updatePreferences: async (preferences) => {
-          set((state) => {
+        updatePreferences: async (preferences: Partial<ProfilePreferences>) => {
+          set((state: any) => {
             state.isUpdating = true;
             state.error = null;
           });
@@ -204,7 +204,7 @@ export const useProfileStore = create<ProfileStore>()(
             const result = await updateProfile({} as ProfileUpdateData);
 
             if (result.success) {
-              set((state) => {
+              set((state: any) => {
                 if (state.preferences) {
                   Object.assign(state.preferences, preferences);
                 } else {
@@ -214,14 +214,14 @@ export const useProfileStore = create<ProfileStore>()(
               });
               return true;
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to update preferences';
                 state.isUpdating = false;
               });
               return false;
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to update preferences';
               state.isUpdating = false;
             });
@@ -230,8 +230,8 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         // Privacy settings update
-        updatePrivacySettings: async (settings) => {
-          set((state) => {
+        updatePrivacySettings: async (settings: Partial<PrivacySettings>) => {
+          set((state: any) => {
             state.isUpdating = true;
             state.error = null;
           });
@@ -241,7 +241,7 @@ export const useProfileStore = create<ProfileStore>()(
             const result = await updateProfile({ privacy_settings: settings as PrivacySettings });
 
             if (result.success) {
-              set((state) => {
+              set((state: any) => {
                 if (state.privacySettings) {
                   state.privacySettings = { ...state.privacySettings, ...settings };
                 } else {
@@ -251,14 +251,14 @@ export const useProfileStore = create<ProfileStore>()(
               });
               return true;
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to update privacy settings';
                 state.isUpdating = false;
               });
               return false;
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to update privacy settings';
               state.isUpdating = false;
             });
@@ -267,8 +267,8 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         // Avatar actions
-        updateAvatar: async (file) => {
-          set((state) => {
+        updateAvatar: async (file: File) => {
+          set((state: any) => {
             state.isUploadingAvatar = true;
             state.error = null;
           });
@@ -277,24 +277,24 @@ export const useProfileStore = create<ProfileStore>()(
             const { updateProfileAvatar } = await import('@/features/profile/lib/profile-service');
             const result = await updateProfileAvatar(file);
 
-            set((state) => {
+            set((state: any) => {
               state.isUploadingAvatar = false;
             });
 
             if (result.success && result.url) {
-              set((state) => {
-                if (state.profile) {
-                  (state.profile as any).avatar_url = result.url;
+              set((state: ProfileStore) => {
+                if (state.profile && 'avatar_url' in state.profile) {
+                  state.profile.avatar_url = result.url ?? null;
                 }
-                if (state.userProfile) {
-                  (state.userProfile as any).avatar_url = result.url;
+                if (state.userProfile && 'avatar_url' in state.userProfile) {
+                  state.userProfile.avatar_url = result.url ?? null;
                 }
               });
             }
 
             return result;
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to update avatar';
               state.isUploadingAvatar = false;
             });
@@ -306,36 +306,36 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         removeAvatar: async () => {
-          set((state) => {
+          set((state: any) => {
             state.isUpdating = true;
             state.error = null;
           });
 
           try {
             const { updateProfile } = await import('@/features/profile/lib/profile-service');
-            const currentState = get();
+            const currentState = get() as ProfileStore;
             const result = await updateProfile({ display_name: currentState.profile?.display_name } as ProfileUpdateData);
 
             if (result.success) {
-              set((state) => {
-                if (state.profile) {
-                  (state.profile as any).avatar_url = null;
+              set((state: ProfileStore) => {
+                if (state.profile && 'avatar_url' in state.profile) {
+                  state.profile.avatar_url = null;
                 }
-                if (state.userProfile) {
-                  (state.userProfile as any).avatar_url = null;
+                if (state.userProfile && 'avatar_url' in state.userProfile) {
+                  state.userProfile.avatar_url = null;
                 }
                 state.isUpdating = false;
               });
               return true;
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to remove avatar';
                 state.isUpdating = false;
               });
               return false;
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to remove avatar';
               state.isUpdating = false;
             });
@@ -345,7 +345,7 @@ export const useProfileStore = create<ProfileStore>()(
 
         // Profile management
         loadProfile: async () => {
-          set((state) => {
+          set((state: any) => {
             state.isProfileLoading = true;
             state.error = null;
           });
@@ -355,19 +355,19 @@ export const useProfileStore = create<ProfileStore>()(
             const result = await getCurrentProfile();
 
             if (result.success && result.data) {
-              set((state) => {
-                state.profile = result.data as any;
+              set((state: ProfileStore) => {
+                state.profile = result.data ?? null;
                 state.isProfileLoaded = true;
                 state.isProfileLoading = false;
               });
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to load profile';
                 state.isProfileLoading = false;
               });
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to load profile';
               state.isProfileLoading = false;
             });
@@ -375,11 +375,11 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         refreshProfile: async () => {
-          await get().loadProfile();
+          await (get() as ProfileStore).loadProfile();
         },
 
         exportProfile: async () => {
-          set((state) => {
+          set((state: any) => {
             state.isExporting = true;
             state.error = null;
           });
@@ -388,13 +388,13 @@ export const useProfileStore = create<ProfileStore>()(
             const { exportUserData } = await import('@/features/profile/lib/profile-service');
             const result = await exportUserData();
 
-            set((state) => {
+            set((state: any) => {
               state.isExporting = false;
             });
 
             return result;
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to export profile';
               state.isExporting = false;
             });
@@ -403,7 +403,7 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         deleteProfile: async () => {
-          set((state) => {
+          set((state: any) => {
             state.isUpdating = true;
             state.error = null;
           });
@@ -413,7 +413,7 @@ export const useProfileStore = create<ProfileStore>()(
             const result = await deleteProfile();
 
             if (result.success) {
-              set((state) => {
+              set((state: any) => {
                 state.profile = null;
                 state.userProfile = null;
                 state.isProfileLoaded = false;
@@ -424,14 +424,14 @@ export const useProfileStore = create<ProfileStore>()(
               });
               return true;
             } else {
-              set((state) => {
+              set((state: any) => {
                 state.error = result.error ?? 'Failed to delete profile';
                 state.isUpdating = false;
               });
               return false;
             }
           } catch (error) {
-            set((state) => {
+            set((state: any) => {
               state.error = error instanceof Error ? error.message : 'Failed to delete profile';
               state.isUpdating = false;
             });
@@ -440,7 +440,7 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         // Validation
-        validateProfile: (data): ProfileValidationResult => {
+        validateProfile: (data: ProfileUpdateData): ProfileValidationResult => {
           // Basic validation logic
           const errors: Record<string, string> = {};
           const warnings: Record<string, string> = {};
@@ -460,43 +460,43 @@ export const useProfileStore = create<ProfileStore>()(
           };
         },
 
-        setValidationErrors: (errors) => set((state) => {
+        setValidationErrors: (errors: Record<string, string[]>) => set((state: any) => {
           state.validationErrors = errors;
         }),
 
-        setValidationWarnings: (warnings) => set((state) => {
+        setValidationWarnings: (warnings: Record<string, string[]>) => set((state: any) => {
           state.validationWarnings = warnings;
         }),
 
-        clearValidation: () => set((state) => {
+        clearValidation: () => set((state: any) => {
           state.validationErrors = {};
           state.validationWarnings = {};
         }),
 
         // Loading states
-        setProfileLoading: (loading) => set((state) => {
+        setProfileLoading: (loading: boolean) => set((state: any) => {
           state.isProfileLoading = loading;
         }),
 
-        setUpdating: (updating) => set((state) => {
+        setUpdating: (updating: boolean) => set((state: any) => {
           state.isUpdating = updating;
         }),
 
-        setUploadingAvatar: (uploading) => set((state) => {
+        setUploadingAvatar: (uploading: boolean) => set((state: any) => {
           state.isUploadingAvatar = uploading;
         }),
 
-        setExporting: (exporting) => set((state) => {
+        setExporting: (exporting: boolean) => set((state: any) => {
           state.isExporting = exporting;
         }),
 
         // Profile completeness
         updateProfileCompleteness: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           const profile = state.profile ?? state.userProfile;
 
           if (!profile) {
-            set((state) => {
+            set((state: any) => {
               state.isProfileComplete = false;
               state.profileCompleteness = 0;
               state.missingFields = [];
@@ -518,7 +518,7 @@ export const useProfileStore = create<ProfileStore>()(
           const isComplete = missingFields.length === 0;
           const percentage = Math.round(((requiredFields.length - missingFields.length) / requiredFields.length) * 100);
 
-          set((state) => {
+          set((state: any) => {
             state.isProfileComplete = isComplete;
             state.profileCompleteness = percentage;
             state.missingFields = missingFields;
@@ -526,7 +526,7 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         getProfileCompleteness: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           return {
             isComplete: state.isProfileComplete,
             percentage: state.profileCompleteness,
@@ -536,25 +536,25 @@ export const useProfileStore = create<ProfileStore>()(
 
         // Profile display helpers
         getDisplayName: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           const profile = state.profile ?? state.userProfile;
           if (!profile) return 'User';
           return profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
         },
 
         getInitials: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           const displayName = state.getDisplayName();
           return displayName
             .split(' ')
-            .map(word => word.charAt(0))
+            .map((word: string) => word.charAt(0))
             .join('')
             .toUpperCase()
             .slice(0, 2);
         },
 
         getTrustTierDisplay: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           const profile = state.profile ?? state.userProfile;
           if (!profile) return 'Unknown';
 
@@ -568,13 +568,13 @@ export const useProfileStore = create<ProfileStore>()(
         },
 
         isAdmin: () => {
-          const state = get();
+          const state = get() as ProfileStore;
           const profile = state.profile ?? state.userProfile;
-          return (profile as any)?.is_admin ?? false;
+          return (profile && 'is_admin' in profile) ? profile.is_admin ?? false : false;
         },
 
         // Reset and cleanup
-        resetProfile: () => set((state) => {
+        resetProfile: () => set((state: any) => {
           state.profile = null;
           state.userProfile = null;
           state.isProfileLoaded = false;
@@ -588,12 +588,12 @@ export const useProfileStore = create<ProfileStore>()(
         }),
 
         clearProfile: () => {
-          get().resetProfile();
+          (get() as ProfileStore).resetProfile();
         }
       })),
       {
         name: 'profile-store',
-        partialize: (state) => ({
+        partialize: (state: any) => ({
           profile: state.profile,
           userProfile: state.userProfile,
           preferences: state.preferences,

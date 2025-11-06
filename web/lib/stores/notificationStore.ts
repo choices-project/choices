@@ -382,7 +382,7 @@ export const notificationStoreUtils = {
       type: 'success',
       title,
       message,
-      duration,
+      duration: duration ?? 5000,
     });
   },
   
@@ -408,7 +408,7 @@ export const notificationStoreUtils = {
       type: 'warning',
       title,
       message,
-      duration,
+      duration: duration ?? 5000,
     });
   },
   
@@ -421,7 +421,7 @@ export const notificationStoreUtils = {
       type: 'info',
       title,
       message,
-      duration,
+      duration: duration ?? 5000,
     });
   },
   
@@ -454,7 +454,7 @@ export const notificationStoreUtils = {
       type,
       title,
       message,
-      duration,
+      duration: duration ?? 0,
       actions,
     });
   },

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/utils/logger';
 
 // Import hashtag functionality
 import type { HashtagSearchQuery } from '@/features/hashtags/types';
@@ -165,7 +166,7 @@ export default function PollsPage() {
     if (query.trim()) {
       try {
         // await searchHashtags({ query: query.trim(), limit: 10 });
-        console.log('Hashtag search:', query.trim());
+        logger.debug('Hashtag search:', query.trim());
       } catch (error) {
         console.warn('Hashtag search failed:', error);
       }

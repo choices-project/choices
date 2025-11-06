@@ -7,7 +7,7 @@
  */
 
 import { ApplicationError } from '@/lib/errors';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type GovTrackConfig = {
   baseUrl?: string;

@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { logger } from '@/lib/utils/logger';
 import type { UserLocation, ElectoralRace } from '@/lib/types/electoral-unified';
 
 import { createCongressGovClient } from './congress-gov/client';
@@ -187,7 +187,7 @@ export class UnifiedDataOrchestrator {
         govTrack: createGovTrackClient()
       };
     } catch (error) {
-      dev.logger.warn('Some API clients failed to initialize', { error });
+      logger.warn('Some API clients failed to initialize', { error });
       // Initialize with available clients only
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.clients = {} as any;
@@ -213,7 +213,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('Congress.gov lookup failed', { identifier, error });
+          logger.debug('Congress.gov lookup failed', { identifier, error });
         }
       }
 
@@ -229,7 +229,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('Open States lookup failed', { identifier, error });
+          logger.debug('Open States lookup failed', { identifier, error });
         }
       }
 
@@ -245,7 +245,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('FEC lookup failed', { identifier, error });
+          logger.debug('FEC lookup failed', { identifier, error });
         }
       }
 
@@ -261,7 +261,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('OpenSecrets lookup failed', { identifier, error });
+          logger.debug('OpenSecrets lookup failed', { identifier, error });
         }
       }
 
@@ -277,7 +277,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('GovTrack lookup failed', { identifier, error });
+          logger.debug('GovTrack lookup failed', { identifier, error });
         }
       }
 
@@ -289,7 +289,7 @@ export class UnifiedDataOrchestrator {
       return this.mergeRepresentativeData(dataFromSources);
 
     } catch (error) {
-      dev.logger.error('Failed to get representative data', { identifier, error });
+      logger.error('Failed to get representative data', { identifier, error });
       return null;
     }
   }
@@ -331,7 +331,7 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('Congress.gov voting record failed', { representativeId, error });
+          logger.debug('Congress.gov voting record failed', { representativeId, error });
         }
       }
 
@@ -361,14 +361,14 @@ export class UnifiedDataOrchestrator {
             });
           }
         } catch (error) {
-          dev.logger.debug('Open States voting record failed', { representativeId, error });
+          logger.debug('Open States voting record failed', { representativeId, error });
         }
       }
 
       return votes;
 
     } catch (error) {
-      dev.logger.error('Failed to get voting record', { representativeId, error });
+      logger.error('Failed to get voting record', { representativeId, error });
       return [];
     }
   }
@@ -388,7 +388,7 @@ export class UnifiedDataOrchestrator {
             financeData.fec = fecSummary;
           }
         } catch (error) {
-          dev.logger.debug('FEC campaign finance failed', { representativeId, error });
+          logger.debug('FEC campaign finance failed', { representativeId, error });
         }
       }
 
@@ -400,7 +400,7 @@ export class UnifiedDataOrchestrator {
             financeData.openSecrets = openSecretsSummary;
           }
         } catch (error) {
-          dev.logger.debug('OpenSecrets campaign finance failed', { representativeId, error });
+          logger.debug('OpenSecrets campaign finance failed', { representativeId, error });
         }
       }
 
@@ -411,7 +411,7 @@ export class UnifiedDataOrchestrator {
       return this.mergeCampaignFinanceData(financeData, representativeId, cycle);
 
     } catch (error) {
-      dev.logger.error('Failed to get campaign finance data', { representativeId, error });
+      logger.error('Failed to get campaign finance data', { representativeId, error });
       return null;
     }
   }
@@ -460,7 +460,7 @@ export class UnifiedDataOrchestrator {
       };
 
     } catch (error) {
-      dev.logger.error('Failed to calculate data quality', { representativeId, error });
+      logger.error('Failed to calculate data quality', { representativeId, error });
       return {
         representativeId,
         scores,
@@ -645,12 +645,12 @@ export class UnifiedDataOrchestrator {
 
   // Missing method stubs - minimal implementations to satisfy type expectations
   async getUpcomingElections(_loc: UserLocation): Promise<ElectoralRace[]> {
-    dev.logger.info('getUpcomingElections called');
+    logger.info('getUpcomingElections called');
     return [];
   }
 
   async getActiveCampaignData(_candidateId: string): Promise<unknown> {
-    dev.logger.info('getActiveCampaignData called');
+    logger.info('getActiveCampaignData called');
     return null;
   }
 

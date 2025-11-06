@@ -24,3 +24,4 @@ export * from './useDebouncedCallback';
 export * from './useEvent';
 export * from './api-logger';
 export * from './auth';
+export * from './privacy-guard'; // 🔒 Privacy utilities

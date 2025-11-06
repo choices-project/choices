@@ -5,9 +5,11 @@
  * Handles data fetching, searching, and user interactions
  * 
  * Created: October 28, 2025
- * Status: ✅ FOUNDATION
+ * Last Updated: November 5, 2025
+ * Status: ✅ PRODUCTION - Mock data removed, uses real APIs
  */
 
+import { CACHE_DURATIONS } from '@/lib/config/constants';
 import { logger } from '@/lib/utils/logger';
 import type {
   Representative,
@@ -22,100 +24,7 @@ import type {
 // Note: We don't import civicsIntegration here because it contains server-only code
 // Client-side code should call API routes instead
 // Note: Supabase client removed - service now uses API routes for all operations
-
-// ============================================================================
-// LEGACY MOCK DATA - NO LONGER USED
-// Kept for reference only. All methods now call real APIs.
-// TODO: Move to test fixtures and remove from production code
-// ============================================================================
-
-const MOCK_REPRESENTATIVES_DEPRECATED: Representative[] = [
-  {
-    id: 1,
-    name: "Alexandria Ocasio-Cortez",
-    party: "Democratic",
-    office: "Representative",
-    level: "federal",
-    state: "NY",
-    district: "14",
-    primary_email: "aoc@mail.house.gov",
-    primary_phone: "(202) 225-3965",
-    primary_website: "https://ocasio-cortez.house.gov",
-    twitter_handle: "AOC",
-    facebook_url: "https://facebook.com/AlexandriaOcasioCortez",
-    instagram_handle: "aoc",
-    primary_photo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Alexandria_Ocasio-Cortez_Official_Portrait.jpg/330px-Alexandria_Ocasio-Cortez_Official_Portrait.jpg",
-    data_quality_score: 95,
-    verification_status: "verified",
-    data_sources: ["congressGov", "googleCivic", "fec"],
-    created_at: "2025-10-28T00:00:00Z",
-    updated_at: "2025-10-28T00:00:00Z",
-    last_verified: "2025-10-28T00:00:00Z",
-    committees: [
-      {
-        id: 1,
-        representative_id: 1,
-        committee_name: "Financial Services",
-        role: "member",
-        is_current: true,
-        created_at: "2025-10-28T00:00:00Z",
-        updated_at: "2025-10-28T00:00:00Z"
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: "Ted Cruz",
-    party: "Republican",
-    office: "Senator",
-    level: "federal",
-    state: "TX",
-    primary_email: "ted.cruz@senate.gov",
-    primary_phone: "(202) 224-5922",
-    primary_website: "https://www.cruz.senate.gov",
-    twitter_handle: "tedcruz",
-    facebook_url: "https://facebook.com/SenatorTedCruz",
-    primary_photo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ted_Cruz%2C_Official_Portrait%2C_113th_Congress.jpg/330px-Ted_Cruz%2C_Official_Portrait%2C_113th_Congress.jpg",
-    data_quality_score: 92,
-    verification_status: "verified",
-    data_sources: ["congressGov", "googleCivic", "fec"],
-    created_at: "2025-10-28T00:00:00Z",
-    updated_at: "2025-10-28T00:00:00Z",
-    last_verified: "2025-10-28T00:00:00Z",
-    committees: [
-      {
-        id: 2,
-        representative_id: 2,
-        committee_name: "Judiciary",
-        role: "member",
-        is_current: true,
-        created_at: "2025-10-28T00:00:00Z",
-        updated_at: "2025-10-28T00:00:00Z"
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: "Gavin Newsom",
-    party: "Democratic",
-    office: "Governor",
-    level: "state",
-    state: "CA",
-    primary_email: "governor@ca.gov",
-    primary_phone: "(916) 445-2841",
-    primary_website: "https://www.gov.ca.gov",
-    twitter_handle: "GavinNewsom",
-    facebook_url: "https://facebook.com/GavinNewsom",
-    instagram_handle: "gavinnewsom",
-    primary_photo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Gavin_Newsom_2021.jpg/330px-Gavin_Newsom_2021.jpg",
-    data_quality_score: 98,
-    verification_status: "verified",
-    data_sources: ["googleCivic", "openStatesApi"],
-    created_at: "2025-10-28T00:00:00Z",
-    updated_at: "2025-10-28T00:00:00Z",
-    last_verified: "2025-10-28T00:00:00Z"
-  }
-];
+// Note: Mock data moved to __tests__/fixtures/representative-mocks.ts (November 5, 2025)
 
 // ============================================================================
 // REPRESENTATIVE SERVICE CLASS
@@ -123,7 +32,7 @@ const MOCK_REPRESENTATIVES_DEPRECATED: Representative[] = [
 
 export class RepresentativeService {
   private cache: Map<string, unknown> = new Map();
-  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  private cacheTimeout = CACHE_DURATIONS.MEDIUM; // 5 minutes
 
   /**
    * Get all representatives with optional filtering

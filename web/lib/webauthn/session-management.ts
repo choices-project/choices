@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 
 import { generateSessionToken } from '@/lib/core/auth/session-cookies';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 export type WebAuthnSessionData = {
   userId: string;

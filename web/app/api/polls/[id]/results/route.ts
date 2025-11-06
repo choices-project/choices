@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(
   request: NextRequest,
@@ -40,7 +41,7 @@ export async function GET(
       });
 
     if (resultsError) {
-      console.error('Results query error:', resultsError);
+      logger.error('Results query error:', resultsError);
       return NextResponse.json(
         { error: 'Failed to get results' }, 
         { status: 500 }
@@ -55,7 +56,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Poll results error:', error);
+    logger.error('Poll results error:', error);
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

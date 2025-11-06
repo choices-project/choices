@@ -7,7 +7,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { RFCManager } from '@/lib/governance/rfcs';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {

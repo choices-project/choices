@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (voteError) {
-      console.error('Vote creation error:', voteError);
+      logger.error('Vote creation error', { error: voteError });
       return NextResponse.json(
         { error: 'Failed to record vote' }, 
         { status: 500 }
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Anonymous voting error:', error);
+    logger.error('Anonymous voting error', { error });
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

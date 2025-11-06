@@ -38,10 +38,15 @@
     "**/*.tsx"
   ],
   "exclude": [
+    "node_modules",
+    ".next",
+    "out",
     "**/*.disabled",
     "**/*.disabled.*",
     "**/scripts.disabled/**",
     "**/tests.disabled/**",
+    "**/_archived/**",
+    "**/_deprecated/**",
     "archive/**",
     "archive-*/**",
     "utils/supabase/database.types.ts"

@@ -24,7 +24,8 @@ import {
   Activity,
   Award,
   Target,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 
@@ -381,6 +382,13 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       description: 'Edit your profile'
     },
     {
+      id: 'privacy-settings',
+      label: 'Privacy & Data',
+      icon: Shield,
+      href: '/account/privacy',
+      description: 'Manage your privacy' // 🔒 Added privacy link
+    },
+    {
       id: 'set-location',
       label: 'Set Location',
       icon: MapPin,
@@ -391,8 +399,8 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       id: 'export-data',
       label: 'Export Data',
       icon: Download,
-      href: '/profile',
-      description: 'Download your data'
+      href: '/account/privacy',
+      description: 'Download your data' // 🔒 Links to privacy page
     }
   ];
 

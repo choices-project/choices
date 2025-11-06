@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Poll Client Component

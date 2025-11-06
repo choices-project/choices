@@ -283,15 +283,18 @@ export async function syncOfflineQueue(): Promise<SyncResult> {
  */
 async function syncAction(action: QueuedAction): Promise<boolean> {
   try {
-    const response = await fetch(action.endpoint, {
+    const fetchOptions: RequestInit = {
       method: action.method,
       headers: {
         'Content-Type': 'application/json',
         'X-Offline-Action': 'true',  // Header to identify offline actions
         'X-Action-Timestamp': action.timestamp.toString(),
-      },
-      body: action.payload ? JSON.stringify(action.payload) : undefined,
-    });
+      }
+    };
+    if (action.payload) {
+      fetchOptions.body = JSON.stringify(action.payload);
+    }
+    const response = await fetch(action.endpoint, fetchOptions);
     
     if (!response.ok) {
       action.lastError = `HTTP ${response.status}: ${response.statusText}`;

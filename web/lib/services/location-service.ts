@@ -182,10 +182,13 @@ export class LocationService {
     const location = await this.geocodeAddress(address);
     if (!location) return null;
 
-    return {
-      state: location.state,
-      district: location.district
+    const result: { state: string; district?: string } = {
+      state: location.state
     };
+    if (location.district) {
+      result.district = location.district;
+    }
+    return result;
   }
 
   /**

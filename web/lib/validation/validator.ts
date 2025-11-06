@@ -6,7 +6,7 @@
 
 import type { ZodError, ZodSchema } from 'zod';
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 /**

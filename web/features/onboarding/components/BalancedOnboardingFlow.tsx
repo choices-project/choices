@@ -19,6 +19,7 @@ import React, { useState, useEffect } from 'react';
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
 import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
+import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useUser, useUserLoading , 
   useOnboardingStep,
   useOnboardingData,
@@ -241,106 +242,42 @@ const DemographicsStep: React.FC<{
         </div>
 
         <div className="space-y-8">
-          {/* Location Section */}
+          {/* Location/District Section */}
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-3">📍</span>
-              Location
+              Find Your District
             </h3>
             <p className="text-gray-600 mb-4">
-              We need this to find your representatives
+              Enter your address to find your congressional district and representatives. 
+              We only store your district, never your full address.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State
-                </label>
-                <select
-                  value={demographics?.location?.state || ''}
-                  onChange={(e) => setDemographics({
-                    ...demographics,
-                    location: {
-                      ...demographics?.location,
-                      state: e.target.value
-                    }
-                  })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select your state</option>
-                  <option value="AL">Alabama</option>
-                  <option value="AK">Alaska</option>
-                  <option value="AZ">Arizona</option>
-                  <option value="AR">Arkansas</option>
-                  <option value="CA">California</option>
-                  <option value="CO">Colorado</option>
-                  <option value="CT">Connecticut</option>
-                  <option value="DE">Delaware</option>
-                  <option value="FL">Florida</option>
-                  <option value="GA">Georgia</option>
-                  <option value="HI">Hawaii</option>
-                  <option value="ID">Idaho</option>
-                  <option value="IL">Illinois</option>
-                  <option value="IN">Indiana</option>
-                  <option value="IA">Iowa</option>
-                  <option value="KS">Kansas</option>
-                  <option value="KY">Kentucky</option>
-                  <option value="LA">Louisiana</option>
-                  <option value="ME">Maine</option>
-                  <option value="MD">Maryland</option>
-                  <option value="MA">Massachusetts</option>
-                  <option value="MI">Michigan</option>
-                  <option value="MN">Minnesota</option>
-                  <option value="MS">Mississippi</option>
-                  <option value="MO">Missouri</option>
-                  <option value="MT">Montana</option>
-                  <option value="NE">Nebraska</option>
-                  <option value="NV">Nevada</option>
-                  <option value="NH">New Hampshire</option>
-                  <option value="NJ">New Jersey</option>
-                  <option value="NM">New Mexico</option>
-                  <option value="NY">New York</option>
-                  <option value="NC">North Carolina</option>
-                  <option value="ND">North Dakota</option>
-                  <option value="OH">Ohio</option>
-                  <option value="OK">Oklahoma</option>
-                  <option value="OR">Oregon</option>
-                  <option value="PA">Pennsylvania</option>
-                  <option value="RI">Rhode Island</option>
-                  <option value="SC">South Carolina</option>
-                  <option value="SD">South Dakota</option>
-                  <option value="TN">Tennessee</option>
-                  <option value="TX">Texas</option>
-                  <option value="UT">Utah</option>
-                  <option value="VT">Vermont</option>
-                  <option value="VA">Virginia</option>
-                  <option value="WA">Washington</option>
-                  <option value="WV">West Virginia</option>
-                  <option value="WI">Wisconsin</option>
-                  <option value="WY">Wyoming</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  District (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={demographics?.location?.district ?? ''}
-                  onChange={(e) => setDemographics({
-                    ...demographics,
-                    location: {
-                      ...demographics?.location,
-                      district: e.target.value
-                    }
-                  })}
-                  placeholder="Enter your congressional district"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+            
+            <AddressLookup 
+              autoSave={true}
+              onDistrictSaved={(district) => {
+                // Update demographics with district info
+                setDemographics({
+                  ...demographics,
+                  location: {
+                    state: district.state,
+                    district: district.district || undefined,
+                    quantized: true
+                  }
+                });
+              }}
+            />
+            
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <strong>Why we ask:</strong> Your district helps us show you relevant representatives, 
+                local civic actions, and polls that matter to your area.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Privacy:</strong> We never store your full address. Only your district (e.g., &quot;CA-12&quot;) 
+                is saved, and you can remove it anytime from your profile settings.
+              </p>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
-              We only store your state and district, not your exact address
-            </p>
           </div>
 
           {/* Demographics Section */}

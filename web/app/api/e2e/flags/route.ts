@@ -10,6 +10,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getAllFeatureFlags, setFeatureFlags } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
       environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
-    console.error('Error getting feature flags:', error);
+    logger.error('Error getting feature flags', { error });
     return NextResponse.json(
       { error: 'Failed to get feature flags' },
       { status: 500 }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error setting feature flags:', error);
+    logger.error('Error setting feature flags', { error });
     return NextResponse.json(
       { error: 'Failed to set feature flags' },
       { status: 500 }

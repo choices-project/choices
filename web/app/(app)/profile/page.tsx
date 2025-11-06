@@ -1,13 +1,15 @@
 'use client'
 
-import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle } from 'lucide-react';
+import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { logger } from '@/lib/utils/logger';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileExport } from '@/features/profile/hooks/use-profile';
 
 export default function ProfilePage() {
@@ -42,7 +44,7 @@ export default function ProfilePage() {
   // SECURITY: Redirect unauthenticated users to login
   useEffect(() => {
     if (!isLoading && isAuthenticated === false) {
-      console.log('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
+      logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
       router.push('/auth');
     }
   }, [isAuthenticated, isLoading, router]);
@@ -195,6 +197,29 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Location Settings */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <MapPin className="h-5 w-5 mr-2" />
+              Your District
+            </CardTitle>
+            <CardDescription>
+              Find your congressional district to see relevant representatives and civic content.
+              We only store your district, never your full address.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AddressLookup 
+              autoSave={true}
+              onDistrictSaved={() => {
+                // Refresh profile after district is saved
+                window.location.reload();
+              }}
+            />
+          </CardContent>
+        </Card>
 
         {/* Account Actions */}
         <Card>

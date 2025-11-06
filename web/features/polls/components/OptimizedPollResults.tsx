@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
 
 type OptimizedPollResultsProps = {

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * CHOICES PLATFORM - LINK ANONYMOUS VOTES TO USER
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Link votes error:', error);
+      logger.error('Link votes error', { error, userId: user_id });
       return NextResponse.json({ 
         error: 'Failed to link anonymous votes',
         details: error.message 
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Link votes API error:', error);
+    logger.error('Link votes API error', { error });
     return NextResponse.json({ 
       error: 'Internal server error',
       platform: 'choices',

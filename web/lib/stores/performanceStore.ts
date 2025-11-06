@@ -278,7 +278,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit: 'ms',
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata
+            metadata: metadata ?? {}
           });
         },
 
@@ -289,7 +289,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit: 'ms',
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata
+            metadata: metadata ?? {}
           });
         },
 
@@ -300,7 +300,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit,
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata
+            metadata: metadata ?? {}
           });
         },
 

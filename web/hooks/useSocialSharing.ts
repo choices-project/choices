@@ -37,11 +37,11 @@ export const useSocialSharing = () => {
 
     setIsSharing(true);
     try {
-      await navigator.share({
-        title: options.title,
-        text: options.text,
-        url: options.url,
-      });
+      const shareData: ShareData = {};
+      if (options.title) shareData.title = options.title;
+      if (options.text) shareData.text = options.text;
+      if (options.url) shareData.url = options.url;
+      await navigator.share(shareData);
       setIsSharing(false);
       return { success: true, platform: 'native' };
     } catch (error: unknown) {
@@ -147,11 +147,14 @@ export const useSocialSharing = () => {
       .join('\n\n');
     
     const success = await copyToClipboard(shareText);
-    return {
+    const result: ShareResult = {
       success,
-      platform: 'clipboard',
-      error: success ? undefined : 'Failed to copy to clipboard',
+      platform: 'clipboard'
     };
+    if (!success) {
+      result.error = 'Failed to copy to clipboard';
+    }
+    return result;
   };
 
   return {

@@ -213,8 +213,8 @@ export const usePWAStore = create<PWAStore>()(
           version: '1.0.0',
         },
         offline: {
-          isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-          isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
+          isOnline: (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? navigator.onLine : true,
+          isOffline: (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? !navigator.onLine : false,
           lastOnline: new Date().toISOString(),
           offlineData: {
             cachedPages: [],
@@ -298,11 +298,11 @@ export const usePWAStore = create<PWAStore>()(
             
             // PWA uninstallation is handled by the browser
             set((state) => ({
-              installation: {
-                ...state.installation,
-                isInstalled: false,
-                installedAt: undefined,
-              }
+            installation: {
+              ...state.installation,
+              isInstalled: false,
+              installedAt: undefined,
+            }
             }));
             
             logger.info('PWA uninstalled');
@@ -322,9 +322,9 @@ export const usePWAStore = create<PWAStore>()(
             isOnline,
             isOffline: !isOnline,
             lastOnline: isOnline ? new Date().toISOString() : state.offline.lastOnline,
-            offlineSince: isOnline ? undefined : new Date().toISOString(),
+            offlineSince: isOnline ? (null as any) : new Date().toISOString(),
           }
-        })),
+        } as any)),
         
         setOfflineData: (data) => set((state) => ({
           offline: {

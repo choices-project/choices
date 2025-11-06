@@ -29,13 +29,14 @@ export async function GET(
 
     // Rate limiting - 50 requests per 15 minutes
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
-    const userAgent = request.headers.get('user-agent') ?? undefined;
+    const userAgent = request.headers.get('user-agent');
     
-    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/contact/[id]', {
+    const rateLimitOptions: any = {
       maxRequests: 50,
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      userAgent
-    });
+      windowMs: 15 * 60 * 1000 // 15 minutes
+    };
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/contact/[id]', rateLimitOptions);
 
     if (!rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded for contact info lookup', { ip, representativeId });
@@ -269,13 +270,14 @@ export async function POST(
 
     // Rate limiting - 10 requests per 15 minutes for authenticated write operations
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
-    const userAgent = request.headers.get('user-agent') ?? undefined;
+    const userAgent = request.headers.get('user-agent');
     
-    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/contact/[id]:POST', {
+    const rateLimitOptions: any = {
       maxRequests: 10,
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      userAgent
-    });
+      windowMs: 15 * 60 * 1000 // 15 minutes
+    };
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/contact/[id]:POST', rateLimitOptions);
 
     if (!rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded for communication logging', { ip, representativeId });

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST() {
   try {
@@ -26,7 +27,7 @@ export async function POST() {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating onboarding status:', updateError);
+      logger.error('Error updating onboarding status', { error: updateError });
       return NextResponse.json(
         { error: 'Failed to complete onboarding' },
         { status: 500 }
@@ -39,7 +40,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('Onboarding completion error:', error);
+    logger.error('Onboarding completion error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

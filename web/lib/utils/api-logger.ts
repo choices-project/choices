@@ -41,35 +41,37 @@ export class ApiLogger {
 
   info(message: string, metadata?: Record<string, any>) {
     devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata }),
+      ...this.createContext({ metadata: metadata ?? {} }),
       level: 'info'
     });
   }
 
   error(message: string, error?: Error, metadata?: Record<string, any>) {
+    const context = { metadata: metadata ?? {} } as any;
+    if (error) context.error = error;
     devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ error, metadata }),
+      ...this.createContext(context),
       level: 'error'
     });
   }
 
   warn(message: string, metadata?: Record<string, any>) {
     devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata }),
+      ...this.createContext({ metadata: metadata ?? {} }),
       level: 'warn'
     });
   }
 
   debug(message: string, metadata?: Record<string, any>) {
     devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata }),
+      ...this.createContext({ metadata: metadata ?? {} }),
       level: 'debug'
     });
   }
 
   success(message: string, statusCode = 200, metadata?: Record<string, any>) {
     devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ statusCode, metadata }),
+      ...this.createContext({ statusCode, metadata: metadata ?? {} }),
       level: 'success'
     });
   }

@@ -12,7 +12,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireTrustedOrigin } from '@/lib/http/origin';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { withOptional } from '@/lib/util/objects';
@@ -96,14 +96,15 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
           biometric: { maxRequests: 20, windowMs: 15 * 60 * 1000 } // 20 requests per 15 minutes
         };
         
-        const config = rateLimitConfigs[rateLimit] || rateLimitConfigs.auth;
+        const config = rateLimitConfigs[rateLimit] || rateLimitConfigs.auth || { maxRequests: 100, windowMs: 15 * 60 * 1000 };
         const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
-        const ua = request.headers.get('user-agent') ?? undefined;
-        const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/auth:${rateLimit}`, {
-          maxRequests: config.maxRequests,
-          windowMs: config.windowMs,
-          userAgent: ua
-        });
+        const ua = request.headers.get('user-agent');
+        const rateLimitOptions: any = {
+          maxRequests: config!.maxRequests,
+          windowMs: config!.windowMs
+        };
+        if (ua) rateLimitOptions.userAgent = ua;
+        const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/auth:${rateLimit}`, rateLimitOptions);
         
         if (!rateLimitResult.allowed) {
           return NextResponse.json(
@@ -306,8 +307,10 @@ export function createRateLimitMiddleware(options: {
     
     // Use Upstash-backed limiter via facade
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
-    const ua = request.headers.get('user-agent') ?? undefined;
-    const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/middleware:${key}`, { maxRequests, windowMs, userAgent: ua });
+    const ua = request.headers.get('user-agent');
+    const rateLimitOptions: any = { maxRequests, windowMs };
+    if (ua) rateLimitOptions.userAgent = ua;
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/middleware:${key}`, rateLimitOptions);
     
     // Log rate limit configuration for debugging
     devLog('Rate limit check', {

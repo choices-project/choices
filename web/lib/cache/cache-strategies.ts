@@ -8,7 +8,7 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
+import { logger } from '@/lib/utils/logger'
 
 import type { RedisClient , CacheStats } from './redis-client'
 

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(
   request: NextRequest,
@@ -54,7 +55,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Shared poll API error:', error);
+    logger.error('Shared poll API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

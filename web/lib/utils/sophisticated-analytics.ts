@@ -17,7 +17,7 @@
  * @since 1.0.0
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Analytics event types supported by our platform
@@ -422,7 +422,7 @@ export async function trackPollVoting(
     vote_count: pollData.optionIds.length,
     is_anonymous: pollData.isAnonymous,
     poll_category: pollData.pollCategory
-  }, { userId });
+  }, userId ? { userId } : {});
 }
 
 /**

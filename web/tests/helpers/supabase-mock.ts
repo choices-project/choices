@@ -30,11 +30,11 @@ export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
 
   const fn = mockLib.fn;
   const handles = {
-    single: fn<(s: State) => unknown>(),
-    maybeSingle: fn<(s: State) => unknown>(),
-    list: fn<(s: State) => unknown>(),
-    mutate: fn<(s: State) => unknown>(),
-    rpc: fn<(s: State) => unknown>(),
+    single: fn<(...args: any[]) => unknown>(),
+    maybeSingle: fn<(...args: any[]) => unknown>(),
+    list: fn<(...args: any[]) => unknown>(),
+    mutate: fn<(...args: any[]) => unknown>(),
+    rpc: fn<(...args: any[]) => unknown>(),
   };
 
   const bump = (table: string, key: keyof typeof metrics.counts) => {
@@ -72,25 +72,25 @@ export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
 
       // terminals (all route-first)
       async single() {
-        bump(state.table, 'single'); handles.single.mock.calls.push([structuredClone(state)]);
+        bump(state.table, 'single'); (handles.single as any).mock.calls.push([structuredClone(state)]);
         const r = find(state); if (r) return r.respond();
-        if (handles.single.mockImplementation) return handles.single.mockImplementation(state);
+        if ((handles.single as any).mockImplementation) return (handles.single as any).mockImplementation(state);
         return { data: null, error: { message: 'Not found' } };
       },
       async maybeSingle() {
-        bump(state.table, 'maybeSingle'); handles.maybeSingle.mock.calls.push([structuredClone(state)]);
+        bump(state.table, 'maybeSingle'); (handles.maybeSingle as any).mock.calls.push([structuredClone(state)]);
         const r = find(state); if (r) return r.respond();
-        if (handles.maybeSingle.mockImplementation) return handles.maybeSingle.mockImplementation(state);
+        if ((handles.maybeSingle as any).mockImplementation) return (handles.maybeSingle as any).mockImplementation(state);
         return { data: null, error: null };
       },
       async then(onFulfilled: unknown, onRejected: unknown) {
         // allow awaited select() without explicit .list() (PostgREST-ish)
-        return api.list().then(onFulfilled, onRejected);
+        return api.list().then(onFulfilled as any, onRejected as any);
       },
       async list() {
-        bump(state.table, 'list'); handles.list.mock.calls.push([structuredClone(state)]);
+        bump(state.table, 'list'); (handles.list as any).mock.calls.push([structuredClone(state)]);
         const r = find(state); if (r) return r.respond();
-        if (handles.list.mockImplementation) return handles.list.mockImplementation(state);
+        if ((handles.list as any).mockImplementation) return (handles.list as any).mockImplementation(state);
         return { data: [], error: null };
       },
 
@@ -99,9 +99,9 @@ export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
       update(_rows?: unknown){ state.op = 'update'; return api; },
       delete(){ state.op = 'delete'; return api; },
       async mutate() {
-        bump(state.table, 'mutate'); handles.mutate.mock.calls.push([structuredClone(state)]);
+        bump(state.table, 'mutate'); (handles.mutate as any).mock.calls.push([structuredClone(state)]);
         const r = find(state); if (r) return r.respond();
-        if (handles.mutate.mockImplementation) return handles.mutate.mockImplementation(state);
+        if ((handles.mutate as any).mockImplementation) return (handles.mutate as any).mockImplementation(state);
         return { data: [], error: null };
       },
     };
@@ -115,16 +115,16 @@ export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
     },
     rpc(fnName: string, args?: unknown) {
       const state: State = { table: '__rpc__', op: 'rpc', filters: [], rpc: { fn: fnName, args } };
-      bump('__rpc__', 'rpc'); handles.rpc.mock.calls.push([structuredClone(state)]);
+      bump('__rpc__', 'rpc'); (handles.rpc as any).mock.calls.push([structuredClone(state)]);
       const r = find(state); if (r) return r.respond();
-      if (handles.rpc.mockImplementation) return handles.rpc.mockImplementation(state);
+      if ((handles.rpc as any).mockImplementation) return (handles.rpc as any).mockImplementation(state);
       return Promise.resolve({ data: null, error: null });
     },
   };
 
   const resetAllMocks = () => {
     routes.length = 0;
-    for (const k of Object.keys(handles) as (keyof typeof handles)[]) handles[k].mockReset();
+    for (const k of Object.keys(handles) as (keyof typeof handles)[]) (handles[k] as any).mockReset?.();
     metrics.counts = { single:0, maybeSingle:0, list:0, mutate:0, rpc:0 };
     for (const t of Object.keys(metrics.byTable)) delete metrics.byTable[t];
   };

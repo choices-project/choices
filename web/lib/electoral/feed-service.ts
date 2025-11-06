@@ -5,7 +5,7 @@
  * No plaintext address or GPS ever received by server.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 import type { JurisdictionID } from '../privacy/location-resolver';
 

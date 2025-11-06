@@ -522,8 +522,8 @@ test.describe('PWA API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // Test WebAuthn PWA integration
-    const webauthnResponse = await page.request.post('/api/v1/auth/webauthn/register/options', {
+    // Test WebAuthn PWA integration (native)
+    const webauthnResponse = await page.request.post('/api/v1/auth/webauthn/native/register/options', {
       data: {}
     });
     

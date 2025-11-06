@@ -5,7 +5,7 @@
  * Provides basic counters and timing without the complexity of the full optimization suite.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 type TelemetryCounters = {
   dbQueryCount: number;

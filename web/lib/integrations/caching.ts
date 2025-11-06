@@ -7,7 +7,7 @@
  * cache invalidation, and storage optimization for government data.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type CacheConfig = {
   defaultTTL: number; // milliseconds

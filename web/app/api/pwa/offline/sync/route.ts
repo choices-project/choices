@@ -8,7 +8,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const { votes, deviceId, timestamp } = body;
 
     // Log sync attempt for audit trail
-    console.log(`Offline sync attempt from device: ${deviceId} at ${timestamp}`);
+    logger.info('Offline sync attempt', { deviceId, timestamp });
 
     if (!votes || !Array.isArray(votes)) {
       return NextResponse.json({
@@ -158,7 +158,7 @@ async function processOfflineVote(vote: any): Promise<any> {
 async function getSyncStatus(deviceId: string): Promise<any> {
   // This would typically query your database for pending sync operations
   // For now, we'll return a mock status
-  console.log(`Getting sync status for device: ${deviceId}`);
+  logger.debug('Getting sync status for device', { deviceId });
   
   return {
     lastSync: new Date().toISOString(),

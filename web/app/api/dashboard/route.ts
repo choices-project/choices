@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       const cachedData = await cache.get<DashboardData>(cacheKey);
       if (cachedData) {
         const loadTime = Date.now() - startTime;
-        console.log(`⚡ Dashboard loaded from cache in ${loadTime}ms`);
+        logger.info('Dashboard loaded from cache', { loadTime });
         return NextResponse.json({
           ...cachedData,
           fromCache: true,
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('🚀 Loading optimized dashboard data...');
+    logger.debug('Loading optimized dashboard data', { userId });
 
     // SINGLE OPTIMIZED QUERY - Get all data in one database call
     const dashboardData = await loadOptimizedDashboardData(supabase, userId);
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     const loadTime = Date.now() - startTime;
-    console.log(`⚡ Optimized dashboard loaded in ${loadTime}ms`);
+    logger.info('Optimized dashboard loaded', { loadTime });
 
     return NextResponse.json({
       ...dashboardData,
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
  * This replaces multiple separate queries with one efficient call
  */
 async function loadOptimizedDashboardData(supabase: any, userId: string): Promise<DashboardData> {
-  console.log('🚀 Executing single optimized dashboard query...');
+  logger.debug('Executing optimized dashboard query', { userId });
   
   // Single optimized query using SQL with CTEs (Common Table Expressions)
   const { data, error } = await supabase.rpc('get_dashboard_data', {
@@ -146,12 +146,12 @@ async function loadOptimizedDashboardData(supabase: any, userId: string): Promis
   });
 
   if (error) {
-    console.log('⚠️ Optimized query failed, falling back to individual queries');
+    logger.warn('Optimized query failed, using fallback', { error });
     return await loadDashboardDataFallback(supabase, userId);
   }
 
   if (!data || data.length === 0) {
-    console.log('⚠️ No data returned, using fallback');
+    logger.warn('No data returned from optimized query, using fallback');
     return await loadDashboardDataFallback(supabase, userId);
   }
 
@@ -196,7 +196,7 @@ async function loadOptimizedDashboardData(supabase: any, userId: string): Promis
  * Used when the single optimized query fails
  */
 async function loadDashboardDataFallback(supabase: any, userId: string): Promise<DashboardData> {
-  console.log('🔄 Using fallback optimized queries...');
+  logger.debug('Using fallback optimized queries', { userId });
   
   // Optimized parallel queries with better indexing
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();

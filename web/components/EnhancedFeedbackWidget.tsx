@@ -22,7 +22,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 import { 
   useAnalyticsActions,
   useAnalyticsLoading,

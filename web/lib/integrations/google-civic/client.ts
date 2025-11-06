@@ -6,7 +6,7 @@
  */
 
 import { ApplicationError } from '../../errors/base';
-import { logger } from '../../logger';
+import { logger } from '@/lib/utils/logger';
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
 

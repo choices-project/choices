@@ -244,8 +244,8 @@ export default function VotingInterface({
             onVote={onApproval}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userApprovalVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userApprovalVote && { userVote: userApprovalVote })}
           />
         );
       case 'quadratic':
@@ -266,8 +266,8 @@ export default function VotingInterface({
             onVote={onQuadratic}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userQuadraticVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userQuadraticVote && { userVote: userQuadraticVote })}
           />
         );
       case 'range':
@@ -288,8 +288,8 @@ export default function VotingInterface({
             onVote={onRange}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userRangeVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userRangeVote && { userVote: userRangeVote })}
           />
         );
       case 'ranked':
@@ -310,8 +310,8 @@ export default function VotingInterface({
             onVote={onRanked}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userRankedVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userRankedVote && { userVote: userRankedVote })}
           />
         );
       case 'multiple':
@@ -332,8 +332,8 @@ export default function VotingInterface({
             onVote={onMultiple}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userMultipleVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userMultipleVote && { userVote: userMultipleVote })}
           />
         );
       default:
@@ -354,8 +354,8 @@ export default function VotingInterface({
             onVote={onSingle}
             isVoting={isVoting}
             hasVoted={hasVoted}
-            description={poll.description ?? undefined}
-            userVote={userVote ?? undefined}
+            {...(poll.description && { description: poll.description })}
+            {...(userVote && { userVote: userVote })}
           />
         );
     }

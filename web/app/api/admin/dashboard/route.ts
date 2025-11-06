@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       const cachedData = await cache.get<AdminDashboardData>(cacheKey);
       if (cachedData) {
         const loadTime = Date.now() - startTime;
-        console.log(`⚡ Admin dashboard loaded from cache in ${loadTime}ms`);
+        logger.info('Admin dashboard loaded from cache', { loadTime });
         return NextResponse.json({
           ...cachedData,
           fromCache: true,
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('🚀 Loading admin dashboard data from database...');
+    logger.debug('Loading admin dashboard data from database');
 
     // Load all data in parallel for maximum performance
     const [
@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
     }
 
     const loadTime = Date.now() - startTime;
-    console.log(`⚡ Admin dashboard loaded in ${loadTime}ms`);
+    logger.info('Admin dashboard loaded', { loadTime });
 
     return NextResponse.json({
       ...dashboardData,

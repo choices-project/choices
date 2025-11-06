@@ -66,7 +66,9 @@ class PerformanceMetricsCollector {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        this.addMetric('lcp', lastEntry.startTime);
+        if (lastEntry) {
+          this.addMetric('lcp', lastEntry.startTime);
+        }
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
@@ -200,8 +202,8 @@ class PerformanceMetricsCollector {
       timestamp: Date.now(),
       url: typeof window !== 'undefined' ? window.location.href : '',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      connection: typeof navigator !== 'undefined' && 'connection' in navigator 
-        ? (navigator.connection as { effectiveType?: string })?.effectiveType : undefined,
+      connection: (typeof navigator !== 'undefined' && 'connection' in navigator 
+        ? (navigator.connection as { effectiveType?: string })?.effectiveType : undefined) ?? 'unknown',
     };
 
     this.metrics.push(metric);

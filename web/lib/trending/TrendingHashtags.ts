@@ -5,7 +5,7 @@
  * for viral content discovery and user engagement
  */
 
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 
 export type HashtagUsage = {
   hashtag: string;

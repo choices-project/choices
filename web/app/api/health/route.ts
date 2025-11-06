@@ -42,11 +42,13 @@ export async function GET(request: NextRequest) {
     // Apply rate limiting for database and all checks
     if (type === 'database' || type === 'all') {
       const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-      const userAgent = request.headers.get('user-agent') ?? undefined;
+      const userAgent = request.headers.get('user-agent');
+      const rateLimitOptions: any = {};
+      if (userAgent) rateLimitOptions.userAgent = userAgent;
       const rateLimitResult = await apiRateLimiter.checkLimit(
         ip,
         '/api/health',
-        { userAgent }
+        rateLimitOptions
       );
       if (!rateLimitResult.allowed) {
         return NextResponse.json(
@@ -355,7 +357,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(healthStatus, { status: statusCode });
 
       } catch (error) {
-        console.error('Civics health check error:', error);
+        logger.error('Civics health check error', { error });
         return NextResponse.json(
           { 
             feature_enabled: false,

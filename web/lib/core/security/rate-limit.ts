@@ -3,7 +3,7 @@
  * Use Upstash-backed limiter in `@/lib/rate-limiting/api-rate-limiter` instead.
  */
 
-import { devLog } from '../../logger'
+import { devLog } from '@/lib/utils/logger'
 
 // Rate limit configuration
 export type RateLimitConfig = {

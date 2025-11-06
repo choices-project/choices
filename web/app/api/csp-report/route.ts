@@ -1,55 +1,123 @@
 /**
  * CSP Violation Reporting Endpoint
  * 
- * Collects Content Security Policy violation reports for monitoring and debugging.
- * This endpoint receives POST requests with CSP violation data from browsers.
+ * Collects Content Security Policy violation reports for security monitoring.
+ * Violations are logged and can be stored in the database for analysis.
+ * 
+ * Privacy: No PII is logged. Only violation details and user-agent.
+ * Security: Helps identify XSS attempts, unauthorized scripts, and policy gaps.
+ * 
+ * Created: 2025
+ * Updated: November 5, 2025 - Production implementation
  */
 
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+type CSPViolation = {
+  'document-uri': string;
+  'violated-directive': string;
+  'effective-directive': string;
+  'original-policy': string;
+  'blocked-uri': string;
+  'source-file'?: string;
+  'line-number'?: number;
+  'column-number'?: number;
+  'status-code'?: number;
+};
+
+type CSPReport = {
+  'csp-report': CSPViolation;
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const report = await request.json();
+    const report: CSPReport = await request.json();
+    const violation = report['csp-report'];
     
-    // Log CSP violation for debugging
-    console.error('CSP Violation Report:', {
+    if (!violation) {
+      return NextResponse.json({ status: 'invalid' }, { status: 400 });
+    }
+
+    // Extract metadata
+    const metadata = {
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent'),
-      report: report,
-    });
+      referer: request.headers.get('referer'),
+      violatedDirective: violation['violated-directive'],
+      blockedUri: violation['blocked-uri'],
+      documentUri: violation['document-uri'],
+      sourceFile: violation['source-file'],
+      lineNumber: violation['line-number']
+    };
     
-    // In production, you might want to:
-    // 1. Store in database
-    // 2. Send to monitoring service (Sentry, DataDog, etc.)
-    // 3. Alert security team for critical violations
+    // Log CSP violation (no PII)
+    logger.error('CSP Violation Detected', metadata);
     
-    // Example: Store in database (uncomment when ready)
-    // await storeCSPViolation({
-    //   timestamp: new Date(),
-    //   userAgent: request.headers.get('user-agent'),
-    //   report: report,
-    //   ip: request.ip,
-    // });
+    // Store in database for security analysis
+    try {
+      const supabase = await getSupabaseServerClient();
+      
+      // Store in admin_activity_log for security tracking
+      await supabase.from('admin_activity_log').insert({
+        action: 'csp_violation',
+        admin_id: '00000000-0000-0000-0000-000000000000', // System action
+        details: {
+          severity: getSeverity(violation),
+          violation,
+          ...metadata
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (dbError) {
+      // Don't fail the request if DB storage fails
+      logger.warn('Failed to store CSP violation in database', { error: dbError });
+    }
     
-    // Example: Send to monitoring service (uncomment when ready)
-    // await sendToMonitoring({
-    //   type: 'csp_violation',
-    //   data: report,
-    //   metadata: {
-    //     userAgent: request.headers.get('user-agent'),
-    //     ip: request.ip,
-    //   }
-    // });
+    // If Sentry is configured, send to Sentry
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      // Sentry integration - would be implemented when Sentry is added to project
+      logger.debug('CSP violation would be sent to Sentry if configured', {
+        severity: getSeverity(violation),
+        directive: violation['violated-directive']
+      });
+    }
     
     return NextResponse.json({ status: 'received' }, { status: 200 });
     
   } catch (error) {
-    console.error('Error processing CSP violation report:', error);
+    logger.error('Error processing CSP violation report', { error });
     
     // Still return 200 to prevent browser from retrying
     return NextResponse.json({ status: 'error' }, { status: 200 });
   }
+}
+
+/**
+ * Determine severity of CSP violation
+ * Critical: script-src, object-src
+ * High: default-src, connect-src
+ * Medium: style-src, img-src
+ * Low: font-src, media-src
+ */
+function getSeverity(violation: CSPViolation): 'critical' | 'high' | 'medium' | 'low' {
+  const directive = violation['violated-directive'] || violation['effective-directive'];
+  
+  if (directive.includes('script-src') || directive.includes('object-src')) {
+    return 'critical'; // Potential XSS
+  }
+  
+  if (directive.includes('default-src') || directive.includes('connect-src')) {
+    return 'high'; // Unauthorized connections
+  }
+  
+  if (directive.includes('style-src') || directive.includes('img-src')) {
+    return 'medium'; // Asset violations
+  }
+  
+  return 'low';
 }
 
 // Handle preflight requests for CORS

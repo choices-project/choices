@@ -5,7 +5,7 @@
  * performance tracking, error monitoring, and alerting capabilities.
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 import type { CacheStats } from './caching';

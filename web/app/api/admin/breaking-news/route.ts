@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';

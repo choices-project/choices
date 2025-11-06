@@ -55,7 +55,7 @@ export class AppError extends Error {
     this.code = code;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    this.details = details;
+    this.details = details ?? {};
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -262,13 +262,14 @@ export function createServerActionError(error: unknown): {
 } {
   const { response } = handleError(error);
   
-  return {
+  const result: any = {
     success: false,
     error: response.error,
     message: response.message,
-    code: response.code,
     timestamp: response.timestamp
   };
+  if (response.code) result.code = response.code;
+  return result;
 }
 
 /**

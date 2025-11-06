@@ -88,13 +88,16 @@ export function useFollowRepresentative(representativeId: number | null) {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: null }));
 
-      const response = await fetch(`/api/representatives/${representativeId}/follow`, {
+      const fetchOptions: RequestInit = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: preferences ? JSON.stringify(preferences) : undefined
-      });
+        }
+      };
+      if (preferences) {
+        fetchOptions.body = JSON.stringify(preferences);
+      }
+      const response = await fetch(`/api/representatives/${representativeId}/follow`, fetchOptions);
 
       if (!response.ok) {
         const errorData = await response.json();

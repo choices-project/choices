@@ -1,9 +1,11 @@
 'use client';
 
-
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { Suspense, useEffect, useState } from 'react';
+
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import { logger } from '@/lib/utils/logger';
 
 // Use PersonalDashboard as the main dashboard component
 const PersonalDashboard = dynamic(() => import('@/features/dashboard').then(mod => ({ default: mod.PersonalDashboard })), {
@@ -24,7 +26,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log('🔍 Dashboard: Checking server-side authentication...');
+        logger.debug('🔍 Dashboard: Checking server-side authentication...');
         
         const response = await fetch('/api/profile', {
           credentials: 'include',
@@ -33,23 +35,23 @@ export default function DashboardPage() {
         if (response.ok) {
           const profileData = await response.json();
           const hasProfile = !!profileData.profile;
-          console.log('🔍 Dashboard: Server auth result:', { hasProfile, userId: profileData.profile?.user_id });
+          logger.debug('🔍 Dashboard: Server auth result:', { hasProfile, userId: profileData.profile?.user_id });
           
           setIsAuthenticated(hasProfile);
           setIsLoading(false);
           
           if (!hasProfile) {
-            console.log('🚨 Dashboard: No profile found - redirecting to login');
+            logger.debug('🚨 Dashboard: No profile found - redirecting to login');
             router.push('/auth');
           }
         } else {
-          console.log('🚨 Dashboard: Profile API failed - redirecting to login');
+          logger.debug('🚨 Dashboard: Profile API failed - redirecting to login');
           setIsAuthenticated(false);
           setIsLoading(false);
           router.push('/auth');
         }
       } catch (error) {
-        console.log('❌ Dashboard: Authentication check failed:', error);
+        logger.debug('❌ Dashboard: Authentication check failed:', error);
         setIsAuthenticated(false);
         setIsLoading(false);
         router.push('/auth');
@@ -82,14 +84,22 @@ export default function DashboardPage() {
   }
 
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
-      </div>
-    }>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PersonalDashboard />
-      </div>
-    </Suspense>
+    <>
+      {/* 🔒 Cohesive Dashboard Navigation */}
+      <DashboardNavigation />
+      
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
+        </div>
+      }>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <PersonalDashboard />
+        </div>
+      </Suspense>
+      
+      {/* 🔒 Mobile Navigation */}
+      <MobileDashboardNav />
+    </>
   );
 }

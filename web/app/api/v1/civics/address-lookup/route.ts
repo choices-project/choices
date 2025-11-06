@@ -228,11 +228,12 @@ export async function POST(req: Request) {
     const juris = await lookupJurisdictionFromExternalAPI(address);
 
     // Extract only the fields setJurisdictionCookie expects
-    await setJurisdictionCookie({
-      state: juris.state,
-      district: juris.district ?? undefined,
-      county: juris.county ?? undefined
-    });
+    const cookieData: any = {
+      state: juris.state
+    };
+    if (juris.district) cookieData.district = juris.district;
+    if (juris.county) cookieData.county = juris.county;
+    await setJurisdictionCookie(cookieData);
     return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
   } catch (error) {
     logger.error('Address lookup error', error instanceof Error ? error : new Error(String(error)));

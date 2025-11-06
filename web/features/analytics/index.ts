@@ -1,37 +1,44 @@
 /**
  * Analytics Feature Exports
- * Enhanced analytics with new schema capabilities
- * Created: 2025-10-27
+ * 
+ * Central export point for analytics components, types, and utilities.
+ * 
+ * Created: November 5, 2025
+ * Consolidated: November 5, 2025 - All charts integrated into EnhancedAnalyticsDashboard
+ * Status: ✅ Consolidated analytics system
  */
 
-// Components
-export { default as EnhancedAnalyticsDashboard } from './components/EnhancedAnalyticsDashboard';
-export { default as FeedbackWidget } from '@/components/EnhancedFeedbackWidget';
-export { ProfessionalChart } from './components/ProfessionalChart';
+// Main Dashboard (consolidated)
+export { EnhancedAnalyticsDashboard } from './components/EnhancedAnalyticsDashboard';
+export { default as EnhancedAnalyticsDashboardDefault } from './components/EnhancedAnalyticsDashboard';
 
-// Hooks
-export { useEnhancedAnalytics } from './hooks/useEnhancedAnalytics';
-
-// Services
-export { EnhancedAnalyticsService } from './lib/enhanced-analytics-service';
-export { AnalyticsEngine } from './lib/AnalyticsEngine';
-export { AuthAnalytics } from './lib/auth-analytics';
+// Individual Chart Components (for reuse if needed)
+export { default as TrendsChart } from './components/TrendsChart';
+export { default as DemographicsChart } from './components/DemographicsChart';
+export { default as TemporalAnalysisChart } from './components/TemporalAnalysisChart';
+export { default as TrustTierComparisonChart } from './components/TrustTierComparisonChart';
+export { default as PollHeatmap } from './components/PollHeatmap';
 
 // Types
-export type { 
-  TrustTierAnalytics,
-  PollDemographicInsights,
-  CivicDatabaseEntry,
-  TrustTierHistoryEntry,
-  TrustTier,
-  TrustTierScore,
-  AnalyticsFilters,
-  AnalyticsSummary,
-  PollAnalytics,
-  UserAnalytics,
-  AnalyticsExport,
-  AnalyticsDashboard
-} from './types/analytics';
+export type {
+  WidgetType,
+  WidgetSize,
+  WidgetConfig,
+  WidgetProps,
+  WidgetComponent,
+  WidgetRegistration,
+  DashboardConfig,
+  WidgetDataResponse,
+  QueryBuilderConfig,
+  PermissionLevel,
+  ExportFormat
+} from './types/widget';
 
-// Utilities
-export * from './lib/minimal';
+// Widget Registry
+export { 
+  WIDGET_REGISTRY,
+  getWidget,
+  getWidgetsByCategory,
+  getAccessibleWidgets,
+  generateWidgetId
+} from './lib/widgetRegistry';

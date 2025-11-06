@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 
 import { isCivicsEnabled } from '@/lib/civics/privacy-utils';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET() {
   const issues: string[] = [];
@@ -68,7 +69,7 @@ export async function GET() {
     return NextResponse.json(healthStatus, { status: statusCode });
 
   } catch (error) {
-    console.error('Civics health check error:', error);
+    logger.error('Civics health check error', { error });
     return NextResponse.json(
       { 
         feature_enabled: false,

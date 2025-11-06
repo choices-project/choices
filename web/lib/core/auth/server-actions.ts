@@ -27,7 +27,7 @@ import {
   clearSessionCookie
 } from '@/lib/core/auth/session-cookies'
 import { getSecurityConfig } from '@/lib/core/security/config'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 // Common validation schemas
 export const BaseActionSchema = z.object({

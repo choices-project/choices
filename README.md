@@ -1,185 +1,143 @@
-# Choices - Democratic Platform
+# Choices Platform
 
-**Created:** January 19, 2025  
-**Status:** Active Development - Enhanced MVP Implementation  
-**Purpose:** Democratic platform for local candidate discovery and community voting  
-**Last Updated:** September 27, 2025 - CodeQL fixes completed, production-ready MVP
+**Civic Engagement & Democratic Decision-Making Platform**
 
----
-
-## 🎯 **Project Overview**
-
-Choices is a privacy-first democratic platform that levels the playing field for all candidates. We provide equal access to local representatives and enable community-driven voting on important issues.
-
-### **Core Features**
-- ✅ **Progressive Web App (PWA)** - Native app-like experience
-- ✅ **WebAuthn Authentication** - Biometric and passkey support
-- ✅ **Admin Dashboard** - Comprehensive admin controls
-- ✅ **Enhanced Feedback System** - Multi-step feedback collection
-- ✅ **Enhanced Onboarding** - 9-step comprehensive user setup
-- ✅ **Poll Management** - Create, vote, and moderate community polls
-- ✅ **Privacy-First Design** - User data stays on device when possible
+**Status**: 85% Complete, Production-Ready  
+**Last Updated**: November 5, 2025  
+**License**: See [LICENSE](LICENSE)
 
 ---
 
-## 🚀 **Quick Start**
+## 🚀 Quick Start
 
-### **Prerequisites**
-- Node.js 22.19.0+ (use Volta for version management)
-- npm 10.9.3+
-- Supabase account and project
-
-### **Setup**
+### For Developers
 ```bash
-# Install dependencies
+# See /docs/DEVELOPMENT.md for full setup
 npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
-
-# Run development server
-cd web && npm run dev
+npm run dev
 ```
 
-### **Documentation**
-- 📖 **[Complete Onboarding Guide](docs/ONBOARDING.md)** - Project setup and development
-- 🎯 **[Master Documentation](docs/MASTER_DOCUMENTATION.md)** - Complete documentation index
-- 🗺️ **[Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md)** - Current development status
-- 🧪 **[Unified Playbook](docs/UNIFIED_PLAYBOOK.md)** - Complete system documentation
-- 🏗️ **[System Architecture](docs/COMPREHENSIVE_SYSTEM_ARCHITECTURE_DISCOVERY.md)** - Technical architecture
+### For Users
+Visit the platform and explore:
+- Create and vote on polls
+- Connect with representatives
+- Filter content by your district
+- Privacy-first design
 
 ---
 
-## 📁 **Project Structure**
+## 📚 Documentation
 
-```
-Choices/
-├── docs/                              # All documentation
-│   ├── implementation/                # Current implementation guides
-│   ├── future-features/              # Future feature documentation
-│   └── *.md                          # Core documentation
-├── web/                              # Next.js application
-│   ├── app/                          # App Router pages
-│   ├── components/                   # React components
-│   ├── lib/                          # Utilities and configurations
-│   ├── tests/e2e/                    # End-to-end tests
-│   └── public/                       # Static assets
-├── supabase/                         # Database schema and migrations
-├── scratch/                          # Temporary files (clean regularly)
-└── archive/                          # Completed and obsolete features
-```
+**Core Documentation**: [/docs/README.md](docs/README.md)
 
----
+### Essential Docs
+- **[docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md)** - Project status (85% complete)
+- **[docs/FEATURES.md](docs/FEATURES.md)** - All features overview
+- **[docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)** - Complete navigation
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
+- **[docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - 70 tables, 19 RPC functions
 
-## 🧪 **Testing**
+### Latest Features (Nov 5, 2025)
+- **[docs/features/location.md](docs/features/location.md)** - District lookup & feed filtering
+- **[docs/features/analytics.md](docs/features/analytics.md)** - Analytics dashboard (6 charts)
+- **[docs/guides/USER_GUIDE_LOCATION_FEATURES.md](docs/guides/USER_GUIDE_LOCATION_FEATURES.md)** - User guide
+- **[docs/guides/ADMIN_GUIDE_ANALYTICS.md](docs/guides/ADMIN_GUIDE_ANALYTICS.md)** - Admin guide
 
-### **E2E Testing**
-```bash
-# Run all E2E tests
-cd web && npm run test:e2e
-
-# Run specific test suites
-npm run test:e2e -- --grep "Enhanced Onboarding"
-npm run test:e2e -- --grep "User Journeys"
-```
-
-### **Test Coverage**
-- ✅ **Authentication Flows** - Login, registration, WebAuthn
-- ✅ **User Journeys** - Complete workflows from registration to voting
-- ✅ **Poll Management** - Creation, voting, moderation
-- ✅ **Feature Flags** - All enabled/disabled states
-- ✅ **PWA Features** - Installation, offline, notifications
-- ✅ **Admin Functions** - Admin dashboard and controls
+### Implementation Notes
+- **[scratch/library-audit-nov2025/](scratch/library-audit-nov2025/)** - Detailed implementation history
 
 ---
 
-## 🏗️ **Current Development Status**
+## ✨ Key Features
 
-### **🟢 Production Ready (MVP)**
-- Core authentication with WebAuthn
-- Basic poll creation and voting
-- Admin dashboard
-- PWA functionality
-- Enhanced feedback system
-- Enhanced onboarding (9-step flow)
-
-### **🟡 Enhanced Features (In Progress)**
-- Enhanced profile management
-- Enhanced authentication system
-- Enhanced dashboard with analytics
-
-### **🔴 Future Features**
-- Automated poll generation
-- Advanced privacy features
-- Social sharing integration
-- Civics address lookup
+- ✅ **Privacy-First** - 16 privacy controls, all opt-in, GDPR/CCPA compliant
+- ✅ **District Filtering** - See civic content relevant to your congressional district
+- ✅ **Equal Voting** - All votes count equally (no weighting)
+- ✅ **Trust Tiers** - T0-T3 verification for analytics only
+- ✅ **Analytics Dashboard** - Comprehensive insights for admins (6 chart types)
+- ✅ **PWA** - Install as native app, offline-first
+- ✅ **WebAuthn** - Passwordless authentication
 
 ---
 
-## 🔧 **Development Guidelines**
+## 🏗️ Tech Stack
 
-### **For Agents**
-- 📋 **Follow the [Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md)**
-- 🧪 **Ensure complete E2E testing** before marking features complete
-- 📁 **Use `/scratch/` directory** for temporary files
-- 📚 **Update documentation** after each major implementation
-- 🗑️ **Clean up obsolete files** to maintain project clarity
-
-### **Code Standards**
-- TypeScript strict mode
-- ESLint configuration
-- Comprehensive E2E testing
-- Feature flag driven development
-- Privacy-first architecture
+- **Frontend**: Next.js 15 (App Router), React, TypeScript, Tailwind CSS
+- **State**: Zustand stores
+- **Database**: Supabase (PostgreSQL + Auth + RLS)
+- **Charts**: Recharts
+- **Auth**: WebAuthn, passkeys
+- **Deployment**: Vercel
 
 ---
 
-## 📊 **Feature Flags**
+## 📊 Project Status
 
-The platform uses a comprehensive feature flag system to control feature rollout:
+**Overall Progress**: 85%
 
-```typescript
-// Core MVP features (always enabled)
-CORE_AUTH: true
-CORE_POLLS: true
-WEBAUTHN: true
-PWA: true
-ADMIN: true
+| Component | Status |
+|-----------|--------|
+| Privacy System | ✅ 100% |
+| Location Features | ✅ 100% |
+| Analytics Dashboard | ✅ 85% |
+| Polling System | ✅ 100% |
+| Trust Tiers | ✅ 100% |
+| Civic Engagement | ✅ 100% |
+| PWA | ✅ 100% |
 
-// Enhanced MVP features (ready for implementation)
-ENHANCED_ONBOARDING: true
-ENHANCED_PROFILE: false
-ENHANCED_AUTH: false
-
-// Future features (development required)
-SOCIAL_SHARING: false
-AUTOMATED_POLLS: false
-```
-
-See [Feature Flags Documentation](docs/implementation/FEATURE_FLAGS_DOCUMENTATION.md) for complete details.
+**What's Left**: Real API endpoints (15%), widget system implementation, caching
 
 ---
 
-## 🤝 **Contributing**
+## 👥 For New Developers
 
-1. **Read the documentation** - Start with [ONBOARDING.md](docs/ONBOARDING.md)
-2. **Follow the roadmap** - Check [Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md)
-3. **Write comprehensive tests** - E2E testing is required
-4. **Update documentation** - Keep docs current with changes
-5. **Use feature flags** - Enable features gradually
-
----
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+1. Read [docs/README.md](docs/README.md)
+2. Read [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+3. Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+4. Check [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
+5. Review [scratch/library-audit-nov2025/](scratch/library-audit-nov2025/) for implementation details
 
 ---
 
-## 📞 **Support**
+## 🔒 Privacy & Security
 
-For questions or issues:
-- Check the [Unified Playbook](docs/UNIFIED_PLAYBOOK.md) for comprehensive guidance
-- Review the [Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md) for current status
-- Use the [scratch directory](scratch/) for temporary files during development
+- **Privacy Policy**: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md)
+- **Security**: [docs/SECURITY.md](docs/SECURITY.md)
+- **Trust Tiers**: [docs/TRUST_TIER_DESIGN.md](docs/TRUST_TIER_DESIGN.md)
+
+**Key Principles**:
+- Opt-in data collection (default: nothing collected)
+- K-anonymity enforcement (min 5 users per group)
+- District-only storage (never full addresses)
+- GDPR/CCPA compliant export & deletion
+
+---
+
+## 🤝 Contributing
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+
+**Quick Standards**:
+- Follow [docs/LINT_STANDARDS.md](docs/LINT_STANDARDS.md)
+- Zero lint errors required
+- Privacy-first always
+- Document everything
+
+---
+
+## 📝 License
+
+See [LICENSE](LICENSE)
+
+---
+
+## 📞 Links
+
+- **Documentation**: [docs/](docs/)
+- **Implementation Notes**: [scratch/library-audit-nov2025/](scratch/library-audit-nov2025/)
+- **Change Log**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
+
+---
+
+**Built with civic responsibility and technical excellence** 🗳️✨
+

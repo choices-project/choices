@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'

@@ -2,7 +2,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { AnalyticsService } from '@/lib/core/services/analytics'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 

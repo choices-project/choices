@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
 
     // Build query object for civics integration
-    const query = {
+    const query: any = {
       limit,
-      offset,
-      state: state ?? undefined,
-      party: party ?? undefined,
-      level: level as 'federal' | 'state' | 'local' | undefined,
-      query: search ?? undefined
+      offset
     };
+    if (state) query.state = state;
+    if (party) query.party = party;
+    if (level) query.level = level as 'federal' | 'state' | 'local';
+    if (search) query.query = search;
 
     // Use civics integration for real data with committee information
     const result = await civicsIntegration.getRepresentatives(query);

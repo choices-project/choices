@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '../dev.logger';
+import { logger } from '@/lib/utils/logger';
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
   UnifiedCampaignFinance
@@ -208,7 +208,7 @@ export class FinancialTransparencySystem {
    */
   async generateFinancialDashboard(candidateId: string, cycle: number): Promise<FinancialInfluenceDashboard> {
     try {
-      dev.logger.info('Generating financial influence dashboard', { candidateId, cycle });
+      logger.info('Generating financial influence dashboard', { candidateId, cycle });
 
       // Get campaign finance data
       const campaignFinance = await this.orchestrator.getCampaignFinance(candidateId, cycle);
@@ -244,7 +244,7 @@ export class FinancialTransparencySystem {
         opponentComparison
       };
 
-      dev.logger.info('Financial influence dashboard generated', { 
+      logger.info('Financial influence dashboard generated', { 
         candidateId, 
         independenceScore: influenceAnalysis.independenceScore,
         corporateInfluence: influenceAnalysis.corporateInfluence
@@ -253,7 +253,7 @@ export class FinancialTransparencySystem {
       return dashboard;
 
     } catch (error) {
-      dev.logger.error('Failed to generate financial dashboard', { candidateId, error });
+      logger.error('Failed to generate financial dashboard', { candidateId, error });
       throw new Error(`Failed to generate financial dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -263,7 +263,7 @@ export class FinancialTransparencySystem {
    */
   async generateBoughtOffIndicator(candidateId: string): Promise<BoughtOffIndicator> {
     try {
-      dev.logger.info('Generating bought off indicator', { candidateId });
+      logger.info('Generating bought off indicator', { candidateId });
 
       // Identify red flags
       const redFlags = await this.identifyRedFlags(candidateId);
@@ -281,7 +281,7 @@ export class FinancialTransparencySystem {
         transparencyScore
       };
 
-      dev.logger.info('Bought off indicator generated', { 
+      logger.info('Bought off indicator generated', { 
         candidateId,
         redFlagsCount: redFlags.length,
         independenceScore: independenceScore.overall,
@@ -291,7 +291,7 @@ export class FinancialTransparencySystem {
       return indicator;
 
     } catch (error) {
-      dev.logger.error('Failed to generate bought off indicator', { candidateId, error });
+      logger.error('Failed to generate bought off indicator', { candidateId, error });
       throw new Error(`Failed to generate bought off indicator: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -301,7 +301,7 @@ export class FinancialTransparencySystem {
    */
   async analyzeIssueInfluence(candidateId: string, issue: string): Promise<InfluenceAnalysis> {
     try {
-      dev.logger.info('Analyzing issue influence', { candidateId, issue });
+      logger.info('Analyzing issue influence', { candidateId, issue });
 
       // Get campaign finance data
       const campaignFinance = await this.orchestrator.getCampaignFinance(candidateId, 2024);
@@ -354,7 +354,7 @@ export class FinancialTransparencySystem {
       }
       this.influenceAnalyses.get(candidateId)!.push(analysis);
 
-      dev.logger.info('Issue influence analysis completed', { 
+      logger.info('Issue influence analysis completed', { 
         candidateId, 
         issue,
         influenceScore,
@@ -364,7 +364,7 @@ export class FinancialTransparencySystem {
       return analysis;
 
     } catch (error) {
-      dev.logger.error('Failed to analyze issue influence', { candidateId, issue, error });
+      logger.error('Failed to analyze issue influence', { candidateId, issue, error });
       throw new Error(`Failed to analyze issue influence: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -374,7 +374,7 @@ export class FinancialTransparencySystem {
    */
   async trackRevolvingDoor(candidateId: string): Promise<RevolvingDoorTracker> {
     try {
-      dev.logger.info('Tracking revolving door activity', { candidateId });
+      logger.info('Tracking revolving door activity', { candidateId });
 
       // Get government service history
       const governmentService = await this.getGovernmentServiceHistory(candidateId);
@@ -408,7 +408,7 @@ export class FinancialTransparencySystem {
       // Cache the tracker
       this.revolvingDoorData.set(candidateId, tracker);
 
-      dev.logger.info('Revolving door tracking completed', { 
+      logger.info('Revolving door tracking completed', { 
         candidateId,
         revolvingDoorScore: revolvingDoorScore.overall
       });
@@ -416,7 +416,7 @@ export class FinancialTransparencySystem {
       return tracker;
 
     } catch (error) {
-      dev.logger.error('Failed to track revolving door', { candidateId, error });
+      logger.error('Failed to track revolving door', { candidateId, error });
       throw new Error(`Failed to track revolving door: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -426,7 +426,7 @@ export class FinancialTransparencySystem {
    */
   async mapCorporateInfluence(candidateId: string): Promise<CorporateInfluenceMap> {
     try {
-      dev.logger.info('Mapping corporate influence', { candidateId });
+      logger.info('Mapping corporate influence', { candidateId });
 
       // Get corporate connections
       const corporateConnections = await this.getCorporateConnections(candidateId);
@@ -466,7 +466,7 @@ export class FinancialTransparencySystem {
       // Cache the influence map
       this.corporateInfluenceMaps.set(candidateId, influenceMap);
 
-      dev.logger.info('Corporate influence mapping completed', { 
+      logger.info('Corporate influence mapping completed', { 
         candidateId,
         connectionsCount: corporateConnections.length,
         conflictsCount: conflictsOfInterest.length
@@ -475,7 +475,7 @@ export class FinancialTransparencySystem {
       return influenceMap;
 
     } catch (error) {
-      dev.logger.error('Failed to map corporate influence', { candidateId, error });
+      logger.error('Failed to map corporate influence', { candidateId, error });
       throw new Error(`Failed to map corporate influence: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -666,7 +666,7 @@ export class FinancialTransparencySystem {
     };
   }> {
     try {
-      dev.logger.info('Calculating transparency score for candidate', { candidateId });
+      logger.info('Calculating transparency score for candidate', { candidateId });
       
       // Get candidate's financial data and voting records
       const orchestrator = await createUnifiedDataOrchestrator();
@@ -697,7 +697,7 @@ export class FinancialTransparencySystem {
         }
       };
     } catch (error) {
-      dev.logger.error('Error calculating transparency score', { candidateId, error });
+      logger.error('Error calculating transparency score', { candidateId, error });
       // Return default scores if calculation fails
       return {
         overall: 50,
@@ -777,7 +777,7 @@ export class FinancialTransparencySystem {
       
       return 50; // Default score
     } catch (error) {
-      dev.logger.error('Error calculating response time', { candidateId, error });
+      logger.error('Error calculating response time', { candidateId, error });
       return 50;
     }
   }
@@ -957,7 +957,7 @@ export class FinancialTransparencySystem {
 
   private async getGovernmentServiceHistory(candidateId: string): Promise<RevolvingDoorEntry[]> {
     try {
-      dev.logger.info('Getting government service history for candidate', { candidateId });
+      logger.info('Getting government service history for candidate', { candidateId });
       
       // Note: getCandidateGovernmentService method not available in orchestrator
       // TODO: Implement government service history retrieval
@@ -989,14 +989,14 @@ export class FinancialTransparencySystem {
         };
       });
     } catch (error) {
-      dev.logger.error('Error getting government service history', { candidateId, error });
+      logger.error('Error getting government service history', { candidateId, error });
     return [];
     }
   }
 
   private async getPostGovernmentEmployment(candidateId: string): Promise<PostGovernmentEmployment[]> {
     try {
-      dev.logger.info('Getting post-government employment for candidate', { candidateId });
+      logger.info('Getting post-government employment for candidate', { candidateId });
       
       const orchestrator = await createUnifiedDataOrchestrator();
       const employmentHistory = await orchestrator.getCandidatePostGovernmentEmployment(candidateId);
@@ -1027,7 +1027,7 @@ export class FinancialTransparencySystem {
         };
       });
     } catch (error) {
-      dev.logger.error('Error getting post-government employment', { candidateId, error });
+      logger.error('Error getting post-government employment', { candidateId, error });
     return [];
     }
   }
@@ -1154,7 +1154,7 @@ export class FinancialTransparencySystem {
 
   private async getCorporateConnections(candidateId: string): Promise<CorporateConnection[]> {
     try {
-      dev.logger.info('Getting corporate connections for candidate', { candidateId });
+      logger.info('Getting corporate connections for candidate', { candidateId });
       
       const orchestrator = await createUnifiedDataOrchestrator();
       const connections = await orchestrator.getCandidateCorporateConnections(candidateId);
@@ -1183,7 +1183,7 @@ export class FinancialTransparencySystem {
         };
       });
     } catch (error) {
-      dev.logger.error('Error getting corporate connections', { candidateId, error });
+      logger.error('Error getting corporate connections', { candidateId, error });
     return [];
     }
   }
@@ -1267,7 +1267,7 @@ export class FinancialTransparencySystem {
         }
       }
     } catch (error) {
-      dev.logger.error('Error identifying conflicts of interest', { candidateId, error });
+      logger.error('Error identifying conflicts of interest', { candidateId, error });
     }
     
     return conflicts.sort((a, b) => {

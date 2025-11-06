@@ -8,7 +8,7 @@
  * - Admin dashboard submissions
  */
 
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 export type ParsedFeedback = {

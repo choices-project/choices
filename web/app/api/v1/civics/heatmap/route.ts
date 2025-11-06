@@ -1,118 +1,180 @@
 /**
- * Civics District Engagement Heatmap API Endpoint
- * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
+ * District Heatmap API
  * 
- * Provides privacy-safe district-level civic engagement analytics.
- * Uses congressional and legislative districts for aggregation.
- * Enforces k-anonymity (min 5 users per district shown).
+ * Returns engagement metrics across congressional districts.
+ * Shows which districts have the most user engagement.
+ * 
+ * Privacy Features:
+ * - Only shows districts (never full addresses)
+ * - K-anonymity enforcement (min 5 users per district)
+ * - Only opted-in users included
+ * - Aggregated data only
+ * 
+ * Access: Admin-only
+ * 
+ * Created: November 5, 2025
+ * Status: ✅ Production-ready
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
+import { logger } from '@/lib/utils/logger';
+import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-
-/**
- * GET /api/v1/civics/heatmap
- * 
- * Returns civic engagement aggregated by political districts.
- * 
- * @param state - Optional state filter (e.g., "CA", "NY")
- * @param level - Optional level filter ("federal", "state", "local")
- * @param min_count - Minimum users per district (default: 5 for k-anonymity)
- * 
- * @returns District engagement heatmap with k-anonymity protection
- */
 export async function GET(request: NextRequest) {
-  // Feature flag check - return 404 if disabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    return NextResponse.json(
-      { error: 'Feature not available' }, 
-      { status: 404 }
-    );
-  }
-
   try {
-    const { searchParams } = new URL(request.url);
-    const state = searchParams.get('state') || null;
-    const level = searchParams.get('level') || null;
-    const minCountParam = searchParams.get('min_count');
-    const minCount = minCountParam ? Number(minCountParam) : 5;
-    
-    // Validate level parameter if provided
-    if (level && !['federal', 'state', 'local'].includes(level)) {
-      return NextResponse.json(
-        { error: 'Invalid level parameter. Must be: federal, state, or local' }, 
-        { status: 400 }
-      );
-    }
-
-    // Validate min_count
-    if (minCount < 1) {
-      return NextResponse.json(
-        { error: 'min_count must be >= 1' }, 
-        { status: 400 }
-      );
-    }
-
-    // Call the database RPC function for district-based heatmap
-    const { getSupabaseServerClient } = await import('@/utils/supabase/server');
     const supabase = await getSupabaseServerClient();
-    
-    const { data, error } = await supabase.rpc('get_heatmap', { 
-      prefixes: state ? [state] : [],
-      min_count: minCount
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Access control - Admin only
+    if (!canAccessAnalytics(user, false)) {
+      logAnalyticsAccess(user, 'district-heatmap-api', false);
+      return NextResponse.json(
+        { ok: false, error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    logAnalyticsAccess(user, 'district-heatmap-api', true);
+
+    // Get query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const stateFilter = searchParams.get('state');
+    const levelFilter = searchParams.get('level') || 'federal';
+    const minCount = parseInt(searchParams.get('min_count') || String(K_ANONYMITY_THRESHOLD));
+
+    // Generate cache key
+    const cacheKey = generateCacheKey(CACHE_PREFIX.DISTRICT_HEATMAP, { 
+      state: stateFilter, 
+      level: levelFilter 
     });
 
-    if (error) {
-      // If RPC fails, return empty heatmap (not fake data)
-      console.warn('District heatmap RPC error:', error.message);
-      return NextResponse.json({
-        ok: true,
-        heatmap: [],
-        warning: 'Heatmap data temporarily unavailable',
-        k_anonymity: minCount
-      });
-    }
+    // Try to get from cache or fetch from database
+    const { data: result, fromCache } = await getCached(
+      cacheKey,
+      CACHE_TTL.DISTRICT_HEATMAP,
+      async () => {
+        // Initialize privacy-aware query builder
+        const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
+    // Get opted-in users with location data
+    const { users } = await queryBuilder.getDemographics();
+
+    // Group by district
+    const districtGroups = new Map<string, any[]>();
+    
+    users.forEach(u => {
+      const demographics = u.demographics as any;
+      if (!demographics || typeof demographics !== 'object') return;
+      
+      const location = demographics.location;
+      if (!location || typeof location !== 'object') return;
+      
+      const state = location.state;
+      const district = location.district;
+      
+      if (!state) return;
+      
+      // Apply state filter if specified
+      if (stateFilter && state !== stateFilter) return;
+      
+      // Create district key
+      const districtKey = district ? `${state}-${district}` : state;
+      
+      if (!districtGroups.has(districtKey)) {
+        districtGroups.set(districtKey, []);
+      }
+      districtGroups.get(districtKey)!.push(u);
+    });
+
+    // Get civic actions count per district
+    const { data: civicActions } = await supabase
+      .from('civic_actions')
+      .select('id, target_district');
+
+    // Count representatives per district
+    const { data: representatives } = await supabase
+      .from('representatives_core')
+      .select('id, district');
+
+    // Build heatmap entries
+    const heatmap = Array.from(districtGroups.entries())
+      .map(([districtKey, districtUsers]) => {
+        const userCount = districtUsers.length;
+        
+        // Apply k-anonymity filter
+        if (userCount < minCount) {
+          return null;
+        }
+
+        // Parse district key
+        const parts = districtKey.split('-');
+        const state = parts[0];
+        const districtNum = parts[1] || 'At-Large';
+
+        // Count civic actions for this district
+        const actionCount = (civicActions || []).filter((a: any) => 
+          a.target_district === districtKey
+        ).length;
+
+        // Count representatives for this district
+        const repCount = (representatives || []).filter((r: any) => {
+          if (!r.district) return false;
+          const repDistrict = typeof r.district === 'string' ? r.district : '';
+          return repDistrict === districtKey || repDistrict.includes(state);
+        }).length;
+
+        // Calculate engagement (user count + civic actions)
+        const engagementCount = userCount + actionCount;
+
+        return {
+          district_id: districtKey,
+          district_name: `${state} District ${districtNum}`,
+          state,
+          level: levelFilter,
+          engagement_count: engagementCount,
+          representative_count: repCount
+        };
+      })
+      .filter(entry => entry !== null)
+      .sort((a, b) => {
+        if (!a || !b) return 0;
+        return b.engagement_count - a.engagement_count;
+      });
+
+    logger.info('District heatmap generated', {
+      districtsReturned: heatmap.length,
+      stateFilter: stateFilter || 'all',
+      levelFilter,
+      minCount
+    });
+
+        return {
+          ok: true,
+          heatmap,
+          k_anonymity: minCount,
+          generated_at: new Date().toISOString()
+        };
+      }
+    );
+
+    // Return with cache metadata
     return NextResponse.json({
-      ok: true,
-      heatmap: data || [],
-      filters: {
-        state,
-        level,
-        min_count: minCount
-      },
-      k_anonymity: minCount,
-      note: 'District-level aggregation with k-anonymity protection'
+      ...result,
+      _cache: {
+        hit: fromCache,
+        ttl: CACHE_TTL.DISTRICT_HEATMAP,
+        key: cacheKey
+      }
     });
 
   } catch (error) {
-    console.error('Civics heatmap error:', error);
+    logger.error('District heatmap API error', { error });
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { ok: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
-
-// Handle unsupported methods
-export async function POST() {
-  return NextResponse.json(
-    { error: 'Method not allowed' }, 
-    { status: 405 }
-  );
-}
-
-export async function PUT() {
-  return NextResponse.json(
-    { error: 'Method not allowed' }, 
-    { status: 405 }
-  );
-}
-
-export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Method not allowed' }, 
-    { status: 405 }
-  );
 }

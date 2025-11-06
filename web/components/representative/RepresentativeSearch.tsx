@@ -28,8 +28,7 @@ export function RepresentativeSearch({
   const [filters, setFilters] = useState<Partial<RepresentativeSearchQuery>>({
     state: '',
     party: '',
-    office: '',
-    level: undefined
+    office: ''
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -61,8 +60,7 @@ export function RepresentativeSearch({
     setFilters({
       state: '',
       party: '',
-      office: '',
-      level: undefined
+      office: ''
     });
   };
 

@@ -335,13 +335,16 @@ export function FilingGuideWizard({
   }
 
   const nextStep = () => {
+    const currentStepData = steps[currentStep];
+    if (!currentStepData) return;
+    
     if (currentStep < steps.length - 1) {
-      markStepComplete(steps[currentStep].id)
+      markStepComplete(currentStepData.id)
       const next = currentStep + 1
       setCurrentStep(next)
       saveProgress(next, completedSteps)
     } else {
-      markStepComplete(steps[currentStep].id)
+      markStepComplete(currentStepData.id)
       if (onComplete) onComplete()
     }
   }
@@ -355,7 +358,9 @@ export function FilingGuideWizard({
   }
 
   const goToStep = (index: number) => {
-    if (index <= currentStep || completedSteps.has(steps[index].id)) {
+    const targetStep = steps[index];
+    if (!targetStep) return;
+    if (index <= currentStep || completedSteps.has(targetStep.id)) {
       setCurrentStep(index)
       saveProgress(index, completedSteps)
     }
@@ -364,6 +369,10 @@ export function FilingGuideWizard({
   const currentStepData = steps[currentStep]
   const isLastStep = currentStep === steps.length - 1
   const progress = ((currentStep + 1) / steps.length) * 100
+
+  if (!currentStepData) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Card className={className}>

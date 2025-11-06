@@ -16,6 +16,7 @@ import React, { useEffect } from 'react';
 import { RepresentativeList  } from '@/components/representative/RepresentativeList';
 import { RepresentativeSearch } from '@/components/representative/RepresentativeSearch';
 import { Badge } from '@/components/ui/badge';
+import { logger } from '@/lib/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,7 +47,7 @@ export default function RepresentativesPage() {
   };
 
   const handleRepresentativeClick = (representative: any) => {
-    console.log('Clicked representative:', representative.name);
+    logger.debug('Clicked representative:', representative.name);
     // TODO: Navigate to representative detail page
   };
 
@@ -127,7 +128,7 @@ export default function RepresentativesPage() {
                   <RepresentativeList
                     representatives={searchResults?.data?.representatives ?? []}
                     loading={loading}
-                    error={error ?? undefined}
+                    {...(error && { error })}
                     onRepresentativeClick={handleRepresentativeClick}
                   />
                 </CardContent>

@@ -7,7 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 import type {
   GeographicLookup

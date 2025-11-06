@@ -5,7 +5,7 @@
  * oversight and guidance for the ranked choice democracy platform.
  */
 
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 
 export type AdvisoryBoardMember = {
   id: string;

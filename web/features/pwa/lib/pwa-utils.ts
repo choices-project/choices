@@ -227,8 +227,8 @@ export class PWAManager {
 export class PWAWebAuthn {
   // Use existing WebAuthn implementation instead of duplicating
   async registerUser(username: string): Promise<any> {
-    // Delegate to existing WebAuthn registration flow
-    const response = await fetch('/api/v1/auth/webauthn/register/options', {
+    // Delegate to native WebAuthn registration flow
+    const response = await fetch('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -242,8 +242,8 @@ export class PWAWebAuthn {
   }
 
   async authenticateUser(): Promise<any> {
-    // Delegate to existing WebAuthn authentication flow
-    const response = await fetch('/api/v1/auth/webauthn/authenticate/options', {
+    // Delegate to native WebAuthn authentication flow
+    const response = await fetch('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });

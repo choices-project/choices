@@ -361,8 +361,8 @@ test.describe('API Endpoints - V2', () => {
     const loginData = await loginResponse.json();
     authToken = loginData.token;
 
-    // Test WebAuthn registration options endpoint
-    const registerOptionsResponse = await page.request.post('/api/v1/auth/webauthn/register/options', {
+    // Test WebAuthn registration options endpoint (native)
+    const registerOptionsResponse = await page.request.post('/api/v1/auth/webauthn/native/register/options', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
@@ -373,8 +373,8 @@ test.describe('API Endpoints - V2', () => {
     const registerOptionsData = await registerOptionsResponse.json();
     expect(registerOptionsData).toHaveProperty('challenge');
 
-    // Test WebAuthn authentication options endpoint
-    const authOptionsResponse = await page.request.post('/api/v1/auth/webauthn/authenticate/options', {
+    // Test WebAuthn authentication options endpoint (native)
+    const authOptionsResponse = await page.request.post('/api/v1/auth/webauthn/native/authenticate/options', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },

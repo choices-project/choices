@@ -5,7 +5,7 @@
  * Transforms raw API responses into structured, normalized data for database storage.
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 // withOptional not used in this file
 // Define AddressLookupResult locally since it's not exported from civics/ingest
 type AddressLookupResult = {
@@ -291,19 +291,21 @@ export class DataTransformationPipeline {
         }
         
         const repObj = rep as Record<string, unknown>;
-        const normalized: NormalizedRepresentative = {
+        const normalized: any = {
           id: String(repObj.id ?? ''),
           name: String(repObj.name ?? ''),
           party: String(repObj.party ?? ''),
           office: String(repObj.office ?? ''),
           level: this.determineLevel(String(repObj.office ?? '')),
           jurisdiction: data.state,
-          district: repObj.district ? String(repObj.district) : undefined,
           contact: repObj.contact as NormalizedRepresentative['contact'],
           socialMedia: repObj.socialMedia as NormalizedRepresentative['socialMedia'],
           sources: ['google-civic'],
           lastUpdated: new Date().toISOString()
         };
+        if (repObj.district) {
+          normalized.district = String(repObj.district);
+        }
 
         if (this.validateRepresentative(normalized)) {
           recordsValid++;

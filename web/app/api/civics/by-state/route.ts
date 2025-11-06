@@ -109,12 +109,14 @@ export async function GET(request: NextRequest) {
   const clientIP = request.headers.get('x-forwarded-for') ??
                    request.headers.get('x-real-ip') ??
                    '127.0.0.1';
-  const userAgent = request.headers.get('user-agent') ?? undefined;
+  const userAgent = request.headers.get('user-agent');
 
+    const rateLimitOptions: any = { maxRequests: 50, windowMs: 15 * 60 * 1000 };
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
     const rateLimitResult = await apiRateLimiter.checkLimit(
       clientIP,
       '/api/civics/by-state',
-      { maxRequests: 50, windowMs: 15 * 60 * 1000, userAgent }
+      rateLimitOptions
     );
 
     if (!rateLimitResult.allowed) {

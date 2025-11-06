@@ -69,6 +69,17 @@ This document lists all environment variables required for the Choices applicati
   - Production: Should use verified domain (e.g., `candidates@yourdomain.com`)
   - Used by: Candidate journey emails
 
+### Google Civic Information API
+- `GOOGLE_CIVIC_API_KEY` (required for address lookup)
+  - Google Civic Information API key for district resolution
+  - Used by: `/api/v1/civics/address-lookup` endpoint
+  - Security: ⚠️ Server-only, never expose to client
+  - Purpose: Convert address → district (no full addresses stored)
+  - Get from: https://console.cloud.google.com/apis/credentials
+  - Enable API: Google Civic Information API
+  - Restrict key: HTTP referrers (production domain) OR IP addresses (server)
+  - Note: Address is used once for lookup, only district is stored
+
 ### Cron Jobs
 - `CRON_SECRET` (required for production)
   - Secret key for authenticating cron job requests
@@ -94,6 +105,7 @@ This document lists all environment variables required for the Choices applicati
 - **Read Operations**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Rate Limiting**: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
 - **Write Operations**: `SUPABASE_SERVICE_ROLE_KEY` (via `getSupabaseAdminClient()`)
+- **Address Lookup**: `GOOGLE_CIVIC_API_KEY` (converts address to district only)
 
 ### Authentication
 - **Supabase Auth**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -144,15 +156,28 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-redis-token
 
+# Google Civic API (Address Lookup)
+GOOGLE_CIVIC_API_KEY=your-google-civic-api-key
+
+# Email Service (Resend)
+RESEND_API_KEY=re_your-resend-api-key
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+
 # Application
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 NEXT_PUBLIC_APP_VERSION=1.0.0
+
+# Cron Jobs
+CRON_SECRET=your-cron-secret
 
 # Optional: Sentry
 NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
 
 # Optional: Admin
 ADMIN_MONITORING_KEY=your-admin-key
+
+# Privacy Peppers (Development)
+PRIVACY_PEPPER_DEV=dev-pepper-for-hmac-hashing
 ```
 
 

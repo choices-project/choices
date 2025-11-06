@@ -29,6 +29,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { logger } from '@/lib/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,7 +52,7 @@ export default function RepresentativeProfilePage() {
       setError(null);
 
       try {
-        console.log('🔄 Loading representative:', representativeId);
+        logger.debug('🔄 Loading representative:', representativeId);
         await representativeStore.getState().getRepresentativeById(parseInt(representativeId));
         
         const state = representativeStore.getState();

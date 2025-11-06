@@ -10,7 +10,7 @@
 
 import type { ZodSchema } from 'zod';
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { safeParse } from '@/lib/validation/validator';
 
 /**

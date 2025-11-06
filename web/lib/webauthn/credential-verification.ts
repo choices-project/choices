@@ -15,7 +15,7 @@ import {
   type AuthenticatorTransportFuture
 } from '@simplewebauthn/server';
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 import { 
   arrayBufferToBase64url,

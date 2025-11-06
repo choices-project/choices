@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 
 // Sophisticated Analytics data types with advanced features
 type AnalyticsEvent = {
@@ -177,15 +177,16 @@ type AnalyticsStore = {
 }
 
 // Default analytics preferences
+// 🔒 PRIVACY FIRST: All tracking DISABLED by default (opt-in required)
 const defaultPreferences: AnalyticsPreferences = {
-  trackingEnabled: true,
-  performanceTracking: true,
-  errorTracking: true,
-  userBehaviorTracking: true,
-  marketingTracking: false,
+  trackingEnabled: false,  // 🔒 User must explicitly opt-in
+  performanceTracking: false,  // 🔒 User must explicitly opt-in
+  errorTracking: true,  // Error tracking OK (helps improve app, no PII)
+  userBehaviorTracking: false,  // 🔒 User must explicitly opt-in
+  marketingTracking: false,  // 🔒 User must explicitly opt-in
   dataRetention: 365, // 1 year
-  anonymizeData: true,
-  shareWithThirdParties: false,
+  anonymizeData: true,  // Always anonymize
+  shareWithThirdParties: false,  // Never share
 };
 
 // Create analytics store with middleware
@@ -204,7 +205,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         chartShowTrends: false,
         chartShowConfidence: false,
         preferences: defaultPreferences,
-        trackingEnabled: true,
+        trackingEnabled: false,  // 🔒 Disabled by default - user must opt-in
         sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         isLoading: false,
         isTracking: false,
@@ -212,8 +213,15 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         error: null,
         
         // Event tracking actions
+        // 🔒 PRIVACY: Only tracks if user has explicitly enabled analytics
         trackEvent: (event) => set((state) => {
+          // 🔒 PRIVACY CHECK: Respect both store-level and preference-level settings
           if (!state.trackingEnabled || !state.preferences.trackingEnabled) {
+            logger.debug('Analytics tracking skipped - user has not opted in', {
+              type: event.type,
+              trackingEnabled: state.trackingEnabled,
+              preferencesEnabled: state.preferences.trackingEnabled
+            });
             return state;
           }
           
@@ -230,7 +238,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
           const maxEvents = 1000;
           const eventsToKeep = updatedEvents.slice(-maxEvents);
           
-          logger.info('Analytics event tracked', {
+          logger.debug('Analytics event tracked (user consented)', {
             type: event.type,
             category: event.category,
             action: event.action,
@@ -255,8 +263,8 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             metadata: {
               ...(metadata ?? {}),
               page,
-              userAgent: navigator.userAgent,
-              referrer: document.referrer,
+              userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+              referrer: typeof document !== 'undefined' ? document.referrer : '',
             },
           });
         },

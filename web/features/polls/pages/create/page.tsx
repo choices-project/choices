@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 // ... existing code ...
 import { Separator } from '@/components/ui/separator';
-import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import {
   usePollWizardData,
   usePollWizardStep,
@@ -68,13 +68,45 @@ export default function CreatePollPage() {
 
   const handlePublish = async () => {
     try {
-      devLog('Creating poll with data:', data);
-      // TODO: Implement actual poll creation API call
-      alert('Poll creation not yet fully implemented. Data is ready to submit.');
-      window.location.href = '/dashboard';
+      logger.debug('Creating poll with data:', data);
+      
+      // Call existing poll creation API (POST /api/polls)
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          question: data.title, // Question defaults to title
+          options: data.options,
+          category: data.category,
+          tags: data.tags,
+          settings: {
+            allowAnonymousVotes: data.settings.allowAnonymousVotes,
+            requireVerification: data.settings.requireAuthentication,
+            allowMultipleVotes: data.settings.allowMultipleVotes,
+            showResultsBeforeClose: data.settings.showResults,
+            allowComments: data.settings.allowComments,
+            privacyLevel: data.privacyLevel,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create poll');
+      }
+
+      const result = await response.json();
+      logger.info('Poll created successfully', { pollId: result.data.id });
+      
+      // Redirect to the new poll
+      window.location.href = `/polls/${result.data.id}`;
     } catch (error) {
-      devLog('Error creating poll:', error);
-      alert('Failed to create poll. Please try again.');
+      logger.error('Error creating poll:', error as Error);
+      alert(`Failed to create poll: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

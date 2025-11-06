@@ -8,7 +8,7 @@
  * - Crypto-shredding: deleting wrapped CEK = irreversible deletion
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type E2EEKeyBag = {
   localCEK: CryptoKey;

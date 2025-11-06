@@ -12,7 +12,7 @@ import {
   withRateLimit,
   apiUsageMonitor 
 } from '@/lib/integrations/rate-limiting';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 import { 
   createDataTransformationPipeline,
@@ -347,13 +347,14 @@ export class DataIngestionPipeline {
     // 2. Process them in batches with proper rate limiting
     // 3. Store results in database
     
-    // This is a simplified example - in practice, you'd have a comprehensive list of addresses
+    // Sample addresses for testing batch ingestion
+    // In production, replace with actual address list from configuration
     const sampleAddresses = [
-      '1600 Pennsylvania Avenue NW, Washington, DC 20500',
-      '1 Hacker Way, Menlo Park, CA 94025',
-      '1 Apple Park Way, Cupertino, CA 95014',
-      '350 5th Ave, New York, NY 10118',
-      '1 Microsoft Way, Redmond, WA 98052'
+      '1600 Pennsylvania Avenue NW, Washington, DC 20500', // White House
+      '1 Capitol St NE, Washington, DC 20002', // US Capitol
+      '1 First Street NE, Washington, DC 20543', // Supreme Court
+      '401 F St NW, Washington, DC 20001', // National Archives
+      '900 E Broad St, Richmond, VA 23219', // Virginia State Capitol
     ];
 
     let recordsProcessed = 0;

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { logger } from '@/lib/utils/logger';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Privacy status error:', error);
+    logger.error('Privacy status error', { error });
     return NextResponse.json({
       status: 'inactive',
       protections: {},

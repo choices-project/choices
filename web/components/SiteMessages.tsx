@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import React, { useState, useEffect, useCallback } from 'react'
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 type SiteMessage = {
   id: string

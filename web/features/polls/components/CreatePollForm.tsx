@@ -3,10 +3,10 @@
 import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { withOptional } from '@/lib/util/objects';
-import { PrivacyLevelSelector } from '@/shared/components/PrivacyLevelSelector';
+import { PrivacyLevelSelector } from '@/components/ui/PrivacyLevelSelector';
 
 type CreatePollFormProps = {
   onSubmit: (pollData: CreatePollData) => Promise<void>;

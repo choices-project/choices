@@ -11,6 +11,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { featureFlagManager } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function GET(_request: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error fetching feature flags:', error);
+    logger.error('Error fetching feature flags:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -83,7 +84,7 @@ export async function PATCH(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error updating feature flag:', error);
+    logger.error('Error updating feature flag:', error);
     return NextResponse.json(
       { 
         success: false, 

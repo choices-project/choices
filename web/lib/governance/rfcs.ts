@@ -5,7 +5,7 @@
  * democracy platform, enabling community-driven decision making.
  */
 
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 export type RFCData = {
@@ -81,9 +81,26 @@ export type RFCNotification = {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * RFC Manager
+ * 
+ * Manages the lifecycle of Request for Comments (RFC) documents
+ * including creation, updates, commenting, voting, and notifications.
+ * 
+ * Features:
+ * - Auto-numbering of RFCs
+ * - Comment threading
+ * - Voting/approval system
+ * - Stakeholder notifications
+ * - Status tracking
+ */
 export class RFCManager {
+  /**
+   * RFC Template for creating new RFCs
+   * Auto-numbering handled by createRFC method
+   */
   public static readonly RFC_TEMPLATE: RFCData = {
-    title: "RFC-XXXX: [Title]",
+    title: "RFC Title (will be auto-numbered)",
     summary: "Brief description of the proposal",
     motivation: "Why this change is needed",
     detailedDesign: "Technical implementation details",

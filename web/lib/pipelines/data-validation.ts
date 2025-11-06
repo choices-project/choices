@@ -5,7 +5,7 @@
  * quality checks, deduplication, and consistency validation.
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 import type { 
   NormalizedRepresentative,

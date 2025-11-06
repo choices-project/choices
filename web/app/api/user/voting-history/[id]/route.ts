@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * CHOICES PLATFORM - USER VOTING HISTORY API
@@ -33,7 +34,7 @@ export async function GET(
     });
 
     if (error) {
-      console.error('User voting history error:', error);
+      logger.error('User voting history error:', error);
       return NextResponse.json({ 
         error: 'Failed to get user voting history',
         details: error.message 
@@ -92,7 +93,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('User voting history API error:', error);
+    logger.error('User voting history API error:', error);
     return NextResponse.json({ 
       error: 'Internal server error',
       platform: 'choices',

@@ -5,7 +5,7 @@
  * and implements proper backoff strategies for good API citizenship.
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 export type RateLimitConfig = {

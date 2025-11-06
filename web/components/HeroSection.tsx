@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 type HeroSectionProps = {
   isAuthenticated?: boolean;

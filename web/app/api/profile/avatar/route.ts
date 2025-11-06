@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
 import { getCurrentUser } from '@/lib/core/auth/utils'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log successful upload for audit trail
-    console.log(`Avatar uploaded successfully: ${uploadData?.path} for user: ${user.userId}`)
+    devLog('Avatar uploaded successfully', { path: uploadData?.path, userId: user.userId })
 
     // Get public URL
     const { data: urlData } = supabase.storage

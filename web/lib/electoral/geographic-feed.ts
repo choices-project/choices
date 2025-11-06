@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '../dev.logger';
+import { logger } from '@/lib/utils/logger';
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
   UserLocation,
@@ -80,7 +80,7 @@ export class GeographicElectoralFeed {
     locationInput: { zipCode?: string; address?: string; coordinates?: { lat: number; lng: number } }
   ): Promise<ElectoralFeed> {
     try {
-      dev.logger.info('Generating electoral feed', { userId, locationInput });
+      logger.info('Generating electoral feed', { userId, locationInput });
 
       // Step 1: Resolve location to jurisdictions
       const location = await this.resolveLocation(locationInput);
@@ -115,7 +115,7 @@ export class GeographicElectoralFeed {
         engagementOpportunities
       };
 
-      dev.logger.info('Electoral feed generated successfully', {
+      logger.info('Electoral feed generated successfully', {
         userId,
         officialsCount: Object.values(currentOfficials).flat().length,
         upcomingElectionsCount: upcomingElections.length,
@@ -126,7 +126,7 @@ export class GeographicElectoralFeed {
       return feed;
 
     } catch (error) {
-      dev.logger.error('Failed to generate electoral feed', { userId, error });
+      logger.error('Failed to generate electoral feed', { userId, error });
       throw new Error(`Failed to generate electoral feed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -202,7 +202,7 @@ export class GeographicElectoralFeed {
       // This would integrate with local government APIs or manual data collection
 
     } catch (error) {
-      dev.logger.error('Failed to get current officials', { error });
+      logger.error('Failed to get current officials', { error });
     }
 
     return officials;
@@ -215,7 +215,7 @@ export class GeographicElectoralFeed {
     const elections: ElectoralRace[] = [];
 
     try {
-      dev.logger.info('Getting upcoming elections for location', { location });
+      logger.info('Getting upcoming elections for location', { location });
       
       // Get election data from orchestrator
       const orchestrator = await createUnifiedDataOrchestrator();
@@ -276,7 +276,7 @@ export class GeographicElectoralFeed {
       });
 
     } catch (error) {
-      dev.logger.error('Failed to get upcoming elections', { error });
+      logger.error('Failed to get upcoming elections', { error });
     }
 
     return elections;
@@ -287,7 +287,7 @@ export class GeographicElectoralFeed {
    */
   private async getActiveRaces(location: UserLocation): Promise<ElectoralRace[]> {
     try {
-      dev.logger.info('Getting active races for location', { location });
+      logger.info('Getting active races for location', { location });
       
       // Get all upcoming elections first
       const upcomingElections = await this.getUpcomingElections(location);
@@ -318,7 +318,7 @@ export class GeographicElectoralFeed {
             });
           }
         } catch (error) {
-          dev.logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
+          logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
         }
         
         return Object.assign({}, race, {
@@ -328,7 +328,7 @@ export class GeographicElectoralFeed {
       
       return enrichedRaces;
     } catch (error) {
-      dev.logger.error('Failed to get active races', { error });
+      logger.error('Failed to get active races', { error });
       return [];
     }
   }
@@ -346,7 +346,7 @@ export class GeographicElectoralFeed {
     activeRaces: ElectoralRace[]
   ): Promise<Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }>> {
     try {
-      dev.logger.info('Identifying key issues for jurisdiction', { location });
+      logger.info('Identifying key issues for jurisdiction', { location });
       
       const issues: Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }> = [];
       
@@ -386,7 +386,7 @@ export class GeographicElectoralFeed {
         return importanceOrder[b.importance] - importanceOrder[a.importance];
       });
     } catch (error) {
-      dev.logger.error('Failed to identify key issues', { error });
+      logger.error('Failed to identify key issues', { error });
       return [];
     }
   }

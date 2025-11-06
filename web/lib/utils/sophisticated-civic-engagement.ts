@@ -20,7 +20,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Sophisticated civic action types supported by our platform
@@ -213,7 +213,7 @@ export async function createSophisticatedCivicAction(
 ): Promise<SophisticatedCivicAction | null> {
   try {
     // category column added in November 2025 migration
-    const civicAction: SophisticatedCivicAction = {
+    const civicAction: any = {
       id: crypto.randomUUID(),
       title: actionData.title,
       description: actionData.description,
@@ -228,13 +228,15 @@ export async function createSophisticatedCivicAction(
       created_by: userId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      end_date: actionData.endDate,
       metadata: {
         created_via: 'web_platform',
         user_agent: navigator.userAgent,
         ip_address: 'tracked_separately'
       }
     };
+    if (actionData.endDate) {
+      civicAction.end_date = actionData.endDate;
+    }
 
     logger.info('Sophisticated civic action created', {
       actionId: civicAction.id,

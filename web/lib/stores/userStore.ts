@@ -15,6 +15,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { UserProfile, ProfileUpdateData as ProfileUpdateDataType } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 import type { BaseStore } from './types';
+import { logger } from '@/lib/utils/logger';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
@@ -293,11 +294,10 @@ export const useUserStore = create<UserStore>()(
       
       updateProfile: (updates) => set((state) => {
         if (state.profile) {
-          state.profile = { 
-            ...state.profile, 
-            ...updates,
+          const newProfile: any = Object.assign({}, state.profile, updates, {
             updated_at: new Date().toISOString()
-          };
+          });
+          state.profile = newProfile;
         }
       }),
       
@@ -444,7 +444,7 @@ export const useUserStore = create<UserStore>()(
         return result.data ?? [];
       },
       
-      handleAddressUpdate: async (address) => {
+      handleAddressUpdate: async (address, temporary = false) => {
         const currentState = _get();
         set((state) => {
           state.addressLoading = true;
@@ -454,8 +454,29 @@ export const useUserStore = create<UserStore>()(
           const representatives = await currentState.lookupAddress(address);
           
           set((state) => {
-            state.currentAddress = address;
+            // 🔒 PRIVACY: Only store address if:
+            // 1. User has opted in to location collection, OR
+            // 2. Temporary flag is false and we have consent
+            const profile = state.profile;
+            const canStoreLocation = profile?.privacy_settings?.collectLocationData === true;
+            
+            // Always update representatives (they requested them)
             state.representatives = representatives;
+            
+            // Only store address if user has consented or it's temporary
+            if (canStoreLocation && !temporary) {
+              state.currentAddress = address;
+              logger.info('Location stored (user consented)', { address });
+            } else {
+              // Don't store address, just show representatives
+              state.currentAddress = ''; // Clear stored address
+              if (temporary) {
+                logger.debug('Location used temporarily (not stored)', { address });
+              } else {
+                logger.debug('Location not stored (no consent)', { address });
+              }
+            }
+            
             state.showAddressForm = false;
             state.newAddress = '';
             state.savedSuccessfully = true;

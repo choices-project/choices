@@ -92,6 +92,9 @@ export default [
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
       
+      // Console logging - enforce use of logger
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+      
       // Unused imports
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [

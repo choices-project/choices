@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Enhanced analytics API error:', error);
+    logger.error('Enhanced analytics API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -8,7 +8,7 @@
  * backward compatibility while avoiding code duplication.
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/util/objects';
 
 import {

@@ -63,8 +63,8 @@ export function PasskeyLogin({
       // Check if platform authenticator is available
       const hasPlatformAuth = await checkPlatformAuthenticator();
       
-      // Start WebAuthn authentication
-      const response = await fetch('/api/v1/auth/webauthn/authenticate/options', {
+      // Start WebAuthn authentication (native implementation)
+      const response = await fetch('/api/v1/auth/webauthn/native/authenticate/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,8 +98,8 @@ export function PasskeyLogin({
         throw new Error('Authentication was cancelled or failed');
       }
 
-      // Complete authentication
-      const completeResponse = await fetch('/api/v1/auth/webauthn/authenticate/verify', {
+      // Complete authentication (native implementation)
+      const completeResponse = await fetch('/api/v1/auth/webauthn/native/authenticate/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

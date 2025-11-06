@@ -82,13 +82,12 @@ export function EnhancedSearch({ onSearch, loading = false, className = '' }: En
   }, [partyFilter, officeFilter, stateFilter, levelFilter]);
 
   const handleSearch = () => {
-    const query: RepresentativeSearchQuery = {
-      query: searchQuery || undefined,
-      party: partyFilter || undefined,
-      office: officeFilter || undefined,
-      state: stateFilter || undefined,
-      level: levelFilter as 'federal' | 'state' | 'local' | undefined,
-    };
+    const query: any = {};
+    if (searchQuery) query.query = searchQuery;
+    if (partyFilter) query.party = partyFilter;
+    if (officeFilter) query.office = officeFilter;
+    if (stateFilter) query.state = stateFilter;
+    if (levelFilter) query.level = levelFilter as 'federal' | 'state' | 'local';
 
     // Remove undefined values
     const cleanQuery = Object.fromEntries(

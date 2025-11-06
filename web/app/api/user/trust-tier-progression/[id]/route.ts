@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * CHOICES PLATFORM - TRUST TIER PROGRESSION API
@@ -33,7 +34,7 @@ export async function GET(
     });
 
     if (error) {
-      console.error('Trust tier progression error:', error);
+      logger.error('Trust tier progression error', { error, userId: id });
       return NextResponse.json({ 
         error: 'Failed to get trust tier progression',
         details: error.message 
@@ -82,7 +83,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Trust tier progression API error:', error);
+    logger.error('Trust tier progression API error', { error });
     return NextResponse.json({ 
       error: 'Internal server error',
       platform: 'choices',

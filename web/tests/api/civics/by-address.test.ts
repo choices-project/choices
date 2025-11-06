@@ -82,11 +82,11 @@ describe('GET /api/civics/by-address', () => {
     jest.clearAllMocks();
 
     // Get mocked modules
-    apiRateLimiter = (await import('@/lib/rate-limiting/api-rate-limiter')).apiRateLimiter;
-    getSupabaseServerClient = (await import('@/utils/supabase/server')).getSupabaseServerClient;
+    apiRateLimiter = (await import('@/lib/rate-limiting/api-rate-limiter')).apiRateLimiter as any;
+    getSupabaseServerClient = (await import('@/utils/supabase/server')).getSupabaseServerClient as any;
 
     // Default successful rate limit
-    apiRateLimiter.checkLimit.mockResolvedValue({
+    (apiRateLimiter as any).checkLimit.mockResolvedValue({
       allowed: true,
       remaining: 49,
       resetTime: Date.now() + 15 * 60 * 1000,
@@ -94,7 +94,7 @@ describe('GET /api/civics/by-address', () => {
     });
 
     // Default Supabase setup
-    getSupabaseServerClient.mockResolvedValue({
+    (getSupabaseServerClient as any).mockResolvedValue({
       from: mockFrom,
     });
 
@@ -106,10 +106,10 @@ describe('GET /api/civics/by-address', () => {
       order: mockOrder,
     };
     
-    mockFrom.mockReturnValue(chain);
-    mockSelect.mockReturnValue(chain);
-    mockEq.mockReturnValue(chain);
-    mockOrder.mockResolvedValue({
+    (mockFrom as any).mockReturnValue(chain);
+    (mockSelect as any).mockReturnValue(chain);
+    (mockEq as any).mockReturnValue(chain);
+    (mockOrder as any).mockResolvedValue({
       data: mockRepresentatives,
       error: null,
     });
@@ -149,7 +149,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return 429 when rate limit is exceeded', async () => {
-    apiRateLimiter.checkLimit.mockResolvedValue({
+    (apiRateLimiter as any).checkLimit.mockResolvedValue({
       allowed: false,
       remaining: 0,
       resetTime: Date.now() + 900000,
@@ -172,7 +172,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return empty array when no representatives found', async () => {
-    mockOrder.mockResolvedValue({
+    (mockOrder as any).mockResolvedValue({
       data: [],
       error: null,
     });
@@ -190,7 +190,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return 500 when database query fails', async () => {
-    mockOrder.mockResolvedValue({
+    (mockOrder as any).mockResolvedValue({
       data: null,
       error: { message: 'Database connection failed' },
     });
@@ -206,7 +206,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return 500 when Supabase client is not available', async () => {
-    getSupabaseServerClient.mockResolvedValue(null);
+    (getSupabaseServerClient as any).mockResolvedValue(null);
 
     const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     const response = await GET(request);
@@ -235,7 +235,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should include rate limit headers in response', async () => {
-    apiRateLimiter.checkLimit.mockResolvedValue({
+    (apiRateLimiter as any).checkLimit.mockResolvedValue({
       allowed: true,
       remaining: 25,
       resetTime: Date.now() + 10 * 60 * 1000,

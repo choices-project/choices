@@ -32,7 +32,7 @@ const RepresentativeCard = dynamic(() => import('@/components/representative/Rep
   ssr: false
 });
 
-const UnifiedFeed = dynamic(() => import('@/features/feeds/components/UnifiedFeed'), {
+const UnifiedFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.UnifiedFeedRefactored })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
   ssr: false
 });

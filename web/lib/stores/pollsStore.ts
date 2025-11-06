@@ -26,7 +26,7 @@ import type {
   PollOptionRow 
 } from '@/features/polls/types';
 
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 
 // ============================================================================
 // STORE STATE TYPES

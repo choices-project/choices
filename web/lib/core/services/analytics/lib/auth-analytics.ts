@@ -14,7 +14,7 @@
  * @since 2024-12-27
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
 
 // Analytics event types

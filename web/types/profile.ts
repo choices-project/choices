@@ -64,13 +64,94 @@ export type NotificationPreferences = {
   follows: boolean;
 }
 
+/**
+ * Comprehensive Privacy Settings
+ * 
+ * PRIVACY PARAMOUNT: All data collection requires explicit opt-in
+ * Default: ALL settings false (privacy-first approach)
+ * 
+ * Updated: November 5, 2025
+ */
 export type PrivacySettings = {
-  profile_visibility: 'public' | 'private' | 'friends';
-  show_email: boolean;
-  show_activity: boolean;
-  allow_messages: boolean;
-  share_demographics: boolean;
-  allow_analytics: boolean;
+  // ===== DATA COLLECTION CONTROLS =====
+  // User must explicitly opt-in to any data collection
+  
+  /** Allow collection of location/address data */
+  collectLocationData: boolean;
+  
+  /** Allow storage of voting history */
+  collectVotingHistory: boolean;
+  
+  /** Allow tracking of hashtag/interest data */
+  trackInterests: boolean;
+  
+  /** Allow tracking of feed interactions (likes, reads, etc.) */
+  trackFeedActivity: boolean;
+  
+  /** Allow collection of analytics/telemetry data */
+  collectAnalytics: boolean;
+  
+  /** Allow tracking of representative interactions */
+  trackRepresentativeInteractions: boolean;
+  
+  // ===== VISIBILITY CONTROLS =====
+  // Control what others can see (separate from collection)
+  
+  /** Show read history to others */
+  showReadHistory: boolean;
+  
+  /** Show bookmarks to others */
+  showBookmarks: boolean;
+  
+  /** Show likes to others */
+  showLikes: boolean;
+  
+  /** Share activity with others */
+  shareActivity: boolean;
+  
+  // ===== TRUST & BIOMETRIC CONTROLS =====
+  
+  /** Participate in trust tier scoring system */
+  participateInTrustTier: boolean;
+  
+  // ===== PERSONALIZATION CONTROLS =====
+  
+  /** Allow feed personalization based on interests */
+  personalizeFeeds: boolean;
+  
+  /** Allow personalized recommendations */
+  personalizeRecommendations: boolean;
+  
+  // ===== DATA RETENTION CONTROLS =====
+  
+  /** Retain voting history long-term */
+  retainVotingHistory: boolean;
+  
+  /** Retain search history */
+  retainSearchHistory: boolean;
+  
+  /** Retain location history */
+  retainLocationHistory: boolean;
+  
+  // ===== LEGACY FIELDS (Deprecated but kept for compatibility) =====
+  
+  /** @deprecated Use visibility controls instead */
+  profile_visibility?: 'public' | 'private' | 'friends';
+  
+  /** @deprecated Use collectAnalytics instead */
+  allow_analytics?: boolean;
+  
+  /** @deprecated Use shareActivity instead */
+  show_activity?: boolean;
+  
+  /** @deprecated Use separate messaging preferences */
+  allow_messages?: boolean;
+  
+  /** @deprecated Use shareActivity instead */
+  share_demographics?: boolean;
+  
+  /** @deprecated Use separate email preferences */
+  show_email?: boolean;
 }
 
 export type FeedPreferences = {

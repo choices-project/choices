@@ -3,11 +3,11 @@ import type { makeMockSupabase } from './supabase-mock';
 type Handles = ReturnType<typeof makeMockSupabase>['handles'];
 
 export function resetAllMocks(handles: Handles) {
-  handles.single.mockClear();
-  handles.maybeSingle.mockClear();
-  handles.list.mockClear();
-  handles.mutate.mockClear();
-  handles.rpc.mockClear();
+  (handles as any).single?.mockClear?.();
+  (handles as any).maybeSingle?.mockClear?.();
+  (handles as any).list?.mockClear?.();
+  (handles as any).mutate?.mockClear?.();
+  (handles as any).rpc?.mockClear?.();
 }
 
 

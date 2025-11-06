@@ -5,7 +5,7 @@
  * with proper validation and error handling.
  */
 
-import { logger } from '../../logger';
+import { logger } from '@/lib/utils/logger';
 import { withOptional } from '../../util/objects';
 
 import type { 

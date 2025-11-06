@@ -10,7 +10,7 @@ import { errorMessages } from './config';
 
 export async function beginRegister(fetcher = fetch) {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/register/options', {
+    const opts = await fetcher('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ export async function beginRegister(fetcher = fetch) {
 
     const attResp = await startRegistration(opts);
     
-    return fetcher('/api/v1/auth/webauthn/register/verify', {
+    return fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export async function beginRegister(fetcher = fetch) {
 
 export async function beginAuthenticate(fetcher = fetch) {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/authenticate/options', {
+    const opts = await fetcher('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export async function beginAuthenticate(fetcher = fetch) {
 
     const assertion = await startAuthentication(opts);
     
-    return fetcher('/api/v1/auth/webauthn/authenticate/verify', {
+    return fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

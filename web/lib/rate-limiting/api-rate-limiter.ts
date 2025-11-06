@@ -29,12 +29,11 @@ export type RateLimitResult = {
 }
 
 class ApiRateLimiter {
-  private defaultOptions: Required<Omit<RateLimitOptions, 'userAgent'>> & Pick<RateLimitOptions, 'userAgent'> = {
+  private defaultOptions: Required<Omit<RateLimitOptions, 'userAgent'>> & Partial<Pick<RateLimitOptions, 'userAgent'>> = {
     maxRequests: 50,
     windowMs: 15 * 60 * 1000, // 15 minutes
     skipSuccessfulRequests: false,
-    skipFailedRequests: false,
-    userAgent: undefined
+    skipFailedRequests: false
   };
 
   async checkLimit(
@@ -59,15 +58,18 @@ class ApiRateLimiter {
 
       // Record violation in monitoring system if rate limited (Upstash-backed)
       if (!result.allowed) {
+        const violationData: any = {
+          ip,
+          endpoint,
+          timestamp: Date.now(),
+          count: result.totalHits,
+          maxRequests: config.maxRequests
+        };
+        if (options.userAgent) {
+          violationData.userAgent = options.userAgent;
+        }
         void upstashRateLimiter
-          .recordViolationExternal({
-            ip,
-            endpoint,
-            timestamp: Date.now(),
-            count: result.totalHits,
-            maxRequests: config.maxRequests,
-            userAgent: options.userAgent
-          })
+          .recordViolationExternal(violationData)
           .catch(error => {
             logger.error('Failed to record rate limit violation:', error);
           });

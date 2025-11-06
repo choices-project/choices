@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 // Removed unused import: mockActivityFeed
 import type { BreakingNewsStory, PollContext } from './mock-data';

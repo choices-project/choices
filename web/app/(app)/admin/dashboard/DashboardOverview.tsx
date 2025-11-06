@@ -16,7 +16,7 @@ import React from 'react';
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/lib/admin/hooks';
 import { mockChartData } from '@/lib/admin/mock-data';
 import { useAdminStore } from '@/lib/admin/store';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 

@@ -165,18 +165,19 @@ export class CivicsIntegrationService {
           committeeMap.set(repId, []);
         }
 
-        committeeMap.get(repId)!.push({
+        const committeeData: any = {
           id: committee.openstates_person_id,
           representative_id: repId,
           committee_name: committee.title ?? 'Unknown Committee',
           role: this.mapRoleType(committee.role_type),
           jurisdiction: committee.jurisdiction,
-          start_date: committee.start_date ?? undefined,
-          end_date: committee.end_date ?? undefined,
           is_current: committee.is_current ?? false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
+        };
+        if (committee.start_date) committeeData.start_date = committee.start_date;
+        if (committee.end_date) committeeData.end_date = committee.end_date;
+        committeeMap.get(repId)!.push(committeeData);
       }
 
       return committeeMap;

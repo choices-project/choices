@@ -22,7 +22,7 @@ import type {
   AdminUser,
 } from '../../features/admin/types';
 import { getSupabaseBrowserClient } from '../../utils/supabase/client';
-import { logger } from '../logger';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Admin store state interface

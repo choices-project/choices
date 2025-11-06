@@ -1,7 +1,7 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

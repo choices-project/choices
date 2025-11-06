@@ -13,6 +13,7 @@ import {
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,14 +68,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (chalErr) {
-      console.error('Challenge persist failed:', chalErr);
+      logger.error('Challenge persist failed:', chalErr);
       return NextResponse.json({ error: 'Challenge persist failed' }, { status: 500 });
     }
 
     return NextResponse.json(responseOptions);
 
   } catch (error) {
-    console.error('Authentication options error:', error);
+    logger.error('Authentication options error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

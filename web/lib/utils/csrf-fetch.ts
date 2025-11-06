@@ -41,12 +41,15 @@ export async function csrfPost(url: string, data?: unknown, options: RequestInit
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   
-  return csrfFetch(url, {
+  const fetchOptions: RequestInit = {
     ...options,
     method: 'POST',
-    headers,
-    body: data ? JSON.stringify(data) : undefined
-  });
+    headers
+  };
+  if (data) {
+    fetchOptions.body = JSON.stringify(data);
+  }
+  return csrfFetch(url, fetchOptions);
 }
 
 /**
@@ -56,12 +59,15 @@ export async function csrfPut(url: string, data?: unknown, options: RequestInit 
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   
-  return csrfFetch(url, {
+  const fetchOptions: RequestInit = {
     ...options,
     method: 'PUT',
-    headers,
-    body: data ? JSON.stringify(data) : undefined
-  });
+    headers
+  };
+  if (data) {
+    fetchOptions.body = JSON.stringify(data);
+  }
+  return csrfFetch(url, fetchOptions);
 }
 
 /**

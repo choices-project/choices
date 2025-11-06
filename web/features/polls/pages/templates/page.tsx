@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [

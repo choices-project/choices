@@ -71,8 +71,8 @@ export function PasskeyRegister({
       // Check if platform authenticator is available
       const hasPlatformAuth = await checkPlatformAuthenticator();
       
-      // Start WebAuthn registration
-      const response = await fetch('/api/v1/auth/webauthn/register/options', {
+      // Start WebAuthn registration (native implementation)
+      const response = await fetch('/api/v1/auth/webauthn/native/register/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,8 +106,8 @@ export function PasskeyRegister({
         throw new Error('Failed to create credential');
       }
 
-      // Complete registration
-      const completeResponse = await fetch('/api/v1/auth/webauthn/register/verify', {
+      // Complete registration (native implementation)
+      const completeResponse = await fetch('/api/v1/auth/webauthn/native/register/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

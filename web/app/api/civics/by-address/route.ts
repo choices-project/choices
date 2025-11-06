@@ -63,13 +63,14 @@ export async function GET(req: NextRequest) {
 
     // Rate limiting check - 50 requests per 15 minutes per IP
     const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? '127.0.0.1';
-    const userAgent = req.headers.get('user-agent') ?? undefined;
+    const userAgent = req.headers.get('user-agent');
     
-    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/by-address', {
+    const rateLimitOptions: any = {
       maxRequests: 50,
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      userAgent
-    });
+      windowMs: 15 * 60 * 1000 // 15 minutes
+    };
+    if (userAgent) rateLimitOptions.userAgent = userAgent;
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/civics/by-address', rateLimitOptions);
 
     if (!rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded for address lookup', { ip, endpoint: '/api/civics/by-address' });
