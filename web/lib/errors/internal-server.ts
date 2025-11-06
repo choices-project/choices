@@ -5,6 +5,7 @@
  */
 
 import { ApplicationError, type ErrorDetails } from './base';
+import { withOptional } from '@/lib/util/objects';
 
 export class InternalServerError extends ApplicationError {
   constructor(message: string = 'Internal server error', details?: ErrorDetails) {
@@ -14,7 +15,7 @@ export class InternalServerError extends ApplicationError {
 
 export class DatabaseError extends ApplicationError {
   constructor(operation: string, details?: ErrorDetails) {
-    super(`Database error during ${operation}`, 500, 'DATABASE_ERROR', Object.assign({}, details, {
+    super(`Database error during ${operation}`, 500, 'DATABASE_ERROR', withOptional(details || {}, {
       constraint: operation
     }));
   }
@@ -22,7 +23,7 @@ export class DatabaseError extends ApplicationError {
 
 export class ExternalServiceError extends ApplicationError {
   constructor(service: string, details?: ErrorDetails) {
-    super(`External service '${service}' is unavailable`, 500, 'EXTERNAL_SERVICE_ERROR', Object.assign({}, details, {
+    super(`External service '${service}' is unavailable`, 500, 'EXTERNAL_SERVICE_ERROR', withOptional(details || {}, {
       field: 'service',
       value: service
     }));
@@ -31,7 +32,7 @@ export class ExternalServiceError extends ApplicationError {
 
 export class VoteProcessingError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error processing vote for poll '${pollId}'`, 500, 'VOTE_PROCESSING_ERROR', Object.assign({}, details, {
+    super(`Error processing vote for poll '${pollId}'`, 500, 'VOTE_PROCESSING_ERROR', withOptional(details || {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -40,7 +41,7 @@ export class VoteProcessingError extends ApplicationError {
 
 export class ResultsCalculationError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error calculating results for poll '${pollId}'`, 500, 'RESULTS_CALCULATION_ERROR', Object.assign({}, details, {
+    super(`Error calculating results for poll '${pollId}'`, 500, 'RESULTS_CALCULATION_ERROR', withOptional(details || {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -49,7 +50,7 @@ export class ResultsCalculationError extends ApplicationError {
 
 export class ConfigurationError extends ApplicationError {
   constructor(configKey: string, details?: ErrorDetails) {
-    super(`Configuration error for '${configKey}'`, 500, 'CONFIGURATION_ERROR', Object.assign({}, details, {
+    super(`Configuration error for '${configKey}'`, 500, 'CONFIGURATION_ERROR', withOptional(details || {}, {
       field: 'configKey',
       value: configKey
     }));

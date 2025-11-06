@@ -5,6 +5,7 @@
  */
 
 import { ApplicationError, type ErrorDetails } from './base';
+import { withOptional } from '@/lib/util/objects';
 
 export class NotFoundError extends ApplicationError {
   constructor(resource: string = 'Resource', details?: ErrorDetails) {
@@ -14,7 +15,7 @@ export class NotFoundError extends ApplicationError {
 
 export class PollNotFoundError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Poll with ID '${pollId}' not found`, 404, 'POLL_NOT_FOUND', Object.assign({}, details, {
+    super(`Poll with ID '${pollId}' not found`, 404, 'POLL_NOT_FOUND', withOptional(details || {}, {
       field: 'pollId',
       value: pollId
     }));
@@ -23,7 +24,7 @@ export class PollNotFoundError extends ApplicationError {
 
 export class UserNotFoundError extends ApplicationError {
   constructor(userId: string, details?: ErrorDetails) {
-    super(`User with ID '${userId}' not found`, 404, 'USER_NOT_FOUND', Object.assign({}, details, {
+    super(`User with ID '${userId}' not found`, 404, 'USER_NOT_FOUND', withOptional(details || {}, {
       field: 'userId',
       value: userId
     }));
@@ -32,7 +33,7 @@ export class UserNotFoundError extends ApplicationError {
 
 export class VoteNotFoundError extends ApplicationError {
   constructor(voteId: string, details?: ErrorDetails) {
-    super(`Vote with ID '${voteId}' not found`, 404, 'VOTE_NOT_FOUND', Object.assign({}, details, {
+    super(`Vote with ID '${voteId}' not found`, 404, 'VOTE_NOT_FOUND', withOptional(details || {}, {
       field: 'voteId',
       value: voteId
     }));
@@ -41,7 +42,7 @@ export class VoteNotFoundError extends ApplicationError {
 
 export class OptionNotFoundError extends ApplicationError {
   constructor(optionId: string, details?: ErrorDetails) {
-    super(`Option with ID '${optionId}' not found`, 404, 'OPTION_NOT_FOUND', Object.assign({}, details, {
+    super(`Option with ID '${optionId}' not found`, 404, 'OPTION_NOT_FOUND', withOptional(details || {}, {
       field: 'optionId',
       value: optionId
     }));

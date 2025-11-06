@@ -436,7 +436,7 @@ export const useUserStore = create<UserStore>()(
       }),
       
       lookupAddress: async (address) => {
-        const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
         if (!response.ok) {
           throw new Error('Address lookup failed');
         }

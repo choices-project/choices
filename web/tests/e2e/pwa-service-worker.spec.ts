@@ -402,7 +402,7 @@ test.describe('PWA Service Worker - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
 
     // Check service worker with civics context

@@ -53,7 +53,7 @@ export class RepresentativeService {
       // Note: page is not part of RepresentativeSearchQuery type, using default pagination
       
       // Call API route (client-safe)
-      const response = await fetch(`/api/civics/by-state?${params.toString()}`);
+      const response = await fetch(`/api/v1/civics/by-state?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
       }
@@ -94,7 +94,7 @@ export class RepresentativeService {
   async getRepresentativeById(id: number): Promise<RepresentativeApiResponse> {
     try {
       // Call API route (client-safe)
-      const response = await fetch(`/api/civics/representative/${id}`);
+      const response = await fetch(`/api/v1/civics/representative/${id}`);
       if (!response.ok) {
         if (response.status === 404) {
           return {
@@ -129,7 +129,7 @@ export class RepresentativeService {
       const params = new URLSearchParams();
       params.append('address', query.address);
       
-      const response = await fetch(`/api/civics/by-state?${params.toString()}`);
+      const response = await fetch(`/api/v1/civics/by-state?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
       }

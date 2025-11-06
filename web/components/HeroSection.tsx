@@ -45,7 +45,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         setIsLoadingTrending(true);
         
         // Fetch trending polls from our new API
-        const response = await fetch('/api/trending-polls');
+        const response = await fetch('/api/trending?type=polls');
         const data = await response.json();
         
         if (data.success && data.trendingPolls.length > 0) {

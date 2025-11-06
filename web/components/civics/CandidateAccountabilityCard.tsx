@@ -278,7 +278,7 @@ export function CandidateAccountabilityCard({
         params.append('district', representative.district);
       }
       
-      fetch(`/api/civics/representative/0/alternatives?${params.toString()}`)
+      fetch(`/api/v1/civics/representative/0/alternatives?${params.toString()}`)
         .then(res => res.json())
         .then(data => {
           if (data.ok && data.data?.alternatives) {

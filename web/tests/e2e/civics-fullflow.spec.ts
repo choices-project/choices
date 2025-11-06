@@ -91,7 +91,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Wait for API call to complete (may use address-lookup or by-address)
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Verify jurisdiction cookie is set
@@ -141,7 +141,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
       await page.click('[data-testid="address-submit"]');
       await page.waitForResponse((response) => 
         response.url().includes('/api/v1/civics/address-lookup') || 
-        response.url().includes('/api/civics/by-address')
+        response.url().includes('/api/v1/civics/address-lookup')
       );
     }
     
@@ -167,7 +167,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Verify cookie security attributes
@@ -259,7 +259,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     // Wait for complete flow
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     await page.goto('/dashboard');
     await waitForPageReady(page);
@@ -293,7 +293,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Navigate to dashboard on mobile
@@ -332,7 +332,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Verify jurisdiction cookie is set
@@ -364,7 +364,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Authenticate user
@@ -427,7 +427,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
       await page.click('[data-testid="address-submit"]');
       await page.waitForResponse((response) => 
         response.url().includes('/api/v1/civics/address-lookup') || 
-        response.url().includes('/api/civics/by-address')
+        response.url().includes('/api/v1/civics/address-lookup')
       );
       
       // Navigate to dashboard
@@ -466,7 +466,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.click('[data-testid="address-submit"]');
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Should work correctly
