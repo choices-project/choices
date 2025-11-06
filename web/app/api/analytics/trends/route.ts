@@ -15,30 +15,25 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    // Access control - Admin or T3
-    const allowT3 = true; // Trends are less sensitive, allow T3 access
-    if (!canAccessAnalytics(user, allowT3)) {
-      logAnalyticsAccess(user, 'trends-api', false);
-      return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+  const allowT3 = true;
+  if (!canAccessAnalytics(user, allowT3)) {
+    logAnalyticsAccess(user, 'trends-api', false);
+    return forbiddenError('Unauthorized - Admin or T3 required');
+  }
 
-    logAnalyticsAccess(user, 'trends-api', true);
+  logAnalyticsAccess(user, 'trends-api', true);
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;

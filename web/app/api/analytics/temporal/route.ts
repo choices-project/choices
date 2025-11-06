@@ -16,30 +16,25 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(_request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    // Access control - Admin or T3
-    const allowT3 = true; // Temporal patterns are less sensitive
-    if (!canAccessAnalytics(user, allowT3)) {
-      logAnalyticsAccess(user, 'temporal-api', false);
-      return NextResponse.json(
-        { ok: false, error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+  const allowT3 = true;
+  if (!canAccessAnalytics(user, allowT3)) {
+    logAnalyticsAccess(user, 'temporal-api', false);
+    return forbiddenError('Unauthorized - Admin or T3 required');
+  }
 
-    logAnalyticsAccess(user, 'temporal-api', true);
+  logAnalyticsAccess(user, 'temporal-api', true);
 
     // Get query parameters
     const searchParams = _request.nextUrl.searchParams;
