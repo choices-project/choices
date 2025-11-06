@@ -1,36 +1,19 @@
-/**
- * My Representatives API Endpoint
- * 
- * Returns all representatives that the authenticated user is following
- * 
- * Created: January 26, 2025
- * Status: ✅ PRODUCTION
- */
+import { type NextRequest } from 'next/server';
 
-import { type NextRequest, NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * GET /api/representatives/my
- * Get all representatives the user is following
- */
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -67,13 +50,10 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (followedError) {
-      logger.error('Error fetching followed representatives:', followedError);
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch followed representatives' },
-        { status: 500 }
-      );
-    }
+  if (followedError) {
+    logger.error('Error fetching followed representatives:', followedError);
+    return errorResponse('Failed to fetch followed representatives', 500);
+  }
 
     // Get total count
     const { count, error: countError } = await (supabase as any)
@@ -101,27 +81,12 @@ export async function GET(request: NextRequest) {
       representative: follow.representatives_core
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        representatives,
-        total: count ?? 0,
-        limit,
-        offset,
-        hasMore: (count ?? 0) > offset + limit
-      }
-    });
-
-  } catch (error) {
-    logger.error('Unexpected error in my representatives endpoint:', error);
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    representatives,
+    total: count ?? 0,
+    limit,
+    offset,
+    hasMore: (count ?? 0) > offset + limit
+  });
+});
 

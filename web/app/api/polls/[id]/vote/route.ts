@@ -295,8 +295,8 @@ export const POST = withErrorHandling(async (
       })
     } else {
       // Unsupported voting method
-      return validationError({ 
-        voting_method: `Voting method '${pollData.voting_method}' is not supported. Supported: single, approval, multiple, ranked, quadratic, range` 
+      return validationError({
+        voting_method: `Voting method '${pollData.voting_method}' is not supported. Supported: single, approval, multiple, ranked, quadratic, range`
       });
     }
 });

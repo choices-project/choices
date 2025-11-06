@@ -1,41 +1,27 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-/**
- * GET /api/candidate/platform
- * Get candidate platform(s) for current user or specific user
- */
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Get current user from Supabase session
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !authUser) {
+    return authError('Authentication required');
+  }
 
     const searchParams = request.nextUrl.searchParams
     const userId = searchParams.get('userId') ?? authUser.id
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      )
-    }
+  if (!userId) {
+    return validationError({ userId: 'User ID required' });
+  }
 
     // If requesting own platform or admin, get all (including drafts)
     // Otherwise only get active verified platforms
@@ -45,73 +31,43 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to fetch platform' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      platforms: platforms ?? []
-    })
-  } catch (error) {
-    logger.error('Failed to fetch platforms:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (error) {
+    return errorResponse('Failed to fetch platform', 500);
   }
-}
 
-/**
- * PUT /api/candidate/platform/:id
- * Update candidate platform
- */
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient()
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      )
-    }
+  return successResponse({
+    platforms: platforms ?? []
+  });
+});
 
-    // Get current user from Supabase session
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient()
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
+
+  const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !authUser) {
+    return authError('Authentication required');
+  }
 
     const body = await request.json()
     const { id, ...updates } = body
 
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Platform ID required' },
-        { status: 400 }
-      )
-    }
+  if (!id) {
+    return validationError({ id: 'Platform ID required' });
+  }
 
-    // Verify user owns this platform
-    const { data: existingPlatform } = await supabase
-      .from('candidate_platforms')
-      .select('user_id')
-      .eq('id', id)
-      .single()
+  const { data: existingPlatform } = await supabase
+    .from('candidate_platforms')
+    .select('user_id')
+    .eq('id', id)
+    .single()
 
-    if (!existingPlatform || existingPlatform.user_id !== authUser.id) {
-      return NextResponse.json(
-        { error: 'Not authorized to update this platform' },
-        { status: 403 }
-      )
-    }
+  if (!existingPlatform || existingPlatform.user_id !== authUser.id) {
+    return forbiddenError('Not authorized to update this platform');
+  }
 
     // Prepare update data
     const updateData: Record<string, unknown> = {
@@ -137,23 +93,12 @@ export async function PUT(request: NextRequest) {
       .select()
       .single()
 
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to update platform' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      platform: updatedPlatform
-    })
-  } catch (error) {
-    logger.error('Failed to update platform:', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (error) {
+    return errorResponse('Failed to update platform', 500);
   }
-}
+
+  return successResponse({
+    platform: updatedPlatform
+  });
+});
 
