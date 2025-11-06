@@ -298,11 +298,10 @@ export const usePWAStore = create<PWAStore>()(
             
             // PWA uninstallation is handled by the browser
             set((state) => ({
-            installation: {
-              ...state.installation,
-              isInstalled: false,
-              installedAt: undefined,
-            }
+              installation: {
+                ...state.installation,
+                isInstalled: false,
+              }
             }));
             
             logger.info('PWA uninstalled');

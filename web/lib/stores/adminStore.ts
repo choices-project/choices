@@ -362,16 +362,21 @@ export const useAdminStore = create<AdminStore>()(
             }
 
             // Transform data to match AdminUser interface
-            const adminUsers: AdminUser[] = users?.map((user) => ({
-              id: user.id || user.user_id,
-              email: user.email,
-              name: user.display_name ?? 'Unknown User',
-              role: user.is_admin ? 'admin' : 'user',
-              status: user.is_active ? 'active' : 'inactive',
-              is_admin: user.is_admin ?? false,
-              created_at: user.created_at ?? '',
-              last_login: user.updated_at ?? undefined
-            })) ?? [];
+            const adminUsers: AdminUser[] = users?.map((user) => {
+              const base: Record<string, unknown> = {
+                id: user.id || user.user_id,
+                email: user.email,
+                name: user.display_name ?? 'Unknown User',
+                role: user.is_admin ? 'admin' : 'user',
+                status: user.is_active ? 'active' : 'inactive',
+                is_admin: user.is_admin ?? false,
+                created_at: user.created_at ?? '',
+              };
+              
+              if (user.updated_at) base.last_login = user.updated_at;
+              
+              return base as AdminUser;
+            }) ?? [];
 
             set({ users: adminUsers });
             

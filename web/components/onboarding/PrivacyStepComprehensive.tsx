@@ -84,7 +84,6 @@ export default function PrivacyStepComprehensive({
   });
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>('collection');
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Privacy categories for organization
   const categories: PrivacyCategory[] = [

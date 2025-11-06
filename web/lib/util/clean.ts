@@ -24,7 +24,7 @@ export function undefinedToNull<T extends Record<string, unknown>>(obj: T): {
     return out as never
   }
   
-  return obj as never
+  return obj
 }
 
 /**

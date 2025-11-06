@@ -584,10 +584,10 @@ export async function GET(request: NextRequest) {
         hashtagPollsFeed = await hashtagPollsIntegrationServiceClient.generateHashtagPollFeed(
           userId,
           {
-            state: locationData?.state,
-            region: locationData?.region,
+            ...(locationData?.state ? { state: locationData.state } : {}),
+            ...(locationData?.region ? { region: locationData.region } : {}),
             followed_hashtags: followedHashtagIds,
-            demographics: demographics || {}
+            demographics: demographics ?? {}
           },
           10 // Limit hashtag-based recommendations
         );
@@ -615,7 +615,7 @@ export async function GET(request: NextRequest) {
       userId,
       followedHashtagNames,
       (userProfile.demographics as any)?.location_data ? JSON.stringify((userProfile.demographics as any).location_data) : '',
-      userProfile.demographics || {}
+      userProfile.demographics ?? {}
     );
 
     // Add district-based civic recommendations if location data is available

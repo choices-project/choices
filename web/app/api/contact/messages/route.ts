@@ -370,7 +370,7 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve User Messages
 // ============================================================================
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Get Supabase client
     const supabase = await getSupabaseServerClient();

@@ -46,7 +46,7 @@ export default function ProfileAvatar({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use external props if provided, otherwise use hooks
-  const finalLoading = externalLoading !== undefined ? externalLoading : isUploading;
+  const finalLoading = externalLoading ?? isUploading;
   const finalError = avatarError ?? error;
 
   // Get initials for fallback

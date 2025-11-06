@@ -29,7 +29,7 @@ export const dynamic = 'force-dynamic';
  * - Privacy settings (always included)
  * - Optional data based on privacy opt-ins
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Get authenticated user
     const supabase = await getSupabaseServerClient();
@@ -116,9 +116,9 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
-      exportData.votingHistory = votes || [];
+      exportData.votingHistory = votes ?? [];
       logger.debug('Voting history included in export (user consented)', {
-        count: votes?.length || 0
+        count: votes?.length ?? 0
       });
     }
 
@@ -138,9 +138,9 @@ export async function POST(request: NextRequest) {
         `)
         .eq('user_id', userId);
       
-      exportData.hashtagInterests = hashtags || [];
+      exportData.hashtagInterests = hashtags ?? [];
       logger.debug('Hashtag interests included in export (user consented)', {
-        count: hashtags?.length || 0
+        count: hashtags?.length ?? 0
       });
     }
 
@@ -152,9 +152,9 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
-      exportData.feedInteractions = feedInteractions || [];
+      exportData.feedInteractions = feedInteractions ?? [];
       logger.debug('Feed interactions included in export (user consented)', {
-        count: feedInteractions?.length || 0
+        count: feedInteractions?.length ?? 0
       });
     }
 
@@ -167,9 +167,9 @@ export async function POST(request: NextRequest) {
         .order('created_at', { ascending: false })
         .limit(5000); // Limit to prevent huge exports
       
-      exportData.analyticsEvents = analytics || [];
+      exportData.analyticsEvents = analytics ?? [];
       logger.debug('Analytics events included in export (user consented)', {
-        count: analytics?.length || 0
+        count: analytics?.length ?? 0
       });
     }
 
@@ -182,9 +182,9 @@ export async function POST(request: NextRequest) {
         .eq('event_category', 'representative')
         .order('created_at', { ascending: false });
       
-      exportData.representativeInteractions = repInteractions || [];
+      exportData.representativeInteractions = repInteractions ?? [];
       logger.debug('Representative interactions included in export (user consented)', {
-        count: repInteractions?.length || 0
+        count: repInteractions?.length ?? 0
       });
     }
 
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       .eq('created_by', userId)
       .order('created_at', { ascending: false });
     
-    exportData.createdPolls = createdPolls || [];
+    exportData.createdPolls = createdPolls ?? [];
 
     // WebAuthn credentials (metadata only, not actual credentials)
     const { data: credentials } = await supabase
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       .select('id, credential_id, public_key, counter, created_at, last_used_at, friendly_name')
       .eq('user_id', userId);
     
-    exportData.webauthnCredentials = credentials || [];
+    exportData.webauthnCredentials = credentials ?? [];
 
     // User sessions (login history)
     const { data: sessions } = await supabase
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(100); // Last 100 sessions
     
-    exportData.sessionHistory = sessions || [];
+    exportData.sessionHistory = sessions ?? [];
 
     // Contact messages
     const { data: messages } = await supabase
@@ -222,19 +222,19 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
-    exportData.contactMessages = messages || [];
+    exportData.contactMessages = messages ?? [];
 
     // Calculate total data points
     const totalDataPoints = 
-      (exportData.votingHistory?.length || 0) +
-      (exportData.hashtagInterests?.length || 0) +
-      (exportData.feedInteractions?.length || 0) +
-      (exportData.analyticsEvents?.length || 0) +
-      (exportData.representativeInteractions?.length || 0) +
-      (exportData.createdPolls?.length || 0) +
-      (exportData.webauthnCredentials?.length || 0) +
-      (exportData.sessionHistory?.length || 0) +
-      (exportData.contactMessages?.length || 0);
+      (exportData.votingHistory?.length ?? 0) +
+      (exportData.hashtagInterests?.length ?? 0) +
+      (exportData.feedInteractions?.length ?? 0) +
+      (exportData.analyticsEvents?.length ?? 0) +
+      (exportData.representativeInteractions?.length ?? 0) +
+      (exportData.createdPolls?.length ?? 0) +
+      (exportData.webauthnCredentials?.length ?? 0) +
+      (exportData.sessionHistory?.length ?? 0) +
+      (exportData.contactMessages?.length ?? 0);
 
     // Add summary statistics
     exportData.summary = {
@@ -244,12 +244,12 @@ export async function POST(request: NextRequest) {
       privacyOptIns: privacySettings ? Object.values(privacySettings).filter(v => v === true).length : 0,
       totalDataPoints: totalDataPoints,
       dataCollectionEnabled: {
-        location: privacySettings?.collectLocationData || false,
-        voting: privacySettings?.collectVotingHistory || false,
-        interests: privacySettings?.trackInterests || false,
-        feedActivity: privacySettings?.trackFeedActivity || false,
-        analytics: privacySettings?.collectAnalytics || false,
-        representatives: privacySettings?.trackRepresentativeInteractions || false,
+        location: privacySettings?.collectLocationData ?? false,
+        voting: privacySettings?.collectVotingHistory ?? false,
+        interests: privacySettings?.trackInterests ?? false,
+        feedActivity: privacySettings?.trackFeedActivity ?? false,
+        analytics: privacySettings?.collectAnalytics ?? false,
+        representatives: privacySettings?.trackRepresentativeInteractions ?? false,
       }
     };
 

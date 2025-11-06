@@ -297,7 +297,7 @@ export async function showNotification(options: NotificationOptions): Promise<vo
       body: options.body,
       icon: options.icon || PUSH_CONFIG.defaultOptions.icon,
       badge: options.badge || PUSH_CONFIG.defaultOptions.badge,
-      tag: options.tag,
+      ...(options.tag ? { tag: options.tag } : {}),
       data: options.data,
       requireInteraction: options.requireInteraction ?? false,
       silent: options.silent ?? false,

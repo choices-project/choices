@@ -336,7 +336,7 @@ export class QueryOptimizer {
     const queryPattern = 'SELECT polls WITH pagination and filters'
     
     // Try smart cache first
-    const cached = await smartCache.get<PollsResponse>(cacheKey, queryPattern, DatabaseSchemas.PollsResponse)
+    const cached = await smartCache.get<PollsResponse>(cacheKey, queryPattern, DatabaseSchemas.PollsResponse as any)
     if (cached) {
       logger.debug('Polls retrieved from smart cache', { page, limit, privacyLevel, userId })
       return cached
@@ -400,7 +400,7 @@ export class QueryOptimizer {
     // Cache the result with smart cache
     await smartCache.set(cacheKey, pollsResponse, queryPattern, {
       tags: ['polls', `page_${page}`, `limit_${limit}`, privacyLevel ? `privacy_${privacyLevel}` : 'all_privacy', userId ? `user_${userId}` : 'all_users'],
-      schema: DatabaseSchemas.PollsResponse,
+      schema: DatabaseSchemas.PollsResponse as any,
     })
 
     return pollsResponse

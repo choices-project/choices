@@ -117,7 +117,9 @@ export default function ElectedOfficialsSection({ electedOfficials }: ElectedOff
                   <div className="p-4">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-12 w-12 flex-shrink-0">
-                        <AvatarImage src={official.photo_url} alt={official.name} />
+                        {official.photo_url ? (
+                          <AvatarImage src={official.photo_url} alt={official.name} />
+                        ) : null}
                         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
                           {official.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>

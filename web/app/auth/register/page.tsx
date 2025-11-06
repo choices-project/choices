@@ -7,6 +7,7 @@ import * as React from 'react'
 import { register as serverRegister } from '@/app/actions/register'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+import { logger } from '@/lib/utils/logger'
 
 
 export default function RegisterPage() {
@@ -56,13 +57,13 @@ export default function RegisterPage() {
       
       // Debug logging for E2E tests
       if (process.env.NODE_ENV !== 'production' || typeof window !== 'undefined') {
-        console.log('[RegisterPage] URL params:', window.location.search)
-        console.log('[RegisterPage] method param from URL:', urlMethod)
-        console.log('[RegisterPage] localStorage e2e-registration-method:', localStorage.getItem('e2e-registration-method'))
+        logger.debug('[RegisterPage] URL params', { search: window.location.search });
+        logger.debug('[RegisterPage] method param from URL', { urlMethod });
+        logger.debug('[RegisterPage] localStorage e2e-registration-method', { value: localStorage.getItem('e2e-registration-method') });
       }
       
       if (urlMethod === 'password') {
-        console.log('[RegisterPage] Setting registrationMethod to password from URL param (useEffect)')
+        logger.debug('[RegisterPage] Setting registrationMethod to password from URL param (useEffect)');
         setRegistrationMethod('password')
         return
       }
@@ -71,7 +72,7 @@ export default function RegisterPage() {
       try {
         const e2eMethod = localStorage.getItem('e2e-registration-method')
         if (e2eMethod === 'password') {
-          console.log('[RegisterPage] Setting registrationMethod to password from localStorage (useEffect)')
+          logger.debug('[RegisterPage] Setting registrationMethod to password from localStorage (useEffect)');
           setRegistrationMethod('password')
           return
         }
@@ -194,7 +195,7 @@ export default function RegisterPage() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Password button clicked, setting registrationMethod to password');
+                logger.debug('Password button clicked, setting registrationMethod to password');
                 setRegistrationMethod('password');
               }}
               onMouseDown={(e) => {

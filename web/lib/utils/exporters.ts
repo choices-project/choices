@@ -33,7 +33,12 @@ export function exportToCSV<T extends Record<string, any>>(
   }
 
   // Use provided headers or extract from first object
-  const csvHeaders = headers || Object.keys(data[0]);
+  const firstItem = data[0];
+  if (!firstItem) {
+    console.warn('No data to export');
+    return;
+  }
+  const csvHeaders = headers || Object.keys(firstItem);
   
   // Create CSV rows
   const rows = data.map(item => {
@@ -316,7 +321,10 @@ export async function exportBatch(
 function generateCSVContent<T extends Record<string, any>>(data: T[]): string {
   if (data.length === 0) return '';
 
-  const headers = Object.keys(data[0]);
+  const firstItem = data[0];
+  if (!firstItem) return '';
+  
+  const headers = Object.keys(firstItem);
   const rows = data.map(item => 
     headers.map(h => {
       const val = item[h];

@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-
+import { logger } from '@/lib/utils/logger';
 import { useIsAuthenticated, useUserStore } from '@/lib/stores';
 
 'use client';
@@ -41,7 +41,7 @@ export function AuthGuard({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      console.log('🚨 SECURITY: AuthGuard - Unauthenticated user blocked, redirecting to login');
+      logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
       router.push(redirectTo);
     }
   }, [isAuthenticated, isLoading, router, redirectTo]);

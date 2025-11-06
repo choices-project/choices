@@ -29,7 +29,7 @@ import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cach
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
     // Process Trust Tiers
     const trustTierCounts = new Map<string, number>();
     users.forEach(u => {
-      const tier = u.trust_tier || 'T0';
-      trustTierCounts.set(tier, (trustTierCounts.get(tier) || 0) + 1);
+      const tier = u.trust_tier ?? 'T0';
+      trustTierCounts.set(tier, (trustTierCounts.get(tier) ?? 0) + 1);
     });
 
     const trustTiers = Array.from(trustTierCounts.entries()).map(([tier, count]) => ({

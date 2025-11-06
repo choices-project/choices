@@ -358,7 +358,8 @@ export default function TemporalAnalysisChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900">{data.label}</p>
@@ -394,7 +395,8 @@ export default function TemporalAnalysisChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
                       const percentage = maxDailyActivity > 0 
                         ? ((data.activity / maxDailyActivity) * 100).toFixed(1)
                         : 0;
@@ -475,7 +477,8 @@ export default function TemporalAnalysisChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900">{data.timestamp}</p>
@@ -520,7 +523,7 @@ export default function TemporalAnalysisChart({
 /**
  * Generate mock data for development
  */
-function generateMockData(range: string): TemporalData {
+function generateMockData(_range: string): TemporalData {
   // Generate hourly data (24 hours)
   const hourly: HourlyData[] = Array.from({ length: 24 }, (_, i) => {
     // Simulate realistic patterns: low at night, high during day
@@ -556,9 +559,9 @@ function generateMockData(range: string): TemporalData {
   }));
 
   // Calculate peak values
-  const peakHourData = hourly.reduce((max, h) => h.activity > max.activity ? h : max, hourly[0]);
-  const peakDayData = daily.reduce((max, d) => d.activity > max.activity ? d : max, daily[0]);
-  const avgActivity = hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length;
+  const peakHourData = hourly.length > 0 ? hourly.reduce((max, h) => h.activity > max.activity ? h : max, hourly[0]) : { hour: 0, activity: 0, label: '12 AM' };
+  const peakDayData = daily.length > 0 ? daily.reduce((max, d) => d.activity > max.activity ? d : max, daily[0]) : { day: 'Monday', activity: 0, dayIndex: 0 };
+  const avgActivity = hourly.length > 0 ? hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length : 0;
 
   return {
     ok: true,

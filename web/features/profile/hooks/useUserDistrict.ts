@@ -59,9 +59,9 @@ export function useUserDistrict(): UserDistrict | null {
 
   return {
     state,
-    district,
-    county,
-    fullDistrict
+    ...(district !== undefined ? { district } : {}),
+    ...(county !== undefined ? { county } : {}),
+    ...(fullDistrict !== undefined ? { fullDistrict } : {})
   };
 }
 
@@ -72,6 +72,6 @@ export function useUserDistrict(): UserDistrict | null {
  */
 export function useFormattedDistrict(): string | null {
   const districtData = useUserDistrict();
-  return districtData?.fullDistrict || null;
+  return districtData?.fullDistrict ?? null;
 }
 

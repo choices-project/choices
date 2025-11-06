@@ -148,14 +148,18 @@ export const contactMessagingService = {
           
           // Call callback for each new message
           newMessages.forEach(callback);
-        } else if (messages.length > 0) {
+        } else {
           // First poll - set last message ID
-          lastMessageId = messages[messages.length - 1].id;
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage) {
+            lastMessageId = lastMessage.id;
+          }
         }
 
         // Update last message ID to the most recent
-        if (messages.length > 0) {
-          lastMessageId = messages[messages.length - 1].id;
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage) {
+          lastMessageId = lastMessage.id;
         }
       } catch (error) {
         console.error('Error polling for messages:', error);

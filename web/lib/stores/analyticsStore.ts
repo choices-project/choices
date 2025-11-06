@@ -359,8 +359,8 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             : config as ChartConfig,
           chartData: config.data ?? state.chartData,
           chartMaxValue: config.maxValue ?? state.chartMaxValue,
-          chartShowTrends: config.showTrends !== undefined ? config.showTrends : state.chartShowTrends,
-          chartShowConfidence: config.showConfidence !== undefined ? config.showConfidence : state.chartShowConfidence
+          chartShowTrends: config.showTrends ?? state.chartShowTrends,
+          chartShowConfidence: config.showConfidence ?? state.chartShowConfidence
         })),
         
         setChartMaxValue: (maxValue) => set({ chartMaxValue: maxValue }),

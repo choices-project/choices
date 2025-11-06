@@ -373,7 +373,8 @@ export default function PollHeatmap({
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) return null;
-                    const poll = payload[0].payload.fullData;
+                    const poll = payload[0]?.payload?.fullData;
+                    if (!poll) return null;
                     const emoji = getEngagementEmoji(poll.engagement_score, maxEngagement);
                     return (
                       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg max-w-xs">
@@ -463,7 +464,7 @@ export default function PollHeatmap({
 /**
  * Generate mock data for development
  */
-function generateMockData(limit: number, category: string): PollHeatmapEntry[] {
+function generateMockData(limit: number, _category: string): PollHeatmapEntry[] {
   const titles = [
     'Climate Change Action Plan 2025',
     'Universal Healthcare Coverage',
@@ -491,8 +492,8 @@ function generateMockData(limit: number, category: string): PollHeatmapEntry[] {
 
   return Array.from({ length: Math.min(limit, titles.length) }, (_, i) => ({
     poll_id: `poll-${i + 1}`,
-    title: titles[i],
-    category: categories[i % categories.length],
+    title: titles[i] ?? 'Untitled Poll',
+    category: categories[i % categories.length] ?? 'Other',
     total_votes: Math.floor(Math.random() * 5000) + 500,
     unique_voters: Math.floor(Math.random() * 3000) + 300,
     engagement_score: Math.floor(Math.random() * 100) + 20,

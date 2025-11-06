@@ -3,6 +3,7 @@
  * Captures comprehensive user journey data for AI analysis and diagnosis
  */
 
+import { withOptional } from '@/lib/util/objects'
 import { devLog } from '@/lib/utils/logger'
 
 import type { UserJourney, FeedbackContext } from '../types'
@@ -215,7 +216,7 @@ class FeedbackTracker {
   }
   
   public captureUserJourney(): UserJourney {
-    return {
+    const baseJourney = {
       currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
       currentPath: typeof window !== 'undefined' ? window.location.href : '',
       pageTitle: typeof document !== 'undefined' ? document.title : '',
@@ -247,10 +248,15 @@ class FeedbackTracker {
       deviceInfo: this.getDeviceInfo(),
       
       isAuthenticated: this.isUserAuthenticated(),
-      
-      userRole: this.getUserRole(),
-      userId: this.getUserId()
-    }
+    };
+    
+    const optionalData: Record<string, unknown> = {};
+    const userRole = this.getUserRole();
+    const userId = this.getUserId();
+    if (userRole) optionalData.userRole = userRole;
+    if (userId) optionalData.userId = userId;
+    
+    return withOptional(baseJourney, optionalData) as UserJourney;
   }
   
   private getActiveFeatures(): string[] {
@@ -325,7 +331,7 @@ class FeedbackTracker {
     description: string,
     sentiment: string
   ): Promise<FeedbackContext> {
-    return {
+    const baseContext = {
       feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       source: 'widget',
@@ -353,9 +359,13 @@ class FeedbackTracker {
         keywords: [],
         suggestedActions: []
       },
-      
-      screenshot: await this.captureScreenshot()
-    }
+    };
+    
+    const optionalData: Record<string, unknown> = {};
+    const screenshot = await this.captureScreenshot();
+    if (screenshot) optionalData.screenshot = screenshot;
+    
+    return withOptional(baseContext, optionalData) as FeedbackContext;
   }
   
   private categorizeFeedback(type: string, title: string, description: string): string[] {

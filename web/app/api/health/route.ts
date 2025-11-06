@@ -416,7 +416,7 @@ export async function GET(request: NextRequest) {
               return {
                 status: error ? 'unhealthy' : 'healthy',
                 connectionSuccess: !error,
-                error: error?.message ?? null,
+                ...(error?.message ? { error: error.message } : {}),
                 type: 'supabase'
               };
             } catch (error) {
@@ -444,9 +444,11 @@ export async function GET(request: NextRequest) {
         // Handle supabase result - only include error if it exists
         const supabaseValue = supabaseResult.status === 'fulfilled' ? supabaseResult.value : null;
         results.supabase = supabaseValue 
-          ? (supabaseValue.error 
-              ? { ...supabaseValue, status: supabaseValue.status as HealthStatus, error: supabaseValue.error }
-              : { ...supabaseValue, status: supabaseValue.status as HealthStatus })
+          ? { 
+              ...supabaseValue, 
+              status: supabaseValue.status as HealthStatus,
+              ...(supabaseValue.error && typeof supabaseValue.error === 'string' ? { error: supabaseValue.error } : {})
+            }
           : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
         
         results.civics = civicsResult.status === 'fulfilled' ? { ...civicsResult.value, status: civicsResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Civics check failed' };

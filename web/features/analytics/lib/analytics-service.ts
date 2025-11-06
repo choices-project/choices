@@ -584,13 +584,16 @@ export class AnalyticsService {
           average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + ((a as any).trust_score ?? 0), 0) / analytics.length : 0,
           last_activity: (latestAnalytics as any)?.created_at ?? new Date().toISOString()
         },
-        demographic_data: {
-          age_group: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.age_group,
-          geographic_region: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.geographic_region,
-          education_level: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.education_level,
-          income_bracket: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.income_bracket,
-          political_affiliation: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.political_affiliation
-        }
+        demographic_data: (() => {
+          const factors = ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors) ?? {};
+          const demographic: Record<string, string> = {};
+          if (factors.age_group) demographic.age_group = factors.age_group;
+          if (factors.geographic_region) demographic.geographic_region = factors.geographic_region;
+          if (factors.education_level) demographic.education_level = factors.education_level;
+          if (factors.income_bracket) demographic.income_bracket = factors.income_bracket;
+          if (factors.political_affiliation) demographic.political_affiliation = factors.political_affiliation;
+          return demographic;
+        })()
       }
 
     } catch (error) {

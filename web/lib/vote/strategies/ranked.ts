@@ -157,7 +157,7 @@ export class RankedStrategy implements VotingStrategy {
             rankedOptions: voteData.rankings?.map((rank, index) => ({
               rank: index + 1,
               option: poll.options[rank]?.text
-            })) || []
+            })) ?? []
           }
         },
         {

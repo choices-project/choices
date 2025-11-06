@@ -115,7 +115,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       created_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
       updated_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
       human_review_required: pendingFlags.length > 0,
-      moderation_reason: pendingFlags.length > 0 ? 'Pending review' : undefined
+      ...(pendingFlags.length > 0 ? { moderation_reason: 'Pending review' } : {})
     };
 
     return {
@@ -283,6 +283,13 @@ export async function moderateHashtag(
 
     // Get updated moderation status
     const moderationResult = await getHashtagModeration(hashtagId);
+    
+    if (!moderationResult.success || !moderationResult.data) {
+      return {
+        success: false,
+        error: 'Failed to get updated moderation status'
+      };
+    }
     
     return {
       success: true,
@@ -488,23 +495,26 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
     });
 
     // Transform duplicates to Hashtag type
-    const transformedDuplicates = duplicates.map(hashtag => ({
-      id: hashtag.id,
-      name: hashtag.name,
-      display_name: hashtag.name,
-      description: hashtag.description ?? undefined,
-      category: (hashtag.category ?? 'general') as HashtagCategory,
-      created_by: hashtag.created_by ?? undefined,
-      follower_count: hashtag.follower_count ?? 0,
-      usage_count: hashtag.usage_count ?? 0,
-      is_featured: hashtag.is_featured ?? false,
-      is_trending: hashtag.is_trending ?? false,
-      is_verified: hashtag.is_verified ?? false,
-      trend_score: hashtag.trending_score ?? 0,
-      created_at: hashtag.created_at ?? new Date().toISOString(),
-      updated_at: hashtag.updated_at ?? new Date().toISOString(),
-      metadata: hashtag.metadata as Record<string, any> | undefined
-    }));
+    const transformedDuplicates: Hashtag[] = duplicates.map(hashtag => {
+      const result: Hashtag = {
+        id: hashtag.id,
+        name: hashtag.name,
+        display_name: hashtag.name,
+        category: (hashtag.category ?? 'general') as HashtagCategory,
+        follower_count: hashtag.follower_count ?? 0,
+        usage_count: hashtag.usage_count ?? 0,
+        is_featured: hashtag.is_featured ?? false,
+        is_trending: hashtag.is_trending ?? false,
+        is_verified: hashtag.is_verified ?? false,
+        trend_score: hashtag.trending_score ?? 0,
+        created_at: hashtag.created_at ?? new Date().toISOString(),
+        updated_at: hashtag.updated_at ?? new Date().toISOString(),
+        metadata: hashtag.metadata as Record<string, any> ?? {}
+      };
+      if (hashtag.description) result.description = hashtag.description;
+      if (hashtag.created_by) result.created_by = hashtag.created_by;
+      return result;
+    });
 
     return {
       success: true,
@@ -538,21 +548,30 @@ function calculateSimilarity(str1: string, str2: string): number {
 function levenshteinDistance(str1: string, str2: string): number {
   const matrix: number[][] = Array(str2.length + 1).fill(0).map(() => Array(str1.length + 1).fill(0));
   
-  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+  for (let i = 0; i <= str1.length; i++) {
+    const row = matrix[0];
+    if (row) row[i] = i;
+  }
+  for (let j = 0; j <= str2.length; j++) {
+    const row = matrix[j];
+    if (row) row[0] = j;
+  }
   
   for (let j = 1; j <= str2.length; j++) {
     for (let i = 1; i <= str1.length; i++) {
       const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      const prevI = matrix[j]?.[i - 1] ?? 0;
+      const prevJ = matrix[j - 1]?.[i] ?? 0;
+      const prevBoth = matrix[j - 1]?.[i - 1] ?? 0;
       matrix[j][i] = Math.min(
-        (matrix[j][i - 1] ?? 0) + 1,
-        (matrix[j - 1][i] ?? 0) + 1,
-        (matrix[j - 1][i - 1] ?? 0) + indicator
+        prevI + 1,
+        prevJ + 1,
+        prevBoth + indicator
       );
     }
   }
   
-  return matrix[str2.length][str1.length] ?? 0;
+  return matrix[str2.length]?.[str1.length] ?? 0;
 }
 
 // ============================================================================

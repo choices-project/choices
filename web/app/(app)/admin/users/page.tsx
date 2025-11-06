@@ -3,8 +3,6 @@
 import { Users, Ban, UserPlus } from 'lucide-react'
 import React from 'react'
 
-import { T } from '@/tests/registry/testIds'
-
 export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -15,7 +13,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* User List */}
-        <section data-testid={T.admin.userList} className="bg-white rounded-lg border border-gray-200 p-6">
+        <section data-testid="admin-user-list" className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <Users className="h-6 w-6 text-blue-600" />
@@ -66,7 +64,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 
-                      data-testid={T.admin.promoteUser('admin-1')}
+                      data-testid="admin-promote-user-admin-1"
                       className="text-green-600 hover:text-green-900 mr-3"
                     >
                       Promote
@@ -92,7 +90,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 
-                      data-testid={T.admin.banUser('user-1')}
+                      data-testid="admin-ban-user-user-1"
                       className="text-red-600 hover:text-red-900 mr-3"
                     >
                       <Ban className="h-4 w-4 inline mr-1" />

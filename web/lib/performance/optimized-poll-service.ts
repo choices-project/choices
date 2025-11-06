@@ -139,16 +139,12 @@ export class OptimizedPollService {
       ? rawHashtags.filter((tag): tag is string => typeof tag === 'string')
       : [];
 
-    return {
+    const basePoll: Record<string, unknown> = {
       id: poll.id,
       title: poll.title,
-      description: poll.description ?? undefined,
-      question: poll.question ?? undefined,
       options,
       status: poll.status ?? 'draft',
-      category: poll.category ?? undefined,
       hashtags,
-      created_at: poll.created_at ?? undefined,
       created_by: poll.created_by,
       total_votes: poll.total_votes ?? 0,
       engagement_score: poll.engagement_score ?? 0,
@@ -157,6 +153,13 @@ export class OptimizedPollService {
       is_trending: poll.is_trending ?? false,
       is_featured: poll.is_featured ?? false,
     };
+    
+    if (poll.description) basePoll.description = poll.description;
+    if (poll.question) basePoll.question = poll.question;
+    if (poll.category) basePoll.category = poll.category;
+    if (poll.created_at) basePoll.created_at = poll.created_at;
+    
+    return basePoll as Poll;
   }
 
   /**

@@ -3065,10 +3065,12 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          analytics_dashboard_mode: string | null
           avatar_url: string | null
           bio: string | null
           community_focus: string[] | null
           created_at: string | null
+          dashboard_layout: Json | null
           demographics: Json | null
           display_name: string | null
           email: string
@@ -3084,10 +3086,12 @@ export type Database = {
           username: string
         }
         Insert: {
+          analytics_dashboard_mode?: string | null
           avatar_url?: string | null
           bio?: string | null
           community_focus?: string[] | null
           created_at?: string | null
+          dashboard_layout?: Json | null
           demographics?: Json | null
           display_name?: string | null
           email: string
@@ -3103,10 +3107,12 @@ export type Database = {
           username: string
         }
         Update: {
+          analytics_dashboard_mode?: string | null
           avatar_url?: string | null
           bio?: string | null
           community_focus?: string[] | null
           created_at?: string | null
+          dashboard_layout?: Json | null
           demographics?: Json | null
           display_name?: string | null
           email?: string

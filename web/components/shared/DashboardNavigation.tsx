@@ -34,7 +34,7 @@ type NavItem = {
   id: string;
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   description: string;
   badge?: string;
 };

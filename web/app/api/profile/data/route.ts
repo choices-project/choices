@@ -214,8 +214,8 @@ export async function DELETE(request: NextRequest) {
         }
         
         deletionResult = {
-          count: count || 0,
-          description: `Deleted ${count || 0} representative interactions`
+          count: count ?? 0,
+          description: `Deleted ${count ?? 0} representative interactions`
         };
         logger.info('Representative interactions deleted successfully', { userId, count });
         break;
@@ -235,8 +235,8 @@ export async function DELETE(request: NextRequest) {
         }
         
         deletionResult = {
-          count: count || 0,
-          description: `Deleted ${count || 0} search history entries`
+          count: count ?? 0,
+          description: `Deleted ${count ?? 0} search history entries`
         };
         logger.info('Search history deleted successfully', { userId, count });
         break;

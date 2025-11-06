@@ -24,7 +24,7 @@ import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cach
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     // Group users by trust tier
     const tierGroups = new Map<string, any[]>();
     users.forEach(u => {
-      const tier = u.trust_tier || 'T0';
+      const tier = u.trust_tier ?? 'T0';
       if (!tierGroups.has(tier)) {
         tierGroups.set(tier, []);
       }
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 
       // Calculate votes per tier
       const tierUserIds = new Set(tierUsers.map(u => u.id));
-      const tierVotes = (votes || []).filter(v => tierUserIds.has(v.user_id));
+      const tierVotes = (votes ?? []).filter(v => v.user_id && tierUserIds.has(v.user_id));
       
       // Calculate metrics
       const avgPollsVoted = tierVotes.length / userCount;
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       
       return {
         tier,
-        tierName: tierNames[tier] || tier,
+        tierName: tierNames[tier] ?? tier,
         userCount,
         participationRate: parseFloat(participationRate.toFixed(1)),
         completionRate: parseFloat(completionRate.toFixed(1)),

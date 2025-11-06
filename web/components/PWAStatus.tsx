@@ -25,6 +25,7 @@ import {
 import React from 'react';
 
 import { usePWAStore } from '@/lib/stores/pwaStore';
+import { logger } from '@/lib/utils/logger';
 
 type PWAStatusProps = {
   /** Show detailed status view */
@@ -53,7 +54,7 @@ type PWAStatusProps = {
  * @returns Status UI or null if PWA not enabled/supported
  */
 export default function PWAStatus({ showDetails = false, className = '' }: PWAStatusProps) {
-  const { installation, offline, preferences, isLoading, error: pwaError, installPWA, syncData, updateServiceWorker } = usePWAStore();
+  const { installation, offline, preferences, isLoading, error: pwaError, installPWA, syncData, updateServiceWorker: _updateServiceWorker } = usePWAStore();
   
   const isSupported = 'serviceWorker' in navigator;
   const isEnabled = preferences.installPrompt;
@@ -71,7 +72,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
 
   // Debug logging for tests
   if (typeof window !== 'undefined') {
-    console.log('PWAStatus: Rendering with status:', {
+    logger.debug('PWAStatus: Rendering with status', {
       isEnabled,
       isSupported,
       loading: isLoading,
@@ -80,7 +81,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   }
 
   if (!isEnabled || !isSupported) {
-    console.log('PWAStatus: Not rendering - isEnabled:', isEnabled, 'isSupported:', isSupported);
+    logger.debug('PWAStatus: Not rendering', { isEnabled, isSupported });
     return null;
   }
 
@@ -215,7 +216,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {!notificationsEnabled && (
           <button
             onClick={async () => {
-              const result = await Notification.requestPermission();
+              await Notification.requestPermission();
               // Result is handled by effect in component
             }}
             className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"

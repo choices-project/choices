@@ -1,1 +1,1 @@
-import '../lib/ssr-polyfills'; // if you still need browser-side shims
+import '../ssr-polyfills'; // if you still need browser-side shims

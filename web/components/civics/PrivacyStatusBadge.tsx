@@ -36,11 +36,13 @@ export function PrivacyStatusBadge() {
           setStatus({
             status: data.status === 'healthy' ? 'healthy' : data.status === 'degraded' ? 'warning' : 'error',
             message: data.message ?? 'Privacy protections active',
-            details: data.details ? {
-              pepper: data.details.pepper ?? true,
-              rls: data.details.rls ?? true,
-              auth: data.details.auth ?? true
-            } : undefined
+            ...(data.details ? {
+              details: {
+                pepper: data.details.pepper ?? true,
+                rls: data.details.rls ?? true,
+                auth: data.details.auth ?? true
+              }
+            } : {})
           });
         } else {
           throw new Error('Health check failed');

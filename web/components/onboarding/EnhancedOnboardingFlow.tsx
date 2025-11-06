@@ -45,7 +45,7 @@ function useLocalStepNavigation(): [StepSlug, (s: StepSlug) => void] {
   }, [router, searchParams]);
 
   function goToStep(next: StepSlug) {
-    console.log('goToStep called:', { current: step, next });
+    logger.debug('goToStep called', { current: step, next });
     setStep(next);           // render now
     syncUrl(next);           // URL catch-up
   }
@@ -110,10 +110,10 @@ function CompleteButton() {
         // Redirect to dashboard or next page
         window.location.href = '/dashboard';
       } else {
-        console.error('Failed to complete onboarding');
+        logger.error('Failed to complete onboarding');
       }
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      logger.error('Error completing onboarding', error);
     } finally {
       setIsPending(false);
     }
@@ -365,14 +365,14 @@ function EnhancedOnboardingFlowInner() {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const nextIndex = Math.min(STEP_ORDER.length - 1, i + 1);
-    return STEP_ORDER[nextIndex];
+    return STEP_ORDER[nextIndex] ?? 'welcome';
   }
   
   function prevOf(s: StepSlug): StepSlug {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const prevIndex = Math.max(0, i - 1);
-    return STEP_ORDER[prevIndex];
+    return STEP_ORDER[prevIndex] ?? 'welcome';
   }
 
   // Persist progress, but NEVER block navigation on it

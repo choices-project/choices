@@ -65,6 +65,16 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
     const currentOrigin = origin.replace(/\/$/, '');
 
+    // SECURITY: Validate origin against allowed origins
+    if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
+      logger.warn('WebAuthn registration attempt from unauthorized origin', {
+        origin: currentOrigin,
+        allowedOrigins,
+        userId: user.id
+      });
+      return NextResponse.json({ error: 'Unauthorized origin' }, { status: 403 });
+    }
+
     // Verify registration using native implementation
     const verificationResult = await verifyRegistrationResponse(
       body,
@@ -94,9 +104,9 @@ export async function POST(req: NextRequest) {
       credential_id: credentialId,
       public_key: publicKeyBase64,
       counter: verificationResult.counter,
-      transports: verificationResult.transports || [],
-      backup_eligible: verificationResult.backupEligible || false,
-      backup_state: verificationResult.backupState || false,
+      transports: verificationResult.transports ?? [],
+      backup_eligible: verificationResult.backupEligible ?? false,
+      backup_state: verificationResult.backupState ?? false,
       created_at: new Date().toISOString()
     });
 

@@ -77,8 +77,8 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
         y: 999, // Will be auto-placed by grid
       },
       size: {
-        w: widgetMeta.defaultConfig.position?.w || 4,
-        h: widgetMeta.defaultConfig.position?.h || 3,
+        w: widgetMeta.defaultConfig.position?.w ?? 4,
+        h: widgetMeta.defaultConfig.position?.h ?? 3,
       },
       settings: {
         refreshInterval: widgetMeta.defaultConfig.refreshInterval,
@@ -97,7 +97,7 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
+        {trigger ?? (
           <Button variant="outline" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add Widget

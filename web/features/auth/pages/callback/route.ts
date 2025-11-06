@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   if (error) {
     devLog('OAuth error:', error, errorDescription)
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(errorDescription || error)}`
+      `${origin}/login?error=${encodeURIComponent(errorDescription ?? error)}`
     )
   }
 

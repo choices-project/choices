@@ -128,7 +128,8 @@ export default function FeedCore({
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading && hasMore) {
+        const entry = entries[0];
+        if (entry && entry.isIntersecting && !isLoading && hasMore) {
           onLoadMore();
         }
       },
@@ -165,7 +166,7 @@ export default function FeedCore({
     const container = scrollContainerRef.current;
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (window.scrollY === 0) {
+      if (window.scrollY === 0 && e.touches[0]) {
         startY.current = e.touches[0].clientY;
       }
     };
@@ -173,7 +174,10 @@ export default function FeedCore({
     const handleTouchMove = (e: TouchEvent) => {
       if (window.scrollY > 0) return;
       
-      const currentY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      if (!touch) return;
+      
+      const currentY = touch.clientY;
       const distance = currentY - startY.current;
       
       if (distance > 0 && distance < 150) {
@@ -404,11 +408,13 @@ export default function FeedCore({
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="flex-1">{feed.title}</CardTitle>
                       {/* District Badge */}
-                      <DistrictIndicator 
-                        feedItemDistrict={feed.district}
-                        userDistrict={userDistrict}
-                        size="sm"
-                      />
+                      {feed.district && (
+                        <DistrictIndicator 
+                          feedItemDistrict={feed.district}
+                          {...(userDistrict ? { userDistrict } : {})}
+                          size="sm"
+                        />
+                      )}
                     </div>
                     <div className="flex gap-2 mt-2">
                       {feed.tags.map(tag => (

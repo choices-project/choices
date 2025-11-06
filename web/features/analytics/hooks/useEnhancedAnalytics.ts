@@ -132,7 +132,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
         const result = await response.json();
         
         if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch analytics');
+          throw new Error(result.error ?? 'Failed to fetch analytics');
         }
 
         // Enhance with new schema capabilities if enabled
@@ -183,7 +183,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
     context: any = {}
   ) => {
     try {
-      await enhancedAnalytics.trackFeatureUsage(userId || null, featureName, {
+      await enhancedAnalytics.trackFeatureUsage(userId ?? null, featureName, {
         action,
         context,
         session_id: sessionId,

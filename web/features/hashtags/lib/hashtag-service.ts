@@ -77,11 +77,10 @@ export type HashtagActivity = {
 
 // Helper function to transform database data to Hashtag type
 function transformHashtagData(data: HashtagRow): Hashtag {
-  return {
+  const result: Hashtag = {
     id: String(data.id),
     name: String(data.name),
     display_name: String(data.name),
-    description: undefined,
     category: 'general' as HashtagCategory,
     usage_count: 0,
     is_trending: false,
@@ -91,9 +90,9 @@ function transformHashtagData(data: HashtagRow): Hashtag {
     trend_score: 0,
     created_at: String(data.created_at ?? new Date().toISOString()),
     updated_at: String(data.updated_at ?? new Date().toISOString()),
-    created_by: undefined,
     metadata: {}
   };
+  return result;
 }
 
 const supabaseClientPromise = getSupabaseBrowserClient();
@@ -120,7 +119,11 @@ export async function getHashtagById(id: string): Promise<HashtagApiResponse<Has
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data ? transformHashtagData(data) : undefined };
+    if (!data) {
+      return { success: false, error: 'Hashtag not found' };
+    }
+
+    return { success: true, data: transformHashtagData(data) };
   } catch (error) {
     return { 
       success: false, 
@@ -176,19 +179,21 @@ export async function createHashtag(
       return { success: false, error: 'Hashtag already exists' };
     }
 
+    const insertData: Database['public']['Tables']['hashtags']['Insert'] = {
+      name: normalizedName,
+      usage_count: 0,
+      follower_count: 0,
+      is_trending: false,
+      trending_score: 0,
+      is_verified: false,
+      is_featured: false,
+      ...(description ? { description } : {}),
+      ...(category ? { category } : {})
+    };
+
     const result = await supabase
       .from('hashtags')
-      .insert({
-        name: normalizedName,
-        description,
-        category,
-        usage_count: 0,
-        follower_count: 0,
-        is_trending: false,
-        trending_score: 0,
-        is_verified: false,
-        is_featured: false
-      })
+      .insert(insertData)
       .select()
       .single();
     
@@ -460,7 +465,7 @@ export async function getHashtagSuggestions(
     }));
 
     // Enhance suggestions with related hashtags for the first matching hashtag
-    if (suggestions.length > 0 && suggestions[0].hashtag.id) {
+    if (suggestions.length > 0 && suggestions[0]?.hashtag?.id) {
       try {
         const relatedHashtagNames = await calculateRelatedHashtags(suggestions[0].hashtag.id);
         // Add related hashtags as additional suggestions if not already present

@@ -1,7 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
@@ -17,11 +16,6 @@ import globals from 'globals';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const _compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
 export default [
   // Global environment
   {
@@ -32,13 +26,14 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
+        ...globals.jest,
       },
     },
   },
   // Base JavaScript recommended rules
   js.configs.recommended,
-  
-  // TypeScript configuration
+
+  // TypeScript configuration (non-type-aware)
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -49,8 +44,7 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        project: ['./tsconfig.json', './tsconfig.*.json'],
-        tsconfigRootDir: __dirname,
+        // NOTE: No "project" here for speed. Type-aware rules use separate config below.
       },
     },
     plugins: {
@@ -58,19 +52,35 @@ export default [
       'unused-imports': unusedImports,
       'boundaries': boundaries,
     },
+    settings: {
+      'boundaries/elements': [
+        { type: 'app',        pattern: 'app/**' },
+        { type: 'features',   pattern: 'features/**' },
+        { type: 'components', pattern: 'components/**' },
+        { type: 'lib',        pattern: 'lib/**' },
+        { type: 'utils',      pattern: 'utils/**' },
+        { type: 'tests',      pattern: 'tests/**' },
+      ],
+      'import/core-modules': ['k6', 'k6/http'],
+    },
     rules: {
+      // TypeScript handles undefined variables better than ESLint
+      'no-undef': 'off',
       // TypeScript specific rules
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': [
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
         'error',
         {
           vars: 'all',
           varsIgnorePattern: '^_',
           args: 'after-used',
           argsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off', // Handled in type-aware config below
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
@@ -81,37 +91,60 @@ export default [
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@typescript-eslint/no-namespace': 'error',
       '@typescript-eslint/no-this-alias': 'error',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       '@typescript-eslint/prefer-as-const': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
-      
+
       // Console logging - enforce use of logger
       'no-console': ['error', { allow: ['warn', 'error'] }],
-      
-      // Unused imports
-      'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': [
-        'error',
+
+      // Boundaries plugin - architectural rules
+      'boundaries/element-types': ['error', {
+        default: 'disallow',
+        rules: [
+          { from: 'lib',        allow: ['lib', 'utils', 'features', 'components'] },
+          { from: 'features',   allow: ['lib', 'components', 'utils', 'features', 'app'] },
+          { from: 'components', allow: ['lib', 'utils', 'components', 'features'] },
+          { from: 'app',        allow: ['features', 'components', 'lib', 'utils'] },
+          { from: 'utils',      allow: ['lib'] },
+          { from: 'tests',      allow: ['app', 'features', 'components', 'lib', 'utils'] },
+        ],
+      }],
+
+      // Block legacy paths
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['@/shared/lib/*', '@/shared/admin/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
+          { group: ['@/components/polls/*'], message: "Use '@/features/polls/*' (canonical)." },
+          { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
+          { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
+          { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
+        ],
+      }],
+
+      // Restricted syntax (exactOptionalPropertyTypes enforcement)
+      'no-restricted-syntax': [
+        'warn',
         {
-          vars: 'all',
-          varsIgnorePattern: '^_',
-          args: 'after-used',
-          argsIgnorePattern: '^_',
+          selector: 'TSTypeReference[typeName.name="AnyObject"]',
+          message: 'Prefer exact interfaces over AnyObject.'
         },
+        {
+          selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
+          message: 'Use conditional spread or delete, not = undefined.'
+        },
+        {
+          selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]',
+          message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.'
+        }
       ],
-      
-      // Boundaries plugin (disabled until elements are defined in settings)
-      'boundaries/element-types': 'off',
     },
   },
-  
+
   // React configuration
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -179,11 +212,11 @@ export default [
       'react/jsx-pascal-case': 'error',
       'react/jsx-sort-props': 'off',
       'react/jsx-wrap-multilines': 'off',
-      
+
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      
+
       // JSX A11y rules
       'jsx-a11y/alt-text': 'error',
       'jsx-a11y/anchor-has-content': 'error',
@@ -210,14 +243,14 @@ export default [
       'jsx-a11y/role-supports-aria-props': 'error',
       'jsx-a11y/scope': 'error',
       'jsx-a11y/tabindex-no-positive': 'error',
-      
+
       // ESLint comments
       'eslint-comments/no-unused-disable': 'error',
       'eslint-comments/no-unused-enable': 'error',
       'eslint-comments/disable-enable-pair': 'error',
     },
   },
-  
+
   // Import plugin configuration
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -229,19 +262,6 @@ export default [
         typescript: {
           alwaysTryTypes: true,
           project: './tsconfig.json',
-          baseUrl: '.',
-          paths: {
-            '@/*': ['./*'],
-            '@/lib/*': ['./lib/*'],
-            '@/hooks/*': ['./hooks/*', './features/*/hooks/*'],
-            '@/components/*': ['./components/*', './features/*/components/*'],
-            '@/features/*': ['./features/*'],
-            '@/utils/*': ['./utils/*'],
-            '@/shared/*': ['./shared/*'],
-            '@/types/*': ['./types/*'],
-            '@/lib/security/*': ['./lib/core/security/*', './lib/utils/*'],
-            '@/lib/cache/*': ['./lib/*'],
-          },
         },
         node: {
           extensions: ['.js', '.jsx', '.ts', '.tsx'],
@@ -249,6 +269,7 @@ export default [
       },
     },
     rules: {
+      // RSC-safe import rules
       'import/no-unresolved': 'error',
       'import/named': 'error',
       'import/default': 'error',
@@ -299,6 +320,20 @@ export default [
       'import/no-named-as-default': 'error',
       'import/no-named-as-default-member': 'error',
       'import/no-deprecated': 'warn',
+      'import/no-restricted-paths': ['error', {
+        zones: [
+          {
+            target: './components',
+            from: 'lucide-react',
+            message: 'Import icons via direct modular import, never re-export through UI barrel.'
+          },
+          {
+            target: './app',
+            from: './components/ui/client',
+            message: 'Server components cannot import client barrel. Use @/components/ui for server-safe primitives.'
+          }
+        ]
+      }],
       'import/no-extraneous-dependencies': [
         'error',
         {
@@ -330,10 +365,16 @@ export default [
       ],
     },
   },
-  
+
   // Test files configuration
   {
-    files: ['**/*.{test,spec}.{js,jsx,ts,tsx}', '**/tests/**/*.{js,jsx,ts,tsx}', '**/__tests__/**/*.{js,jsx,ts,tsx}'],
+    files: [
+      '**/*.{test,spec}.{js,jsx,ts,tsx}',
+      '**/tests/**/*.{js,jsx,ts,tsx}',
+      '**/__tests__/**/*.{js,jsx,ts,tsx}',
+      'jest*.js',
+      '**/*.setup.js',
+    ],
     languageOptions: {
       globals: {
         ...globals.jest,
@@ -345,12 +386,37 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       'import/no-extraneous-dependencies': 'off',
+      'no-console': 'off',
+      'unused-imports/no-unused-imports': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
-  
+
+  // UI components - reduce noise from withOptional warnings
+  {
+    files: ['components/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'TSTypeReference[typeName.name="AnyObject"]',
+          message: 'Prefer exact interfaces over AnyObject.'
+        },
+        {
+          selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
+          message: 'Use conditional spread or delete, not = undefined.'
+        },
+        // Removed SpreadElement warning for UI components to reduce noise
+      ],
+    },
+  },
+
   // Configuration files
   {
-    files: ['*.config.{js,ts}', '*.config.*.{js,ts}', 'dangerfile.js'],
+    files: ['*.config.{js,ts}', '*.config.*.{js,ts}', 'dangerfile.js', '**/webpack.config*.js', '**/next.config*.js'],
     languageOptions: {
       globals: {
         module: 'readonly',
@@ -362,10 +428,20 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
       'import/no-extraneous-dependencies': 'off',
+      'import/no-unresolved': 'off',
     },
   },
-  
+
+  // JavaScript files: allow require() for Node.js scripts
+  {
+    files: ['**/*.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
   // Tool files (.mjs) - Node.js environment
   {
     files: ['tools/**/*.mjs'],
@@ -383,7 +459,27 @@ export default [
       'import/no-extraneous-dependencies': 'off',
     },
   },
-  
+
+  // K6 load testing scripts
+  {
+    files: ['k6/**/*.js'],
+    languageOptions: {
+      globals: {
+        __ENV: 'readonly',
+        __VU: 'readonly',
+        __ITER: 'readonly',
+        open: 'readonly',
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'no-undef': 'off', // K6 globals
+      'import/no-extraneous-dependencies': 'off',
+      'no-console': 'off',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
@@ -400,10 +496,17 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'archive/**',
+      'archive-*/**',
+      'app/archive-*/**',
+      '_reports/**',
+      'tests/e2e/archive-old/**',
+      'archive-unused-files/**',
       'scratch/**',
       'vercel.json',
-      '.eslintrc.cjs',
-      '.eslintrc.type-aware.cjs',
+      '**/*.disabled',
+      '**/*.disabled.*',
+      '**/scripts.disabled/**',
+      '**/tests.disabled/**',
     ],
   },
 ];

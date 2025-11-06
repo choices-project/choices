@@ -39,20 +39,19 @@ import { getPreset, getAllPresets } from '../../lib/widgetPresets';
 import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
 import type { WidgetConfig } from '../../types/widget';
 import DemographicsChart from '../DemographicsChart';
+import PollHeatmap from '../PollHeatmap';
+import TemporalAnalysisChart from '../TemporalAnalysisChart';
 import TrendsChart from '../TrendsChart';
-
 import TrustTierComparisonChart from '../TrustTierComparisonChart';
+
 import { WidgetGrid } from './WidgetGrid';
 import { WidgetRenderer } from './WidgetRenderer';
-
 import { WidgetSelector } from './WidgetSelector';
 
 
 
 
 // Import existing analytics components
-import TemporalAnalysisChart from '../TemporalAnalysisChart';
-import PollHeatmap from '../PollHeatmap';
 
 
 // ============================================================================
@@ -203,7 +202,7 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
 
   const handleLayoutChange = useCallback((
     layout: GridLayout[],
-    layouts: Record<string, GridLayout[]>
+    _layouts: Record<string, GridLayout[]>
   ) => {
     // Update widget positions and sizes based on grid layout changes
     logger.debug('Layout changed', { layoutCount: layout.length });
@@ -224,8 +223,8 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
         y: widget.position.y,
         w: widget.size.w,
         h: widget.size.h,
-        minW: widget.minSize?.w || 2,
-        minH: widget.minSize?.h || 2,
+        minW: widget.minSize?.w ?? 2,
+        minH: widget.minSize?.h ?? 2,
       }}>
         <WidgetRenderer
           config={widget}

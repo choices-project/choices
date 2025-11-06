@@ -7,6 +7,9 @@ const bundleAnalyzer = withBundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable SWC minification for better performance
+  swcMinify: true,
+
   experimental: {
     // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)
     serverComponentsExternalPackages: [
@@ -15,8 +18,6 @@ const nextConfig = {
       '@supabase/supabase-js',
       // Externalize all Supabase packages to prevent browser globals in server bundles
     ],
-    // Enable SWC for better performance
-    swcMinify: true,
     // Disable CSS optimization to avoid critters dependency issues
     optimizeCss: false,
     // Disable font optimization to prevent browser globals in server bundles
@@ -87,21 +88,21 @@ const nextConfig = {
     if (isServer) {
       // Define browser globals as undefined for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({ 
-        self: 'globalThis',
-        window: 'undefined',
-        document: 'undefined',
-        navigator: 'undefined',
-        localStorage: 'undefined',
-        sessionStorage: 'undefined',
-        location: 'undefined',
-        HTMLElement: 'undefined',
+        self: JSON.stringify('globalThis'),
+        window: undefined,
+        document: undefined,
+        navigator: undefined,
+        localStorage: undefined,
+        sessionStorage: undefined,
+        location: undefined,
+        HTMLElement: undefined,
         // Additional browser globals that might leak
-        'window.location': 'undefined',
-        'document.location': 'undefined',
-        'navigator.userAgent': 'undefined',
-        'navigator.clipboard': 'undefined',
-        'window.localStorage': 'undefined',
-        'window.sessionStorage': 'undefined'
+        'window.location': undefined,
+        'document.location': undefined,
+        'navigator.userAgent': undefined,
+        'navigator.clipboard': undefined,
+        'window.localStorage': undefined,
+        'window.sessionStorage': undefined
       }));
 
       // Exclude font optimization and Supabase from server bundles
@@ -145,93 +146,54 @@ const nextConfig = {
 
     // Bundle size optimizations
     if (!isServer) {
-      // Optimize bundle splitting - more aggressive consolidation
+      // Optimize bundle splitting - balanced approach
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
           minSize: 20000, // 20KB minimum chunk size
-          maxSize: 300000, // 300KB maximum chunk size
-          minChunks: 1,
-          maxAsyncRequests: 10, // Limit async chunks
-          maxInitialRequests: 8, // Limit initial chunks
+          maxSize: 244000, // 250KB maximum chunk size
           cacheGroups: {
-            // React specific chunk - highest priority
-            react: {
-              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              name: 'react',
-              chunks: 'all',
+            // React and Next.js framework
+            framework: {
+              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              name: 'framework',
               priority: 40,
               enforce: true,
             },
-            // Next.js framework chunk
-            nextjs: {
-              test: /[\\/]node_modules[\\/](next)[\\/]/,
-              name: 'nextjs',
-              chunks: 'all',
-              priority: 35,
-              enforce: true,
-            },
-            // UI libraries consolidated
+            // UI libraries
             ui: {
               test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|clsx|tailwind-merge)[\\/]/,
               name: 'ui',
-              chunks: 'all',
               priority: 30,
               enforce: true,
             },
-            // Data & state management
+            // Data libraries
             data: {
               test: /[\\/]node_modules[\\/](@tanstack|@supabase|zod)[\\/]/,
               name: 'data',
-              chunks: 'all',
               priority: 25,
               enforce: true,
             },
-            // Charts and visualization - more aggressive splitting
-            charts: {
-              test: /[\\/]node_modules[\\/](recharts|d3|chart\.js|react-smooth)[\\/]/,
-              name: 'charts',
-              chunks: 'async', // Only load charts when needed
+            // Large libraries that should be code-split
+            heavy: {
+              test: /[\\/]node_modules[\\/](recharts|framer-motion)[\\/]/,
+              name: 'heavy',
+              chunks: 'async',
               priority: 20,
-              enforce: true,
-              maxSize: 100000, // 100KB max for charts
             },
-            // Animation libraries - async loading
-            animations: {
-              test: /[\\/]node_modules[\\/](framer-motion|lottie)[\\/]/,
-              name: 'animations',
-              chunks: 'async', // Only load animations when needed
-              priority: 20,
-              enforce: true,
-              maxSize: 100000, // 100KB max for animations
-            },
-            // Utility libraries - async loading
-            utils: {
-              test: /[\\/]node_modules[\\/](date-fns|lodash-es|uuid)[\\/]/,
-              name: 'utils',
-              chunks: 'async', // Only load utils when needed
-              priority: 15,
-              enforce: true,
-              maxSize: 50000, // 50KB max for utils
-            },
-            // All other vendor libraries - consolidated
+            // Other vendor libraries
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
-              chunks: 'all',
               priority: 10,
-              enforce: true,
-              minChunks: 1,
+              reuseExistingChunk: true,
             },
             // Common application code
             common: {
-              name: 'common',
               minChunks: 2,
-              chunks: 'all',
               priority: 5,
               reuseExistingChunk: true,
-              enforce: true,
             }
           }
         }
@@ -509,13 +471,13 @@ const nextConfig = {
     ignoreBuildErrors: false // Fix TypeScript errors properly, don't hide them
   },
 
-  // ESLint configuration - temporarily disabled for bundle optimization testing
+  // ESLint configuration
   eslint: {
-    ignoreDuringBuilds: true
+    ignoreDuringBuilds: false
   },
 
-  // Output configuration - removed standalone for Vercel compatibility
-  // output: 'standalone',
+  // Output configuration - enable for Docker deployments
+  output: 'standalone',
 
   // Trailing slash
   trailingSlash: false,

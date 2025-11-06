@@ -1,16 +1,16 @@
 /**
  * Temporal Analytics API
- * 
+ *
  * Returns temporal patterns showing when users are most active.
  * Analyzes hourly, daily, and velocity patterns.
- * 
+ *
  * Privacy Features:
  * - Only includes users who opted in
  * - Aggregated time-based data only
  * - No individual timestamps exposed
- * 
+ *
  * Access: Admin or T3 users
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -23,7 +23,7 @@ import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cach
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     logAnalyticsAccess(user, 'temporal-api', true);
 
     // Get query parameters
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = _request.nextUrl.searchParams;
     const range = searchParams.get('range') ?? '30d';
     const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
 
@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
     // Get votes from opted-in users only
-    const votesQueryResult = await queryBuilder.getVoteAnalytics({ 
-      dateRange: String(days) 
+    const votesQueryResult = await queryBuilder.getVoteAnalytics({
+      dateRange: String(days)
     });
-    
+
     const { data: votes, error: votesError } = await votesQueryResult;
 
     if (votesError) {
@@ -70,28 +70,28 @@ export async function GET(request: NextRequest) {
 
     // Analyze hourly patterns (0-23)
     const hourlyActivity = new Array(24).fill(0);
-    
+
     // Analyze daily patterns (Mon-Sun)
     const dailyActivity = new Array(7).fill(0);
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
+
     // Analyze velocity (activity over time)
     const velocityByDate = new Map<string, number>();
 
-    (votes || []).forEach((vote: any) => {
+    (votes ?? []).forEach((vote: any) => {
       const date = new Date(vote.created_at);
       if (isNaN(date.getTime())) return; // Skip invalid dates
-      
+
       // Hour of day (0-23)
       const hour = date.getHours();
       hourlyActivity[hour]++;
-      
+
       // Day of week (0=Sunday, 1=Monday, etc.)
       let dayIndex = date.getDay();
       // Convert to Monday=0 format
       dayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
       dailyActivity[dayIndex]++;
-      
+
       // Velocity (activity per date)
       const dateKey = date.toISOString().split('T')[0];
       if (dateKey) {
@@ -130,13 +130,16 @@ export async function GET(request: NextRequest) {
       .slice(-30); // Last 30 days
 
     // Calculate insights
-    const peakHour = hourly.length > 0 ? hourly.reduce((max, curr) => 
-      curr.activity > max.activity ? curr : max
-    , hourly[0]!) : { hour: 0, activity: 0, label: '12 AM' };
+    const defaultHour = { hour: 0, activity: 0, label: '12 AM' };
+    const defaultDay = { day: 'Monday', activity: 0, dayIndex: 0 };
 
-    const peakDay = daily.length > 0 ? daily.reduce((max, curr) => 
+    const peakHour = hourly.length > 0 ? hourly.reduce((max, curr) =>
       curr.activity > max.activity ? curr : max
-    , daily[0]!) : { day: 'Monday', activity: 0, dayIndex: 0 };
+    , hourly[0]!) : defaultHour;
+
+    const peakDay = daily.length > 0 ? daily.reduce((max, curr) =>
+      curr.activity > max.activity ? curr : max
+    , daily[0]!) : defaultDay;
 
     const avgActivity = (votes?.length ?? 0) / days;
 

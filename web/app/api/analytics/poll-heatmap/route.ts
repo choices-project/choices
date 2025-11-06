@@ -24,7 +24,7 @@ import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cach
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') ?? '20');
 
     // Generate cache key
     const cacheKey = generateCacheKey(CACHE_PREFIX.POLL_HEATMAP, { category, limit });
@@ -117,13 +117,12 @@ export async function GET(request: NextRequest) {
       const engagementScore = (totalVotes * 0.4) + (uniqueVoters * 0.6);
       
       // Check if poll is currently active
-      const now = new Date();
       const isActive = poll.status === 'active';
 
       return {
         poll_id: poll.id,
         title: poll.title,
-        category: (poll.hashtags && poll.hashtags[0]) ?? 'general',
+        category: poll.hashtags?.[0] ?? 'general',
         total_votes: totalVotes,
         unique_voters: uniqueVoters,
         engagement_score: engagementScore,

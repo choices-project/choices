@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUserStore } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
@@ -90,13 +91,14 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     getSystemHealth,
     getActiveSiteMessages,
     refresh
-  } = useEnhancedAnalytics({
-    pollId,
-    userId,
-    sessionId,
+  } = useEnhancedAnalytics(withOptional({
     enableRealTime,
     enableNewSchema
-  });
+  }, {
+    ...(pollId ? { pollId } : {}),
+    ...(userId ? { userId } : {}),
+    ...(sessionId ? { sessionId } : {})
+  }));
 
   const [systemHealth, setSystemHealth] = useState<any[]>([]);
   const [siteMessages, setSiteMessages] = useState<any[]>([]);

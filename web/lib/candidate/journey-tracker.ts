@@ -331,6 +331,6 @@ export function getStageDescription(stage: JourneyStage): string {
     verified: 'Filing verified! You\'re an official candidate.',
     active: 'Active campaign in progress. Good luck!'
   }
-  return descriptions[stage] || ''
+  return descriptions[stage] ?? ''
 }
 

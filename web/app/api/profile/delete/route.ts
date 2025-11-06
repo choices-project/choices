@@ -35,7 +35,7 @@ export const dynamic = 'force-dynamic';
  * - feed_interactions
  * - And more...
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     // Get authenticated user
     const supabase = await getSupabaseServerClient();
@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest) {
         { status: 500 }
       );
     }
-    deletionLog.profiles = profileCount || 0;
+    deletionLog.profiles = profileCount ?? 0;
 
     // 2. Delete voting records
     const { error: votesError, count: votesCount } = await supabase
@@ -92,7 +92,7 @@ export async function DELETE(request: NextRequest) {
     if (votesError) {
       logger.warn('Votes deletion error (non-critical, continuing)', votesError);
     }
-    deletionLog.votes = votesCount || 0;
+    deletionLog.votes = votesCount ?? 0;
 
     // 3. Delete created polls
     const { error: pollsError, count: pollsCount } = await supabase
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
     if (pollsError) {
       logger.warn('Polls deletion error (non-critical, continuing)', pollsError);
     }
-    deletionLog.polls = pollsCount || 0;
+    deletionLog.polls = pollsCount ?? 0;
 
     // 4. Delete analytics events
     const { error: analyticsError, count: analyticsCount } = await supabase
@@ -114,7 +114,7 @@ export async function DELETE(request: NextRequest) {
     if (analyticsError) {
       logger.warn('Analytics deletion error (non-critical, continuing)', analyticsError);
     }
-    deletionLog.analyticsEvents = analyticsCount || 0;
+    deletionLog.analyticsEvents = analyticsCount ?? 0;
 
     // 5. Delete user hashtags
     const { error: hashtagsError, count: hashtagsCount } = await supabase
@@ -125,7 +125,7 @@ export async function DELETE(request: NextRequest) {
     if (hashtagsError) {
       logger.warn('Hashtags deletion error (non-critical, continuing)', hashtagsError);
     }
-    deletionLog.hashtags = hashtagsCount || 0;
+    deletionLog.hashtags = hashtagsCount ?? 0;
 
     // 6. Delete WebAuthn credentials
     const { error: credentialsError, count: credentialsCount } = await supabase
@@ -136,7 +136,7 @@ export async function DELETE(request: NextRequest) {
     if (credentialsError) {
       logger.warn('WebAuthn credentials deletion error (non-critical, continuing)', credentialsError);
     }
-    deletionLog.credentials = credentialsCount || 0;
+    deletionLog.credentials = credentialsCount ?? 0;
 
     // 7. Delete user sessions
     const { error: sessionsError, count: sessionsCount } = await supabase
@@ -147,7 +147,7 @@ export async function DELETE(request: NextRequest) {
     if (sessionsError) {
       logger.warn('User sessions deletion error (non-critical, continuing)', sessionsError);
     }
-    deletionLog.sessions = sessionsCount || 0;
+    deletionLog.sessions = sessionsCount ?? 0;
 
     // 8. Delete contact messages
     const { error: messagesError, count: messagesCount } = await supabase
@@ -158,7 +158,7 @@ export async function DELETE(request: NextRequest) {
     if (messagesError) {
       logger.warn('Contact messages deletion error (non-critical, continuing)', messagesError);
     }
-    deletionLog.contactMessages = messagesCount || 0;
+    deletionLog.contactMessages = messagesCount ?? 0;
 
     // 9. Delete feed interactions
     const { error: feedError, count: feedCount } = await supabase
@@ -169,7 +169,7 @@ export async function DELETE(request: NextRequest) {
     if (feedError) {
       logger.warn('Feed interactions deletion error (non-critical, continuing)', feedError);
     }
-    deletionLog.feedInteractions = feedCount || 0;
+    deletionLog.feedInteractions = feedCount ?? 0;
 
     // 10. Delete platform analytics (if user created platforms)
     const { error: platformError, count: platformCount } = await supabase
@@ -180,7 +180,7 @@ export async function DELETE(request: NextRequest) {
     if (platformError) {
       logger.warn('Platform analytics deletion error (non-critical, continuing)', platformError);
     }
-    deletionLog.platformAnalytics = platformCount || 0;
+    deletionLog.platformAnalytics = platformCount ?? 0;
 
     // 11. Delete candidate platforms (if user declared candidacy)
     const { error: candidateError, count: candidateCount } = await supabase
@@ -191,7 +191,7 @@ export async function DELETE(request: NextRequest) {
     if (candidateError) {
       logger.warn('Candidate platforms deletion error (non-critical, continuing)', candidateError);
     }
-    deletionLog.candidatePlatforms = candidateCount || 0;
+    deletionLog.candidatePlatforms = candidateCount ?? 0;
 
     // 12. Delete push subscriptions
     const { error: pushError, count: pushCount } = await supabase
@@ -202,7 +202,7 @@ export async function DELETE(request: NextRequest) {
     if (pushError) {
       logger.warn('Push subscriptions deletion error (non-critical, continuing)', pushError);
     }
-    deletionLog.pushSubscriptions = pushCount || 0;
+    deletionLog.pushSubscriptions = pushCount ?? 0;
 
     // 13. Delete user roles
     const { error: rolesError, count: rolesCount } = await supabase
@@ -213,7 +213,7 @@ export async function DELETE(request: NextRequest) {
     if (rolesError) {
       logger.warn('User roles deletion error (non-critical, continuing)', rolesError);
     }
-    deletionLog.userRoles = rolesCount || 0;
+    deletionLog.userRoles = rolesCount ?? 0;
 
     // ========================================================================
     // DELETE AUTH USER (Final step - CRITICAL)

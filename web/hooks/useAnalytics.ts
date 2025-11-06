@@ -293,12 +293,13 @@ function generateRecommendations(data: AnalyticsData, type: string): string[] {
       }
       break;
     
-    case 'trends':
+    case 'trends': {
       const recentUserGrowth = data.trends.userGrowth.slice(-7).reduce((sum, trend) => sum + trend.count, 0);
       if (recentUserGrowth < 10) {
         recommendations.push('Low recent user growth - consider marketing campaigns');
       }
       break;
+    }
     
     case 'performance':
       if (!data.performance.queryOptimized) {

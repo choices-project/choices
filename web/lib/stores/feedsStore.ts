@@ -281,7 +281,6 @@ const defaultFilters: FeedFilters = {
   engagement: 'all',
   language: 'en',
   tags: [],
-  district: undefined, // No district filter by default (show all content)
 };
 
 // Create feeds store with middleware
@@ -578,8 +577,8 @@ export const useFeedsStore = create<FeedsStore>()(
           ...feed,
           userInteraction: { 
             ...feed.userInteraction, 
-            read: false, 
-            readAt: undefined,
+            read: false,
+            ...(feed.userInteraction.readAt !== undefined ? {} : {})
           },
         }))),
         

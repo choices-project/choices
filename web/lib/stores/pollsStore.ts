@@ -593,8 +593,7 @@ export const usePollsStore = create<PollsStore>()(
           return poll.status === 'active' && !poll.closed_at;
         },
         
-        hasUserVoted: (pollId) => {
-          const state = get();
+        hasUserVoted: (_pollId) => {
           // This would need to check against user's votes from database
           // For now, return false - actual implementation would query votes table
           return false;

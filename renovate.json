@@ -1,0 +1,67 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":preserveSemverRanges"
+  ],
+  "schedule": ["before 6am on Monday"],
+  "timezone": "America/Los_Angeles",
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    },
+    {
+      "groupName": "Next.js packages",
+      "matchPackagePatterns": ["^next", "^@next/"],
+      "schedule": ["before 6am on the first day of the month"]
+    },
+    {
+      "groupName": "React packages",
+      "matchPackagePatterns": ["^react", "^react-dom"],
+      "schedule": ["before 6am on the first day of the month"]
+    },
+    {
+      "groupName": "TypeScript",
+      "matchPackageNames": ["typescript", "@types/node"],
+      "schedule": ["before 6am on the first day of the month"]
+    },
+    {
+      "groupName": "Testing libraries",
+      "matchPackagePatterns": ["^@testing-library/", "^jest", "^@playwright/"],
+      "automerge": true
+    },
+    {
+      "groupName": "ESLint and plugins",
+      "matchPackagePatterns": ["^eslint", "^@typescript-eslint/"],
+      "automerge": true
+    },
+    {
+      "groupName": "Supabase packages",
+      "matchPackagePatterns": ["^@supabase/"],
+      "schedule": ["before 6am on the 15th day of the month"]
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "matchUpdateTypes": ["patch"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@alaughingkitsune"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "ignoreDeps": []
+}
+

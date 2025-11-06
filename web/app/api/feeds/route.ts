@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
       feeds: feedItems,
       count: feedItems.length,
       filters: {
-        district: district || null
+        district: district ?? null
       },
       message: 'Feed items loaded successfully'
     });

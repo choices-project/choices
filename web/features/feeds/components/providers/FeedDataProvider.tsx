@@ -186,7 +186,7 @@ export default function FeedDataProvider({
     if (newValue && userDistrict) {
       feedsStoreRef.current.setFilters({ district: userDistrict });
     } else {
-      feedsStoreRef.current.setFilters({ district: undefined });
+      feedsStoreRef.current.setFilters({});
     }
     
     // Refresh feeds with new filter
@@ -217,7 +217,7 @@ export default function FeedDataProvider({
   return children({
     feeds: filteredFeeds,
     isLoading,
-    error: error || storeError,
+    error: error ?? storeError,
     onLike: handleLike,
     onBookmark: handleBookmark,
     onShare: handleShare,
@@ -228,8 +228,8 @@ export default function FeedDataProvider({
     trendingHashtags,
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictFilterToggle,
-    onLoadMore: enableInfiniteScroll ? handleLoadMore : undefined,
-    hasMore: enableInfiniteScroll && hasMore
+    ...(enableInfiniteScroll && handleLoadMore ? { onLoadMore: handleLoadMore } : {}),
+    ...(enableInfiniteScroll ? { hasMore } : {})
   });
 }
 

@@ -16,7 +16,7 @@ import type {
   RegistrationResponse,
   AuthenticationResponse,
   WebAuthnCredential
-} from './native/types';
+, AuthenticatorTransport } from './native/types';
 import { 
   arrayBufferToBase64url,
   base64urlToArrayBuffer
@@ -99,17 +99,31 @@ export async function verifyCredentialRegistration(
     }
 
     // Extract credential information from native response
-    return {
+    const baseResult: RegistrationVerificationResult = {
       verified: true,
       credentialId: verification.credentialId,
       publicKey: verification.publicKey,
       counter: verification.counter,
-      transports: verification.transports,
-      backupEligible: verification.backupEligible,
-      backupState: verification.backupState,
-      aaguid: verification.aaguid,
-      userHandle: verification.userHandle,
     };
+    
+    // Add optional fields only if they are defined
+    if (verification.transports && Array.isArray(verification.transports)) {
+      baseResult.transports = verification.transports.map(t => String(t));
+    }
+    if (verification.backupEligible !== undefined) {
+      baseResult.backupEligible = verification.backupEligible;
+    }
+    if (verification.backupState !== undefined) {
+      baseResult.backupState = verification.backupState;
+    }
+    if (verification.aaguid) {
+      baseResult.aaguid = verification.aaguid;
+    }
+    if (verification.userHandle !== undefined) {
+      baseResult.userHandle = verification.userHandle;
+    }
+    
+    return baseResult;
 
   } catch (error) {
     return {
@@ -134,21 +148,37 @@ export async function verifyCredentialAuthentication(
 ): Promise<AuthenticationVerificationResult> {
   try {
     // Convert database format to WebAuthnCredential
-    const credential: WebAuthnCredential = {
+    const baseCredential: WebAuthnCredential = {
       id: credentialData.credentialId,
       userId: '', // Not needed for verification
       rpId: expectedRPID,
       credentialId: credentialData.credentialId,
       publicKey: credentialData.publicKey,
       counter: credentialData.counter,
-      transports: credentialData.transports as any,
-      backupEligible: credentialData.backupEligible,
-      backupState: credentialData.backupState,
-      aaguid: credentialData.aaguid,
-      userHandle: credentialData.userHandle,
       createdAt: credentialData.createdAt,
-      lastUsedAt: credentialData.lastUsedAt
     };
+    
+    // Add optional fields only if they are defined
+    if (credentialData.transports && Array.isArray(credentialData.transports)) {
+      baseCredential.transports = credentialData.transports as AuthenticatorTransport[];
+    }
+    if (credentialData.backupEligible !== undefined) {
+      baseCredential.backupEligible = credentialData.backupEligible;
+    }
+    if (credentialData.backupState !== undefined) {
+      baseCredential.backupState = credentialData.backupState;
+    }
+    if (credentialData.aaguid) {
+      baseCredential.aaguid = credentialData.aaguid;
+    }
+    if (credentialData.userHandle) {
+      baseCredential.userHandle = credentialData.userHandle;
+    }
+    if (credentialData.lastUsedAt) {
+      baseCredential.lastUsedAt = credentialData.lastUsedAt;
+    }
+    
+    const credential = baseCredential;
 
     // Log credential ID for debugging
     devLog('Verifying credential', {

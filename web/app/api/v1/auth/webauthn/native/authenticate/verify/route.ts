@@ -61,6 +61,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Challenge expired' }, { status: 400 });
     }
 
+    // Get current request origin
+    const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
+    const currentOrigin = origin.replace(/\/$/, '');
+
+    // SECURITY: Validate origin against allowed origins
+    if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
+      logger.warn('WebAuthn authentication attempt from unauthorized origin', {
+        origin: currentOrigin,
+        allowedOrigins,
+        userId: user.id
+      });
+      return NextResponse.json({ error: 'Unauthorized origin' }, { status: 403 });
+    }
+
     // Lookup credential
     const credIdBuf = Buffer.from(body.id, 'base64url');
     const { data: creds, error: credsErr } = await supabase
@@ -80,10 +94,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Credential not found' }, { status: 400 });
     }
 
-    // Get current request origin
-    const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
-    const currentOrigin = origin.replace(/\/$/, '');
-
     // Verify authentication using native implementation
     const verificationResult = await verifyAuthenticationResponse(
       body,
@@ -96,8 +106,8 @@ export async function POST(req: NextRequest) {
         publicKey: cred.public_key,
         counter: Number(cred.counter),
         userId: cred.user_id,
-        rpId: cred.rp_id || rpID,
-        createdAt: new Date(cred.created_at || Date.now()),
+        rpId: cred.rp_id ?? rpID,
+        createdAt: new Date(cred.created_at ?? Date.now()),
         userHandle: cred.user_id
       }
     );
@@ -109,7 +119,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const newCounter = verificationResult.newCounter || 0;
+    const newCounter = verificationResult.newCounter ?? 0;
 
     // Security check: Counter should never decrease
     if (newCounter < Number(cred.counter)) {

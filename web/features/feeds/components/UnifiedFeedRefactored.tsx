@@ -20,6 +20,8 @@
 
 import React from 'react';
 
+import { logger } from '@/lib/utils/logger';
+
 import FeedCore from './core/FeedCore';
 import FeedDataProvider from './providers/FeedDataProvider';
 
@@ -47,24 +49,27 @@ export default function UnifiedFeedRefactored({
   userId,
   userDistrict,
   className = '',
-  enablePersonalization = true,
-  enableRealTimeUpdates = true,
-  enableAnalytics = false,
-  enableHaptics = true,
-  enableHashtagPolls = true,
-  enableMobileOptimization = true,
-  showTrending = true,
+  enablePersonalization: _enablePersonalization = true,
+  enableRealTimeUpdates: _enableRealTimeUpdates = true,
+  enableAnalytics: _enableAnalytics = false,
+  enableHaptics: _enableHaptics = true,
+  enableHashtagPolls: _enableHashtagPolls = true,
+  enableMobileOptimization: _enableMobileOptimization = true,
+  showTrending: _showTrending = true,
   maxItems = 50
 }: UnifiedFeedProps) {
-  console.log('[UnifiedFeedRefactored] Rendering', { userId, userDistrict });
+  logger.debug('[UnifiedFeedRefactored] Rendering', { userId, userDistrict });
 
   return (
-    <FeedDataProvider userId={userId} userDistrict={userDistrict}>
+    <FeedDataProvider 
+      {...(userId ? { userId } : {})}
+      {...(userDistrict !== undefined ? { userDistrict } : {})}
+    >
       {(dataProps) => (
         <FeedCore
           {...dataProps}
           className={className}
-          userDistrict={userDistrict}
+          userDistrict={userDistrict ?? null}
         />
       )}
     </FeedDataProvider>

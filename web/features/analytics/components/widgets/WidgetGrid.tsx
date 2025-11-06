@@ -95,7 +95,7 @@ const widgetToLayout = (widget: WidgetConfig): GridLayoutType => ({
   minH: widget.minSize?.h,
   maxW: widget.maxSize?.w,
   maxH: widget.maxSize?.h,
-  static: widget.static || false,
+  static: widget.static ?? false,
   isDraggable: widget.enabled,
   isResizable: widget.enabled,
 });
@@ -166,7 +166,7 @@ export const WidgetGrid: React.FC<WidgetGridProps> = ({
 
   // Handle drag start
   const handleDragStart = useCallback(
-    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, placeholder: GridLayoutType, event: MouseEvent, element: HTMLElement) => {
+    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, _placeholder: GridLayoutType, _event: MouseEvent, _element: HTMLElement) => {
       onDragStart?.(layout, oldItem, newItem);
     },
     [onDragStart]
@@ -174,7 +174,7 @@ export const WidgetGrid: React.FC<WidgetGridProps> = ({
 
   // Handle drag stop
   const handleDragStop = useCallback(
-    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, placeholder: GridLayoutType, event: MouseEvent, element: HTMLElement) => {
+    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, _placeholder: GridLayoutType, _event: MouseEvent, _element: HTMLElement) => {
       onDragStop?.(layout, oldItem, newItem);
     },
     [onDragStop]
@@ -182,7 +182,7 @@ export const WidgetGrid: React.FC<WidgetGridProps> = ({
 
   // Handle resize start
   const handleResizeStart = useCallback(
-    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, placeholder: GridLayoutType, event: MouseEvent, element: HTMLElement) => {
+    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, _placeholder: GridLayoutType, _event: MouseEvent, _element: HTMLElement) => {
       onResizeStart?.(layout, oldItem, newItem);
     },
     [onResizeStart]
@@ -190,7 +190,7 @@ export const WidgetGrid: React.FC<WidgetGridProps> = ({
 
   // Handle resize stop
   const handleResizeStop = useCallback(
-    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, placeholder: GridLayoutType, event: MouseEvent, element: HTMLElement) => {
+    (layout: GridLayoutType[], oldItem: GridLayoutType, newItem: GridLayoutType, _placeholder: GridLayoutType, _event: MouseEvent, _element: HTMLElement) => {
       onResizeStop?.(layout, oldItem, newItem);
     },
     [onResizeStop]

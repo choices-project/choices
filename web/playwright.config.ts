@@ -19,13 +19,6 @@ export default defineConfig({
     actionTimeout: 10_000,
     navigationTimeout: 15_000,
   },
-  // Use existing dev server instead of starting new one
-  // webServer: {
-  //   command: 'bash -c "npm run build && npm run start -- -p 3000"',
-  //   port: 3000,
-  //   reuseExistingServer: true,
-  //   timeout: 120_000,
-  // },
 
   projects: [
     {
@@ -53,6 +46,4 @@ export default defineConfig({
       },
     },
   ],
-
-  // No webServer - assuming dev server is already running on port 3000
 })

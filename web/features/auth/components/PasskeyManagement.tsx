@@ -33,7 +33,7 @@ export function PasskeyManagement() {
       const response = await fetch('/api/v1/auth/webauthn/credentials');
       if (response.ok) {
         const data = await response.json();
-        setPasskeys(data.credentials || []);
+        setPasskeys(data.credentials ?? []);
       } else {
         setError('Failed to load passkeys');
       }
@@ -152,7 +152,7 @@ function PasskeyCard({
   onRevoke: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [newLabel, setNewLabel] = useState(passkey.device_label || 'Unnamed Device');
+  const [newLabel, setNewLabel] = useState(passkey.device_label ?? 'Unnamed Device');
 
   const handleSave = () => {
     onRename(newLabel);
@@ -192,7 +192,7 @@ function PasskeyCard({
             </div>
           ) : (
             <div>
-              <h4 className="font-medium">{passkey.device_label || 'Unnamed Device'}</h4>
+              <h4 className="font-medium">{passkey.device_label ?? 'Unnamed Device'}</h4>
               <p className="text-sm text-gray-600">
                 Last used: {formatDate(passkey.last_used_at)}
               </p>

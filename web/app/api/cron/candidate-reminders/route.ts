@@ -6,9 +6,9 @@ import {
   type JourneyMilestone
 } from '@/lib/candidate/journey-tracker'
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
+import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { withOptional } from '@/lib/util/objects'
 
 /**
  * GET /api/cron/candidate-reminders

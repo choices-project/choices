@@ -261,7 +261,7 @@ const DemographicsStep: React.FC<{
                   ...demographics,
                   location: {
                     state: district.state,
-                    district: district.district ?? undefined,
+                    ...(district.district ? { district: district.district } : {}),
                     quantized: true
                   }
                 });

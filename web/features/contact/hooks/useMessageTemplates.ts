@@ -33,10 +33,13 @@ export function useMessageTemplates() {
   const templatesByCategory = useMemo(() => {
     const categories: Record<string, MessageTemplate[]> = {};
     MESSAGE_TEMPLATES.forEach(template => {
-      if (!categories[template.category]) {
-        categories[template.category] = [];
+      const category = template.category;
+      if (category) {
+        if (!categories[category]) {
+          categories[category] = [];
+        }
+        categories[category].push(template);
       }
-      categories[template.category].push(template);
     });
     return categories;
   }, []);

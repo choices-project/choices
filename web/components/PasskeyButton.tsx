@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
-
 import { T } from '@/lib/testing/testIds';
+import { logger } from '@/lib/utils/logger';
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
 
 type PasskeyButtonProps = {
@@ -58,7 +58,7 @@ export function PasskeyButton({
       if (result.ok) {
         onSuccess?.();
       } else {
-        const errorMsg = result.error || 'Operation failed';
+        const errorMsg = result.error ?? 'Operation failed';
         setError(errorMsg);
         onError?.(errorMsg);
       }
@@ -140,7 +140,7 @@ export function EmailLinkButton({
     setLoading(true);
     try {
       // Implement email link functionality
-      console.log('Email link clicked');
+      logger.debug('Email link clicked');
       onSuccess?.();
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Email link failed');

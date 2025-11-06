@@ -6,7 +6,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const supabase = getSupabaseServerClient()
     
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     let progressError: any = null;
 
     switch (action) {
-      case 'start':
+      case 'start': {
         // Start onboarding - upsert progress record
         const { data: startData, error: startError } = await (supabaseClient as any)
           .from('onboarding_progress')
@@ -111,9 +111,10 @@ export async function POST(request: NextRequest) {
           .single();
         updatedProgress = startData;
         progressError = startError;
-        break
+        break;
+      }
 
-      case 'update':
+      case 'update': {
         // Update onboarding step
         const { data: updateData, error: updateError } = await (supabaseClient as any)
           .from('onboarding_progress')
@@ -127,9 +128,10 @@ export async function POST(request: NextRequest) {
           .single();
         updatedProgress = updateData;
         progressError = updateError;
-        break
+        break;
+      }
 
-      case 'complete':
+      case 'complete': {
         // Complete onboarding
         const { data: completeData, error: completeError } = await (supabaseClient as any)
           .from('onboarding_progress')
@@ -141,7 +143,8 @@ export async function POST(request: NextRequest) {
           .single();
         updatedProgress = completeData;
         progressError = completeError;
-        break
+        break;
+      }
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

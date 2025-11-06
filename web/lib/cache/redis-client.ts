@@ -155,11 +155,11 @@ export class RedisClient {
           host: this.config.host,
           port: this.config.port,
           keepAlive: this.config.keepAlive ? true : false,
-          connectTimeout: this.config.connectTimeout,
-          family: this.config.family
+          ...(this.config.connectTimeout !== undefined ? { connectTimeout: this.config.connectTimeout } : {}),
+          ...(this.config.family !== undefined ? { family: this.config.family } : {})
         },
-        password: this.config.password,
-        database: this.config.db
+        ...(this.config.password ? { password: this.config.password } : {}),
+        ...(this.config.db !== undefined ? { database: this.config.db } : {})
       }) as unknown as RedisClientInterface
 
       // Set up event listeners
@@ -717,7 +717,7 @@ const defaultRedisConfig: RedisConfig = {
   db: parseInt(process.env.REDIS_DB ?? '0'),
   maxMemoryPolicy: 'allkeys-lru',
   maxMemory: '256mb',
-  password: process.env.REDIS_PASSWORD
+  ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {})
 }
 
 // Global Redis client instance

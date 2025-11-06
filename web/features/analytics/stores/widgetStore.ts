@@ -258,14 +258,18 @@ export const useWidgetStore = create<WidgetState & WidgetStoreActions>()(
         // ====================================================================
 
         undo: () => {
-          const { history, historyIndex } = get();
+          const { historyIndex } = get();
           if (historyIndex > 0) {
             set((state) => {
               state.historyIndex--;
               const previousLayout = state.history[state.historyIndex];
-              state.currentLayout = previousLayout;
-              state.widgets = new Map(previousLayout.widgets.map(w => [w.id, w]));
-              logger.debug('Undo', { historyIndex: state.historyIndex });
+              if (previousLayout) {
+                state.currentLayout = previousLayout;
+                state.widgets = new Map(previousLayout.widgets.map(w => [w.id, w]));
+                logger.debug('Undo', { historyIndex: state.historyIndex });
+              } else {
+                state.currentLayout = null;
+              }
             });
           }
         },
@@ -276,9 +280,13 @@ export const useWidgetStore = create<WidgetState & WidgetStoreActions>()(
             set((state) => {
               state.historyIndex++;
               const nextLayout = state.history[state.historyIndex];
-              state.currentLayout = nextLayout;
-              state.widgets = new Map(nextLayout.widgets.map(w => [w.id, w]));
-              logger.debug('Redo', { historyIndex: state.historyIndex });
+              if (nextLayout) {
+                state.currentLayout = nextLayout;
+                state.widgets = new Map(nextLayout.widgets.map(w => [w.id, w]));
+                logger.debug('Redo', { historyIndex: state.historyIndex });
+              } else {
+                state.currentLayout = null;
+              }
             });
           }
         },

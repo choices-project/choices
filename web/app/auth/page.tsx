@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
-import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';

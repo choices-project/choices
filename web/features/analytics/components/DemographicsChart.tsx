@@ -357,13 +357,14 @@ export default function DemographicsChart({
                   tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <YAxis 
-                  label={isMobile ? undefined : { value: 'User Count', angle: -90, position: 'insideLeft' }}
+                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
                   tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) return null;
-                    const data = payload[0].payload;
+                    const data = payload[0]?.payload;
+                    if (!data) return null;
                     return (
                       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                         <p className="font-semibold text-gray-900">{data.ageGroup}</p>
@@ -406,13 +407,14 @@ export default function DemographicsChart({
                   tick={{ fontSize: isMobile ? 9 : 12 }}
                 />
                 <YAxis 
-                  label={isMobile ? undefined : { value: 'User Count', angle: -90, position: 'insideLeft' }}
+                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
                   tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) return null;
-                    const data = payload[0].payload;
+                    const data = payload[0]?.payload;
+                    if (!data) return null;
                     return (
                       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                         <p className="font-semibold text-gray-900">{data.district}</p>

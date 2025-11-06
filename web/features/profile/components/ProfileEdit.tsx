@@ -237,13 +237,13 @@ export default function ProfileEdit({
     try {
       // Convert userStore ProfileUpdateData to profile types ProfileUpdateData
       const profileUpdateData: ProfileUpdateData = {
-        display_name: formData.display_name,
-        bio: formData.bio,
-        username: formData.username,
-        primary_concerns: formData.primary_concerns,
-        community_focus: formData.community_focus,
-        participation_style: formData.participation_style,
-        privacy_settings: formData.privacy_settings
+        ...(formData.display_name !== undefined ? { display_name: formData.display_name } : {}),
+        ...(formData.bio !== undefined ? { bio: formData.bio } : {}),
+        ...(formData.username !== undefined ? { username: formData.username } : {}),
+        ...(formData.primary_concerns !== undefined ? { primary_concerns: formData.primary_concerns } : {}),
+        ...(formData.community_focus !== undefined ? { community_focus: formData.community_focus } : {}),
+        ...(formData.participation_style !== undefined ? { participation_style: formData.participation_style } : {}),
+        ...(formData.privacy_settings !== undefined ? { privacy_settings: formData.privacy_settings } : {})
       };
       
       await updateProfile(profileUpdateData);

@@ -35,7 +35,7 @@ export class PrivacyAwareQueryBuilder {
    * Get base query with privacy filters applied
    * Excludes users with collectAnalytics = false
    */
-  async getPrivacyFilteredQuery<T>(
+  async getPrivacyFilteredQuery(
     table: string,
     columns: string = '*'
   ) {

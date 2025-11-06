@@ -57,7 +57,7 @@ export function HashtagManagement({
         const result = await searchHashtags({ 
           query: '',
           limit: 100,
-          category: selectedCategory === 'all' ? undefined : selectedCategory
+          ...(selectedCategory !== 'all' ? { category: selectedCategory } : {})
         });
         
         if (result.success && result.data) {
@@ -103,11 +103,12 @@ export function HashtagManagement({
       setIsLoading(true);
       setError(null);
       
-      const result = await updateHashtag(hashtag.id, {
-        display_name: hashtag.display_name,
-        category: hashtag.category,
-        description: hashtag.description
-      });
+      const updateData: Record<string, unknown> = {};
+      if (hashtag.display_name) updateData.display_name = hashtag.display_name;
+      updateData.category = hashtag.category;
+      if (hashtag.description) updateData.description = hashtag.description;
+      
+      const result = await updateHashtag(hashtag.id, updateData);
       
       if (result.success && result.data) {
         setHashtags(prev => prev.map(h => h.id === hashtag.id ? result.data! : h));

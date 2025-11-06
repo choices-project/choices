@@ -3,8 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { feedbackParser } from '@/lib/feedback/FeedbackParser';
 import type { InterestSuggestion } from '@/lib/feedback/FeedbackParser';
 import { devLog } from '@/lib/utils/logger';
+import type { Database } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { undefinedToNull } from '@/lib/util/clean';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,28 +33,25 @@ export async function POST(request: NextRequest) {
     // Store in database
     const supabase = await getSupabaseServerClient();
     if (supabase) {
-      const insertData: Record<string, unknown> = {
+      const insertData: Database['public']['Tables']['feedback']['Insert'] = {
         id: parsedFeedback.id,
-        user_id: parsedFeedback.metadata.userId,
+        user_id: parsedFeedback.metadata.userId ?? null,
         feedback_type: parsedFeedback.type,
-        type: parsedFeedback.type,
+        type: parsedFeedback.type ?? null,
         title: parsedFeedback.title,
         description: parsedFeedback.description,
-        sentiment: parsedFeedback.sentiment,
-        priority: parsedFeedback.priority,
-        tags: parsedFeedback.tags,
-        metadata: parsedFeedback.metadata,
+        sentiment: parsedFeedback.sentiment ?? null,
+        priority: parsedFeedback.priority ?? null,
+        tags: parsedFeedback.tags ?? null,
+        metadata: parsedFeedback.metadata ?? null,
         status: 'pending',
-        created_at: parsedFeedback.metadata.timestamp
+        created_at: parsedFeedback.metadata.timestamp ?? null,
+        ...(parsedFeedback.aiAnalysis ? { ai_analysis: parsedFeedback.aiAnalysis } : {})
       };
-      
-      if (parsedFeedback.aiAnalysis) {
-        insertData.ai_analysis = parsedFeedback.aiAnalysis;
-      }
 
       const { error } = await supabase
         .from('feedback')
-        .insert(undefinedToNull(insertData) as Record<string, unknown>);
+        .insert(insertData);
 
       if (error) {
         devLog('Error storing feedback:', error);

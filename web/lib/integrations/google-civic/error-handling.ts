@@ -87,7 +87,7 @@ export class GoogleCivicErrorHandler {
     const errorData = error.body ?? error.data ?? {};
 
     switch (status) {
-      case 400:
+      case 400: {
         return new GoogleCivicApiError(
           'Bad request: Invalid parameters provided to Google Civic API',
           400,
@@ -97,8 +97,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'The address or parameters provided are invalid. Please check your input and try again.'
           }
         );
+      }
 
-      case 403:
+      case 403: {
         return new GoogleCivicApiError(
           'Forbidden: API key is invalid or quota exceeded',
           403,
@@ -108,8 +109,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'API access denied. Please check your API key configuration.'
           }
         );
+      }
 
-      case 404:
+      case 404: {
         return new GoogleCivicApiError(
           'Not found: No representatives found for the given address',
           404,
@@ -119,8 +121,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'No representatives found for this address. The address may be invalid or outside the supported regions.'
           }
         );
+      }
 
-      case 408:
+      case 408: {
         return new GoogleCivicApiError(
           'Request timeout: Google Civic API took too long to respond',
           408,
@@ -130,8 +133,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'The request timed out. Please try again.'
           }
         );
+      }
 
-      case 429:
+      case 429: {
         return new GoogleCivicApiError(
           'Rate limit exceeded: Too many requests to Google Civic API',
           429,
@@ -141,8 +145,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'Too many requests. Please wait a moment before trying again.'
           }
         );
+      }
 
-      case 500:
+      case 500: {
         return new GoogleCivicApiError(
           'Internal server error: Google Civic API is experiencing issues',
           500,
@@ -152,10 +157,11 @@ export class GoogleCivicErrorHandler {
             userMessage: 'Google Civic API is temporarily unavailable. Please try again later.'
           }
         );
+      }
 
       case 502:
       case 503:
-      case 504:
+      case 504: {
         return new GoogleCivicApiError(
           'Service unavailable: Google Civic API is temporarily down',
           status,
@@ -165,8 +171,9 @@ export class GoogleCivicErrorHandler {
             userMessage: 'Google Civic API is temporarily unavailable. Please try again later.'
           }
         );
+      }
 
-      default:
+      default: {
         return new GoogleCivicApiError(
           `HTTP error ${status}: ${(errorData as { message?: string }).message ?? 'Unknown error'}`,
           status ?? 500,
@@ -176,6 +183,7 @@ export class GoogleCivicErrorHandler {
             userMessage: 'An error occurred while fetching representative information.'
           }
         );
+      }
     }
   }
 

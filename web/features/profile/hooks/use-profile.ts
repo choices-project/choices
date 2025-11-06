@@ -246,9 +246,9 @@ export function useProfileErrorStates() {
     avatarError: avatarMutation.error,
     exportError: exportMutation.error,
     hasAnyError: !!(
-      profileQuery.error || 
-      updateMutation.error || 
-      avatarMutation.error || 
+      profileQuery.error ?? 
+      updateMutation.error ?? 
+      avatarMutation.error ?? 
       exportMutation.error
     ),
   };

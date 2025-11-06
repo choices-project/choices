@@ -6,6 +6,7 @@
  */
 
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 
 // Local SSR guard to avoid restricted imports and missing exports
 const isServer = (): boolean => typeof window === 'undefined';
@@ -358,13 +359,13 @@ export function logWebAuthnError(
     });
   }
 
-  // Console-level logging with severity
+  // Logger-level logging with severity
   if (error.statusCode >= 500) {
-    console.error('WebAuthn server error:', logData);
+    logger.error('WebAuthn server error:', logData);
   } else if (error.statusCode >= 400) {
-    console.warn('WebAuthn client error:', logData);
+    logger.warn('WebAuthn client error:', logData);
   } else {
-    console.log('WebAuthn error:', logData);
+    logger.info('WebAuthn error:', logData);
   }
 }
 

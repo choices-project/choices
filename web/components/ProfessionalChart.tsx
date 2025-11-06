@@ -260,7 +260,7 @@ export function ProfessionalChart({
       showConfidence
     }}>
       <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              {(title || subtitle) && (
+              {(title ?? subtitle) && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             {title && (

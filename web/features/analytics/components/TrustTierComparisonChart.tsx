@@ -46,6 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { logger } from '@/lib/utils/logger';
 
 type TierMetrics = {
   tier: string;
@@ -78,13 +79,6 @@ const TIER_COLORS = {
   'T3': '#22c55e'  // green-500
 };
 
-const TIER_NAMES = {
-  'T0': 'Basic',
-  'T1': 'Verified',
-  'T2': 'Trusted',
-  'T3': 'Elite'
-};
-
 export default function TrustTierComparisonChart({
   className = '',
   defaultTab = 'participation'
@@ -113,7 +107,7 @@ export default function TrustTierComparisonChart({
 
       setData(result);
     } catch (err) {
-      console.error('Failed to fetch tier data:', err);
+      logger.error('Failed to fetch tier data', err);
       setError(err instanceof Error ? err.message : 'Failed to load tier data');
       
       // Use mock data for development
@@ -211,7 +205,7 @@ export default function TrustTierComparisonChart({
         <CardContent>
           <div className="flex items-center justify-center h-64 text-red-600">
             <AlertCircle className="h-5 w-5 mr-2" />
-            <span>{error || 'No data available'}</span>
+            <span>{error ?? 'No data available'}</span>
           </div>
         </CardContent>
       </Card>
@@ -342,7 +336,9 @@ export default function TrustTierComparisonChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const tier = payload[0].payload;
+                      const firstPayload = payload[0];
+                      const tier = firstPayload?.payload;
+                      if (!tier || typeof tier !== 'object' || !('tier' in tier)) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900 mb-2">
@@ -421,7 +417,9 @@ export default function TrustTierComparisonChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const tier = payload[0].payload;
+                      const firstPayload = payload[0];
+                      const tier = firstPayload?.payload;
+                      if (!tier || typeof tier !== 'object' || !('tier' in tier)) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900 mb-2">

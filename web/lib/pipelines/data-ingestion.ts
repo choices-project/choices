@@ -372,7 +372,7 @@ export class DataIngestionPipeline {
         
         // Here you would store the result in your database
         // Use result for processing
-        if (result && result.representatives) {
+        if (result?.representatives) {
           logger.debug('Found representatives for address', { 
             address, 
             representativeCount: result.representatives.length,

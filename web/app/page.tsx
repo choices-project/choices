@@ -22,7 +22,7 @@ export default function RootPage() {
           // User is not authenticated, redirect to auth
           router.push('/auth');
         }
-      } catch (error) {
+      } catch (_error) {
         // On error, default to auth page
         router.push('/auth');
       }

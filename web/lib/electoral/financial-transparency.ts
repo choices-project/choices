@@ -313,8 +313,8 @@ export class FinancialTransparencySystem {
       // Get voting record
       const votes = await this.orchestrator.getVotingRecord(candidateId);
       const issueVotes = votes.filter(vote => 
-        vote.billTitle?.toLowerCase().includes(issue.toLowerCase()) ||
-        vote.question.toLowerCase().includes(issue.toLowerCase())
+        (vote.billTitle?.toLowerCase().includes(issue.toLowerCase()) ?? false) ||
+        (vote.question?.toLowerCase().includes(issue.toLowerCase()) ?? false)
       );
 
       // Analyze industry contributions

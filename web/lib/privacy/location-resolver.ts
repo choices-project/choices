@@ -176,7 +176,7 @@ export function isValidJurisdictionId(id: string): boolean {
  */
 export function extractStateFromJurisdictionId(id: string): string | null {
   const match = id.match(/\/state:([a-z]{2})/);
-  if (match && match[1]) {
+  if (match?.[1]) {
     return match[1].toUpperCase();
   }
   return null;

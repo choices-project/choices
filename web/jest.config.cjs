@@ -97,6 +97,9 @@ module.exports = {
       ],
     }
   ],
+  // Coverage configuration
+  coverageDirectory: '<rootDir>/coverage',
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   coverageThreshold: {
     global: {
       lines: 80,
@@ -104,5 +107,20 @@ module.exports = {
       branches: 70,
       statements: 80
     }
-  }
+  },
+  // Additional coverage settings
+  collectCoverage: false, // Enable only when running test:coverage
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/coverage/',
+    '/dist/',
+    '/build/',
+    '\\.d\\.ts$',
+    '\\.disabled',
+    '\\.disabled\\.',
+    '/tests\\.disabled/',
+    '/scripts\\.disabled/',
+    '/archive/'
+  ]
 };

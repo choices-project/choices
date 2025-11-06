@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-
+import { logger } from '@/lib/utils/logger';
 import { beginRegister } from '@/lib/webauthn/client';
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
@@ -58,7 +58,7 @@ export function PasskeyManagement() {
   const handleRenamePasskey = async (id: string, newLabel: string) => {
     try {
       // Implement rename functionality
-      console.log('Rename passkey:', id, newLabel);
+      logger.info('Rename passkey:', { id, newLabel });
     } catch {
       setError('Failed to rename passkey');
     }
@@ -67,7 +67,7 @@ export function PasskeyManagement() {
   const handleRevokePasskey = async (id: string) => {
     try {
       // Implement revoke functionality
-      console.log('Revoke passkey:', id);
+      logger.info('Revoke passkey:', { id });
       await loadPasskeys();
     } catch {
       setError('Failed to revoke passkey');

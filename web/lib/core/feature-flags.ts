@@ -371,7 +371,7 @@ export const featureFlagManager = {
   },
   importConfig: (config: FeatureFlagConfig): void => {
     // Import flag configuration
-    if (config && config.flags) {
+    if (config?.flags) {
       Object.entries(config.flags).forEach(([key, value]) => {
         const normalizedKey = normalize(key);
         if (normalizedKey && normalizedKey in mutableFlags && typeof value === 'boolean') {

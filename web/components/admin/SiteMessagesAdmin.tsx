@@ -89,7 +89,7 @@ export default function SiteMessagesAdmin({
 
   const handleCreateMessage = async () => {
     try {
-      const message: SiteMessage = {
+      const baseMessage = {
         id: Date.now().toString(),
         title: newMessage.title ?? '',
         message: newMessage.message ?? '',
@@ -98,8 +98,11 @@ export default function SiteMessagesAdmin({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_active: newMessage.is_active ?? true,
-        expires_at: newMessage.expires_at
-      }
+      };
+      
+      const message: SiteMessage = newMessage.expires_at 
+        ? { ...baseMessage, expires_at: newMessage.expires_at }
+        : baseMessage;
       
       setMessages(prev => [...prev, message])
       setNewMessage({
@@ -274,10 +277,18 @@ export default function SiteMessagesAdmin({
                 <input
                   type="datetime-local"
                   value={newMessage.expires_at ? new Date(newMessage.expires_at).toISOString().slice(0, 16) : ''}
-                  onChange={(e) => setNewMessage(prev => ({ 
-                    ...prev, 
-                    expires_at: e.target.value ? new Date(e.target.value).toISOString() : undefined 
-                  }))}
+                  onChange={(e) => {
+                    const expiresAt = e.target.value ? new Date(e.target.value).toISOString() : undefined;
+                    setNewMessage(prev => {
+                      const updated = { ...prev };
+                      if (expiresAt) {
+                        updated.expires_at = expiresAt;
+                      } else {
+                        delete updated.expires_at;
+                      }
+                      return updated;
+                    });
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>

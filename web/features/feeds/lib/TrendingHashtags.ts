@@ -79,15 +79,16 @@ export class TrendingHashtagsTracker {
     const timestamp = new Date().toISOString();
     
     for (const hashtag of hashtags) {
-      this.trackHashtagUsage({
+      const usage: HashtagUsage = {
         hashtag: hashtag.toLowerCase().trim(),
         userId,
         timestamp,
-        source,
         count: 1,
         lastUsed: new Date(),
-        users: [userId]
-      });
+        users: [userId],
+        ...(source ? { source } : {})
+      };
+      this.trackHashtagUsage(usage);
     }
   }
 

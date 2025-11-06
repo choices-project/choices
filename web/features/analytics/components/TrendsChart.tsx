@@ -146,9 +146,9 @@ export default function TrendsChart({
   // Calculate trend direction
   const getTrend = (metric: 'votes' | 'participation' | 'velocity'): number => {
     if (data.length < 2) return 0;
-    const first = data[0][metric];
-    const last = data[data.length - 1][metric];
-    if (first === 0) return 0;
+    const first = data[0]?.[metric];
+    const last = data[data.length - 1]?.[metric];
+    if (first === undefined || last === undefined || first === 0) return 0;
     return ((last - first) / first) * 100;
   };
 
@@ -321,7 +321,8 @@ export default function TrendsChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900">{data.date}</p>
@@ -391,7 +392,8 @@ export default function TrendsChart({
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
                       return (
                         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                           <p className="font-semibold text-gray-900">{data.date}</p>
@@ -462,7 +464,7 @@ function generateMockData(range: DateRange): TrendDataPoint[] {
     date.setDate(date.getDate() - i);
     
     data.push({
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString().split('T')[0] ?? date.toISOString(),
       votes: Math.floor(Math.random() * 500) + 200,
       participation: Math.floor(Math.random() * 40) + 60,
       velocity: Math.floor(Math.random() * 50) + 20

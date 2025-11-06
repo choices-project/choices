@@ -78,7 +78,7 @@ export function ProfessionalChart({
   useEffect(() => {
     if (data.length > 0) {
       setChartData(data);
-      setChartMaxValue(maxValue || Math.max(...data.map(item => item.value)));
+      setChartMaxValue(maxValue ?? Math.max(...data.map(item => item.value)));
       setChartShowTrends(showTrends);
       setChartShowConfidence(showConfidence);
     }
@@ -86,9 +86,9 @@ export function ProfessionalChart({
 
   // Use store data or fallback to props
   const chartData = storeData.length > 0 ? storeData : data
-  const chartMaxValue = storeMaxValue || maxValue || Math.max(...chartData.map((item: any) => item.value))
-  const chartShowTrends = storeShowTrends || showTrends
-  const chartShowConfidence = storeShowConfidence || showConfidence
+  const chartMaxValue = storeMaxValue ?? maxValue ?? Math.max(...chartData.map((item: any) => item.value))
+  const chartShowTrends = storeShowTrends ?? showTrends
+  const chartShowConfidence = storeShowConfidence ?? showConfidence
 
   // Cache data processing to prevent unnecessary re-renders
   const processedData = useCallback(() => {
@@ -268,7 +268,7 @@ export function ProfessionalChart({
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-      {(title || subtitle) && (
+      {(title ?? subtitle) && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             {title && (

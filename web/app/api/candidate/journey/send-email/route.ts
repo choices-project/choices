@@ -4,9 +4,9 @@ import {
   sendCandidateJourneyEmail,
   type EmailType 
 } from '@/lib/services/email/candidate-journey-emails'
+import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { withOptional } from '@/lib/util/objects'
 
 /**
  * POST /api/candidate/journey/send-email
