@@ -1,23 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-/**
- * CHOICES PLATFORM - TRUST TIER PROGRESSION API
- * 
- * Repository: https://github.com/choices-project/choices
- * Live Site: https://choices-platform.vercel.app
- * License: MIT
- * 
- * This endpoint provides user trust tier progression and requirements
- */
-
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -34,17 +24,13 @@ export async function GET(
       p_user_id: id
     });
 
-    if (error) {
-      logger.error('Trust tier progression error', { error, userId: id });
-      return NextResponse.json({ 
-        error: 'Failed to get trust tier progression',
-        details: error.message 
-      }, { status: 500 });
-    }
+  if (error) {
+    logger.error('Trust tier progression error', { error, userId: id });
+    return errorResponse('Failed to get trust tier progression', 500, error.message);
+  }
 
-    // If function doesn't exist yet, return mock data
-    if (!progressionData) {
-      return NextResponse.json({
+  if (!progressionData) {
+    return successResponse({
         user_id: id,
         current_tier: 3,
         progression_history: [
@@ -66,29 +52,14 @@ export async function GET(
           tier_3: 'Participate in 10+ polls',
           tier_4: 'Community verification and engagement'
         },
-        platform: 'choices',
-        repository: 'https://github.com/choices-project/choices',
-        live_site: 'https://choices-platform.vercel.app',
-        analysis_method: 'trust_tier_based',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    return NextResponse.json({
-      ...progressionData,
-      platform: 'choices',
-      repository: 'https://github.com/choices-project/choices',
-      live_site: 'https://choices-platform.vercel.app',
       analysis_method: 'trust_tier_based',
       timestamp: new Date().toISOString()
     });
-
-  } catch (error) {
-    logger.error('Trust tier progression API error', { error });
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      platform: 'choices',
-      repository: 'https://github.com/choices-project/choices'
-    }, { status: 500 });
   }
-}
+
+  return successResponse({
+    ...progressionData,
+    analysis_method: 'trust_tier_based',
+    timestamp: new Date().toISOString()
+  });
+});

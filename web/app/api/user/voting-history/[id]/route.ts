@@ -1,23 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
-/**
- * CHOICES PLATFORM - USER VOTING HISTORY API
- * 
- * Repository: https://github.com/choices-project/choices
- * Live Site: https://choices-platform.vercel.app
- * License: MIT
- * 
- * This endpoint provides user voting history and trust tier progression
- */
-
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -34,17 +24,13 @@ export async function GET(
       p_user_id: id
     });
 
-    if (error) {
-      logger.error('User voting history error:', error);
-      return NextResponse.json({ 
-        error: 'Failed to get user voting history',
-        details: error.message 
-      }, { status: 500 });
-    }
+  if (error) {
+    logger.error('User voting history error:', error);
+    return errorResponse('Failed to get user voting history', 500, error.message);
+  }
 
-    // If function doesn't exist yet, return mock data
-    if (!historyData) {
-      return NextResponse.json({
+  if (!historyData) {
+    return successResponse({
         user_id: id,
         total_votes: 15,
         polls_participated: 8,
@@ -76,29 +62,14 @@ export async function GET(
             trust_tier: 3
           }
         ],
-        platform: 'choices',
-        repository: 'https://github.com/choices-project/choices',
-        live_site: 'https://choices-platform.vercel.app',
-        analysis_method: 'trust_tier_based',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    return NextResponse.json({
-      ...historyData,
-      platform: 'choices',
-      repository: 'https://github.com/choices-project/choices',
-      live_site: 'https://choices-platform.vercel.app',
       analysis_method: 'trust_tier_based',
       timestamp: new Date().toISOString()
     });
-
-  } catch (error) {
-    logger.error('User voting history API error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      platform: 'choices',
-      repository: 'https://github.com/choices-project/choices'
-    }, { status: 500 });
   }
-}
+
+  return successResponse({
+    ...historyData,
+    analysis_method: 'trust_tier_based',
+    timestamp: new Date().toISOString()
+  });
+});
