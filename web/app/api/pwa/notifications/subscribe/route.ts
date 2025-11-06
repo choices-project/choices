@@ -5,43 +5,32 @@
  * This enables users to receive notifications for new polls, results, etc.
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
+  }
 
-    const body = await request.json();
-    const { subscription, userId, preferences } = body;
+  const body = await request.json();
+  const { subscription, userId, preferences } = body;
 
-    if (!subscription?.endpoint) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid subscription data'
-      }, { status: 400 });
-    }
+  if (!subscription?.endpoint) {
+    return validationError({ subscription: 'Invalid subscription data' });
+  }
 
     logger.info(`PWA: Registering push notification subscription for user ${userId}`);
 
-    // Validate subscription
-    const isValidSubscription = await validateSubscription(subscription);
-    if (!isValidSubscription) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid subscription format'
-      }, { status: 400 });
-    }
+  const isValidSubscription = await validateSubscription(subscription);
+  if (!isValidSubscription) {
+    return validationError({ subscription: 'Invalid subscription format' });
+  }
 
     // Store subscription in database
     const subscriptionId = await storeSubscription({
@@ -59,44 +48,28 @@ export async function POST(request: NextRequest) {
 
     logger.info(`PWA: Push notification subscription registered with ID ${subscriptionId}`);
 
-    return NextResponse.json({
-      success: true,
-      subscriptionId,
-      message: 'Push notifications enabled successfully',
-      timestamp: new Date().toISOString()
-    });
+  return successResponse({
+    subscriptionId,
+    message: 'Push notifications enabled successfully',
+    timestamp: new Date().toISOString()
+  }, undefined, 201);
+});
 
-  } catch (error) {
-    logger.error('PWA: Failed to subscribe to push notifications:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to subscribe to push notifications',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
 
-export async function DELETE(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+  const subscriptionId = searchParams.get('subscriptionId');
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const subscriptionId = searchParams.get('subscriptionId');
-
-    if (!userId && !subscriptionId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Either userId or subscriptionId is required'
-      }, { status: 400 });
-    }
+  if (!userId && !subscriptionId) {
+    return validationError({ 
+      userId: 'Either userId or subscriptionId is required',
+      subscriptionId: 'Either userId or subscriptionId is required'
+    });
+  }
 
     logger.info(`PWA: Unsubscribing push notifications for user ${userId ?? subscriptionId}`);
 
