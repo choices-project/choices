@@ -1,15 +1,15 @@
 /**
  * Representative Detail Page
- * 
+ *
  * Displays detailed information about a specific elected representative.
  * Shows contact info, bio, social media, voting record, and allows following.
- * 
+ *
  * Features:
  * - Representative profile and contact information
  * - Social media links
  * - Follow/unfollow functionality
  * - Back navigation
- * 
+ *
  * Created: November 7, 2025
  * Status: Production-ready
  */
@@ -42,7 +42,7 @@ export default function RepresentativeDetailPage() {
   const params = useParams();
   const router = useRouter();
   const representativeId = params?.id as string;
-  
+
   const [representative, setRepresentative] = useState<Representative | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function RepresentativeDetailPage() {
         setError(null);
 
         const response = await fetch(`/api/v1/civics/representative/${representativeId}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to load representative');
         }
@@ -164,7 +164,7 @@ export default function RepresentativeDetailPage() {
                 <User className="w-16 h-16" />
               </div>
             )}
-            
+
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">{representative.name}</h1>
               <p className="text-xl text-blue-100 mb-1">{representative.office}</p>
@@ -196,7 +196,7 @@ export default function RepresentativeDetailPage() {
         {/* Contact Information */}
         <div className="p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {representative.email && (
               <div className="flex items-start gap-3">

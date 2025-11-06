@@ -2,7 +2,7 @@
 -- Audit Logs System
 -- ============================================================================
 -- Creates comprehensive audit logging infrastructure for security and compliance
--- 
+--
 -- Tables:
 --   - audit_logs: Main audit log table with RLS
 --   - audit_log_categories: Categorizes different types of audit events
@@ -46,38 +46,38 @@ CREATE TYPE audit_severity AS ENUM (
 
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Event identification
   event_type audit_event_type NOT NULL,
   event_name VARCHAR(255) NOT NULL,
   severity audit_severity DEFAULT 'info',
-  
+
   -- User and session info
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   session_id TEXT,
-  
+
   -- Request context
   ip_address INET,
   user_agent TEXT,
   request_path TEXT,
   request_method VARCHAR(10),
-  
+
   -- Event details
   resource VARCHAR(500),
   action VARCHAR(100),
   status VARCHAR(50),
   granted BOOLEAN,
-  
+
   -- Additional metadata (flexible JSON for any extra data)
   metadata JSONB DEFAULT '{}'::jsonb,
-  
+
   -- Error information (if applicable)
   error_message TEXT,
   error_stack TEXT,
-  
+
   -- Timestamps
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   -- Retention (for automatic cleanup)
   expires_at TIMESTAMPTZ
 );
@@ -186,12 +186,12 @@ BEGIN
     p_severity,
     p_ip_address,
     p_user_agent,
-    CASE 
+    CASE
       WHEN p_retention_days > 0 THEN NOW() + (p_retention_days || ' days')::INTERVAL
       ELSE NULL
     END
   ) RETURNING id INTO v_audit_id;
-  
+
   RETURN v_audit_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -208,9 +208,9 @@ BEGIN
   DELETE FROM public.audit_logs
   WHERE expires_at IS NOT NULL
     AND expires_at < NOW();
-  
+
   GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
-  
+
   RETURN v_deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -231,13 +231,13 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     al.event_type,
     al.severity,
     COUNT(*) as count,
     COUNT(DISTINCT al.user_id) as unique_users,
     ROUND(
-      (COUNT(*) FILTER (WHERE al.status = 'success')::NUMERIC / 
+      (COUNT(*) FILTER (WHERE al.status = 'success')::NUMERIC /
        NULLIF(COUNT(*), 0) * 100),
       2
     ) as success_rate

@@ -5,54 +5,47 @@
  * This is typically used by admin users or automated systems.
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, forbiddenError, validationError, notFoundError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
+  }
 
-    const body = await request.json();
-    const { 
-      title, 
-      message, 
-      url, 
-      icon, 
-      badge, 
-      tag, 
-      data, 
-      targetUsers, 
-      targetType = 'all' 
-    } = body;
+  const body = await request.json();
+  const { 
+    title, 
+    message, 
+    url, 
+    icon, 
+    badge, 
+    tag, 
+    data, 
+    targetUsers, 
+    targetType = 'all' 
+  } = body;
 
-    if (!title || !message) {
-      return NextResponse.json({
-        success: false,
-        error: 'Title and message are required'
-      }, { status: 400 });
-    }
+  if (!title || !message) {
+    return validationError({
+      title: !title ? 'Title is required' : '',
+      message: !message ? 'Message is required' : ''
+    });
+  }
 
     logger.info(`PWA: Sending push notification - "${title}" to ${targetType}`);
 
     // Get target subscriptions
     const subscriptions = await getTargetSubscriptions(targetUsers, targetType);
     
-    if (subscriptions.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No active subscriptions found for target audience'
-      }, { status: 404 });
-    }
+  if (subscriptions.length === 0) {
+    return notFoundError('No active subscriptions found for target audience');
+  }
 
     // Prepare notification payload
     const payload = {
@@ -87,62 +80,34 @@ export async function POST(request: NextRequest) {
 
     logger.info(`PWA: Push notification sent - ${results.successful} successful, ${results.failed} failed`);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Push notifications sent successfully',
-      results: {
-        total: subscriptions.length,
-        successful: results.successful,
-        failed: results.failed,
-        errors: results.errors
-      },
-      timestamp: new Date().toISOString()
-    });
+  return successResponse({
+    message: 'Push notifications sent successfully',
+    results: {
+      total: subscriptions.length,
+      successful: results.successful,
+      failed: results.failed,
+      errors: results.errors
+    },
+    timestamp: new Date().toISOString()
+  }, undefined, 201);
+});
 
-  } catch (error) {
-    logger.error('PWA: Failed to send push notifications:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to send push notifications',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+  const limit = parseInt(searchParams.get('limit') ?? '10');
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') ?? '10');
+  const history = await getNotificationHistory(userId, limit);
 
-    // Get notification history
-    const history = await getNotificationHistory(userId, limit);
-
-    return NextResponse.json({
-      success: true,
-      history,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('PWA: Failed to get notification history:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to get notification history',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
-  }
-}
+  return successResponse({
+    history,
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * Get target subscriptions based on criteria

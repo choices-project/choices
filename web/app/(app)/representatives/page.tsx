@@ -1,9 +1,9 @@
 /**
  * Representatives Page
- * 
+ *
  * Main representatives page with search, filtering, and display
  * Replaces the demo page with production-ready functionality
- * 
+ *
  * Created: October 28, 2025
  * Status: ✅ PRODUCTION
  */
@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   useRepresentativeSearchResults,
   useRepresentativeLoading,
   useRepresentativeError,
