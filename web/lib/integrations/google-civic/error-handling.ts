@@ -5,9 +5,9 @@
  * proper error classification, retry logic, and user-friendly messages.
  */
 
-import { logger } from '@/lib/utils/logger';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 
 import { GoogleCivicApiError } from './client';
 

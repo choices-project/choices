@@ -41,7 +41,7 @@ export function useUserDistrict(): UserDistrict | null {
     ? profile.demographics as any
     : null;
 
-  if (!demographics || !demographics.location) {
+  if (!demographics?.location) {
     return null;
   }
 

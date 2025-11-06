@@ -14,7 +14,8 @@
  * Status: ✅ Privacy-first analytics
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -200,7 +201,7 @@ export async function hasAnalyticsConsent(
     return false; // Fail closed (no consent = no tracking)
   }
 
-  const settings = profile.privacy_settings as any;
+  const settings = profile.privacy_settings;
   
   // Default to false if not explicitly set
   return settings?.collectAnalytics === true;

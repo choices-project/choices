@@ -443,7 +443,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data ? this.mapBreakingNewsFromDB(data as any) : null;
+      return data ? this.mapBreakingNewsFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching breaking news:', error);
       return null;
@@ -461,7 +461,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data ? this.mapBreakingNewsFromDB(data as any) : null;
+      return data ? this.mapBreakingNewsFromDB(data) : null;
     } catch (error) {
       devLog('Error creating breaking news:', error);
       return null;

@@ -9,6 +9,7 @@
  */
 
 import { lazy } from 'react';
+
 import type { WidgetRegistryType, WidgetType } from '../types/widget';
 
 // Lazy load widget components for better performance

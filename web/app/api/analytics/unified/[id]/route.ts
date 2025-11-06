@@ -50,7 +50,7 @@ function parseAnalysisWindow(window: string): number {
   // Handle "24 hours", "7 days", "1 week" format
   const parts = normalized.split(/\s+/);
   if (parts.length >= 2) {
-    const value = parseInt(parts[0]!, 10);
+    const value = parseInt(parts[0], 10);
     const unit = parts[1];
     
     if (!isNaN(value) && unit) {

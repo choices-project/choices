@@ -15,9 +15,10 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { usePWAStore } from '@/lib/stores/pwaStore';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { usePWAStore } from '@/lib/stores/pwaStore';
 
 type FeedPWAEnhancerProps = {
   children: React.ReactNode;

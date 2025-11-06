@@ -9,6 +9,7 @@
  */
 
 import type { LayoutPreset, WidgetConfig } from '../types/widget';
+
 import { generateWidgetId } from './widgetRegistry';
 
 // ============================================================================

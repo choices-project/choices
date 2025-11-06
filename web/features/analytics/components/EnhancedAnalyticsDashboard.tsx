@@ -26,7 +26,6 @@ import {
   Zap,
   Database,
   BarChart3,
-  MapPin,
   Flame,
   Clock
 } from 'lucide-react';
@@ -36,18 +35,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { logger } from '@/lib/utils/logger';
-import { useUserStore } from '@/lib/stores';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
+import { useUserStore } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
-import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
-import TrendsChart from './TrendsChart';
-import DemographicsChart from './DemographicsChart';
-import TemporalAnalysisChart from './TemporalAnalysisChart';
-import TrustTierComparisonChart from './TrustTierComparisonChart';
-import PollHeatmap from './PollHeatmap';
 import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
+import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
+
+import DemographicsChart from './DemographicsChart';
+import PollHeatmap from './PollHeatmap';
+import TemporalAnalysisChart from './TemporalAnalysisChart';
+import TrendsChart from './TrendsChart';
+import TrustTierComparisonChart from './TrustTierComparisonChart';
 
 
 type EnhancedAnalyticsDashboardProps = {

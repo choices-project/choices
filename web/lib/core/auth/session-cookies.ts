@@ -12,8 +12,8 @@
 import * as jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 
-import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
+import { logger } from '@/lib/utils/logger'
 
 export type SessionPayload = {
   sub: string // user ID

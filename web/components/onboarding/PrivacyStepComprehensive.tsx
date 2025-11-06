@@ -42,8 +42,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import type { PrivacySettings } from '@/types/profile';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
+import type { PrivacySettings } from '@/types/profile';
 
 type PrivacyOption = {
   id: keyof PrivacySettings;

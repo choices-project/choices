@@ -4,8 +4,9 @@
  * Errors for unexpected server-side issues and system failures.
  */
 
-import { ApplicationError, type ErrorDetails } from './base';
 import { withOptional } from '@/lib/util/objects';
+
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class InternalServerError extends ApplicationError {
   constructor(message: string = 'Internal server error', details?: ErrorDetails) {

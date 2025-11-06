@@ -16,10 +16,12 @@
  * Status: ✅ Architectural refactor
  */
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+
+import { useUserStore } from '@/lib/stores';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import { useHashtagStore } from '@/lib/stores/hashtagStore';
-import { useUserStore } from '@/lib/stores';
 
 type FeedDataProviderProps = {
   userId?: string;

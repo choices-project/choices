@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 
-import { logger } from '@/lib/utils/logger';
 import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
+import { logger } from '@/lib/utils/logger';
 
 type OptimizedPollResultsProps = {
   pollId: string

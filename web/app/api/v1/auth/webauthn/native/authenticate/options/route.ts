@@ -12,8 +12,8 @@ import {
   generateAuthenticationOptions,
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

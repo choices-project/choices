@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 // ... existing code ...
 import { Separator } from '@/components/ui/separator';
-import { logger } from '@/lib/utils/logger';
 import {
   usePollWizardData,
   usePollWizardStep,
@@ -22,6 +21,7 @@ import {
   usePollWizardActions
 } from '@/lib/stores';
 import type { PollCategory } from '@/lib/types/poll-templates';
+import { logger } from '@/lib/utils/logger';
 
 const CATEGORIES: Array<{ id: PollCategory; name: string; description: string; icon: string }> = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊' },

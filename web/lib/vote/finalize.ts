@@ -21,10 +21,10 @@ import { createHash } from 'crypto';
 
 import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
-import { logger } from '@/lib/utils/logger';
 import { withOptional } from '../util/objects';
 
 import { IRVCalculator } from './irv-calculator';

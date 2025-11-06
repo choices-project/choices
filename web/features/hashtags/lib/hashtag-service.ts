@@ -718,7 +718,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
       trending_count: stats?.filter((s: HashtagRow) => s.is_trending).length ?? 0,
       verified_count: stats?.filter((s: HashtagRow) => s.is_verified).length ?? 0,
       categories: {} as Record<HashtagCategory, number>,
-      top_hashtags: (stats?.slice(0, 10).map(transformHashtagData) as Hashtag[]) ?? [],
+      top_hashtags: (stats?.slice(0, 10).map(transformHashtagData)) ?? [],
       recent_activity: await getRecentActivity() as HashtagActivity[],
       system_health: {
         api_response_time: 0,

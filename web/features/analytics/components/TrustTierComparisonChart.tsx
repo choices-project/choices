@@ -18,6 +18,13 @@
 
 'use client';
 
+import { 
+  Download, 
+  Shield, 
+  AlertCircle,
+  RefreshCw,
+  Award
+} from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
@@ -28,24 +35,16 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { 
-  Download, 
-  Shield, 
-  AlertCircle,
-  RefreshCw,
-  Award,
-  Users
-} from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type TierMetrics = {

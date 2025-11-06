@@ -17,16 +17,17 @@
  * Status: ✅ Production-grade architecture
  */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HashtagIcon, MoonIcon, SunIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
+import { HashtagIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 import { MapPin } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 type FeedItem = {
   id: string;
@@ -469,7 +470,7 @@ export default function FeedCore({
       </div>
 
       {/* Accessibility */}
-      <div className="sr-only" aria-live="polite" id="live-region-content"></div>
+      <div className="sr-only" aria-live="polite" id="live-region-content" />
     </div>
   );
 }

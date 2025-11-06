@@ -16,7 +16,6 @@ import React, { useEffect } from 'react';
 import { RepresentativeList  } from '@/components/representative/RepresentativeList';
 import { RepresentativeSearch } from '@/components/representative/RepresentativeSearch';
 import { Badge } from '@/components/ui/badge';
-import { logger } from '@/lib/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,6 +25,7 @@ import {
   useRepresentativeError,
   representativeStore
 } from '@/lib/stores/representativeStore';
+import { logger } from '@/lib/utils/logger';
 import type { RepresentativeSearchQuery } from '@/types/representative';
 
 export default function RepresentativesPage() {

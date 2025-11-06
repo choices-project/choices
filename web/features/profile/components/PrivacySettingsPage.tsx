@@ -20,7 +20,6 @@
 
 import {
   Shield,
-  Save,
   Info,
   Lock,
   Unlock,
@@ -34,7 +33,6 @@ import React, { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 import type { PrivacySettings } from '@/types/profile';

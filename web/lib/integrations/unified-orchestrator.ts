@@ -8,8 +8,8 @@
  * @date 2025-01-15
  */
 
-import { logger } from '@/lib/utils/logger';
 import type { UserLocation, ElectoralRace } from '@/lib/types/electoral-unified';
+import { logger } from '@/lib/utils/logger';
 
 import { createCongressGovClient } from './congress-gov/client';
 import { createFECClient } from './fec/client';

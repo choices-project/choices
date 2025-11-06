@@ -18,9 +18,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { logger } from '@/lib/utils/logger';
 
 /**
  * Sophisticated civic action types supported by our platform
@@ -464,7 +464,7 @@ export async function getTrendingCivicActions(
       };
     }).sort((a, b) => (b.trendingScore ?? 0) - (a.trendingScore ?? 0))
       .slice(0, limit)
-      .map(({ trendingScore: _trendingScore, ...action }) => action as any);
+      .map(({ trendingScore: _trendingScore, ...action }) => action);
 
     logger.info('Retrieved trending civic actions', { count: trendingActions.length, limit, category });
     

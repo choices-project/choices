@@ -15,15 +15,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
+import { logger } from '@/lib/utils/logger';
+
 import type { 
   WidgetConfig, 
   DashboardLayout, 
-  WidgetState, 
-  WidgetAction,
+  WidgetState,
   WidgetPosition,
   WidgetSize
 } from '../types/widget';
-import { logger } from '@/lib/utils/logger';
 
 // ============================================================================
 // INITIAL STATE
@@ -44,7 +45,7 @@ const INITIAL_STATE: WidgetState = {
 // STORE ACTIONS
 // ============================================================================
 
-interface WidgetStoreActions {
+type WidgetStoreActions = {
   // Layout management
   loadLayout: (layout: DashboardLayout) => void;
   saveLayout: (layout: Partial<DashboardLayout>) => Promise<void>;

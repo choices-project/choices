@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { logger } from '@/lib/utils/logger';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileExport } from '@/features/profile/hooks/use-profile';
+import { logger } from '@/lib/utils/logger';
 
 export default function ProfilePage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

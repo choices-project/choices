@@ -27,13 +27,11 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { UserPreferences } from '@/features/civics/lib/types/civics-types';
 import { useSocialSharing } from '@/hooks/useSocialSharing';
-import { useHashtagStore, useHashtagActions, useHashtagStats, usePWAStore, useUserStore, useNotificationStore } from '@/lib/stores';
+import { useHashtagStore, usePWAStore, useUserStore, useNotificationStore } from '@/lib/stores';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
-import FeedItem from './FeedItem';
-import { PollCard } from '@/features/polls';
 import type { 
   FeedItemWithScore, 
   TrackEventData, 
@@ -43,6 +41,8 @@ import type {
   HashtagAnalytic,
   HashtagPollsFeed
 } from '../types/feed-types';
+
+import FeedItem from './FeedItem';
 
 type UnifiedFeedProps = {
   userId?: string;

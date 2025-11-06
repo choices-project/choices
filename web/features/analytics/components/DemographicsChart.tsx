@@ -16,6 +16,14 @@
 
 'use client';
 
+import { 
+  Download, 
+  Users, 
+  AlertCircle,
+  RefreshCw,
+  Shield,
+  Filter
+} from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   PieChart,
@@ -30,17 +38,9 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { 
-  Download, 
-  Users, 
-  AlertCircle,
-  RefreshCw,
-  Shield,
-  Filter
-} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 

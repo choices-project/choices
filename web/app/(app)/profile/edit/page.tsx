@@ -4,9 +4,6 @@ import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'luc
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Prevent static generation since this requires authentication
-export const dynamic = 'force-dynamic';
-
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +18,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { devLog } from '@/lib/utils/logger';
+
+// Prevent static generation since this requires authentication
+export const dynamic = 'force-dynamic';
 
 // Types - Updated to match new database schema
 type UserProfile = {

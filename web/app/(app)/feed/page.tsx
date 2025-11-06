@@ -17,9 +17,10 @@
  */
 
 import React from 'react';
+
 import { UnifiedFeedRefactored } from '@/features/feeds';
-import { useUserStore } from '@/lib/stores';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
+import { useUserStore } from '@/lib/stores';
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';

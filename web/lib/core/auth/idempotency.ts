@@ -11,8 +11,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export type IdempotencyResult<T> = {

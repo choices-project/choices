@@ -15,6 +15,7 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
+
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 
 type FeedAnalyticsConfig = {

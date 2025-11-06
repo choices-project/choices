@@ -78,10 +78,10 @@ export async function POST() {
       success: true,
       message: 'User synced successfully',
       user: {
-        id: (newUser as any).id,
-        user_id: (newUser as any).user_id,
-        email: (newUser as any).email,
-        trust_tier: (newUser as any).trust_tier
+        id: (newUser).id,
+        user_id: (newUser).user_id,
+        email: (newUser).email,
+        trust_tier: (newUser).trust_tier
       }
     })
 

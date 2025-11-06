@@ -12,6 +12,7 @@
  */
 
 import { useEffect } from 'react';
+
 import { useWidgetStore } from '../stores/widgetStore';
 
 // ============================================================================

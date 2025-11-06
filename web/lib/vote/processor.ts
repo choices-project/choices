@@ -10,8 +10,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { getSupabaseServerClient } from '../../utils/supabase/server';
 import { devLog } from '@/lib/utils/logger';
+
+import { getSupabaseServerClient } from '../../utils/supabase/server';
 
 import type { 
   VoteData, 

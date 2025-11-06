@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { devLog } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
+import { devLog } from '@/lib/utils/logger'
 
 // Types
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'tv'

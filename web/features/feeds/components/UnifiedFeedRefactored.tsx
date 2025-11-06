@@ -19,8 +19,9 @@
  */
 
 import React from 'react';
-import FeedDataProvider from './providers/FeedDataProvider';
+
 import FeedCore from './core/FeedCore';
+import FeedDataProvider from './providers/FeedDataProvider';
 
 type UnifiedFeedProps = {
   userId?: string;

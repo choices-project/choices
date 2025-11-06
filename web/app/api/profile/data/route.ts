@@ -12,6 +12,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

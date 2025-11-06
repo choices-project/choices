@@ -365,14 +365,14 @@ function EnhancedOnboardingFlowInner() {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const nextIndex = Math.min(STEP_ORDER.length - 1, i + 1);
-    return STEP_ORDER[nextIndex]!;
+    return STEP_ORDER[nextIndex];
   }
   
   function prevOf(s: StepSlug): StepSlug {
     const i = STEP_ORDER.indexOf(s);
     if (i === -1) return 'welcome'; // fallback if step not found
     const prevIndex = Math.max(0, i - 1);
-    return STEP_ORDER[prevIndex]!;
+    return STEP_ORDER[prevIndex];
   }
 
   // Persist progress, but NEVER block navigation on it

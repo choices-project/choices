@@ -9,9 +9,10 @@
  * Status: PRODUCTION
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // ============================================================================
 // GET - Load Dashboard Layout
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If no layout found, return 404
-    if (!profile || !profile.dashboard_layout) {
+    if (!profile?.dashboard_layout) {
       return NextResponse.json(
         { ok: false, error: 'No layout found' },
         { status: 404 }

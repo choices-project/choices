@@ -8,8 +8,9 @@
  * Updated: September 15, 2025
  */
 
-import { getSupabaseServerClient } from '../../utils/supabase/server';
 import { devLog } from '@/lib/utils/logger';
+
+import { getSupabaseServerClient } from '../../utils/supabase/server';
 
 import type { 
   VoteData, 

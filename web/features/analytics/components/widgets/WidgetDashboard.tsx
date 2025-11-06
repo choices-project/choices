@@ -16,8 +16,6 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { 
   Edit, 
   Save, 
@@ -28,24 +26,34 @@ import {
   Redo,
   Settings
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { WidgetGrid } from './WidgetGrid';
-import { WidgetRenderer } from './WidgetRenderer';
-import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
-import { getPreset, getAllPresets } from '../../lib/widgetPresets';
-import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
-import { WidgetSelector } from './WidgetSelector';
-import type { WidgetConfig } from '../../types/widget';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Layout as GridLayout } from 'react-grid-layout';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import DistrictHeatmap from '@/features/admin/components/DistrictHeatmap';
 import { logger } from '@/lib/utils/logger';
 
-// Import existing analytics components
-import TrendsChart from '../TrendsChart';
+import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
+import { getPreset, getAllPresets } from '../../lib/widgetPresets';
+import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
+import type { WidgetConfig } from '../../types/widget';
 import DemographicsChart from '../DemographicsChart';
-import TemporalAnalysisChart from '../TemporalAnalysisChart';
+import TrendsChart from '../TrendsChart';
+
 import TrustTierComparisonChart from '../TrustTierComparisonChart';
+import { WidgetGrid } from './WidgetGrid';
+import { WidgetRenderer } from './WidgetRenderer';
+
+import { WidgetSelector } from './WidgetSelector';
+
+
+
+
+// Import existing analytics components
+import TemporalAnalysisChart from '../TemporalAnalysisChart';
 import PollHeatmap from '../PollHeatmap';
-import DistrictHeatmap from '@/features/admin/components/DistrictHeatmap';
+
 
 // ============================================================================
 // WIDGET COMPONENT MAP
@@ -64,7 +72,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 // WIDGET DASHBOARD PROPS
 // ============================================================================
 
-export interface WidgetDashboardProps {
+export type WidgetDashboardProps = {
   userId: string;
   isAdmin?: boolean;
   className?: string;

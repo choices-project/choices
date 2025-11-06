@@ -45,7 +45,7 @@ export type WidgetPosition = {
 // WIDGET CONFIGURATION
 // ============================================================================
 
-export interface BaseWidgetConfig {
+export type BaseWidgetConfig = {
   id: string;
   type: WidgetType;
   title: string;
@@ -54,15 +54,15 @@ export interface BaseWidgetConfig {
   enabled: boolean;
 }
 
-export interface WidgetLayoutConfig extends BaseWidgetConfig {
+export type WidgetLayoutConfig = {
   position: WidgetPosition;
   size: WidgetSize;
   minSize?: WidgetSize;
   maxSize?: WidgetSize;
   static?: boolean; // Cannot be moved/resized
-}
+} & BaseWidgetConfig
 
-export interface WidgetSettings {
+export type WidgetSettings = {
   // Common settings
   refreshInterval?: number; // Auto-refresh in seconds
   dateRange?: {
@@ -76,11 +76,11 @@ export interface WidgetSettings {
   customizations?: Record<string, any>;
 }
 
-export interface WidgetConfig extends WidgetLayoutConfig {
+export type WidgetConfig = {
   settings: WidgetSettings;
   createdAt: Date;
   updatedAt: Date;
-}
+} & WidgetLayoutConfig
 
 // ============================================================================
 // DASHBOARD LAYOUT
@@ -88,7 +88,7 @@ export interface WidgetConfig extends WidgetLayoutConfig {
 
 export type Breakpoint = 'lg' | 'md' | 'sm' | 'xs';
 
-export interface DashboardLayout {
+export type DashboardLayout = {
   id: string;
   userId: string;
   name: string;
@@ -113,7 +113,7 @@ export interface DashboardLayout {
 // WIDGET METADATA
 // ============================================================================
 
-export interface WidgetMetadata {
+export type WidgetMetadata = {
   type: WidgetType;
   name: string;
   description: string;
@@ -145,7 +145,7 @@ export interface WidgetMetadata {
 // WIDGET REGISTRY
 // ============================================================================
 
-export interface WidgetRegistryEntry {
+export type WidgetRegistryEntry = {
   metadata: WidgetMetadata;
   component: React.ComponentType<WidgetProps>;
   configComponent?: React.ComponentType<WidgetConfigProps>;
@@ -173,7 +173,7 @@ export type WidgetRegistryType = Partial<Record<WidgetType, WidgetRegistration>>
 // WIDGET COMPONENT PROPS
 // ============================================================================
 
-export interface WidgetProps {
+export type WidgetProps = {
   id: string;
   config: WidgetConfig;
   onConfigChange?: (config: Partial<WidgetConfig>) => void;
@@ -182,7 +182,7 @@ export interface WidgetProps {
   error?: Error;
 }
 
-export interface WidgetConfigProps {
+export type WidgetConfigProps = {
   config: WidgetConfig;
   onChange: (settings: Partial<WidgetSettings>) => void;
   onSave: () => void;
@@ -208,7 +208,7 @@ export type WidgetAction =
 // WIDGET STATE
 // ============================================================================
 
-export interface WidgetState {
+export type WidgetState = {
   layouts: DashboardLayout[];
   currentLayout: DashboardLayout | null;
   widgets: Map<string, WidgetConfig>;
@@ -227,7 +227,7 @@ export interface WidgetState {
 // LAYOUT PRESETS
 // ============================================================================
 
-export interface LayoutPreset {
+export type LayoutPreset = {
   id: string;
   name: string;
   description: string;

@@ -20,8 +20,8 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
 
 import { useSupabaseAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/utils/logger';
 import { T } from '@/lib/testing/testIds'
+import { logger } from '@/lib/utils/logger';
 
 
 type AdminStats = {

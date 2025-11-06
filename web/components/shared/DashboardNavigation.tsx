@@ -22,9 +22,7 @@ import {
   Shield,
   Settings,
   Vote,
-  Hash,
-  Bell,
-  HelpCircle
+  Hash
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

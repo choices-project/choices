@@ -11,9 +11,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
-import { verifyAuthenticationResponse, arrayBufferToBase64URL } from '@/features/auth/lib/webauthn/native/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

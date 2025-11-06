@@ -36,7 +36,7 @@ import {
   Loader2,
   Info
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

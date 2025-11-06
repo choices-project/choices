@@ -13,7 +13,8 @@
  * Status: ✅ Production-ready
  */
 
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/utils/logger';
 
 export type UserRole = 'admin' | 'T3' | 'T2' | 'T1' | 'T0' | 'guest';

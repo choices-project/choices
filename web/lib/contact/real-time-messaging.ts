@@ -150,12 +150,12 @@ export const contactMessagingService = {
           newMessages.forEach(callback);
         } else if (messages.length > 0) {
           // First poll - set last message ID
-          lastMessageId = messages[messages.length - 1]!.id;
+          lastMessageId = messages[messages.length - 1].id;
         }
 
         // Update last message ID to the most recent
         if (messages.length > 0) {
-          lastMessageId = messages[messages.length - 1]!.id;
+          lastMessageId = messages[messages.length - 1].id;
         }
       } catch (error) {
         console.error('Error polling for messages:', error);

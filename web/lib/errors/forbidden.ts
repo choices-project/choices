@@ -4,8 +4,9 @@
  * Errors for when access to a resource is denied due to permissions or business rules.
  */
 
-import { ApplicationError, type ErrorDetails } from './base';
 import { withOptional } from '@/lib/util/objects';
+
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class ForbiddenError extends ApplicationError {
   constructor(message: string = 'Access forbidden', details?: ErrorDetails) {

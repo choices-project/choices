@@ -21,6 +21,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+
 import { redis } from './redis';
 
 /**

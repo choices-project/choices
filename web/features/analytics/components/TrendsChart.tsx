@@ -15,6 +15,14 @@
 
 'use client';
 
+import { 
+  Download, 
+  Calendar, 
+  TrendingUp,
+  AlertCircle,
+  RefreshCw,
+  Activity
+} from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   LineChart,
@@ -28,14 +36,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { 
-  Download, 
-  Calendar, 
-  TrendingUp,
-  AlertCircle,
-  RefreshCw,
-  Activity
-} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';

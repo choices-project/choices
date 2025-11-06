@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/lib/utils/logger';
 import { getRPIDAndOrigins } from '@/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';

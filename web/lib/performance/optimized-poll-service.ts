@@ -11,8 +11,8 @@
 
 import { CACHE_DURATIONS } from '@/lib/config/constants';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Database } from '@/types/database';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Use actual database type for polls
 type PollRow = Database['public']['Tables']['polls']['Row'];

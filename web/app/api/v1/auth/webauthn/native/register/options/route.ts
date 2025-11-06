@@ -12,8 +12,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

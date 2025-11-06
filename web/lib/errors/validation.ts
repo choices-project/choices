@@ -4,8 +4,9 @@
  * Errors related to input validation, data format validation, and business rule validation.
  */
 
-import { ApplicationError, type ErrorDetails } from './base';
 import { withOptional } from '@/lib/util/objects';
+
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class ValidationError extends ApplicationError {
   constructor(message: string = 'Validation failed', details?: ErrorDetails) {

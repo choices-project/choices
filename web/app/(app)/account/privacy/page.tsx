@@ -18,14 +18,13 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
-
 import type { PrivacySettings } from '@/types/profile';
 
 export default function PrivacyPage() {

@@ -12,10 +12,10 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireTrustedOrigin } from '@/lib/http/origin';
-import { devLog } from '@/lib/utils/logger';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { withOptional } from '@/lib/util/objects';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
@@ -100,8 +100,8 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? '127.0.0.1';
         const ua = request.headers.get('user-agent');
         const rateLimitOptions: any = {
-          maxRequests: config!.maxRequests,
-          windowMs: config!.windowMs
+          maxRequests: config.maxRequests,
+          windowMs: config.windowMs
         };
         if (ua) rateLimitOptions.userAgent = ua;
         const rateLimitResult = await apiRateLimiter.checkLimit(ip, `/auth:${rateLimit}`, rateLimitOptions);

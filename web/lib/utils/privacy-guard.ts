@@ -9,8 +9,9 @@
  * Status: ✅ ACTIVE
  */
 
-import { logger } from './logger';
 import type { PrivacySettings } from '@/types/profile';
+
+import { logger } from './logger';
 
 /**
  * Privacy Data Types

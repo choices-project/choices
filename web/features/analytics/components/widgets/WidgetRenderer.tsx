@@ -14,21 +14,22 @@
 
 'use client';
 
-import React, { Suspense, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { 
   Settings, 
   X, 
   RefreshCw, 
-  Download, 
   Maximize2, 
   AlertCircle,
-  Loader2,
   GripVertical
 } from 'lucide-react';
-import type { WidgetConfig, WidgetProps } from '../../types/widget';
+import React, { Suspense, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { logger } from '@/lib/utils/logger';
+
+import type { WidgetConfig } from '../../types/widget';
+
 
 // ============================================================================
 // ERROR BOUNDARY
@@ -83,12 +84,12 @@ class WidgetErrorBoundary extends React.Component<
 
 const WidgetLoadingSkeleton: React.FC = () => (
   <div className="animate-pulse space-y-4 p-6">
-    <div className="h-4 bg-muted rounded w-1/3"></div>
-    <div className="h-64 bg-muted rounded"></div>
+    <div className="h-4 bg-muted rounded w-1/3" />
+    <div className="h-64 bg-muted rounded" />
     <div className="grid grid-cols-3 gap-4">
-      <div className="h-8 bg-muted rounded"></div>
-      <div className="h-8 bg-muted rounded"></div>
-      <div className="h-8 bg-muted rounded"></div>
+      <div className="h-8 bg-muted rounded" />
+      <div className="h-8 bg-muted rounded" />
+      <div className="h-8 bg-muted rounded" />
     </div>
   </div>
 );
@@ -97,7 +98,7 @@ const WidgetLoadingSkeleton: React.FC = () => (
 // WIDGET RENDERER PROPS
 // ============================================================================
 
-export interface WidgetRendererProps {
+export type WidgetRendererProps = {
   config: WidgetConfig;
   children: React.ReactNode;
   isEditing?: boolean;

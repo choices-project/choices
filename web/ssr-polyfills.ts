@@ -80,7 +80,7 @@ if (typeof window === 'undefined') {
     try {
       // Use Node.js built-in crypto if available
       const nodeCrypto = require('crypto');
-      if (nodeCrypto && nodeCrypto.webcrypto) {
+      if (nodeCrypto?.webcrypto) {
         (globalThis as any).crypto = nodeCrypto.webcrypto;
       }
     } catch {

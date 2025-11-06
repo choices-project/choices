@@ -16,18 +16,18 @@
  * Status: ✅ Production-ready with privacy-first design
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { 
   PrivacyAwareQueryBuilder,
   applyKAnonymity,
-  getPrivacyOptOutCount,
   K_ANONYMITY_THRESHOLD,
   privacyAwareAggregate
 } from '@/features/analytics/lib/privacyFilters';
-import { logger } from '@/lib/utils/logger';
+import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {

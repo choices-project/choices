@@ -15,13 +15,14 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Layout, Grid } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
 import { EnhancedAnalyticsDashboard } from '@/features/analytics';
 import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetDashboard';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 type DashboardMode = 'classic' | 'widget';
 
@@ -90,7 +91,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
       </div>
     );
   }

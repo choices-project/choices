@@ -117,7 +117,7 @@ function simpleGeohash(lat: number, lng: number, precision: 5 | 6 | 7): string {
   
   while (bits < precision * 5) {
     if (even) {
-      const lngMid = (lngMin! + lngMax!) / 2;
+      const lngMid = (lngMin + lngMax) / 2;
       if (lng >= lngMid) {
         ch |= (1 << (4 - bit));
         lngMin = lngMid;
@@ -125,7 +125,7 @@ function simpleGeohash(lat: number, lng: number, precision: 5 | 6 | 7): string {
         lngMax = lngMid;
       }
     } else {
-      const latMid = (latMin! + latMax!) / 2;
+      const latMid = (latMin + latMax) / 2;
       if (lat >= latMid) {
         ch |= (1 << (4 - bit));
         latMin = latMid;

@@ -19,13 +19,13 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+
 import type { 
   PollRow, 
   PollInsert, 
   PollUpdate,
   PollOptionRow 
 } from '@/features/polls/types';
-
 import { logger } from '@/lib/utils/logger';
 
 // ============================================================================

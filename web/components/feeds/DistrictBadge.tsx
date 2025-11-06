@@ -9,8 +9,8 @@
 
 'use client';
 
-import React from 'react';
 import { MapPin } from 'lucide-react';
+import React from 'react';
 
 type DistrictBadgeProps = {
   district: string;

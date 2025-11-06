@@ -15,6 +15,13 @@
 
 'use client';
 
+import { 
+  Download, 
+  MapPin, 
+  Filter, 
+  AlertCircle,
+  RefreshCw 
+} from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart, 
@@ -27,16 +34,10 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { 
-  Download, 
-  MapPin, 
-  Filter, 
-  AlertCircle,
-  RefreshCw 
-} from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 type HeatmapEntry = {
   district_id: string;

@@ -4,8 +4,9 @@
  * Errors for when requested resources cannot be found.
  */
 
-import { ApplicationError, type ErrorDetails } from './base';
 import { withOptional } from '@/lib/util/objects';
+
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class NotFoundError extends ApplicationError {
   constructor(resource: string = 'Resource', details?: ErrorDetails) {

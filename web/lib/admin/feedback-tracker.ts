@@ -4,6 +4,7 @@
  */
 
 import { devLog } from '@/lib/utils/logger'
+
 import { withOptional } from '../util/objects'
 
 export type UserJourney = {

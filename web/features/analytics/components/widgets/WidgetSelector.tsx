@@ -14,7 +14,9 @@
 
 'use client';
 
+import { Plus, Info } from 'lucide-react';
 import React, { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -26,7 +28,7 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Info } from 'lucide-react';
+
 import { WIDGET_REGISTRY, generateWidgetId } from '../../lib/widgetRegistry';
 import { useWidgetStore } from '../../stores/widgetStore';
 import type { WidgetType } from '../../types/widget';
@@ -35,7 +37,7 @@ import type { WidgetType } from '../../types/widget';
 // WIDGET SELECTOR PROPS
 // ============================================================================
 
-export interface WidgetSelectorProps {
+export type WidgetSelectorProps = {
   trigger?: React.ReactNode;
   onWidgetAdd?: (widgetType: WidgetType) => void;
 }

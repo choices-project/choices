@@ -16,7 +16,8 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
-import GridLayout, { Layout as GridLayoutType, Responsive, WidthProvider } from 'react-grid-layout';
+import { type Layout as GridLayoutType, Responsive, WidthProvider } from 'react-grid-layout';
+
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import type { WidgetConfig, Breakpoint } from '../../types/widget';
@@ -65,7 +66,7 @@ const GRID_CONFIG = {
 // WIDGET GRID PROPS
 // ============================================================================
 
-export interface WidgetGridProps {
+export type WidgetGridProps = {
   widgets: WidgetConfig[];
   children: React.ReactNode;
   isEditing?: boolean;

@@ -14,8 +14,8 @@
  * @since 2024-12-27
  */
 
-import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/util/objects'
+import { logger } from '@/lib/utils/logger'
 
 // Analytics event types
 export enum AuthEventType {

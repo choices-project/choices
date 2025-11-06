@@ -8,8 +8,8 @@
  * @date 2025-01-15
  */
 
-import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 
 // Types for FEC API responses
 export type FECCandidate = {

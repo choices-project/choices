@@ -4,8 +4,9 @@
  * Errors for when a request conflicts with the current state of the resource.
  */
 
-import { ApplicationError, type ErrorDetails } from './base';
 import { withOptional } from '@/lib/util/objects';
+
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class ConflictError extends ApplicationError {
   constructor(message: string = 'Resource conflict', details?: ErrorDetails) {

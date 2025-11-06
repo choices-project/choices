@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     devLog('Fetching feed items (polls)...', { limit, category, district });
 
     // Fetch active polls with sophisticated engagement features
-    let pollsQuery = (supabaseClient as any)
+    const pollsQuery = (supabaseClient as any)
       .from('polls')
       .select(`
         id, 

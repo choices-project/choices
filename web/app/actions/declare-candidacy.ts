@@ -11,7 +11,6 @@ import {
 } from '@/lib/core/auth/server-actions'
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { stripUndefinedDeep } from '@/lib/util/clean'
-import type { CandidatePlatformInsert } from '@/types/candidate'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**

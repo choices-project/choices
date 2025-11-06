@@ -16,12 +16,13 @@
  * Status: ✅ Production-ready
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
-import { logger } from '@/lib/utils/logger';
+import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     const districtGroups = new Map<string, any[]>();
     
     users.forEach(u => {
-      const demographics = u.demographics as any;
+      const demographics = u.demographics;
       if (!demographics || typeof demographics !== 'object') return;
       
       const location = demographics.location;

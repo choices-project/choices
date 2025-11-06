@@ -17,7 +17,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   wait: number,
   immediate?: boolean
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
@@ -234,7 +234,7 @@ export class BatchProcessor<T> {
   private batch: T[] = [];
   private batchSize: number;
   private processFn: (items: T[]) => void | Promise<void>;
-  private timeout: NodeJS.Timeout | null = null;
+  private timeout: ReturnType<typeof setTimeout> | null = null;
   private timeoutMs: number;
   
   constructor(

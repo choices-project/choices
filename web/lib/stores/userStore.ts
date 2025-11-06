@@ -12,10 +12,12 @@ import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
+import { logger } from '@/lib/utils/logger';
 import type { UserProfile, ProfileUpdateData as ProfileUpdateDataType } from '@/types/profile';
 import type { Representative } from '@/types/representative';
+
 import type { BaseStore } from './types';
-import { logger } from '@/lib/utils/logger';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
@@ -374,7 +376,7 @@ export const useUserStore = create<UserStore>()(
       }),
       
       updatePrivacySetting: (setting, value) => set((state) => {
-        if (state.profileEditData && state.profileEditData.privacy_settings) {
+        if (state.profileEditData?.privacy_settings) {
           (state.profileEditData.privacy_settings as Record<string, unknown>)[setting] = value;
         }
       }),

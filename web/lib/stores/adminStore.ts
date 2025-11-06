@@ -13,6 +13,8 @@
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 
+import { logger } from '@/lib/utils/logger';
+
 import type {
   AdminNotification,
   TrendingTopic,
@@ -22,7 +24,6 @@ import type {
   AdminUser,
 } from '../../features/admin/types';
 import { getSupabaseBrowserClient } from '../../utils/supabase/client';
-import { logger } from '@/lib/utils/logger';
 
 /**
  * Admin store state interface

@@ -11,9 +11,10 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { PrivacySettings } from '@/types/profile';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

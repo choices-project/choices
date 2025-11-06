@@ -12,10 +12,11 @@
 
 import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
-import type { Database } from '@/types/database';
+
 
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+import type { Database } from '@/types/database';
 import type { PrivacySettings } from '@/types/profile';
 
 /**

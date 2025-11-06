@@ -17,6 +17,12 @@
 
 'use client';
 
+import { 
+  Download, 
+  Clock,
+  AlertCircle,
+  RefreshCw
+} from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
@@ -31,14 +37,7 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { 
-  Download, 
-  Clock, 
-  Calendar,
-  AlertCircle,
-  RefreshCw,
-  TrendingUp
-} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
