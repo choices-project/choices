@@ -16,9 +16,9 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -48,22 +48,17 @@ async function timed<T>(name: string, fn: () => Promise<T>): Promise<[T | null, 
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    // Admin authentication
-    const authGate = await requireAdminOr401();
-    if (authGate) return authGate;
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
 
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') ?? 'metrics';
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') ?? 'metrics';
 
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Supabase client not available', 500);
+  }
 
     // System Metrics (default)
     if (type === 'metrics' || type === 'all') {
