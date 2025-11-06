@@ -19,7 +19,7 @@ import { VoteValidator } from '@/lib/vote/validator';
 import { getMS } from '../../setup';
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   devLog: jest.fn()
 }));
 const mockSetup = getMS();

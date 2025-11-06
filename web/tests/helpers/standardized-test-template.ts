@@ -20,7 +20,7 @@ import { getMS } from '../setup';
 import { arrangeFindById, arrangeVoteProcessing } from './arrange-helpers';
 
 // Mock the logger (if needed)
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   devLog: jest.fn()
 }));
 

@@ -15,7 +15,7 @@ import type { VoteRequest, PollData, VoteData, VotingMethod } from '@/lib/vote/t
 // Import V2 test setup
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   devLog: jest.fn()
 }));
 
