@@ -1,27 +1,20 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export async function GET(_request: NextRequest) {
-  // Single admin gate - returns 401 if not admin
+export const GET = withErrorHandling(async (_request: NextRequest) => {
   const authGate = await requireAdminOr401()
   if (authGate) return authGate
   
-  try {
-    const supabase = getSupabaseServerClient();
-    
-    // Get Supabase client
-    const supabaseClient = await supabase;
-    
-    if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+  const supabase = getSupabaseServerClient();
+  const supabaseClient = await supabase;
+  
+  if (!supabaseClient) {
+    return errorResponse('Supabase client not available', 500);
+  }
     
     // Fetch real metrics from database
     const [topicsResult, pollsResult] = await Promise.all([
@@ -41,12 +34,5 @@ export async function GET(_request: NextRequest) {
       last_updated: new Date().toISOString()
     };
 
-    return NextResponse.json({ metrics });
-  } catch (error) {
-    devLog('Error fetching system metrics:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch system metrics' },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({ metrics });
+});
