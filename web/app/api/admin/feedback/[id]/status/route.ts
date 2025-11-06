@@ -1,73 +1,53 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError, validationError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function PATCH(
+export const PATCH = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = getSupabaseServerClient();
-    
-    // Get Supabase client
-    const supabaseClient = await supabase;
-    
-    if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+) => {
+  const { id } = await params;
+  const supabase = getSupabaseServerClient();
+  const supabaseClient = await supabase;
+  
+  if (!supabaseClient) {
+    return errorResponse('Supabase client not available', 500);
+  }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
-    // Check admin permissions - only admins can modify feedback status
-    const { data: userProfile, error: profileError } = await (supabaseClient as any)
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('user_id', String(user.id))
-      .single();
+  const { data: userProfile, error: profileError } = await (supabaseClient as any)
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', String(user.id))
+    .single();
 
-    if (profileError) {
-      devLog('Error fetching user profile:', { error: profileError });
-      return NextResponse.json(
-        { error: 'Failed to verify user permissions' },
-        { status: 500 }
-      );
-    }
+  if (profileError) {
+    devLog('Error fetching user profile:', { error: profileError });
+    return errorResponse('Failed to verify user permissions', 500);
+  }
 
-    if (!userProfile.is_admin) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+  if (!userProfile.is_admin) {
+    return forbiddenError('Admin access required');
+  }
 
-      const feedbackId = String(id);
-    if (!feedbackId) {
-      return NextResponse.json(
-        { error: 'Feedback ID is required' },
-        { status: 400 }
-      );
-    }
+  const feedbackId = String(id);
+  if (!feedbackId) {
+    return validationError({ feedbackId: 'Feedback ID is required' });
+  }
 
-    const body = await request.json();
-    const { status: newStatus } = body;
+  const body = await request.json();
+  const { status: newStatus } = body;
 
-    if (!newStatus) {
-      return NextResponse.json(
+  if (!newStatus) {
+    return validationError({
         { error: 'Status is required' },
         { status: 400 }
       );
