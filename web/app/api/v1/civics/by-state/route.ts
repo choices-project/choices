@@ -9,11 +9,11 @@ export const dynamic = 'force-dynamic';
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     return errorResponse('Supabase configuration missing', 500);
   }
-  
+
   const supabase = createClient(
     supabaseUrl,
     supabaseKey,
@@ -176,9 +176,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
     }
   });
-  
+
   response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
   response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
-  
+
   return response;
 });

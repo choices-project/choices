@@ -1,45 +1,20 @@
-/**
- * @fileoverview Hashtags API
- * 
- * Hashtag management API providing hashtag flagging, moderation,
- * and approval/rejection functionality.
- * 
- * @author Choices Platform Team
- * @created 2025-10-24
- * @version 2.0.0
- * @since 1.0.0
- */
+import { type NextRequest } from 'next/server';
 
-import { type NextRequest, NextResponse } from 'next/server';
-
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Get hashtag moderation queue
- * 
- * @param {NextRequest} request - Request object
- * @param {string} [request.searchParams.action] - Action type (moderation-queue)
- * @returns {Promise<NextResponse>} Moderation queue data
- * 
- * @example
- * GET /api/hashtags?action=moderation-queue
- */
-export async function GET(request: NextRequest) {
-  try {
-    const url = new URL(request.url);
-    const action = url.searchParams.get('action');
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const action = url.searchParams.get('action');
 
-    const supabase = await getSupabaseServerClient();
-            
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
+  const supabase = await getSupabaseServerClient();
+          
+  if (!supabase) {
+    return errorResponse('Supabase not configured', 500);
+  }
 
     // Get moderation queue
     if (action === 'moderation-queue') {
@@ -49,15 +24,12 @@ export async function GET(request: NextRequest) {
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        logger.error('Failed to fetch moderation queue', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to fetch moderation queue' },
-          { status: 500 }
-        );
-      }
+    if (error) {
+      logger.error('Failed to fetch moderation queue', error instanceof Error ? error : new Error(String(error)));
+      return errorResponse('Failed to fetch moderation queue', 500);
+    }
 
-      return NextResponse.json({
+    return successResponse({
         success: true,
         data: flags,
         metadata: {

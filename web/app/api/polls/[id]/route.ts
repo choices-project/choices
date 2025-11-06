@@ -1,16 +1,15 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, notFoundError, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const { id } = await params;
     const pollId = id;
     
@@ -24,12 +23,9 @@ export async function GET(
       .eq('id', pollId)
       .single();
 
-    if (error || !poll) {
-      return NextResponse.json(
-        { error: 'Poll not found' },
-        { status: 404 }
-      );
-    }
+  if (error || !poll) {
+    return notFoundError('Poll not found');
+  }
 
     // Return sanitized poll data with privacy info
     const sanitizedPoll = {
@@ -47,12 +43,5 @@ export async function GET(
       createdAt: poll.created_at,
     };
 
-    return NextResponse.json(sanitizedPoll);
-  } catch (error) {
-    devLog('Error fetching poll:', { error });
-    return NextResponse.json(
-      { error: 'Failed to fetch poll data' },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse(sanitizedPoll);
+});
