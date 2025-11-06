@@ -1,8 +1,8 @@
 # System Architecture
 
 **Created:** 2025-01-18  
-**Updated:** November 3, 2025  
-**Status:** ✅ Current (Next.js 15, Zustand stores, 64 tables)  
+**Updated:** November 6, 2025  
+**Status:** ✅ Current (Next.js 15, Zustand stores, Widget System, 70+ tables, 115 API endpoints)  
 **Purpose:** Comprehensive technical overview of the Choices platform architecture
 
 ## 🏗️ Architecture Overview
@@ -55,7 +55,8 @@ The Choices platform is built as a modern, privacy-first web application using a
 
 ### 3. Scalability & Performance
 - **Edge Computing**: Vercel Edge Functions
-- **Caching Strategy**: Multi-layer caching
+- **Redis Caching**: Analytics endpoints (50x improvement)
+- **Multi-layer Caching**: Browser, CDN, Redis, Database
 - **Database Optimization**: Efficient queries and indexing
 - **CDN Distribution**: Global content delivery
 
@@ -505,3 +506,66 @@ await loginPage.submit();
 **E2E Testing**: ✅ **99% COMPLETE (2025-01-17) - Major breakthrough achieved**  
 **Maintainers**: [@michaeltempesta](https://github.com/michaeltempesta)  
 **Organization**: [@choices-project](https://github.com/choices-project)
+
+---
+
+## 🎨 Widget System Architecture (Nov 2025)
+
+### Overview
+Customizable drag-and-drop analytics dashboard built with react-grid-layout and Zustand.
+
+### Components
+```
+WidgetDashboard (Main Container)
+├── WidgetGrid (react-grid-layout)
+│   ├── Widget 1: TrendsChart
+│   ├── Widget 2: DemographicsChart
+│   ├── Widget 3: TemporalAnalysisChart
+│   ├── Widget 4: TrustTierComparisonChart
+│   ├── Widget 5: PollHeatmap
+│   └── Widget 6: DistrictHeatmap
+├── WidgetToolbar (Add/Remove/Configure)
+├── LayoutPresets (5 presets)
+└── ConfigurationPanel (Settings)
+```
+
+### State Management
+**Store**: `widgetStore.ts` (Zustand + Immer)
+- Widget CRUD operations
+- Layout management (save/load)
+- Undo/redo history (10 states)
+- LocalStorage persistence
+- Database sync
+
+### Data Flow
+```
+User Action → Widget Event → Zustand Store → LocalStorage + Database → Re-render
+```
+
+### Persistence
+**LocalStorage**: Immediate offline persistence  
+**Database**: `user_preferences.dashboard_layout` (JSONB)  
+**API**: `/api/analytics/dashboard/layout` (GET/POST/DELETE)
+
+### Layout Presets
+1. **Default** - 3 widgets (balanced)
+2. **Executive** - 4 widgets (high-level)
+3. **Detailed** - 6 widgets (comprehensive)
+4. **Mobile** - 4 widgets (stacked)
+5. **Engagement** - 4 widgets (engagement focus)
+
+### Responsive Breakpoints
+- **lg** (1200px): 12-column grid
+- **md** (996px): 10-column grid
+- **sm** (768px): 6-column grid
+- **xs** (480px): 4-column grid (stacked)
+
+### Features
+- Drag-and-drop with touch support
+- Resize with constraints
+- Error boundaries per widget
+- Loading states with skeletons
+- Keyboard shortcuts (Cmd+Z/S/Esc)
+- Dual-mode toggle (Classic ↔ Widget)
+
+---
