@@ -16,7 +16,7 @@ test.describe('Civics Representative Database', () => {
     await setupExternalAPIMocks(page);
     // Mock DB-backed API with representative list for robustness in CI/local
     // Updated to reflect actual database state: 8,663 representatives after full ingest
-    await page.route('**/api/civics/by-state**', async route => {
+    await page.route('**/api/v1/civics/by-state**', async route => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') ?? 'CA';
       const level = url.searchParams.get('level') ?? 'federal';
@@ -112,8 +112,8 @@ test.describe('Civics Representative Database', () => {
   test('handles API error gracefully with retry', async ({ page }) => {
     // Force error once; then re-allow
     let called = false;
-    await page.unroute('**/api/civics/by-state**');
-    await page.route('**/api/civics/by-state**', async route => {
+    await page.unroute('**/api/v1/civics/by-state**');
+    await page.route('**/api/v1/civics/by-state**', async route => {
       if (!called) {
         called = true;
         return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Database error' }) });

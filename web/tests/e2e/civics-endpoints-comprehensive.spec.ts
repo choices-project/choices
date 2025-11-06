@@ -2,8 +2,8 @@
  * Comprehensive Civics Endpoints E2E Tests
  * 
  * Tests all civics API endpoints that were recently fixed:
- * - /api/civics/by-address (GET)
- * - /api/civics/by-state (GET)
+ * - /api/v1/civics/address-lookup (GET)
+ * - /api/v1/civics/by-state (GET)
  * - /api/civics/contact/[id] (GET, POST)
  * - /api/civics/actions (GET, POST)
  * - /api/civics/actions/[id] (GET, PUT, DELETE)
@@ -67,11 +67,11 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
   });
 
   // ============================================================================
-  // /api/civics/by-address Tests
+  // /api/v1/civics/address-lookup Tests
   // ============================================================================
 
-  test('GET /api/civics/by-address should return representatives for valid address', async ({ page }) => {
-    const response = await page.request.get('/api/civics/by-address?address=123%20Main%20St,%20Springfield,%20IL%2062701', {
+  test('GET /api/v1/civics/address-lookup should return representatives for valid address', async ({ page }) => {
+    const response = await page.request.get('/api/v1/civics/address-lookup?address=123%20Main%20St,%20Springfield,%20IL%2062701', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -85,8 +85,8 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
     expect(data.metadata.source).toBe('database');
   });
 
-  test('GET /api/civics/by-address should return 400 for missing address', async ({ page }) => {
-    const response = await page.request.get('/api/civics/by-address', {
+  test('GET /api/v1/civics/address-lookup should return 400 for missing address', async ({ page }) => {
+    const response = await page.request.get('/api/v1/civics/address-lookup', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -98,12 +98,12 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
     expect(data.error).toContain('Address');
   });
 
-  test('GET /api/civics/by-address should handle rate limiting', async ({ page }) => {
+  test('GET /api/v1/civics/address-lookup should handle rate limiting', async ({ page }) => {
     // Make 60 requests rapidly (limit is 50 per 15 minutes)
     const promises = [];
     for (let i = 0; i < 60; i++) {
       promises.push(
-        page.request.get(`/api/civics/by-address?address=123%20Main%20St,%20IL&_=${i}`, {
+        page.request.get(`/api/v1/civics/address-lookup?address=123%20Main%20St,%20IL&_=${i}`, {
           headers: {
             'x-e2e-bypass': '1'
           }
@@ -119,11 +119,11 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
   });
 
   // ============================================================================
-  // /api/civics/by-state Tests
+  // /api/v1/civics/by-state Tests
   // ============================================================================
 
-  test('GET /api/civics/by-state should return representatives for valid state', async ({ page }) => {
-    const response = await page.request.get('/api/civics/by-state?state=IL', {
+  test('GET /api/v1/civics/by-state should return representatives for valid state', async ({ page }) => {
+    const response = await page.request.get('/api/v1/civics/by-state?state=IL', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -137,8 +137,8 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
     expect(data.data.state).toBe('IL');
   });
 
-  test('GET /api/civics/by-state should filter by level', async ({ page }) => {
-    const response = await page.request.get('/api/civics/by-state?state=CA&level=federal', {
+  test('GET /api/v1/civics/by-state should filter by level', async ({ page }) => {
+    const response = await page.request.get('/api/v1/civics/by-state?state=CA&level=federal', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -151,8 +151,8 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
     }
   });
 
-  test('GET /api/civics/by-state should return 400 for missing state', async ({ page }) => {
-    const response = await page.request.get('/api/civics/by-state', {
+  test('GET /api/v1/civics/by-state should return 400 for missing state', async ({ page }) => {
+    const response = await page.request.get('/api/v1/civics/by-state', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -169,7 +169,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
 
   test('GET /api/civics/contact/[id] should return contact information', async ({ page }) => {
     // First, get a representative ID from by-state
-    const stateResponse = await page.request.get('/api/civics/by-state?state=IL&limit=1', {
+    const stateResponse = await page.request.get('/api/v1/civics/by-state?state=IL&limit=1', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -207,7 +207,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
 
   test('POST /api/civics/contact/[id] should log communication for authenticated user', async ({ page }) => {
     // Get a representative ID
-    const stateResponse = await page.request.get('/api/civics/by-state?state=IL&limit=1', {
+    const stateResponse = await page.request.get('/api/v1/civics/by-state?state=IL&limit=1', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -304,7 +304,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
 
   test('GET /api/civics/representative/[id] should return detailed representative info', async ({ page }) => {
     // Get a representative ID
-    const stateResponse = await page.request.get('/api/civics/by-state?state=IL&limit=1', {
+    const stateResponse = await page.request.get('/api/v1/civics/by-state?state=IL&limit=1', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -347,7 +347,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
 
   test('All endpoints should handle database errors gracefully', async ({ page }) => {
     // Test by-state with invalid state code (should still return empty array or error)
-    const response = await page.request.get('/api/civics/by-state?state=XX', {
+    const response = await page.request.get('/api/v1/civics/by-state?state=XX', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -390,7 +390,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
       }
     });
 
-    const response = await page.request.get('/api/civics/by-address?address=Springfield,%20IL', {
+    const response = await page.request.get('/api/v1/civics/address-lookup?address=Springfield,%20IL', {
       headers: {
         'x-e2e-bypass': '1'
       }
@@ -414,7 +414,7 @@ test.describe('Civics Endpoints - Comprehensive E2E Tests', () => {
       }
     });
 
-    const response = await page.request.get('/api/civics/by-state?state=CA', {
+    const response = await page.request.get('/api/v1/civics/by-state?state=CA', {
       headers: {
         'x-e2e-bypass': '1'
       }

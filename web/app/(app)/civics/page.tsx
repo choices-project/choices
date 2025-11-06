@@ -57,7 +57,7 @@ export default function Civics2Page() {
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
     
     try {
-      const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
+      const response = await fetch(`/api/v1/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
       logger.info('📡 Response status', { status: response.status });
       
       if (!response.ok) {

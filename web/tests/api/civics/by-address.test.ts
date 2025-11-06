@@ -1,7 +1,7 @@
 /**
  * Civics By-Address API Tests
  * 
- * Tests for /api/civics/by-address endpoint
+ * Tests for /api/v1/civics/address-lookup endpoint
  * 
  * Created: January 29, 2025
  */
@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
-import { GET } from '@/app/api/civics/by-address/route';
+import { GET } from '@/app/api/v1/civics/address-lookup/route';
 
 // Mock dependencies
 const mockFrom = jest.fn();
@@ -35,7 +35,7 @@ jest.mock('@/lib/utils/api-logger', () => ({
   }),
 }));
 
-describe('GET /api/civics/by-address', () => {
+describe('GET /api/v1/civics/address-lookup', () => {
   let apiRateLimiter: { checkLimit: jest.Mock };
   let getSupabaseServerClient: jest.Mock;
 
@@ -116,7 +116,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return representatives for a valid address', async () => {
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     
     const response = await GET(request);
     
@@ -137,7 +137,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should return 400 when address parameter is missing', async () => {
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup');
     const response = await GET(request);
     const data = await response.json();
 
@@ -157,7 +157,7 @@ describe('GET /api/civics/by-address', () => {
       retryAfter: 900,
     });
 
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     const response = await GET(request);
     const data = await response.json();
 
@@ -177,7 +177,7 @@ describe('GET /api/civics/by-address', () => {
       error: null,
     });
 
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=999%20Nonexistent%20St%2C%20Nowhere%2C%20XX%2000000');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=999%20Nonexistent%20St%2C%20Nowhere%2C%20XX%2000000');
     const response = await GET(request);
     const data = await response.json();
 
@@ -195,7 +195,7 @@ describe('GET /api/civics/by-address', () => {
       error: { message: 'Database connection failed' },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     const response = await GET(request);
     const data = await response.json();
 
@@ -208,7 +208,7 @@ describe('GET /api/civics/by-address', () => {
   it('should return 500 when Supabase client is not available', async () => {
     (getSupabaseServerClient as any).mockResolvedValue(null);
 
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     const response = await GET(request);
     const data = await response.json();
 
@@ -226,7 +226,7 @@ describe('GET /api/civics/by-address', () => {
     ];
 
     for (const address of addresses) {
-      const request = new NextRequest(`http://localhost:3000/api/civics/by-address?address=${encodeURIComponent(address)}`);
+      const request = new NextRequest(`http://localhost:3000/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
       await GET(request);
 
       // Verify query was called with extracted state
@@ -242,7 +242,7 @@ describe('GET /api/civics/by-address', () => {
       totalHits: 25,
     });
 
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     const response = await GET(request);
     const data = await response.json();
 
@@ -255,7 +255,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should query correct tables with proper relations', async () => {
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     await GET(request);
 
     expect(mockFrom).toHaveBeenCalledWith('representatives_core');
@@ -266,7 +266,7 @@ describe('GET /api/civics/by-address', () => {
   });
 
   it('should order results by level ascending', async () => {
-    const request = new NextRequest('http://localhost:3000/api/civics/by-address?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
+    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
     await GET(request);
 
     expect(mockOrder).toHaveBeenCalledWith('level', { ascending: true });

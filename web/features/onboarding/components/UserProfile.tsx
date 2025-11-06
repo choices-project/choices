@@ -80,7 +80,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   const handleAddressUpdateLocal = async () => {
     setAddressLoading(true);
     try {
-      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(newAddress)}`);
+      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(newAddress)}`);
       if (!response.ok) throw new Error('Address lookup failed');
       const result = await response.json();
       
@@ -114,7 +114,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   const handleStateUpdate = async (state: string) => {
     setAddressLoading(true);
     try {
-      const response = await fetch(`/api/civics/by-state?state=${state}&level=federal&limit=20`);
+      const response = await fetch(`/api/v1/civics/by-state?state=${state}&level=federal&limit=20`);
       if (!response.ok) throw new Error('State lookup failed');
       const result = await response.json();
       

@@ -169,7 +169,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     // Wait for API response
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Check if results are displayed - flexible selector
@@ -297,7 +297,7 @@ test.describe('Civics Address Lookup System - V2', () => {
       // Wait for API response (may use either endpoint)
       await page.waitForResponse((response) => 
         response.url().includes('/api/v1/civics/address-lookup') || 
-        response.url().includes('/api/civics/by-address')
+        response.url().includes('/api/v1/civics/address-lookup')
       );
       
       // Small wait for results to render
@@ -343,7 +343,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     // Wait for API response
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Check if results are displayed - flexible selectors
@@ -385,7 +385,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     await submitButton.click();
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     ).catch(() => null);
 
     const resultsVisible = await page.locator('[data-testid="address-results"], [data-testid="representatives-list"]').first().isVisible().catch(() => false);
@@ -433,7 +433,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     // Wait for API response
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
     
     // Check if results are displayed on mobile
@@ -465,7 +465,7 @@ test.describe('Civics Address Lookup System - V2', () => {
       await submitButton.click();
       await page.waitForResponse((response) => 
         response.url().includes('/api/v1/civics/address-lookup') || 
-        response.url().includes('/api/civics/by-address')
+        response.url().includes('/api/v1/civics/address-lookup')
       ).catch(() => null);
     } else {
       console.log('⚠️ Address lookup not available - continuing with poll creation');
@@ -525,7 +525,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     // Wait for API response
     await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     );
 
     const endTime = Date.now();
@@ -583,7 +583,7 @@ test.describe('Civics Address Lookup System - V2', () => {
     
     const response = await page.waitForResponse((response) => 
       response.url().includes('/api/v1/civics/address-lookup') || 
-      response.url().includes('/api/civics/by-address')
+      response.url().includes('/api/v1/civics/address-lookup')
     ).catch(() => null);
 
     // At minimum, the API should have been called when back online

@@ -57,7 +57,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
     try {
       // Call the address lookup API
-      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`, {
+      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

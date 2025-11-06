@@ -55,7 +55,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     setCurrentStep(2); // loading step
     
     try {
-      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(currentAddress)}`);
+      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(currentAddress)}`);
       if (!response.ok) throw new Error('Address lookup failed');
       const result = await response.json();
       
@@ -103,7 +103,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     setCurrentStep(2); // loading step
     
     try {
-      const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=federal&limit=20`);
+      const response = await fetch(`/api/v1/civics/by-state?state=${selectedState}&level=federal&limit=20`);
       if (!response.ok) throw new Error('State lookup failed');
       const result = await response.json();
       

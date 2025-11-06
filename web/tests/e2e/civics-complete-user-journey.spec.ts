@@ -14,14 +14,14 @@
  * 3. Address Lookup → Uses /api/v1/civics/address-lookup (SOLE EXCEPTION)
  *    - This is the ONLY endpoint that calls external APIs (Google Civic)
  *    - Sets jurisdiction cookie for privacy-safe storage
- * 4. Representative Lookup → Uses /api/civics/by-address (Supabase query only)
+ * 4. Representative Lookup → Uses /api/v1/civics/address-lookup (Supabase query only)
  *    - Queries representatives_core table in Supabase
  *    - No external API calls (per audit requirement)
  * 5. Representative Auto-population → Stores representatives in userStore/localStorage
  * 
  * CRITICAL REQUIREMENTS:
  * - /api/v1/civics/address-lookup MUST call Google Civic API (sole exception)
- * - /api/civics/by-address MUST ONLY query Supabase (no external APIs)
+ * - /api/v1/civics/address-lookup MUST ONLY query Supabase (no external APIs)
  * - Representative data comes from Supabase (pre-ingested by backend service)
  * - Address is never stored, only jurisdiction (state/district)
  * 
@@ -76,7 +76,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     ]
   };
 
-  // Mock representative data from Supabase (as would be returned by /api/civics/by-address)
+  // Mock representative data from Supabase (as would be returned by /api/v1/civics/address-lookup)
   const mockSupabaseRepresentatives = [
     {
       id: 1,
@@ -185,7 +185,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     });
 
     // Mock Supabase query endpoint (MUST only query Supabase, no external APIs)
-    await page.route('**/api/civics/by-address*', async (route) => {
+    await page.route('**/api/v1/civics/address-lookup*', async (route) => {
       const url = new URL(route.request().url());
       const address = url.searchParams.get('address');
 
@@ -235,7 +235,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     });
 
     // Mock state-based lookup (also queries Supabase only)
-    await page.route('**/api/civics/by-state*', async (route) => {
+    await page.route('**/api/v1/civics/by-state*', async (route) => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state');
       const level = url.searchParams.get('level') ?? 'all';
@@ -1082,7 +1082,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           console.log('✓ Found address input, filling...');
           await addressInput.fill(testAddress);
           
-          // Submit address lookup - this triggers /api/civics/by-address (Supabase query only)
+          // Submit address lookup - this triggers /api/v1/civics/address-lookup (Supabase query only)
           const lookupButton = page.locator('button:has-text("Find Representatives"), button[type="submit"]:has-text("Find"), button:has-text("Lookup")').first();
           if (await lookupButton.isVisible({ timeout: 3000 }).catch(() => false)) {
           await lookupButton.click();
@@ -1144,7 +1144,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         }
       }
       
-      // IMPORTANT: The onboarding flow uses /api/civics/by-address directly
+      // IMPORTANT: The onboarding flow uses /api/v1/civics/address-lookup directly
       // This endpoint queries Supabase ONLY (no external API calls)
       // The /api/v1/civics/address-lookup is a separate endpoint used elsewhere
     });
@@ -1152,7 +1152,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     // ========================================
     // STEP 4: REPRESENTATIVE LOOKUP (Supabase Only)
     // ========================================
-    await test.step('System queries representatives from Supabase via /api/civics/by-address', async () => {
+    await test.step('System queries representatives from Supabase via /api/v1/civics/address-lookup', async () => {
       // Check if address lookup was already triggered in previous step
       // If not, trigger it manually
       const currentUrl = page.url();
@@ -1175,7 +1175,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           // Set up response listener BEFORE triggering submission
           const responsePromise = page.waitForResponse(
             (response) =>
-              response.url().includes('/api/civics/by-address') &&
+              response.url().includes('/api/v1/civics/address-lookup') &&
               response.request().method() === 'GET',
             { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
           ).catch(() => null); // Don't throw if timeout, just return null
@@ -1232,7 +1232,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             
             // Use baseURL to avoid page context issues
             const byAddressData = await page.evaluate(async ({ url, address }) => {
-              const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(address)}`);
+              const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
               if (!res.ok) {
                 throw new Error(`API returned ${res.status}`);
               }
@@ -1268,7 +1268,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         try {
       const byAddressResponse = await page.waitForResponse(
         (response) =>
-          response.url().includes('/api/civics/by-address') &&
+          response.url().includes('/api/v1/civics/address-lookup') &&
           response.request().method() === 'GET',
             { timeout: 5000 } // Shorter timeout
       );
@@ -1314,7 +1314,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           
           // Make direct API call
           const byAddressData = await page.evaluate(async ({ url, address }) => {
-            const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(address)}`);
+            const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
             if (!res.ok) {
               throw new Error(`API returned ${res.status}`);
             }
@@ -1493,13 +1493,13 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       }
 
       // Verify architecture compliance
-      // 1. /api/civics/by-address should NOT call external APIs
-      const byAddressCalls = apiCalls.filter(call => call.url.includes('/api/civics/by-address'));
+      // 1. /api/v1/civics/address-lookup should NOT call external APIs
+      const byAddressCalls = apiCalls.filter(call => call.url.includes('/api/v1/civics/address-lookup'));
       byAddressCalls.forEach(call => {
         expect(call.method).toBe('GET');
         expect(call.external).toBe(false);
       });
-      console.log(`✓ Verified ${byAddressCalls.length} calls to /api/civics/by-address (GET, no external APIs)`);
+      console.log(`✓ Verified ${byAddressCalls.length} calls to /api/v1/civics/address-lookup (GET, no external APIs)`);
 
       // 2. Any external API calls should only be from /api/v1/civics/address-lookup
       const externalCalls = apiCalls.filter(call => call.external);
@@ -1579,7 +1579,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
 
       console.log('✅ Complete user journey verified successfully!');
       console.log(`   - User registered: ${testUser.email}`);
-      console.log(`   - Address lookup completed via /api/civics/by-address (Supabase query only)`);
+      console.log(`   - Address lookup completed via /api/v1/civics/address-lookup (Supabase query only)`);
       console.log(`   - Representatives loaded from Supabase: ${repsArray.length}`);
       console.log(`   - Data flow compliant with civics architecture audit`);
       console.log(`   - Representatives have proper structure:`, {
@@ -1642,7 +1642,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // If UI wasn't used, make a direct API call to test
       if (!usedUI) {
         await page.evaluate(async (address) => {
-          await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
         }, testAddress);
       }
 
@@ -1663,8 +1663,8 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
     });
   });
 
-  test('Verify /api/civics/by-address only queries Supabase (no external APIs)', async ({ page }) => {
-    await test.step('Verify /api/civics/by-address queries Supabase only', async () => {
+  test('Verify /api/v1/civics/address-lookup only queries Supabase (no external APIs)', async ({ page }) => {
+    await test.step('Verify /api/v1/civics/address-lookup queries Supabase only', async () => {
       // Setup mocks first
       await setupE2ETestData({ user: testUser });
       
@@ -1688,7 +1688,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         const url = request.url();
         requestsTracked.push(`${request.method()} ${url}`);
         
-        if (url.includes('/api/civics/by-address')) {
+        if (url.includes('/api/v1/civics/address-lookup')) {
           supabaseQueryCalled = true;
           // Verify it's a GET request (query, not mutation)
           expect(request.method()).toBe('GET');
@@ -1711,7 +1711,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         }
       });
 
-      // This test verifies /api/civics/by-address queries Supabase only
+      // This test verifies /api/v1/civics/address-lookup queries Supabase only
       // We can test this directly via API call without needing the UI
       // However, if the UI is available, we'll use it for more realistic testing
       
@@ -1752,15 +1752,15 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       if (usedUI) {
         // Wait for API response from UI interaction
         const response = await page.waitForResponse(
-          (resp) => resp.url().includes('/api/civics/by-address'),
+          (resp) => resp.url().includes('/api/v1/civics/address-lookup'),
           { timeout: 10000 }
         );
         responseData = await response.json();
       } else {
         // Make direct API call to test the endpoint
-        console.log('📡 Testing /api/civics/by-address directly via API call');
+        console.log('📡 Testing /api/v1/civics/address-lookup directly via API call');
         responseData = await page.evaluate(async (address) => {
-          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
           if (!res.ok) {
             throw new Error(`API call failed: ${res.status}`);
           }
@@ -1777,10 +1777,10 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       expect(supabaseQueryCalled).toBe(true);
 
       // Verify no external API was called
-      // This is critical - /api/civics/by-address MUST only query Supabase
+      // This is critical - /api/v1/civics/address-lookup MUST only query Supabase
       expect(externalApiCalled).toBe(false);
 
-      console.log('✓ /api/civics/by-address verified: Supabase-only query');
+      console.log('✓ /api/v1/civics/address-lookup verified: Supabase-only query');
       console.log(`   - Query method: GET`);
       console.log(`   - External API calls: ${externalApiCalled ? 'FAILED' : '0 (correct)'}`);
       console.log(`   - Total requests tracked: ${requestsTracked.length}`);
@@ -1876,14 +1876,14 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         await addressInput.fill(testAddress);
         flowSteps.push('Address entered');
         
-        // Step 2: Submit triggers /api/civics/by-address (Supabase query)
+        // Step 2: Submit triggers /api/v1/civics/address-lookup (Supabase query)
           const lookupButton = page.locator('button:has-text("Find Representatives"), button:has-text("Find"), button[type="submit"]:has-text("Find"), [data-testid="address-submit"]').first();
           const buttonVisible = await lookupButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => false);
           
           if (buttonVisible) {
             // Set up response listener BEFORE clicking, but with timeout handling
             const responsePromise = page.waitForResponse(
-              (response) => response.url().includes('/api/civics/by-address'),
+              (response) => response.url().includes('/api/v1/civics/address-lookup'),
               { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
             ).catch(() => null); // Don't throw if timeout, just return null
             
@@ -1910,7 +1910,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
             const response = await responsePromise;
             if (response) {
         flowSteps.push('Address lookup submitted');
-              flowSteps.push('/api/civics/by-address called (Supabase query)');
+              flowSteps.push('/api/v1/civics/address-lookup called (Supabase query)');
               addressLookupCompleted = true;
             }
           }
@@ -1922,7 +1922,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Fallback: Direct API call if UI interaction failed
       if (!addressLookupCompleted) {
         await page.evaluate(async (address) => {
-          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
           if (!res.ok) {
             throw new Error(`API returned ${res.status}`);
           }
@@ -1938,7 +1938,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         }, testAddress);
         
         flowSteps.push('Address lookup via direct API call');
-        flowSteps.push('/api/civics/by-address called (Supabase query)');
+        flowSteps.push('/api/v1/civics/address-lookup called (Supabase query)');
         addressLookupCompleted = true;
       }
         
@@ -1956,7 +1956,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       } else {
         // If not stored from UI, verify API still works
         const apiResponse = await page.evaluate(async (address) => {
-          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
           return res.json();
         }, testAddress);
         
@@ -1991,7 +1991,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       await setupExternalAPIMocks(page);
       
       // Mock Supabase query failure
-      await page.route('**/api/civics/by-address*', async (route) => {
+      await page.route('**/api/v1/civics/address-lookup*', async (route) => {
         await route.fulfill({
           status: 500,
           contentType: 'application/json',
@@ -2025,7 +2025,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           if (buttonVisible) {
             // Set up response listener before clicking, but with timeout handling
           const responsePromise = page.waitForResponse(
-            (response) => response.url().includes('/api/civics/by-address') && response.status() === 500,
+            (response) => response.url().includes('/api/v1/civics/address-lookup') && response.status() === 500,
               { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
             ).catch(() => null); // Don't throw if timeout, just return null
           
@@ -2053,7 +2053,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         try {
           // Increase timeout for error response
           const errorResponse = await page.evaluate(async (address) => {
-            const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+            const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
             return { status: res.status, ok: res.ok, statusText: res.statusText };
           }, testAddress);
           
@@ -2131,7 +2131,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
           if (buttonVisible) {
             // Set up response listener before clicking, but with timeout handling
           const responsePromise = page.waitForResponse(
-            (response) => response.url().includes('/api/civics/by-address'),
+            (response) => response.url().includes('/api/v1/civics/address-lookup'),
               { timeout: 5000 } // Shorter timeout to fail fast and use API fallback
             ).catch(() => null); // Don't throw if timeout, just return null
           
@@ -2158,7 +2158,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         try {
         // Make the API call and verify response
         const response = await page.evaluate(async (address) => {
-          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
             if (!res.ok) {
               throw new Error(`API returned ${res.status}`);
             }
@@ -2214,7 +2214,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       if (!storedReps) {
         // Make a direct API call to verify the endpoint works
         const apiResponse = await page.evaluate(async (address) => {
-          const res = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          const res = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
           return res.json();
         }, testAddress);
         
@@ -2262,7 +2262,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       // Test state-based lookup (use full URL for fetch in page.evaluate context)
       const response = await page.evaluate(async ({ url, state }) => {
-        const res = await fetch(`${url}/api/civics/by-state?state=${state}&level=federal&limit=10`);
+        const res = await fetch(`${url}/api/v1/civics/by-state?state=${state}&level=federal&limit=10`);
         return res.json();
       }, { url: baseURL, state: 'IL' });
       
@@ -2297,7 +2297,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       ];
       for (const { address, expectedState } of testAddresses) {
         // Mock the route for this specific address to return correct state
-        await page.route(`**/api/civics/by-address*address=${encodeURIComponent(address)}*`, async (route) => {
+        await page.route(`**/api/v1/civics/address-lookup*address=${encodeURIComponent(address)}*`, async (route) => {
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -2322,7 +2322,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
         });
         
         const response = await page.evaluate(async ({ url, addr }) => {
-          const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(addr)}`);
+          const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(addr)}`);
           return res.json();
         }, { url: baseURL, addr: address });
         
@@ -2343,7 +2343,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       const baseURL = page.url().split('/').slice(0, 3).join('/');
       
       const response = await page.evaluate(async ({ url, address }) => {
-        const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
         return res.json();
       }, { url: baseURL, address: testAddress });
       
@@ -2397,7 +2397,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Test empty address - route handler will validate and return error
       try {
         const emptyResponse = await page.evaluate(async (url) => {
-          const res = await fetch(`${url}/api/civics/by-address?address=`);
+          const res = await fetch(`${url}/api/v1/civics/address-lookup?address=`);
           return res.json();
         }, baseURL);
         
@@ -2415,7 +2415,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       // Test invalid address format
       try {
         const invalidResponse = await page.evaluate(async (url) => {
-          const res = await fetch(`${url}/api/civics/by-address?address=invalid`);
+          const res = await fetch(`${url}/api/v1/civics/address-lookup?address=invalid`);
           return res.json();
         }, baseURL);
         
@@ -2440,7 +2440,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       // Test with limit
       const limitedResponse = await page.evaluate(async (url) => {
-        const res = await fetch(`${url}/api/civics/by-state?state=CA&level=federal&limit=5`);
+        const res = await fetch(`${url}/api/v1/civics/by-state?state=CA&level=federal&limit=5`);
         return res.json();
       }, baseURL);
       
@@ -2462,7 +2462,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       const baseURL = page.url().split('/').slice(0, 3).join('/');
       
       const response = await page.evaluate(async ({ url, address }) => {
-        const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
         return res.json();
       }, { url: baseURL, address: testAddress });
       
@@ -2519,7 +2519,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       for (const address of addressFormats) {
         try {
           const response = await page.evaluate(async ({ url, addr }) => {
-            const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(addr)}`);
+            const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(addr)}`);
             return res.json();
           }, { url: baseURL, addr: address });
           
@@ -2547,7 +2547,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       
       for (const level of levels) {
         const response = await page.evaluate(async ({ url, lvl }) => {
-          const res = await fetch(`${url}/api/civics/by-state?state=IL&level=${lvl}&limit=5`);
+          const res = await fetch(`${url}/api/v1/civics/by-state?state=IL&level=${lvl}&limit=5`);
           return res.json();
         }, { url: baseURL, lvl: level });
         
@@ -2573,7 +2573,7 @@ test.describe('Complete Civics User Journey - Registration to Representative Aut
       const baseURL = page.url().split('/').slice(0, 3).join('/');
       
       const response = await page.evaluate(async ({ url, address }) => {
-        const res = await fetch(`${url}/api/civics/by-address?address=${encodeURIComponent(address)}`);
+        const res = await fetch(`${url}/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
         return res.json();
       }, { url: baseURL, address: testAddress });
       
