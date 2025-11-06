@@ -46,14 +46,14 @@ export default function AnalyticsPage() {
         setUserId(user.id);
 
         // Load user's preferred mode
-        const { data: prefs } = await (supabase as any)
-          .from('user_preferences')
+        const { data: profile } = await (supabase as any)
+          .from('user_profiles')
           .select('analytics_dashboard_mode')
           .eq('user_id', user.id)
           .single();
 
-        if (prefs?.analytics_dashboard_mode) {
-          setMode(prefs.analytics_dashboard_mode as DashboardMode);
+        if (profile?.analytics_dashboard_mode) {
+          setMode(profile.analytics_dashboard_mode as DashboardMode);
         }
         
         setIsLoading(false);
@@ -75,13 +75,11 @@ export default function AnalyticsPage() {
     try {
       const supabase = await getSupabaseBrowserClient();
       await (supabase as any)
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
+        .from('user_profiles')
+        .update({
           analytics_dashboard_mode: newMode,
-        }, {
-          onConflict: 'user_id',
-        });
+        })
+        .eq('user_id', userId);
       
       logger.info('Dashboard mode preference saved', { mode: newMode, userId });
     } catch (error) {

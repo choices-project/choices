@@ -84,11 +84,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await getSupabaseServerClient();
     
-    // Save layout to user_preferences
+    // Save layout to user_profiles
     const { error } = await (supabase as any)
-      .from('user_preferences')
-      .upsert({
-        user_id: layout.userId,
+      .from('user_profiles')
+      .update({
         dashboard_layout: {
           id: layout.id,
           name: layout.name,
@@ -100,9 +99,8 @@ export async function POST(request: NextRequest) {
           createdAt: layout.createdAt,
           updatedAt: new Date().toISOString(),
         },
-      }, {
-        onConflict: 'user_id',
-      });
+      })
+      .eq('user_id', layout.userId);
 
     if (error) {
       logger.error('Failed to save dashboard layout', { error, userId: layout.userId });
@@ -148,7 +146,7 @@ export async function DELETE(request: NextRequest) {
     
     // Remove dashboard layout (user will get default on next load)
     const { error } = await (supabase as any)
-      .from('user_preferences')
+      .from('user_profiles')
       .update({ dashboard_layout: null })
       .eq('user_id', userId);
 
