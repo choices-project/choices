@@ -12,6 +12,7 @@
  * Status: ✅ ACTIVE
  */
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/supabase';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
@@ -108,15 +109,17 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
               flag.status === 'rejected' ? 'rejected' : 'pending') as 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged'
     }));
 
-    const moderationData: HashtagModeration = {
-      id: `moderation_${hashtagId}`,
-      hashtag_id: hashtagId,
-      status: moderationStatus,
-      created_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
-      updated_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
-      human_review_required: pendingFlags.length > 0,
-      ...(pendingFlags.length > 0 ? { moderation_reason: 'Pending review' } : {})
-    };
+    const moderationData: HashtagModeration = withOptional(
+      {
+        id: `moderation_${hashtagId}`,
+        hashtag_id: hashtagId,
+        status: moderationStatus,
+        created_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
+        updated_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
+        human_review_required: pendingFlags.length > 0,
+      },
+      pendingFlags.length > 0 ? { moderation_reason: 'Pending review' } : undefined
+    ) as HashtagModeration;
 
     return {
       success: true,
@@ -247,7 +250,7 @@ export async function moderateHashtag(
       reviewed_by: userId
     };
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('hashtag_flags')
       .update(updateData as any)
       .eq('hashtag_id', hashtagId)
@@ -264,13 +267,6 @@ export async function moderateHashtag(
 
     // Update hashtag status if rejected
     if (status === 'rejected') {
-      // Get current hashtag metadata first
-      const { data: hashtagData } = await supabase
-        .from('hashtags')
-        .select('metadata')
-        .eq('id', hashtagId)
-        .single();
-
       const hashtagUpdate: Database['public']['Tables']['hashtags']['Update'] = {
         is_trending: false
       };
@@ -336,19 +332,25 @@ export async function getModerationQueue(
       };
     }
 
-    const result = data?.map((item: any) => ({
-      ...item.hashtags,
-      moderation: {
-        hashtag_id: item.hashtag,
-        status: item.status,
-        moderation_reason: item.reason,
-        moderated_by: item.reviewed_by,
-        moderated_at: item.updated_at ?? item.created_at,
-        flags: [], // Will be populated separately if needed
-        auto_moderation_score: 0.5, // Default score
-        human_review_required: item.status === 'pending'
-      }
-    })) ?? [];
+    const result =
+      data?.map((item: any) => {
+        const hashtagData = Object.assign({}, item.hashtags);
+        const moderationRecord = withOptional(
+          {
+            id: `moderation_${item.hashtag}`,
+            hashtag_id: item.hashtag,
+            status: item.status ?? 'pending',
+            created_at: item.created_at ?? new Date().toISOString(),
+            updated_at: item.updated_at ?? item.created_at ?? new Date().toISOString(),
+            human_review_required: item.status === 'pending',
+          },
+          item.reason ? { moderation_reason: item.reason } : undefined
+        ) as HashtagModeration;
+
+        return Object.assign(hashtagData, { moderation: moderationRecord }) as Hashtag & {
+          moderation: HashtagModeration;
+        };
+      }) ?? [];
 
     return {
       success: true,

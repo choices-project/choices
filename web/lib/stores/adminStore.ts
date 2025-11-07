@@ -18,6 +18,7 @@ import { logger } from '@/lib/utils/logger';
 
 import type {
   AdminNotification,
+  NewAdminNotification,
   TrendingTopic,
   GeneratedPoll,
   SystemMetrics,
@@ -132,7 +133,7 @@ type AdminStore = {
   // UI Actions
   toggleSidebar: () => void;
   setCurrentPage: (page: string) => void;
-  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
+  addNotification: (notification: NewAdminNotification) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
 
@@ -183,6 +184,26 @@ type AdminStore = {
   refreshData: () => Promise<void>;
   syncData: () => Promise<void>;
 }
+
+const buildAdminNotification = (input: NewAdminNotification): AdminNotification => {
+  const issuedAt = input.timestamp ?? new Date().toISOString();
+  const createdAt = input.created_at ?? issuedAt;
+
+  const base: AdminNotification = {
+    id: crypto.randomUUID(),
+    timestamp: issuedAt,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    read: input.read ?? false,
+    created_at: createdAt,
+  };
+
+  return withOptional(base, {
+    action: input.action,
+    metadata: input.metadata,
+  });
+};
 
 // Create the admin store
 export const useAdminStore = create<AdminStore>()(
@@ -265,18 +286,11 @@ export const useAdminStore = create<AdminStore>()(
 
         /**
          * Add a new admin notification
-         * @param notification The notification data (without id and timestamp)
+         * @param notification The notification payload without generated identifiers
          */
-        addNotification: (notification: Omit<AdminNotification, 'id' | 'created_at'>) => {
+        addNotification: (notification: NewAdminNotification) => {
           const currentState = get();
-          const newNotification = withOptional(
-            {
-              id: crypto.randomUUID(),
-              created_at: new Date().toISOString(),
-              read: false,
-            } as AdminNotification,
-            notification as Record<string, unknown>
-          ) as AdminNotification;
+          const newNotification = buildAdminNotification(notification);
 
           set((state: AdminStore) => ({
             notifications: [
@@ -320,7 +334,7 @@ export const useAdminStore = create<AdminStore>()(
               action: 'mark_notification_read',
               notificationId: id,
               notificationType: notification.type,
-              timeToRead: Date.now() - new Date(notification.created_at).getTime()
+              timeToRead: Date.now() - new Date(notification.timestamp).getTime()
             });
           }
         },
@@ -561,8 +575,7 @@ export const useAdminStore = create<AdminStore>()(
                 );
 
                 if (!alreadyNotified) {
-                  pendingNotifications.push({
-                    id: createId(),
+                  const pending = buildAdminNotification({
                     type: 'success',
                     title: 'Poll milestone achieved',
                     message: pollId
@@ -570,6 +583,7 @@ export const useAdminStore = create<AdminStore>()(
                       : `A poll crossed ${milestoneLabel} votes.`,
                     read: false,
                     created_at: createdAt,
+                    timestamp: createdAt,
                     metadata: withOptional(
                       {
                         eventId: event.id,
@@ -580,6 +594,8 @@ export const useAdminStore = create<AdminStore>()(
                       }
                     ),
                   });
+                  pending.id = createId();
+                  pendingNotifications.push(pending);
                 }
                 return;
               }

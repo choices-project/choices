@@ -218,7 +218,7 @@ export default function PollClient({ poll }: PollClientProps) {
     return map;
   }, [results]);
 
-  const pollOptions = poll.options ?? [];
+  const pollOptions = useMemo(() => poll.options ?? [], [poll.options]);
   const normalizedOptions: NormalizedOption[] = useMemo(() => {
     return pollOptions.map((option, index) => {
       const id = typeof option === 'string' ? String(index) : option.id ?? String(index);

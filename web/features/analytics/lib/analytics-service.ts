@@ -6,6 +6,7 @@ import type {
   PollDemographicInsights,
   AnalyticsSummary,
   PollAnalytics,
+  TrustTierHistoryEntry,
   UserAnalytics
 } from '@/types/features/analytics'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
@@ -26,7 +27,191 @@ type TrustTierAnalyticsFactors = {
   biometric_verified?: boolean;
   phone_verified?: boolean;
   identity_verified?: boolean;
+  voting_history_count?: number;
+  verification_methods?: string[];
+  last_activity?: string;
 }
+
+type TrustTierAnalyticsRecord = {
+  id: string;
+  user_id: string;
+  poll_id: string | null;
+  trust_tier: TrustTier;
+  trust_score: number | null;
+  factors: TrustTierAnalyticsFactors | null;
+  created_at: string | null;
+  calculated_at?: string | null;
+};
+
+type TrustTierAnalyticsInsertPayload = {
+  user_id: string;
+  poll_id: string;
+  trust_tier: TrustTier;
+  trust_score: number;
+  factors: TrustTierAnalyticsFactors;
+  calculated_at: string;
+};
+
+type CivicDatabaseEntrySnapshot = {
+  id: string;
+  current_trust_tier: TrustTier | null;
+  trust_tier_history: TrustTierHistoryEntry[];
+  trust_tier_upgrade_date: string | null;
+};
+
+type CivicDatabaseEntryUpsertPayload = {
+  stable_user_id: string;
+  user_hash: string;
+  total_polls_participated: number;
+  total_votes_cast: number;
+  average_engagement_score: number;
+  current_trust_tier: TrustTier;
+  trust_tier_history: TrustTierHistoryEntry[];
+  trust_tier_upgrade_date: string | null;
+};
+
+type ErrorWithCode = Error & { code?: string };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const toStringArray = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const items = value.filter((entry): entry is string => typeof entry === 'string');
+  return items.length > 0 ? items : undefined;
+};
+
+const parseTrustTierFactors = (value: unknown): TrustTierAnalyticsFactors | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const factors: TrustTierAnalyticsFactors = {};
+
+  if (typeof record.confidence_level === 'number') {
+    factors.confidence_level = record.confidence_level;
+  }
+  if (typeof record.data_quality_score === 'number') {
+    factors.data_quality_score = record.data_quality_score;
+  }
+  if (typeof record.age_group === 'string') {
+    factors.age_group = record.age_group;
+  }
+  if (typeof record.geographic_region === 'string') {
+    factors.geographic_region = record.geographic_region;
+  }
+  if (typeof record.education_level === 'string') {
+    factors.education_level = record.education_level;
+  }
+  if (typeof record.income_bracket === 'string') {
+    factors.income_bracket = record.income_bracket;
+  }
+  if (typeof record.political_affiliation === 'string') {
+    factors.political_affiliation = record.political_affiliation;
+  }
+  if (typeof record.biometric_verified === 'boolean') {
+    factors.biometric_verified = record.biometric_verified;
+  }
+  if (typeof record.phone_verified === 'boolean') {
+    factors.phone_verified = record.phone_verified;
+  }
+  if (typeof record.identity_verified === 'boolean') {
+    factors.identity_verified = record.identity_verified;
+  }
+  if (typeof record.voting_history_count === 'number') {
+    factors.voting_history_count = record.voting_history_count;
+  }
+  const verificationMethods = toStringArray(record.verification_methods);
+  if (verificationMethods) {
+    factors.verification_methods = verificationMethods;
+  }
+  if (typeof record.last_activity === 'string') {
+    factors.last_activity = record.last_activity;
+  }
+
+  return Object.keys(factors).length > 0 ? factors : null;
+};
+
+const parseTrustTierAnalyticsRow = (value: unknown): TrustTierAnalyticsRecord | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : null;
+  const userId = typeof record.user_id === 'string' ? record.user_id : null;
+
+  if (!trustTier || !userId) {
+    return null;
+  }
+
+  return {
+    id: typeof record.id === 'string' ? record.id : 'unknown',
+    user_id: userId,
+    poll_id: typeof record.poll_id === 'string' ? record.poll_id : null,
+    trust_tier: trustTier,
+    trust_score: typeof record.trust_score === 'number' ? record.trust_score : null,
+    factors: parseTrustTierFactors(record.factors),
+    created_at: typeof record.created_at === 'string' ? record.created_at : null,
+    calculated_at: typeof record.calculated_at === 'string' ? record.calculated_at : undefined
+  };
+};
+
+const parseTrustTierHistory = (value: unknown): TrustTierHistoryEntry[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<TrustTierHistoryEntry[]>((entries, candidate) => {
+    if (!isRecord(candidate)) {
+      return entries;
+    }
+
+    const record = candidate as Record<string, unknown>;
+    const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : undefined;
+    const upgradeDate = typeof record.upgrade_date === 'string' ? record.upgrade_date : undefined;
+    const reason = typeof record.reason === 'string' ? record.reason : undefined;
+    const verificationMethods = toStringArray(record.verification_methods) ?? [];
+
+    if (trustTier && upgradeDate && reason) {
+      entries.push({
+        trust_tier: trustTier,
+        upgrade_date: upgradeDate,
+        reason,
+        verification_methods: verificationMethods
+      });
+    }
+
+    return entries;
+  }, []);
+};
+
+const parseCivicDatabaseEntry = (value: unknown): CivicDatabaseEntrySnapshot | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return {
+    id: typeof record.id === 'string' ? record.id : 'unknown',
+    current_trust_tier: typeof record.current_trust_tier === 'string' ? (record.current_trust_tier as TrustTier) : null,
+    trust_tier_history: parseTrustTierHistory(record.trust_tier_history),
+    trust_tier_upgrade_date: typeof record.trust_tier_upgrade_date === 'string' ? record.trust_tier_upgrade_date : null
+  };
+};
+
+const getErrorCode = (error: unknown): string | undefined => {
+  if (error && typeof error === 'object' && 'code' in error && typeof (error as { code?: unknown }).code === 'string') {
+    return (error as { code?: string }).code;
+  }
+  return undefined;
+};
+
 
 export class AnalyticsService {
   private static instance: AnalyticsService
@@ -56,7 +241,7 @@ export class AnalyticsService {
       const { data: user, error: userError } = await supabase
         .from('user_profiles')
         .select('trust_tier, email')
-        .eq('id', userId as any)
+        .eq('id', userId)
         .single()
 
       if (userError || !user) {
@@ -67,13 +252,13 @@ export class AnalyticsService {
       const { data: biometricCreds } = await supabase
         .from('webauthn_credentials')
         .select('id')
-        .eq('user_id', userId as any)
+        .eq('user_id', userId)
 
       // Get voting history count
       const { count: votingHistory } = await supabase
         .from('votes')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId as any)
+        .eq('user_id', userId)
 
       // Calculate verification factors
       const biometric_verified = (biometricCreds?.length ?? 0) > 0
@@ -147,30 +332,34 @@ export class AnalyticsService {
       if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
 
       // Insert analytics record
+      const factorPayload: TrustTierAnalyticsInsertPayload['factors'] = {
+        age_group: demographicData?.age_group,
+        geographic_region: demographicData?.geographic_region,
+        education_level: demographicData?.education_level,
+        income_bracket: demographicData?.income_bracket,
+        political_affiliation: demographicData?.political_affiliation,
+        voting_history_count: trustTierScore.factors.voting_history_count,
+        biometric_verified: trustTierScore.factors.biometric_verified,
+        phone_verified: trustTierScore.factors.phone_verified,
+        identity_verified: trustTierScore.factors.identity_verified,
+        verification_methods: verificationMethods,
+        data_quality_score: trustTierScore.score,
+        confidence_level: trustTierScore.score,
+        last_activity: new Date().toISOString()
+      };
+
+      const insertPayload: TrustTierAnalyticsInsertPayload = {
+        user_id: userId,
+        poll_id: pollId,
+        trust_tier: trustTierScore.trust_tier,
+        trust_score: trustTierScore.score,
+        factors: factorPayload,
+        calculated_at: new Date().toISOString()
+      };
+
       const { error: insertError } = await supabase
         .from('trust_tier_analytics')
-        .insert({
-          user_id: userId,
-          poll_id: pollId,
-          trust_tier: trustTierScore.trust_tier,
-          trust_score: trustTierScore.score,
-          factors: {
-            age_group: demographicData?.age_group,
-            geographic_region: demographicData?.geographic_region,
-            education_level: demographicData?.education_level,
-            income_bracket: demographicData?.income_bracket,
-            political_affiliation: demographicData?.political_affiliation,
-            voting_history_count: trustTierScore.factors.voting_history_count,
-            biometric_verified: trustTierScore.factors.biometric_verified,
-            phone_verified: trustTierScore.factors.phone_verified,
-            identity_verified: trustTierScore.factors.identity_verified,
-            verification_methods: verificationMethods,
-            data_quality_score: trustTierScore.score,
-            confidence_level: trustTierScore.score,
-            last_activity: new Date().toISOString()
-          } as any, // Type assertion for JSON field
-          calculated_at: new Date().toISOString()
-        } as any) // Type assertion for insert data
+        .insert(insertPayload)
 
       if (insertError) {
         throw new Error('Failed to record poll analytics')
@@ -190,10 +379,10 @@ export class AnalyticsService {
 
   /**
    * Calls RPC function to update poll demographic insights
-   * 
+   *
    * Gracefully handles missing `update_poll_demographic_insights` function.
    * Logs warning and continues if function doesn't exist (no throw).
-   * 
+   *
    * @param pollId - Poll UUID
    * @throws {Error} If database connection unavailable
    */
@@ -217,9 +406,9 @@ export class AnalyticsService {
           }
           throw new Error(`Failed to update poll demographic insights: ${error.message}`)
         }
-      } catch (rpcError: any) {
+      } catch (rpcError: unknown) {
         // Gracefully handle missing function
-        if (rpcError.message?.includes('does not exist')) {
+        if (rpcError instanceof Error && rpcError.message?.includes('does not exist')) {
           devLog('Warning: update_poll_demographic_insights function not implemented. Database migration needed.')
           return
         }
@@ -233,11 +422,11 @@ export class AnalyticsService {
 
   /**
    * Updates civic database entry with user engagement metrics
-   * 
+   *
    * Tracks polls participated, votes cast, engagement score, trust tier,
    * and trust tier history. Gracefully handles missing `civic_database_entries`
    * table by logging warning and continuing (no throw).
-   * 
+   *
    * @param userId - User UUID
    * @param _pollId - Reserved for future use
    * @throws {Error} If database connection unavailable
@@ -253,17 +442,21 @@ export class AnalyticsService {
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
-        .eq('user_id', userId as any)
+        .eq('user_id', userId)
 
       if (analyticsError) {
         throw new Error('Failed to get user analytics')
       }
 
+      const analyticsRows = (analytics ?? [])
+        .map(parseTrustTierAnalyticsRow)
+        .filter((row): row is TrustTierAnalyticsRecord => row !== null)
+
       // Calculate engagement metrics
-      const total_polls_participated = analytics?.length ?? 0
-      const total_votes_cast = analytics?.length ?? 0
-      const average_engagement_score = analytics && analytics.length > 0 
-        ? analytics.reduce((sum, a) => sum + (a && 'trust_score' in a ? (a as any).trust_score : 0), 0) / analytics.length
+      const total_polls_participated = analyticsRows.length
+      const total_votes_cast = analyticsRows.length
+      const average_engagement_score = analyticsRows.length > 0
+        ? analyticsRows.reduce((sum, row) => sum + (row.trust_score ?? 0), 0) / analyticsRows.length
         : 0
 
       // Get current trust tier
@@ -271,6 +464,11 @@ export class AnalyticsService {
 
       // Generate user hash (anonymized)
       const userHash = await this.generateUserHash(userId)
+
+      const verificationMethods: string[] = []
+      if (trustTierScore.factors.biometric_verified) verificationMethods.push('biometric')
+      if (trustTierScore.factors.phone_verified) verificationMethods.push('phone')
+      if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
 
       // Check if civic database entry exists
       try {
@@ -282,31 +480,19 @@ export class AnalyticsService {
 
         if (selectError) {
           // Check if table doesn't exist
-          if (selectError.message?.includes('does not exist') || selectError.code === '42P01') {
+          const message = selectError.message ?? ''
+          if (message.includes('does not exist') || selectError.code === '42P01') {
             devLog('Warning: civic_database_entries table not yet implemented. Skipping civic database update. Migration needed.')
             return
           }
           throw selectError
         }
 
-        // Parse JSONB trust tier history as array
-        type TrustTierHistoryEntry = {
-          trust_tier: string;
-          upgrade_date: string;
-          reason: string;
-          verification_methods: string[];
-        };
-        const trustTierHistory: TrustTierHistoryEntry[] = Array.isArray(existingEntry?.trust_tier_history) 
-          ? (existingEntry.trust_tier_history as TrustTierHistoryEntry[])
-          : [];
-        
-        // Add new trust tier entry if changed
-        if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
-          const verificationMethods: string[] = []
-          if (trustTierScore.factors.biometric_verified) verificationMethods.push('biometric')
-          if (trustTierScore.factors.phone_verified) verificationMethods.push('phone')
-          if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
+        const civicEntry = parseCivicDatabaseEntry(existingEntry)
+        const trustTierHistory: TrustTierHistoryEntry[] = civicEntry?.trust_tier_history ?? []
 
+        // Add new trust tier entry if changed
+        if (!civicEntry || civicEntry.current_trust_tier !== trustTierScore.trust_tier) {
           trustTierHistory.push({
             trust_tier: trustTierScore.trust_tier,
             upgrade_date: new Date().toISOString(),
@@ -316,27 +502,30 @@ export class AnalyticsService {
         }
 
         // Upsert civic database entry
+        const upsertPayload: CivicDatabaseEntryUpsertPayload = {
+          stable_user_id: userId,
+          user_hash: userHash,
+          total_polls_participated,
+          total_votes_cast,
+          average_engagement_score,
+          current_trust_tier: trustTierScore.trust_tier,
+          trust_tier_history: trustTierHistory,
+          trust_tier_upgrade_date: (!civicEntry || civicEntry.current_trust_tier !== trustTierScore.trust_tier)
+            ? new Date().toISOString()
+            : civicEntry.trust_tier_upgrade_date
+        }
+
         const { error: upsertError } = await supabase
           .from('civic_database_entries')
-          .upsert({
-            stable_user_id: userId,
-            user_hash: userHash,
-            total_polls_participated,
-            total_votes_cast,
-            average_engagement_score,
-            current_trust_tier: trustTierScore.trust_tier,
-            trust_tier_history: trustTierHistory as any, // JSONB type
-            trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
-              ? new Date().toISOString() 
-              : existingEntry?.trust_tier_upgrade_date
-          })
+          .upsert(upsertPayload)
 
         if (upsertError) {
           throw new Error(`Failed to update civic database entry: ${upsertError.message}`)
         }
-      } catch (tableError: any) {
+      } catch (tableError: unknown) {
         // Gracefully handle missing table
-        if (tableError.message?.includes('does not exist') || tableError.code === '42P01') {
+        const message = tableError instanceof Error ? tableError.message : ''
+        if (message.includes('does not exist') || getErrorCode(tableError) === '42P01') {
           devLog('Warning: civic_database_entries table not implemented. Database migration needed.')
           return
         }
@@ -369,49 +558,55 @@ export class AnalyticsService {
         .from('trust_tier_analytics')
         .select('trust_tier')
 
-      const trustTierCounts = tierDistribution?.reduce((acc, item) => {
-        const tier = item && 'trust_tier' in item ? item.trust_tier as TrustTier : 'T1' as TrustTier
-        acc[tier] = (acc[tier] ?? 0) + 1
+      const trustTierCounts = (tierDistribution ?? []).reduce<Record<TrustTier, number>>((acc, item) => {
+        if (isRecord(item) && typeof item.trust_tier === 'string') {
+          const tier = item.trust_tier as TrustTier
+          acc[tier] = (acc[tier] ?? 0) + 1
+        }
         return acc
-      }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
+      }, { T0: 0, T1: 0, T2: 0, T3: 0 })
 
       // Get average confidence level
-      const { data: confidenceData } = await supabase
+      const { data: confidenceData, error: confidenceError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
 
-      const averageConfidenceLevel = confidenceData && confidenceData.length > 0
-        ? confidenceData.reduce((sum, item) => {
-            const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
-            return sum + (factors?.confidence_level ?? 0)
-          }, 0) / confidenceData.length
+      if (confidenceError) {
+        throw new Error('Failed to load confidence analytics')
+      }
+
+      const confidenceRows = (confidenceData ?? [])
+        .map(parseTrustTierAnalyticsRow)
+        .filter((row): row is TrustTierAnalyticsRecord => row !== null)
+
+      const averageConfidenceLevel = confidenceRows.length > 0
+        ? confidenceRows.reduce((sum, item) => sum + (item.factors?.confidence_level ?? 0), 0) / confidenceRows.length
         : 0
 
       // Get data quality metrics
-      const highQuality = confidenceData?.filter(item => {
-        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
-        return (factors?.confidence_level ?? 0) >= 0.8
-      }).length ?? 0
-      const mediumQuality = confidenceData?.filter(item => {
-        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
-        const confidence = factors?.confidence_level ?? 0
+      const highQuality = confidenceRows.filter(item => (item.factors?.confidence_level ?? 0) >= 0.8).length
+      const mediumQuality = confidenceRows.filter(item => {
+        const confidence = item.factors?.confidence_level ?? 0
         return confidence >= 0.5 && confidence < 0.8
-      }).length ?? 0
-      const lowQuality = confidenceData?.filter(item => {
-        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
-        return (factors?.confidence_level ?? 0) < 0.5
-      }).length ?? 0
+      }).length
+      const lowQuality = confidenceRows.filter(item => (item.factors?.confidence_level ?? 0) < 0.5).length
 
       // Get engagement metrics from platform_analytics
-      const { data: platformData } = await supabase
+      const { data: platformData, error: platformError } = await supabase
         .from('platform_analytics')
         .select('metric_name, metric_value')
         .in('metric_name', ['unique_users', 'total_sessions', 'total_page_views'])
 
-      const metrics = platformData?.reduce((acc, item) => {
-        acc[item.metric_name] = item.metric_value
+      if (platformError) {
+        throw new Error('Failed to load platform analytics')
+      }
+
+      const metrics = (platformData ?? []).reduce<Record<string, number>>((acc, item) => {
+        if (isRecord(item) && typeof item.metric_name === 'string' && typeof item.metric_value === 'number') {
+          acc[item.metric_name] = item.metric_value
+        }
         return acc
-      }, {} as Record<string, number>) ?? {}
+      }, {})
 
       const activeUsers = metrics.unique_users ?? 0
       const averagePollsParticipated = metrics.total_sessions ?? 0
@@ -493,33 +688,30 @@ export class AnalyticsService {
         return acc
       }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
 
+      const demographicInsights: PollDemographicInsights = {
+        id: pollData.id,
+        poll_id: pollData.id,
+        total_responses,
+        trust_tier_breakdown: trustTierBreakdown,
+        age_group_breakdown: {},
+        geographic_breakdown: {},
+        education_breakdown: {},
+        income_breakdown: {},
+        political_breakdown: {},
+        average_confidence_level: confidence_level,
+        data_quality_distribution: {},
+        verification_method_distribution: {},
+        trust_tier_by_demographic: {},
+        demographic_by_trust_tier: {},
+        created_at: pollData.created_at ?? new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
       return {
         poll_id: pollId,
         total_responses,
         trust_tier_breakdown: trustTierBreakdown,
-        demographic_insights: {
-          id: pollData.id,
-          poll_id: pollData.id,
-          total_responses: total_responses,
-          trust_tier_breakdown: trustTierBreakdown,
-          age_group_breakdown: {},
-          education_breakdown: {},
-          region_breakdown: {},
-          geographic_breakdown: {},
-          political_breakdown: {},
-          income_breakdown: {},
-          gender_breakdown: {},
-          device_breakdown: {},
-          time_breakdown: {},
-          data_quality_distribution: {},
-          verification_method_distribution: {},
-          engagement_metrics: {
-            average_choice: 0,
-            choice_variance: 0
-          },
-          response_velocity: 0,
-          participation_trends: {}
-        } as unknown as PollDemographicInsights,
+        demographic_insights: demographicInsights,
         data_quality_score,
         confidence_level,
         response_trends: {
@@ -550,7 +742,7 @@ export class AnalyticsService {
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
-        .eq('user_id', userId as any)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
       if (analyticsError) {
@@ -570,7 +762,11 @@ export class AnalyticsService {
       // }
 
       // Get latest demographic data
-      const latestAnalytics = analytics[0]
+      const analyticsRows = (analytics ?? [])
+        .map(parseTrustTierAnalyticsRow)
+        .filter((row): row is TrustTierAnalyticsRecord => row !== null)
+
+      const latestAnalytics = analyticsRows[0]
 
       return {
         user_id: userId,
@@ -582,13 +778,13 @@ export class AnalyticsService {
           identity_verified: trustTierScore.factors.identity_verified
         },
         engagement_metrics: {
-          total_polls_participated: analytics.length,
-          total_votes_cast: analytics.length,
-          average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + ((a as any).trust_score ?? 0), 0) / analytics.length : 0,
-          last_activity: (latestAnalytics as any)?.created_at ?? new Date().toISOString()
+          total_polls_participated: analyticsRows.length,
+          total_votes_cast: analyticsRows.length,
+          average_engagement_score: analyticsRows.length > 0 ? analyticsRows.reduce((sum, row) => sum + (row.trust_score ?? 0), 0) / analyticsRows.length : 0,
+          last_activity: latestAnalytics?.created_at ?? new Date().toISOString()
         },
         demographic_data: (() => {
-          const factors = ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors) ?? {};
+          const factors = latestAnalytics?.factors ?? {};
           const demographic: Record<string, string> = {};
           if (factors.age_group) demographic.age_group = factors.age_group;
           if (factors.geographic_region) demographic.geographic_region = factors.geographic_region;
@@ -622,7 +818,7 @@ export class AnalyticsService {
       const { data: trends, error } = await supabase
         .from('trust_tier_analytics')
         .select('created_at')
-        .eq('poll_id', pollId as any)
+        .eq('poll_id', pollId)
         .gte('created_at', thirtyDaysAgo.toISOString())
 
       if (error) {
@@ -631,12 +827,10 @@ export class AnalyticsService {
 
       // Group by date and count
       const dailyCounts = new Map<string, number>()
-      trends?.forEach(trend => {
-        if ((trend as any).created_at && typeof (trend as any).created_at === 'string') {
-          const date = new Date((trend as any).created_at).toISOString().split('T')[0]
-          if (date) {
-            dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
-          }
+      (trends ?? []).forEach((trend) => {
+        if (isRecord(trend) && typeof trend.created_at === 'string') {
+          const date = new Date(trend.created_at).toISOString().split('T')[0]
+          dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
         }
       })
 

@@ -1,9 +1,9 @@
 /**
  * Profile Feature Hooks
- * 
+ *
  * React Query hooks for profile management
  * Consolidates profile hooks from across the codebase
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
@@ -11,20 +11,21 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
 
 
-import type { UserProfile, ProfileUpdateData, ExportOptions, ProfileActionResult , 
-UseProfileReturn, 
-  UseProfileUpdateReturn, 
-  UseProfileAvatarReturn, 
-  UseProfileExportReturn 
+import type { UserProfile, ProfileUpdateData, ExportOptions, ProfileActionResult ,
+UseProfileReturn,
+  UseProfileUpdateReturn,
+  UseProfileAvatarReturn,
+  UseProfileExportReturn
 } from '../index';
-import { 
-  getCurrentProfile, 
-  updateProfile, 
-  updateProfileAvatar, 
+import {
+  getCurrentProfile,
+  updateProfile,
+  updateProfileAvatar,
   exportUserData,
   deleteProfile
 } from '../lib/profile-service';
@@ -92,9 +93,13 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
       queryClient.setQueryData(profileQueryKeys.current(), (old: unknown) => {
         if (!old || typeof old !== 'object' || !('data' in old)) return old;
         const oldData = old as { data: UserProfile };
-        return {
-          ...oldData,
-          data: { ...(oldData.data ?? {}), ...(newData ?? {}) },
+        const currentProfile = (oldData.data ?? {}) as Record<string, unknown>;
+        const mergedProfile = withOptional(
+          currentProfile,
+          (newData ?? {}) as Record<string, unknown>
+        ) as UserProfile;
+        return withOptional(oldData as Record<string, unknown>, { data: mergedProfile }) as {
+          data: UserProfile;
         };
       });
 
@@ -156,10 +161,10 @@ export function useProfileExport(): UseProfileExportReturn {
     onSuccess: async (data) => {
       // Create and download file
       if (data) {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { 
-          type: 'application/json' 
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: 'application/json'
         });
-        
+
         // Use SSR-safe browser API access
         try {
           const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
@@ -248,9 +253,9 @@ export function useProfileErrorStates() {
     avatarError: avatarMutation.error,
     exportError: exportMutation.error,
     hasAnyError: !!(
-      profileQuery.error ?? 
-      updateMutation.error ?? 
-      avatarMutation.error ?? 
+      profileQuery.error ??
+      updateMutation.error ??
+      avatarMutation.error ??
       exportMutation.error
     ),
   };
@@ -265,11 +270,7 @@ export function useProfileData() {
   const loadingStates = useProfileLoadingStates();
   const errorStates = useProfileErrorStates();
 
-  return {
-    ...profile,
-    ...loadingStates,
-    ...errorStates
-  };
+  return Object.assign({}, profile, loadingStates, errorStates);
 }
 
 // ============================================================================
@@ -282,7 +283,7 @@ export function useProfileData() {
  */
 export function useProfileCompleteness() {
   const { profile } = useProfile();
-  
+
   const isComplete = profile ? (
     !!(profile.display_name && profile.username && profile.email)
   ) : false;
@@ -296,7 +297,7 @@ export function useProfileCompleteness() {
   return {
     isComplete,
     missingFields,
-    completionPercentage: profile ? 
+    completionPercentage: profile ?
       Math.round((3 - missingFields.length) / 3 * 100) : 0,
   };
 }
@@ -307,7 +308,7 @@ export function useProfileCompleteness() {
  */
 export function useProfileDisplay() {
   const { profile } = useProfile();
-  
+
   if (!profile) {
     return {
       displayName: 'User',

@@ -1,9 +1,9 @@
 /**
  * Hashtag Store - Zustand Implementation
- * 
+ *
  * Comprehensive hashtag state management with Zustand integration
  * Handles hashtag data, search, trending, user interactions, and cross-feature integration
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ INTEGRATED
  */
@@ -98,17 +98,17 @@ type HashtagStore = {
   hashtags: Hashtag[];
   userHashtags: UserHashtag[];
   trendingHashtags: TrendingHashtag[];
-  
+
   // Search and discovery
   searchResults: HashtagSearchResponse | null;
   suggestions: HashtagSuggestion[];
   recentSearches: string[];
-  
+
   // User preferences and settings
   userPreferences: HashtagUserPreferences | null;
   followedHashtags: string[];
   primaryHashtags: string[];
-  
+
   // Filter state
   filters: {
     selectedCategory: HashtagCategory | 'all';
@@ -116,7 +116,7 @@ type HashtagStore = {
     timeRange: '24h' | '7d' | '30d';
     searchQuery: string;
   };
-  
+
   // Loading states
   isSearching: boolean;
   isFollowing: boolean;
@@ -124,18 +124,18 @@ type HashtagStore = {
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  
+
   // Error states
   searchError: string | null;
   followError: string | null;
   createError: string | null;
-  
+
   // Actions - Core hashtag operations
   setHashtags: (hashtags: Hashtag[]) => void;
   addHashtag: (hashtag: Hashtag) => void;
   updateHashtag: (id: string, updates: Partial<Hashtag>) => void;
   removeHashtag: (id: string) => void;
-  
+
   // Actions - Search and discovery
   searchHashtags: (query: HashtagSearchQuery) => Promise<void>;
   getTrendingHashtags: (category?: HashtagCategory) => Promise<void>;
@@ -143,30 +143,30 @@ type HashtagStore = {
   clearSearch: () => void;
   addRecentSearch: (query: string) => void;
   clearRecentSearches: () => void;
-  
+
   // Actions - User interactions
   followHashtag: (hashtagId: string) => Promise<boolean>;
   unfollowHashtag: (hashtagId: string) => Promise<boolean>;
   createHashtag: (name: string, description?: string, category?: HashtagCategory) => Promise<Hashtag | null>;
   getUserHashtags: () => Promise<void>;
   setPrimaryHashtags: (hashtagIds: string[]) => void;
-  
+
   // Actions - Preferences
   updateUserPreferences: (preferences: Partial<HashtagUserPreferences>) => Promise<boolean>;
   getUserPreferences: () => Promise<void>;
-  
+
   // Actions - Analytics
   getHashtagAnalytics: (hashtagId: string, period?: '24h' | '7d' | '30d' | '90d' | '1y') => Promise<HashtagAnalytics | null>;
   getHashtagStats: () => Promise<void>;
-  
+
   // Actions - Cross-feature integration
   getProfileIntegration: (userId: string) => Promise<ProfileHashtagIntegration | null>;
   getPollIntegration: (pollId: string) => Promise<PollHashtagIntegration | null>;
   getFeedIntegration: (feedId: string) => Promise<FeedHashtagIntegration | null>;
-  
+
   // Actions - Validation
   validateHashtagName: (name: string) => Promise<HashtagValidation | null>;
-  
+
   // Actions - Filters
   setFilter: (filter: Partial<HashtagStore['filters']>) => void;
   resetFilters: () => void;
@@ -174,7 +174,7 @@ type HashtagStore = {
   setSortBy: (sortBy: 'trend_score' | 'usage' | 'growth' | 'alphabetical') => void;
   setTimeRange: (timeRange: '24h' | '7d' | '30d') => void;
   setSearchQuery: (query: string) => void;
-  
+
   // Actions - Loading states
   setSearching: (searching: boolean) => void;
   setFollowing: (following: boolean) => void;
@@ -182,13 +182,13 @@ type HashtagStore = {
   setCreating: (creating: boolean) => void;
   setUpdating: (updating: boolean) => void;
   setDeleting: (deleting: boolean) => void;
-  
+
   // Actions - Error handling
   setSearchError: (error: string | null) => void;
   setFollowError: (error: string | null) => void;
   setCreateError: (error: string | null) => void;
   clearErrors: () => void;
-  
+
   // Getters and utilities
   getHashtagById: (id: string) => Hashtag | undefined;
   getHashtagByName: (name: string) => Hashtag | undefined;
@@ -196,7 +196,7 @@ type HashtagStore = {
   getFollowedHashtags: () => Hashtag[];
   getTrendingHashtagsByCategory: (category: HashtagCategory) => TrendingHashtag[];
   getHashtagSuggestions: (input: string) => HashtagSuggestion[];
-  
+
   // Reset and cleanup
   resetHashtagStore: () => void;
   clearHashtagStore: () => void;
@@ -229,25 +229,25 @@ export const useHashtagStore = create<HashtagStore>()(
         searchError: null,
         followError: null,
         createError: null,
-        
+
         // Base store actions
         setLoading: (loading) => set((state) => {
           state.isLoading = loading;
         }),
-        
+
         setError: (error) => set((state) => {
           state.error = error;
         }),
-        
+
         clearError: () => set((state) => {
           state.error = null;
         }),
-        
+
         // Core hashtag operations
-        setHashtags: (hashtags) => set((state) => {
-          state.hashtags = hashtags;
-        }),
-        
+        setHashtags: (hashtags) => set(() => ({
+          hashtags
+        })),
+
         addHashtag: (hashtag) => set((state) => {
           const existingIndex = state.hashtags.findIndex(h => h.id === hashtag.id);
           if (existingIndex >= 0) {
@@ -256,7 +256,7 @@ export const useHashtagStore = create<HashtagStore>()(
             state.hashtags.push(hashtag);
           }
         }),
-        
+
         updateHashtag: (id, updates) => set((state) => {
           const index = state.hashtags.findIndex(h => h.id === id);
           if (index >= 0) {
@@ -266,22 +266,22 @@ export const useHashtagStore = create<HashtagStore>()(
             }
           }
         }),
-        
+
         removeHashtag: (id) => set((state) => {
           state.hashtags = state.hashtags.filter(h => h.id !== id);
         }),
-        
+
         // Search and discovery
         searchHashtags: async (query) => {
           set((state) => {
             state.isSearching = true;
             state.searchError = null;
           });
-          
+
           try {
             const { searchHashtags: searchService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await searchService(query);
-            
+
             if (result.success && result.data) {
               set((state) => {
                 state.searchResults = result.data ?? null;
@@ -300,17 +300,17 @@ export const useHashtagStore = create<HashtagStore>()(
             });
           }
         },
-        
+
         getTrendingHashtags: async (category) => {
           set((state) => {
             state.isLoading = true;
             state.error = null;
           });
-          
+
           try {
             const { getTrendingHashtags: getTrendingService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getTrendingService(category);
-            
+
             if (result.success && result.data) {
               set((state) => {
                 state.trendingHashtags = result.data ?? [];
@@ -329,12 +329,12 @@ export const useHashtagStore = create<HashtagStore>()(
             });
           }
         },
-        
+
         getSuggestions: async (input, context) => {
           try {
             const { getHashtagSuggestions: getSuggestionsService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getSuggestionsService(input, context);
-            
+
             if (result.success && result.data) {
               set((state) => {
                 state.suggestions = result.data ?? [];
@@ -344,34 +344,34 @@ export const useHashtagStore = create<HashtagStore>()(
             logger.error('Failed to get suggestions:', error);
           }
         },
-        
+
         clearSearch: () => set((state) => {
           state.searchResults = null;
           state.suggestions = [];
           state.searchError = null;
         }),
-        
+
         addRecentSearch: (query) => set((state) => {
           const recentSearches = state.recentSearches.filter(q => q !== query);
           recentSearches.unshift(query);
           state.recentSearches = recentSearches.slice(0, 10); // Keep only last 10
         }),
-        
+
         clearRecentSearches: () => set((state) => {
           state.recentSearches = [];
         }),
-        
+
         // User interactions
         followHashtag: async (hashtagId) => {
           set((state) => {
             state.isFollowing = true;
             state.followError = null;
           });
-          
+
           try {
             const { followHashtag: followService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await followService(hashtagId);
-            
+
             if (result.success && result.data) {
               set((state) => {
                 if (result.data) {
@@ -396,17 +396,17 @@ export const useHashtagStore = create<HashtagStore>()(
             return false;
           }
         },
-        
+
         unfollowHashtag: async (hashtagId) => {
           set((state) => {
             state.isUnfollowing = true;
             state.followError = null;
           });
-          
+
           try {
             const { unfollowHashtag: unfollowService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await unfollowService(hashtagId);
-            
+
             if (result.success) {
               set((state) => {
                 state.userHashtags = state.userHashtags.filter(uh => uh.hashtag_id !== hashtagId);
@@ -430,17 +430,17 @@ export const useHashtagStore = create<HashtagStore>()(
             return false;
           }
         },
-        
+
         createHashtag: async (name, description, category) => {
           set((state) => {
             state.isCreating = true;
             state.createError = null;
           });
-          
+
           try {
             const { createHashtag: createService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await createService(name, description, category);
-            
+
             if (result.success && result.data) {
               set((state) => {
                 if (result.data) {
@@ -464,17 +464,17 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         getUserHashtags: async () => {
           set((state) => {
             state.isLoading = true;
             state.error = null;
           });
-          
+
           try {
             const { getUserHashtags: getUserHashtagsService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getUserHashtagsService();
-            
+
             if (result.success && result.data) {
               set((state) => {
                 state.userHashtags = result.data ?? [];
@@ -495,22 +495,22 @@ export const useHashtagStore = create<HashtagStore>()(
             });
           }
         },
-        
+
         setPrimaryHashtags: (hashtagIds) => set((state) => {
           state.primaryHashtags = hashtagIds;
         }),
-        
+
         // Preferences
         updateUserPreferences: async (preferences) => {
           set((state) => {
             state.isUpdating = true;
             state.error = null;
           });
-          
+
           try {
             const { updateUserPreferences: updatePreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await updatePreferencesService(preferences);
-            
+
             if (result.success) {
               set((state) => {
                 if (state.userPreferences) {
@@ -534,17 +534,17 @@ export const useHashtagStore = create<HashtagStore>()(
             return false;
           }
         },
-        
+
         getUserPreferences: async () => {
           set((state) => {
             state.isLoading = true;
             state.error = null;
           });
-          
+
           try {
             const { getUserPreferences: getPreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getPreferencesService();
-            
+
             if (result.success && result.data) {
               set((state) => {
                 state.userPreferences = withOptional(result.data) as HashtagUserPreferences;
@@ -563,13 +563,13 @@ export const useHashtagStore = create<HashtagStore>()(
             });
           }
         },
-        
+
         // Analytics
         getHashtagAnalytics: async (hashtagId, period: '24h' | '7d' | '30d' | '90d' | '1y' = '7d') => {
           try {
             const { getHashtagAnalytics: getAnalyticsService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getAnalyticsService(hashtagId, period);
-            
+
             if (result.success && result.data) {
               return result.data;
             }
@@ -579,17 +579,17 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         getHashtagStats: async () => {
           set((state) => {
             state.isLoading = true;
             state.error = null;
           });
-          
+
           try {
             const { getHashtagStats: getStatsService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getStatsService();
-            
+
             if (result.success && result.data) {
               set((state) => {
                 // Store stats in state for future use
@@ -608,13 +608,13 @@ export const useHashtagStore = create<HashtagStore>()(
             });
           }
         },
-        
+
         // Cross-feature integration
         getProfileIntegration: async (userId) => {
           try {
             const { getProfileHashtagIntegration: getProfileIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getProfileIntegrationService(userId);
-            
+
             if (result.success && result.data) {
               return result.data;
             }
@@ -624,12 +624,12 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         getPollIntegration: async (pollId) => {
           try {
             const { getPollHashtagIntegration: getPollIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getPollIntegrationService(pollId);
-            
+
             if (result.success && result.data) {
               return result.data;
             }
@@ -639,12 +639,12 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         getFeedIntegration: async (feedId) => {
           try {
             const { getFeedHashtagIntegration: getFeedIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getFeedIntegrationService(feedId);
-            
+
             if (result.success && result.data) {
               return result.data;
             }
@@ -654,13 +654,13 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         // Validation
         validateHashtagName: async (name) => {
           try {
             const { validateHashtagName: validateService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await validateService(name);
-            
+
             if (result.success && result.data) {
               return result.data;
             }
@@ -670,111 +670,111 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
-        
+
         // Filter actions
         setFilter: (filter) => set((state) => {
           state.filters = mergeFilters(state.filters, filter);
         }),
-        
+
         resetFilters: () => set((state) => {
           state.filters = cloneFilters();
         }),
-        
+
         setCategory: (category) => set((state) => {
           state.filters.selectedCategory = category;
         }),
-        
+
         setSortBy: (sortBy) => set((state) => {
           state.filters.sortBy = sortBy;
         }),
-        
+
         setTimeRange: (timeRange) => set((state) => {
           state.filters.timeRange = timeRange;
         }),
-        
+
         setSearchQuery: (query) => set((state) => {
           state.filters.searchQuery = query;
         }),
-        
+
         // Loading states
         setSearching: (searching) => set((state) => {
           state.isSearching = searching;
         }),
-        
+
         setFollowing: (following) => set((state) => {
           state.isFollowing = following;
         }),
-        
+
         setUnfollowing: (unfollowing) => set((state) => {
           state.isUnfollowing = unfollowing;
         }),
-        
+
         setCreating: (creating) => set((state) => {
           state.isCreating = creating;
         }),
-        
+
         setUpdating: (updating) => set((state) => {
           state.isUpdating = updating;
         }),
-        
+
         setDeleting: (deleting) => set((state) => {
           state.isDeleting = deleting;
         }),
-        
+
         // Error handling
         setSearchError: (error) => set((state) => {
           state.searchError = error;
         }),
-        
+
         setFollowError: (error) => set((state) => {
           state.followError = error;
         }),
-        
+
         setCreateError: (error) => set((state) => {
           state.createError = error;
         }),
-        
+
         clearErrors: () => set((state) => {
           state.error = null;
           state.searchError = null;
           state.followError = null;
           state.createError = null;
         }),
-        
+
         // Getters and utilities
         getHashtagById: (id) => {
           const state = get();
           return state.hashtags.find(h => h.id === id);
         },
-        
+
         getHashtagByName: (name) => {
           const state = get();
           return state.hashtags.find(h => h.name === name);
         },
-        
+
         isFollowingHashtag: (hashtagId) => {
           const state = get();
           return state.followedHashtags.includes(hashtagId);
         },
-        
+
         getFollowedHashtags: () => {
           const state = get();
           return state.userHashtags.map(uh => uh.hashtag);
         },
-        
+
         getTrendingHashtagsByCategory: (category) => {
           const state = get();
           return state.trendingHashtags.filter(th => th.hashtag.category === category);
         },
-        
+
         getHashtagSuggestions: (input) => {
           const state = get();
-          return state.suggestions.filter(s => 
+          return state.suggestions.filter(s =>
             s.hashtag.name.toLowerCase().includes(input.toLowerCase()) ||
             (s.hashtag.display_name ?? s.hashtag.name).toLowerCase().includes(input.toLowerCase())
           );
         },
-        
+
         // Reset and cleanup
         resetHashtagStore: () => set((state) => {
           state.hashtags = [];
@@ -799,7 +799,7 @@ export const useHashtagStore = create<HashtagStore>()(
           state.followError = null;
           state.createError = null;
         }),
-        
+
         clearHashtagStore: () => {
           get().resetHashtagStore();
         }
@@ -830,24 +830,24 @@ export const hashtagSelectors = {
   hashtags: (state: HashtagStore) => state.hashtags,
   userHashtags: (state: HashtagStore) => state.userHashtags,
   trendingHashtags: (state: HashtagStore) => state.trendingHashtags,
-  
+
   // Filter selectors
   filters: (state: HashtagStore) => state.filters,
   selectedCategory: (state: HashtagStore) => state.filters.selectedCategory,
   sortBy: (state: HashtagStore) => state.filters.sortBy,
   timeRange: (state: HashtagStore) => state.filters.timeRange,
   searchQuery: (state: HashtagStore) => state.filters.searchQuery,
-  
+
   // Search and discovery
   searchResults: (state: HashtagStore) => state.searchResults,
   suggestions: (state: HashtagStore) => state.suggestions,
   recentSearches: (state: HashtagStore) => state.recentSearches,
-  
+
   // User data
   followedHashtags: (state: HashtagStore) => state.followedHashtags,
   primaryHashtags: (state: HashtagStore) => state.primaryHashtags,
   userPreferences: (state: HashtagStore) => state.userPreferences,
-  
+
   // Loading states
   isLoading: (state: HashtagStore) => state.isLoading,
   isSearching: (state: HashtagStore) => state.isSearching,
@@ -856,14 +856,14 @@ export const hashtagSelectors = {
   isCreating: (state: HashtagStore) => state.isCreating,
   isUpdating: (state: HashtagStore) => state.isUpdating,
   isDeleting: (state: HashtagStore) => state.isDeleting,
-  
+
   // Error states
   hasError: (state: HashtagStore) => !!state.error,
   error: (state: HashtagStore) => state.error,
   searchError: (state: HashtagStore) => state.searchError,
   followError: (state: HashtagStore) => state.followError,
   createError: (state: HashtagStore) => state.createError,
-  
+
   // Statistics
   followedCount: (state: HashtagStore) => state.followedHashtags.length,
   trendingCount: (state: HashtagStore) => state.trendingHashtags.length,
@@ -953,27 +953,27 @@ export const hashtagStoreUtils = {
       logger.error('Failed to initialize hashtag store', error);
     }
   },
-  
+
   // Reset hashtag store
   reset: () => {
     useHashtagStore.getState().resetHashtagStore();
   },
-  
+
   // Get hashtag by ID
   getHashtagById: (id: string) => {
     return useHashtagStore.getState().getHashtagById(id);
   },
-  
+
   // Get hashtag by name
   getHashtagByName: (name: string) => {
     return useHashtagStore.getState().getHashtagByName(name);
   },
-  
+
   // Check if following hashtag
   isFollowingHashtag: (hashtagId: string) => {
     return useHashtagStore.getState().isFollowingHashtag(hashtagId);
   },
-  
+
   // Get followed hashtags
   getFollowedHashtags: () => {
     return useHashtagStore.getState().getFollowedHashtags();
@@ -992,7 +992,7 @@ export const hashtagStoreSubscriptions = {
       }
     });
   },
-  
+
   // Subscribe to user hashtag changes
   onUserHashtagsChange: (callback: (userHashtags: UserHashtag[]) => void) => {
     let previousUserHashtags: UserHashtag[] = [];
@@ -1003,7 +1003,7 @@ export const hashtagStoreSubscriptions = {
       }
     });
   },
-  
+
   // Subscribe to trending hashtag changes
   onTrendingHashtagsChange: (callback: (trendingHashtags: TrendingHashtag[]) => void) => {
     let previousTrendingHashtags: TrendingHashtag[] = [];
@@ -1014,7 +1014,7 @@ export const hashtagStoreSubscriptions = {
       }
     });
   },
-  
+
   // Subscribe to search results changes
   onSearchResultsChange: (callback: (searchResults: HashtagSearchResponse | null) => void) => {
     let previousSearchResults: HashtagSearchResponse | null = null;
@@ -1025,7 +1025,7 @@ export const hashtagStoreSubscriptions = {
       }
     });
   },
-  
+
   // Subscribe to filter changes
   onFiltersChange: (callback: (filters: HashtagStore['filters']) => void) => {
     let previousFilters: HashtagStore['filters'] = cloneFilters();
@@ -1045,12 +1045,12 @@ export const hashtagStoreDebug = {
     const state = useHashtagStore.getState();
     logger.info('Hashtag store state:', state);
   },
-  
+
   // Reset store
   reset: () => {
     hashtagStoreUtils.reset();
   },
-  
+
   // Clear all data
   clearAll: () => {
     useHashtagStore.getState().clearHashtagStore();

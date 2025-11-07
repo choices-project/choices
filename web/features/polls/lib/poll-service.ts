@@ -199,7 +199,7 @@ export class OptimizedPollService {
     try {
       // Check cache first
       if (this.cache.has(id)) {
-        this.metrics.cacheHitRate! += 1;
+        this.metrics.cacheHitRate = (this.metrics.cacheHitRate ?? 0) + 1;
         return this.cache.get(id);
       }
 
@@ -213,7 +213,7 @@ export class OptimizedPollService {
       this.metrics.responseTime = Date.now() - startTime;
       return poll;
     } catch (error) {
-      this.metrics.errorRate! += 1;
+      this.metrics.errorRate = (this.metrics.errorRate ?? 0) + 1;
       throw error;
     }
   }

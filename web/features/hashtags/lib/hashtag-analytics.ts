@@ -25,10 +25,14 @@ import {
   getHashtagPerformanceLevel
 } from '../utils/hashtag-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase environment variables are not configured for hashtag analytics.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ============================================================================
 // ANALYTICS CORE FUNCTIONS
@@ -133,7 +137,10 @@ export async function calculateTrendingHashtags(
         });
       }
 
-      const metrics = hashtagMetrics.get(hashtagId)!;
+      const metrics = hashtagMetrics.get(hashtagId);
+      if (!metrics) {
+        return;
+      }
       metrics.usageCount++;
       metrics.uniqueUsers.add(String(usage.user_id ?? 'anonymous'));
       metrics.recentUsage.push(1);
@@ -622,7 +629,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
   }
 }
 
-async function getUsageCount(hashtagId: string, days: number): Promise<number> {
+async function _getUsageCount(hashtagId: string, days: number): Promise<number> {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   
   const { data, error } = await supabase
@@ -635,7 +642,7 @@ async function getUsageCount(hashtagId: string, days: number): Promise<number> {
   return data?.length ?? 0;
 }
 
-async function getCategoryTrends(category: string) {
+async function _getCategoryTrends(category: string) {
   try {
     // Get trending hashtags in the same category
     const { data: categoryHashtags, error } = await supabase
@@ -905,7 +912,7 @@ async function getTrendingSuggestions(currentHashtagIds: string[], limit: number
 /**
  * Calculate peak position for a hashtag based on historical data
  */
-async function calculatePeakPosition(hashtagId: string): Promise<number> {
+async function _calculatePeakPosition(hashtagId: string): Promise<number> {
   try {
     // Get historical usage data for the last 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -947,7 +954,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
 /**
  * Calculate current position for a hashtag based on recent usage
  */
-async function calculateCurrentPosition(hashtagId: string): Promise<number> {
+async function _calculateCurrentPosition(hashtagId: string): Promise<number> {
   try {
     // Get current usage data for the last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

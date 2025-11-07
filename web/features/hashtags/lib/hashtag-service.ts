@@ -10,9 +10,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-
-// Temporary logger for development
-import type { Database } from '@/types/supabase';
+import type { Database, Json } from '@/types/supabase';
 
 import { getSupabaseBrowserClient } from '../../../utils/supabase/client';
 import type {
@@ -226,7 +224,7 @@ export async function updateHashtag(
       ...(updates.trend_score !== undefined && { trending_score: updates.trend_score }),
       ...(updates.is_verified !== undefined && { is_verified: updates.is_verified }),
       ...(updates.is_featured !== undefined && { is_featured: updates.is_featured }),
-      ...(updates.metadata && { metadata: updates.metadata }),
+      ...(updates.metadata !== undefined && { metadata: updates.metadata as Json }),
       updated_at: new Date().toISOString()
     };
     

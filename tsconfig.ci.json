@@ -7,7 +7,12 @@
     "noUncheckedIndexedAccess": true,
     "useUnknownInCatchVariables": true,
     "verbatimModuleSyntax": true,
-    "types": []
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["web/*"],
+      "@/tests/*": ["web/tests/*"]
+    }
   },
   "include": [
     "web/app/**/*",

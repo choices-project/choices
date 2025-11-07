@@ -105,8 +105,8 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       
       const result = await followHashtag(hashtagId);
       if (result.success && result.data) {
-        // Add to user hashtags
-        setUserHashtags(prev => [...prev, result.data!]);
+        const { data } = result;
+        setUserHashtags(prev => [...prev, data]);
         return true;
       } else {
         setError(result.error ?? 'Failed to follow hashtag');

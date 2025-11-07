@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -41,6 +40,7 @@ import {
   useUserIsUploadingAvatar,
   useUserActions
 } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
 
 import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
 import type { ProfileEditProps } from '../index';
@@ -174,6 +174,7 @@ export default function ProfileEdit({
 
   // Handle form field changes
   const handleFieldChange = (field: keyof ProfileUpdateData, value: any) => {
+    setFormData(prev => withOptional(prev, { [field]: value }) as ProfileUpdateData);
     updateProfileEditData({ [field]: value });
     setError(null);
     setSuccess(null);
@@ -185,10 +186,7 @@ export default function ProfileEdit({
       ? formData[field]?.filter(item => item !== value)
       : [...(formData[field] ?? []), value];
     
-    setFormData(prev => ({
-      ...prev,
-      [field]: newArray
-    }));
+    setFormData(prev => withOptional(prev, { [field]: newArray }) as ProfileUpdateData);
     
     // Note: Store sync handled by save action, not individual field updates
   };

@@ -5,7 +5,12 @@
     "types": ["jest", "node"],
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["web/*"],
+      "@/tests/*": ["web/tests/*"]
+    }
   },
   "include": [
     "tests/**/*",

@@ -13,7 +13,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { AdminNotification } from '@/features/admin/types';
+import type { AdminNotification, NewAdminNotification } from '@/features/admin/types';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
@@ -54,7 +54,7 @@ type NotificationStore = {
   clearByType: (type: Notification['type']) => void;
   
   // Actions - Admin Notifications
-  addAdminNotification: (notification: Omit<AdminNotification, 'id' | 'created_at' | 'read'>) => void;
+  addAdminNotification: (notification: NewAdminNotification) => void;
   removeAdminNotification: (id: string) => void;
   markAdminNotificationAsRead: (id: string) => void;
   markAllAdminNotificationsAsRead: () => void;
@@ -84,6 +84,32 @@ const defaultSettings = {
   enableHaptics: true,
   enableAutoDismiss: true,
   enableStacking: true,
+};
+
+const generateAdminNotificationId = () =>
+  `admin_notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+const buildAdminNotification = (
+  payload: NewAdminNotification,
+  customId?: string
+): AdminNotification => {
+  const issuedAt = payload.timestamp ?? new Date().toISOString();
+  const createdAt = payload.created_at ?? issuedAt;
+
+  const base: AdminNotification = {
+    id: customId ?? generateAdminNotificationId(),
+    timestamp: issuedAt,
+    type: payload.type,
+    title: payload.title,
+    message: payload.message,
+    read: payload.read ?? false,
+    created_at: createdAt,
+  };
+
+  return withOptional(base, {
+    action: payload.action,
+    metadata: payload.metadata,
+  });
 };
 
 // Create notification store with middleware
@@ -211,12 +237,10 @@ export const useNotificationStore = create<NotificationStore>()(
       
       // Admin notification actions
       addAdminNotification: (notification) => set((state) => {
-        const sanitized = withOptional(notification as Record<string, unknown>);
-        const newAdminNotification = withOptional(sanitized, {
-          id: `admin_notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          created_at: new Date().toISOString(),
-          read: false,
-        }) as AdminNotification;
+        const newAdminNotification = buildAdminNotification(
+          notification,
+          generateAdminNotificationId()
+        );
         
         // Add to admin notifications array
         if (state.settings.enableStacking) {

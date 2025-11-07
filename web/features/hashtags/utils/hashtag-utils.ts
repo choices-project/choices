@@ -127,8 +127,8 @@ export function getHashtagCategoryColor(category: HashtagCategory): string {
     community: 'bg-green-100 text-green-700 border-green-200',
     business: 'bg-purple-100 text-purple-700 border-purple-200'
   };
-  
-  return colors[category] || colors.custom;
+
+  return colors[category] ?? colors.custom ?? 'bg-gray-100 text-gray-700 border-gray-200';
 }
 
 /**
@@ -157,8 +157,8 @@ export function getHashtagCategoryIcon(category: HashtagCategory): string {
     community: '🤝',
     business: '💼'
   };
-  
-  return icons[category] || icons.custom;
+
+  return icons[category] ?? icons.custom ?? '🏷️';
 }
 
 /**

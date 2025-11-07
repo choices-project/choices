@@ -188,6 +188,7 @@ export type FeedbackContext = {
 
 export type AdminNotification = {
   id: string;
+  timestamp: string;
   type: 'info' | 'warning' | 'error' | 'success';
   title: string;
   message: string;
@@ -199,6 +200,9 @@ export type AdminNotification = {
   };
   metadata?: Record<string, any>;
 }
+
+export type NewAdminNotification = Pick<AdminNotification, 'type' | 'title' | 'message'> &
+  Partial<Pick<AdminNotification, 'read' | 'action' | 'metadata' | 'timestamp' | 'created_at'>>;
 
 export type FeatureFlag = {
   id: string;

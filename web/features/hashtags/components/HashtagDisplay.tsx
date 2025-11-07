@@ -55,10 +55,11 @@ export function HashtagDisplay({
   return (
     <div className={`space-y-2 ${className}`}>
       {displayHashtags.map((hashtag) => (
-        <div
+        <button
           key={hashtag.id}
-          className="group flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+          type="button"
           onClick={() => onHashtagClick?.(hashtag)}
+          className="w-full text-left group flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div className="flex items-center space-x-3">
             {getHashtagIcon(hashtag)}
@@ -106,7 +107,7 @@ export function HashtagDisplay({
               )}
             </div>
           )}
-        </div>
+        </button>
       ))}
 
       {remainingCount > 0 && (
@@ -145,10 +146,11 @@ export function TrendingHashtagDisplay({
       </div>
 
       {displayHashtags.map((trending, index) => (
-        <div
+        <button
           key={trending.hashtag.id}
-          className="group flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg hover:border-orange-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+          type="button"
           onClick={() => onHashtagClick?.(trending.hashtag)}
+          className="w-full text-left group flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg hover:border-orange-300 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <div className="flex items-center space-x-4">
             <div className="flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 rounded-full font-bold">
@@ -169,7 +171,6 @@ export function TrendingHashtagDisplay({
               </div>
             </div>
           </div>
-
           <div className="text-right">
             <div className="text-lg font-bold text-orange-600">
               {trending.trend_score.toFixed(1)}
@@ -181,7 +182,7 @@ export function TrendingHashtagDisplay({
               </div>
             )}
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );

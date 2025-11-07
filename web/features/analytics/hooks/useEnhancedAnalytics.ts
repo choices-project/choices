@@ -8,12 +8,25 @@ import { createClient } from '@supabase/supabase-js';
 import { useState, useEffect, useCallback } from 'react';
 
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 
 import { EnhancedAnalyticsService } from '../lib/enhanced-analytics-service';
 
 
 type _SupabaseClient = ReturnType<typeof createClient<Database>>;
+
+type PlatformMetricRow = Database['public']['Tables']['platform_analytics']['Row'];
+type UserSessionRow = Database['public']['Tables']['user_sessions']['Row'];
+type FeatureUsageRow = Database['public']['Tables']['feature_usage']['Row'];
+type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
+type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
+type AuthEventPayload = Parameters<EnhancedAnalyticsService['enhanceAuthAnalytics']>[0];
+type FeatureUsageContext = Parameters<EnhancedAnalyticsService['trackFeatureUsage']>[2];
+type SessionMetadata = {
+  deviceInfo?: Json;
+  userAgent?: string;
+  ipAddress?: string;
+};
 
 type EnhancedAnalyticsData = {
   // Existing analytics data
@@ -56,14 +69,14 @@ type EnhancedAnalyticsData = {
   
   // Enhanced capabilities
   enhancedInsights?: {
-    comprehensiveAnalysis: any;
-    trustTierDistribution: any;
-    botDetectionResults: any;
-    platformMetrics: any[];
+    comprehensiveAnalysis: unknown;
+    trustTierDistribution: unknown;
+    botDetectionResults: unknown;
+    platformMetrics: PlatformMetricRow[];
   };
   sessionInsights?: {
-    sessionData: any;
-    featureUsage: any[];
+    sessionData: UserSessionRow | null;
+    featureUsage: FeatureUsageRow[];
     sessionMetrics: {
       totalActions: number;
       sessionDuration: number;
@@ -72,12 +85,12 @@ type EnhancedAnalyticsData = {
     };
   };
   userInsights?: {
-    sessions: any[];
-    featureUsage: any[];
-    platformMetrics: any[];
-    trustTierProgression: any;
+    sessions: UserSessionRow[];
+    featureUsage: FeatureUsageRow[];
+    platformMetrics: PlatformMetricRow[];
+    trustTierProgression: unknown;
   };
-  systemHealth?: any[];
+  systemHealth?: SystemHealthRow[];
   realTimeCapabilities?: {
     sessionTracking: boolean;
     featureUsageTracking: boolean;
@@ -180,55 +193,57 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackFeatureUsage = useCallback(async (
     featureName: string,
     action: string = 'interact',
-    context: any = {}
+    context: Record<string, unknown> = {}
   ) => {
     try {
-      await enhancedAnalytics.trackFeatureUsage(userId ?? null, featureName, {
+      const contextPayload: FeatureUsageContext = {
         action,
         context,
         session_id: sessionId,
         timestamp: new Date().toISOString()
-      });
+      };
+
+      await enhancedAnalytics.trackFeatureUsage(userId ?? null, featureName, contextPayload);
     } catch (err) {
       logger.error('Feature usage tracking error:', err);
     }
   }, [userId, sessionId, enhancedAnalytics]);
 
   // Track session activity
-  const trackSessionActivity = useCallback(async (
-    action: string,
-    page: string,
-    metadata: any = {}
-  ) => {
-    try {
-      if (!sessionId) return;
+  const trackSessionActivity = useCallback(
+    async (action: string, page: string, metadata: SessionMetadata = {}) => {
+      try {
+        if (!sessionId) return;
 
-      await enhancedAnalytics.trackUserSession({
-        userId,
-        sessionId,
-        deviceInfo: metadata.deviceInfo || {},
-        userAgent: metadata.userAgent || navigator.userAgent,
-        ipAddress: metadata.ipAddress || 'unknown',
-        currentPage: page,
-        action
-      });
-    } catch (err) {
-      logger.error('Session activity tracking error:', err);
-    }
-  }, [userId, sessionId, enhancedAnalytics]);
+        await enhancedAnalytics.trackUserSession({
+          userId,
+          sessionId,
+          deviceInfo: metadata.deviceInfo ?? null,
+          userAgent: metadata.userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
+          ipAddress: metadata.ipAddress ?? undefined,
+          currentPage: page,
+          action
+        });
+      } catch (err) {
+        logger.error('Session activity tracking error:', err);
+      }
+    },
+    [userId, sessionId, enhancedAnalytics]
+  );
 
   // Track auth events
-  const trackAuthEvent = useCallback(async (
-    authEvent: any
-  ) => {
-    try {
-      if (!sessionId) return;
+  const trackAuthEvent = useCallback(
+    async (authEvent: AuthEventPayload) => {
+      try {
+        if (!sessionId) return;
 
-      await enhancedAnalytics.enhanceAuthAnalytics(authEvent, sessionId);
-    } catch (err) {
-      logger.error('Auth event tracking error:', err);
-    }
-  }, [sessionId, enhancedAnalytics]);
+        await enhancedAnalytics.enhanceAuthAnalytics(authEvent, sessionId);
+      } catch (err) {
+        logger.error('Auth event tracking error:', err);
+      }
+    },
+    [sessionId, enhancedAnalytics]
+  );
 
   // Set up real-time updates
   useEffect(() => {
@@ -252,10 +267,11 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       const { data: healthData, error } = await supabase
         .from('system_health')
         .select('*')
-        .order('last_check', { ascending: false });
+        .order('last_check', { ascending: false })
+        .returns<SystemHealthRow[]>();
 
       if (error) throw error;
-      return healthData || [];
+      return healthData ?? [];
     } catch (err) {
       logger.error('System health fetch error:', err);
       return [];
@@ -272,10 +288,11 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
         .eq('target_audience', targetAudience)
         .lte('start_date', new Date().toISOString())
         .gte('end_date', new Date().toISOString())
-        .order('priority', { ascending: false });
+        .order('priority', { ascending: false })
+        .returns<SiteMessageRow[]>();
 
       if (error) throw error;
-      return messages || [];
+      return messages ?? [];
     } catch (err) {
       logger.error('Site messages fetch error:', err);
       return [];

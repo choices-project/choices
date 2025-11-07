@@ -211,10 +211,11 @@ export function HashtagInput({
           className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
         >
           {suggestions.map((suggestion, _index) => (
-            <div
+            <button
               key={suggestion.hashtag.id}
+              type="button"
               onClick={() => handleSuggestionClick(suggestion)}
-              className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100"
+              className="w-full text-left select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
             >
               <div className="flex items-center">
                 <Hash className="h-4 w-4 text-gray-400 mr-2" />
@@ -233,7 +234,7 @@ export function HashtagInput({
                   {Math.round((suggestion.confidence_score || 0) * 100)}% match
                 </span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

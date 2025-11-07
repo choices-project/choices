@@ -15,6 +15,11 @@ type AnalyticsBridgeApi = {
   reset: () => void;
 };
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __playwrightAnalytics: AnalyticsBridgeApi | undefined;
+}
+
 export function AnalyticsTestBridge() {
   const events = useAnalyticsEvents();
   const { setTrackingEnabled, updatePreferences, clearEvents } = useAnalyticsActions();

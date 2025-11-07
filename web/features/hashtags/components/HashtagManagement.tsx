@@ -1,13 +1,12 @@
 'use client';
 
 import { Hash, Plus, Search, Filter } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
-
-import { searchHashtags, createHashtag, updateHashtag, deleteHashtag } from '../lib/hashtag-service';
+import { searchHashtags, createHashtag, deleteHashtag } from '../lib/hashtag-service';
 import type { Hashtag, HashtagCategory } from '../types';
 
 type HashtagManagementProps = {
@@ -26,8 +25,8 @@ export function HashtagManagement({
   userHashtags = [],
   onFollow,
   onUnfollow,
-  onReorder,
-  showSuggestions = false
+  onReorder: _onReorder,
+  showSuggestions: _showSuggestions = false
 }: HashtagManagementProps) {
   const [hashtags, setHashtags] = useState<Hashtag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,11 +43,7 @@ export function HashtagManagement({
 
   const categories: HashtagCategory[] = ['politics', 'civics', 'social', 'environment', 'economy', 'health', 'education', 'technology', 'culture', 'sports', 'entertainment', 'news'];
 
-  useEffect(() => {
-    loadHashtags();
-  }, []);
-
-  const loadHashtags = async () => {
+  const loadHashtags = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -69,12 +64,16 @@ export function HashtagManagement({
           setError(result.error ?? 'Failed to load hashtags');
         }
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while loading hashtags');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedCategory, userHashtags]);
+
+  useEffect(() => {
+    void loadHashtags();
+  }, [loadHashtags]);
 
   const handleCreateHashtag = async () => {
     try {
@@ -88,38 +87,20 @@ export function HashtagManagement({
       );
       
       if (result.success && result.data) {
-        setHashtags(prev => [result.data!, ...prev]);
-        setNewHashtag({ name: '', display_name: '', category: 'politics', description: '' });
+        const { data } = result;
+        setHashtags(prev => [data, ...prev]);
+        setNewHashtag({
+          name: '',
+          display_name: '',
+          category: 'politics',
+          description: ''
+        });
         setShowCreateForm(false);
       } else {
         setError(result.error ?? 'Failed to create hashtag');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while creating hashtag');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdateHashtag = async (hashtag: Hashtag) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const updateData: Record<string, unknown> = {};
-      if (hashtag.display_name) updateData.display_name = hashtag.display_name;
-      updateData.category = hashtag.category;
-      if (hashtag.description) updateData.description = hashtag.description;
-      
-      const result = await updateHashtag(hashtag.id, updateData);
-      
-      if (result.success && result.data) {
-        setHashtags(prev => prev.map(h => (h.id === hashtag.id ? result.data! : h)));
-      } else {
-        setError(result.error ?? 'Failed to update hashtag');
-      }
-    } catch (err) {
-      setError('An error occurred while updating hashtag');
     } finally {
       setIsLoading(false);
     }
@@ -136,10 +117,10 @@ export function HashtagManagement({
       
       if (result.success) {
         setHashtags(prev => prev.filter(h => h.id !== hashtagId));
-    } else {
+      } else {
         setError(result.error ?? 'Failed to delete hashtag');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while deleting hashtag');
     } finally {
       setIsLoading(false);
@@ -219,7 +200,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.name}
-                  onChange={(e) => setNewHashtag(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { name: e.target.value }))}
                   placeholder="e.g., #climatechange"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -229,7 +210,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.display_name}
-                  onChange={(e) => setNewHashtag(prev => ({ ...prev, display_name: e.target.value }))}
+                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { display_name: e.target.value }))}
                   placeholder="e.g., Climate Change"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -238,7 +219,11 @@ export function HashtagManagement({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select
                   value={newHashtag.category}
-                  onChange={(e) => setNewHashtag(prev => ({ ...prev, category: e.target.value as HashtagCategory }))}
+                  onChange={(e) =>
+                    setNewHashtag(prev =>
+                      withOptional(prev, { category: e.target.value as HashtagCategory })
+                    )
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {categories.map(category => (
@@ -253,7 +238,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.description}
-                  onChange={(e) => setNewHashtag(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { description: e.target.value }))}
                   placeholder="Brief description..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />

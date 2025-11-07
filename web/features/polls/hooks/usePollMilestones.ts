@@ -123,11 +123,8 @@ export const usePollMilestoneState = (pollId: string | null) => {
       const pollKey = currentPollIdRef.current;
       if (!pollKey) return;
       persist((prev) => ({
-        ...prev,
-        preferences: {
-          ...prev.preferences,
-          [milestone]: enabled,
-        },
+        preferences: Object.assign({}, prev.preferences, { [milestone]: enabled }),
+        acknowledged: prev.acknowledged,
       }));
     },
     [persist],
@@ -137,12 +134,15 @@ export const usePollMilestoneState = (pollId: string | null) => {
     (milestone: Milestone) => {
       const pollKey = currentPollIdRef.current;
       if (!pollKey) return;
-      persist((prev) => ({
-        ...prev,
-        acknowledged: prev.acknowledged.includes(milestone)
-          ? prev.acknowledged
-          : [...prev.acknowledged, milestone],
-      }));
+      persist((prev) => {
+        if (prev.acknowledged.includes(milestone)) {
+          return prev;
+        }
+        return {
+          preferences: prev.preferences,
+          acknowledged: [...prev.acknowledged, milestone],
+        };
+      });
     },
     [persist],
   );
@@ -151,8 +151,8 @@ export const usePollMilestoneState = (pollId: string | null) => {
     const pollKey = currentPollIdRef.current;
     if (!pollKey) return;
     persist((prev) => ({
-      ...prev,
       acknowledged: prev.acknowledged.filter((milestone) => prev.preferences[milestone]),
+      preferences: prev.preferences,
     }));
   }, [persist]);
 

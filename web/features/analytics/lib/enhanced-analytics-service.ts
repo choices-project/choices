@@ -8,9 +8,73 @@ import type { createClient } from '@supabase/supabase-js';
 
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 
 type SupabaseClient = ReturnType<typeof createClient<Database>>;
+
+type UserSessionRow = Database['public']['Tables']['user_sessions']['Row'];
+type FeatureUsageRow = Database['public']['Tables']['feature_usage']['Row'];
+type PlatformAnalyticsRow = Database['public']['Tables']['platform_analytics']['Row'];
+type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
+type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
+type SiteMessageInsert = Database['public']['Tables']['site_messages']['Insert'];
+type FeedbackRow = Database['public']['Tables']['feedback']['Row'];
+
+type AnalyticsRecord = Record<string, unknown>;
+type JsonRecord = Record<string, Json | undefined>;
+type DimensionsRecord = JsonRecord;
+type AuthEventPayload = JsonRecord & {
+  method?: string;
+  success?: boolean;
+  userId?: string;
+};
+type BotDetectionPayload = JsonRecord & {
+  risk_score?: number;
+  suspicious_patterns?: unknown[];
+  confidence?: number;
+};
+type UserSessionPayload = {
+  userId?: string;
+  sessionId: string;
+  deviceInfo?: Json | null;
+  userAgent?: string;
+  ipAddress?: string;
+  currentPage?: string;
+  action?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const asRecord = (value: unknown): Record<string, unknown> => (isRecord(value) ? value : {});
+
+const extractRecordField = (source: AnalyticsRecord, key: string): Record<string, unknown> => {
+  const value = source[key];
+  return isRecord(value) ? value : {};
+};
+
+const toJson = (value: unknown): Json => {
+  if (value === undefined) {
+    return null;
+  }
+  try {
+    return JSON.parse(JSON.stringify(value)) as Json;
+  } catch {
+    return null;
+  }
+};
+
+const getDeviceType = (deviceInfo: Json | null): string => {
+  if (!isRecord(deviceInfo)) {
+    return 'unknown';
+  }
+
+  const type = deviceInfo.type;
+  return typeof type === 'string' ? type : 'unknown';
+};
+
+const ensureArray = <T>(value: T[] | null | undefined): T[] => (Array.isArray(value) ? value : []);
+
 
 export class EnhancedAnalyticsService {
   private supabase: SupabaseClient;
@@ -23,7 +87,7 @@ export class EnhancedAnalyticsService {
    * ENHANCE EXISTING ANALYTICS WITH NEW SCHEMA CAPABILITIES
    * Integrates with your existing unified analytics API
    */
-  async enhanceUnifiedAnalytics(pollId: string, existingAnalytics: any) {
+  async enhanceUnifiedAnalytics(pollId: string, existingAnalytics: AnalyticsRecord | null = null): Promise<AnalyticsRecord> {
     try {
       // Use our new built-in functions to enhance existing analytics
       const [
@@ -54,13 +118,16 @@ export class EnhancedAnalyticsService {
         platformMetrics
       };
 
-      const enhancedMetadata = withOptional(existingAnalytics?.metadata ?? {}, {
+      const baseAnalytics: AnalyticsRecord = existingAnalytics ?? {};
+      const baseMetadata = extractRecordField(baseAnalytics, 'metadata');
+
+      const enhancedMetadata = withOptional(baseMetadata, {
         enhancedWith: 'new_schema_capabilities',
         schemaVersion: 'enhanced_2025_10_27',
         integrationTimestamp: new Date().toISOString()
       });
 
-      const enhancedAnalytics = withOptional(existingAnalytics, {
+      const enhancedAnalytics = withOptional(baseAnalytics, {
         enhancedInsights,
         sessionAnalytics: await this.getSessionAnalytics(pollId),
         featureUsage: await this.getFeatureUsageAnalytics(pollId),
@@ -79,7 +146,7 @@ export class EnhancedAnalyticsService {
     } catch (error) {
       logger.error('Analytics enhancement error:', error);
       // Return existing analytics if enhancement fails
-      return existingAnalytics;
+      return existingAnalytics ?? {};
     }
   }
 
@@ -87,14 +154,14 @@ export class EnhancedAnalyticsService {
    * ENHANCE EXISTING ANALYTICS STORE WITH SESSION TRACKING
    * Integrates with your existing analyticsStore
    */
-  async enhanceAnalyticsStore(storeData: any, sessionId: string) {
+  async enhanceAnalyticsStore(storeData: AnalyticsRecord | null, sessionId: string): Promise<AnalyticsRecord> {
     try {
       // Get session data from our new user_sessions table
       const { data: sessionData } = await this.supabase
         .from('user_sessions')
         .select('*')
         .eq('session_id', sessionId)
-        .single();
+        .single<UserSessionRow>();
 
       // Get feature usage for this session
       const { data: featureUsage } = await this.supabase
@@ -104,14 +171,17 @@ export class EnhancedAnalyticsService {
         .order('timestamp', { ascending: false });
 
       // Enhance store data with session insights
-      const enhancedStoreData = withOptional(storeData, {
+      const baseStore: AnalyticsRecord = storeData ?? {};
+      const features = ensureArray(featureUsage as FeatureUsageRow[] | null | undefined);
+
+      const enhancedStoreData = withOptional(baseStore, {
         sessionInsights: {
           sessionData: sessionData ?? null,
-          featureUsage: featureUsage ?? [],
+          featureUsage: features,
           sessionMetrics: {
-            totalActions: featureUsage?.length ?? 0,
+            totalActions: features.length,
             sessionDuration: sessionData ? this.calculateSessionDuration(sessionData) : 0,
-            deviceType: (sessionData?.device_info as any)?.type ?? 'unknown',
+            deviceType: getDeviceType(sessionData?.device_info ?? null),
             pageViews: sessionData?.page_views ?? 0
           }
         },
@@ -121,7 +191,7 @@ export class EnhancedAnalyticsService {
       return enhancedStoreData;
     } catch (error) {
       logger.error('Store enhancement error:', error);
-      return storeData;
+      return storeData ?? {};
     }
   }
 
@@ -129,7 +199,7 @@ export class EnhancedAnalyticsService {
    * ENHANCE EXISTING ANALYTICS HOOK WITH REAL-TIME CAPABILITIES
    * Integrates with your existing useAnalytics hook
    */
-  async enhanceAnalyticsHook(hookData: any, userId?: string) {
+  async enhanceAnalyticsHook(hookData: AnalyticsRecord | null, userId?: string): Promise<AnalyticsRecord> {
     try {
       // Get user-specific analytics from our new tables
       const [
@@ -143,7 +213,8 @@ export class EnhancedAnalyticsService {
       ]);
 
       // Enhance hook data with user-specific insights
-      const enhancedHookData = withOptional(hookData, {
+      const baseHook: AnalyticsRecord = hookData ?? {};
+      const enhancedHookData = withOptional(baseHook, {
         userInsights: {
           sessions: userSessions,
           featureUsage: userFeatureUsage,
@@ -161,7 +232,7 @@ export class EnhancedAnalyticsService {
       return enhancedHookData;
     } catch (error) {
       logger.error('Hook enhancement error:', error);
-      return hookData;
+      return hookData ?? {};
     }
   }
 
@@ -169,14 +240,14 @@ export class EnhancedAnalyticsService {
    * INTEGRATE WITH EXISTING AUTH ANALYTICS
    * Enhances your existing auth analytics with session tracking
    */
-  async enhanceAuthAnalytics(authEvent: any, sessionId: string) {
+  async enhanceAuthAnalytics(authEvent: AuthEventPayload, sessionId: string): Promise<AuthEventPayload> {
     try {
       // Track auth event in our new session system
       await this.trackAuthEventInSession(authEvent, sessionId);
-      
+
       // Update session with auth data
       await this.updateSessionWithAuth(sessionId, authEvent);
-      
+
       // Track feature usage for auth
       await this.trackFeatureUsage(null, 'authentication', {
         auth_method: authEvent.method,
@@ -195,7 +266,7 @@ export class EnhancedAnalyticsService {
   }
 
   // Helper methods for integration
-  private async getPlatformMetricsForPoll(pollId: string) {
+  private async getPlatformMetricsForPoll(pollId: string): Promise<PlatformAnalyticsRow[]> {
     const { data } = await this.supabase
       .from('platform_analytics')
       .select('*')
@@ -203,41 +274,41 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(10);
 
-    return data ?? [];
+    return (data ?? []) as PlatformAnalyticsRow[];
   }
 
-  private async getSessionAnalytics(_pollId: string) {
+  private async getSessionAnalytics(_pollId: string): Promise<UserSessionRow[]> {
     const { data } = await this.supabase
       .from('user_sessions')
       .select('*')
       .gte('last_activity', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('last_activity', { ascending: false });
 
-    return data ?? [];
+    return (data ?? []) as UserSessionRow[];
   }
 
-  private async getFeatureUsageAnalytics(_pollId: string) {
+  private async getFeatureUsageAnalytics(_pollId: string): Promise<FeatureUsageRow[]> {
     const { data } = await this.supabase
       .from('feature_usage')
       .select('*')
       .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('timestamp', { ascending: false });
 
-    return data ?? [];
+    return (data ?? []) as FeatureUsageRow[];
   }
 
-  async getSystemHealthContext() {
+  async getSystemHealthContext(): Promise<SystemHealthRow[]> {
     const { data } = await this.supabase
       .from('system_health')
       .select('*')
       .order('last_check', { ascending: false });
 
-    return data ?? [];
+    return (data ?? []) as SystemHealthRow[];
   }
 
-  private async getUserSessions(userId?: string) {
+  private async getUserSessions(userId?: string): Promise<UserSessionRow[]> {
     if (!userId) return [];
-    
+
     const { data } = await this.supabase
       .from('user_sessions')
       .select('*')
@@ -245,12 +316,12 @@ export class EnhancedAnalyticsService {
       .order('started_at', { ascending: false })
       .limit(10);
 
-    return data ?? [];
+    return (data ?? []) as UserSessionRow[];
   }
 
-  private async getUserFeatureUsage(userId?: string) {
+  private async getUserFeatureUsage(userId?: string): Promise<FeatureUsageRow[]> {
     if (!userId) return [];
-    
+
     const { data } = await this.supabase
       .from('feature_usage')
       .select('*')
@@ -258,12 +329,12 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(20);
 
-    return data ?? [];
+    return (data ?? []) as FeatureUsageRow[];
   }
 
-  private async getUserPlatformMetrics(userId?: string) {
+  private async getUserPlatformMetrics(userId?: string): Promise<PlatformAnalyticsRow[]> {
     if (!userId) return [];
-    
+
     const { data } = await this.supabase
       .from('platform_analytics')
       .select('*')
@@ -271,12 +342,12 @@ export class EnhancedAnalyticsService {
       .order('timestamp', { ascending: false })
       .limit(10);
 
-    return data ?? [];
+    return (data ?? []) as PlatformAnalyticsRow[];
   }
 
-  private async getUserTrustTierProgression(userId?: string) {
+  private async getUserTrustTierProgression(userId?: string): Promise<unknown> {
     if (!userId) return null;
-    
+
     const { data } = await this.supabase.rpc('get_trust_tier_progression', {
       p_user_id: userId
     });
@@ -284,66 +355,78 @@ export class EnhancedAnalyticsService {
     return data;
   }
 
-  private async trackAuthEventInSession(authEvent: any, sessionId: string) {
+  private async trackAuthEventInSession(authEvent: AuthEventPayload, sessionId: string): Promise<void> {
+    const sanitizedEvent = toJson(authEvent);
+    const metadataPayload = toJson({
+      auth_events: [sanitizedEvent],
+      last_auth_event: new Date().toISOString()
+    });
+
     await this.supabase
       .from('user_sessions')
       .update({
-        metadata: {
-          auth_events: [authEvent],
-          last_auth_event: new Date().toISOString()
-        }
+        metadata: metadataPayload
       })
       .eq('session_id', sessionId);
   }
 
-  private async updateSessionWithAuth(sessionId: string, authEvent: any) {
+  private async updateSessionWithAuth(sessionId: string, authEvent: AuthEventPayload): Promise<void> {
+    const metadataPayload = toJson({
+      authenticated: authEvent.success ?? null,
+      auth_method: authEvent.method ?? null
+    });
+
     await this.supabase
       .from('user_sessions')
       .update({
         user_id: authEvent.userId ?? null,
         last_activity: new Date().toISOString(),
-        metadata: {
-          authenticated: authEvent.success,
-          auth_method: authEvent.method
-        }
+        metadata: metadataPayload
       })
       .eq('session_id', sessionId);
   }
 
-  async trackFeatureUsage(userId: string | null, featureName: string, context: any) {
+  async trackFeatureUsage(userId: string | null, featureName: string, context: DimensionsRecord): Promise<void> {
+    const contextPayload = toJson(context);
+
     await this.supabase
       .from('feature_usage')
       .insert({
         user_id: userId,
         feature_name: featureName,
         action_type: 'interact',
-        context,
+        context: contextPayload,
         timestamp: new Date().toISOString(),
         success: true
       });
   }
 
-  async recordPlatformMetric(metricName: string, dimensions: any) {
+  async recordPlatformMetric(metricName: string, dimensions: DimensionsRecord): Promise<void> {
+    const dimensionsPayload = toJson(dimensions);
+
     await this.supabase
       .from('platform_analytics')
       .insert({
         metric_name: metricName,
         metric_value: 1,
         metric_type: 'counter',
-        dimensions,
+        dimensions: dimensionsPayload,
         category: 'integration',
         source: 'enhanced_analytics'
       });
   }
 
-  async updateSystemHealth(checkName: string, status: 'ok' | 'warning' | 'critical', details?: any) {
+  async updateSystemHealth(checkName: string, status: 'ok' | 'warning' | 'critical', details?: DimensionsRecord): Promise<void> {
     try {
+      const detailsPayload = details ? toJson(details) : null;
+      const metadataPayload = toJson({ check_name: checkName });
+
       const { error } = await this.supabase.from('system_health').upsert({
         service_name: checkName,
         health_status: status,
-        details: details,
+        details: detailsPayload,
         last_check: new Date().toISOString(),
-        metadata: { check_name: checkName }
+        metadata: metadataPayload
       }, { onConflict: 'service_name' });
       if (error) {
         logger.error('Error updating system health:', error);
@@ -353,12 +436,12 @@ export class EnhancedAnalyticsService {
     }
   }
 
-  private calculateSessionDuration(sessionData: any): number {
+  private calculateSessionDuration(sessionData: UserSessionRow): number {
     if (!sessionData.started_at) return 0;
-    
+
     const start = new Date(sessionData.started_at);
     const end = new Date(sessionData.last_activity ?? new Date());
-    
+
     return Math.floor((end.getTime() - start.getTime()) / 1000); // seconds
   }
 
@@ -369,14 +452,21 @@ export class EnhancedAnalyticsService {
         p_poll_id: pollId,
         p_time_window: '24 hours'
       });
-      
+
       if (error) throw error;
-      
+
+      const payloadCandidate = Array.isArray(data) ? data[0] : data;
+      const payload: BotDetectionPayload = isRecord(payloadCandidate) ? payloadCandidate as BotDetectionPayload : {};
+
+      const riskScore = typeof payload.risk_score === 'number' ? payload.risk_score : 0;
+      const suspiciousPatterns = Array.isArray(payload.suspicious_patterns) ? payload.suspicious_patterns : [];
+      const confidence = typeof payload.confidence === 'number' ? payload.confidence : 0;
+
       return {
-        riskScore: (data as any)?.risk_score ?? 0,
-        suspiciousPatterns: (data as any)?.suspicious_patterns ?? [],
-        confidence: (data as any)?.confidence ?? 0,
-        analysis: data
+        riskScore,
+        suspiciousPatterns,
+        confidence,
+        analysis: payloadCandidate
       };
     } catch (error) {
       logger.error('Bot detection error:', error);
@@ -389,7 +479,7 @@ export class EnhancedAnalyticsService {
     }
   }
 
-  async getActiveSiteMessages(targetAudience: string = 'all') {
+  async getActiveSiteMessages(targetAudience: string = 'all'): Promise<SiteMessageRow[]> {
     try {
       const { data, error } = await this.supabase
         .from('site_messages')
@@ -401,32 +491,46 @@ export class EnhancedAnalyticsService {
         .order('priority', { ascending: false });
 
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as SiteMessageRow[];
     } catch (error) {
       logger.error('Site messages fetch error:', error);
       return [];
     }
   }
 
-  async trackUserSession(sessionData: any) {
+  async trackUserSession(sessionData: UserSessionPayload): Promise<UserSessionRow[] | null> {
     try {
+      const metadataRecord: DimensionsRecord = {
+        timestamp: new Date().toISOString()
+      };
+
+      if (typeof sessionData.currentPage === 'string') {
+        metadataRecord.current_page = sessionData.currentPage;
+      }
+
+      if (typeof sessionData.action === 'string') {
+        metadataRecord.action = sessionData.action;
+      }
+
+      const metadataPayload = toJson(metadataRecord);
+      const deviceInfoPayload = sessionData.deviceInfo !== undefined ? toJson(sessionData.deviceInfo) : null;
+
+      const payload: Database['public']['Tables']['user_sessions']['Insert'] = {
+        user_id: sessionData.userId ?? null,
+        session_id: sessionData.sessionId,
+        device_info: deviceInfoPayload,
+        user_agent: sessionData.userAgent ?? null,
+        ip_address: sessionData.ipAddress ?? null,
+        metadata: metadataPayload
+      };
+
       const { data, error } = await this.supabase
         .from('user_sessions')
-        .insert({
-          user_id: sessionData.userId,
-          session_id: sessionData.sessionId,
-          device_info: sessionData.deviceInfo,
-          user_agent: sessionData.userAgent,
-          ip_address: sessionData.ipAddress,
-          metadata: {
-            current_page: sessionData.currentPage,
-            action: sessionData.action,
-            timestamp: new Date().toISOString()
-          }
-        });
+        .insert(payload)
+        .select();
 
       if (error) throw error;
-      return data;
+      return (data ?? null) as UserSessionRow[] | null;
     } catch (error) {
       logger.error('Session tracking error:', error);
       return null;
@@ -459,7 +563,7 @@ export class EnhancedAnalyticsService {
         p_poll_id: pollId,
         p_analysis_window: timeRange ?? '7 days'
       });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -473,7 +577,7 @@ export class EnhancedAnalyticsService {
       const { data, error } = await this.supabase.rpc('calculate_trust_filtered_votes', {
         p_poll_id: pollId
       });
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
@@ -482,7 +586,16 @@ export class EnhancedAnalyticsService {
     }
   }
 
-  async getComprehensiveAnalytics() {
+  async getComprehensiveAnalytics(): Promise<{
+    totalEvents: number;
+    eventsByType: Record<string, number>;
+    activeSessions: number;
+    averageSessionDuration: string;
+    featureAdoption: Record<string, number>;
+    systemHealthStatus: Record<string, string>;
+    recentFeedback: FeedbackRow[];
+    activeSiteMessages: SiteMessageRow[];
+  }> {
     try {
       const [
         analyticsEvents,
@@ -500,36 +613,43 @@ export class EnhancedAnalyticsService {
         this.supabase.from('site_messages').select('*').eq('is_active', true)
       ]);
 
-      const totalEvents = analyticsEvents.data?.length ?? 0;
-      const eventsByType = analyticsEvents.data?.reduce((acc: any, event: any) => {
-        acc[event.event_name] = (acc[event.event_name] ?? 0) + 1;
+      const eventRows = (analyticsEvents.data ?? []) as PlatformAnalyticsRow[];
+      const totalEvents = eventRows.length;
+      const eventsByType = eventRows.reduce<Record<string, number>>((acc, event) => {
+        const key = event.metric_name ?? 'unknown';
+        acc[key] = (acc[key] ?? 0) + 1;
         return acc;
-      }, {}) ?? {};
+      }, {});
 
-      const activeSessions = userSessions.data?.length ?? 0;
-      const totalSessionDuration = userSessions.data?.reduce((sum: number, session: any) => {
-        if (session.session_start && session.session_end) {
-          const start = new Date(session.session_start).getTime();
-          const end = new Date(session.session_end).getTime();
+      const sessionRows = (userSessions.data ?? []) as UserSessionRow[];
+      const activeSessions = sessionRows.length;
+      const totalSessionDurationMs = sessionRows.reduce((sum, session) => {
+        const start = session.started_at ? Date.parse(session.started_at) : NaN;
+        const end = session.ended_at ? Date.parse(session.ended_at) : NaN;
+        if (!Number.isNaN(start) && !Number.isNaN(end) && end >= start) {
           return sum + (end - start);
         }
         return sum;
-      }, 0) ?? 0;
+      }, 0);
 
-      const averageSessionDurationMs = activeSessions > 0 ? totalSessionDuration / activeSessions : 0;
-      const averageSessionDuration = averageSessionDurationMs > 0
-        ? `${(averageSessionDurationMs / 1000 / 60).toFixed(2)} minutes`
+      const averageSessionDuration = activeSessions > 0 && totalSessionDurationMs > 0
+        ? `${(totalSessionDurationMs / activeSessions / 1000 / 60).toFixed(2)} minutes`
         : 'N/A';
 
-      const featureAdoption = featureUsage.data?.reduce((acc: any, usage: any) => {
-        acc[usage.feature_name] = (acc[usage.feature_name] ?? 0) + (usage.usage_count ?? 0);
+      const featureRows = (featureUsage.data ?? []) as FeatureUsageRow[];
+      const featureAdoption = featureRows.reduce<Record<string, number>>((acc, usage) => {
+        const name = usage.feature_name ?? 'unknown';
+        acc[name] = (acc[name] ?? 0) + 1;
         return acc;
-      }, {}) ?? {};
+      }, {});
 
-      const systemHealthStatus = systemHealth.data?.reduce((acc: any, check: any) => {
-        acc[check.check_name] = check.status ?? 'unknown';
+      const healthRows = (systemHealth.data ?? []) as SystemHealthRow[];
+      const systemHealthStatus = healthRows.reduce<Record<string, string>>((acc, check) => {
+        const name = check.service_name ?? 'unknown';
+        const status = check.health_status ?? 'unknown';
+        acc[name] = status;
         return acc;
-      }, {}) ?? {};
+      }, {});
 
       return {
         totalEvents,
@@ -538,8 +658,8 @@ export class EnhancedAnalyticsService {
         averageSessionDuration,
         featureAdoption,
         systemHealthStatus,
-        recentFeedback: recentFeedback.data ?? [],
-        activeSiteMessages: activeSiteMessages.data ?? []
+        recentFeedback: (recentFeedback.data ?? []) as FeedbackRow[],
+        activeSiteMessages: (activeSiteMessages.data ?? []) as SiteMessageRow[]
       };
     } catch (error) {
       logger.error('Comprehensive analytics error:', error);

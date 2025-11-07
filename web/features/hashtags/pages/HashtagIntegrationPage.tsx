@@ -203,10 +203,11 @@ export default function HashtagIntegrationPage() {
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Suggestions</h3>
                     <div className="space-y-2">
                       {suggestions.map((suggestion) => (
-                        <div
+                        <button
                           key={suggestion.hashtag.id}
+                          type="button"
                           onClick={() => handleHashtagClick(suggestion.hashtag)}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                          className="w-full text-left flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
                         >
                           <div className="flex items-center space-x-3">
                             <Hash className="h-4 w-4 text-gray-400" />
@@ -216,7 +217,7 @@ export default function HashtagIntegrationPage() {
                           <span className="text-sm text-gray-400">
                             {Math.round((suggestion.confidence_score ?? 0) * 100)}% match
                           </span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -251,7 +252,7 @@ export default function HashtagIntegrationPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Followed Hashtags</h2>
               <p className="text-gray-600 mb-6">
-                Hashtags you're currently following.
+                Hashtags you&apos;re currently following.
               </p>
               {userHashtags.length > 0 ? (
                 <div className="space-y-4">
@@ -274,7 +275,7 @@ export default function HashtagIntegrationPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">You're not following any hashtags yet.</p>
+                <p className="text-gray-500">You&apos;re not following any hashtags yet.</p>
               )}
             </div>
           </div>

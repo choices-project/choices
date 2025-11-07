@@ -28,7 +28,7 @@ import {
   Loader2,
   Sparkles
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -56,31 +56,8 @@ export default function PrivacySettingsPage({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Handle setting change
-  const handleChange = (settingId: keyof PrivacySettings, value: boolean) => {
-    const newSettings = {
-      ...settings,
-      [settingId]: value
-    };
-    setSettings(newSettings);
-    setHasChanges(true);
-    setSaveSuccess(false);
-    setSaveError(null);
-  };
-
   // Auto-save settings (debounced)
-  React.useEffect(() => {
-    if (!hasChanges) return;
-
-    const timer = setTimeout(async () => {
-      await handleSave();
-    }, 1000); // Wait 1 second after last change
-
-    return () => clearTimeout(timer);
-  }, [settings, hasChanges]);
-
-  // Handle save
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     setSaveError(null);
 
@@ -104,7 +81,19 @@ export default function PrivacySettingsPage({
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [onUpdate, settings]);
+
+  useEffect(() => {
+    if (!hasChanges) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      void handleSave();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [hasChanges, handleSave]);
 
   // Quick presets
   const applyMaximumPrivacy = () => {

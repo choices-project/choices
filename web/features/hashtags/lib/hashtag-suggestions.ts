@@ -22,10 +22,14 @@ import {
   extractHashtagsFromText
 } from '../utils/hashtag-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const suggestionsSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const suggestionsSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!suggestionsSupabaseUrl || !suggestionsSupabaseAnonKey) {
+  throw new Error('Supabase environment variables are not configured for hashtag suggestions.');
+}
+
+const supabase = createClient(suggestionsSupabaseUrl, suggestionsSupabaseAnonKey);
 
 // ============================================================================
 // SUGGESTION ALGORITHMS
@@ -132,7 +136,7 @@ export async function getAutoCompleteSuggestions(
           related_hashtags: [],
           category_match: true,
           user_history: false,
-          social_proof: Number(hashtag.usage_count) ?? 0
+          social_proof: Number(hashtag.usage_count ?? 0)
         }
       };
     });

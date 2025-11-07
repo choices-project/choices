@@ -1,9 +1,9 @@
 /**
  * Hashtag Feature Types
- * 
+ *
  * Comprehensive type definitions for the hashtag system
  * Includes core hashtag types, user interactions, analytics, and cross-feature integration
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -12,24 +12,26 @@
 // CORE HASHTAG TYPES
 // ============================================================================
 
+import type { Json } from '@/types/supabase';
+
 export type Hashtag = {
   id: string;
   name: string;
-  display_name: string;
+  display_name?: string;
   description?: string;
-  category?: HashtagCategory;
+  category: HashtagCategory;
   usage_count: number;
-  follower_count: number;
+  follower_count?: number;
   is_trending: boolean;
-  trend_score: number;
+  trend_score?: number;
   engagement_rate?: number;
   created_at: string;
   updated_at: string;
   created_by?: string;
   is_verified: boolean;
-  is_featured: boolean;
-  metadata?: Record<string, any>;
-}
+  is_featured?: boolean;
+  metadata?: Json | null;
+};
 
 export type UserHashtag = {
   id: string;
@@ -64,48 +66,22 @@ export type TrendingHashtag = {
   hashtag: Hashtag;
   trend_score: number;
   growth_rate: number;
-  usage_count_24h: number;
-  usage_count_7d: number;
-  peak_position: number;
-  current_position: number;
-  related_hashtags: string[];
-  trending_since: string;
-  category_trends: Record<string, number>;
-}
+  usage_count_24h?: number;
+  usage_count_7d?: number;
+  peak_usage?: number;
+  peak_position?: number;
+  current_position?: number;
+  related_hashtags?: string[];
+  trending_since?: string;
+  category_trends?: Record<string, number>;
+  time_period?: string;
+};
 
 // ============================================================================
 // HASHTAG CATEGORIES AND CLASSIFICATION
 // ============================================================================
 
-export type HashtagCategory = 
-  | 'politics'
-  | 'civics'
-  | 'social'
-  | 'environment'
-  | 'economy'
-  | 'health'
-  | 'education'
-  | 'technology'
-  | 'culture'
-  | 'sports'
-  | 'entertainment'
-  | 'news'
-  | 'local'
-  | 'national'
-  | 'international'
-  | 'global'
-  | 'activism'
-  | 'community'
-  | 'business'
-  | 'science'
-  | 'art'
-  | 'music'
-  | 'food'
-  | 'travel'
-  | 'fashion'
-  | 'lifestyle'
-  | 'custom'
-  | 'other';
+export type HashtagCategory = string;
 
 export type HashtagCategoryInfo = {
   name: HashtagCategory;
@@ -150,17 +126,29 @@ export type HashtagFollow = {
 export type HashtagEngagement = {
   hashtag_id: string;
   user_id: string;
-  engagement_type: 'view' | 'click' | 'share' | 'create' | 'follow' | 'unfollow';
+  action: 'view' | 'click' | 'share' | 'create' | 'follow' | 'unfollow';
+  engagement_type?: HashtagEngagement['action'];
   content_id?: string;
   content_type?: string;
   timestamp: string;
   metadata?: Record<string, any>;
-}
+};
 
 export type HashtagAnalytics = {
   hashtag_id: string;
-  period: '24h' | '7d' | '30d' | '90d' | '1y';
-  metrics: {
+  period: string;
+  total_usage: number;
+  unique_users: number;
+  engagement_rate: number;
+  trend_score: number;
+  demographics?: {
+    age_groups: Record<string, number>;
+    locations: Record<string, number>;
+    interests: Record<string, number>;
+  };
+  metadata?: Record<string, any>;
+  generated_at: string;
+  metrics?: {
     usage_count: number;
     unique_users: number;
     engagement_rate: number;
@@ -174,8 +162,7 @@ export type HashtagAnalytics = {
     geographic_distribution: Record<string, number>;
     demographic_distribution: Record<string, number>;
   };
-  generated_at: string;
-}
+};
 
 // ============================================================================
 // HASHTAG SEARCH AND DISCOVERY
@@ -183,6 +170,12 @@ export type HashtagAnalytics = {
 
 export type HashtagSearchQuery = {
   query: string;
+  category?: HashtagCategory;
+  limit?: number;
+  offset?: number;
+  sort_by?: 'relevance' | 'popularity' | 'trending' | 'recent';
+  include_trending?: boolean;
+  include_verified?: boolean;
   filters?: {
     category?: HashtagCategory;
     is_trending?: boolean;
@@ -191,26 +184,29 @@ export type HashtagSearchQuery = {
     created_after?: string;
     created_before?: string;
   };
-  sort?: 'relevance' | 'usage' | 'trending' | 'alphabetical' | 'created';
-  limit?: number;
-  offset?: number;
-}
+};
 
 export type HashtagSearchResult = {
+  hashtag: Hashtag;
+  relevance_score: number;
+  match_type: 'exact' | 'partial' | 'fuzzy';
+};
+
+export type HashtagSearchResponse = {
   hashtags: Hashtag[];
   total_count: number;
-  suggestions: string[];
+  suggestions: HashtagSuggestion[];
   related_queries: string[];
   filters_applied: Record<string, any>;
   search_time_ms: number;
-}
+};
 
 export type HashtagSuggestion = {
   hashtag: Hashtag;
-  reason: 'trending' | 'related' | 'popular' | 'recent' | 'personal';
+  reason: string;
   confidence: number;
-  confidence_score: number; // For backward compatibility
-  source: 'trending' | 'related' | 'personalized' | 'category' | 'search';
+  confidence_score?: number;
+  source: 'trending' | 'related' | 'personalized' | 'category' | 'search' | 'similar' | 'popular' | 'personal';
   category?: HashtagCategory;
   usage_count?: number;
   is_trending?: boolean;
@@ -223,7 +219,7 @@ export type HashtagSuggestion = {
     user_history?: boolean;
     social_proof?: number;
   };
-}
+};
 
 // ============================================================================
 // HASHTAG CONTENT INTEGRATION
@@ -317,15 +313,18 @@ export type HashtagValidation = {
 }
 
 export type HashtagModeration = {
+  id?: string;
   hashtag_id: string;
-  status: 'approved' | 'pending' | 'rejected' | 'flagged';
+  status: 'approved' | 'pending' | 'rejected' | 'flagged' | 'reviewed' | 'resolved';
   moderation_reason?: string;
   moderated_by?: string;
-  moderated_at: string;
-  flags: HashtagFlag[];
-  auto_moderation_score: number;
-  human_review_required: boolean;
-}
+  moderated_at?: string;
+  created_at?: string;
+  updated_at?: string;
+  flags?: HashtagFlag[];
+  auto_moderation_score?: number;
+  human_review_required?: boolean;
+};
 
 export type HashtagFlag = {
   id: string;
@@ -334,10 +333,19 @@ export type HashtagFlag = {
   flag_type: 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other';
   reason: string;
   created_at: string;
-  status: 'pending' | 'resolved' | 'dismissed';
+  updated_at?: string;
+  status:
+    | 'pending'
+    | 'flagged'
+    | 'approved'
+    | 'rejected'
+    | 'resolved'
+    | 'reviewed'
+    | 'dismissed';
+  flagged_by?: string;
   reviewed_by?: string;
   reviewed_at?: string;
-}
+};
 
 // ============================================================================
 // HASHTAG API RESPONSES
@@ -566,7 +574,7 @@ export type HashtagStore = {
   isSearching: boolean;
   isFollowing: boolean;
   error: string | null;
-  
+
   // Actions
   searchHashtags: (query: HashtagSearchQuery) => Promise<void>;
   followHashtag: (hashtagId: string) => Promise<boolean>;
@@ -577,7 +585,7 @@ export type HashtagStore = {
   getUserHashtags: () => Promise<void>;
   clearSearch: () => void;
   clearError: () => void;
-  
+
   // Getters
   getHashtagById: (id: string) => Hashtag | undefined;
   getHashtagByName: (name: string) => Hashtag | undefined;

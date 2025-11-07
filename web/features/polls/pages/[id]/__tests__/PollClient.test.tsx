@@ -19,13 +19,13 @@ jest.mock('@/hooks/useAuth', () => ({
 
 jest.mock('@/lib/stores', () => {
   const actual = jest.requireActual('@/lib/stores');
-  return {
-    ...actual,
-    useAnalyticsStore: (selector: any) => selector({
-      trackEvent: trackEventMock,
-      sessionId: 'test-session',
-    }),
-  };
+  return Object.assign({}, actual, {
+    useAnalyticsStore: (selector: any) =>
+      selector({
+        trackEvent: trackEventMock,
+        sessionId: 'test-session',
+      }),
+  });
 });
 
 jest.mock('@/features/polls/hooks/usePollMilestoneNotifications', () => ({

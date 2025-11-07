@@ -7,8 +7,6 @@
  * Status: ✅ ACTIVE
  */
 
-import type { HashtagCategory } from '@/types/features/hashtags/hashtags';
-
 // ============================================================================
 // HASHTAG SYSTEM CONSTANTS
 // ============================================================================
@@ -65,7 +63,7 @@ export const HASHTAG_CONSTANTS = {
 // HASHTAG CATEGORY CONFIGURATION
 // ============================================================================
 
-export const HASHTAG_CATEGORIES: Record<HashtagCategory, {
+export const HASHTAG_CATEGORIES: Record<string, {
   name: string;
   displayName: string;
   description: string;

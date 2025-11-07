@@ -1,24 +1,24 @@
 /**
  * Hashtag Moderation Component
- * 
+ *
  * Comprehensive moderation interface for hashtags including:
  * - Flagging interface for users
  * - Moderation queue for admins
  * - Auto-moderation status display
  * - Content policy enforcement
- * 
+ *
  * Created: October 11, 2025
  * Status: ✅ ACTIVE
  */
 
 'use client';
 
-import { 
-  Flag, 
-  Shield, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
+import {
+  Flag,
+  Shield,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
   Clock,
   Eye,
   User,
@@ -30,40 +30,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   useHashtagModerationStore,
   type HashtagFlagType
 } from '@/lib/stores/hashtagModerationStore';
 import { logger } from '@/lib/utils/logger';
 
-import type { 
-  Hashtag 
+import type {
+  Hashtag,
+  HashtagFlag,
+  HashtagModeration
 } from '../types';
-
-// Local type definitions
-type HashtagModeration = {
-  id: string;
-  hashtag_id: string;
-  moderator_id: string;
-  action: 'approve' | 'reject' | 'flag' | 'suspend';
-  reason?: string;
-  moderation_reason?: string;
-  status?: 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged';
-  human_review_required?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-type HashtagFlag = {
-  id: string;
-  hashtag_id: string;
-  user_id: string;
-  reason: string;
-  flag_type?: 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other';
-  status: 'pending' | 'reviewed' | 'resolved';
-  created_at: string;
-  updated_at: string;
-}
 
 // ============================================================================
 // TYPES
@@ -97,18 +74,18 @@ export type FlagHashtagProps = {
 
 export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) {
   // Zustand store integration
-  const { 
-    isOpen, 
-    flagType, 
-    reason, 
-    isSubmitting, 
+  const {
+    isOpen,
+    flagType,
+    reason,
+    isSubmitting,
     error,
-    setIsOpen, 
-    setFlagType, 
-    setReason, 
-    setIsSubmitting, 
-    setError, 
-    submitFlag 
+    setIsOpen,
+    setFlagType,
+    setReason,
+    setIsSubmitting,
+    setError,
+    submitFlag
   } = useHashtagModerationStore(state => ({
     isOpen: state.isOpen,
     flagType: state.flagType,
@@ -141,7 +118,7 @@ export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) 
     try {
       // Use the store's submitFlag action
       await submitFlag(hashtagId);
-      
+
       // Call the onFlag callback if provided
       if (onFlag) {
         // Map store type to component type
@@ -267,12 +244,12 @@ export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) 
 // MODERATION STATUS COMPONENT
 // ============================================================================
 
-export function ModerationStatus({ 
-  moderation, 
-  className 
-}: { 
-  moderation: HashtagModeration; 
-  className?: string; 
+export function ModerationStatus({
+  moderation,
+  className
+}: {
+  moderation: HashtagModeration;
+  className?: string;
 }) {
   const getStatusIcon = () => {
     switch (moderation.status) {
@@ -321,11 +298,11 @@ export function ModerationStatus({
 // MODERATION QUEUE COMPONENT
 // ============================================================================
 
-export function ModerationQueue({ 
-  status, 
-  limit = 50, 
+export function ModerationQueue({
+  status,
+  limit = 50,
   onModerationAction,
-  className 
+  className
 }: ModerationQueueProps) {
   const [hashtags, setHashtags] = useState<Array<Hashtag & { moderation: HashtagModeration }>>([]);
   const [loading, setLoading] = useState(true);
@@ -488,7 +465,7 @@ export function ModerationQueue({
 // MAIN MODERATION COMPONENT
 // ============================================================================
 
-export default function HashtagModeration({
+export default function HashtagModerationView({
   hashtagId,
   hashtag: _hashtag,
   showUserActions = true,

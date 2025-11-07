@@ -192,6 +192,15 @@ export default function ProfileAvatar({
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload profile photo"
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleClick();
+          }
+        }}
       >
         <input
           ref={fileInputRef}

@@ -1,26 +1,26 @@
 /**
  * Profile Service
- * 
+ *
  * Core business logic for profile management
  * Consolidates profile operations from across the codebase
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
 
-import logger from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger';
 
-import type { 
-  ProfileUser, 
-  UserProfile, 
-  ProfileUpdateData, 
-  ProfileActionResult, 
+import type {
+  ProfileUser,
+  UserProfile,
+  ProfileUpdateData,
+  ProfileActionResult,
   ProfileValidationResult,
   AvatarUploadResult,
   ProfileExportData,
   ExportOptions
 } from '../../../types/profile';
-import { 
+import {
   PROFILE_CONSTANTS,
   PROFILE_DEFAULTS
 } from '../../../types/profile';
@@ -81,10 +81,20 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
     }
   }
 
+  const errorRecords: Record<string, string> = {};
+  errors.forEach((error, index) => {
+    errorRecords[`error_${index}`] = error;
+  });
+
+  const warningRecords: Record<string, string> = {};
+  warnings.forEach((warning, index) => {
+    warningRecords[`warning_${index}`] = warning;
+  });
+
   return {
     isValid: errors.length === 0,
-    errors: errors.reduce((acc, error, index) => ({ ...acc, [`error_${index}`]: error }), {} as Record<string, string>),
-    warnings: warnings.reduce((acc, warning, index) => ({ ...acc, [`warning_${index}`]: warning }), {} as Record<string, string>)
+    errors: errorRecords,
+    warnings: warningRecords
   };
 }
 

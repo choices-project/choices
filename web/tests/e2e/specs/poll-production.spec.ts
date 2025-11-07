@@ -27,7 +27,7 @@ test.describe('Production poll journey', () => {
     };
 
     page.on('console', (msg) => {
-       
+
       console.log(`[browser:${msg.type()}] ${msg.text()}`);
     });
 

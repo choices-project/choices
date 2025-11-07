@@ -8,6 +8,7 @@ import { withOptional } from '@/lib/util/objects';
 
 import type {
   AdminNotification,
+  NewAdminNotification,
   TrendingTopic,
   GeneratedPoll,
   SystemMetrics,
@@ -17,20 +18,23 @@ import type {
 } from '../types';
 
 // Helper utilities for state creation/merging
-const createNotification = (
-  data: Omit<AdminNotification, 'id' | 'timestamp'>
-): AdminNotification => {
-  const issuedAt = new Date().toISOString();
+const createNotification = (data: NewAdminNotification): AdminNotification => {
+  const issuedAt = data.timestamp ?? new Date().toISOString();
+  const createdAt = data.created_at ?? issuedAt;
+  const base: AdminNotification = {
+    id: crypto.randomUUID(),
+    timestamp: issuedAt,
+    created_at: createdAt,
+    type: data.type,
+    title: data.title,
+    message: data.message,
+    read: data.read ?? false,
+  };
 
-  return withOptional(
-    {
-      id: crypto.randomUUID(),
-      timestamp: issuedAt,
-      created_at: issuedAt,
-      read: false,
-    },
-    data as Record<string, unknown>
-  ) as AdminNotification;
+  return withOptional(base, {
+    action: data.action,
+    metadata: data.metadata,
+  });
 };
 
 const mergeNotification = (
@@ -168,9 +172,9 @@ export const useAdminStore = create<AdminStore>()(
 
       /**
        * Add a new admin notification
-       * @param notification The notification data (without id and timestamp)
+       * @param notification The notification data (without generated identifiers or timestamps)
        */
-      addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => {
+      addNotification: (notification: NewAdminNotification) => {
         const currentState = get();
         const newNotification = createNotification(notification);
 

@@ -39,13 +39,14 @@ jest.mock('../hooks', () => ({
       },
     };
 
-    const steps = POLL_CREATION_STEPS.map((step, index) => ({
-      ...step,
-      index,
-      isCurrent: index === POLL_CREATION_STEPS.length - 1,
-      isCompleted: index < POLL_CREATION_STEPS.length - 1,
-      hasError: false,
-    }));
+    const steps = POLL_CREATION_STEPS.map((step, index) =>
+      Object.assign({}, step, {
+        index,
+        isCurrent: index === POLL_CREATION_STEPS.length - 1,
+        isCompleted: index < POLL_CREATION_STEPS.length - 1,
+        hasError: false,
+      })
+    );
 
     return {
       data,

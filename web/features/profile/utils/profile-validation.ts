@@ -134,24 +134,24 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   if (data.display_name) {
     const displayName = data.display_name || '';
     const validation = validateDisplayName(displayName);
-    if (!validation.isValid) {
-      errors.push(validation.error!);
+    if (!validation.isValid && validation.error) {
+      errors.push(validation.error);
     }
   }
 
   // Username validation
   if (data.username) {
     const validation = validateUsername(data.username);
-    if (!validation.isValid) {
-      errors.push(validation.error!);
+    if (!validation.isValid && validation.error) {
+      errors.push(validation.error);
     }
   }
 
   // Bio validation
   if (data.bio) {
     const validation = validateBio(data.bio);
-    if (!validation.isValid) {
-      errors.push(validation.error!);
+    if (!validation.isValid && validation.error) {
+      errors.push(validation.error);
     }
   }
 
@@ -189,10 +189,20 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
     }
   }
 
+  const errorRecords: Record<string, string> = {};
+  errors.forEach((error, index) => {
+    errorRecords[`error_${index}`] = error;
+  });
+
+  const warningRecords: Record<string, string> = {};
+  warnings.forEach((warning, index) => {
+    warningRecords[`warning_${index}`] = warning;
+  });
+
   return {
     isValid: errors.length === 0,
-    errors: errors.reduce((acc, error, index) => ({ ...acc, [`error_${index}`]: error }), {} as Record<string, string>),
-    warnings: warnings.reduce((acc, warning, index) => ({ ...acc, [`warning_${index}`]: warning }), {} as Record<string, string>)
+    errors: errorRecords,
+    warnings: warningRecords
   };
 }
 
@@ -282,7 +292,7 @@ export function validatePrivacySettings(settings: any): { isValid: boolean; erro
  * Removes potentially harmful content and normalizes data
  */
 export function sanitizeProfileData(data: ProfileUpdateData): ProfileUpdateData {
-  const sanitized = { ...data };
+  const sanitized = Object.assign({}, data) as ProfileUpdateData;
 
   // Sanitize text fields
   if (sanitized.display_name) {
