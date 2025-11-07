@@ -1,12 +1,12 @@
 'use client'
 
-import { 
-  Shield, 
-  Users, 
-  Vote, 
-  BarChart3, 
-  Settings, 
-  Smartphone, 
+import {
+  Shield,
+  Users,
+  Vote,
+  BarChart3,
+  Settings,
+  Smartphone,
   Activity,
   Lock,
   LogOut,
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
           'Content-Type': 'application/json'
         }
       })
-      
+
       if (response.ok) {
         setIsAdmin(true)
         loadAdminStats()
@@ -77,29 +77,29 @@ export default function AdminDashboard() {
   const loadAdminStats = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch real stats from API - no auth headers needed, server handles auth
       const response = await fetch('/api/admin/health?type=all', {
         headers: {
           'Content-Type': 'application/json'
         }
       })
-      
+
       if (response.ok) {
         const systemData = await response.json()
-        
+
         // Parse consolidated admin/health response (type=all)
         // Response structure: { metrics: {...}, status: {...} }
         const metrics = systemData.metrics || {}
         const status = systemData.status || {}
-        
+
         setStats({
           totalUsers: metrics.total_users || 0,
           totalPolls: metrics.total_polls || 0,
           totalVotes: metrics.total_votes || 0,
           activePolls: metrics.active_polls || 0,
           adminUsers: 0, // Not provided in new structure
-          systemHealth: status.ok ? 'healthy' : 'warning'
+          systemHealth: status.ok ? 'excellent' : 'warning'
         })
       } else {
         logger.error('Failed to fetch admin stats:', new Error(`HTTP ${response.status}`))
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
               Access Denied
             </div>
             <div className="mt-6">
-              <Link 
+              <Link
                 href="/dashboard"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
               </div>
               <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
                 Welcome, {user.email}
@@ -214,56 +214,56 @@ export default function AdminDashboard() {
         <nav className="mb-8">
           <div className="border-b border-gray-200">
             <div className="flex space-x-8">
-              <Link 
+              <Link
                 href="/admin"
                 data-testid="admin-dashboard-tab"
                 className="py-2 px-1 border-b-2 border-blue-500 text-blue-600 font-medium"
               >
                 Dashboard
               </Link>
-              <Link 
+              <Link
                 href="/admin/users"
                 data-testid={T.admin.usersTab}
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Users
               </Link>
-              <Link 
+              <Link
                 href="/admin/polls"
                 data-testid={T.admin.pollsTab}
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Polls
               </Link>
-              <Link 
+              <Link
                 href="/admin/feedback"
                 data-testid="admin-feedback-tab"
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Feedback
               </Link>
-              <Link 
+              <Link
                 href="/admin/analytics"
                 data-testid="admin-analytics-tab"
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Analytics
               </Link>
-              <Link 
+              <Link
                 href="/admin/monitoring"
                 data-testid="admin-monitoring-tab"
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Monitoring
               </Link>
-              <Link 
+              <Link
                 href="/admin/system"
                 data-testid="admin-system-tab"
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 System
               </Link>
-              <Link 
+              <Link
                 href="/admin/site-messages"
                 data-testid="admin-site-messages-tab"
                 className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -296,7 +296,7 @@ export default function AdminDashboard() {
                 <Vote className="h-8 w-8 text-green-600" />
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                 <BarChart3 className="h-8 w-8 text-purple-600" />
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-500">Admin User</p>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
+                  <button
                     data-testid={T.admin.promoteUser('admin-1')}
                     className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded"
                   >
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-500">Regular User</p>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
+                  <button
                     data-testid={T.admin.banUser('user-1')}
                     className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded"
                   >
@@ -398,14 +398,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">Manage users, permissions, and access controls</p>
             <div className="space-y-2">
-              <Link 
-                href="/admin/users" 
+              <Link
+                href="/admin/users"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 View all users
               </Link>
-              <Link 
-                href="/admin/analytics" 
+              <Link
+                href="/admin/analytics"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 User analytics
@@ -421,14 +421,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">Create, edit, and manage polls and voting</p>
             <div className="space-y-2">
-              <Link 
-                href="/admin/polls" 
+              <Link
+                href="/admin/polls"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 View all polls
               </Link>
-              <Link 
-                href="/polls/create" 
+              <Link
+                href="/polls/create"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Create new poll
@@ -444,14 +444,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">Manage authentication and security settings</p>
             <div className="space-y-2">
-              <Link 
-                href="/auth/biometric-setup" 
+              <Link
+                href="/auth/biometric-setup"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Biometric setup
               </Link>
-              <Link 
-                href="/admin/audit" 
+              <Link
+                href="/admin/audit"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Security audit
@@ -467,14 +467,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">Test and manage Progressive Web App features</p>
             <div className="space-y-2">
-              <Link 
-                href="/pwa-features" 
+              <Link
+                href="/pwa-features"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 PWA testing
               </Link>
-              <Link 
-                href="/pwa-app" 
+              <Link
+                href="/pwa-app"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 App experience
@@ -490,14 +490,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">View platform analytics and insights</p>
             <div className="space-y-2">
-              <Link 
-                href="/admin/analytics" 
+              <Link
+                href="/admin/analytics"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Platform analytics
               </Link>
-              <Link 
-                href="/analytics" 
+              <Link
+                href="/analytics"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 User analytics
@@ -513,14 +513,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">System configuration and monitoring</p>
             <div className="space-y-2">
-              <Link 
-                href="/admin/system" 
+              <Link
+                href="/admin/system"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 System status
               </Link>
-              <Link 
-                href="/admin/feature-flags" 
+              <Link
+                href="/admin/feature-flags"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Feature flags
@@ -536,14 +536,14 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-600 mb-4">Manage site-wide announcements and feedback requests</p>
             <div className="space-y-2">
-              <Link 
-                href="/admin/site-messages" 
+              <Link
+                href="/admin/site-messages"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 Manage messages
               </Link>
-              <Link 
-                href="/admin/feedback" 
+              <Link
+                href="/admin/feedback"
                 className="block text-sm text-blue-600 hover:text-blue-500"
               >
                 View feedback
@@ -556,39 +556,39 @@ export default function AdminDashboard() {
         <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link 
+            <Link
               href="/polls/create"
               className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
             >
               <Plus className="h-5 w-5 text-blue-600" />
               <span className="text-blue-900">Create Poll</span>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/admin/users"
               className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
             >
               <Users className="h-5 w-5 text-green-600" />
               <span className="text-green-900">Manage Users</span>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/pwa-features"
               className="flex items-center space-x-2 p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
             >
               <Zap className="h-5 w-5 text-purple-600" />
               <span className="text-purple-900">Test PWA</span>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/admin/site-messages"
               className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
             >
               <MessageSquare className="h-5 w-5 text-indigo-600" />
               <span className="text-indigo-900">Site Messages</span>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/"
               className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >

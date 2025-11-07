@@ -9,6 +9,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import logger from '@/lib/utils/logger';
+
 export type ConsentType = 
   | 'analytics'           // Basic usage analytics
   | 'demographics'        // Age, location, education data
@@ -55,7 +57,7 @@ export class ConsentManager {
       .order('granted_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching user consent:', error);
+      logger.error('Error fetching user consent:', error);
       return [];
     }
 
@@ -118,7 +120,7 @@ export class ConsentManager {
       }
       return true;
     } catch (error) {
-      console.error('Error granting consent:', error);
+      logger.error('Error granting consent:', error);
       return false;
     }
   }
@@ -135,7 +137,7 @@ export class ConsentManager {
       }
       return true;
     } catch (error) {
-      console.error('Error revoking consent:', error);
+      logger.error('Error revoking consent:', error);
       return false;
     }
   }

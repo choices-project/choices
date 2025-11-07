@@ -31,7 +31,7 @@ export default function ProfilePage() {
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Profile auth check failed:', error);
+        logger.error('Profile auth check failed:', error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);

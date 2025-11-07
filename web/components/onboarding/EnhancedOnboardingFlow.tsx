@@ -394,7 +394,7 @@ function EnhancedOnboardingFlowInner() {
 
   const handleNext = () => {
     const nxt = nextOf(currentStep);
-    console.log('handleNext called:', { currentStep, next: nxt });
+    logger.info('handleNext called:', { currentStep, next: nxt });
     setCurrentStep(nxt);       // render now (local state)
     void persistProgress(nxt); // don't await
   };

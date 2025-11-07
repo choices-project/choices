@@ -1,21 +1,20 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import {
   withErrorHandling,
   successResponse,
   rateLimitError,
   validationError,
-  errorResponse
+  errorResponse,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-import { 
-  validateCsrfProtection, 
-  createCsrfErrorResponse 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse
 } from '../_shared'
 
 
@@ -33,7 +32,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       '/api/auth/register',
       withOptional({}, { userAgent })
     );
-    
+
     if (!rateLimitResult.allowed) {
       return rateLimitError('Too many registration attempts. Please try again later.');
     }
@@ -85,23 +84,25 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     if (authError || !authData.user) {
       logger.warn('Registration failed', { email, username, error: authError?.message })
-      
+
       // Handle specific Supabase errors
       if (authError?.message.includes('already registered')) {
-        return NextResponse.json(
-          { message: 'An account with this email already exists' },
-          { status: 409 }
-        )
+        return errorResponse(
+          'An account with this email already exists',
+          409,
+          { email: email.toLowerCase().trim() },
+          'EMAIL_EXISTS'
+        );
       }
-      
-      return NextResponse.json(
-        { 
-          message: 'Registration failed. Please try again.',
+
+      return errorResponse(
+        'Registration failed. Please try again.',
+        400,
+        {
           error: authError?.message ?? 'Unknown error',
-          details: authError?.status ?? 'No status'
-        },
-        { status: 400 }
-      )
+          details: authError?.status ?? 'No status',
+        }
+      );
     }
 
     // Create user profile
@@ -119,10 +120,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .single()
 
     if (profileError) {
-      logger.error('Failed to create user profile', profileError, { 
-        user_id: authData.user.id 
+      logger.error('Failed to create user profile', profileError, {
+        user_id: authData.user.id
       })
-      
+
       // If profile creation fails, log the issue and rely on a secure backend cleanup process
       // Cleanup of orphaned auth users should be handled by a secure backend process or database trigger
       logger.warn('Orphaned auth user created - cleanup required', {
@@ -130,14 +131,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         email: authData.user.email,
         timestamp: new Date().toISOString()
       })
-      
+
       return errorResponse('Registration failed. Please try again.', 500);
     }
 
-    logger.info('User registered successfully', { 
-      userId: authData.user.id, 
+    logger.info('User registered successfully', {
+      userId: authData.user.id,
       email: authData.user.email,
-      username 
+      username
     })
 
     return successResponse({

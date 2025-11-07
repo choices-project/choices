@@ -13,6 +13,7 @@ import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import logger from '@/lib/utils/logger';
 import type { RepresentativeListProps } from '@/types/representative';
 
 import { RepresentativeCard } from './RepresentativeCard';
@@ -69,10 +70,10 @@ export function RepresentativeList({
             key={representative.id}
             representative={representative}
             onFollow={(rep) => {
-              console.log('Followed:', rep.name);
+              logger.info('Followed:', rep.name);
             }}
             onContact={(rep) => {
-              console.log('Contact:', rep.name);
+              logger.info('Contact:', rep.name);
             }}
             onClick={() => {
               if (onRepresentativeClick) {
@@ -144,10 +145,10 @@ export function RepresentativeGrid({
           representative={representative}
           showDetails={false}
           onFollow={(rep) => {
-            console.log('Followed:', rep.name);
+            logger.info('Followed:', rep.name);
           }}
           onContact={(rep) => {
-            console.log('Contact:', rep.name);
+            logger.info('Contact:', rep.name);
           }}
           {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
         />

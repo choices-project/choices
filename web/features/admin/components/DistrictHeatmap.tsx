@@ -1,6 +1,6 @@
 /**
  * DistrictHeatmap Component
- * 
+ *
  * Visualizes engagement metrics across congressional districts.
  * Features:
  * - Color-coded engagement levels (green → yellow → red)
@@ -8,29 +8,29 @@
  * - K-anonymity enforcement (minimum 5 users per district)
  * - Export functionality (CSV)
  * - Privacy-first: Only shows aggregated data
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
 
 'use client';
 
-import { 
-  Download, 
-  MapPin, 
-  Filter, 
+import {
+Download,
+  MapPin,
+  Filter,
   AlertCircle,
-  RefreshCw 
+  RefreshCw
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   Cell
 } from 'recharts';
@@ -38,6 +38,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import logger from '@/lib/utils/logger'
 
 type HeatmapEntry = {
   district_id: string;
@@ -77,9 +78,9 @@ const LEVELS = ['All Levels', 'federal', 'state', 'local'];
  */
 const getEngagementColor = (count: number, maxCount: number): string => {
   if (maxCount === 0) return '#22c55e'; // green-500
-  
+
   const ratio = count / maxCount;
-  
+
   if (ratio < 0.33) {
     // Green to Yellow
     const r = Math.round(34 + (234 - 34) * (ratio / 0.33));
@@ -130,21 +131,27 @@ export default function DistrictHeatmap({
       params.append('min_count', String(minCount));
 
       const response = await fetch(`/api/v1/civics/heatmap?${params.toString()}`);
-      
+
+      if (response.status === 403) {
+        throw new Error('You need admin analytics access to view this heatmap. Ask an administrator to grant access.');
+      }
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch heatmap data: ${response.statusText}`);
+        throw new Error(`Failed to fetch heatmap data (${response.status})`);
       }
 
       const result: HeatmapData = await response.json();
-      
+
       if (!result.ok) {
-        throw new Error('API returned unsuccessful response');
+        throw new Error(result && typeof result === 'object' && 'message' in result
+          ? String((result as any).message)
+          : 'The heatmap service returned an unexpected response.');
       }
 
       setData(result.heatmap);
       setKAnonymity(result.k_anonymity);
     } catch (err) {
-      console.error('Failed to fetch heatmap data:', err);
+      logger.error('Failed to fetch heatmap data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load heatmap data');
       setData([]);
     } finally {
@@ -179,11 +186,11 @@ export default function DistrictHeatmap({
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `district-heatmap-${Date.now()}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -219,6 +226,8 @@ export default function DistrictHeatmap({
 
   // Error state
   if (error) {
+    const isAccessError = error.toLowerCase().includes('admin analytics access');
+
     return (
       <Card className={className}>
         <CardHeader>
@@ -228,9 +237,23 @@ export default function DistrictHeatmap({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-red-600">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            <span>{error}</span>
+          <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
+            <div className="flex items-center text-red-600">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <span className="font-medium">Unable to load heatmap</span>
+            </div>
+            <p className="text-sm text-gray-600 max-w-sm">{error}</p>
+            {isAccessError && (
+              <p className="text-xs text-gray-500 max-w-sm">
+                If you believe you should have access, reach out to a workspace administrator to be added to the analytics group.
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button onClick={fetchHeatmapData} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try again
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -315,7 +338,7 @@ export default function DistrictHeatmap({
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
           <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-blue-800">
-            <strong>Privacy Protected:</strong> Only districts with at least {kAnonymity} users are shown 
+            <strong>Privacy Protected:</strong> Only districts with at least {kAnonymity} users are shown
             to ensure k-anonymity. Individual users cannot be identified.
           </p>
         </div>
@@ -370,17 +393,17 @@ export default function DistrictHeatmap({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     angle={-45}
                     textAnchor="end"
                     height={80}
                     tick={{ fontSize: 12 }}
                   />
-                  <YAxis 
+                  <YAxis
                     label={{ value: 'Engagement Count', angle: -90, position: 'insideLeft' }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload?.fullData;
@@ -410,8 +433,8 @@ export default function DistrictHeatmap({
                   <Legend />
                   <Bar dataKey="engagement" name="Engagement Count">
                     {chartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
+                      <Cell
+                        key={`cell-${index}`}
                         fill={getEngagementColor(entry.engagement, maxEngagement)}
                       />
                     ))}
@@ -429,7 +452,7 @@ export default function DistrictHeatmap({
                     .sort((a, b) => b.engagement_count - a.engagement_count)
                     .slice(0, 5)
                     .map((district, index) => (
-                      <div 
+                      <div
                         key={district.district_id}
                         className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                       >

@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/util/objects';
 
 import { PUSH_CONFIG } from './sw-config';
 
@@ -95,13 +96,12 @@ export async function requestNotificationPermission(context?: {
     logger.info('Notification permission result:', permission);
     
     // Track permission result
+    const properties = withOptional({ result: permission }, context);
+
     window.dispatchEvent(new CustomEvent('pwa-analytics', {
       detail: {
         eventName: 'notification-permission-requested',
-        properties: {
-          result: permission,
-          ...context,
-        },
+        properties,
       },
     }));
     
@@ -293,16 +293,20 @@ export async function showNotification(options: NotificationOptions): Promise<vo
   try {
     const registration = await navigator.serviceWorker.ready;
     
-    await registration.showNotification(options.title, {
-      body: options.body,
-      icon: options.icon || PUSH_CONFIG.defaultOptions.icon,
-      badge: options.badge || PUSH_CONFIG.defaultOptions.badge,
-      ...(options.tag ? { tag: options.tag } : {}),
-      data: options.data,
-      requireInteraction: options.requireInteraction ?? false,
-      silent: options.silent ?? false,
-      // vibrate not supported in NotificationOptions type
-    });
+    const notificationOptions = withOptional(
+      {
+        body: options.body,
+        icon: options.icon || PUSH_CONFIG.defaultOptions.icon,
+        badge: options.badge || PUSH_CONFIG.defaultOptions.badge,
+        data: options.data,
+        requireInteraction: options.requireInteraction ?? false,
+        silent: options.silent ?? false,
+        // vibrate not supported in NotificationOptions type
+      },
+      options.tag ? { tag: options.tag } : undefined
+    );
+
+    await registration.showNotification(options.title, notificationOptions);
     
     logger.info('Notification shown:', options.title);
   } catch (error) {

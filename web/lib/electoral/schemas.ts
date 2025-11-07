@@ -9,10 +9,11 @@
 
 import { z } from 'zod'
 
+import logger from '@/lib/utils/logger'
+
 // ============================================================================
 // REPRESENTATIVE SCHEMAS
 // ============================================================================
-
 export const ContactSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
@@ -203,7 +204,7 @@ export function safeParseWithLog<T>(
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ')
 
-    console.error(`[${context}] Validation failed:`, errorMessage)
+    logger.error(`[${context}] Validation failed:`, errorMessage)
 
     return {
       success: false,
@@ -247,7 +248,7 @@ export function parseArrayFiltered<T>(
     .map((item, index) => {
       const result = itemSchema.safeParse(item)
       if (!result.success) {
-        console.warn(`[${context}] Invalid item at index ${index}:`, result.error.issues)
+        logger.warn(`[${context}] Invalid item at index ${index}:`, result.error.issues)
         return null
       }
       return result.data

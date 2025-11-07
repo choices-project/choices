@@ -1,9 +1,9 @@
 /**
  * Performance Store
- * 
+ *
  * Centralized Zustand store for performance monitoring, metrics collection,
  * and performance alert management.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -12,11 +12,13 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
+import { createSafeStorage } from './storage';
 // ============================================================================
 // TYPES
 // ============================================================================
-
 export type PerformanceMetric = {
   id: string;
   type: 'navigation' | 'resource' | 'measure' | 'custom' | 'database';
@@ -98,38 +100,38 @@ export type PerformanceStore = {
   isMonitoring: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Database performance state
   databaseMetrics: DatabasePerformanceMetric[];
   cacheStats: CacheStats | null;
   lastRefresh: Date | null;
   autoRefresh: boolean;
   refreshInterval: number;
-  
+
   // Actions - Metrics
   recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => void;
   recordNavigationMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
   recordResourceMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
   recordCustomMetric: (name: string, value: number, unit?: 'ms' | 'bytes' | 'count' | 'score', metadata?: Record<string, unknown>) => void;
   clearMetrics: () => void;
-  
+
   // Actions - Alerts
   createAlert: (alert: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>) => void;
   resolveAlert: (id: string) => void;
   clearAlerts: () => void;
   clearResolvedAlerts: () => void;
-  
+
   // Actions - Monitoring
   startMonitoring: () => void;
   stopMonitoring: () => void;
   setThreshold: (type: string, metric: string, threshold: number) => void;
   checkThresholds: () => void;
-  
+
   // Actions - Reports
   generateReport: () => PerformanceReport;
   exportMetrics: (format?: 'json' | 'csv') => string;
   exportReport: (reportId: string, format?: 'json' | 'csv') => string;
-  
+
   // Actions - Database Performance
   setDatabaseMetrics: (metrics: DatabasePerformanceMetric[]) => void;
   setCacheStats: (stats: CacheStats) => void;
@@ -139,12 +141,12 @@ export type PerformanceStore = {
   loadDatabasePerformance: () => Promise<void>;
   refreshMaterializedViews: () => Promise<void>;
   performDatabaseMaintenance: () => Promise<void>;
-  
+
   // Actions - Loading & Error
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  
+
   // Initialization
   initialize: () => void;
 }
@@ -163,36 +165,36 @@ const calculatePerformanceScore = (metrics: PerformanceMetric[]): { score: numbe
 
   // Calculate score based on Core Web Vitals
   let score = 100;
-  
+
   // FCP scoring (0-3000ms)
   if (fcp > 3000) score -= 20;
   else if (fcp > 1800) score -= 10;
-  
+
   // LCP scoring (0-4000ms)
   if (lcp > 4000) score -= 25;
   else if (lcp > 2500) score -= 15;
-  
+
   // FID scoring (0-300ms)
   if (fid > 300) score -= 20;
   else if (fid > 100) score -= 10;
-  
+
   // CLS scoring (0-0.25)
   if (cls > 0.25) score -= 20;
   else if (cls > 0.1) score -= 10;
-  
+
   // TTFB scoring (0-800ms)
   if (ttfb > 800) score -= 15;
   else if (ttfb > 600) score -= 5;
 
   const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
-  
+
   return { score: Math.max(0, score), grade };
 };
 
 const generateRecommendations = (metrics: PerformanceMetric[]): string[] => {
   const recommendations: string[] = [];
   const navigationMetrics = metrics.filter(m => m.type === 'navigation');
-  
+
   const fcp = navigationMetrics.find(m => m.name === 'FCP')?.value ?? 0;
   const lcp = navigationMetrics.find(m => m.name === 'LCP')?.value ?? 0;
   const fid = navigationMetrics.find(m => m.name === 'FID')?.value ?? 0;
@@ -238,7 +240,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
         isMonitoring: false,
         isLoading: false,
         error: null,
-        
+
         // Database performance state
         databaseMetrics: [],
         cacheStats: null,
@@ -249,15 +251,15 @@ export const usePerformanceStore = create<PerformanceStore>()(
         // Actions - Metrics
         recordMetric: (metric) => {
           const id = `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const newMetric: PerformanceMetric = {
-            ...metric,
+          const sanitizedMetric = withOptional(metric as Record<string, unknown>);
+          const newMetric = withOptional(sanitizedMetric, {
             id,
-            timestamp: new Date()
-          };
+            timestamp: new Date(),
+          }) as PerformanceMetric;
 
           set((state) => {
             state.metrics.push(newMetric);
-            
+
             // Keep only last 1000 metrics to prevent memory issues
             if (state.metrics.length > 1000) {
               state.metrics = state.metrics.slice(-1000);
@@ -313,16 +315,16 @@ export const usePerformanceStore = create<PerformanceStore>()(
         // Actions - Alerts
         createAlert: (alert) => {
           const id = `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const newAlert: PerformanceAlert = {
-            ...alert,
+          const sanitizedAlert = withOptional(alert as Record<string, unknown>);
+          const newAlert = withOptional(sanitizedAlert, {
             id,
             timestamp: new Date(),
-            resolved: false
-          };
+            resolved: false,
+          }) as PerformanceAlert;
 
           set((state) => {
             state.alerts.push(newAlert);
-            
+
             // Keep only last 500 alerts
             if (state.alerts.length > 500) {
               state.alerts = state.alerts.slice(-500);
@@ -376,7 +378,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
               observer.observe({ entryTypes: ['navigation', 'resource'] });
             } catch (error) {
-              console.warn('Performance Observer not supported:', error);
+              logger.warn('Performance Observer not supported:', error);
             }
           }
         },
@@ -405,7 +407,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
           recentMetrics.forEach((metric) => {
             let threshold = 0;
-            
+
             if (metric.type === 'navigation' && metric.name in thresholds.navigation) {
               threshold = (thresholds.navigation as Record<string, number>)[metric.name] ?? 0;
             } else if (metric.type === 'resource' && metric.name in thresholds.resource) {
@@ -416,7 +418,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
             if (threshold > 0 && metric.value > threshold) {
               const severity = metric.value > threshold * 2 ? 'high' : metric.value > threshold * 1.5 ? 'medium' : 'low';
-              
+
               get().createAlert({
                 type: 'threshold',
                 severity,
@@ -452,7 +454,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
           set((state) => {
             state.reports.push(report);
-            
+
             // Keep only last 50 reports
             if (state.reports.length > 50) {
               state.reports = state.reports.slice(-50);
@@ -464,7 +466,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         exportMetrics: (format = 'json') => {
           const { metrics } = get();
-          
+
           if (format === 'csv') {
             const headers = ['id', 'type', 'name', 'value', 'unit', 'timestamp', 'url'];
             const rows = metrics.map(metric => [
@@ -476,21 +478,21 @@ export const usePerformanceStore = create<PerformanceStore>()(
               metric.timestamp.toISOString(),
               metric.url
             ]);
-            
+
             return [headers, ...rows].map(row => row.join(',')).join('\n');
           }
-          
+
           return JSON.stringify(metrics, null, 2);
         },
 
         exportReport: (reportId, format = 'json') => {
           const { reports } = get();
           const report = reports.find(r => r.id === reportId);
-          
+
           if (!report) {
             throw new Error(`Report ${reportId} not found`);
           }
-          
+
           if (format === 'csv') {
             const headers = ['metric', 'value', 'unit', 'timestamp'];
             const rows = report.metrics.map(metric => [
@@ -499,10 +501,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
               metric.unit,
               metric.timestamp.toISOString()
             ]);
-            
+
             return [headers, ...rows].map(row => row.join(',')).join('\n');
           }
-          
+
           return JSON.stringify(report, null, 2);
         },
 
@@ -539,11 +541,11 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         loadDatabasePerformance: async () => {
           const { setLoading, setError, setLastRefresh, setDatabaseMetrics, setCacheStats } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             // Fetch performance metrics directly from database
             const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseBrowserClient());
             if (!supabase) {
@@ -592,11 +594,11 @@ export const usePerformanceStore = create<PerformanceStore>()(
               memoryUsage: 0,
               hitRate: 0
             };
-            
+
             setDatabaseMetrics(databaseMetrics);
             setCacheStats(cacheStats);
             setLastRefresh(new Date());
-            
+
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to load database performance';
             setError(errorMessage);
@@ -607,24 +609,24 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         refreshMaterializedViews: async () => {
           const { setLoading, setError, loadDatabasePerformance } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             // Call optimized poll service to refresh materialized views
             const response = await fetch('/api/admin/refresh-materialized-views', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             });
-            
+
             if (!response.ok) {
               throw new Error(`Failed to refresh materialized views: ${response.statusText}`);
             }
-            
+
             // Reload performance data after refresh
             await loadDatabasePerformance();
-            
+
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to refresh materialized views';
             setError(errorMessage);
@@ -635,24 +637,24 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         performDatabaseMaintenance: async () => {
           const { setLoading, setError, loadDatabasePerformance } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             // Call optimized poll service to perform database maintenance
             const response = await fetch('/api/admin/perform-database-maintenance', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
             });
-            
+
             if (!response.ok) {
               throw new Error(`Failed to perform database maintenance: ${response.statusText}`);
             }
-            
+
             // Reload performance data after maintenance
             await loadDatabasePerformance();
-            
+
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to perform database maintenance';
             setError(errorMessage);
@@ -707,6 +709,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
       })),
       {
         name: 'performance-storage',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           thresholds: state.thresholds,
           isMonitoring: state.isMonitoring
@@ -725,29 +728,29 @@ export const usePerformance = () => usePerformanceStore();
 
 // Metrics Selectors
 export const usePerformanceMetrics = () => usePerformanceStore(state => state.metrics);
-export const useNavigationMetrics = () => usePerformanceStore(state => 
+export const useNavigationMetrics = () => usePerformanceStore(state =>
   state.metrics.filter(m => m.type === 'navigation')
 );
-export const useResourceMetrics = () => usePerformanceStore(state => 
+export const useResourceMetrics = () => usePerformanceStore(state =>
   state.metrics.filter(m => m.type === 'resource')
 );
-export const useCustomMetrics = () => usePerformanceStore(state => 
+export const useCustomMetrics = () => usePerformanceStore(state =>
   state.metrics.filter(m => m.type === 'custom')
 );
 
 // Alerts Selectors
 export const usePerformanceAlerts = () => usePerformanceStore(state => state.alerts);
-export const useActiveAlerts = () => usePerformanceStore(state => 
+export const useActiveAlerts = () => usePerformanceStore(state =>
   state.alerts.filter(a => !a.resolved)
 );
-export const useAlertsBySeverity = (severity: 'low' | 'medium' | 'high' | 'critical') => 
-  usePerformanceStore(state => 
+export const useAlertsBySeverity = (severity: 'low' | 'medium' | 'high' | 'critical') =>
+  usePerformanceStore(state =>
     state.alerts.filter(a => a.severity === severity && !a.resolved)
   );
 
 // Reports Selectors
 export const usePerformanceReports = () => usePerformanceStore(state => state.reports);
-export const useLatestReport = () => usePerformanceStore(state => 
+export const useLatestReport = () => usePerformanceStore(state =>
   state.reports[state.reports.length - 1]
 );
 

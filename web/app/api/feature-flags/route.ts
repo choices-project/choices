@@ -10,9 +10,11 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { featureFlagManager } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
   // Get all feature flags

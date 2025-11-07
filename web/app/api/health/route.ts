@@ -16,9 +16,10 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
-import { withErrorHandling, successResponse, rateLimitError } from '@/lib/api';
+import { withErrorHandling, rateLimitError } from '@/lib/api';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -487,9 +488,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Invalid type parameter
-  return validationError({
+  return NextResponse.json({
     type: 'Invalid type parameter. Valid types: basic, database, supabase, civics, all'
-  });
+  }, { status: 400 });
 });
 
 // Handle unsupported methods

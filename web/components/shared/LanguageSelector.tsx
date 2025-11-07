@@ -18,10 +18,7 @@ import React, { useState } from 'react';
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
 import { useAppStore } from '@/lib/stores/appStore';
-
-
-
-
+import logger from '@/lib/utils/logger';
 
 type LanguageSelectorProps = {
   className?: string;
@@ -51,7 +48,7 @@ export default function LanguageSelector({
       updateSettings({ language });
       setIsOpen(false);
     } catch (error) {
-      console.error('Failed to change language:', error);
+      logger.error('Failed to change language:', error);
     }
   };
 

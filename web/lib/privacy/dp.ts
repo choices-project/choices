@@ -15,6 +15,7 @@
 // - Budget allocation and monitoring
 
 import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -23,7 +24,6 @@ import { withOptional } from '@/lib/util/objects';
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-
 export type EpsilonBudget = {
   total: number;
   used: number;
@@ -199,7 +199,7 @@ export class DifferentialPrivacyManager {
     });
 
     // Log the usage
-    console.log(`Epsilon usage tracked: ${operation} used ${epsilon} (${budget.remaining} remaining)`);
+    logger.info(`Epsilon usage tracked: ${operation} used ${epsilon} (${budget.remaining} remaining)`);
   }
 
   /**

@@ -255,11 +255,11 @@ export type WidgetLoadingState = {
 // BACKWARD COMPATIBILITY TYPES
 // ============================================================================
 
-export type WidgetComponent<TData = any> = React.ComponentType<WidgetProps>;
+export type WidgetComponent = React.ComponentType<WidgetProps>;
 export type DashboardConfig = DashboardLayout;
-export type WidgetDataResponse<TData = any> = {
+export type WidgetDataResponse<Data = unknown> = {
   ok: boolean;
-  data: TData;
+  data: Data;
   cached?: boolean;
   error?: string;
 };

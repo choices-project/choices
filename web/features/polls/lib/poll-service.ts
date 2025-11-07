@@ -547,7 +547,7 @@ export class OptimizedPollService {
       
       return mockResults;
     } catch (error) {
-      console.error('Error getting optimized poll results:', error);
+      logger.error('Error getting optimized poll results:', error);
       return null;
     }
   }

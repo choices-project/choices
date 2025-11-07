@@ -8,6 +8,7 @@
  * Status: ✅ FOUNDATION
  */
 
+import logger from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 export type LocationQuery = {
@@ -72,19 +73,19 @@ export class LocationService {
    */
   async geocodeAddress(address: string): Promise<LocationResult | null> {
     try {
-      console.log('🌍 LocationService: Geocoding address:', address);
+      logger.info('🌍 LocationService: Geocoding address:', address);
       
       // Check cache first
       const cached = this.cache.get(address);
       if (cached) {
-        console.log('📍 LocationService: Using cached result');
+        logger.info('📍 LocationService: Using cached result');
         return cached;
       }
 
       // For development, use mock data
       const mockResult = MOCK_LOCATIONS[address];
       if (mockResult) {
-        console.log('📍 LocationService: Using mock data');
+        logger.info('📍 LocationService: Using mock data');
         this.cache.set(address, mockResult);
         return mockResult;
       }
@@ -93,10 +94,10 @@ export class LocationService {
       // const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
       // const data = await response.json();
       
-      console.log('❌ LocationService: Address not found in mock data');
+      logger.info('❌ LocationService: Address not found in mock data');
       return null;
     } catch (error) {
-      console.error('❌ LocationService: Geocoding error:', error);
+      logger.error('❌ LocationService: Geocoding error:', error);
       return null;
     }
   }
@@ -106,7 +107,7 @@ export class LocationService {
    */
   async findRepresentativesByLocation(query: LocationQuery): Promise<RepresentativesByLocation | null> {
     try {
-      console.log('🔍 LocationService: Finding representatives for location:', query);
+      logger.info('🔍 LocationService: Finding representatives for location:', query);
       
       // Geocode the address
       const location = await this.geocodeAddress(query.address);
@@ -144,7 +145,7 @@ export class LocationService {
         local
       };
 
-      console.log('✅ LocationService: Found representatives:', {
+      logger.info('✅ LocationService: Found representatives:', {
         total: representatives.length,
         federal: federal.length,
         state: state.length,
@@ -153,7 +154,7 @@ export class LocationService {
 
       return result;
     } catch (error) {
-      console.error('❌ LocationService: Error finding representatives:', error);
+      logger.error('❌ LocationService: Error finding representatives:', error);
       return null;
     }
   }
@@ -163,14 +164,14 @@ export class LocationService {
    */
   async findRepresentativesByCoordinates(latitude: number, longitude: number, radius: number = 10): Promise<RepresentativesByLocation | null> {
     try {
-      console.log('📍 LocationService: Finding representatives by coordinates:', { latitude, longitude, radius });
+      logger.info('📍 LocationService: Finding representatives by coordinates:', { latitude, longitude, radius });
       
       // Reverse geocoding: use Google Maps or alternative geocoding service
       // For now, return null as this requires Google Maps API
-      console.log('⚠️ LocationService: Coordinate search not implemented yet');
+      logger.info('⚠️ LocationService: Coordinate search not implemented yet');
       return null;
     } catch (error) {
-      console.error('❌ LocationService: Error finding representatives by coordinates:', error);
+      logger.error('❌ LocationService: Error finding representatives by coordinates:', error);
       return null;
     }
   }

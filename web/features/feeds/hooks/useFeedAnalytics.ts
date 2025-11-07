@@ -17,6 +17,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import logger from '@/lib/utils/logger';
 
 type FeedAnalyticsConfig = {
   feedId?: string;
@@ -60,7 +61,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics] Feed viewed:', feedId);
+      logger.info('[Analytics] Feed viewed:', feedId);
     }
   }, [feedId, userId]);
 
@@ -157,7 +158,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
         });
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('[Analytics] Time spent on feed:', timeSpent, 'seconds');
+          logger.info('[Analytics] Time spent on feed:', timeSpent, 'seconds');
         }
       }
     };

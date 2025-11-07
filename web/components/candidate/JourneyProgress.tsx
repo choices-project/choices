@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import logger from '@/lib/utils/logger'
 
 type JourneyProgressProps = {
   platformId: string
@@ -40,7 +41,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
           setNextAction(data.nextAction)
         }
       } catch (error) {
-        console.error('Failed to fetch journey progress:', error)
+        logger.error('Failed to fetch journey progress:', error)
       } finally {
         setLoading(false)
       }

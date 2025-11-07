@@ -189,7 +189,7 @@ export class UnifiedDataOrchestrator {
     } catch (error) {
       logger.warn('Some API clients failed to initialize', { error });
       // Initialize with available clients only
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       this.clients = {} as any;
     }
   }

@@ -8,7 +8,7 @@
  * Status: In Progress
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
@@ -68,21 +68,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       violationsLastHour: metrics.violationsLastHour
     });
 
-    return NextResponse.json({
-      success: true,
-      data: response
-    });
-
-  } catch (error) {
-    logger.error('Security monitoring API error:', error instanceof Error ? error : new Error('Unknown error'));
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    data: response
+  });
+});

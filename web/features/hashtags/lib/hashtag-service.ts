@@ -9,7 +9,7 @@
  * Status: ✅ ACTIVE
  */
 
-// import { logger } from '@/lib/utils/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Temporary logger for development
 import type { Database } from '@/types/supabase';
@@ -27,12 +27,6 @@ import type {
   HashtagAnalytics,
   HashtagApiResponse
 } from '../types';
-
-const logger = {
-  info: (message: string, context?: any) => console.log(`[INFO] ${message}`, context),
-  error: (message: string, context?: any) => console.error(`[ERROR] ${message}`, context),
-  warn: (message: string, context?: any) => console.warn(`[WARN] ${message}`, context)
-};
 
 // Database types
 type HashtagRow = Database['public']['Tables']['hashtags']['Row'];
@@ -1145,7 +1139,7 @@ async function generateRelatedQueries(query: string): Promise<string[]> {
     // Remove duplicates and limit results
     return [...new Set(relatedQueries)].slice(0, 8);
   } catch (error) {
-    console.error('Failed to generate related queries:', error);
+    logger.error('Failed to generate related queries:', error);
     return [];
   }
 }
@@ -1188,7 +1182,7 @@ async function calculateGrowthRate(hashtag: Hashtag): Promise<number> {
     const growthRate = ((recentCount - previousCount) / previousCount) * 100;
     return Math.round(growthRate * 100) / 100; // Round to 2 decimal places
   } catch (error) {
-    console.error('Failed to calculate growth rate:', error);
+    logger.error('Failed to calculate growth rate:', error);
     return 0;
   }
 }
@@ -1210,7 +1204,7 @@ async function calculateUsage24h(hashtag: Hashtag): Promise<number> {
 
     return data?.length ?? 0;
   } catch (error) {
-    console.error('Failed to calculate 24h usage:', error);
+    logger.error('Failed to calculate 24h usage:', error);
     return 0;
   }
 }
@@ -1232,7 +1226,7 @@ async function calculateUsage7d(hashtag: Hashtag): Promise<number> {
 
     return data?.length ?? 0;
   } catch (error) {
-    console.error('Failed to calculate 7d usage:', error);
+    logger.error('Failed to calculate 7d usage:', error);
     return 0;
   }
 }
@@ -1281,7 +1275,7 @@ async function getUserCustomHashtags(userId: string): Promise<string[]> {
 
     return data?.map(h => h.name) ?? [];
   } catch (error) {
-    console.error('Failed to get user custom hashtags:', error);
+    logger.error('Failed to get user custom hashtags:', error);
     return [];
   }
 }
@@ -1318,7 +1312,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
     const positions = historicalData.map((d: any) => d.position_rank || 1);
     return Math.min(...positions);
   } catch (error) {
-    console.error('Failed to calculate peak position:', error);
+    logger.error('Failed to calculate peak position:', error);
     return 1;
   }
 }
@@ -1338,7 +1332,7 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
     const position = currentRanking.findIndex(h => h.id === hashtagId);
     return position >= 0 ? position + 1 : 1;
   } catch (error) {
-    console.error('Failed to calculate current position:', error);
+    logger.error('Failed to calculate current position:', error);
     return 1;
   }
 }
@@ -1387,7 +1381,7 @@ export async function calculateRelatedHashtags(hashtagId: string): Promise<strin
 
     return relatedHashtags?.map(h => h.name) ?? [];
   } catch (error) {
-    console.error('Failed to calculate related hashtags:', error);
+    logger.error('Failed to calculate related hashtags:', error);
     return [];
   }
 }
@@ -1439,7 +1433,7 @@ export async function calculateCategoryTrends(category: string): Promise<Record<
       average_usage: totalUsage / categoryData.length
     };
   } catch (error) {
-    console.error('Failed to calculate category trends:', error);
+    logger.error('Failed to calculate category trends:', error);
     return {};
   }
 }
@@ -1481,7 +1475,7 @@ async function getRecentActivity() {
       engagement_score: 0
     })) ?? [];
   } catch (error) {
-    console.error('Failed to get recent activity:', error);
+    logger.error('Failed to get recent activity:', error);
     return [];
   }
 }

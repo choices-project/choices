@@ -156,7 +156,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   // Load platform analytics with optimized API
   const loadPlatformAnalytics = useCallback(async () => {
     try {
-      console.log('🌐 Fetching optimized admin dashboard data...');
+      logger.info('🌐 Fetching optimized admin dashboard data...');
       const startTime = Date.now();
       // Add timeout protection
       const controller = new AbortController();
@@ -175,7 +175,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       const data = await response.json();
       
       const loadTime = Date.now() - startTime;
-      console.log(`⚡ Admin dashboard loaded in ${loadTime}ms`);
+      logger.info(`⚡ Admin dashboard loaded in ${loadTime}ms`);
       
       // Transform optimized data to match existing interface
       const transformedAnalytics: PlatformAnalytics = {

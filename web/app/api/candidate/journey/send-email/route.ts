@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { 
   sendCandidateJourneyEmail,
   type EmailType 
 } from '@/lib/services/email/candidate-journey-emails'
-import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError } from '@/lib/api';
 import { withOptional } from '@/lib/util/objects'
-import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const POST = withErrorHandling(async (request: NextRequest) => {

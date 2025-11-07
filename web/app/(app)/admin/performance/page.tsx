@@ -5,7 +5,7 @@
 'use client';
 
 import { 
-  Activity, 
+Activity, 
   AlertTriangle, 
   CheckCircle, 
   Clock, 
@@ -14,6 +14,8 @@ import {
   BarChart3
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+
+import logger from '@/lib/utils/logger'
 
 import { AdminLayout } from '../layout/AdminLayout';
 
@@ -103,7 +105,7 @@ export default function PerformanceMonitoringPage() {
       setPerformanceData(data.data);
       setSystemHealth(data.systemHealth ?? 0);
     } catch (err) {
-      console.error('Error fetching performance data:', err);
+      logger.error('Error fetching performance data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load performance data');
     } finally {
       setLoading(false);
@@ -120,7 +122,7 @@ export default function PerformanceMonitoringPage() {
         await fetchPerformanceData(); // Refresh data
       }
     } catch (err) {
-      console.error('Error resolving alert:', err);
+      logger.error('Error resolving alert:', err);
     }
   };
 

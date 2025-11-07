@@ -1,5 +1,5 @@
 import { 
-  User, 
+User, 
   Shield, 
   Download, 
   Edit, 
@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import logger from '@/lib/utils/logger'
 
 import { useProfileData, useProfileDisplay, useProfileCompleteness, useProfileLoadingStates } from '../hooks/use-profile';
 import type { ProfilePageProps } from '../index';
@@ -69,7 +70,7 @@ export default function ProfilePage({
   // Handle export data
   const handleExportData = () => {
     // Note: Export functionality would be implemented here
-    console.log('Export data requested');
+    logger.info('Export data requested');
     setShowExportConfirm(false);
   };
 
@@ -137,7 +138,7 @@ export default function ProfilePage({
                 size="sm"
                 onClick={() => {
                   // Note: Edit functionality would be implemented here
-                  console.log('Edit profile requested');
+                  logger.info('Edit profile requested');
                 }}
               >
                 <Edit className="h-4 w-4 mr-2" />
@@ -148,7 +149,7 @@ export default function ProfilePage({
                 size="sm"
                 onClick={() => {
                   // Note: Settings functionality would be implemented here
-                  console.log('Settings requested');
+                  logger.info('Settings requested');
                 }}
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -171,7 +172,7 @@ export default function ProfilePage({
               className="p-0 h-auto ml-1"
               onClick={() => {
                 // Note: Edit functionality would be implemented here
-                console.log('Complete profile requested');
+                logger.info('Complete profile requested');
               }}
             >
               Complete your profile
@@ -270,7 +271,7 @@ export default function ProfilePage({
               variant="outline" 
               onClick={() => {
                 // Note: Edit functionality would be implemented here
-                console.log('Edit profile requested');
+                logger.info('Edit profile requested');
               }}
               disabled={loadingStates.isAnyUpdating}
             >
@@ -281,7 +282,7 @@ export default function ProfilePage({
               variant="outline" 
               onClick={() => {
                 // Note: Settings functionality would be implemented here
-                console.log('Privacy settings requested');
+                logger.info('Privacy settings requested');
               }}
               disabled={loadingStates.isAnyUpdating}
             >

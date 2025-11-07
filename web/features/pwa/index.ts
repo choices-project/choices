@@ -17,6 +17,7 @@
  */
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import logger from '@/lib/utils/logger';
 
 // Re-export PWA utilities conditionally
 export const getPWAUtils = () => {
@@ -60,7 +61,7 @@ export const getPWAUtils = () => {
         }
         return false;
       } catch (error) {
-        console.error('Failed to unregister service worker:', error);
+        logger.error('Failed to unregister service worker:', error);
         return false;
       }
     },

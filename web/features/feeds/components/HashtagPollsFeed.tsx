@@ -24,9 +24,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import logger from '@/lib/utils/logger';
 
 import type { 
-  PersonalizedHashtagFeed 
+PersonalizedHashtagFeed 
 } from '../lib/hashtag-polls-integration';
 
 type HashtagPollsFeedProps = {
@@ -87,7 +88,7 @@ export default function HashtagPollsFeed({
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load feed');
-      console.error('Failed to load hashtag-polls feed:', err);
+      logger.error('Failed to load hashtag-polls feed:', err);
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +163,7 @@ export default function HashtagPollsFeed({
         })
       });
     } catch (error) {
-      console.warn('Failed to track hashtag engagement:', error);
+      logger.warn('Failed to track hashtag engagement:', error);
     }
   }, [userId]);
 

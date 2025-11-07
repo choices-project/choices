@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 // ============================================================================
 // PHASE 1: PROOF-OF-PERSONHOOD WITH WEBAUTHN
 // ============================================================================
@@ -20,7 +21,6 @@
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-
 export type WebAuthnCredential = {
   id: string;
   type: 'public-key';
@@ -131,7 +131,7 @@ export class ProofOfPersonhoodManager {
         clientExtensionResults: credential.getClientExtensionResults()
       };
     } catch (error) {
-      console.error('WebAuthn registration failed:', error);
+      logger.error('WebAuthn registration failed:', error);
       throw new Error(`Passkey registration failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -169,7 +169,7 @@ export class ProofOfPersonhoodManager {
         clientExtensionResults: credential.getClientExtensionResults()
       };
     } catch (error) {
-      console.error('WebAuthn authentication failed:', error);
+      logger.error('WebAuthn authentication failed:', error);
       throw new Error(`Passkey authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -212,7 +212,7 @@ export class ProofOfPersonhoodManager {
 
       return !!credential;
     } catch (error) {
-      console.error('Device presence verification failed:', error);
+      logger.error('Device presence verification failed:', error);
       return false;
     }
   }
@@ -281,7 +281,7 @@ export class ProofOfPersonhoodManager {
         verificationMethod: 'address'
       };
     } catch (error) {
-      console.error('Constituent status verification failed:', error);
+      logger.error('Constituent status verification failed:', error);
       return {
         verified: false,
         jurisdiction: '',
@@ -364,7 +364,7 @@ export class ProofOfPersonhoodManager {
         }
       };
     } catch (error) {
-      console.error('Proof-of-personhood verification failed:', error);
+      logger.error('Proof-of-personhood verification failed:', error);
       return {
         verified: false,
         confidence: 0,
@@ -422,7 +422,7 @@ export class ProofOfPersonhoodManager {
       }
       return mockJurisdictions[0] ?? null;
     } catch (error) {
-      console.error('Jurisdiction determination failed:', error);
+      logger.error('Jurisdiction determination failed:', error);
       return null;
     }
   }

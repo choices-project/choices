@@ -31,6 +31,9 @@ Helper files not currently used by any tests:
 - Test utilities
 - Fixtures
 
+### Restored Scenarios
+- `feedback-widget.spec.ts` has been moved into the active Playwright suite at `tests/e2e/specs/feedback-widget.spec.ts` after updating selectors and payload assertions.
+
 ---
 
 ## Why Archived

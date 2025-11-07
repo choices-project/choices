@@ -6,8 +6,10 @@
  */
 
 'use client';
-
 import { useEffect, useState } from 'react';
+
+import logger from '@/lib/utils/logger';
+
 
 /**
  * Hook to detect if we're running on the client side
@@ -28,7 +30,7 @@ export function useClientOnly<T>(fn: () => T, fallback?: T): T | undefined {
   try {
     return fn();
   } catch (error) {
-    console.warn('Client-only hook failed:', error);
+    logger.warn('Client-only hook failed:', error);
     return fallback;
   }
 }

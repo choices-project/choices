@@ -1,6 +1,6 @@
 /**
  * Lazy-loaded User Management Component
- * 
+ *
  * This component provides comprehensive user management functionality.
  * It's loaded only when needed to reduce initial bundle size.
  */
@@ -9,14 +9,15 @@ import React, { useEffect } from 'react';
 
 import type { AdminUser } from '@/features/admin/types';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
-import { 
+import {
   useAdminUsers,
   useAdminUserFilters,
   useAdminUserActions,
   useAdminLoading,
   useAdminError,
-  useAdminActions
+  useAdminActions,
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 
 type UserManagementProps = {
   onUserUpdate?: (user: AdminUser) => void;
@@ -29,7 +30,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   const { searchTerm, roleFilter, statusFilter, selectedUsers, showBulkActions } = useAdminUserFilters();
   const loading = useAdminLoading();
   const error = useAdminError();
-  
+
   // Get actions from adminStore
   const {
     setUserFilters,
@@ -37,62 +38,59 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     updateUserStatus,
     deleteUser
   } = useAdminUserActions();
-  
+
   const { loadUsers, setError } = useAdminActions();
 
   useEffect(() => {
     const startTime = performance.now();
-    
+
     const loadUsersData = async () => {
       try {
         await loadUsers();
-        
+
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('user-management-load', loadTime);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load users';
         setError(errorMessage);
         performanceMetrics.addMetric('user-management-error', 1);
-        console.error('User management load error:', err);
+        logger.error('User management load error:', err);
       }
     };
-    
+
     loadUsersData();
   }, [loadUsers, setError]);
 
   const filteredUsers = users.filter((user: AdminUser) => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleUserSelect = (userId: string) => {
-    const newSelected = new Set(selectedUsers);
-    if (newSelected.has(userId)) {
-      newSelected.delete(userId);
-    } else {
-      newSelected.add(userId);
-    }
-    setUserFilters({ selectedUsers: newSelected, showBulkActions: newSelected.size > 0 });
+    const alreadySelected = selectedUsers.includes(userId);
+    const updated = alreadySelected
+      ? selectedUsers.filter((id) => id !== userId)
+      : [...selectedUsers, userId];
+
+    setUserFilters({ selectedUsers: updated, showBulkActions: updated.length > 0 });
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.size === filteredUsers.length) {
-      setUserFilters({ selectedUsers: new Set(), showBulkActions: false });
+    if (selectedUsers.length === filteredUsers.length) {
+      setUserFilters({ selectedUsers: [], showBulkActions: false });
     } else {
-      setUserFilters({ 
-        selectedUsers: new Set(filteredUsers.map((user: AdminUser) => user.id)), 
-        showBulkActions: true 
-      });
+      const allUserIds = filteredUsers.map((user: AdminUser) => user.id);
+      setUserFilters({ selectedUsers: allUserIds, showBulkActions: allUserIds.length > 0 });
     }
   };
 
   const handleBulkAction = (action: 'activate' | 'deactivate' | 'suspend' | 'delete') => {
-    const selectedUserIds = Array.from(selectedUsers);
-    
+    const selectedUserIds = [...selectedUsers];
+
     switch (action) {
       case 'activate':
         selectedUserIds.forEach(userId => updateUserStatus(userId, 'active'));
@@ -110,8 +108,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         });
         break;
     }
-    
-    setUserFilters({ selectedUsers: new Set(), showBulkActions: false });
+
+    setUserFilters({ selectedUsers: [], showBulkActions: false });
     performanceMetrics.addMetric('user-bulk-action', 1);
   };
 
@@ -258,7 +256,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-blue-800">
-              {selectedUsers.size} user(s) selected
+              {selectedUsers.length} user(s) selected
             </span>
             <div className="flex space-x-2">
               <button
@@ -299,7 +297,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                 <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                    checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                     onChange={handleSelectAll}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
@@ -327,7 +325,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.has(user.id)}
+                      checked={selectedUsers.includes(user.id)}
                       onChange={() => handleUserSelect(user.id)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />

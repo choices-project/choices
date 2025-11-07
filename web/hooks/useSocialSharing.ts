@@ -10,6 +10,8 @@
 
 import { useState } from 'react';
 
+import logger from '@/lib/utils/logger';
+
 export type SocialSharingOptions = {
   title?: string;
   text?: string;
@@ -133,7 +135,7 @@ export const useSocialSharing = () => {
         return success;
       }
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      logger.error('Failed to copy to clipboard:', error);
       return false;
     }
   };

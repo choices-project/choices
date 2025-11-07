@@ -182,7 +182,12 @@ export class MerkleTree {
     const path: string[] = [];
     const indices: number[] = [];
     
-    this.buildProofPath(this.root!, leafIndex, path, indices);
+    const rootNode = this.root;
+    if (!rootNode) {
+      return null;
+    }
+
+    this.buildProofPath(rootNode, leafIndex, path, indices);
     
     return {
       leaf: leafHash,
@@ -202,18 +207,25 @@ export class MerkleTree {
       return;
     }
 
-    const leftSize = this.getLeafCountFromNode(node.left!);
+    const leftChild = node.left;
+    const rightChild = node.right;
+
+    if (!leftChild || !rightChild) {
+      throw new Error('Merkle node is missing child nodes');
+    }
+
+    const leftSize = this.getLeafCountFromNode(leftChild);
     
     if (leafIndex < leftSize) {
       // Leaf is in left subtree
-      path.push(node.right!.hash);
+      path.push(rightChild.hash);
       indices.push(1); // Right sibling
-      this.buildProofPath(node.left!, leafIndex, path, indices);
+      this.buildProofPath(leftChild, leafIndex, path, indices);
     } else {
       // Leaf is in right subtree
-      path.push(node.left!.hash);
+      path.push(leftChild.hash);
       indices.push(0); // Left sibling
-      this.buildProofPath(node.right!, leafIndex - leftSize, path, indices);
+      this.buildProofPath(rightChild, leafIndex - leftSize, path, indices);
     }
   }
 
@@ -222,7 +234,14 @@ export class MerkleTree {
       return 1;
     }
     
-    return this.getLeafCountFromNode(node.left!) + this.getLeafCountFromNode(node.right!);
+    const leftChild = node.left;
+    const rightChild = node.right;
+
+    if (!leftChild || !rightChild) {
+      throw new Error('Merkle node is missing child nodes');
+    }
+    
+    return this.getLeafCountFromNode(leftChild) + this.getLeafCountFromNode(rightChild);
   }
 
   // ============================================================================

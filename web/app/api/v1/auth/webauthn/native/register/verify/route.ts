@@ -9,10 +9,11 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyRegistrationResponse } from '@/features/auth/lib/webauthn/native/server';
-import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse, validationError } from '@/lib/api';
+import { withErrorHandling, authError, forbiddenError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -131,10 +132,5 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         publicKey: publicKeyBase64
       }
     });
-
-  } catch (error) {
-    logger.error('Native registration verify error', { error });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});
 

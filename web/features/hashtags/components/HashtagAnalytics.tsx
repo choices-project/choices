@@ -3,6 +3,8 @@
 import { TrendingUp, Users, BarChart3, Hash } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import logger from '@/lib/utils/logger';
+
 
 import { getHashtagStats, getTrendingHashtags } from '../lib/hashtag-service';
 import type { TrendingHashtag } from '../types';
@@ -55,7 +57,7 @@ export function HashtagAnalytics({
       }
     } catch (err) {
       setError('Failed to load analytics data');
-      console.error('Analytics fetch error:', err);
+      logger.error('Analytics fetch error:', err);
     } finally {
       setIsLoading(false);
     }

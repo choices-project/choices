@@ -4,10 +4,7 @@ export type { CoreTrustTier, CoreUser, CoreDatabase } from './core'
 
 // Use explicit re-exports to resolve duplicate export conflicts
 export type { BreakingNewsStory as CoreBreakingNewsStory } from './core'
-export type { BreakingNewsStory as AdminBreakingNewsStory } from './admin'
-
 export type { PollContext as CorePollContext } from './core'
-export type { PollContext as AdminPollContext } from './admin'
 
 export type { DeviceFingerprint as CoreDeviceFingerprint } from './core'
 

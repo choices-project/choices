@@ -13,6 +13,7 @@
  */
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
+import { devLog } from '@/lib/utils/logger';
 
 // Mock Supabase client
 const mockSupabase = {
@@ -65,8 +66,6 @@ describe('AnalyticsService - Civic Database Tracking', () => {
     });
 
     it('logs warning when function does not exist', async () => {
-      const { devLog } = require('@/lib/utils/logger');
-      
       mockSupabase.rpc.mockResolvedValue({
         data: null,
         error: { message: 'function does not exist' }

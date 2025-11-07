@@ -20,7 +20,7 @@
 'use client';
 
 import { 
-  Download, 
+Download, 
   AlertCircle,
   RefreshCw,
   Filter,
@@ -42,6 +42,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import logger from '@/lib/utils/logger'
 
 type PollHeatmapEntry = {
   poll_id: string;
@@ -151,7 +152,7 @@ export default function PollHeatmap({
 
       setData(result.polls);
     } catch (err) {
-      console.error('Failed to fetch poll heatmap:', err);
+      logger.error('Failed to fetch poll heatmap:', err);
       setError(err instanceof Error ? err.message : 'Failed to load poll heatmap');
       
       // Use mock data for development

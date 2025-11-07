@@ -19,6 +19,7 @@ import React, { useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import logger from '@/lib/utils/logger';
 
 type PerformanceMetrics = {
   dashboardLoadTime: number;
@@ -54,13 +55,13 @@ export default function PerformanceMonitor({
   // Start performance monitoring
   const startMonitoring = useCallback(() => {
     setIsMonitoring(true);
-    console.log('🔍 Performance monitoring started');
+    logger.info('🔍 Performance monitoring started');
   }, []);
 
   // Stop performance monitoring
   const stopMonitoring = useCallback(() => {
     setIsMonitoring(false);
-    console.log('🔍 Performance monitoring stopped');
+    logger.info('🔍 Performance monitoring stopped');
   }, []);
 
   // Update metrics from performance data

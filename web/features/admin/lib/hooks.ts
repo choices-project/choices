@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
-import { devLog } from '@/lib/utils/logger';
+import { logger, devLog } from '@/lib/utils/logger';
 
 import type { TrendingTopic, GeneratedPoll, SystemMetrics, BreakingNewsStory, PollContext } from '../types';
 
@@ -25,7 +25,7 @@ const emptySystemMetrics: SystemMetrics = {
 /**
  * Fetches trending topics for admin review.
  * Returns empty array on error instead of throwing.
- * 
+ *
  * @returns Trending topics or empty array if API fails
  */
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
@@ -39,7 +39,7 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
     return data.topics || emptyTrendingTopics;
   } catch (error) {
     devLog('Error fetching trending topics - API unavailable', { error });
-    console.warn('⚠️ Admin API: Trending topics endpoint failed. Showing empty state.');
+    logger.warn('⚠️ Admin API: Trending topics endpoint failed. Showing empty state.');
     return emptyTrendingTopics;
   }
 };
@@ -47,7 +47,7 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
 /**
  * Fetches AI-generated polls awaiting admin approval.
  * Returns empty array on error instead of throwing.
- * 
+ *
  * @returns Generated polls or empty array if API fails
  */
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
@@ -61,7 +61,7 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
     return data.polls || emptyGeneratedPolls;
   } catch (error) {
     devLog('Error fetching generated polls - API unavailable', { error });
-    console.warn('⚠️ Admin API: Generated polls endpoint failed. Showing empty state.');
+    logger.warn('⚠️ Admin API: Generated polls endpoint failed. Showing empty state.');
     return emptyGeneratedPolls;
   }
 };
@@ -69,7 +69,7 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 /**
  * Fetches system health metrics (topic counts, poll counts, health status).
  * Returns empty metrics object on error instead of throwing.
- * 
+ *
  * @returns System metrics or empty object if API fails
  */
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
@@ -83,7 +83,7 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
     return data.metrics || emptySystemMetrics;
   } catch (error) {
     devLog('Error fetching system metrics - API unavailable', { error });
-    console.warn('⚠️ Admin API: System metrics endpoint failed. Showing empty state.');
+    logger.warn('⚠️ Admin API: System metrics endpoint failed. Showing empty state.');
     return emptySystemMetrics;
   }
 };
@@ -190,12 +190,12 @@ export const useTrendingTopics = () => {
     if (query.data) {
       updateTrendingTopics(query.data);
       setLoading('topics', false);
-      
+
       // Warn if we got empty data (API likely failed)
       if (query.data === emptyTrendingTopics || query.data.length === 0) {
-        console.warn('⚠️ Admin Dashboard: No trending topics data available. Check API endpoints.');
+        logger.warn('⚠️ Admin Dashboard: No trending topics data available. Check API endpoints.');
       }
-      
+
       // Invalidate related queries when trending topics update
       queryClient.invalidateQueries({ queryKey: ['activity-feed'] });
     }
@@ -221,7 +221,7 @@ export const useGeneratedPolls = () => {
     if (query.data) {
       updateGeneratedPolls(query.data);
       setLoading('polls', false);
-      
+
       // Invalidate related queries when generated polls update
       queryClient.invalidateQueries({ queryKey: ['system-metrics'] });
     }

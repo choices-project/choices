@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { RFCManager } from '@/lib/governance/rfcs';

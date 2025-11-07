@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 

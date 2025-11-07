@@ -1,4 +1,5 @@
- 'use client'
+'use client';
+
 
 import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react'
 import Link from 'next/link'
@@ -21,6 +22,7 @@ import React, { useState } from 'react';
 
 
 import { Button } from '@/components/ui/button'
+import logger from '@/lib/utils/logger'
 
 /**
  * Global Navigation Component
@@ -90,7 +92,7 @@ export default function GlobalNavigation() {
     try {
       closeMobileMenu()
     } catch (error) {
-      console.error('Logout failed:', error)
+      logger.error('Logout failed:', error)
     }
   }
 

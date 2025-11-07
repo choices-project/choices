@@ -11,6 +11,7 @@ import {
 } from '@/lib/core/auth/server-actions'
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { stripUndefinedDeep } from '@/lib/util/clean'
+import logger from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
@@ -133,11 +134,11 @@ export const declareCandidacy = createSecureServerAction(
             .getPublicUrl(filePath)
           filingDocumentUrl = urlData.publicUrl
         } else {
-          console.error('Failed to upload filing document:', uploadError)
+          logger.error('Failed to upload filing document:', uploadError)
           // Continue without document - it can be added later
         }
       } catch (error) {
-        console.error('Failed to upload filing document:', error)
+        logger.error('Failed to upload filing document:', error)
         // Continue without document - it can be added later
       }
     }
@@ -289,7 +290,7 @@ export const declareCandidacy = createSecureServerAction(
         }
       } catch (error) {
         // Non-blocking - cron job will handle it if this fails
-        console.error('Welcome email trigger failed (will retry via cron):', error)
+        logger.error('Welcome email trigger failed (will retry via cron):', error)
       }
     }
     

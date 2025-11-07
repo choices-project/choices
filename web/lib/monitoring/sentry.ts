@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * Sentry Error Tracking and Monitoring
  * 
@@ -11,13 +12,12 @@
 
 // Dynamic import for Sentry (optional dependency)
 // Sentry is optional - may not be installed
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Sentry: any = null;
 
 // Try to load Sentry if available
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
+   
   Sentry = require('@sentry/nextjs');
 } catch {
   // Sentry not installed - that's okay, functions will no-op
@@ -29,7 +29,7 @@ try {
  */
 export function initSentry() {
   if (!Sentry) {
-    console.log('[Sentry] Not installed - install with: npm install @sentry/nextjs');
+    logger.info('[Sentry] Not installed - install with: npm install @sentry/nextjs');
     return;
   }
 
@@ -39,7 +39,7 @@ export function initSentry() {
 
   // Only initialize if DSN is provided
   if (!dsn) {
-    console.warn('[Sentry] DSN not provided, Sentry monitoring disabled');
+    logger.warn('[Sentry] DSN not provided, Sentry monitoring disabled');
     return;
   }
 
@@ -56,7 +56,7 @@ export function initSentry() {
     replaysOnErrorSampleRate: environment === 'production' ? 0 : 1.0,
 
     // Filter out localhost errors in production
-    beforeSend(event: any, hint: any) {
+    beforeSend(event: any, _hint: any) {
       if (environment === 'production') {
         // Don't send events from localhost
         if (event.request?.url?.includes('localhost')) {
@@ -109,7 +109,7 @@ export function initSentry() {
     },
   });
 
-  console.log(`[Sentry] Initialized for environment: ${environment}`);
+  logger.info(`[Sentry] Initialized for environment: ${environment}`);
 }
 
 /**

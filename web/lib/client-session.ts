@@ -1,10 +1,10 @@
+import logger from '@/lib/utils/logger';
 /**
  * Client session utilities
  * 
  * This module provides client-side session management functions.
  * It replaces the old @/shared/utils/lib/client-session imports.
  */
-
 export const clientSession = {
   get: (key: string): string | null => {
     if (typeof window === 'undefined') return null;
@@ -53,7 +53,7 @@ export const clientSession = {
         return { success: false, error: issues.join(' ') };
       }
       // This is a placeholder implementation; do not log plaintext passwords
-      console.log('Login attempt:', { email, password: '***' });
+      logger.info('Login attempt:', { email, password: '***' });
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));

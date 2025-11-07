@@ -5,7 +5,8 @@
  * This endpoint is critical for the PWA offline functionality.
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';

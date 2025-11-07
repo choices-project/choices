@@ -42,7 +42,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/utils/logger';
 import type { PrivacySettings } from '@/types/profile';
 
@@ -68,7 +67,6 @@ export default function MyDataDashboard({
   privacySettings,
   onPrivacyUpdate
 }: MyDataDashboardProps) {
-  const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);

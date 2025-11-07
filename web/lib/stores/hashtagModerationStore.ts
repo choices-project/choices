@@ -9,11 +9,13 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
+import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 // Hashtag moderation types
@@ -167,11 +169,10 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
           if (index !== -1) {
             const existing = state.moderationQueue[index];
             if (existing) {
-              state.moderationQueue[index] = {
-                ...existing,
-                ...updates,
+              const mergedModeration = withOptional(existing, updates as Record<string, unknown>);
+              state.moderationQueue[index] = withOptional(mergedModeration, {
                 updatedAt: new Date().toISOString(),
-              };
+              });
             }
           }
         }),
@@ -367,6 +368,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
       })),
       {
         name: 'hashtag-moderation-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           flagType: state.flagType,
           reason: state.reason,

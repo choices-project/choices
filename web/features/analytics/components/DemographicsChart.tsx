@@ -17,7 +17,7 @@
 'use client';
 
 import { 
-  Download, 
+Download, 
   Users, 
   AlertCircle,
   RefreshCw,
@@ -43,6 +43,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
+import logger from '@/lib/utils/logger'
 
 type TrustTierData = {
   tier: string;
@@ -120,7 +121,7 @@ export default function DemographicsChart({
 
       setData(result);
     } catch (err) {
-      console.error('Failed to fetch demographics data:', err);
+      logger.error('Failed to fetch demographics data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load demographics data');
       
       // Use mock data for development

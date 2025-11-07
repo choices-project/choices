@@ -258,7 +258,7 @@ export async function trackAnalyticsEventData(
  * @example
  * ```typescript
  * const metrics = calculateEngagementMetrics(analyticsEvents);
- * console.log(`Engagement Score: ${metrics.engagement_score}`);
+ * logger.info(`Engagement Score: ${metrics.engagement_score}`);
  * ```
  * 
  * @since 2.0.0
@@ -299,7 +299,7 @@ export function calculateEngagementMetrics(
  * @example
  * ```typescript
  * const civicMetrics = calculateCivicEngagementMetrics(civicEvents);
- * console.log(`Civic Score: ${civicMetrics.civic_score}`);
+ * logger.info(`Civic Score: ${civicMetrics.civic_score}`);
  * ```
  * 
  * @since 2.0.0

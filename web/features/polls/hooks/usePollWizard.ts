@@ -1,17 +1,18 @@
 /**
  * Poll Wizard Hook
- * 
+ *
  * This module provides a hook for managing poll creation wizard state.
  * It replaces the old @/shared/utils/lib/usePollWizard imports.
  */
 
 import { useState, useCallback } from 'react';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
-import type { 
-  PollWizardData, 
-  PollWizardState 
+import type {
+  PollWizardData,
+  PollWizardState
 } from '../types';
 
 const INITIAL_WIZARD_DATA: PollWizardData = {
@@ -34,10 +35,26 @@ const INITIAL_WIZARD_STATE: PollWizardState = {
   totalSteps: 4,
   data: INITIAL_WIZARD_DATA,
   errors: {},
+  progress: 0,
   isLoading: false,
   canProceed: false,
   canGoBack: false,
   isComplete: false
+};
+
+const mergeWizardState = (state: PollWizardState, updates: Partial<PollWizardState>): PollWizardState => {
+  return withOptional(state, updates);
+};
+
+const mergeWizardData = (data: PollWizardData, updates: Partial<PollWizardData>): PollWizardData => {
+  return withOptional(data, updates);
+};
+
+const mergeWizardSettings = (
+  settings: PollWizardData['settings'],
+  updates: Partial<PollWizardData['settings']>
+): PollWizardData['settings'] => {
+  return withOptional(settings, updates);
 };
 
 export function usePollWizard() {
@@ -56,7 +73,7 @@ export function usePollWizard() {
           errors.description = 'Description is required';
         }
         break;
-      
+
       case 1: { // Options
         const step1ValidOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (step1ValidOptions.length < 2) {
@@ -64,26 +81,26 @@ export function usePollWizard() {
         }
         break;
       }
-      
+
       case 2: // Settings
         if (data.category === 'general' && !data.tags.length) {
           errors.tags = 'At least one tag is required for general polls';
         }
         break;
-      
+
       case 3: { // Review
         // Final validation - comprehensive check
         const validOptions = data.options.filter((option: string) => option.trim().length > 0);
         if (validOptions.length < 2) {
           errors.options = 'At least 2 valid options are required';
         }
-        
+
         // Check for duplicate options
         const uniqueOptions = new Set(validOptions.map((opt: string) => opt.toLowerCase().trim()));
         if (uniqueOptions.size !== validOptions.length) {
           errors.options = 'Duplicate options are not allowed';
         }
-        
+
         // Validate title length
         if (data.title.trim().length < 3) {
           errors.title = 'Title must be at least 3 characters';
@@ -91,12 +108,12 @@ export function usePollWizard() {
         if (data.title.trim().length > 200) {
           errors.title = 'Title must be less than 200 characters';
         }
-        
+
         // Validate description length
         if (data.description.trim().length > 1000) {
           errors.description = 'Description must be less than 1000 characters';
         }
-        
+
         break;
       }
     }
@@ -112,13 +129,13 @@ export function usePollWizard() {
 
   // Navigation functions
   const nextStep = useCallback(() => {
-    setWizardState((prev: any) => {
+    setWizardState((prev: PollWizardState) => {
       const errors = validateStep(prev.currentStep, prev.data);
       if (Object.keys(errors).length > 0) {
-        return Object.assign({}, prev, { errors });
+        return mergeWizardState(prev, { errors });
       }
-      
-      return Object.assign({}, prev, {
+
+      return mergeWizardState(prev, {
         currentStep: Math.min(prev.currentStep + 1, prev.totalSteps - 1),
         errors: {},
         canProceed: prev.currentStep + 1 < prev.totalSteps - 1 || isCurrentStepValid(prev.currentStep + 1, prev.data)
@@ -127,14 +144,14 @@ export function usePollWizard() {
   }, [validateStep, isCurrentStepValid]);
 
   const prevStep = useCallback(() => {
-    setWizardState(prev => Object.assign({}, prev, {
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
       currentStep: Math.max(prev.currentStep - 1, 0),
       errors: {}
     }));
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setWizardState(prev => Object.assign({}, prev, {
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
       currentStep: Math.max(0, Math.min(step, prev.totalSteps - 1)),
       errors: {}
     }));
@@ -142,11 +159,11 @@ export function usePollWizard() {
 
   // Data update functions
   const updateData = useCallback((updates: Partial<PollWizardData>) => {
-    setWizardState((prev: any) => {
-      const newData = Object.assign({}, prev.data, updates);
+    setWizardState((prev: PollWizardState) => {
+      const newData = mergeWizardData(prev.data, updates);
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
-      
+
       // Debug logging
       logger.info('🔧 usePollWizard updateData:', {
         currentStep: prev.currentStep,
@@ -155,8 +172,8 @@ export function usePollWizard() {
         errors,
         canProceed
       });
-      
-      return Object.assign({}, prev, {
+
+      return mergeWizardState(prev, {
         data: newData,
         canProceed,
         errors
@@ -165,18 +182,18 @@ export function usePollWizard() {
   }, [validateStep]);
 
   const addOption = useCallback(() => {
-    setWizardState(prev => Object.assign({}, prev, {
-      data: Object.assign({}, prev.data, {
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
+      data: mergeWizardData(prev.data, {
         options: [...prev.data.options, '']
       })
     }));
   }, []);
 
   const removeOption = useCallback((index: number) => {
-    setWizardState((prev: any) => {
+    setWizardState((prev: PollWizardState) => {
       const newOptions = prev.data.options.filter((_: string, i: number) => i !== index);
-      return Object.assign({}, prev, {
-        data: Object.assign({}, prev.data, {
+      return mergeWizardState(prev, {
+        data: mergeWizardData(prev.data, {
           options: newOptions
         })
       });
@@ -184,26 +201,26 @@ export function usePollWizard() {
   }, []);
 
   const updateOption = useCallback((index: number, value: string) => {
-    setWizardState(prev => Object.assign({}, prev, {
-      data: Object.assign({}, prev.data, {
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
+      data: mergeWizardData(prev.data, {
         options: prev.data.options.map((option: string, i: number) => i === index ? value : option)
       })
     }));
   }, []);
 
   const addTag = useCallback((tag: string) => {
-    setWizardState(prev => Object.assign({}, prev, {
-      data: Object.assign({}, prev.data, {
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
+      data: mergeWizardData(prev.data, {
         tags: [...prev.data.tags, tag]
       })
     }));
   }, []);
 
   const removeTag = useCallback((tagToRemove: string) => {
-    setWizardState((prev: any) => {
+    setWizardState((prev: PollWizardState) => {
       const newTags = prev.data.tags.filter((tag: string) => tag !== tagToRemove);
-      return Object.assign({}, prev, {
-        data: Object.assign({}, prev.data, {
+      return mergeWizardState(prev, {
+        data: mergeWizardData(prev.data, {
           tags: newTags
         })
       });
@@ -212,7 +229,7 @@ export function usePollWizard() {
 
   // Loading state
   const setLoading = useCallback((loading: boolean) => {
-    setWizardState(prev => Object.assign({}, prev, { isLoading: loading }));
+    setWizardState((prev: PollWizardState) => mergeWizardState(prev, { isLoading: loading }));
   }, []);
 
   // Reset wizard
@@ -223,12 +240,12 @@ export function usePollWizard() {
   // Submit poll
   const submitPoll = useCallback(async (): Promise<{ success: boolean; pollId?: string; error?: string }> => {
     setLoading(true);
-    
+
     try {
       // Validate final data before submission
       const finalErrors = validateStep(3, wizardState.data);
       if (Object.keys(finalErrors).length > 0) {
-        setWizardState(prev => Object.assign({}, prev, { errors: finalErrors }));
+        setWizardState((prev: PollWizardState) => mergeWizardState(prev, { errors: finalErrors }));
         return {
           success: false,
           error: 'Please fix validation errors before submitting'
@@ -264,25 +281,25 @@ export function usePollWizard() {
       }
 
       const result = await response.json();
-      
+
       // Update wizard state to mark as complete
-      setWizardState(prev => Object.assign({}, prev, {
+      setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
         isComplete: true,
         progress: 100
       }));
-      
+
       return {
         success: true,
         pollId: result.id
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
-      
+
       // Update wizard state with error
-      setWizardState(prev => Object.assign({}, prev, {
+      setWizardState((prev: PollWizardState) => mergeWizardState(prev, {
         errors: { submit: errorMessage }
       }));
-      
+
       return {
         success: false,
         error: errorMessage
@@ -294,44 +311,44 @@ export function usePollWizard() {
 
   // Progress calculation with dynamic error detection
   const progress = [
-    { 
-      step: 0, 
-      title: 'Basic Information', 
-      isCompleted: wizardState.currentStep > 0, 
-      isCurrent: wizardState.currentStep === 0, 
-      hasError: !!(wizardState.errors.title || wizardState.errors.description), 
-      estimatedTime: 2 
+    {
+      step: 0,
+      title: 'Basic Information',
+      isCompleted: wizardState.currentStep > 0,
+      isCurrent: wizardState.currentStep === 0,
+      hasError: !!(wizardState.errors.title || wizardState.errors.description),
+      estimatedTime: 2
     },
-    { 
-      step: 1, 
-      title: 'Poll Options', 
-      isCompleted: wizardState.currentStep > 1, 
-      isCurrent: wizardState.currentStep === 1, 
-      hasError: !!(wizardState.errors.options || wizardState.errors.option_0 || wizardState.errors.option_1), 
-      estimatedTime: 2 
+    {
+      step: 1,
+      title: 'Poll Options',
+      isCompleted: wizardState.currentStep > 1,
+      isCurrent: wizardState.currentStep === 1,
+      hasError: !!(wizardState.errors.options || wizardState.errors.option_0 || wizardState.errors.option_1),
+      estimatedTime: 2
     },
-    { 
-      step: 2, 
-      title: 'Category & Tags', 
-      isCompleted: wizardState.currentStep > 2, 
-      isCurrent: wizardState.currentStep === 2, 
-      hasError: !!(wizardState.errors.tags || wizardState.errors.category), 
-      estimatedTime: 2 
+    {
+      step: 2,
+      title: 'Category & Tags',
+      isCompleted: wizardState.currentStep > 2,
+      isCurrent: wizardState.currentStep === 2,
+      hasError: !!(wizardState.errors.tags || wizardState.errors.category),
+      estimatedTime: 2
     },
-    { 
-      step: 3, 
-      title: 'Review', 
-      isCompleted: wizardState.currentStep > 3, 
-      isCurrent: wizardState.currentStep === 3, 
-      hasError: !!(wizardState.errors.submit), 
-      estimatedTime: 2 
+    {
+      step: 3,
+      title: 'Review',
+      isCompleted: wizardState.currentStep > 3,
+      isCurrent: wizardState.currentStep === 3,
+      hasError: !!(wizardState.errors.submit),
+      estimatedTime: 2
     }
   ];
 
   // Alias functions for compatibility
   const updateWizardData = updateData;
   const previousStep = prevStep;
-  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: Object.assign({}, wizardState.data.settings, updates) });
+  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: mergeWizardSettings(wizardState.data.settings, updates) });
 
   return {
     wizardState,

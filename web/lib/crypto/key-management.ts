@@ -26,7 +26,8 @@
 // SECURE KEY MANAGER CLASS
 // ============================================================================
 
-import { withOptional } from '../util/objects';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 export type SecureKey = {
   id: string;
@@ -394,7 +395,7 @@ export class SecureKeyManager {
           const newKey = await this.rotateKey(keyId);
           rotatedKeys.push(newKey);
         } catch (error) {
-          console.error(`Failed to rotate key ${keyId}:`, error);
+          logger.error(`Failed to rotate key ${keyId}:`, error);
         }
       }
     }
@@ -455,7 +456,7 @@ export class SecureKeyManager {
 
   private async createKeyBackup(keyId: string): Promise<void> {
     // Implementation would depend on backup storage system
-    console.log(`Creating backup for key: ${keyId}`);
+    logger.info(`Creating backup for key: ${keyId}`);
   }
 
   // ============================================================================

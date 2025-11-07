@@ -18,6 +18,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import logger from '@/lib/utils/logger';
 
 type FeedRealTimeUpdatesProps = {
   children: React.ReactNode;
@@ -58,7 +59,7 @@ export default function FeedRealTimeUpdates({
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = () => {
-          console.log('[WebSocket] Connected to feed updates');
+          logger.info('[WebSocket] Connected to feed updates');
           setIsConnected(true);
           setWs(websocket);
         };
@@ -66,7 +67,7 @@ export default function FeedRealTimeUpdates({
         websocket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('[WebSocket] Received:', data);
+            logger.info('[WebSocket] Received:', data);
             
             if (data.type === 'new_content') {
               setNewItemsCount(prev => prev + 1);
@@ -75,28 +76,28 @@ export default function FeedRealTimeUpdates({
               }
             }
           } catch (err) {
-            console.error('[WebSocket] Failed to parse message:', err);
+            logger.error('[WebSocket] Failed to parse message:', err);
           }
         };
 
         websocket.onerror = (error) => {
-          console.error('[WebSocket] Error:', error);
+          logger.error('[WebSocket] Error:', error);
           setIsConnected(false);
         };
 
         websocket.onclose = () => {
-          console.log('[WebSocket] Disconnected');
+          logger.info('[WebSocket] Disconnected');
           setIsConnected(false);
           setWs(null);
           
           // Attempt to reconnect after 5 seconds
           reconnectTimeout = setTimeout(() => {
-            console.log('[WebSocket] Attempting to reconnect...');
+            logger.info('[WebSocket] Attempting to reconnect...');
             connect();
           }, 5000);
         };
       } catch (err) {
-        console.error('[WebSocket] Failed to connect:', err);
+        logger.error('[WebSocket] Failed to connect:', err);
       }
     };
 

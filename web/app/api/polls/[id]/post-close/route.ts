@@ -38,12 +38,12 @@ export const POST = withErrorHandling(async (
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session?.user) {
-      throw new AuthenticationError('Authentication required to modify post-close settings');
+      return authError('Authentication required to modify post-close settings');
     }
     
     const user = session.user;
     if (!user) {
-      throw new AuthenticationError('Authentication required to modify post-close settings');
+      return authError('Authentication required to modify post-close settings');
     }
 
     // Get poll details

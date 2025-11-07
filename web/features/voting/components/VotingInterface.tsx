@@ -3,12 +3,6 @@
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
 import React, { useState, useCallback, useEffect } from 'react'
 
-import { 
-  useVotingActions,
-  useVotingLoading,
-  useVotingError
-} from '@/lib/stores/votingStore'
-import { logger } from '@/lib/utils/logger'
 
 import ApprovalVoting from './ApprovalVoting'
 import MultipleChoiceVoting from './MultipleChoiceVoting'
@@ -19,8 +13,24 @@ import SingleChoiceVoting from './SingleChoiceVoting'
 
 type VoteResponse = { ok: boolean; id?: string; error?: string }
 type VerificationResponse = { ok: boolean; error?: string }
-type OnVote = (n: number) => Promise<VoteResponse>;
-type OnVerify = (id: string) => Promise<VerificationResponse>;
+
+export type VoteSubmission =
+  | { method: 'single'; choice: number }
+  | { method: 'multiple'; selections: number[] }
+  | { method: 'approval'; approvals: string[] }
+  | { method: 'ranked'; rankings: number[] }
+  | { method: 'range'; ratings: Record<string, number> }
+  | { method: 'quadratic'; allocations: Record<string, number> };
+
+export type VoteAnalyticsPayload = {
+  category?: string
+  label?: string
+  value?: number
+  metadata?: Record<string, unknown>
+}
+
+type OnVote = (submission: VoteSubmission) => Promise<VoteResponse>
+type OnVerify = (id: string) => Promise<VerificationResponse>
 
 type Poll = {
   id: string;
@@ -45,11 +55,12 @@ type VotingInterfaceProps = {
   userRangeVote?: Record<string, number>;
   userRankedVote?: string[];
   verificationTier?: string;
+  onAnalyticsEvent?: (action: string, payload?: VoteAnalyticsPayload) => void;
 }
 
-export default function VotingInterface({ 
-  poll, 
-  onVote, 
+export default function VotingInterface({
+  poll,
+  onVote,
   onVerify: _onVerify,
   isVoting = false,
   hasVoted = false,
@@ -59,106 +70,137 @@ export default function VotingInterface({
   userQuadraticVote,
   userRangeVote,
   userRankedVote,
-  verificationTier = 'T1'
+  verificationTier = 'T1',
+  onAnalyticsEvent,
 }: VotingInterfaceProps) {
-  const { submitBallot: _submitBallot } = useVotingActions();
-  const _votingLoading = useVotingLoading();
-  const _votingError = useVotingError();
-  
+
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
-  const handleVote = useCallback((n: number) => onVote(n), [onVote]);
-  
-  const handleApprovalVote = useCallback(async (approvals: string[]) => {
-    try {
-      const response = await fetch(`/api/polls/${poll.id}/vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-e2e-bypass': '1'
-        },
-        body: JSON.stringify({ approvals }),
-      });
+  const emitAnalytics = useCallback(
+    (action: string, payload?: VoteAnalyticsPayload) => {
+      if (!onAnalyticsEvent) return
+      onAnalyticsEvent(action, payload)
+    },
+    [onAnalyticsEvent]
+  )
 
-      if (!response.ok) {
-        const errorData = await response.json() as { error?: string };
-        throw new Error(errorData.error ?? 'Failed to submit vote');
+  const handleVoteResult = useCallback(
+    (result: VoteResponse, context: VoteAnalyticsPayload & { method: string }) => {
+      if (result.ok) {
+        const payload: VoteAnalyticsPayload = {
+          metadata: {
+            method: context.method,
+            ...(context.metadata ?? {}),
+          },
+        }
+
+        if (typeof context.value === 'number') {
+          payload.value = context.value
+        }
+
+        emitAnalytics('vote_cast', payload)
+      } else {
+        emitAnalytics('vote_failed', {
+          metadata: {
+            method: context.method,
+            error: result.error ?? 'Unknown error',
+            ...(context.metadata ?? {}),
+          },
+        })
       }
-
-      const _result = await response.json() as { ok: boolean; id?: string };
-
-      // Call the original onVote callback to update the UI
-      await onVote(approvals.length);
-    } catch (error) {
-      logger.error('Approval vote failed', error instanceof Error ? error : new Error(String(error)), { pollId: poll.id });
-      throw error;
-    }
-  }, [poll.id, onVote]);
+    },
+    [emitAnalytics]
+  )
 
   // Stable adapters for each child signature (NO unused params anywhere)
   const onApproval = useCallback(
     async (...[, approvals]: [string, string[]]) => {
-      await handleApprovalVote(approvals);
+      const result = await onVote({ method: 'approval', approvals })
+      handleVoteResult(result, {
+        method: 'approval',
+        value: approvals.length,
+        metadata: { approvals }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
+      }
     },
-    [handleApprovalVote]
+    [handleVoteResult, onVote]
   );
 
   const onQuadratic = useCallback(
     async (...[, allocations]: [string, Record<string, number>]) => {
-      const total = Object.values(allocations).reduce((s, v) => s + v, 0);
-      await handleVote(total);
+      const result = await onVote({ method: 'quadratic', allocations })
+      handleVoteResult(result, {
+        method: 'quadratic',
+        value: Object.values(allocations).reduce((s, v) => s + v, 0),
+        metadata: { allocations }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
+      }
     },
-    [handleVote]
+    [handleVoteResult, onVote]
   );
 
   const onRange = useCallback(
     async (...[, ratings]: [string, Record<string, number>]) => {
-      const score = Object.values(ratings).reduce((s, v) => s + v, 0);
-      await handleVote(score);
+      const result = await onVote({ method: 'range', ratings })
+      handleVoteResult(result, {
+        method: 'range',
+        value: Object.values(ratings).reduce((s, v) => s + v, 0),
+        metadata: { ratings }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
+      }
     },
-    [handleVote]
+    [handleVoteResult, onVote]
   );
 
   const onRanked = useCallback(
-    async (...[, rankings]: [string, string[]]) => {
-      await handleVote(rankings.length);
+    async (...[, rankings]: [string, number[]]) => {
+      const result = await onVote({ method: 'ranked', rankings })
+      handleVoteResult(result, {
+        method: 'ranked',
+        value: rankings.length,
+        metadata: { rankings }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
+      }
     },
-    [handleVote]
+    [handleVoteResult, onVote]
   );
 
   const onSingle = useCallback(
     async (choice: number) => {
-      await handleVote(choice);
+      const result = await onVote({ method: 'single', choice })
+      handleVoteResult(result, {
+        method: 'single',
+        value: 1,
+        metadata: { choice }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
+      }
     },
-    [handleVote]
+    [handleVoteResult, onVote]
   );
 
   const onMultiple = useCallback(
     async (selections: number[]) => {
-      try {
-        const response = await fetch(`/api/polls/${poll.id}/vote`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ selections }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json() as { error?: string };
-          throw new Error(errorData.error ?? 'Failed to submit vote');
-        }
-
-        const _result = await response.json() as { ok: boolean; id?: string };
-
-        // Call the original onVote callback to update the UI
-        await onVote(selections.length);
-      } catch (error) {
-        logger.error('Multiple choice vote failed', error instanceof Error ? error : new Error(String(error)), { pollId: poll.id });
-        throw error;
+      const result = await onVote({ method: 'multiple', selections })
+      handleVoteResult(result, {
+        method: 'multiple',
+        value: selections.length,
+        metadata: { selections }
+      })
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Failed to submit vote')
       }
     },
-    [poll.id, onVote]
+    [handleVoteResult, onVote]
   );
 
   // Calculate time remaining with useCallback for optimization
@@ -166,16 +208,16 @@ export default function VotingInterface({
     const now = new Date();
     const end = new Date(poll.endtime);
     const diff = end.getTime() - now.getTime();
-    
+
     if (diff <= 0) {
       setTimeRemaining('Poll ended');
       return;
     }
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      
+
     if (days > 0) {
       setTimeRemaining(`${days}d ${hours}h ${minutes}m left`);
     } else if (hours > 0) {
@@ -224,7 +266,7 @@ export default function VotingInterface({
 
   const renderVotingComponent = () => {
     const votingMethod = (poll.votingMethod ?? 'single').toLowerCase();
-    
+
     switch (votingMethod) {
       case 'approval':
         return (
@@ -371,7 +413,7 @@ export default function VotingInterface({
             {poll.description && (
               <p className="text-gray-600 mb-4">{poll.description}</p>
             )}
-            
+
             {/* Poll stats */}
             <div className="flex items-center space-x-6 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
@@ -384,7 +426,7 @@ export default function VotingInterface({
               </div>
             </div>
           </div>
-          
+
           {/* Verification tier badge */}
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-sm font-medium ${getVerificationTierColor(verificationTier)}`}>
             {getVerificationTierIcon(verificationTier)}

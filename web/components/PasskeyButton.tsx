@@ -55,7 +55,7 @@ export function PasskeyButton({
         result = await beginAuthenticate();
       }
 
-      if (result.ok) {
+      if (result.success) {
         onSuccess?.();
       } else {
         const errorMsg = result.error ?? 'Operation failed';

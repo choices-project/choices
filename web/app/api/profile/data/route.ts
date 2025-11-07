@@ -11,7 +11,7 @@
  * Status: ✅ ACTIVE - PRODUCTION READY
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';

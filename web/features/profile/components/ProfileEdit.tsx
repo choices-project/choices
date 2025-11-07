@@ -129,7 +129,6 @@ export default function ProfileEdit({
   const {
     setProfileEditData,
     updateProfileEditData,
-    updateArrayField,
     setAvatarFile,
     setAvatarPreview,
     setUploadingAvatar

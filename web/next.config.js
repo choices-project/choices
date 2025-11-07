@@ -55,7 +55,7 @@ const nextConfig = {
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
       use: 'ignore-loader'
     });
-    
+
     // Exclude test directories
     config.module.rules.push({
       test: /tests\/.*\.(ts|tsx|js|jsx)$/,
@@ -68,7 +68,7 @@ const nextConfig = {
         test: /components\/social\/.*\.(ts|tsx|js|jsx)$/,
         use: 'ignore-loader'
       });
-      
+
       config.module.rules.push({
         test: /lib\/share\.(ts|tsx|js|jsx)$/,
         use: 'ignore-loader'
@@ -87,7 +87,7 @@ const nextConfig = {
 
     if (isServer) {
       // Define browser globals as undefined for server-side compatibility
-      config.plugins.push(new webpack.DefinePlugin({ 
+      config.plugins.push(new webpack.DefinePlugin({
         self: JSON.stringify('globalThis'),
         window: undefined,
         document: undefined,
@@ -174,7 +174,7 @@ const nextConfig = {
             // Next.js framework - split into smaller chunks
             nextFramework: {
               test: /[\\/]node_modules[\\/]next[\\/]/,
-              name(module) {
+              name(/** @type {any} */ module) {
                 const match = module.context.match(/[\\/]node_modules[\\/]next[\\/](.*?)[\\/]/);
                 if (match && match[1]) {
                   return `next-${match[1]}`;
@@ -216,12 +216,10 @@ const nextConfig = {
             // Other vendor libraries - split by package
             vendors: {
               test: /[\\/]node_modules[\\/]/,
-              name(module) {
+              name(/** @type {any} */ module) {
                 const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
-                if (match && match[1]) {
-                  return `vendor-${match[1].replace('@', '')}`;
-                }
-                return 'vendors';
+                const packageName = match && match[1] ? match[1] : 'vendor';
+                return `vendor-${packageName.replace('@', '').replace('/', '-')}`;
               },
               priority: 10,
               reuseExistingChunk: true,
@@ -279,7 +277,7 @@ const nextConfig = {
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production'
     const isReportOnly = process.env.CSP_REPORT_ONLY === 'true'
-    
+
     // CSP configuration with two profiles: production and development
     const cspDirectives = {
       production: {

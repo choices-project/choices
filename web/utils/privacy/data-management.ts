@@ -9,6 +9,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import logger from '@/lib/utils/logger';
+
 import { getSupabaseBrowserClient } from '../supabase/client';
 
 import { ConsentManager } from './consent';
@@ -89,7 +91,7 @@ export class PrivacyDataManager {
     try {
       const { data: { user } } = await this.supabaseClient.auth.getUser();
       if (!user) {
-        console.error('User not authenticated');
+        logger.error('User not authenticated');
         return null;
       }
 
@@ -98,13 +100,13 @@ export class PrivacyDataManager {
       });
 
       if (error) {
-        console.error('Error exporting user data:', error);
+        logger.error('Error exporting user data:', error);
         return null;
       }
 
       return data as UserDataExport;
     } catch (error) {
-      console.error('Error exporting user data:', error);
+      logger.error('Error exporting user data:', error);
       return null;
     }
   }
@@ -128,7 +130,7 @@ export class PrivacyDataManager {
       });
 
       if (error) {
-        console.error('Error anonymizing user data:', error);
+        logger.error('Error anonymizing user data:', error);
         return {
           success: false,
           message: error.message,
@@ -150,7 +152,7 @@ export class PrivacyDataManager {
         ]
       };
     } catch (error) {
-      console.error('Error anonymizing user data:', error);
+      logger.error('Error anonymizing user data:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -223,7 +225,7 @@ export class PrivacyDataManager {
 
       return true;
     } catch (error) {
-      console.error('Error storing encrypted data:', error);
+      logger.error('Error storing encrypted data:', error);
       this.encryption.clearKey();
       return false;
     }
@@ -304,7 +306,7 @@ export class PrivacyDataManager {
 
       return decryptionResult.success ? (decryptionResult.decryptedData as Record<string, unknown>) : null;
     } catch (error) {
-      console.error('Error retrieving encrypted data:', error);
+      logger.error('Error retrieving encrypted data:', error);
       this.encryption.clearKey();
       return null;
     }
@@ -327,7 +329,7 @@ export class PrivacyDataManager {
       // Check if user has consent for analytics
       const hasConsent = await this.consentManager.hasConsent('analytics');
       if (!hasConsent) {
-        console.warn('User has not granted consent for analytics');
+        logger.warn('User has not granted consent for analytics');
         return false;
       }
 
@@ -347,13 +349,13 @@ export class PrivacyDataManager {
       });
 
       if (error) {
-        console.error('Error contributing to analytics:', error);
+        logger.error('Error contributing to analytics:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error contributing to analytics:', error);
+      logger.error('Error contributing to analytics:', error);
       return false;
     }
   }
@@ -409,7 +411,7 @@ export class PrivacyDataManager {
         }
       };
     } catch (error) {
-      console.error('Error getting privacy dashboard:', error);
+      logger.error('Error getting privacy dashboard:', error);
       return {
         consentSummary: { totalConsents: 0, activeConsents: 0, consentTypes: {} },
         dataExportAvailable: false,

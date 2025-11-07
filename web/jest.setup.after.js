@@ -1,8 +1,6 @@
 /* eslint-env jest */
 // Jest setup that runs after test environment is initialized
 require('@testing-library/jest-dom');
-const _React = require('react');
-
 // Mock crypto API for DPoP tests
 Object.defineProperty(global, 'crypto', {
   value: {
@@ -130,12 +128,12 @@ if (typeof window !== 'undefined') {
       jsHeapSizeLimit: 4000000
     }
   };
-  
+
   // Mock for browser environment
   Object.defineProperty(window, 'performance', {
     value: performanceMock
   });
-  
+
   // Mock for Node.js environment
   Object.defineProperty(global, 'performance', {
     value: performanceMock

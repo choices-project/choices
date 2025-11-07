@@ -85,7 +85,7 @@ export function createCodeSplitComponent<T extends ComponentType<Record<string, 
     return React.createElement(
       React.Suspense,
       { fallback },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       React.createElement(LazyComponent, props as any)
     );
   };

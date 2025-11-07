@@ -11,7 +11,7 @@ type RankedChoiceVotingProps = {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (...[, rankings]: [string, string[]]) => Promise<void>
+  onVote: (pollId: string, rankings: number[]) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
   userVote?: string[]
@@ -111,24 +111,31 @@ export default function RankedChoiceVoting({
         }
       }
       
-      // Ensure all options are ranked
-      if (Object.keys(validRankings).length !== options.length) {
-        throw new Error('All options must be ranked')
+      if (Object.keys(validRankings).length === 0) {
+        throw new Error('Please rank at least one option')
       }
       
+      const orderedRankings = Object.entries(validRankings)
+        .sort(([, rankA], [, rankB]) => rankA - rankB)
+        .map(([optionId]) => optionId)
+
       // Track analytics with poll ID using SSR-safe access
       const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow(w => w.gtag);
       if (gtag) {
         gtag('event', 'vote_submitted', {
           poll_id: pollId,
-          rankings: validRankings,
+          rankings: orderedRankings,
           voting_method: 'ranked_choice',
-          ranked_options_count: Object.keys(validRankings).length
+          ranked_options_count: orderedRankings.length
         })
       }
       
-      await onVote(pollId, Object.keys(validRankings))
+      const numericRankings = orderedRankings
+        .map((optionId) => Number(optionId))
+        .filter((value) => Number.isInteger(value))
+      
+      await onVote(pollId, numericRankings)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {

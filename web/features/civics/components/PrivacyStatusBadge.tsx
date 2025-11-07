@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import logger from '@/lib/utils/logger';
 
 /**
  * Privacy Status Badge Component
@@ -15,7 +16,6 @@ import { isFeatureEnabled } from '@/lib/core/feature-flags';
  * @since 2024-10-09
  * @feature CIVICS_ADDRESS_LOOKUP
  */
-
 'use client';
 
 /**
@@ -72,7 +72,7 @@ export function PrivacyStatusBadge() {
           }
         } catch (error) {
           // Fallback to simulated healthy status if API is not available
-          console.warn('Health check API not available, using fallback status:', error);
+          logger.warn('Health check API not available, using fallback status:', error);
           setStatus({
             status: 'healthy',
             message: 'Privacy protections active',

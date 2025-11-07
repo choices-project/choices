@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getRedisClient } from '@/lib/cache/redis-client';
@@ -162,7 +163,7 @@ export async function GET(request: NextRequest) {
         ipAddress: request.headers.get('x-forwarded-for') || undefined,
         userAgent: request.headers.get('user-agent') || undefined,
         metadata: {
-          includes: includes,
+          includes: includeArray,
           use_cache: useCache,
           admin_email: user.email
         }

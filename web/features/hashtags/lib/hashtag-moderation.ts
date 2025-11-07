@@ -1,13 +1,13 @@
 /**
  * Hashtag Moderation Service
- * 
+ *
  * Comprehensive moderation system for hashtags including:
  * - Auto-moderation with content analysis
  * - User flagging system
  * - Manual moderation tools
  * - Spam detection
  * - Content policy enforcement
- * 
+ *
  * Created: October 11, 2025
  * Status: ✅ ACTIVE
  */
@@ -16,9 +16,9 @@ import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/supabase';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
-import type { 
-  HashtagModeration, 
-  HashtagFlag, 
+import type {
+  HashtagModeration,
+  HashtagFlag,
   HashtagApiResponse,
   Hashtag,
   HashtagCategory
@@ -37,26 +37,26 @@ const MODERATION_CONSTANTS = {
   INAPPROPRIATE_THRESHOLD: 0.7,
   MISLEADING_THRESHOLD: 0.6,
   DUPLICATE_THRESHOLD: 0.9,
-  
+
   // Flag limits
   MAX_FLAGS_PER_HASHTAG: 10,
   FLAG_COOLDOWN_HOURS: 24,
-  
+
   // Review timeouts
   AUTO_APPROVE_HOURS: 72,
   HUMAN_REVIEW_THRESHOLD: 0.5,
-  
+
   // Content analysis
   SPAM_KEYWORDS: [
     'buy', 'sell', 'promo', 'discount', 'offer', 'deal',
     'click', 'link', 'free', 'win', 'prize', 'money'
   ],
-  
+
   INAPPROPRIATE_KEYWORDS: [
     'hate', 'violence', 'explicit', 'adult',
     'illegal', 'harmful', 'dangerous'
   ],
-  
+
   MISLEADING_PATTERNS: [
     /fake/i, /scam/i, /fraud/i, /lie/i, /false/i
   ]
@@ -72,13 +72,13 @@ const MODERATION_CONSTANTS = {
 export async function getHashtagModeration(hashtagId: string): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     const result = await supabase
       .from('hashtag_flags')
       .select('*')
       .eq('hashtag', hashtagId)
       .order('created_at', { ascending: false });
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -92,7 +92,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
     // Transform hashtag_flags data to HashtagModeration format
     const flags = (data ?? []) as HashtagFlagRow[];
     const pendingFlags = flags.filter(flag => flag.status === 'pending');
-    const moderationStatus = pendingFlags.length > 0 ? 'pending' : 
+    const moderationStatus = pendingFlags.length > 0 ? 'pending' :
                            flags.length > 0 ? 'flagged' : 'approved';
 
     // Transform flags to match HashtagFlag type
@@ -104,7 +104,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       reason: flag.reason ?? '',
       created_at: flag.created_at ?? new Date().toISOString(),
       updated_at: flag.created_at ?? new Date().toISOString(), // Use created_at since updated_at doesn't exist
-      status: (flag.status === 'approved' ? 'resolved' : 
+      status: (flag.status === 'approved' ? 'resolved' :
               flag.status === 'rejected' ? 'rejected' : 'pending') as 'pending' | 'reviewed' | 'resolved' | 'approved' | 'rejected' | 'flagged'
     }));
 
@@ -141,7 +141,7 @@ export async function flagHashtag(
 ): Promise<HashtagApiResponse<HashtagFlag>> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.id) {
@@ -175,13 +175,13 @@ export async function flagHashtag(
       status: 'pending',
       flag_type: 'inappropriate'
     };
-    
+
     const result = await supabase
       .from('hashtag_flags')
       .insert(insertData as any)
       .select()
       .single();
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -232,7 +232,7 @@ export async function moderateHashtag(
   try {
     const supabase = await getSupabaseBrowserClient();
     const userId = (await supabase.auth.getUser()).data.user?.id;
-    
+
     if (!userId) {
       return {
         success: false,
@@ -246,7 +246,7 @@ export async function moderateHashtag(
       reviewed_at: new Date().toISOString(),
       reviewed_by: userId
     };
-    
+
     const { data, error } = await supabase
       .from('hashtag_flags')
       .update(updateData as any)
@@ -274,7 +274,7 @@ export async function moderateHashtag(
       const hashtagUpdate: Database['public']['Tables']['hashtags']['Update'] = {
         is_trending: false
       };
-      
+
       await supabase
         .from('hashtags')
         .update(hashtagUpdate as any)
@@ -283,14 +283,14 @@ export async function moderateHashtag(
 
     // Get updated moderation status
     const moderationResult = await getHashtagModeration(hashtagId);
-    
+
     if (!moderationResult.success || !moderationResult.data) {
       return {
         success: false,
         error: 'Failed to get updated moderation status'
       };
     }
-    
+
     return {
       success: true,
       data: moderationResult.data
@@ -313,7 +313,7 @@ export async function getModerationQueue(
 ): Promise<HashtagApiResponse<Array<Hashtag & { moderation: HashtagModeration }>>> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     let query = supabase
       .from('hashtag_flags')
       .select(`
@@ -373,7 +373,7 @@ export async function getModerationQueue(
 export async function triggerAutoModeration(hashtagId: string): Promise<void> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     // Get hashtag details
     const { data: hashtag } = await supabase
       .from('hashtags')
@@ -385,7 +385,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
 
     // Calculate auto-moderation score
     const score = await calculateAutoModerationScore(hashtag);
-    
+
     // Get flag count
     const { count: flagCount } = await supabase
       .from('hashtag_flags')
@@ -394,7 +394,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
       .eq('status', 'pending');
 
     // Determine if human review is required
-    const humanReviewRequired = score > MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD || 
+    const humanReviewRequired = score > MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD ||
                                (flagCount ?? 0) >= 3;
 
     // Update hashtag flags with auto-moderation results
@@ -402,7 +402,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
       status: humanReviewRequired ? 'flagged' : 'approved',
       reviewed_at: new Date().toISOString()
     };
-    
+
     await supabase
       .from('hashtag_flags')
       .update(autoUpdateData as any)
@@ -426,21 +426,21 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
 export async function calculateAutoModerationScore(hashtag: any): Promise<number> {
   let score = 0;
   const name = hashtag.name.toLowerCase();
-  
+
   // Check for spam keywords
-  const spamMatches = MODERATION_CONSTANTS.SPAM_KEYWORDS.filter(keyword => 
+  const spamMatches = MODERATION_CONSTANTS.SPAM_KEYWORDS.filter(keyword =>
     name.includes(keyword.toLowerCase())
   );
   score += spamMatches.length * 0.3;
 
   // Check for inappropriate keywords
-  const inappropriateMatches = MODERATION_CONSTANTS.INAPPROPRIATE_KEYWORDS.filter(keyword => 
+  const inappropriateMatches = MODERATION_CONSTANTS.INAPPROPRIATE_KEYWORDS.filter(keyword =>
     name.includes(keyword.toLowerCase())
   );
   score += inappropriateMatches.length * 0.4;
 
   // Check for misleading patterns
-  const misleadingMatches = MODERATION_CONSTANTS.MISLEADING_PATTERNS.filter(pattern => 
+  const misleadingMatches = MODERATION_CONSTANTS.MISLEADING_PATTERNS.filter(pattern =>
     pattern.test(name)
   );
   score += misleadingMatches.length * 0.2;
@@ -470,10 +470,10 @@ export async function calculateAutoModerationScore(hashtag: any): Promise<number
 export async function checkForDuplicates(hashtagName: string): Promise<HashtagApiResponse<Hashtag[]>> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     // Normalize the name for comparison
     const normalizedName = hashtagName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
+
     const { data, error } = await supabase
       .from('hashtags')
       .select('*')
@@ -535,9 +535,9 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
 function calculateSimilarity(str1: string, str2: string): number {
   const longer = str1.length > str2.length ? str1 : str2;
   const shorter = str1.length > str2.length ? str2 : str1;
-  
+
   if (longer.length === 0) return 1.0;
-  
+
   const editDistance = levenshteinDistance(longer, shorter);
   return (longer.length - editDistance) / longer.length;
 }
@@ -547,7 +547,7 @@ function calculateSimilarity(str1: string, str2: string): number {
  */
 function levenshteinDistance(str1: string, str2: string): number {
   const matrix: number[][] = Array(str2.length + 1).fill(0).map(() => Array(str1.length + 1).fill(0));
-  
+
   for (let i = 0; i <= str1.length; i++) {
     const row = matrix[0];
     if (row) row[i] = i;
@@ -556,22 +556,29 @@ function levenshteinDistance(str1: string, str2: string): number {
     const row = matrix[j];
     if (row) row[0] = j;
   }
-  
+
   for (let j = 1; j <= str2.length; j++) {
+    const currentRow = matrix[j];
+    const previousRow = matrix[j - 1];
+    if (!currentRow || !previousRow) {
+      continue;
+    }
+
     for (let i = 1; i <= str1.length; i++) {
       const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      const prevI = matrix[j]?.[i - 1] ?? 0;
-      const prevJ = matrix[j - 1]?.[i] ?? 0;
-      const prevBoth = matrix[j - 1]?.[i - 1] ?? 0;
-      matrix[j][i] = Math.min(
+      const prevI = currentRow[i - 1] ?? 0;
+      const prevJ = previousRow[i] ?? 0;
+      const prevBoth = previousRow[i - 1] ?? 0;
+      currentRow[i] = Math.min(
         prevI + 1,
         prevJ + 1,
         prevBoth + indicator
       );
     }
   }
-  
-  return matrix[str2.length]?.[str1.length] ?? 0;
+
+  const lastRow = matrix[str2.length];
+  return lastRow ? lastRow[str1.length] ?? 0 : 0;
 }
 
 // ============================================================================
@@ -594,7 +601,7 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
 }>> {
   try {
     const supabase = await getSupabaseBrowserClient();
-    
+
     // Get basic counts
     const [
       { count: totalHashtags },
@@ -622,12 +629,12 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
       // Categorize by reason content since flag_type doesn't exist
       const reason = flag.reason?.toLowerCase() ?? 'other';
       let type = 'other';
-      
+
       if (reason.includes('spam') || reason.includes('promotional')) type = 'spam';
       else if (reason.includes('inappropriate') || reason.includes('offensive')) type = 'inappropriate';
       else if (reason.includes('misleading') || reason.includes('false')) type = 'misleading';
       else if (reason.includes('duplicate')) type = 'duplicate';
-      
+
         acc[type] = (acc[type] ?? 0) + 1;
       return acc;
     }, {} as Record<string, number>) ?? {};

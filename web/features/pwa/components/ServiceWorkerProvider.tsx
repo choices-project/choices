@@ -138,6 +138,22 @@ export function ServiceWorkerProvider({
       window.removeEventListener('offline', handleOffline);
     };
   }, [debug]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    if (isRegistered) {
+      document.documentElement.setAttribute('data-sw-registered', 'true');
+      return () => {
+        document.documentElement.removeAttribute('data-sw-registered');
+      };
+    }
+
+    document.documentElement.removeAttribute('data-sw-registered');
+    return undefined;
+  }, [isRegistered]);
   
   /**
    * Handle user clicking "Update Now" button
@@ -205,7 +221,7 @@ export function ServiceWorkerProvider({
           role="alert"
           aria-live="polite"
         >
-          📡 You're offline. Some features may be limited.
+          📡 You&apos;re offline. Some features may be limited.
         </div>
       )}
     </>
@@ -231,11 +247,17 @@ export function ServiceWorkerProvider({
  * ```
  */
 export function useServiceWorker() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(() => (
+    typeof navigator === 'undefined' ? false : !navigator.onLine
+  ));
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
     
@@ -244,10 +266,26 @@ export function useServiceWorker() {
     
     // Check update status
     setIsUpdateAvailable(checkUpdateAvailable());
+    let isMounted = true;
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then(() => {
+          if (isMounted) {
+            setIsRegistered(true);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setIsRegistered(false);
+          }
+        });
+    }
     
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      isMounted = false;
     };
   }, []);
   

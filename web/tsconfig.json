@@ -7,7 +7,7 @@
       "dom.iterable",
       "esnext"
     ],
-    "types": ["node"],
+    "types": ["node", "@testing-library/jest-dom"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "preserve",
@@ -42,6 +42,6 @@
     "**/_deprecated/**",
     "archive/**",
     "archive-*/**",
-    "utils/supabase/database.types.ts"
+    "tests/archive/**"
   ]
 }

@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import { withErrorHandling, errorResponse } from '@/lib/api';

@@ -1,7 +1,7 @@
 'use client';
 
 import { 
-  Fingerprint, 
+Fingerprint, 
   Loader2, 
   CheckCircle, 
   AlertCircle, 
@@ -15,6 +15,7 @@ import React, { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import logger from '@/lib/utils/logger'
 
 type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
@@ -43,7 +44,7 @@ export function PasskeyLogin({
     try {
       return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     } catch (err) {
-      console.error('Error checking platform authenticator:', err);
+      logger.error('Error checking platform authenticator:', err);
       return false;
     }
   };

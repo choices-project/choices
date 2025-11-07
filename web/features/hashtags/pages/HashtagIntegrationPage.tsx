@@ -3,6 +3,8 @@
 import { Hash, TrendingUp, Users, Search, BarChart3, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
+import logger from '@/lib/utils/logger';
+
 import { HashtagAnalytics } from '../components/HashtagAnalytics';
 import { HashtagDisplay, TrendingHashtagDisplay } from '../components/HashtagDisplay';
 import { HashtagInput } from '../components/HashtagInput';
@@ -35,21 +37,21 @@ export default function HashtagIntegrationPage() {
   } = useHashtagSearch({ debounceMs: 300, minQueryLength: 2 });
 
   const handleHashtagClick = (hashtag: Hashtag) => {
-    console.log('Hashtag clicked:', hashtag);
+    logger.info('Hashtag clicked:', hashtag);
     // You can implement navigation or other actions here
   };
 
   const _handleFollowHashtag = async (hashtagId: string) => {
     const success = await followHashtagAction(hashtagId);
     if (success) {
-      console.log('Successfully followed hashtag');
+      logger.info('Successfully followed hashtag');
     }
   };
 
   const handleUnfollowHashtag = async (hashtagId: string) => {
     const success = await unfollowHashtagAction(hashtagId);
     if (success) {
-      console.log('Successfully unfollowed hashtag');
+      logger.info('Successfully unfollowed hashtag');
     }
   };
 

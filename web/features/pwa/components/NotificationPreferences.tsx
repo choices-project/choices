@@ -8,18 +8,18 @@
  * @migrated Zustand migration complete - November 4, 2025
  */
 
-'use client'
+'use client';
 
-import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react'
+import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
-import { logger } from '@/lib/utils/logger'
+import { usePWAStore } from '@/lib/stores/pwaStore';
+import { logger } from '@/lib/utils/logger';
 
 type NotificationPreferencesProps = {
   /** Additional CSS classes */
-  className?: string
-}
+  className?: string;
+};
 
 /**
  * Notification Preferences Component
@@ -34,19 +34,19 @@ type NotificationPreferencesProps = {
  * @returns Preferences UI or null if notifications not supported
  */
 export default function NotificationPreferences({ className = '' }: NotificationPreferencesProps) {
-  const { preferences: pwaPreferences, updatePreferences } = usePWAStore()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
+  const { preferences: pwaPreferences, updatePreferences } = usePWAStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [preferences, setPreferences] = useState({
     pollNotifications: true,
     commentNotifications: true,
     systemNotifications: true,
-    emailNotifications: false
-  })
-  
-  const notificationsSupported = 'Notification' in window
+    emailNotifications: false,
+  });
+
+  const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
 
   useEffect(() => {
     if (notificationsSupported) {
@@ -55,81 +55,82 @@ export default function NotificationPreferences({ className = '' }: Notification
   }, [notificationsSupported])
 
   const handleRequestPermission = async () => {
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
     
     try {
       const result = await Notification.requestPermission()
       if (result === 'granted') {
-        setNotificationPermission('granted')
-        setSuccess('Notification permission granted!')
-        updatePreferences({ pushNotifications: true })
-        logger.info('Notification permission granted')
+        setNotificationPermission('granted');
+        setSuccess('Notification permission granted!');
+        updatePreferences({ pushNotifications: true });
+        logger.info('Notification permission granted');
       } else {
-        setNotificationPermission('denied')
-        setError('Notification permission denied.')
-        updatePreferences({ pushNotifications: false })
-        logger.warn('Notification permission denied')
+        setNotificationPermission('denied');
+        setError('Notification permission denied.');
+        updatePreferences({ pushNotifications: false });
+        logger.warn('Notification permission denied');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to request notification permission.')
-      logger.error('Error requesting notification permission:', err as Error)
+      setError(err instanceof Error ? err.message : 'Failed to request notification permission.');
+      logger.error('Error requesting notification permission:', err as Error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSubscribe = async () => {
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
     
     try {
       if (notificationPermission !== 'granted') {
-        const result = await Notification.requestPermission()
+        const result = await Notification.requestPermission();
         if (result !== 'granted') {
-          setError('Notification permission required.')
-          setIsLoading(false)
-          return
+          setError('Notification permission required.');
+          setIsLoading(false);
+          return;
         }
-        setNotificationPermission('granted')
+        setNotificationPermission('granted');
       }
       
-      updatePreferences({ pushNotifications: true })
-      setSuccess('Successfully subscribed to push notifications!')
-      logger.info('Subscribed to push notifications')
+      updatePreferences({ pushNotifications: true });
+      setSuccess('Successfully subscribed to push notifications!');
+      logger.info('Subscribed to push notifications');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to subscribe to push notifications.')
-      logger.error('Error subscribing to push notifications:', err as Error)
+      setError(err instanceof Error ? err.message : 'Failed to subscribe to push notifications.');
+      logger.error('Error subscribing to push notifications:', err as Error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleUnsubscribe = async () => {
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
     
     try {
-      updatePreferences({ pushNotifications: false })
-      setSuccess('Successfully unsubscribed from push notifications.')
-      logger.info('Unsubscribed from push notifications')
+      updatePreferences({ pushNotifications: false });
+      setSuccess('Successfully unsubscribed from push notifications.');
+      logger.info('Unsubscribed from push notifications');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to unsubscribe from push notifications.')
-      logger.error('Error unsubscribing from push notifications:', err as Error)
+      setError(err instanceof Error ? err.message : 'Failed to unsubscribe from push notifications.');
+      logger.error('Error unsubscribing from push notifications:', err as Error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handlePreferenceChange = (key: keyof typeof preferences) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }))
-  }
+    setPreferences((prev) =>
+      Object.assign({}, prev, {
+        [key]: !prev[key],
+      })
+    );
+  };
 
   if (!notificationsSupported) {
     return (
@@ -145,7 +146,7 @@ export default function NotificationPreferences({ className = '' }: Notification
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -291,5 +292,5 @@ export default function NotificationPreferences({ className = '' }: Notification
         </div>
       </div>
     </div>
-  )
+  );
 }

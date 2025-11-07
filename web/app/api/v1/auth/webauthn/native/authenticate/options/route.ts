@@ -6,6 +6,7 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { 
@@ -65,10 +66,5 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return NextResponse.json({ error: 'Challenge persist failed' }, { status: 500 });
     }
 
-    return NextResponse.json(responseOptions);
-
-  } catch (error) {
-    logger.error('Authentication options error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  return successResponse(responseOptions);
+});

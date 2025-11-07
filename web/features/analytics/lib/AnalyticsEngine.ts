@@ -9,6 +9,7 @@
  * Updated: November 03, 2025
  */
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 /// <reference types="node" />
@@ -49,13 +50,12 @@ export class AnalyticsEngine {
   private eventListenersInitialized = false;
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
-    this.config = {
+    this.config = withOptional({
       enabled: true,
       debug: false,
       batchSize: 50,
-      flushInterval: 60000, // 1 minute
-      ...config
-    };
+      flushInterval: 60000 // 1 minute
+    }, config as Record<string, unknown>) as AnalyticsConfig;
 
     if (this.config.enabled) {
       this.startFlushTimer();
@@ -186,11 +186,11 @@ export class AnalyticsEngine {
   track(event: AnalyticsEvent): void {
     if (!this.config.enabled) return;
 
-    const fullEvent: AnalyticsEvent = {
-      ...event,
+    const sanitizedEvent = withOptional(event as Record<string, unknown>) as AnalyticsEvent;
+    const fullEvent = withOptional(sanitizedEvent, {
       timestamp: event.timestamp ?? Date.now(),
       sessionId: event.sessionId ?? this.getSessionId()
-    };
+    }) as AnalyticsEvent;
 
     this.events.push(fullEvent);
 
@@ -215,7 +215,7 @@ export class AnalyticsEngine {
    * Get feature usage statistics
    */
   getFeatureUsage(): Record<string, number> {
-    return { ...this.featureUsage };
+    return withOptional({}, this.featureUsage) as Record<string, number>;
   }
 
   /**

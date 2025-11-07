@@ -1,9 +1,9 @@
 /**
  * Poll Types
- * 
+ *
  * Type definitions for the polls system
  * Based on database schema: polls, poll_options, votes tables
- * 
+ *
  * Status: ✅ ACTIVE
  */
 
@@ -32,7 +32,7 @@ export type VoteUpdate = Database['public']['Tables']['votes']['Update'];
 // Primary Poll type - use DB type directly
 export type Poll = PollRow;
 
-// PollOption - use DB type directly  
+// PollOption - use DB type directly
 export type PollOption = PollOptionRow;
 
 // Vote - use DB type directly
@@ -42,15 +42,15 @@ export type Vote = VoteRow;
 // ENUM/UNION TYPES (derived from database values)
 // ============================================================================
 
-export type PollType = 
+export type PollType =
   | 'single_choice'
   | 'multiple_choice'
   | 'ranked_choice'
   | 'approval'
   | 'quadratic'
-  | 'range'
+  | 'range';
 
-export type VotingMethod = 
+export type VotingMethod =
   | 'single'
   | 'multiple'
   | 'ranked'
@@ -58,45 +58,45 @@ export type VotingMethod =
   | 'quadratic'
   | 'range'
   | 'single-choice'
-  | 'ranked-choice'
+  | 'ranked-choice';
 
-export type PollStatus = 
+export type PollStatus =
   | 'draft'
   | 'active'
   | 'closed'
-  | 'archived'
+  | 'archived';
 
 // ============================================================================
 // SETTINGS TYPES (JSON fields from database)
 // ============================================================================
 
 export type PollSettings = {
-  allow_multiple_votes: boolean
-  allow_vote_changes: boolean
-  show_results_before_close: boolean
-  show_voter_count: boolean
-  require_authentication: boolean
-  allow_anonymous_votes: boolean
-  max_votes_per_option?: number
-  min_votes_per_user?: number
-  max_votes_per_user?: number
-}
+  allow_multiple_votes: boolean;
+  allow_vote_changes: boolean;
+  show_results_before_close: boolean;
+  show_voter_count: boolean;
+  require_authentication: boolean;
+  allow_anonymous_votes: boolean;
+  max_votes_per_option?: number;
+  min_votes_per_user?: number;
+  max_votes_per_user?: number;
+};
 
 export type TemplateSettings = {
-  allowMultipleVotes: boolean
-  allowAnonymousVotes: boolean
-  requireAuthentication: boolean
-  requireEmail: boolean
-  showResults: boolean
-  allowWriteIns: boolean
-  allowComments: boolean
-  enableNotifications?: boolean
-  maxSelections?: number
-  votingMethod?: string
-  privacyLevel?: string
-  moderationEnabled?: boolean
-  autoClose?: boolean
-}
+  allowMultipleVotes: boolean;
+  allowAnonymousVotes: boolean;
+  requireAuthentication: boolean;
+  requireEmail: boolean;
+  showResults: boolean;
+  allowWriteIns: boolean;
+  allowComments: boolean;
+  enableNotifications?: boolean;
+  maxSelections?: number;
+  votingMethod?: string;
+  privacyLevel?: string;
+  moderationEnabled?: boolean;
+  autoClose?: boolean;
+};
 
 // ============================================================================
 // DOMAIN-SPECIFIC TYPES
@@ -178,6 +178,7 @@ export type PollWizardState = {
   data: PollWizardData
   errors: Record<string, string>
   isLoading: boolean
+  progress: number
   canProceed: boolean
   canGoBack: boolean
   isComplete: boolean

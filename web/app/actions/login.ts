@@ -42,7 +42,7 @@ export async function loginAction(formData: FormData) {
   });
 
   if (authError) {
-    console.error('Authentication error:', authError);
+    logger.error('Authentication error:', authError);
     throw new Error('Invalid email or password');
   }
 
@@ -60,7 +60,7 @@ export async function loginAction(formData: FormData) {
     .single();
 
   if (profileError) {
-    console.error('Profile lookup error:', profileError);
+    logger.error('Profile lookup error:', profileError);
     // Continue anyway - user can complete onboarding later
   }
 

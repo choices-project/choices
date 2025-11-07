@@ -1,6 +1,7 @@
 import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -71,10 +72,5 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     logger.info('Onboarding completed successfully', { userId: user.id })
 
-    return response
-
-  } catch (error) {
-    logger.error('Complete onboarding error', error instanceof Error ? error : new Error('Unknown error'))
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return response
+});

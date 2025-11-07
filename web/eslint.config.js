@@ -1,6 +1,3 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
@@ -12,9 +9,6 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export default [
   // Global environment
@@ -128,7 +122,7 @@ export default [
 
       // Restricted syntax (exactOptionalPropertyTypes enforcement)
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector: 'TSTypeReference[typeName.name="AnyObject"]',
           message: 'Prefer exact interfaces over AnyObject.'

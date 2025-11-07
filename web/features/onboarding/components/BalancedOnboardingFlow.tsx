@@ -21,12 +21,13 @@ import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
 import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useUser, useUserLoading , 
-  useOnboardingStep,
+useOnboardingStep,
   useOnboardingData,
   useOnboardingActions,
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 
@@ -414,7 +415,7 @@ const AuthStep: React.FC<{
 
   const handlePasskeyError = (error: string) => {
     // Error is managed by the store
-    console.error('Passkey error:', error);
+    logger.error('Passkey error:', error);
   };
 
   const handleEmailAuth = async () => {
@@ -423,7 +424,7 @@ const AuthStep: React.FC<{
       const { safeNavigate } = await import('@/lib/utils/ssr-safe');
       safeNavigate('/register');
     } catch {
-      console.error('Failed to redirect to registration');
+      logger.error('Failed to redirect to registration');
     }
   };
 
@@ -433,7 +434,7 @@ const AuthStep: React.FC<{
       const { safeNavigate } = await import('@/lib/utils/ssr-safe');
       safeNavigate('/auth/google');
     } catch {
-      console.error('Failed to redirect to Google authentication');
+      logger.error('Failed to redirect to Google authentication');
     }
   };
 
@@ -883,7 +884,7 @@ const BalancedOnboardingFlow: React.FC = () => {
             safeNavigate('/dashboard');
           }
         } catch (error) {
-          console.error('Error checking onboarding status:', error);
+          logger.error('Error checking onboarding status:', error);
           // Continue with onboarding if we can't check status
         }
       }
@@ -923,7 +924,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Failed to update onboarding status:', error);
+          logger.error('Failed to update onboarding status:', error);
         }
       }
 
@@ -933,7 +934,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     // Redirect to main app
     window.location.href = '/civics';
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      logger.error('Error completing onboarding:', error);
       // Still redirect even if database update fails
       window.location.href = '/civics';
     }

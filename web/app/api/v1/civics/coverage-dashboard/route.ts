@@ -163,19 +163,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     };
 
-    return NextResponse.json(dashboard, {
-      headers: {
-        'ETag': `"dashboard-${Date.now()}"`,
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
-        'Content-Type': 'application/json'
-      }
-    });
-
-  } catch (error) {
-    logger.error('Error fetching coverage dashboard:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  const response = successResponse(dashboard);
+  response.headers.set('ETag', `"dashboard-${Date.now()}"`);
+  response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+  
+  return response;
+});

@@ -21,7 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
 import { cn } from '@/lib/utils';
+import logger from '@/lib/utils/logger';
 
 import type { Poll, PollHashtagIntegrationRecord } from '../types';
 
@@ -61,7 +63,7 @@ export default function PollHashtagIntegration({
   const _trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
     // Since PollHashtagIntegrationRecord doesn't have hashtag_engagement,
     // we'll track this separately
-    console.log(`Hashtag engagement tracked: ${action}`);
+    logger.info(`Hashtag engagement tracked: ${action}`);
     // Engagement tracking: extend analytics service to track hashtag engagement metrics
   };
 
@@ -96,10 +98,9 @@ export default function PollHashtagIntegration({
   // Handle primary hashtag change
   const handlePrimaryHashtagChange = (hashtag: string) => {
     if (hashtagIntegration) {
-      const updatedIntegration = {
-        ...hashtagIntegration,
+      const updatedIntegration = withOptional(hashtagIntegration, {
         primary_hashtag: hashtag
-      };
+      });
       
       setHashtagIntegration(updatedIntegration);
       onUpdate({

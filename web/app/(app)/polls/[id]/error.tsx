@@ -7,7 +7,7 @@ import { logger } from '@/lib/utils/logger';
 export default function PollRouteError({ error }: { error: Error & { digest?: string } }) {
   // Log error to console for debugging (development only)
   if (process.env.NODE_ENV === 'development') {
-    console.error('Poll route error:', error);
+    logger.error('Poll route error:', error);
   }
   
   // Use existing error logging system

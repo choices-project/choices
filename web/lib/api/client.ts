@@ -8,6 +8,8 @@
  * Status: ✅ ACTIVE
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from './types';
 
 // ============================================================================
@@ -110,16 +112,23 @@ export async function apiClient<T = any>(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    if (fetchOptions.headers) {
+      const originalHeaders = new Headers(fetchOptions.headers);
+      originalHeaders.forEach((value, key) => {
+        headers.set(key, value);
+      });
+    }
+
+    const baseRequestInit = withOptional({}, fetchOptions as Record<string, unknown>) as RequestInit;
+    const requestInit = withOptional(baseRequestInit, {
+      signal: controller.signal,
+      headers
+    }) as RequestInit;
+
     const response = await fetchWithRetry(
       `${baseUrl}${url}`,
-      {
-        ...fetchOptions,
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...fetchOptions.headers,
-        },
-      },
+      requestInit,
       retries,
       retryDelay
     );
@@ -215,7 +224,7 @@ export async function get<T = any>(
   url: string,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  return apiClient<T>(url, { ...options, method: 'GET' });
+  return apiClient<T>(url, mergeClientOptions(options, { method: 'GET' }));
 }
 
 /**
@@ -226,11 +235,12 @@ export async function post<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  return apiClient<T>(url, {
-    ...options,
-    method: 'POST',
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+  const extras = withOptional(
+    { method: 'POST' } as Record<string, unknown>,
+    body ? { body: JSON.stringify(body) } : undefined
+  );
+
+  return apiClient<T>(url, mergeClientOptions(options, extras));
 }
 
 /**
@@ -241,11 +251,12 @@ export async function put<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  return apiClient<T>(url, {
-    ...options,
-    method: 'PUT',
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+  const extras = withOptional(
+    { method: 'PUT' } as Record<string, unknown>,
+    body ? { body: JSON.stringify(body) } : undefined
+  );
+
+  return apiClient<T>(url, mergeClientOptions(options, extras));
 }
 
 /**
@@ -256,11 +267,12 @@ export async function patch<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  return apiClient<T>(url, {
-    ...options,
-    method: 'PATCH',
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+  const extras = withOptional(
+    { method: 'PATCH' } as Record<string, unknown>,
+    body ? { body: JSON.stringify(body) } : undefined
+  );
+
+  return apiClient<T>(url, mergeClientOptions(options, extras));
 }
 
 /**
@@ -270,7 +282,7 @@ export async function del<T = any>(
   url: string,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  return apiClient<T>(url, { ...options, method: 'DELETE' });
+  return apiClient<T>(url, mergeClientOptions(options, { method: 'DELETE' }));
 }
 
 // ============================================================================
@@ -308,12 +320,21 @@ export function createMutationFn<TResult, TVariables = void>(
   return async (variables: TVariables): Promise<TResult> => {
     const finalUrl = typeof url === 'function' ? url(variables) : url;
 
-    return apiClient<TResult>(finalUrl, {
-      ...options,
-      method,
-      ...(method !== 'DELETE' ? { body: JSON.stringify(variables) } : {}),
-    });
+    const extras = withOptional(
+      { method } as Record<string, unknown>,
+      method !== 'DELETE' ? { body: JSON.stringify(variables) } : undefined
+    );
+
+    return apiClient<TResult>(finalUrl, mergeClientOptions(options, extras));
   };
+}
+
+function mergeClientOptions(
+  options: ApiClientOptions | undefined,
+  extras: Record<string, unknown>
+): ApiClientOptions {
+  const baseOptions = withOptional({}, (options ?? {}) as Record<string, unknown>) as ApiClientOptions;
+  return withOptional(baseOptions, extras) as ApiClientOptions;
 }
 
 // ============================================================================

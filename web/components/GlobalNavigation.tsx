@@ -17,6 +17,7 @@ import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/contexts/AuthContext'
+import logger from '@/lib/utils/logger'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -36,7 +37,7 @@ export default function GlobalNavigation() {
       await signOut()
       closeMobileMenu()
     } catch (error) {
-      console.error('Logout failed:', error)
+      logger.error('Logout failed:', error)
     }
   }
 

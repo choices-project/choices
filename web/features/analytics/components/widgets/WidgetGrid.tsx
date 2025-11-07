@@ -1,6 +1,6 @@
 /**
  * Widget Grid Component
- * 
+ *
  * Implements drag-and-drop grid layout using react-grid-layout.
  * Features:
  * - Responsive breakpoints
@@ -8,7 +8,7 @@
  * - Resize widgets
  * - Touch support
  * - Smooth animations
- * 
+ *
  * Created: November 5, 2025
  * Status: PRODUCTION
  */
@@ -18,9 +18,12 @@
 import React, { useCallback, useMemo } from 'react';
 import { type Layout as GridLayoutType, Responsive, WidthProvider } from 'react-grid-layout';
 
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
+import { withOptional } from '@/lib/util/objects';
+
 import type { WidgetConfig, Breakpoint } from '../../types/widget';
+
+import 'react-grid-layout/css/styles.css';
+import './WidgetGrid.css';
 
 // Wrap GridLayout with WidthProvider for automatic width detection
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -37,7 +40,7 @@ const GRID_CONFIG = {
     sm: 768,
     xs: 480,
   },
-  
+
   // Number of columns for each breakpoint
   cols: {
     lg: 12,
@@ -45,19 +48,19 @@ const GRID_CONFIG = {
     sm: 6,
     xs: 4,
   },
-  
+
   // Row height in pixels
   rowHeight: 100,
-  
+
   // Margins between widgets [x, y]
   margin: [16, 16] as [number, number],
-  
+
   // Container padding [x, y]
   containerPadding: [16, 16] as [number, number],
-  
+
   // Compact type (vertical or horizontal)
   compactType: 'vertical' as const,
-  
+
   // Prevent collision
   preventCollision: false,
 };
@@ -107,28 +110,31 @@ const generateResponsiveLayouts = (
   widgets: WidgetConfig[]
 ): Record<Breakpoint, GridLayoutType[]> => {
   const baseLayout = widgets.map(widgetToLayout);
-  
+
   return {
     lg: baseLayout,
-    md: baseLayout.map(item => ({
-      ...item,
-      // Adjust for medium screens
-      w: Math.min(item.w, GRID_CONFIG.cols.md),
-      x: item.x % GRID_CONFIG.cols.md,
-    })),
-    sm: baseLayout.map(item => ({
-      ...item,
-      // Adjust for small screens - stack widgets
-      w: GRID_CONFIG.cols.sm,
-      x: 0,
-    })),
-    xs: baseLayout.map(item => ({
-      ...item,
-      // Full width on mobile
-      w: GRID_CONFIG.cols.xs,
-      x: 0,
-    })),
-  };
+    md: baseLayout.map(item =>
+      withOptional(item, {
+        // Adjust for medium screens
+        w: Math.min(item.w, GRID_CONFIG.cols.md),
+        x: item.x % GRID_CONFIG.cols.md,
+      })
+    ),
+    sm: baseLayout.map(item =>
+      withOptional(item, {
+        // Adjust for small screens - stack widgets
+        w: GRID_CONFIG.cols.sm,
+        x: 0,
+      })
+    ),
+    xs: baseLayout.map(item =>
+      withOptional(item, {
+        // Full width on mobile
+        w: GRID_CONFIG.cols.xs,
+        x: 0,
+      })
+    ),
+  } as Record<Breakpoint, GridLayoutType[]>;
 };
 
 // ============================================================================
@@ -208,100 +214,27 @@ export const WidgetGrid: React.FC<WidgetGridProps> = ({
         containerPadding={GRID_CONFIG.containerPadding}
         compactType={GRID_CONFIG.compactType}
         preventCollision={GRID_CONFIG.preventCollision}
-        
+
         // Editing controls
         isDraggable={isEditing}
         isResizable={isEditing}
-        
+
         // Event handlers
         onLayoutChange={handleLayoutChange}
         onDragStart={handleDragStart}
         onDragStop={handleDragStop}
         onResizeStart={handleResizeStart}
         onResizeStop={handleResizeStop}
-        
+
         // Touch support
         isBounded={false}
         useCSSTransforms={true}
-        
+
         // Drag handle (use .drag-handle class in child components)
         draggableHandle=".drag-handle"
       >
         {children}
       </ResponsiveGridLayout>
-
-      {/* Custom Styles */}
-      <style jsx global>{`
-        .widget-grid-container {
-          width: 100%;
-          min-height: 100vh;
-        }
-
-        .react-grid-item {
-          transition: all 200ms ease;
-          transition-property: left, top, width, height;
-        }
-
-        .react-grid-item.cssTransforms {
-          transition-property: transform, width, height;
-        }
-
-        .react-grid-item.resizing {
-          transition: none;
-          z-index: 100;
-        }
-
-        .react-grid-item.react-draggable-dragging {
-          transition: none;
-          z-index: 100;
-          opacity: 0.9;
-        }
-
-        .react-grid-item.dropping {
-          visibility: hidden;
-        }
-
-        .react-grid-item.react-grid-placeholder {
-          background: hsl(var(--primary) / 0.2);
-          opacity: 0.2;
-          transition-duration: 100ms;
-          z-index: 2;
-          border-radius: 8px;
-          border: 2px dashed hsl(var(--primary));
-        }
-
-        .react-grid-item > .react-resizable-handle {
-          position: absolute;
-          width: 20px;
-          height: 20px;
-        }
-
-        .react-grid-item > .react-resizable-handle::after {
-          content: "";
-          position: absolute;
-          right: 3px;
-          bottom: 3px;
-          width: 5px;
-          height: 5px;
-          border-right: 2px solid hsl(var(--border));
-          border-bottom: 2px solid hsl(var(--border));
-        }
-
-        .react-resizable-hide > .react-resizable-handle {
-          display: none;
-        }
-
-        /* Resize handle visibility - only show when editing */
-        .react-grid-item:not(.react-grid-placeholder) > .react-resizable-handle {
-          opacity: 0;
-          transition: opacity 200ms ease;
-        }
-
-        .react-grid-item:hover > .react-resizable-handle,
-        .react-grid-item.resizing > .react-resizable-handle {
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 };

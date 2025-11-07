@@ -1,11 +1,11 @@
 'use client';
 
-import { 
-  Vote, 
-  Shield, 
-  Users, 
-  TrendingUp, 
-  ArrowRight, 
+import {
+  Vote,
+  Shield,
+  Users,
+  TrendingUp,
+  ArrowRight,
   CheckCircle2,
   Lock
 } from 'lucide-react';
@@ -43,14 +43,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     const fetchTrendingPoll = async () => {
       try {
         setIsLoadingTrending(true);
-        
+
         // Fetch trending polls from our new API
         const response = await fetch('/api/trending?type=polls');
         const data = await response.json();
-        
+
         if (data.success && data.trendingPolls.length > 0) {
           const topTrending = data.trendingPolls[0]; // Get the highest trending score
-          
+
           setTrendingPoll({
             title: topTrending.title,
             description: topTrending.description,
@@ -112,11 +112,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }
   ];
 
+  const gridPatternStyle: React.CSSProperties = {
+    backgroundImage:
+      'linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)',
+    backgroundSize: '20px 20px'
+  };
+
   return (
     <section className="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      
+      <div className="absolute inset-0 opacity-5" style={gridPatternStyle} />
+
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Content */}
@@ -136,7 +142,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </span>
               </h1>
               <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
-                Participate in democratic decision-making with privacy, security, and transparency. 
+                Participate in democratic decision-making with privacy, security, and transparency.
                 Your voice matters, and we ensure it&apos;s heard.
               </p>
             </div>
@@ -338,7 +344,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Why Choose Our Platform?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We combine cutting-edge cryptography with user-friendly design to create 
+              We combine cutting-edge cryptography with user-friendly design to create
               the most secure and accessible voting experience.
             </p>
           </div>
@@ -394,16 +400,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
       </div>
-
-      {/* CSS for grid pattern */}
-      <style jsx={true}>{`
-        .bg-grid-pattern {
-          background-image: 
-            linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
     </section>
   );
 };

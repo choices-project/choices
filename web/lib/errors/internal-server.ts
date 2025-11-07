@@ -8,6 +8,16 @@ import { withOptional } from '@/lib/util/objects';
 
 import { ApplicationError, type ErrorDetails } from './base';
 
+const EMPTY_DETAILS: ErrorDetails = {};
+
+function sanitizeDetails(details?: ErrorDetails): ErrorDetails {
+  return details ? withOptional(details) : EMPTY_DETAILS;
+}
+
+function mergeDetails(details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails {
+  return withOptional(sanitizeDetails(details), extras);
+}
+
 export class InternalServerError extends ApplicationError {
   constructor(message: string = 'Internal server error', details?: ErrorDetails) {
     super(message, 500, 'INTERNAL_SERVER_ERROR', details);
@@ -16,44 +26,69 @@ export class InternalServerError extends ApplicationError {
 
 export class DatabaseError extends ApplicationError {
   constructor(operation: string, details?: ErrorDetails) {
-    super(`Database error during ${operation}`, 500, 'DATABASE_ERROR', withOptional(details ?? {}, {
-      constraint: operation
-    }));
+    super(
+      `Database error during ${operation}`,
+      500,
+      'DATABASE_ERROR',
+      mergeDetails(details, {
+        constraint: operation
+      })
+    );
   }
 }
 
 export class ExternalServiceError extends ApplicationError {
   constructor(service: string, details?: ErrorDetails) {
-    super(`External service '${service}' is unavailable`, 500, 'EXTERNAL_SERVICE_ERROR', withOptional(details ?? {}, {
-      field: 'service',
-      value: service
-    }));
+    super(
+      `External service '${service}' is unavailable`,
+      500,
+      'EXTERNAL_SERVICE_ERROR',
+      mergeDetails(details, {
+        field: 'service',
+        value: service
+      })
+    );
   }
 }
 
 export class VoteProcessingError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error processing vote for poll '${pollId}'`, 500, 'VOTE_PROCESSING_ERROR', withOptional(details ?? {}, {
-      field: 'pollId',
-      value: pollId
-    }));
+    super(
+      `Error processing vote for poll '${pollId}'`,
+      500,
+      'VOTE_PROCESSING_ERROR',
+      mergeDetails(details, {
+        field: 'pollId',
+        value: pollId
+      })
+    );
   }
 }
 
 export class ResultsCalculationError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Error calculating results for poll '${pollId}'`, 500, 'RESULTS_CALCULATION_ERROR', withOptional(details ?? {}, {
-      field: 'pollId',
-      value: pollId
-    }));
+    super(
+      `Error calculating results for poll '${pollId}'`,
+      500,
+      'RESULTS_CALCULATION_ERROR',
+      mergeDetails(details, {
+        field: 'pollId',
+        value: pollId
+      })
+    );
   }
 }
 
 export class ConfigurationError extends ApplicationError {
   constructor(configKey: string, details?: ErrorDetails) {
-    super(`Configuration error for '${configKey}'`, 500, 'CONFIGURATION_ERROR', withOptional(details ?? {}, {
-      field: 'configKey',
-      value: configKey
-    }));
+    super(
+      `Configuration error for '${configKey}'`,
+      500,
+      'CONFIGURATION_ERROR',
+      mergeDetails(details, {
+        field: 'configKey',
+        value: configKey
+      })
+    );
   }
 }

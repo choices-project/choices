@@ -92,7 +92,7 @@ export async function register(
       .single();
 
     if (usernameError && usernameError.code !== 'PGRST116') { // PGRST116 is "not found" which is expected
-      console.error('Error checking existing username:', usernameError);
+      logger.error('Error checking existing username:', usernameError);
       logger.error('Failed to check existing username', new Error(usernameError.message));
       return { ok: false, error: `Failed to check existing username: ${usernameError.message}` };
     }
@@ -161,7 +161,7 @@ export async function register(
 
       if (profileError) {
         logger.error('Failed to create user profile', new Error(profileError.message));
-        console.error('Profile error details:', profileError);
+        logger.error('Profile error details:', profileError);
         return { ok: false, error: `Failed to create user profile: ${profileError.message}` };
       }
 
@@ -183,7 +183,7 @@ export async function register(
 
       if (roleError) {
         logger.error('Failed to create user role', new Error(roleError.message));
-        console.error('Role error details:', roleError);
+        logger.error('Role error details:', roleError);
         return { ok: false, error: `Failed to create user role: ${roleError.message}` };
       }
 
@@ -271,7 +271,7 @@ export async function register(
 
       if (profileError) {
         logger.error('Failed to create user profile', new Error(profileError.message));
-        console.error('Profile error details:', profileError);
+        logger.error('Profile error details:', profileError);
         return { ok: false, error: `Failed to create user profile: ${profileError.message}` };
       }
 
@@ -293,7 +293,7 @@ export async function register(
 
       if (roleError) {
         logger.error('Failed to create user role', new Error(roleError.message));
-        console.error('Role error details:', roleError);
+        logger.error('Role error details:', roleError);
         return { ok: false, error: `Failed to create user role: ${roleError.message}` };
       }
 
@@ -323,7 +323,7 @@ export async function register(
       return { ok: false, error: 'Validation failed', fieldErrors };
     }
     logger.error('Register action failed', err instanceof Error ? err : new Error(String(err)));
-    console.error('Registration error details:', err);
+    logger.error('Registration error details:', err);
     return { ok: false, error: `Registration failed: ${err instanceof Error ? err.message : String(err)}` };
   }
 }

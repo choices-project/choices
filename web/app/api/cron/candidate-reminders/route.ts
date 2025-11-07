@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server'
 
+import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { 
   shouldSendReminder,
   type JourneyStage,
   type JourneyMilestone
 } from '@/lib/candidate/journey-tracker'
-import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'

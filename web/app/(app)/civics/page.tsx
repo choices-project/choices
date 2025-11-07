@@ -70,7 +70,7 @@ export default function Civics2Page() {
       setRepresentatives(data.data ?? []);
       logger.info('🎯 Representatives state updated');
     } catch (error) {
-      console.error('❌ Error loading representatives:', error);
+      logger.error('❌ Error loading representatives:', error);
     } finally {
       setIsLoading(false);
     }

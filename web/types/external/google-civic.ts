@@ -90,17 +90,6 @@ export type RetryConfig = {
   retryableStatusCodes: number[];
 }
 
-/**
- * Error context for logging and debugging
- * Note: Using the centralized ErrorContext from error-types.ts
- */
-// Error context type definition
-type ErrorContext = {
-  code: string;
-  message: string;
-  details?: any;
-}
-
 // Legacy aliases for backward compatibility
 export type GoogleCivicElectionInfo = GcElectionInfo;
 export type GoogleCivicVoterInfo = GcVoterInfo;

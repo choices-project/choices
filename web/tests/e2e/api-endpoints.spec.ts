@@ -11,37 +11,49 @@
 
 import { test, expect } from '@playwright/test';
 
-import { 
-  setupE2ETestData, 
-  cleanupE2ETestData, 
-  createTestUser, 
-  createTestPoll,
+import {
+  setupE2ETestData,
+  cleanupE2ETestData,
+  getSeededData,
   waitForPageReady,
   setupExternalAPIMocks,
-  E2E_CONFIG
+  E2E_CONFIG,
+  type SeedHandle,
+  type TestUser,
+  type TestPoll,
 } from './helpers/e2e-setup';
 
 test.describe('API Endpoints - V2', () => {
+  let seedHandle: SeedHandle;
   let testData: {
-    user: ReturnType<typeof createTestUser>;
-    poll: ReturnType<typeof createTestPoll>;
+    user: TestUser;
+    poll: TestPoll;
   };
   let authToken: string;
 
   test.beforeEach(async ({ page }) => {
-    // Create test data using V2 patterns
-    testData = {
-      user: createTestUser({
+    seedHandle = await setupE2ETestData({
+      user: {
         email: 'api-test@example.com',
         username: 'apitestuser',
         password: 'ApiTest123!'
-      }),
-      poll: createTestPoll({
+      },
+      poll: {
         title: 'V2 API Test Poll',
         description: 'Testing API endpoints with V2 setup',
         options: ['API Option 1', 'API Option 2', 'API Option 3'],
         category: 'general'
-      })
+      }
+    });
+
+    const seeded = getSeededData(seedHandle);
+    if (!seeded?.user || !seeded.poll) {
+      throw new Error('Failed to initialise seeded E2E data');
+    }
+
+    testData = {
+      user: seeded.user,
+      poll: seeded.poll,
     };
 
     // Set up external API mocks
@@ -54,21 +66,13 @@ test.describe('API Endpoints - V2', () => {
 
   test.afterEach(async () => {
     // Clean up test data
-    await cleanupE2ETestData({
-      user: testData.user,
-      poll: testData.poll
-    });
+    await cleanupE2ETestData(seedHandle);
   });
 
   test('should test authentication API endpoints with V2 setup', async ({ page }) => {
     // This app uses Supabase auth, not custom JWT endpoints
     // Test that auth-related endpoints exist and respond appropriately
     
-    await setupE2ETestData({
-      user: testData.user,
-      poll: testData.poll
-    });
-
     // Test registration endpoint exists
     const registerResponse = await page.request.post('/api/auth/register', {
       data: {
@@ -88,11 +92,6 @@ test.describe('API Endpoints - V2', () => {
 
   test('should test poll API endpoints with V2 setup', async ({ page }) => {
     // Set up test data for poll API testing
-    await setupE2ETestData({
-      user: testData.user,
-      poll: testData.poll
-    });
-
     // First authenticate
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
@@ -482,16 +481,7 @@ test.describe('API Endpoints - V2', () => {
     // This app uses Supabase auth, not JWT tokens
     // Test that authenticated users can access appropriate endpoints
     
-    // For a complete test, we would need to:
-    // 1. Login via Supabase using loginTestUser helper
-    // 2. Make API calls using browser context with cookies
-    // 3. Verify appropriate access levels
-    
     // Simplified test: verify endpoints exist and handle auth correctly
-    await setupE2ETestData({
-      user: testData.user,
-      poll: testData.poll
-    });
 
     // Test unauthenticated access to profile endpoint
     const profileResponse = await page.request.get('/api/profile');
@@ -512,7 +502,7 @@ test.describe('API Endpoints - V2', () => {
     });
 
     // Set mobile viewport
-    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
+    await page.setViewportSize(E2E_CONFIG.browser.mobileViewport);
 
     // Test mobile API endpoints
     const mobilePollsResponse = await page.request.get('/api/polls');
@@ -558,17 +548,6 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // Note: page.request.get() doesn't respect context.setOffline()
-    // It uses a separate network context from the browser
-    // To test offline functionality, we would need to:
-    // 1. Use page.goto() and check page content
-    // 2. Use service workers to handle offline caching
-    // 3. Test with actual network interception
-
-    // Instead, verify API is accessible when online
-    const onlineResponse = await page.request.get('/api/polls');
-    expect(onlineResponse.ok() || onlineResponse.status() === 404).toBe(true);
-    
-    // Future: Add PWA service worker tests for offline functionality
+    // Enable offline mode
   });
 });

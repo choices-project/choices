@@ -1,5 +1,5 @@
 import { 
-  Camera, 
+Camera, 
   Upload, 
   X, 
   Loader2, 
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import logger from '@/lib/utils/logger'
 
 import { useProfileAvatar } from '../hooks/use-profile';
 import type { ProfileAvatarProps } from '../index';
@@ -136,7 +137,7 @@ export default function ProfileAvatar({
   const handleRemove = async () => {
     try {
       // Note: removeAvatar not available in hook, implementing basic removal
-      console.log('Remove avatar requested');
+      logger.info('Remove avatar requested');
       setSuccess('Avatar removed successfully');
       setPreview(null);
       onRemove?.();

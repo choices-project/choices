@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 
+import logger from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function isAdmin(): Promise<boolean> {
@@ -24,7 +25,7 @@ export async function isAdmin(): Promise<boolean> {
     if (profileError || !profile) return false;
     return profile.is_admin === true;
   } catch (error) {
-    console.error('Admin check error:', error);
+    logger.error('Admin check error:', error);
     return false;
   }
 }

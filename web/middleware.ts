@@ -7,6 +7,7 @@ import {
   isBlockedUserAgent,
   anonymizeIP
 } from '@/lib/core/security/config'
+import logger from '@/lib/utils/logger'
 
 /**
  * Security Middleware
@@ -178,7 +179,7 @@ export function middleware(request: NextRequest) {
   // Validate request
   const validation = validateRequest(request)
   if (!validation.valid) {
-    console.warn(`Security: Blocked suspicious request: ${validation.reason}`, {
+    logger.warn(`Security: Blocked suspicious request: ${validation.reason}`, {
       ip: getClientIP(request),
       path: pathname,
       userAgent: request.headers.get('user-agent')
@@ -193,7 +194,7 @@ export function middleware(request: NextRequest) {
     .some(endpoint => pathname.startsWith(endpoint))
 
   if (SECURITY_CONFIG.rateLimit.enabled && isSensitiveEndpoint && !checkRateLimit(clientIP, pathname, request)) {
-    console.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
+    logger.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
 
     return new NextResponse('Too Many Requests', {
       status: 429,
@@ -226,7 +227,7 @@ export function middleware(request: NextRequest) {
   // Add security logging
   if (process.env.NODE_ENV === 'production') {
     const logIP = SECURITY_CONFIG.privacy.anonymizeIPs ? anonymizeIP(clientIP) : clientIP
-    console.log('Security: Request processed', {
+    logger.info('Security: Request processed', {
       ip: logIP,
       path: pathname,
       method: request.method,

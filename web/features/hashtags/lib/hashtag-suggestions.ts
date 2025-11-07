@@ -225,7 +225,7 @@ export async function getRelatedHashtags(
       .sort((a, b) => b.confidence - a.confidence)
       .slice(0, limit);
   } catch (error) {
-    console.error('Failed to get related hashtags:', error);
+    logger.error('Failed to get related hashtags:', error);
     throw error;
   }
 }
@@ -264,7 +264,7 @@ export async function getTrendingSuggestions(
       }
     }));
   } catch (error) {
-    console.error('Failed to get trending suggestions:', error);
+    logger.error('Failed to get trending suggestions:', error);
     throw error;
   }
 }

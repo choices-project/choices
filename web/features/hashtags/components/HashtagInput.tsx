@@ -3,6 +3,8 @@
 import { Hash, TrendingUp, X } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 
+import logger from '@/lib/utils/logger';
+
 
 import { getHashtagSuggestions, validateHashtagName } from '../lib/hashtag-service';
 import type { HashtagSuggestion } from '../types';
@@ -54,7 +56,7 @@ export function HashtagInput({
           setShowSuggestionsList(true);
         }
       } catch (error) {
-        console.error('Failed to fetch hashtag suggestions:', error);
+        logger.error('Failed to fetch hashtag suggestions:', error);
       } finally {
         setIsLoading(false);
       }

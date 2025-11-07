@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
+import logger from '@/lib/utils/logger';
 
 type SystemSettingsConfig = {
   general: {
@@ -93,7 +94,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
       } catch (err) {
         setError('Failed to load system settings');
         performanceMetrics.addMetric('system-settings-error', 1);
-        console.error('System settings load error:', err);
+        logger.error('System settings load error:', err);
       } finally {
         setLoading(false);
       }
@@ -122,7 +123,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
     } catch (err) {
       setError('Failed to save settings');
       performanceMetrics.addMetric('system-settings-save-error', 1);
-      console.error('System settings save error:', err);
+      logger.error('System settings save error:', err);
     } finally {
       setSaving(false);
     }

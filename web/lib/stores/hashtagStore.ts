@@ -9,10 +9,10 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { 
+import type {
   Hashtag,
   UserHashtag,
   TrendingHashtag,
@@ -22,7 +22,10 @@ import type {
   HashtagAnalytics,
   HashtagCategory
 } from '@/features/hashtags/types';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
+import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 // Additional type definitions for hashtag store
@@ -65,6 +68,28 @@ type HashtagValidation = {
   errors: string[];
   warnings: string[];
 }
+
+const defaultHashtagFilters: HashtagStore['filters'] = {
+  selectedCategory: 'all',
+  sortBy: 'trend_score',
+  timeRange: '24h',
+  searchQuery: '',
+};
+
+const mergeHashtag = (hashtag: Hashtag, updates: Partial<Hashtag>) =>
+  withOptional(hashtag, updates as Record<string, unknown>) as Hashtag;
+
+const mergeFilters = (
+  filters: HashtagStore['filters'],
+  updates: Partial<HashtagStore['filters']>
+) => withOptional(filters, updates as Record<string, unknown>) as HashtagStore['filters'];
+
+const mergeUserPreferences = (
+  preferences: HashtagUserPreferences,
+  updates: Partial<HashtagUserPreferences>
+) => withOptional(preferences, updates as Record<string, unknown>) as HashtagUserPreferences;
+
+const cloneFilters = () => withOptional(defaultHashtagFilters);
 
 
 // Hashtag store state interface
@@ -192,12 +217,7 @@ export const useHashtagStore = create<HashtagStore>()(
         userPreferences: null,
         followedHashtags: [],
         primaryHashtags: [],
-        filters: {
-          selectedCategory: 'all',
-          sortBy: 'trend_score',
-          timeRange: '24h',
-          searchQuery: '',
-        },
+        filters: cloneFilters(),
         isLoading: false,
         isSearching: false,
         isFollowing: false,
@@ -242,7 +262,7 @@ export const useHashtagStore = create<HashtagStore>()(
           if (index >= 0) {
             const existing = state.hashtags[index];
             if (existing) {
-              state.hashtags[index] = { ...existing, ...updates };
+              state.hashtags[index] = mergeHashtag(existing, updates);
             }
           }
         }),
@@ -321,7 +341,7 @@ export const useHashtagStore = create<HashtagStore>()(
               });
             }
           } catch (error) {
-            console.error('Failed to get suggestions:', error);
+            logger.error('Failed to get suggestions:', error);
           }
         },
         
@@ -494,7 +514,7 @@ export const useHashtagStore = create<HashtagStore>()(
             if (result.success) {
               set((state) => {
                 if (state.userPreferences) {
-                  state.userPreferences = { ...state.userPreferences, ...preferences };
+                  state.userPreferences = mergeUserPreferences(state.userPreferences, preferences);
                 }
                 state.isUpdating = false;
               });
@@ -527,7 +547,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.userPreferences = result.data!;
+                state.userPreferences = withOptional(result.data) as HashtagUserPreferences;
                 state.isLoading = false;
               });
             } else {
@@ -555,7 +575,7 @@ export const useHashtagStore = create<HashtagStore>()(
             }
             return null;
           } catch (error) {
-            console.error('Failed to get hashtag analytics:', error);
+            logger.error('Failed to get hashtag analytics:', error);
             return null;
           }
         },
@@ -600,7 +620,7 @@ export const useHashtagStore = create<HashtagStore>()(
             }
             return null;
           } catch (error) {
-            console.error('Failed to get profile integration:', error);
+            logger.error('Failed to get profile integration:', error);
             return null;
           }
         },
@@ -615,7 +635,7 @@ export const useHashtagStore = create<HashtagStore>()(
             }
             return null;
           } catch (error) {
-            console.error('Failed to get poll integration:', error);
+            logger.error('Failed to get poll integration:', error);
             return null;
           }
         },
@@ -630,7 +650,7 @@ export const useHashtagStore = create<HashtagStore>()(
             }
             return null;
           } catch (error) {
-            console.error('Failed to get feed integration:', error);
+            logger.error('Failed to get feed integration:', error);
             return null;
           }
         },
@@ -646,23 +666,18 @@ export const useHashtagStore = create<HashtagStore>()(
             }
             return null;
           } catch (error) {
-            console.error('Failed to validate hashtag name:', error);
+            logger.error('Failed to validate hashtag name:', error);
             return null;
           }
         },
         
         // Filter actions
         setFilter: (filter) => set((state) => {
-          state.filters = { ...state.filters, ...filter };
+          state.filters = mergeFilters(state.filters, filter);
         }),
         
         resetFilters: () => set((state) => {
-          state.filters = {
-            selectedCategory: 'all',
-            sortBy: 'trend_score',
-            timeRange: '24h',
-            searchQuery: '',
-          };
+          state.filters = cloneFilters();
         }),
         
         setCategory: (category) => set((state) => {
@@ -771,6 +786,7 @@ export const useHashtagStore = create<HashtagStore>()(
           state.userPreferences = null;
           state.followedHashtags = [];
           state.primaryHashtags = [];
+          state.filters = cloneFilters();
           state.isLoading = false;
           state.isSearching = false;
           state.isFollowing = false;
@@ -790,6 +806,7 @@ export const useHashtagStore = create<HashtagStore>()(
       })),
       {
         name: 'hashtag-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           hashtags: state.hashtags,
           userHashtags: state.userHashtags,
@@ -924,7 +941,17 @@ export const useHashtagStats = () => useHashtagStore((state) => ({
 // Hashtag store utilities
 export const hashtagStoreUtils = {
   // Initialize hashtag store
-  initialize: () => {
+  initialize: async () => {
+    const state = useHashtagStore.getState();
+    if (state.trendingHashtags.length > 0 || state.isLoading) {
+      return;
+    }
+
+    try {
+      await state.getTrendingHashtags();
+    } catch (error) {
+      logger.error('Failed to initialize hashtag store', error);
+    }
   },
   
   // Reset hashtag store
@@ -1001,15 +1028,10 @@ export const hashtagStoreSubscriptions = {
   
   // Subscribe to filter changes
   onFiltersChange: (callback: (filters: HashtagStore['filters']) => void) => {
-    let previousFilters: HashtagStore['filters'] = {
-      selectedCategory: 'all',
-      sortBy: 'trend_score',
-      timeRange: '24h',
-      searchQuery: '',
-    };
+    let previousFilters: HashtagStore['filters'] = cloneFilters();
     return useHashtagStore.subscribe((state) => {
       if (JSON.stringify(state.filters) !== JSON.stringify(previousFilters)) {
-        previousFilters = { ...state.filters };
+        previousFilters = withOptional(state.filters);
         callback(state.filters);
       }
     });
@@ -1021,7 +1043,7 @@ export const hashtagStoreDebug = {
   // Log current state
   logState: () => {
     const state = useHashtagStore.getState();
-    console.log('Hashtag store state:', state);
+    logger.info('Hashtag store state:', state);
   },
   
   // Reset store

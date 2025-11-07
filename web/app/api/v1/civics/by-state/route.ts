@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
-import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,17 +153,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         return filtered;
       });
     }
-
-    const responseData = {
-      ok: true,
-      count: finalResponse.length,
-      data: finalResponse,
-      attribution: {
-        fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
-        votes: include.includes('votes') ? 'GovTrack.us' : undefined,
-        contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
-      }
-    };
 
   const response = successResponse({
     ok: true,

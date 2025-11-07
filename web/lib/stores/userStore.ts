@@ -10,13 +10,15 @@
 
 import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { UserProfile, ProfileUpdateData as ProfileUpdateDataType } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 
+import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 // Re-export types for convenience
@@ -355,7 +357,10 @@ export const useUserStore = create<UserStore>()(
       
       updateProfileEditData: (updates) => set((state) => {
         if (state.profileEditData) {
-          state.profileEditData = { ...state.profileEditData, ...updates };
+          state.profileEditData = withOptional(
+            state.profileEditData,
+            updates as Record<string, unknown>
+          ) as ProfileUpdateData;
         }
       }),
       
@@ -536,6 +541,7 @@ export const useUserStore = create<UserStore>()(
     })),
     {
       name: 'user-store',
+      storage: createSafeStorage(),
       partialize: (state) => ({
         profile: state.profile,
         isAuthenticated: state.isAuthenticated,

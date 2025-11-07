@@ -13,6 +13,7 @@ import { create } from 'zustand';
 import { devtools , persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type {
   ProfileUser,
@@ -243,9 +244,14 @@ export const useProfileStore = create<ProfileStore>()(
             if (result.success) {
               set((state: any) => {
                 if (state.privacySettings) {
-                  state.privacySettings = { ...state.privacySettings, ...settings };
+                  state.privacySettings = withOptional(
+                    state.privacySettings,
+                    settings as Record<string, unknown>
+                  ) as PrivacySettings;
                 } else {
-                  state.privacySettings = settings as PrivacySettings;
+                  state.privacySettings = withOptional(
+                    settings as Record<string, unknown>
+                  ) as PrivacySettings;
                 }
                 state.isUpdating = false;
               });

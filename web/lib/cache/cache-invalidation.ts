@@ -555,12 +555,13 @@ export class CacheInvalidationFactory {
     redisClient: RedisClient,
     strategyManager: CacheStrategyManager
   ): CacheInvalidationManager {
-    if (!this.instances.has(name)) {
-      const manager = new CacheInvalidationManager(redisClient, strategyManager)
+    let manager = this.instances.get(name)
+    if (!manager) {
+      manager = new CacheInvalidationManager(redisClient, strategyManager)
       this.instances.set(name, manager)
     }
     
-    return this.instances.get(name)!
+    return manager
   }
 
   static get(name: string): CacheInvalidationManager | undefined {

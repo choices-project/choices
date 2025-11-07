@@ -26,13 +26,6 @@ type Poll = {
   [key: string]: unknown;
 }
 
-type DatabaseMaintenanceStats = {
-  tablesOptimized: number;
-  indexesRebuilt: number;
-  cacheCleared: boolean;
-  duration: string;
-}
-
 export type PerformanceMetrics = {
   metricName: string;
   avgValue: number;
@@ -317,7 +310,7 @@ export class OptimizedPollService {
   }
 
   // Perform database maintenance (admin only)
-  async performDatabaseMaintenance(pollId?: string): Promise<{ success: boolean; message: string; stats: any }> {
+  async performDatabaseMaintenance(_pollId?: string): Promise<{ success: boolean; message: string; stats: any }> {
     try {
       const supabase = await getSupabaseServerClient();
       const startTime = Date.now();
@@ -436,7 +429,7 @@ export class OptimizedPollService {
       
       return mockResults;
     } catch (error) {
-      console.error('Error getting optimized poll results:', error);
+      logger.error('Error getting optimized poll results:', error);
       return null;
     }
   }

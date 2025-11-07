@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
+import logger from '@/lib/utils/logger';
 
 type User = {
   id: string;
@@ -101,7 +102,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
       } catch (err) {
         setError('Failed to load users');
         performanceMetrics.addMetric('user-management-error', 1);
-        console.error('User management load error:', err);
+        logger.error('User management load error:', err);
       } finally {
         setLoading(false);
       }

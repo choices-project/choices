@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * Client Session Utility
  * 
@@ -26,7 +27,7 @@ export function setSessionData(data: Record<string, unknown>): void {
   try {
     localStorage.setItem('session', JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to set session data:', error);
+    logger.error('Failed to set session data:', error);
   }
 }
 
@@ -37,7 +38,7 @@ export function clearSessionData(): void {
   try {
     localStorage.removeItem('session');
   } catch (error) {
-    console.error('Failed to clear session data:', error);
+    logger.error('Failed to clear session data:', error);
   }
 }
 

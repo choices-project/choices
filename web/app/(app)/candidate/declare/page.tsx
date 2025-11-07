@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import logger from '@/lib/utils/logger'
 
 const STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -200,7 +201,7 @@ function DeclareCandidacyPageContent() {
           })
         }).catch((error) => {
           // Non-blocking - cron will handle it if this fails
-          console.error('Welcome email trigger failed (will retry via cron):', error)
+          logger.error('Welcome email trigger failed (will retry via cron):', error)
         })
         
         router.push(`/candidate/dashboard`)

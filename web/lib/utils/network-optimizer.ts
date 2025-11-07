@@ -11,6 +11,8 @@
 // Import React for the hook
 import React from 'react';
 
+import { withOptional } from '@/lib/util/objects';
+
 export type CacheConfig = {
   ttl: number; // Time to live in milliseconds
   maxSize: number; // Maximum cache size
@@ -101,17 +103,17 @@ export class NetworkOptimizer {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const fetchOptions: RequestInit = {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            ...headers,
+        const fetchOptions: RequestInit = withOptional(
+          {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...headers,
+            },
+            signal: controller.signal,
           },
-          signal: controller.signal,
-        };
-        if (body) {
-          fetchOptions.body = JSON.stringify(body);
-        }
+          body ? { body: JSON.stringify(body) } : undefined
+        );
         const response = await fetch(url, fetchOptions);
 
         clearTimeout(timeoutId);

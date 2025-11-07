@@ -16,6 +16,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 // ============================================================================
@@ -69,8 +70,8 @@ export type AuditLogOptions = {
   retentionDays?: number;
   severity?: AuditSeverity;
   metadata?: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress?: string | null | undefined;
+  userAgent?: string | null | undefined;
 };
 
 // ============================================================================
@@ -153,22 +154,24 @@ export class AuditLogService {
     role?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
+    const metadata = withOptional(options.metadata ?? {}, {
+      userId,
+      role,
+      type: 'analytics_access',
+    });
+
+    const mergedOptions = withOptional(options as Record<string, unknown>, {
+      metadata,
+      severity: granted ? 'info' : 'warning',
+    }) as AuditLogOptions;
+
     return this.log(
       'analytics_access',
       granted ? 'Analytics Access Granted' : 'Analytics Access Denied',
       resource,
       'access',
       granted,
-      {
-        ...options,
-        metadata: {
-          ...options.metadata,
-          userId,
-          role,
-          type: 'analytics_access',
-        },
-        severity: granted ? 'info' : 'warning',
-      }
+      mergedOptions
     );
   }
 
@@ -188,21 +191,23 @@ export class AuditLogService {
     method?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
+    const metadata = withOptional(options.metadata ?? {}, {
+      method,
+      success,
+    });
+
+    const mergedOptions = withOptional(options as Record<string, unknown>, {
+      metadata,
+      severity: success ? 'info' : 'warning',
+    }) as AuditLogOptions;
+
     return this.log(
       'authentication',
       eventName,
       '/api/auth',
       method || 'unknown',
       success,
-      {
-        ...options,
-        metadata: {
-          ...options.metadata,
-          method,
-          success,
-        },
-        severity: success ? 'info' : 'warning',
-      }
+      mergedOptions
     );
   }
 
@@ -220,16 +225,17 @@ export class AuditLogService {
     resource?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
+    const mergedOptions = withOptional(options as Record<string, unknown>, {
+      severity,
+    }) as AuditLogOptions;
+
     return this.log(
       'security_event',
       eventName,
       resource,
       'security',
       undefined,
-      {
-        ...options,
-        severity,
-      }
+      mergedOptions
     );
   }
 
@@ -247,20 +253,22 @@ export class AuditLogService {
     resource?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
+    const metadata = withOptional(options.metadata ?? {}, {
+      adminUserId: userId,
+    });
+
+    const mergedOptions = withOptional(options as Record<string, unknown>, {
+      metadata,
+      severity: 'info',
+    }) as AuditLogOptions;
+
     return this.log(
       'admin_action',
       action,
       resource,
       'admin',
       true,
-      {
-        ...options,
-        metadata: {
-          ...options.metadata,
-          adminUserId: userId,
-        },
-        severity: 'info',
-      }
+      mergedOptions
     );
   }
 

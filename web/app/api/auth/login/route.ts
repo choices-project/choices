@@ -1,11 +1,12 @@
 import type { NextRequest} from 'next/server';
 
-import { 
+import {
   withErrorHandling,
   successResponse,
   rateLimitError,
   validationError,
-  notFoundError
+  notFoundError,
+  authError,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { withOptional } from '@/lib/util/objects'
@@ -50,13 +51,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // E2E tests should use real Supabase authentication - no mock responses
 
     // Sign in with Supabase Auth
-    const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+    const { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
       password
     })
 
-    if (authError || !authData.user) {
-      logger.warn('Login failed', { email, error: authError?.message })
+    if (signInError || !authData.user) {
+      logger.warn('Login failed', { email, error: signInError?.message })
       return authError('Invalid email or password');
     }
 

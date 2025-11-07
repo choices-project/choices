@@ -17,31 +17,39 @@ export enum LogLevel {
 class Logger {
   private level: LogLevel = LogLevel.INFO;
 
+  private emit(method: 'warn' | 'error', levelLabel: string, message: string, args: unknown[]): void {
+    if (method === 'warn') {
+      console.warn(`[${levelLabel}] ${message}`, ...args);
+    } else {
+      console.error(`[${levelLabel}] ${message}`, ...args);
+    }
+  }
+
   setLevel(level: LogLevel) {
     this.level = level;
   }
 
   debug(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.DEBUG) {
-      console.debug(`[DEBUG] ${message}`, ...args);
+      this.emit('warn', 'DEBUG', message, args);
     }
   }
 
   info(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.INFO) {
-      console.info(`[INFO] ${message}`, ...args);
+      this.emit('warn', 'INFO', message, args);
     }
   }
 
   warn(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.WARN) {
-      console.warn(`[WARN] ${message}`, ...args);
+      this.emit('warn', 'WARN', message, args);
     }
   }
 
   error(message: string, ...args: unknown[]) {
     if (this.level <= LogLevel.ERROR) {
-      console.error(`[ERROR] ${message}`, ...args);
+      this.emit('error', 'ERROR', message, args);
       
       // Send to Sentry if available
       if (typeof window !== 'undefined') {

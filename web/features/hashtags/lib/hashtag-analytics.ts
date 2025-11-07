@@ -183,7 +183,7 @@ export async function calculateTrendingHashtags(
       .sort((a, b) => b.trend_score - a.trend_score)
       .slice(0, limit);
   } catch (error) {
-    console.error('Failed to calculate trending hashtags:', error);
+    logger.error('Failed to calculate trending hashtags:', error);
     throw error;
   }
 }
@@ -254,7 +254,7 @@ export async function getHashtagPerformanceInsights(hashtagId: string): Promise<
       }
     };
   } catch (error) {
-    console.error('Failed to get hashtag performance insights:', error);
+    logger.error('Failed to get hashtag performance insights:', error);
     throw error;
   }
 }
@@ -303,7 +303,7 @@ export async function getCrossFeatureDiscovery(
       trendingSuggestions: trendingSuggestions.map(th => th.hashtag)
     };
   } catch (error) {
-    console.error('Failed to get cross-feature discovery:', error);
+    logger.error('Failed to get cross-feature discovery:', error);
     throw error;
   }
 }
@@ -445,7 +445,7 @@ async function getRelatedHashtags(hashtagId: string): Promise<string[]> {
 
     return Array.from(relatedNames).slice(0, 8);
   } catch (error) {
-    console.error('Failed to get related hashtags:', error);
+    logger.error('Failed to get related hashtags:', error);
     return [];
   }
 }
@@ -492,7 +492,7 @@ async function getSentimentDistribution(hashtagId: string, startDate: string, en
       negative: sentimentCounts.negative / total
     };
   } catch (error) {
-    console.error('Failed to get sentiment distribution:', error);
+    logger.error('Failed to get sentiment distribution:', error);
     return {
       positive: 0.6,
       neutral: 0.3,
@@ -543,7 +543,7 @@ async function getGeographicDistribution(hashtagId: string, startDate: string, e
 
     return distribution;
   } catch (error) {
-    console.error('Failed to get geographic distribution:', error);
+    logger.error('Failed to get geographic distribution:', error);
     return {
       'US': 0.7,
       'CA': 0.2,
@@ -612,7 +612,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
 
     return distribution;
   } catch (error) {
-    console.error('Failed to get demographic distribution:', error);
+    logger.error('Failed to get demographic distribution:', error);
     return {
       '18-24': 0.3,
       '25-34': 0.4,
@@ -664,7 +664,7 @@ async function getCategoryTrends(category: string) {
       top_hashtags: categoryHashtags?.slice(0, 5).map(h => h.name) ?? []
     };
   } catch (error) {
-    console.error('Failed to get category trends:', error);
+    logger.error('Failed to get category trends:', error);
     return {};
   }
 }
@@ -719,7 +719,7 @@ async function getHashtagBenchmarks(hashtagId: string) {
       }
     };
   } catch (error) {
-    console.error('Failed to get hashtag benchmarks:', error);
+    logger.error('Failed to get hashtag benchmarks:', error);
     return {
       category: 'custom',
       usage: {
@@ -787,7 +787,7 @@ async function getProfileBasedSuggestions(userId: string, currentHashtagIds: str
 
     return suggestions.slice(0, limit);
   } catch (error) {
-    console.error('Failed to get profile-based suggestions:', error);
+    logger.error('Failed to get profile-based suggestions:', error);
     return [];
   }
 }
@@ -830,7 +830,7 @@ async function getPollBasedSuggestions(userId: string, currentHashtagIds: string
 
     return pollHashtagData ?? [];
   } catch (error) {
-    console.error('Failed to get poll-based suggestions:', error);
+    logger.error('Failed to get poll-based suggestions:', error);
     return [];
   }
 }
@@ -873,7 +873,7 @@ async function getFeedBasedSuggestions(userId: string, currentHashtagIds: string
 
     return feedHashtagData ?? [];
   } catch (error) {
-    console.error('Failed to get feed-based suggestions:', error);
+    logger.error('Failed to get feed-based suggestions:', error);
     return [];
   }
 }
@@ -893,7 +893,7 @@ async function getTrendingSuggestions(currentHashtagIds: string[], limit: number
 
     return trendingHashtags ?? [];
   } catch (error) {
-    console.error('Failed to get trending suggestions:', error);
+    logger.error('Failed to get trending suggestions:', error);
     return [];
   }
 }
@@ -939,7 +939,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
     // Calculate position based on peak usage (simplified ranking)
     return Math.max(1, Math.min(10, Math.ceil(peakUsage / 10)));
   } catch (error) {
-    console.error('Failed to calculate peak position:', error);
+    logger.error('Failed to calculate peak position:', error);
     return 1;
   }
 }
@@ -971,7 +971,7 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
     if (currentUsage >= 5) return 5;
     return Math.min(10, Math.ceil(10 - currentUsage));
   } catch (error) {
-    console.error('Failed to calculate current position:', error);
+    logger.error('Failed to calculate current position:', error);
     return 5;
   }
 }
@@ -1000,7 +1000,7 @@ async function getPreviousPeriodUsage(hashtagId: string, startDate: string, endD
 
     return data?.length ?? 0;
   } catch (error) {
-    console.error('Failed to get previous period usage:', error);
+    logger.error('Failed to get previous period usage:', error);
     return 0;
   }
 }

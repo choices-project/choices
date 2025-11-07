@@ -9,7 +9,7 @@
  */
 
 import {
-  TrendingUp,
+TrendingUp,
   Flame,
   Clock,
   Search,
@@ -23,6 +23,8 @@ import {
   useHashtagStore,
   useHashtagActions
 } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger'
 
 import type {
   HashtagCategory
@@ -70,7 +72,7 @@ export default function HashtagTrending({
     try {
       await getTrendingHashtags();
     } catch (err) {
-      console.error('Failed to load trending hashtags:', err);
+      logger.error('Failed to load trending hashtags:', err);
     }
   }, [getTrendingHashtags]);
 
@@ -176,7 +178,7 @@ export default function HashtagTrending({
                 value={filters.searchQuery}
                 onChange={(e) => {
                   const query = e.target.value;
-                  setFilters(prev => ({ ...prev, searchQuery: query }));
+                  setFilters(prev => withOptional(prev, { searchQuery: query }));
                   setSearchQuery(query);
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -188,7 +190,7 @@ export default function HashtagTrending({
               value={filters.selectedCategory}
               onChange={(e) => {
                 const category = e.target.value as HashtagCategory | 'all';
-                setFilters(prev => ({ ...prev, selectedCategory: category }));
+                setFilters(prev => withOptional(prev, { selectedCategory: category }));
                 setCategory(category);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
@@ -209,7 +211,7 @@ export default function HashtagTrending({
               value={filters.sortBy}
               onChange={(e) => {
                 const sort = e.target.value as 'trend_score' | 'usage' | 'growth' | 'alphabetical';
-                setFilters(prev => ({ ...prev, sortBy: sort }));
+                setFilters(prev => withOptional(prev, { sortBy: sort }));
                 setSortBy(sort);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
@@ -226,7 +228,7 @@ export default function HashtagTrending({
               onChange={(e) => {
                 const value = e.target.value as '24h' | '7d' | '30d' | 'all';
                 const timeRange = value === 'all' ? '30d' : value;
-                setFilters(prev => ({ ...prev, timeRange }));
+                setFilters(prev => withOptional(prev, { timeRange }));
                 setTimeRange(timeRange);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"

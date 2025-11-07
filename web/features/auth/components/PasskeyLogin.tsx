@@ -1,20 +1,22 @@
 'use client';
 
-import { 
-  Fingerprint, 
-  Loader2, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  Fingerprint,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
   Shield,
   Smartphone,
   Laptop,
-  Key
+  Key,
 } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
@@ -43,7 +45,7 @@ export function PasskeyLogin({
     try {
       return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     } catch (err) {
-      console.error('Error checking platform authenticator:', err);
+      logger.error('Error checking platform authenticator:', err);
       return false;
     }
   };
@@ -83,15 +85,19 @@ export function PasskeyLogin({
       const credentialOptions = await response.json();
 
       // Get credential
-      const credential = await navigator.credentials.get({
-        publicKey: {
-          ...credentialOptions,
+      const publicKeyOptions = withOptional(
+        credentialOptions ?? {},
+        {
           userVerification: 'required',
           authenticatorSelection: {
             userVerification: 'required',
-            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform'
-          }
+            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+          },
         }
+      );
+
+      const credential = await navigator.credentials.get({
+        publicKey: publicKeyOptions,
       }) as PublicKeyCredential;
 
       if (!credential) {

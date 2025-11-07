@@ -5,7 +5,8 @@
  * user preferences, and system health.
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
@@ -52,79 +53,50 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     responseObj.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     responseObj.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
-    return responseObj;
+  return responseObj;
+});
 
-  } catch (error) {
-    logger.error('PWA: Failed to get PWA status:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to get PWA status',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+  const body = await request.json();
+  const { action, userId, data } = body;
 
-    const body = await request.json();
-    const { action, userId, data } = body;
-
-    if (!action || !userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Action and userId are required'
-      }, { status: 400 });
-    }
-
-    logger.info(`PWA: Processing ${action} for user ${userId}`);
-
-    let result;
-    switch (action) {
-      case 'register':
-        result = await registerPWAUser(userId, data);
-        break;
-      case 'updatePreferences':
-        result = await updatePWAUserPreferences(userId, data);
-        break;
-      case 'getDeviceInfo':
-        result = await getPWAUserDeviceInfo(userId);
-        break;
-      case 'clearOfflineData':
-        result = await clearPWAUserOfflineData(userId);
-        break;
-      default:
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid action'
-        }, { status: 400 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      action,
-      result,
-      timestamp: new Date().toISOString()
+  if (!action || !userId) {
+    return validationError({
+      action: !action ? 'Action is required' : '',
+      userId: !userId ? 'User ID is required' : ''
     });
-
-  } catch (error) {
-    logger.error('PWA: Failed to process PWA action:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to process PWA action',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
   }
-}
+
+  logger.info(`PWA: Processing ${action} for user ${userId}`);
+
+  let result;
+  switch (action) {
+    case 'register':
+      result = await registerPWAUser(userId, data);
+      break;
+    case 'updatePreferences':
+      result = await updatePWAUserPreferences(userId, data);
+      break;
+    case 'getDeviceInfo':
+      result = await getPWAUserDeviceInfo(userId);
+      break;
+    case 'clearOfflineData':
+      result = await clearPWAUserOfflineData(userId);
+      break;
+    default:
+      return validationError({ action: 'Invalid action' });
+  }
+
+  return successResponse({
+    action,
+    result,
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * Get PWA system status

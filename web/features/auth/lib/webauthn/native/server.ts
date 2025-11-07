@@ -5,8 +5,10 @@
  * Replaces @simplewebauthn/server with native browser API
  */
 
+import logger from '@/lib/utils/logger'
+
 import type { 
-  PublicKeyCredentialCreationOptions,
+PublicKeyCredentialCreationOptions,
   PublicKeyCredentialRequestOptions,
   RegistrationResponse,
   AuthenticationResponse,
@@ -408,8 +410,8 @@ export function logCredentialOperation(
   };
   
   if (error) {
-    console.error('WebAuthn credential operation failed:', logData);
+    logger.error('WebAuthn credential operation failed:', logData);
   } else {
-    console.log('WebAuthn credential operation:', logData);
+    logger.info('WebAuthn credential operation:', logData);
   }
 }

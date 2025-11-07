@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /// <reference types="node" />
 
 /**
@@ -6,18 +7,17 @@
  * This module provides performance-related utility functions.
  * It replaces the old @/shared/core/performance/lib/performance imports.
  */
-
 export const performanceUtils = {
   measureAsync: async <T>(fn: () => Promise<T>, label: string): Promise<T> => {
     const start = performance.now();
     try {
       const result = await fn();
       const end = performance.now();
-      console.log(`${label} took ${end - start} milliseconds`);
+      logger.info(`${label} took ${end - start} milliseconds`);
       return result;
     } catch (error) {
       const end = performance.now();
-      console.error(`${label} failed after ${end - start} milliseconds:`, error);
+      logger.error(`${label} failed after ${end - start} milliseconds:`, error);
       throw error;
     }
   },
@@ -27,11 +27,11 @@ export const performanceUtils = {
     try {
       const result = fn();
       const end = performance.now();
-      console.log(`${label} took ${end - start} milliseconds`);
+      logger.info(`${label} took ${end - start} milliseconds`);
       return result;
     } catch (error) {
       const end = performance.now();
-      console.error(`${label} failed after ${end - start} milliseconds:`, error);
+      logger.error(`${label} failed after ${end - start} milliseconds:`, error);
       throw error;
     }
   },

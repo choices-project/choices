@@ -14,6 +14,7 @@
 // - Cross-demographic insights with privacy protection
 
 import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -22,7 +23,6 @@ import { withOptional } from '@/lib/util/objects';
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-
 export type UserProfile = {
   id: string;
   age: number;
@@ -215,7 +215,7 @@ export class PrivacyAwareSocialDiscoveryManager {
 
       return similarUsers;
     } catch (error) {
-      console.error('Error finding similar users:', error);
+      logger.error('Error finding similar users:', error);
       return [];
     }
   }
@@ -356,7 +356,7 @@ export class PrivacyAwareSocialDiscoveryManager {
         privacyProtected: true
       };
     } catch (error) {
-      console.error('Error computing local similarity:', error);
+      logger.error('Error computing local similarity:', error);
       return {
         clusterId: 'error',
         similarity: 0,
@@ -389,9 +389,9 @@ export class PrivacyAwareSocialDiscoveryManager {
       // Publish centroids for client-side computation
       await this.publishCentroids(newCentroids);
       
-      console.log(`Updated ${newCentroids.length} public centroids for poll ${pollId}`);
+      logger.info(`Updated ${newCentroids.length} public centroids for poll ${pollId}`);
     } catch (error) {
-      console.error('Error updating public centroids:', error);
+      logger.error('Error updating public centroids:', error);
     }
   }
 
@@ -566,7 +566,7 @@ export class PrivacyAwareSocialDiscoveryManager {
   private async publishCentroids(centroids: PublicCentroid[]): Promise<void> {
     // Publish centroids for client-side computation
     // This would typically involve storing in a public endpoint or CDN
-    console.log(`Published ${centroids.length} centroids for client-side computation`);
+    logger.info(`Published ${centroids.length} centroids for client-side computation`);
   }
 
   private laplaceNoise(epsilon: number): number {

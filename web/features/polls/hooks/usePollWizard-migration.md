@@ -1,288 +1,150 @@
-# usePollWizard Hook Migration Guide
+# Poll Authoring Experience Guide (2025 Refresh)
 
 ## Overview
-This guide shows how to migrate from the `usePollWizard` hook to the new `usePollWizardStore` Zustand store.
 
-## Before (usePollWizard Hook)
+The poll creation flow now centers on a controller-driven architecture that wraps the legacy Zustand wizard store with opinionated helpers, analytics instrumentation, and author follow-up tooling.
 
-```typescript
-import { usePollWizard } from './usePollWizard';
+Key components:
+- `usePollCreateController` – the single hook consumed by `create/page.tsx`
+- `create/schema.ts` & `create/types.ts` – shared validation/types used by the controller
+- `create/api.ts` – API client that handles submission results
+- `usePollMilestoneNotifications` – reusable milestone preference/notification helper
+- Post-publish share dialog – canonical success surface with analytics & milestone toggles
 
-function PollCreatePage() {
-  const {
-    wizardState,
-    nextStep,
-    prevStep,
-    goToStep,
-    updateData,
-    addOption,
-    removeOption,
-    updateOption,
-    addTag,
-    removeTag,
-    validateCurrentStep,
-    setLoading,
-    setError,
-    clearError
-  } = usePollWizard();
+This document explains how to migrate older code that relied on `usePollWizard` or direct store selectors to the new experience.
 
-  // Access state
-  const { currentStep, data, errors, canProceed, canGoBack } = wizardState;
+## Why the Switch
 
-  // Use actions
-  const handleNext = () => {
-    if (canProceed) {
-      nextStep();
-    }
-  };
+### 1. Guided Author Workflow
+- Inline tips, validation summaries, and character counters are unified in the controller.
+- The controller exposes `steps`, `errors`, `activeTip`, and `actions` so the page can stay presentational.
 
-  const handleUpdateData = (updates) => {
-    updateData(updates);
-  };
-}
+### 2. Centralized Validation & Submission
+- Zod schemas (`create/schema.ts`) validate every step before submission.
+- The controller’s `submit()` returns a structured result with `fieldErrors`, `status`, and analytics-friendly metadata.
+
+### 3. Analytics & Telemetry
+- `recordPollEvent` wraps analytics calls to respect opt-in rules.
+- Key events (`poll_created`, share actions, CTA clicks) emit rich context.
+
+### 4. Author Follow-up
+- On success we open the share dialog rather than redirecting immediately.
+- Milestone preferences are stored per poll via `usePollMilestoneNotifications`.
+- A `choices:poll-created` custom event allows downstream listeners (analytics dashboard, admin feed, etc.).
+
+## Migration Checklist
+
+1. **Replace direct wizard store usage**
+   ```diff
+   - const { wizardState, actions } = usePollWizardStore();
+   - const { currentStep, data, errors } = wizardState;
+   + const {
+   +   data,
+   +   errors,
+   +   currentStep,
+   +   steps,
+   +   activeTip,
+   +   canProceed,
+   +   canGoBack,
+   +   isLoading,
+   +   submit,
+   +   actions,
+   +   goToNextStep,
+   +   goToPreviousStep,
+   + } = usePollCreateController();
+   ```
+
+2. **Adopt shared constants & helpers**
+   ```diff
+   - const TITLE_MAX = 120;
+   - const DESCRIPTION_MAX = 500;
+   + import {
+   +   TITLE_CHAR_LIMIT,
+   +   DESCRIPTION_CHAR_LIMIT,
+   +   MAX_OPTIONS,
+   +   MAX_TAGS,
+   +   POLL_CREATION_STEPS,
+   +   STEP_TIPS,
+   + } from './constants';
+   ```
+
+3. **Use controller actions**
+   ```diff
+   - actions.updateData({...});
+   + actions.updateData({...}); // same signature, but automatically clears field errors
+
+   - actions.validateCurrentStep();
+   + submit(); // handles validation + API call
+   ```
+
+4. **Handle submission results**
+   ```ts
+   const result = await submit();
+   if (!result.success) {
+     // result.status: 0 (client error), 401, 403, 429, etc.
+     // result.fieldErrors: { [field]: string }
+   }
+   ```
+
+5. **Invoke analytics safely**
+   Use `recordPollEvent` helper inside `create/page.tsx`.
+   ```ts
+   recordPollEvent('poll_created', {
+     category: 'poll_creation',
+     label: pollId,
+     metadata: { pollId }
+   });
+   ```
+
+6. **Enable milestone notifications**
+   - In `create/page.tsx`, pass the newly created `pollId` to `usePollMilestoneNotifications` to toggle default thresholds.
+   - In `PollClient.tsx`, surface preferences and let admins adjust them.
+
+7. **Leverage the share dialog**
+   - Success sets `shareInfo` rather than redirecting.
+   - The dialog provides copy/email/X share buttons, analytics tracking, and milestone toggles.
+   - Milestone toggles emit `milestone_pref_updated` events so dashboards/admin tools can react.
+   - Redirects (`View poll`, `View analytics`) remain accessible via buttons.
+
+## Controller Contract at a Glance
+
+```ts
+const controller = usePollCreateController();
+
+controller.data;            // normalized wizard snapshot
+controller.errors;          // keyed Zod errors
+controller.currentStep;     // number
+controller.steps;           // progress metadata for WizardProgress
+controller.activeTip;       // optional tip per step
+controller.canProceed;      // boolean
+controller.canGoBack;       // boolean
+controller.isLoading;       // submission state
+controller.actions;         // { updateData, addOption, removeOption, addTag, removeTag, updateSettings, clearError, ... }
+controller.goToNextStep();
+controller.goToPreviousStep();
+const result = await controller.submit();
 ```
 
-## After (usePollWizardStore)
+## Testing Guidance
 
-```typescript
-import { 
-  usePollWizardData,
-  usePollWizardStep,
-  usePollWizardProgress,
-  usePollWizardErrors,
-  usePollWizardCanProceed,
-  usePollWizardCanGoBack,
-  usePollWizardActions,
-  usePollWizardStats
-} from '@/lib/stores';
+1. **Controller Tests**
+   - Use `@testing-library/react` to render a component that consumes `usePollCreateController`.
+   - Mock `createPollRequest` to cover success vs. error branches.
+   - Assert `recordPollEvent` is called with expected payloads.
 
-function PollCreatePage() {
-  // Access state with optimized selectors
-  const data = usePollWizardData();
-  const currentStep = usePollWizardStep();
-  const progress = usePollWizardProgress();
-  const errors = usePollWizardErrors();
-  const canProceed = usePollWizardCanProceed();
-  const canGoBack = usePollWizardCanGoBack();
-  const stats = usePollWizardStats();
+2. **Milestone Hook Tests**
+   - Mock `localStorage` to verify persistence.
+   - Simulate vote thresholds and assert that `useNotificationStore.addNotification` fires when preferences are enabled.
 
-  // Get actions
-  const {
-    nextStep,
-    prevStep,
-    goToStep,
-    updateData,
-    addOption,
-    removeOption,
-    updateOption,
-    addTag,
-    removeTag,
-    validateCurrentStep,
-    setLoading,
-    setError,
-    clearError
-  } = usePollWizardActions();
+3. **Integration Smoke Tests**
+   - For the share dialog, ensure copy/email/share buttons call `recordPollEvent` and update UI state.
+   - Verify `choices:poll-created` event listeners receive `{ id, title }` payloads.
 
-  // Use actions (same API)
-  const handleNext = () => {
-    if (canProceed) {
-      nextStep();
-    }
-  };
+4. **Regression Commands**
+   - `npm test -- web/tests/unit/polls/create-poll.schema.test.ts`
+   - `npm test -- web/tests/unit/polls/create-poll.api.test.ts`
+   - `npx playwright test web/tests/e2e/specs/poll-create.spec.ts --config=web/tests/e2e/playwright.config.ts`
 
-  const handleUpdateData = (updates) => {
-    updateData(updates);
-  };
-}
-```
+## FAQ
 
-## Key Benefits
-
-### 1. **Performance Optimization**
-- **Before**: Single hook with large state object causes unnecessary re-renders
-- **After**: Granular selectors only re-render when specific data changes
-
-### 2. **Better State Management**
-- **Before**: Local state in hook, lost on unmount
-- **After**: Persistent state with Zustand, survives component unmounts
-
-### 3. **Improved Developer Experience**
-- **Before**: Complex hook with many responsibilities
-- **After**: Clean, focused selectors and actions
-
-### 4. **Enhanced Debugging**
-- **Before**: Limited debugging capabilities
-- **After**: Full Zustand devtools integration
-
-## Migration Steps
-
-### Step 1: Update Imports
-```typescript
-// Remove
-import { usePollWizard } from './usePollWizard';
-
-// Add
-import { 
-  usePollWizardData,
-  usePollWizardStep,
-  usePollWizardProgress,
-  usePollWizardErrors,
-  usePollWizardCanProceed,
-  usePollWizardCanGoBack,
-  usePollWizardActions,
-  usePollWizardStats
-} from '@/lib/stores';
-```
-
-### Step 2: Replace Hook Usage
-```typescript
-// Before
-const { wizardState, ...actions } = usePollWizard();
-const { currentStep, data, errors, canProceed, canGoBack } = wizardState;
-
-// After
-const data = usePollWizardData();
-const currentStep = usePollWizardStep();
-const errors = usePollWizardErrors();
-const canProceed = usePollWizardCanProceed();
-const canGoBack = usePollWizardCanGoBack();
-const actions = usePollWizardActions();
-```
-
-### Step 3: Update State Access
-```typescript
-// Before
-const { currentStep, data, errors, canProceed, canGoBack } = wizardState;
-
-// After
-const currentStep = usePollWizardStep();
-const data = usePollWizardData();
-const errors = usePollWizardErrors();
-const canProceed = usePollWizardCanProceed();
-const canGoBack = usePollWizardCanGoBack();
-```
-
-### Step 4: Update Actions
-```typescript
-// Before
-const { nextStep, prevStep, goToStep, updateData, ... } = usePollWizard();
-
-// After
-const { nextStep, prevStep, goToStep, updateData, ... } = usePollWizardActions();
-```
-
-## Advanced Usage
-
-### Store Utilities
-```typescript
-import { pollWizardStoreUtils } from '@/lib/stores';
-
-// Get wizard summary
-const summary = pollWizardStoreUtils.getWizardSummary();
-
-// Reset wizard
-pollWizardStoreUtils.resetWizard();
-
-// Validate all steps
-const validation = pollWizardStoreUtils.validateAllSteps();
-
-// Export/Import data
-const exportedData = pollWizardStoreUtils.exportWizardData();
-pollWizardStoreUtils.importWizardData(importedData);
-```
-
-### Store Subscriptions
-```typescript
-import { pollWizardStoreSubscriptions } from '@/lib/stores';
-
-// Subscribe to step changes
-const unsubscribe = pollWizardStoreSubscriptions.onStepChange((step) => {
-  console.log('Step changed to:', step);
-});
-
-// Subscribe to progress changes
-const unsubscribeProgress = pollWizardStoreSubscriptions.onProgressChange((progress) => {
-  console.log('Progress:', progress);
-});
-
-// Subscribe to data changes
-const unsubscribeData = pollWizardStoreSubscriptions.onDataChange((data) => {
-  console.log('Data changed:', data);
-});
-```
-
-### Store Debugging
-```typescript
-import { pollWizardStoreDebug } from '@/lib/stores';
-
-// Log current state
-pollWizardStoreDebug.logState();
-
-// Log wizard data
-pollWizardStoreDebug.logWizardData();
-
-// Reset store
-pollWizardStoreDebug.reset();
-```
-
-## Testing
-
-### Before (Hook Testing)
-```typescript
-import { renderHook, act } from '@testing-library/react';
-import { usePollWizard } from './usePollWizard';
-
-test('usePollWizard', () => {
-  const { result } = renderHook(() => usePollWizard());
-  
-  act(() => {
-    result.current.updateData({ title: 'Test Poll' });
-  });
-  
-  expect(result.current.wizardState.data.title).toBe('Test Poll');
-});
-```
-
-### After (Store Testing)
-```typescript
-import { renderHook, act } from '@testing-library/react';
-import { usePollWizardStore } from '@/lib/stores';
-
-test('usePollWizardStore', () => {
-  const { result } = renderHook(() => usePollWizardStore());
-  
-  act(() => {
-    result.current.updateData({ title: 'Test Poll' });
-  });
-  
-  expect(result.current.data.title).toBe('Test Poll');
-});
-```
-
-## Performance Comparison
-
-### Before (Hook)
-- ❌ Single large state object
-- ❌ All components re-render on any state change
-- ❌ No persistence
-- ❌ Limited debugging
-
-### After (Store)
-- ✅ Granular selectors
-- ✅ Only re-render when specific data changes
-- ✅ Persistent state
-- ✅ Full devtools integration
-- ✅ Better performance
-- ✅ Enhanced debugging
-
-## Conclusion
-
-The migration from `usePollWizard` hook to `usePollWizardStore` provides:
-
-1. **Better Performance** - Granular selectors prevent unnecessary re-renders
-2. **Enhanced State Management** - Persistent state with Zustand
-3. **Improved Developer Experience** - Clean, focused API
-4. **Better Debugging** - Full devtools integration
-5. **Future-Proof** - Follows modern state management patterns
-
-The API remains largely the same, making migration straightforward while providing significant benefits.
+**What happened to `usePollWizard`

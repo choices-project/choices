@@ -1,7 +1,7 @@
 'use client';
 
 import { 
-  MapPinIcon, 
+MapPinIcon, 
   UserGroupIcon,
   CheckIcon,
   PencilIcon
@@ -19,6 +19,7 @@ import {
   useUserSavedSuccessfully,
   useUserActions
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger'
 
 import type { UserProfileProps } from '../types';
 
@@ -72,7 +73,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       try {
         setRepresentatives(JSON.parse(savedRepresentatives));
       } catch (e) {
-        console.error('Failed to parse saved representatives:', e);
+        logger.error('Failed to parse saved representatives:', e);
       }
     }
   }, [setCurrentAddress, setCurrentState, setRepresentatives]);
@@ -104,7 +105,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
     } catch (error) {
-      console.error('Address update failed:', error);
+      logger.error('Address update failed:', error);
       alert('Failed to update address. Please try again.');
     } finally {
       setAddressLoading(false);
@@ -136,7 +137,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
     } catch (error) {
-      console.error('State update failed:', error);
+      logger.error('State update failed:', error);
       alert('Failed to update state. Please try again.');
     } finally {
       setAddressLoading(false);

@@ -199,7 +199,7 @@ export async function registerPeriodicSync(tag: string, minInterval: number): Pr
  * ```typescript
  * window.addEventListener('online', async () => {
  *   const result = await syncOfflineQueue();
- *   console.log(`Synced ${result.succeeded} actions`);
+ *   logger.info(`Synced ${result.succeeded} actions`);
  * });
  * ```
  */

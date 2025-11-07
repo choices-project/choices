@@ -1,8 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
+import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -79,18 +80,17 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     }
 
   const ok = results.every((r) => r.ok);
-  
-  const response = successResponse({
-    ok,
-    results,
-    meta: {
-      generatedAt: new Date().toISOString(),
-      refreshApplied: refresh,
+
+  return successResponse(
+    {
+      ok,
+      results,
+      meta: {
+        generatedAt: new Date().toISOString(),
+        refreshApplied: refresh,
+      },
     },
-  });
-  
-  if (!ok) {
-    return new Response(response.body, { status: 422, headers: response.headers });
-  }
-  return response;
+    undefined,
+    ok ? 200 : 422
+  );
 });

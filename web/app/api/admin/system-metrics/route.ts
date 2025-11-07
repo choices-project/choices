@@ -2,7 +2,6 @@ import type { NextRequest} from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
-import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {

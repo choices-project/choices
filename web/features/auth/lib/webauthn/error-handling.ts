@@ -362,9 +362,9 @@ export function logWebAuthnError(
 
   // Console-level logging with severity
   if (error.statusCode >= 500) {
-    console.error('WebAuthn server error:', logData);
+    logger.error('WebAuthn server error:', logData);
   } else if (error.statusCode >= 400) {
-    console.warn('WebAuthn client error:', logData);
+    logger.warn('WebAuthn client error:', logData);
   } else {
     logger.info('WebAuthn error:', { logData });
   }
@@ -456,7 +456,7 @@ async function persistWebAuthnError(data: unknown): Promise<void> {
   } catch (err) {
     // Last resort: non-throwing debug log
     if (process.env.NODE_ENV !== 'production') {
-      console.warn('Failed to persist WebAuthn error log:', err);
+      logger.warn('Failed to persist WebAuthn error log:', err);
     }
   }
 }

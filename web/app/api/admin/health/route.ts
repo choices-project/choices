@@ -16,10 +16,11 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import { withErrorHandling, errorResponse } from '@/lib/api';
-import { devLog, logger } from '@/lib/utils/logger';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 type CheckResult = {

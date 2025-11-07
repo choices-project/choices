@@ -16,11 +16,11 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
+import { withErrorHandling, authError, errorResponse } from '@/lib/api';
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
-import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError } from '@/lib/api';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';

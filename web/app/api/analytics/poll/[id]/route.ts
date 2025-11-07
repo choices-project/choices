@@ -2,7 +2,6 @@ import type { NextRequest} from 'next/server';
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { AnalyticsService } from '@/lib/core/services/analytics'
-import { devLog } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 

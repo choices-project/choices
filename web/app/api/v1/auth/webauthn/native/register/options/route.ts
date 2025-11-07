@@ -9,6 +9,7 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
@@ -69,13 +70,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return NextResponse.json({ error: 'Challenge persist failed' }, { status: 500 });
     }
 
-    logger.info('WebAuthn registration options generated (native)', { userId: user.id });
+  logger.info('WebAuthn registration options generated (native)', { userId: user.id });
 
-    return NextResponse.json(options);
-
-  } catch (error) {
-    logger.error('Native registration options error', { error });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  return successResponse(options);
+});
 

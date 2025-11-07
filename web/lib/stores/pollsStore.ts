@@ -1,17 +1,17 @@
 /**
  * @fileoverview Polls Store - Perfect Architecture
- * 
+ *
  * Industry best-practice poll state management using database types directly.
- * 
+ *
  * **Architecture**:
  * - Database types flow through entire app (zero transformation)
  * - Computed fields via selectors (no duplication)
  * - Separates DB state from UI state
  * - Type-safe from database to UI
- * 
+ *
  * **Pattern**:
  * Database → PollRow → Store → Components → UI
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-11-05
  * @version 3.0.0 - Perfect Architecture
@@ -20,13 +20,16 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import type { 
-  PollRow, 
-  PollInsert, 
+import type {
+  PollRow,
+  PollInsert,
   PollUpdate,
-  PollOptionRow 
+  PollOptionRow
 } from '@/features/polls/types';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
+
+import { createSafeStorage } from './storage';
 
 // ============================================================================
 // STORE STATE TYPES
@@ -77,13 +80,13 @@ type PollSearch = {
  */
 type PollUIState = {
   selectedPollId: string | null;
-  expandedPollIds: Set<string>;
-  votingInProgress: Set<string>;
+  expandedPollIds: string[];
+  votingInProgress: string[];
 }
 
 /**
  * Polls Store State
- * 
+ *
  * **Design Philosophy**:
  * - `polls`: Array of PollRow - pure database data
  * - `pollOptions`: Map of poll options by poll ID
@@ -96,62 +99,62 @@ type PollsStore = {
   // Pure database data - matches schema exactly
   polls: PollRow[];
   pollOptions: Map<string, PollOptionRow[]>;
-  
+
   // ========== UI STATE ==========
   uiState: PollUIState;
   filters: PollFilters;
   preferences: PollPreferences;
   search: PollSearch;
-  
+
   // ========== LOADING STATES ==========
   isLoading: boolean;
   isSearching: boolean;
   isVoting: boolean;
   error: string | null;
-  
+
   setVoting: (voting: boolean) => void;
   setSearching: (searching: boolean) => void;
-  
+
   // ========== POLL CRUD ACTIONS ==========
   setPolls: (polls: PollRow[]) => void;
   addPoll: (poll: PollRow) => void;
   updatePoll: (id: string, updates: PollUpdate) => void;
   removePoll: (id: string) => void;
-  
+
   // ========== POLL STATUS ACTIONS ==========
   publishPoll: (id: string) => void;
   closePoll: (id: string) => void;
   archivePoll: (id: string) => void;
-  
+
   // ========== VOTING ACTIONS ==========
   voteOnPoll: (pollId: string, optionId: string) => Promise<void>;
   undoVote: (pollId: string) => Promise<void>;
-  
+
   // ========== FILTERING & SEARCH ==========
   setFilters: (filters: Partial<PollFilters>) => void;
   clearFilters: () => void;
   searchPolls: (query: string) => Promise<void>;
   clearSearch: () => void;
-  
+
   // ========== UI STATE ACTIONS ==========
   selectPoll: (pollId: string | null) => void;
   togglePollExpanded: (pollId: string) => void;
   setView: (view: 'list' | 'grid' | 'card') => void;
-  
+
   // ========== PREFERENCES ==========
   updatePreferences: (preferences: Partial<PollPreferences>) => void;
   resetPreferences: () => void;
-  
+
   // ========== DATA LOADING ==========
   loadPolls: (category?: string) => Promise<void>;
   loadPoll: (id: string) => Promise<void>;
   createPoll: (data: PollInsert) => Promise<void>;
-  
+
   // ========== LOADING STATES ==========
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  
+
   // ========== SELECTORS (Computed fields) ==========
   // These return computed data, not stored data
   getPollById: (id: string) => PollRow | undefined;
@@ -187,9 +190,24 @@ const defaultFilters: PollFilters = {
 
 const defaultUIState: PollUIState = {
   selectedPollId: null,
-  expandedPollIds: new Set(),
-  votingInProgress: new Set(),
+  expandedPollIds: [],
+  votingInProgress: [],
 };
+
+const mergePoll = (poll: PollRow, updates: Partial<PollRow>) =>
+  withOptional(poll, updates as Record<string, unknown>) as PollRow;
+
+const mergeUIState = (state: PollUIState, updates: Partial<PollUIState>) =>
+  withOptional(state, updates as Record<string, unknown>) as PollUIState;
+
+const mergeFilters = (filters: PollFilters, updates: Partial<PollFilters>) =>
+  withOptional(filters, updates as Record<string, unknown>) as PollFilters;
+
+const mergePreferences = (preferences: PollPreferences, updates: Partial<PollPreferences>) =>
+  withOptional(preferences, updates as Record<string, unknown>) as PollPreferences;
+
+const mergeSearch = (search: PollSearch, updates: Partial<PollSearch>) =>
+  withOptional(search, updates as Record<string, unknown>) as PollSearch;
 
 // ============================================================================
 // STORE IMPLEMENTATION
@@ -218,102 +236,95 @@ export const usePollsStore = create<PollsStore>()(
         isSearching: false,
         isVoting: false,
         error: null,
-        
+
         // ========== POLL CRUD ACTIONS ==========
-        
+
         setPolls: (polls) => set({ polls }),
-        
+
         addPoll: (poll) => set((state) => ({
           polls: [poll, ...state.polls],
         })),
-        
+
         updatePoll: (id, updates) => set((state) => ({
-          polls: state.polls.map(poll =>
-            poll.id === id ? { ...poll, ...updates } : poll
+          polls: state.polls.map((poll) =>
+            poll.id === id ? mergePoll(poll, updates as Partial<PollRow>) : poll
           ),
         })),
-        
+
         removePoll: (id) => set((state) => ({
           polls: state.polls.filter(poll => poll.id !== id),
         })),
-        
+
         // ========== POLL STATUS ACTIONS ==========
-        
+
         publishPoll: (id) => set((state) => ({
-          polls: state.polls.map(poll =>
-            poll.id === id 
-              ? { 
-                  ...poll,
+          polls: state.polls.map((poll) =>
+            poll.id === id
+              ? mergePoll(poll, {
                   status: 'active',
-                  updated_at: new Date().toISOString()
-                }
+                  updated_at: new Date().toISOString(),
+                })
               : poll
           ),
         })),
-        
+
         closePoll: (id) => set((state) => ({
-          polls: state.polls.map(poll =>
-            poll.id === id 
-              ? { 
-                  ...poll,
+          polls: state.polls.map((poll) =>
+            poll.id === id
+              ? mergePoll(poll, {
                   status: 'closed',
                   closed_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
-                }
+                  updated_at: new Date().toISOString(),
+                })
               : poll
           ),
         })),
-        
+
         archivePoll: (id) => set((state) => ({
-          polls: state.polls.map(poll =>
-            poll.id === id 
-              ? { 
-                  ...poll,
+          polls: state.polls.map((poll) =>
+            poll.id === id
+              ? mergePoll(poll, {
                   status: 'archived',
-                  updated_at: new Date().toISOString()
-                }
+                  updated_at: new Date().toISOString(),
+                })
               : poll
           ),
         })),
-        
+
         // ========== VOTING ACTIONS ==========
-        
+
         voteOnPoll: async (pollId, optionId) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch('/api/polls/vote', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ pollId, optionId }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to vote on poll');
             }
-            
+
             // Update poll - increment total_votes
             set((state) => ({
-              polls: state.polls.map(poll =>
-                poll.id === pollId 
-                  ? {
-                      ...poll,
+              polls: state.polls.map((poll) =>
+                poll.id === pollId
+                  ? mergePoll(poll, {
                       total_votes: (poll.total_votes ?? 0) + 1,
-                      updated_at: new Date().toISOString()
-                    }
+                      updated_at: new Date().toISOString(),
+                    })
                   : poll
               ),
-              uiState: {
-                ...state.uiState,
-                votingInProgress: new Set(
-                  [...state.uiState.votingInProgress].filter(id => id !== pollId)
-                ),
-              },
+              uiState: mergeUIState(state.uiState, {
+                votingInProgress: state.uiState.votingInProgress.filter((id) => id !== pollId),
+              }),
             }));
-            
+
             logger.info('Vote cast successfully', { pollId, optionId });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -323,37 +334,36 @@ export const usePollsStore = create<PollsStore>()(
             setVoting(false);
           }
         },
-        
+
         undoVote: async (pollId) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch('/api/polls/undo-vote', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ pollId }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to undo vote');
             }
-            
+
             // Update poll - decrement total_votes
             set((state) => ({
-              polls: state.polls.map(poll =>
-                poll.id === pollId 
-                  ? {
-                      ...poll,
+              polls: state.polls.map((poll) =>
+                poll.id === pollId
+                  ? mergePoll(poll, {
                       total_votes: Math.max(0, (poll.total_votes ?? 0) - 1),
-                      updated_at: new Date().toISOString()
-                    }
+                      updated_at: new Date().toISOString(),
+                    })
                   : poll
               ),
             }));
-            
+
             logger.info('Vote undone successfully', { pollId });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -363,45 +373,44 @@ export const usePollsStore = create<PollsStore>()(
             setVoting(false);
           }
         },
-        
+
         // ========== FILTERING & SEARCH ==========
-        
+
         setFilters: (filters) => set((state) => ({
-          filters: { ...state.filters, ...filters },
+          filters: mergeFilters(state.filters, filters),
         })),
-        
+
         clearFilters: () => set({ filters: defaultFilters }),
-        
+
         searchPolls: async (query) => {
           const { setSearching, setError } = get();
-          
+
           try {
             setSearching(true);
             setError(null);
-            
+
             const response = await fetch('/api/polls/search', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ query }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to search polls');
             }
-            
+
             const { polls, total } = await response.json();
-            
+
             set((state) => ({
-              search: {
-                ...state.search,
+              search: mergeSearch(state.search, {
                 query,
                 results: polls,
                 totalResults: total,
                 currentPage: 1,
                 totalPages: Math.ceil(total / state.preferences.itemsPerPage),
-              },
+              }),
             }));
-            
+
             logger.info('Polls searched', { query, results: polls.length, total });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -411,70 +420,68 @@ export const usePollsStore = create<PollsStore>()(
             setSearching(false);
           }
         },
-        
+
         clearSearch: () => set((state) => ({
-          search: {
-            ...state.search,
+          search: mergeSearch(state.search, {
             query: '',
             results: [],
             totalResults: 0,
             currentPage: 1,
             totalPages: 1,
-          },
+          }),
         })),
-        
+
         // ========== UI STATE ACTIONS ==========
-        
+
         selectPoll: (pollId) => set((state) => ({
-          uiState: { ...state.uiState, selectedPollId: pollId },
+          uiState: mergeUIState(state.uiState, { selectedPollId: pollId }),
         })),
-        
+
         togglePollExpanded: (pollId) => set((state) => {
-          const expanded = new Set(state.uiState.expandedPollIds);
-          if (expanded.has(pollId)) {
-            expanded.delete(pollId);
-          } else {
-            expanded.add(pollId);
-          }
+          const isExpanded = state.uiState.expandedPollIds.includes(pollId);
+          const expanded = isExpanded
+            ? state.uiState.expandedPollIds.filter((id) => id !== pollId)
+            : [...state.uiState.expandedPollIds, pollId];
+
           return {
-            uiState: { ...state.uiState, expandedPollIds: expanded },
+            uiState: mergeUIState(state.uiState, { expandedPollIds: expanded }),
           };
         }),
-        
+
         setView: (view) => set((state) => ({
-          preferences: { ...state.preferences, defaultView: view },
+          preferences: mergePreferences(state.preferences, { defaultView: view }),
         })),
-        
+
         // ========== PREFERENCES ==========
-        
+
         updatePreferences: (preferences) => set((state) => ({
-          preferences: { ...state.preferences, ...preferences },
+          preferences: mergePreferences(state.preferences, preferences),
         })),
-        
+
         resetPreferences: () => set({ preferences: defaultPreferences }),
-        
+
         // ========== DATA LOADING ==========
-        
+
         loadPolls: async (category) => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
-            const url = category 
+
+            const url = category
               ? `/api/polls?category=${encodeURIComponent(category)}`
               : '/api/polls';
-            
+
             const response = await fetch(url);
-            
+
             if (!response.ok) {
               throw new Error('Failed to load polls');
             }
-            
+
             const polls = await response.json();
             set({ polls });
-            
+
             logger.info('Polls loaded', { category, count: polls.length });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -484,31 +491,31 @@ export const usePollsStore = create<PollsStore>()(
             setLoading(false);
           }
         },
-        
+
         loadPoll: async (id) => {
           const { setLoading, setError, selectPoll } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch(`/api/polls/${id}`);
-            
+
             if (!response.ok) {
               throw new Error('Failed to load poll');
             }
-            
+
             const poll = await response.json();
-            
+
             // Add or update poll in list
             set((state) => ({
               polls: state.polls.some(p => p.id === id)
                 ? state.polls.map(p => p.id === id ? poll : p)
                 : [poll, ...state.polls],
             }));
-            
+
             selectPoll(id);
-            
+
             logger.info('Poll loaded', { id });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -518,27 +525,27 @@ export const usePollsStore = create<PollsStore>()(
             setLoading(false);
           }
         },
-        
+
         createPoll: async (data) => {
           const { setLoading, setError, addPoll } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch('/api/polls', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(data),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to create poll');
             }
-            
+
             const poll = await response.json();
             addPoll(poll);
-            
+
             logger.info('Poll created successfully', { pollId: poll.id, title: poll.title });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -548,22 +555,22 @@ export const usePollsStore = create<PollsStore>()(
             setLoading(false);
           }
         },
-        
+
         // ========== LOADING STATES ==========
-        
+
         setLoading: (loading) => set({ isLoading: loading }),
         setVoting: (voting) => set({ isVoting: voting }),
         setSearching: (searching) => set({ isSearching: searching }),
         setError: (error) => set({ error }),
         clearError: () => set({ error: null }),
-        
+
         // ========== SELECTORS (Computed fields) ==========
-        
+
         getPollById: (id) => {
           const state = get();
           return state.polls.find(poll => poll.id === id);
         },
-        
+
         getFilteredPolls: () => {
           const state = get();
           return state.polls.filter(poll => {
@@ -583,22 +590,22 @@ export const usePollsStore = create<PollsStore>()(
             return true;
           });
         },
-        
+
         canUserVote: (pollId) => {
           const state = get();
           const poll = state.polls.find(p => p.id === pollId);
           if (!poll) return false;
-          
+
           // Check if poll is active and not closed
           return poll.status === 'active' && !poll.closed_at;
         },
-        
+
         hasUserVoted: (_pollId) => {
           // This would need to check against user's votes from database
           // For now, return false - actual implementation would query votes table
           return false;
         },
-        
+
         getActivePollsCount: () => {
           const state = get();
           return state.polls.filter(poll => poll.status === 'active').length;
@@ -606,6 +613,7 @@ export const usePollsStore = create<PollsStore>()(
       }),
       {
         name: 'polls-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           polls: state.polls,
           preferences: state.preferences,
@@ -683,7 +691,7 @@ export const pollsStoreUtils = {
       .sort((a, b) => (b.total_votes ?? 0) - (a.total_votes ?? 0))
       .slice(0, limit);
   },
-  
+
   /**
    * Get recent polls
    */
@@ -697,7 +705,7 @@ export const pollsStoreUtils = {
       })
       .slice(0, limit);
   },
-  
+
   /**
    * Get polls by category
    */

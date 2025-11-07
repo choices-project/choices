@@ -16,11 +16,11 @@
  * Status: ✅ Production-ready
  */
 
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
+import { withErrorHandling, forbiddenError } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
-import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -166,12 +166,4 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         key: cacheKey
       }
     });
-
-  } catch (error) {
-    logger.error('District heatmap API error', { error });
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});

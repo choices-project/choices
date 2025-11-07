@@ -8,13 +8,15 @@
 'use client';
 
 import { 
-  Users, 
+Users, 
   BarChart3, 
   Settings, 
   Activity,
   Shield
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+
+import logger from '@/lib/utils/logger'
 
 type SimpleAdminDashboardProps = {
   className?: string;
@@ -40,7 +42,7 @@ export default function SimpleAdminDashboard({ className = '' }: SimpleAdminDash
           setStats(data);
         }
       } catch (error) {
-        console.error('Error loading admin stats:', error);
+        logger.error('Error loading admin stats:', error);
         // Use default stats if API fails
         setStats({
           totalUsers: 0,

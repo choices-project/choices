@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -134,22 +135,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         );
       }
 
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         data: data[0],
         message: 'Hashtag flag rejected'
       });
     }
 
-    return NextResponse.json(
-      { error: 'Invalid action' },
-      { status: 400 }
-    );
-  } catch (error) {
-    logger.error('Hashtags POST error', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return validationError({ action: 'Invalid action' });
+});

@@ -1,6 +1,6 @@
 /**
  * Validation Utilities
- * 
+ *
  * Safe parsing utilities with comprehensive error handling for runtime validation
  */
 
@@ -36,25 +36,29 @@ export type ValidationOptions = {
   fallbackData?: unknown;
 }
 
+function mergeOptions(options: ValidationOptions | undefined, extras: ValidationOptions): ValidationOptions {
+  return withOptional(withOptional(options ?? {}), extras);
+}
+
 /**
  * Safely parse data with a Zod schema
- * 
+ *
  * This function provides comprehensive error handling and logging for schema validation.
  * It returns a result object instead of throwing errors, making it safe to use in
  * production code.
- * 
+ *
  * @param schema - The Zod schema to validate against
  * @param data - The data to validate
  * @param options - Validation options
  * @returns ValidationResult with success status and data or error information
- * 
+ *
  * @example
  * ```typescript
  * const result = safeParse(UserProfileSchema, userData);
  * if (result.success) {
  *   const profile = result.data; // Fully typed UserProfile
  * } else {
- *   console.error('Validation failed:', result.error);
+ *   logger.error('Validation failed:', result.error);
  * }
  * ```
  */
@@ -67,14 +71,14 @@ export function safeParse<T>(
 
   try {
     const result = schema.safeParse(data);
-    
+
     if (result.success) {
       return withOptional(
         { success: true },
         { data: result.data }
       );
     } else {
-      const errorMessage = `Validation failed: ${result.error.issues.map(issue => 
+      const errorMessage = `Validation failed: ${result.error.issues.map(issue =>
         `${issue.path.join('.')}: ${issue.message}`
       ).join(', ')}`;
 
@@ -97,7 +101,7 @@ export function safeParse<T>(
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
-    
+
     if (logErrors) {
       logger.error('Validation parsing failed', {
         error: errorMessage,
@@ -118,17 +122,17 @@ export function safeParse<T>(
 
 /**
  * Parse data with fallback to default value
- * 
+ *
  * This function attempts to validate data against a schema, and if validation fails,
  * it returns the provided fallback value instead of throwing an error. This is useful
  * for providing default values when data validation fails.
- * 
+ *
  * @param schema - The Zod schema to validate against
  * @param data - The data to validate
  * @param fallback - The fallback value to return if validation fails
  * @param options - Validation options
  * @returns The validated data or the fallback value
- * 
+ *
  * @example
  * ```typescript
  * const user = parseWithFallback(UserProfileSchema, userData, defaultUser);
@@ -141,19 +145,19 @@ export function parseWithFallback<T>(
   fallback: T,
   options: ValidationOptions = {}
 ): T {
-  const result = safeParse(schema, data, Object.assign({}, options, { logErrors: true }));
-  
+  const result = safeParse(schema, data, mergeOptions(options, { logErrors: true }));
+
   if (result.success && result.data !== undefined) {
     return result.data;
   }
-  
+
   if (options.logErrors) {
     logger.warn('Using fallback data due to validation failure', {
       error: result.error,
       fallback: typeof fallback === 'object' ? JSON.stringify(fallback, null, 2) : fallback,
     });
   }
-  
+
   return fallback;
 }
 
@@ -169,8 +173,8 @@ export function parseArray<T>(
   const errors: string[] = [];
 
   for (let i = 0; i < data.length; i++) {
-    const result = safeParse(schema, data[i], Object.assign({}, options, { logErrors: false }));
-    
+    const result = safeParse(schema, data[i], mergeOptions(options, { logErrors: false }));
+
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
     } else {
@@ -191,16 +195,16 @@ export function parseArray<T>(
 
 /**
  * Validate database response with proper error handling
- * 
+ *
  * This function validates database responses from Supabase, handling both database
  * errors and data validation errors. It provides comprehensive error information
  * for debugging and monitoring.
- * 
+ *
  * @param schema - The Zod schema to validate against
  * @param response - The database response object with data and error properties
  * @param options - Validation options
  * @returns ValidationResult with success status and data or error information
- * 
+ *
  * @example
  * ```typescript
  * const { data, error } = await supabase.from('users').select('*').single();
@@ -217,7 +221,7 @@ export function validateDatabaseResponse<T>(
 ): ValidationResult<T> {
   if (response.error) {
     const errorMessage = `Database error: ${response.error.message}`;
-    
+
     if (options.logErrors) {
       logger.error('Database response validation failed due to database error', {
         error: errorMessage,
@@ -248,8 +252,8 @@ export function validateMultipleResponses<T>(
   for (let i = 0; i < responses.length; i++) {
     const response = responses[i];
     if (!response) continue;
-    const result = validateDatabaseResponse(schema, response, Object.assign({}, options, { logErrors: false }));
-    
+    const result = validateDatabaseResponse(schema, response, mergeOptions(options, { logErrors: false }));
+
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
     } else {
@@ -267,7 +271,7 @@ export function validateMultipleResponses<T>(
 
   return withOptional(
     { success: validItems.length > 0 },
-    { 
+    {
       data: validItems,
       error: errors.length > 0 ? errors.join('; ') : undefined
     }
@@ -291,11 +295,11 @@ export function validateAndTransform<T, U>(
   options: ValidationOptions = {}
 ): ValidationResult<U> {
   const validationResult = safeParse(schema, data, options);
-  
+
   if (!validationResult.success || validationResult.data === undefined) {
     return withOptional(
       { success: false },
-      { 
+      {
         error: validationResult.error,
         details: validationResult.details
       }
@@ -310,7 +314,7 @@ export function validateAndTransform<T, U>(
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Transform failed';
-    
+
     if (options.logErrors) {
       logger.error('Data transformation failed', {
         error: errorMessage,
@@ -337,8 +341,8 @@ export function validateBatch<T extends Record<string, unknown>>(
   const errors: string[] = [];
 
   for (const [key, schema] of Object.entries(schemas)) {
-    const validationResult = safeParse(schema, data[key], Object.assign({}, options, { logErrors: false }));
-    
+    const validationResult = safeParse(schema, data[key], mergeOptions(options, { logErrors: false }));
+
     if (validationResult.success && validationResult.data !== undefined) {
       (result as Record<string, unknown>)[key] = validationResult.data;
     } else {
@@ -355,7 +359,7 @@ export function validateBatch<T extends Record<string, unknown>>(
 
   return withOptional(
     { success: errors.length === 0 },
-    { 
+    {
       data: result as T,
       error: errors.length > 0 ? errors.join('; ') : undefined
     }

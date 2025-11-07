@@ -13,6 +13,7 @@
  */
 
 import type { AnalyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 // Track PWA events using existing analytics system
@@ -24,19 +25,20 @@ export async function trackPWAEvent(
     const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseBrowserClient());
     if (!supabase) return;
 
+    const eventData = withOptional(properties, {
+      pwa_event_type: eventType,
+      platform: navigator.platform,
+      user_agent: navigator.userAgent,
+      timestamp: new Date().toISOString()
+    });
+
     await supabase.from('analytics_events').insert({
       event_type: 'user_registered', // Use existing event type
       event_category: 'pwa',
-      event_data: {
-        pwa_event_type: eventType,
-        ...properties,
-        platform: navigator.platform,
-        user_agent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-      }
+      event_data: eventData
     });
   } catch (error) {
-    console.warn('Failed to track PWA event:', error);
+    logger.warn('Failed to track PWA event:', error);
   }
 }
 
@@ -61,7 +63,7 @@ export async function trackPWAPerformance(
       }
     });
   } catch (error) {
-    console.warn('Failed to track PWA performance:', error);
+    logger.warn('Failed to track PWA performance:', error);
   }
 }
 
@@ -487,8 +489,8 @@ class PWAAnalytics {
     try {
       // This would integrate with your analytics backend
       // For now, just log the events
-      return Promise.resolve();
       logger.info('PWA Analytics: Flushing events', { count: events.length });
+      return Promise.resolve();
     } catch (error) {
       logger.error('PWA Analytics: Failed to send data to backend', error instanceof Error ? error : new Error(String(error)));
       return Promise.resolve();
@@ -581,7 +583,7 @@ class PWAAnalytics {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.warn('PWA analytics error:', error.message);
+        logger.warn('PWA analytics error:', error.message);
         return [];
       }
 
@@ -633,7 +635,7 @@ class PWAAnalytics {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.warn('PWA offline analytics error:', error.message);
+        logger.warn('PWA offline analytics error:', error.message);
         return [];
       }
 
@@ -714,7 +716,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
-      console.error('Error getting performance trends:', error);
+      logger.error('Error getting performance trends:', error);
       return [];
     }
   }

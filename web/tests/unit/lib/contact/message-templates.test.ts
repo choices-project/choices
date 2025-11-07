@@ -116,6 +116,33 @@ describe('Message Templates', () => {
       }
     });
 
+    it('should preserve existing values when user info omits them', () => {
+      const template = getTemplateById('support-bill');
+      expect(template).toBeDefined();
+
+      if (!template) return;
+
+      const values = {
+        billName: 'Resilient Communities Act',
+        representativeLastName: 'Ortega',
+        personalStatement: 'Resilience saves lives.',
+        reason1: 'Protect vulnerable communities.',
+        userName: 'Existing Supporter',
+      };
+
+      const userInfo = {
+        email: 'supporter@example.com',
+        name: undefined,
+      };
+
+      const result = fillTemplate(template, values, userInfo);
+
+      expect(result.body).toContain('Existing Supporter');
+      if (template.body.includes('{{userEmail}}')) {
+        expect(result.body).toContain('supporter@example.com');
+      }
+    });
+
     it('should remove unfilled placeholders', () => {
       const template = getTemplateById('support-bill');
       expect(template).toBeDefined();

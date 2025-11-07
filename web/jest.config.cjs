@@ -3,14 +3,17 @@ module.exports = {
   // Global timeout settings
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
-  
+
   projects: [
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
       testTimeout: 20000, // 20 seconds for client tests
       setupFiles: ['<rootDir>/jest.setup.js'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
+      setupFilesAfterEnv: [
+        '<rootDir>/jest.setup.after.js',
+        '<rootDir>/tests/setup.ts'
+      ],
       testMatch: [
         '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
@@ -54,7 +57,10 @@ module.exports = {
       testEnvironment: 'node',
       testTimeout: 25000, // 25 seconds for server tests
       setupFiles: ['<rootDir>/jest.setup.js'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
+      setupFilesAfterEnv: [
+        '<rootDir>/jest.setup.after.js',
+        '<rootDir>/tests/setup.ts'
+      ],
       testMatch: [
         '<rootDir>/tests/unit/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/tests/unit/**/*.spec.{js,jsx,ts,tsx}',

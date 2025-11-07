@@ -2,30 +2,45 @@
 
 import React, { useState } from 'react';
 
-import { 
-  useOnboardingStep,
+import {
+useOnboardingStep,
   useOnboardingActions,
   useUserStore,
   useNotificationStore
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 
 import type { UserOnboardingProps } from '../types';
 
+type Jurisdiction = {
+  state?: string | null;
+  district?: string | null;
+  county?: string | null;
+  fallback?: boolean | null;
+};
+
+type LoadRepresentativesOptions = {
+  source: 'address' | 'state';
+  fallback?: boolean;
+  skipLoading?: boolean;
+  jurisdiction?: Jurisdiction | null;
+};
+
 /**
  * User Onboarding Component
- * 
+ *
  * Civics-focused onboarding flow for finding local representatives:
  * - Address input and validation
  * - State selection
  * - Representative lookup and display
  * - Data persistence in localStorage
- * 
+ *
  * Features:
  * - Integration with civics API endpoints
  * - Address and state lookup functionality
  * - Representative data display
  * - Skip option for users who prefer not to provide location
- * 
+ *
  * @param {UserOnboardingProps} props - Component props
  * @returns {JSX.Element} Civics onboarding interface
  */
@@ -34,7 +49,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   // Onboarding store for step management
   const currentStep = useOnboardingStep();
   const { updateFormData, setCurrentStep } = useOnboardingActions();
-  
+
   // User store for address and representatives
   const currentAddress = useUserStore(state => state.currentAddress);
   const representatives = useUserStore(state => state.representatives);
@@ -43,106 +58,190 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const setCurrentState = useUserStore(state => state.setCurrentState);
   const setRepresentatives = useUserStore(state => state.setRepresentatives);
   const setAddressLoading = useUserStore(state => state.setAddressLoading);
-  
+
   // Notification store for user feedback
   const addNotification = useNotificationStore((state: any) => state.addNotification);
-  
+
   // ✅ Keep local state for component-specific concerns
   const [selectedState] = useState('CA'); // Default state selection
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [completionPayload, setCompletionPayload] = useState<{
+    address?: string;
+    state?: string;
+    jurisdiction?: Jurisdiction | null;
+    representatives: unknown[];
+  } | null>(null);
 
-  const handleAddressLookup = async () => {
-    setAddressLoading(true);
-    setCurrentStep(2); // loading step
-    
+  const loadRepresentativesForState = async (
+    state: string,
+    { source, fallback = false, skipLoading = false, jurisdiction = null }: LoadRepresentativesOptions
+  ) => {
+    if (!state) {
+      throw new Error('State is required to load representatives');
+    }
+
+    if (!skipLoading) {
+      setAddressLoading(true);
+      setCurrentStep(2);
+    }
+
     try {
-      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(currentAddress)}`);
-      if (!response.ok) throw new Error('Address lookup failed');
+      const response = await fetch(
+        `/api/v1/civics/by-state?state=${encodeURIComponent(state)}&level=federal&limit=20`
+      );
+      if (!response.ok) {
+        throw new Error('State lookup failed');
+      }
+
       const result = await response.json();
-      
-      // API returns { data: { representatives: [...] } }
-      // Extract representatives array from the nested data structure
-      const representatives = result.data?.representatives ?? [];
-      
-      setRepresentatives(representatives);
-      setCurrentStep(3); // complete step
-      
-      // Update store with address data
-      updateFormData(2, { address: currentAddress, representatives });
-      
-      // Save to localStorage for future use
-      localStorage.setItem('userAddress', currentAddress);
-      localStorage.setItem('userRepresentatives', JSON.stringify(representatives));
-      
-      // Add success notification
+      const representativesList = result.data?.representatives ?? [];
+
+      setRepresentatives(representativesList);
+      setCurrentState(state);
+      setCurrentStep(3);
+
+      updateFormData(2, { state, representatives: representativesList, jurisdiction });
+      localStorage.setItem('userState', state);
+      localStorage.setItem('userRepresentatives', JSON.stringify(representativesList));
+      if (jurisdiction) {
+        localStorage.setItem('userJurisdiction', JSON.stringify(jurisdiction));
+      }
+
+      const payload: Exclude<typeof completionPayload, null> = {
+        state,
+        jurisdiction,
+        representatives: representativesList,
+      };
+
+      if (source === 'address' && currentAddress) {
+        payload.address = currentAddress;
+      }
+
+      setCompletionPayload(payload);
+
+      setAddressError(null);
+
+      const successTitle =
+        source === 'address'
+          ? fallback
+            ? 'Showing statewide representatives'
+            : 'Representatives found'
+          : 'Representatives loaded';
+
+      const successMessage =
+        source === 'address'
+          ? fallback
+            ? `We couldn't verify a district, so we're showing statewide representatives for ${state}.`
+            : `We found representatives near your address in ${state}.`
+          : `${representativesList.length} representative(s) loaded for ${state}.`;
+
       addNotification({
         type: 'success',
-        title: 'Address Found',
-        message: `Address found! ${representatives.length} representative(s) loaded successfully.`,
-        duration: 3000
+        title: successTitle,
+        message: successMessage,
+        duration: 4000,
       });
-      
-      onComplete({ address: currentAddress, representatives });
     } catch (error) {
-      console.error('Address lookup failed:', error);
-      
-      // Add error notification
+      logger.error('Representative lookup failed:', error);
+
       addNotification({
         type: 'error',
-        title: 'Address Lookup Failed',
-        message: 'Address lookup failed. Trying state-based lookup...',
-        duration: 5000
+        title: 'Representatives unavailable',
+        message:
+          source === 'address'
+            ? 'We located your jurisdiction, but could not load representatives right now. Please try again shortly or browse by state.'
+            : 'We could not load representatives for that state. You can skip this step and update it later.',
+        duration: 5000,
       });
-      
-      // Fallback to state-based lookup
-      handleStateLookup();
+
+      if (source === 'state') {
+        onSkip();
+      }
+
+      throw error;
+    } finally {
+      if (!skipLoading) {
+        setAddressLoading(false);
+      }
+    }
+  };
+
+  const handleAddressLookup = async () => {
+    if (!currentAddress?.trim()) {
+      setAddressError('Please enter a valid address before searching.');
+      return;
+    }
+
+    setAddressError(null);
+    setAddressLoading(true);
+    setCurrentStep(2);
+
+    try {
+      const response = await fetch('/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: currentAddress }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || result?.ok !== true) {
+        throw new Error(result?.error ?? 'Address lookup failed');
+      }
+
+      const jurisdiction: Jurisdiction = result.jurisdiction ?? {};
+      const resolvedState = jurisdiction.state ?? null;
+
+      localStorage.setItem('userAddress', currentAddress);
+
+      if (!resolvedState) {
+        setCurrentStep(1);
+        setAddressError(
+          'We could not determine your state from that address. Please double-check the address or use the state option.'
+        );
+
+        addNotification({
+          type: 'warning',
+          title: 'Need a little more info',
+          message: 'Please verify your address, or choose “Show General Representatives” to continue.',
+          duration: 6000,
+        });
+        return;
+      }
+
+      await loadRepresentativesForState(resolvedState, {
+        source: 'address',
+        fallback: Boolean(jurisdiction?.fallback),
+        skipLoading: true,
+        jurisdiction,
+      });
+    } catch (error) {
+      logger.error('Address lookup failed:', error);
+
+      setCurrentStep(1);
+      setAddressError('We could not verify that address. Please double-check or try the state option below.');
+
+      addNotification({
+        type: 'error',
+        title: 'Address lookup failed',
+        message: 'We could not verify your address. You can correct it or browse representatives by state.',
+        duration: 6000,
+      });
+    } finally {
+      setAddressLoading(false);
     }
   };
 
   const handleStateLookup = async () => {
-    setAddressLoading(true);
-    setCurrentStep(2); // loading step
-    
+    setAddressError(null);
+
     try {
-      const response = await fetch(`/api/v1/civics/by-state?state=${selectedState}&level=federal&limit=20`);
-      if (!response.ok) throw new Error('State lookup failed');
-      const result = await response.json();
-      
-      // API returns { data: { representatives: [...] } }
-      // Extract representatives array from the nested data structure
-      const representatives = result.data?.representatives ?? [];
-      
-      setRepresentatives(representatives);
-      setCurrentState(selectedState);
-      setCurrentStep(3); // complete step
-      
-      // Update store with state data
-      updateFormData(2, { state: selectedState, representatives });
-      
-      // Save to localStorage for future use
-      localStorage.setItem('userState', selectedState);
-      localStorage.setItem('userRepresentatives', JSON.stringify(representatives));
-      
-      // Add success notification
-      addNotification({
-        type: 'success',
-        title: 'Representatives Loaded',
-        message: `${representatives.length} state representative(s) loaded successfully.`,
-        duration: 3000
-      });
-      
-      onComplete({ state: selectedState, representatives });
+      await loadRepresentativesForState(selectedState, { source: 'state' });
     } catch (error) {
-      console.error('State lookup failed:', error);
-      
-      // Add error notification
-      addNotification({
-        type: 'error',
-        title: 'Representatives Load Failed',
-        message: 'Failed to load representatives. You can skip this step.',
-        duration: 5000
-      });
-      
-      onSkip();
+      logger.error('State lookup failed:', error);
+      setCurrentStep(1);
+      setAddressLoading(false);
     }
   };
 
@@ -158,10 +257,10 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Civics!</h1>
             <p className="text-gray-600 mb-8">
-              Let&apos;s personalize your experience by finding your local representatives. 
+              Let&apos;s personalize your experience by finding your local representatives.
               This helps us show you the most relevant political information.
             </p>
-            
+
             <div className="space-y-4">
               <button
                 onClick={() => setCurrentStep(1)}
@@ -169,7 +268,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
               >
                 Find My Representatives
               </button>
-              
+
               <button
                 onClick={handleStateLookup}
                 className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors font-medium"
@@ -191,7 +290,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             <h2 className="text-xl font-bold text-gray-900 mb-2">Find Your Representatives</h2>
             <p className="text-gray-600">Enter your address to see your local elected officials</p>
           </div>
-          
+
           <form onSubmit={(e) => {
             e.preventDefault();
             void handleAddressLookup();
@@ -208,8 +307,13 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+              {addressError && (
+                <p className="mt-2 text-sm text-red-600" role="alert">
+                  {addressError}
+                </p>
+              )}
             </div>
-            
+
             <div className="flex space-x-3">
               <button
                 type="submit"
@@ -218,7 +322,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
               >
                 {addressLoading ? 'Finding...' : 'Find Representatives'}
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => setCurrentStep(0)}
@@ -259,12 +363,18 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">All Set!</h2>
             <p className="text-gray-600 mb-6">
-              We found {representatives.length} representatives for your area. 
+              We found {(completionPayload?.representatives as unknown[] | undefined)?.length ?? representatives.length} representatives for your area.
               You can always update this information later.
             </p>
-            
+
             <button
-              onClick={() => onComplete({ address: currentAddress, representatives })}
+              onClick={() => {
+                if (completionPayload) {
+                  onComplete(completionPayload);
+                } else {
+                  onComplete({ address: currentAddress, representatives });
+                }
+              }}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               Continue to Your Feed

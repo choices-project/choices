@@ -8,6 +8,16 @@ import { withOptional } from '@/lib/util/objects';
 
 import { ApplicationError, type ErrorDetails } from './base';
 
+const EMPTY_DETAILS: ErrorDetails = {};
+
+function sanitizeDetails(details?: ErrorDetails): ErrorDetails {
+  return details ? withOptional(details) : EMPTY_DETAILS;
+}
+
+function mergeDetails(details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails {
+  return withOptional(sanitizeDetails(details), extras);
+}
+
 export class ValidationError extends ApplicationError {
   constructor(message: string = 'Validation failed', details?: ErrorDetails) {
     super(message, 400, 'VALIDATION_FAILED', details);
@@ -22,18 +32,26 @@ export class InvalidInputError extends ApplicationError {
 
 export class MissingFieldError extends ApplicationError {
   constructor(field: string, details?: ErrorDetails) {
-    super(`Missing required field: ${field}`, 400, 'VALIDATION_MISSING_FIELD', withOptional(details ?? {}, {
-      field
-    }));
+    super(
+      `Missing required field: ${field}`,
+      400,
+      'VALIDATION_MISSING_FIELD',
+      mergeDetails(details, { field })
+    );
   }
 }
 
 export class InvalidFormatError extends ApplicationError {
   constructor(field: string, expectedFormat: string, details?: ErrorDetails) {
-    super(`Invalid format for field '${field}'. Expected: ${expectedFormat}`, 400, 'VALIDATION_INVALID_FORMAT', withOptional(details ?? {}, {
-      field,
-      constraint: expectedFormat
-    }));
+    super(
+      `Invalid format for field '${field}'. Expected: ${expectedFormat}`,
+      400,
+      'VALIDATION_INVALID_FORMAT',
+      mergeDetails(details, {
+        field,
+        constraint: expectedFormat
+      })
+    );
   }
 }
 
@@ -45,10 +63,15 @@ export class OutOfRangeError extends ApplicationError {
         ? `greater than or equal to ${min}`
         : `less than or equal to ${max}`;
     
-    super(`Field '${field}' must be ${range}`, 400, 'VALIDATION_OUT_OF_RANGE', withOptional(details ?? {}, {
-      field,
-      constraint: range
-    }));
+    super(
+      `Field '${field}' must be ${range}`,
+      400,
+      'VALIDATION_OUT_OF_RANGE',
+      mergeDetails(details, {
+        field,
+        constraint: range
+      })
+    );
   }
 }
 

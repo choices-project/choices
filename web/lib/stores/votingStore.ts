@@ -1,18 +1,21 @@
 /**
  * Voting Store - Zustand Implementation
- * 
+ *
  * Comprehensive voting state management including voting records,
  * ballot information, voting preferences, and election data.
  * Consolidates voting state management and voting history.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
+
+import { createSafeStorage } from './storage';
 
 // Voting data types
 export type Ballot = {
@@ -189,22 +192,22 @@ type VotingStore = {
   elections: Election[];
   votingRecords: VotingRecord[];
   search: VotingSearch;
-  
+
   // UI state
   selectedBallot: Ballot | null;
   selectedElection: Election | null;
   currentBallot: Ballot | null;
-  
+
   // Preferences
   preferences: VotingPreferences;
-  
+
   // Loading states
   isLoading: boolean;
   isSearching: boolean;
   isVoting: boolean;
   isUpdating: boolean;
   error: string | null;
-  
+
   // Actions - Ballot management
   setBallots: (ballots: Ballot[]) => void;
   addBallot: (ballot: Ballot) => void;
@@ -212,36 +215,36 @@ type VotingStore = {
   removeBallot: (id: string) => void;
   setSelectedBallot: (ballot: Ballot | null) => void;
   setCurrentBallot: (ballot: Ballot | null) => void;
-  
+
   // Actions - Election management
   setElections: (elections: Election[]) => void;
   addElection: (election: Election) => void;
   updateElection: (id: string, updates: Partial<Election>) => void;
   removeElection: (id: string) => void;
   setSelectedElection: (election: Election | null) => void;
-  
+
   // Actions - Voting records
   setVotingRecords: (records: VotingRecord[]) => void;
   addVotingRecord: (record: VotingRecord) => void;
   updateVotingRecord: (id: string, updates: Partial<VotingRecord>) => void;
   removeVotingRecord: (id: string) => void;
-  
+
   // Actions - Voting
   castVote: (ballotId: string, contestId: string, selections: string[]) => Promise<void>;
   updateVote: (recordId: string, selections: string[]) => Promise<void>;
   cancelVote: (recordId: string) => Promise<void>;
-  
+
   // Actions - Search and filtering
   searchVoting: (query: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   clearSearch: () => void;
   setFilters: (filters: Partial<VotingSearch['filters']>) => void;
   clearFilters: () => void;
-  
+
   // Actions - Preferences
   updatePreferences: (preferences: Partial<VotingPreferences>) => void;
   resetPreferences: () => void;
-  
+
   // Actions - Data operations
   loadBallots: (electionId?: string) => Promise<void>;
   loadElections: () => Promise<void>;
@@ -251,7 +254,7 @@ type VotingStore = {
   submitBallot: (ballotId: string, votes: Record<string, string[]>) => Promise<void>;
   clearUserVotingSession: () => void;
   reset: () => void;
-  
+
   // Actions - Loading states
   setLoading: (loading: boolean) => void;
   setSearching: (searching: boolean) => void;
@@ -295,6 +298,32 @@ const defaultFilters: VotingSearch['filters'] = {
   jurisdiction: [],
 };
 
+const mergeBallot = (ballot: Ballot, updates: Partial<Ballot>) =>
+  withOptional(ballot, updates as Record<string, unknown>) as Ballot;
+
+const mergeElection = (election: Election, updates: Partial<Election>) =>
+  withOptional(election, updates as Record<string, unknown>) as Election;
+
+const mergeVotingRecord = (record: VotingRecord, updates: Partial<VotingRecord>) =>
+  withOptional(record, updates as Record<string, unknown>) as VotingRecord;
+
+const mergeVotingPreferences = (preferences: VotingPreferences, updates: Partial<VotingPreferences>) =>
+  withOptional(preferences, updates as Record<string, unknown>) as VotingPreferences;
+
+const mergeSearch = (search: VotingSearch, updates: Partial<VotingSearch>) =>
+  withOptional(search, updates as Record<string, unknown>) as VotingSearch;
+
+const mergeSearchFilters = (
+  filters: VotingSearch['filters'],
+  updates: Partial<VotingSearch['filters']>,
+) => withOptional(filters, updates as Record<string, unknown>) as VotingSearch['filters'];
+
+const prependItem = <T>(items: T[], item: T): T[] => {
+  const copy = items.slice();
+  copy.unshift(item);
+  return copy;
+};
+
 // Create voting store with middleware
 export const useVotingStore = create<VotingStore>()(
   devtools(
@@ -323,88 +352,88 @@ export const useVotingStore = create<VotingStore>()(
         isVoting: false,
         isUpdating: false,
         error: null,
-        
+
         // Ballot management actions
         setBallots: (ballots) => set({ ballots }),
-        
+
         addBallot: (ballot) => set((state) => ({
-          ballots: [ballot, ...state.ballots]
+          ballots: prependItem(state.ballots, ballot),
         })),
-        
+
         updateBallot: (id, updates) => set((state) => ({
-          ballots: state.ballots.map(ballot =>
-            ballot.id === id ? { ...ballot, ...updates } : ballot
-          )
+          ballots: state.ballots.map((ballot) =>
+            ballot.id === id ? mergeBallot(ballot, updates) : ballot
+          ),
         })),
-        
+
         removeBallot: (id) => set((state) => ({
           ballots: state.ballots.filter(ballot => ballot.id !== id)
         })),
-        
+
         setSelectedBallot: (ballot) => set({ selectedBallot: ballot }),
-        
+
         setCurrentBallot: (ballot) => set({ currentBallot: ballot }),
-        
+
         // Election management actions
         setElections: (elections) => set({ elections }),
-        
+
         addElection: (election) => set((state) => ({
-          elections: [election, ...state.elections]
+          elections: prependItem(state.elections, election),
         })),
-        
+
         updateElection: (id, updates) => set((state) => ({
-          elections: state.elections.map(election =>
-            election.id === id ? { ...election, ...updates } : election
-          )
+          elections: state.elections.map((election) =>
+            election.id === id ? mergeElection(election, updates) : election
+          ),
         })),
-        
+
         removeElection: (id) => set((state) => ({
           elections: state.elections.filter(election => election.id !== id)
         })),
-        
+
         setSelectedElection: (election) => set({ selectedElection: election }),
-        
+
         // Voting records actions
         setVotingRecords: (records) => set({ votingRecords: records }),
-        
+
         addVotingRecord: (record) => set((state) => ({
-          votingRecords: [record, ...state.votingRecords]
+          votingRecords: prependItem(state.votingRecords, record),
         })),
-        
+
         updateVotingRecord: (id, updates) => set((state) => ({
-          votingRecords: state.votingRecords.map(record =>
-            record.id === id ? { ...record, ...updates } : record
-          )
+          votingRecords: state.votingRecords.map((record) =>
+            record.id === id ? mergeVotingRecord(record, updates) : record
+          ),
         })),
-        
+
         removeVotingRecord: (id) => set((state) => ({
           votingRecords: state.votingRecords.filter(record => record.id !== id)
         })),
-        
+
         // Voting actions
         castVote: async (ballotId, contestId, selections) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/vote', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ballotId, contestId, selections }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to cast vote');
             }
-            
+
             const votingRecord = await response.json();
-            
+
             set((state) => ({
-              votingRecords: [votingRecord, ...state.votingRecords]
+              votingRecords: prependItem(state.votingRecords, votingRecord),
             }));
-            
+
             logger.info('Vote cast successfully', {
               ballotId,
               contestId,
@@ -418,32 +447,32 @@ export const useVotingStore = create<VotingStore>()(
             setVoting(false);
           }
         },
-        
+
         updateVote: async (recordId, selections) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch(`/api/voting/records/${recordId}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ selections }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to update vote');
             }
-            
+
             set((state) => ({
-              votingRecords: state.votingRecords.map(record =>
-                record.id === recordId 
-                  ? { ...record, selections }
+              votingRecords: state.votingRecords.map((record) =>
+                record.id === recordId
+                  ? mergeVotingRecord(record, { selections })
                   : record
-              )
+              ),
             }));
-            
+
             logger.info('Vote updated successfully', {
               recordId,
               selections
@@ -456,26 +485,26 @@ export const useVotingStore = create<VotingStore>()(
             setVoting(false);
           }
         },
-        
+
         cancelVote: async (recordId) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch(`/api/voting/records/${recordId}`, {
               method: 'DELETE',
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to cancel vote');
             }
-            
+
             set((state) => ({
               votingRecords: state.votingRecords.filter(record => record.id !== recordId)
             }));
-            
+
             logger.info('Vote cancelled successfully', { recordId });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -485,41 +514,40 @@ export const useVotingStore = create<VotingStore>()(
             setVoting(false);
           }
         },
-        
+
         // Search and filtering actions
         searchVoting: async (query) => {
           const { setSearching, setError } = get();
-          
+
           try {
             setSearching(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/search', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ query }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to search voting data');
             }
-            
+
             const results = await response.json() as {
               items: Array<Ballot | Election>;
               total: number;
             };
-            
+
             set((state) => ({
-              search: {
-                ...state.search,
+              search: mergeSearch(state.search, {
                 query,
                 results: results.items,
                 totalResults: results.total,
                 currentPage: 1,
                 totalPages: Math.ceil(results.total / 20),
-              },
+              }),
             }));
-            
+
             logger.info('Voting data searched', {
               query,
               results: results.items.length,
@@ -533,46 +561,42 @@ export const useVotingStore = create<VotingStore>()(
             setSearching(false);
           }
         },
-        
+
         setSearchQuery: (query) => set((state) => ({
-          search: { ...state.search, query }
+          search: mergeSearch(state.search, { query }),
         })),
-        
+
         clearSearch: () => set((state) => ({
-          search: {
-            ...state.search,
+          search: mergeSearch(state.search, {
             query: '',
             results: [],
             totalResults: 0,
             currentPage: 1,
             totalPages: 1,
-          }
+          }),
         })),
-        
+
         setFilters: (filters) => set((state) => ({
-          search: {
-            ...state.search,
-            filters: { ...state.search.filters, ...filters }
-          }
+          search: mergeSearch(state.search, {
+            filters: mergeSearchFilters(state.search.filters, filters),
+          }),
         })),
-        
+
         clearFilters: () => set((state) => ({
-          search: {
-            ...state.search,
-            filters: defaultFilters
-          }
+          search: mergeSearch(state.search, {
+            filters: defaultFilters,
+          }),
         })),
-        
+
         clearUserVotingSession: () => set((state) => ({
           ballots: [],
           selectedBallot: null,
           currentBallot: null,
-          search: {
-            ...state.search,
-            filters: defaultFilters
-          }
+          search: mergeSearch(state.search, {
+            filters: defaultFilters,
+          }),
         })),
-        
+
         reset: () => {
           useVotingStore.getState().clearFilters();
           useVotingStore.getState().resetPreferences();
@@ -586,35 +610,35 @@ export const useVotingStore = create<VotingStore>()(
           });
           logger.info('Voting store reset');
         },
-        
+
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: { ...state.preferences, ...preferences }
+          preferences: mergeVotingPreferences(state.preferences, preferences),
         })),
-        
+
         resetPreferences: () => set({ preferences: defaultPreferences }),
-        
+
         // Data operations
         loadBallots: async (electionId) => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/ballots', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ electionId }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to load ballots');
             }
-            
+
             const ballots = await response.json() as Ballot[];
             set({ ballots });
-            
+
             logger.info('Ballots loaded', {
               electionId,
               count: ballots.length
@@ -627,23 +651,23 @@ export const useVotingStore = create<VotingStore>()(
             setLoading(false);
           }
         },
-        
+
         loadElections: async () => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/elections');
-            
+
             if (!response.ok) {
               throw new Error('Failed to load elections');
             }
-            
+
             const elections = await response.json() as Election[];
             set({ elections });
-            
+
             logger.info('Elections loaded', {
               count: elections.length
             });
@@ -655,23 +679,23 @@ export const useVotingStore = create<VotingStore>()(
             setLoading(false);
           }
         },
-        
+
         loadVotingRecords: async () => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/records');
-            
+
             if (!response.ok) {
               throw new Error('Failed to load voting records');
             }
-            
+
             const records = await response.json() as VotingRecord[];
             set({ votingRecords: records });
-            
+
             logger.info('Voting records loaded', {
               count: records.length
             });
@@ -683,23 +707,23 @@ export const useVotingStore = create<VotingStore>()(
             setLoading(false);
           }
         },
-        
+
         loadBallot: async (id) => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch(`/api/voting/ballots/${id}`);
-            
+
             if (!response.ok) {
               throw new Error('Failed to load ballot');
             }
-            
+
             const ballot = await response.json();
             set({ selectedBallot: ballot });
-            
+
             logger.info('Ballot loaded', { id });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -709,23 +733,23 @@ export const useVotingStore = create<VotingStore>()(
             setLoading(false);
           }
         },
-        
+
         loadElection: async (id) => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch(`/api/voting/elections/${id}`);
-            
+
             if (!response.ok) {
               throw new Error('Failed to load election');
             }
-            
+
             const election = await response.json() as Election;
             set({ selectedElection: election });
-            
+
             logger.info('Election loaded', { id });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -735,30 +759,30 @@ export const useVotingStore = create<VotingStore>()(
             setLoading(false);
           }
         },
-        
+
         submitBallot: async (ballotId, votes) => {
           const { setVoting, setError } = get();
-          
+
           try {
             setVoting(true);
             setError(null);
-            
+
             const response = await fetch('/api/voting/submit', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ballotId, votes }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to submit ballot');
             }
-            
+
             const votingRecord = await response.json() as VotingRecord;
-            
+
             set((state) => ({
-              votingRecords: [votingRecord, ...state.votingRecords]
+              votingRecords: prependItem(state.votingRecords, votingRecord),
             }));
-            
+
             logger.info('Ballot submitted successfully', {
               ballotId,
               votes: Object.keys(votes).length
@@ -771,7 +795,7 @@ export const useVotingStore = create<VotingStore>()(
             setVoting(false);
           }
         },
-        
+
         // Loading state actions
         setLoading: (loading) => set({ isLoading: loading }),
         setSearching: (searching) => set({ isSearching: searching }),
@@ -782,6 +806,7 @@ export const useVotingStore = create<VotingStore>()(
       }),
       {
         name: 'voting-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           ballots: state.ballots,
           elections: state.elections,
@@ -860,15 +885,15 @@ export const useVotingStats = () => useVotingStore(state => ({
   error: state.error,
 }));
 
-export const useUpcomingElections = () => useVotingStore(state => 
+export const useUpcomingElections = () => useVotingStore(state =>
   state.elections.filter(election => election.status === 'upcoming')
 );
 
-export const useActiveElections = () => useVotingStore(state => 
+export const useActiveElections = () => useVotingStore(state =>
   state.elections.filter(election => election.status === 'active')
 );
 
-export const useUserVotingHistory = () => useVotingStore(state => 
+export const useUserVotingHistory = () => useVotingStore(state =>
   state.votingRecords.sort((a, b) => new Date(b.votedAt).getTime() - new Date(a.votedAt).getTime())
 );
 
@@ -887,7 +912,7 @@ export const votingStoreUtils = {
       preferences: state.preferences,
     };
   },
-  
+
   /**
    * Get elections by type
    */
@@ -895,7 +920,7 @@ export const votingStoreUtils = {
     const state = useVotingStore.getState();
     return state.elections.filter(election => election.type === type);
   },
-  
+
   /**
    * Get ballots by election
    */
@@ -903,17 +928,17 @@ export const votingStoreUtils = {
     const state = useVotingStore.getState();
     return state.ballots.filter(ballot => ballot.electionId === electionId);
   },
-  
+
   /**
    * Get voting records by election
    */
   getVotingRecordsByElection: (electionId: string) => {
     const state = useVotingStore.getState();
-    return state.votingRecords.filter(record => 
+    return state.votingRecords.filter(record =>
       state.ballots.find(ballot => ballot.id === record.ballotId)?.electionId === electionId
     );
   },
-  
+
   /**
    * Get upcoming elections
    */
@@ -938,7 +963,7 @@ export const votingStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to elections changes
    */
@@ -949,7 +974,7 @@ export const votingStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to voting records changes
    */
@@ -981,7 +1006,7 @@ export const votingStoreDebug = {
       error: state.error
     });
   },
-  
+
   /**
    * Log voting summary
    */
@@ -989,7 +1014,7 @@ export const votingStoreDebug = {
     const summary = votingStoreUtils.getVotingSummary();
     logger.debug('Voting Summary', summary);
   },
-  
+
   /**
    * Log elections by type
    */
@@ -1001,7 +1026,7 @@ export const votingStoreDebug = {
     }, {} as Record<string, number>);
     logger.debug('Elections by Type', byType);
   },
-  
+
   /**
    * Reset voting store
    */

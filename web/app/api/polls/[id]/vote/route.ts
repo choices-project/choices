@@ -1,29 +1,65 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { getUser } from '@/lib/core/auth/middleware'
-import { AnalyticsService } from '@/lib/services/analytics'
 import {
   withErrorHandling,
   successResponse,
   authError,
   validationError,
   notFoundError,
-  errorResponse
-} from '@/lib/api'
-import { devLog, logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+  errorResponse,
+} from '@/lib/api';
+import { getUser } from '@/lib/core/auth/middleware';
+import { AnalyticsService } from '@/lib/services/analytics';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/polls/[id]/vote - Submit a vote (authenticated users only)
-export const POST = withErrorHandling(async (
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) => {
-    const { id } = await params;
-    const pollId = id;
-    devLog('Vote submission attempt for poll:', { pollId })
-    devLog('POST vote API called with pollId:', { pollId });
+type VoteRequestBody = {
+  choice?: number;
+  optionId?: string;
+  metadata?: Record<string, unknown>;
+  selections?: number[];
+  approvals?: Array<string | number>;
+  rankings?: Array<string | number>;
+  allocations?: Record<string, number>;
+  ratings?: Record<string, number>;
+};
+
+type PollOptionRow = {
+  id: string;
+  text?: string | null;
+  option_text?: string | null;
+  order_index?: number | null;
+};
+
+type PollRecord = {
+  id: string;
+  status: string | null;
+  privacy_level: string | null;
+  voting_method: string | null;
+  poll_settings: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  poll_options: PollOptionRow[];
+};
+
+const SUPPORTED_METHODS = new Set(['single', 'multiple', 'approval', 'ranked']);
+
+const MULTI_SELECT_METHODS = new Set(['multiple', 'approval']);
+
+const normalizeOptions = (options: PollOptionRow[]) =>
+  [...options]
+    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+    .map((option, index) => ({
+      id: option.id,
+      text: option.text ?? option.option_text ?? `Option ${index + 1}`,
+      order: option.order_index ?? index,
+      index,
+    }));
+
+export const POST = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  const pollId = params.id;
 
   if (!pollId) {
     return validationError({ pollId: 'Poll ID is required' });
@@ -31,368 +67,443 @@ export const POST = withErrorHandling(async (
 
   const supabase = await getSupabaseServerClient();
 
-  let user;
-  try {
-    user = await getUser();
-  } catch (error) {
-    logger.error('Authentication error during vote:', error instanceof Error ? error : new Error(String(error)));
-    return authError('Authentication required to vote');
-  }
+  const user = await getUser().catch((error) => {
+    logger.warn('Vote submission authentication lookup failed', error);
+    return null;
+  });
 
   if (!user) {
     return authError('Authentication required to vote');
   }
 
-    const supabaseClient = supabase;
+  let body: VoteRequestBody;
+  try {
+    body = await request.json();
+  } catch {
+    return validationError({ body: 'Request body must be valid JSON' });
+  }
 
-    // Verify user is active - always check for real users
-    const { data: userProfile } = await supabaseClient
-      .from('user_profiles')
-      .select('is_active')
-      .eq('user_id', user.id)
-      .single()
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .select(
+      `
+        id,
+        status,
+        privacy_level,
+        voting_method,
+        poll_settings,
+        metadata,
+        poll_options:poll_options (
+          id,
+          text,
+          option_text,
+          order_index
+        )
+      `,
+    )
+    .eq('id', pollId)
+    .maybeSingle<PollRecord>();
 
-    if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
-      throw new AuthenticationError('Active account required to vote')
+  if (pollError || !poll) {
+    logger.error('Vote submission poll lookup failed', pollError ?? new Error('Poll not found'));
+    return notFoundError('Poll not found');
+  }
+
+  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+
+  if (!SUPPORTED_METHODS.has(votingMethod)) {
+    return validationError({
+      voting_method: `Voting method '${votingMethod}' is not supported yet.`,
+    });
+  }
+
+  if ((poll.status ?? 'active') !== 'active') {
+    return validationError({ poll: 'This poll is not open for voting.' });
+  }
+
+  const options = normalizeOptions(poll.poll_options ?? []);
+  const optionByIndex = new Map(options.map((option) => [option.index, option]));
+  const optionById = new Map(options.map((option) => [option.id, option]));
+
+  const metadata = (poll.metadata ?? {}) as Record<string, unknown>;
+  const settings = (poll.poll_settings ?? {}) as Record<string, unknown>;
+  const allowMultipleVotes = Boolean(settings.allow_multiple_votes);
+  const configuredMaxSelections =
+    typeof settings.max_selections === 'number' && settings.max_selections > 0
+      ? settings.max_selections
+      : typeof metadata.maxSelections === 'number' && metadata.maxSelections > 0
+        ? metadata.maxSelections
+        : null;
+
+  const recordAnalyticsSafely = async () => {
+    try {
+      const analyticsService = AnalyticsService.getInstance();
+      await analyticsService.recordPollAnalytics(user.id, pollId);
+    } catch (analyticsError) {
+      logger.warn('Analytics recording failed for vote', analyticsError);
+    }
+  };
+
+  if (votingMethod === 'ranked') {
+    const rawRankings = Array.isArray(body.rankings) ? body.rankings : [];
+
+    if (rawRankings.length === 0) {
+      return validationError({ rankings: 'Provide the ordered rankings before submitting your vote.' });
     }
 
-    const body = await request.json()
-    const { choice, approvals, selections, privacy_level = 'public' } = body
+    const rankingIndices: number[] = [];
 
+    for (const value of rawRankings) {
+      let optionIndex: number | undefined;
+      if (typeof value === 'number') {
+        optionIndex = value;
+      } else if (typeof value === 'string') {
+        const numeric = Number.parseInt(value, 10);
+        if (!Number.isNaN(numeric) && optionByIndex.has(numeric)) {
+          optionIndex = numeric;
+        } else {
+          const option = optionById.get(value);
+          optionIndex = option?.index;
+        }
+      }
 
-    // Get poll data to determine voting method
-    const { data: pollData } = await supabaseClient
-      .from('polls')
-      .select('voting_method')
-      .eq('id', pollId)
-      .single()
+      if (optionIndex === undefined || !optionByIndex.has(optionIndex)) {
+        return validationError({ rankings: 'One or more ranked options are not valid for this poll.' });
+      }
 
-    if (!pollData) {
-      throw new NotFoundError('Poll not found')
+      rankingIndices.push(optionIndex);
     }
 
+    const uniqueRankingIndices = Array.from(new Set(rankingIndices));
 
-    // Validate vote data based on voting method
-    if (pollData.voting_method === 'approval') {
-      if (!approvals || !Array.isArray(approvals) || approvals.length === 0) {
-        return validationError({ approvals: 'At least one approval is required for approval voting' });
-      }
-    } else if (pollData.voting_method === 'multiple') {
-      if (!selections || !Array.isArray(selections) || selections.length === 0) {
-        return validationError({ selections: 'At least one selection is required for multiple choice voting' });
-      }
-    } else if (pollData.voting_method === 'ranked') {
-      if (!rankings || !Array.isArray(rankings) || rankings.length === 0) {
-        return validationError({ rankings: 'Rankings are required for ranked choice voting' });
-      }
-    } else if (pollData.voting_method === 'quadratic') {
-      if (!credits || typeof credits !== 'object') {
-        return validationError({ credits: 'Vote credits are required for quadratic voting' });
-      }
-    } else if (pollData.voting_method === 'range') {
-      if (!scores || typeof scores !== 'object') {
-        return validationError({ scores: 'Scores are required for range voting' });
-      }
-    } else if (pollData.voting_method === 'single') {
-      if (!choice || typeof choice !== 'number' || choice < 1) {
-        return validationError({ choice: 'Valid choice is required for single choice voting' });
-      }
+    if (uniqueRankingIndices.length === 0) {
+      return validationError({ rankings: 'Select at least one option to rank.' });
     }
 
-    // Handle approval voting differently
-    if (pollData.voting_method === 'approval') {
-      // For approval voting, store the approvals in vote_data
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: approvals[0] ?? '', // Use first approval as primary option_id
-          voting_method: 'approval',
-          vote_data: { approvals },
-          is_verified: true
-        })
+    const { error: deleteExistingBallotError } = await supabase
+      .from('poll_rankings')
+      .delete()
+      .eq('poll_id', pollId)
+      .eq('user_id', user.id);
 
-      if (voteError) {
-        devLog('Error storing approval vote:', { error: voteError.message })
-        return errorResponse('Failed to submit approval vote', 500);
-      }
+    if (deleteExistingBallotError) {
+      logger.error('Ranked vote delete failed', deleteExistingBallotError);
+      return errorResponse('Failed to update your ranked ballot', 500);
+    }
 
-      // Record analytics
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        devLog('Analytics recording failed for vote:', { error: analyticsError });
-      }
-
-      return successResponse({
-        message: 'Approval vote submitted successfully',
-        pollId,
-        voteId: 'approval-vote',
-        privacyLevel: privacy_level
+    const { data: insertedBallot, error: insertBallotError } = await supabase
+      .from('poll_rankings')
+      .insert({
+        poll_id: pollId,
+        user_id: user.id,
+        rankings: uniqueRankingIndices,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
-    } else if (pollData.voting_method === 'multiple') {
-      // For multiple choice voting, store the selections in vote_data
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: selections[0] ?? '', // Use first selection as primary option_id
-          voting_method: 'multiple',
-          vote_data: { selections },
-          is_verified: true
-        })
+      .select('id')
+      .single<{ id: string }>();
 
-      if (voteError) {
-        devLog('Error storing multiple choice vote:', { error: voteError.message })
-        return errorResponse('Failed to submit multiple choice vote', 500);
-      }
+    if (insertBallotError) {
+      logger.error('Ranked vote insert failed', insertBallotError);
+      return errorResponse('Failed to submit ranked vote', 500);
+    }
 
-      // Record analytics for the vote
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        const errorMessage = analyticsError instanceof Error ? analyticsError.message : String(analyticsError);
-        devLog('Analytics recording failed for vote:', { error: errorMessage });
-        // Don't fail the vote if analytics fails
-      }
+    await recordAnalyticsSafely();
 
-      return successResponse({
-        message: 'Multiple choice vote submitted successfully',
+    return successResponse(
+      {
         pollId,
-        voteId: 'multiple-choice-vote',
-        privacyLevel: privacy_level
-      })
-    } else if (pollData.voting_method === 'ranked') {
-      // Ranked choice voting - store rankings array
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: rankings[0] ?? '', // First choice as primary
-          voting_method: 'ranked',
-          vote_data: { rankings }, // Full ranking array
-          is_verified: true
-        })
+        ballotId: insertedBallot?.id ?? null,
+        rankings: uniqueRankingIndices,
+      },
+      {
+        votedAt: new Date().toISOString(),
+        pollingMethod: votingMethod,
+      },
+    );
+  }
 
-      if (voteError) {
-        devLog('Error storing ranked choice vote:', { error: voteError.message })
-        return errorResponse('Failed to submit ranked choice vote', 500);
-      }
+  let existingVoteRows: Array<{ id: string; option_id: string }> = [];
 
-      // Record analytics
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        devLog('Analytics recording failed for vote:', { error: analyticsError });
-      }
+  if (MULTI_SELECT_METHODS.has(votingMethod) || votingMethod === 'single') {
+    const { data: existingVotes, error: existingVotesError } = await supabase
+      .from('votes')
+      .select('id, option_id')
+      .eq('poll_id', pollId)
+      .eq('user_id', user.id);
 
-      return successResponse({
-        message: 'Ranked choice vote submitted successfully',
-        pollId,
-        voteId: 'ranked-choice-vote',
-        privacyLevel: privacy_level
-      })
-    } else if (pollData.voting_method === 'quadratic') {
-      // Quadratic voting - store credits allocation
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: Object.keys(credits)[0] ?? '', // First credited option as primary
-          voting_method: 'quadratic',
-          vote_data: { credits }, // Credit allocation per option
-          is_verified: true
-        })
+    if (existingVotesError) {
+      logger.error('Vote submission existing vote lookup failed', existingVotesError);
+      return errorResponse('Unable to verify voting history', 500);
+    }
 
-      if (voteError) {
-        devLog('Error storing quadratic vote:', { error: voteError.message })
-        return errorResponse('Failed to submit quadratic vote', 500);
-      }
+    existingVoteRows = existingVotes ?? [];
+  }
 
-      // Record analytics
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        devLog('Analytics recording failed for vote:', { error: analyticsError });
-      }
+  if (MULTI_SELECT_METHODS.has(votingMethod)) {
+    const rawValues = votingMethod === 'multiple'
+      ? (Array.isArray(body.selections) ? body.selections : [])
+      : (Array.isArray(body.approvals) ? body.approvals : []);
 
-      return successResponse({
-        message: 'Quadratic vote submitted successfully',
-        pollId,
-        voteId: 'quadratic-vote',
-        privacyLevel: privacy_level
-      })
-    } else if (pollData.voting_method === 'range') {
-      // Range/score voting - store scores for each option
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: Object.keys(scores)[0] ?? '', // First scored option as primary
-          voting_method: 'range',
-          vote_data: { scores }, // Score per option
-          is_verified: true
-        })
-
-      if (voteError) {
-        devLog('Error storing range vote:', { error: voteError.message })
-        return errorResponse('Failed to submit range vote', 500);
-      }
-
-      // Record analytics
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        devLog('Analytics recording failed for vote:', { error: analyticsError });
-      }
-
-      return successResponse({
-        message: 'Range vote submitted successfully',
-        pollId,
-        voteId: 'range-vote',
-        privacyLevel: privacy_level
-      })
-    } else if (pollData.voting_method === 'single') {
-      // Single choice voting (standard method)
-      const { error: voteError } = await supabaseClient
-        .from('votes')
-        .insert({
-          poll_id: pollId,
-          user_id: user.id,
-          option_id: choice.toString(),
-          voting_method: 'single',
-          is_verified: true
-        })
-
-      if (voteError) {
-        devLog('Error storing single choice vote:', { error: voteError.message })
-        return errorResponse('Failed to submit vote', 500);
-      }
-
-      // Record analytics
-      try {
-        const analyticsService = AnalyticsService.getInstance()
-        await analyticsService.recordPollAnalytics(user.id, pollId)
-      } catch (analyticsError: any) {
-        devLog('Analytics recording failed for vote:', { error: analyticsError });
-      }
-
-      return successResponse({
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId: 'single-choice-vote',
-        privacyLevel: privacy_level
-      })
-    } else {
-      // Unsupported voting method
+    if (rawValues.length === 0) {
       return validationError({
-        voting_method: `Voting method '${pollData.voting_method}' is not supported. Supported: single, approval, multiple, ranked, quadratic, range`
+        [votingMethod === 'approval' ? 'approvals' : 'selections']:
+          'Select at least one option before submitting your vote.',
       });
     }
+
+    const resolvedOptionIds: string[] = [];
+
+    for (const value of rawValues) {
+      let candidate;
+      if (typeof value === 'number') {
+        candidate = optionByIndex.get(value);
+      } else if (typeof value === 'string') {
+        candidate = optionById.get(value) ?? optionByIndex.get(Number(value));
+      }
+
+      if (!candidate) {
+        return validationError({ vote: 'One or more selected options are not valid for this poll.' });
+      }
+
+      resolvedOptionIds.push(candidate.id);
+    }
+
+    const uniqueOptionIds = Array.from(new Set(resolvedOptionIds));
+
+    if (configuredMaxSelections && uniqueOptionIds.length > configuredMaxSelections) {
+      return validationError({
+        selections: `You can select up to ${configuredMaxSelections} option${configuredMaxSelections === 1 ? '' : 's'} for this poll.`,
+      });
+    }
+
+    if (!allowMultipleVotes && existingVoteRows.length > 0) {
+      return validationError({ vote: 'You have already submitted selections for this poll.' });
+    }
+
+    if (existingVoteRows.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('votes')
+        .delete()
+        .eq('poll_id', pollId)
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        logger.error('Vote submission delete failed', deleteError);
+        return errorResponse('Failed to update your vote', 500);
+      }
+    }
+
+    const rowsToInsert = uniqueOptionIds.map((optionId) => ({
+      poll_id: pollId,
+      option_id: optionId,
+      poll_option_id: optionId,
+      user_id: user.id,
+      vote_status: 'submitted',
+    }));
+
+    const { data: insertedVotes, error: insertError } = await supabase
+      .from('votes')
+      .insert(rowsToInsert)
+      .select('id');
+
+    if (insertError) {
+      logger.error('Vote submission insert failed', insertError);
+      return errorResponse('Failed to submit vote', 500);
+    }
+
+    await recordAnalyticsSafely();
+
+    return successResponse(
+      {
+        pollId,
+        voteIds: (insertedVotes ?? []).map((vote) => vote.id),
+        optionIds: uniqueOptionIds,
+        allowMultipleVotes: true,
+      },
+      {
+        votedAt: new Date().toISOString(),
+        pollingMethod: votingMethod,
+      },
+    );
+  }
+
+  const optionIdFromBody = typeof body.optionId === 'string' ? body.optionId : undefined;
+  const choiceIndex = typeof body.choice === 'number' ? body.choice : undefined;
+
+  let selectedOption = optionIdFromBody
+    ? optionById.get(optionIdFromBody) ?? optionByIndex.get(Number(optionIdFromBody))
+    : undefined;
+
+  if (!selectedOption) {
+    if (choiceIndex === undefined) {
+      return validationError({ choice: 'Option selection is required.' });
+    }
+
+    if (!Number.isInteger(choiceIndex) || !optionByIndex.has(choiceIndex)) {
+      return validationError({ choice: 'Selected option is not valid for this poll.' });
+    }
+
+    selectedOption = optionByIndex.get(choiceIndex);
+  }
+
+  if (!selectedOption) {
+    return validationError({ choice: 'Selected option is not valid for this poll.' });
+  }
+
+  if (existingVoteRows.length > 0) {
+    if (!allowMultipleVotes) {
+      return validationError({ vote: 'You have already voted on this poll.' });
+    }
+
+    if (existingVoteRows.some((vote) => vote.option_id === selectedOption?.id)) {
+      return validationError({ vote: 'You have already selected this option.' });
+    }
+  }
+
+  const { data: insertedVote, error: insertError } = await supabase
+    .from('votes')
+    .insert({
+      poll_id: pollId,
+      option_id: selectedOption.id,
+      poll_option_id: selectedOption.id,
+      user_id: user.id,
+      vote_status: 'submitted',
+    })
+    .select('id')
+    .single<{ id: string }>();
+
+  if (insertError) {
+    logger.error('Vote submission insert failed', insertError);
+    return errorResponse('Failed to submit vote', 500);
+  }
+
+  await recordAnalyticsSafely();
+
+  const optionIndex = selectedOption.index;
+
+  return successResponse(
+    {
+      pollId,
+      voteId: insertedVote?.id ?? null,
+      optionId: selectedOption.id,
+      optionIndex,
+      allowMultipleVotes,
+    },
+    {
+      votedAt: new Date().toISOString(),
+      pollingMethod: votingMethod,
+    },
+  );
 });
 
-// HEAD /api/polls/[id]/vote - Check if user has voted (returns boolean only)
-export async function HEAD(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const pollId = id
+export async function HEAD(request: NextRequest, { params }: { params: { id: string } }) {
+  const pollId = params.id;
 
-    if (!pollId) {
-      return new NextResponse(null, { status: 204 }) // Not voted
-    }
+  if (!pollId) {
+    return new NextResponse(null, { status: 204 });
+  }
 
-    // Always use regular client - no E2E bypasses
-    const supabase = await getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
 
-    // Get user - always require real authentication
-    const { data: auth } = await supabase.auth.getUser()
-    const user = auth?.user
+  if (!user) {
+    return new NextResponse(null, { status: 204 });
+  }
 
-    if (!user) {
-      return new NextResponse(null, { status: 204 }) // unauth => not voted
-    }
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .select('voting_method')
+    .eq('id', pollId)
+    .maybeSingle<{ voting_method: string | null }>();
 
-    // Fast existence check: head + count (no rows)
-    const { error, count } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
+  if (pollError || !poll) {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+
+  if (votingMethod === 'ranked') {
+    const { count, error } = await supabase
+      .from('poll_rankings')
+      .select('id', { head: true, count: 'exact' })
       .eq('poll_id', pollId)
-      .eq('user_id', user.id)
+      .eq('user_id', user.id);
 
     if (error) {
-      // Don't crash SSR — log server-side if you want, but return 204
-      return new NextResponse(null, { status: 204 })
+      logger.warn('Ranked vote status HEAD lookup failed', error);
+      return new NextResponse(null, { status: 204 });
     }
 
-    return new NextResponse(null, {
-      status: count && count > 0 ? 200 : 204
-    })
-
-  } catch {
-    // Absolutely never throw in HEAD — prevent stream aborts
-    return new NextResponse(null, { status: 204 })
+    return new NextResponse(null, { status: count && count > 0 ? 200 : 204 });
   }
+
+  const { error, count } = await supabase
+    .from('votes')
+    .select('*', { head: true, count: 'exact' })
+    .eq('poll_id', pollId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    logger.warn('Vote status HEAD lookup failed', error);
+    return new NextResponse(null, { status: 204 });
+  }
+
+  return new NextResponse(null, { status: count && count > 0 ? 200 : 204 });
 }
 
-// GET /api/polls/[id]/vote - Check if user has voted (returns boolean only)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const pollId = id
+export const GET = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  const pollId = params.id;
 
-    if (!pollId) {
-      throw new ValidationError('Poll ID is required')
-    }
+  if (!pollId) {
+    return validationError({ pollId: 'Poll ID is required' });
+  }
 
-    const supabase = await getSupabaseServerClient()
+  const supabase = await getSupabaseServerClient();
+  const user = await getUser().catch(() => null);
 
-    if (!supabase) {
-      throw new Error('Supabase client not available')
-    }
+  if (!user) {
+    return successResponse({ hasVoted: false });
+  }
 
-    // Always require real authentication - no E2E bypasses
-    const user = await getUser()
+  const { data: poll, error: pollError } = await supabase
+    .from('polls')
+    .select('voting_method')
+    .eq('id', pollId)
+    .maybeSingle<{ voting_method: string | null }>();
 
-    if (!user) {
-      return NextResponse.json(
-        { has_voted: false },
-        { status: 200 }
-      )
-    }
+  if (pollError || !poll) {
+    return successResponse({ hasVoted: false });
+  }
 
-    // Check if user has voted (returns boolean only, no vote data)
-    const { data: existingVote, error: voteError } = await supabase
-      .from('votes')
-      .select('id')
+  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+
+  if (votingMethod === 'ranked') {
+    const { count, error: rankedError } = await supabase
+      .from('poll_rankings')
+      .select('id', { head: true, count: 'exact' })
       .eq('poll_id', pollId)
-      .eq('user_id', user.id)
-      .maybeSingle()
+      .eq('user_id', user.id);
 
-    // If there's an error or no vote found, user hasn't voted
-    const hasVoted = !voteError && !!existingVote
+    if (rankedError) {
+      logger.error('Ranked vote status GET lookup failed', rankedError);
+      return errorResponse('Unable to verify vote status', 500);
+    }
 
-    return NextResponse.json({
-      has_voted: hasVoted,
-      // Do NOT return any vote details for privacy
-    })
-
-  } catch (error) {
-    return createErrorResponse(error);
+    return successResponse({ hasVoted: Boolean(count && count > 0) });
   }
-}
+
+  const { count, error: voteError } = await supabase
+    .from('votes')
+    .select('id', { head: true, count: 'exact' })
+    .eq('poll_id', pollId)
+    .eq('user_id', user.id);
+
+  if (voteError) {
+    logger.error('Vote status GET lookup failed', voteError);
+    return errorResponse('Unable to verify vote status', 500);
+  }
+
+  return successResponse({ hasVoted: Boolean(count && count > 0) });
+});

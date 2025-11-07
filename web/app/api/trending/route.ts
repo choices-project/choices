@@ -14,9 +14,10 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
+import { withErrorHandling, validationError } from '@/lib/api';
 import { logger , devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -78,40 +79,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         type: 'Invalid type. Use "polls", "hashtags", or "topics"' 
       });
     }
+});
 
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error in trending API:', err);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') ?? 'hashtags';
+
+  if (type === 'hashtags') {
+    return await trackHashtags(request);
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') ?? 'hashtags';
-
-    if (type === 'hashtags') {
-      return await trackHashtags(request);
-    }
-
-    return NextResponse.json(
-      { error: 'Invalid type for POST. Use "hashtags"' },
-      { status: 400 }
-    );
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error in trending POST API:', err);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return validationError({ type: 'Invalid type for POST. Use "hashtags"' });
+});
 
 async function getTrendingPolls(limit: number) {
   try {

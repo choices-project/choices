@@ -1,11 +1,11 @@
 'use client'
 
-import { 
-  MessageCircle, 
-  X, 
-  Bug, 
-  Lightbulb, 
-  Camera, 
+import {
+  MessageCircle,
+  X,
+  Bug,
+  Lightbulb,
+  Camera,
   CheckCircle,
   Star,
   Smile,
@@ -17,57 +17,18 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
+import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
-import { 
+import {
   useAnalyticsActions,
   useAnalyticsLoading,
   useAnalyticsError
 } from '@/lib/stores/analyticsStore'
 import { logger , devLog } from '@/lib/utils/logger'
-
-type UserJourney = {
-  currentPage?: string
-  currentPath?: string
-  pageTitle?: string
-  referrer?: string
-  userAgent?: string
-  screenResolution?: string
-  viewportSize?: string
-  timeOnPage?: number
-  sessionId?: string
-  sessionStartTime?: string
-  totalPageViews?: number
-  activeFeatures?: string[]
-  lastAction?: string
-  actionSequence?: string[]
-  pageLoadTime?: number
-  performanceMetrics?: {
-    fcp?: number
-    lcp?: number
-    fid?: number
-    cls?: number
-  }
-  errors?: Array<{
-    type: string
-    message: string
-    stack?: string
-    timestamp: string
-  }>
-  deviceInfo?: {
-    type: 'mobile' | 'tablet' | 'desktop'
-    os: string
-    browser: string
-    language: string
-    timezone: string
-  }
-  isAuthenticated?: boolean
-  userRole?: string
-  userId?: string
-}
 
 type FeedbackData = {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
@@ -78,6 +39,42 @@ type FeedbackData = {
   userJourney: UserJourney
 }
 
+const createDefaultUserJourney = (): UserJourney => {
+  const now = new Date().toISOString()
+  return {
+    currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
+    currentPath: typeof window !== 'undefined' ? window.location.href : '',
+    pageTitle: typeof document !== 'undefined' ? document.title : '',
+    referrer: typeof document !== 'undefined' ? document.referrer : '',
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+    screenResolution:
+      typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : 'unknown',
+    viewportSize:
+      typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'unknown',
+    timeOnPage: 0,
+    sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+    sessionStartTime: now,
+    totalPageViews: 0,
+    activeFeatures: [],
+    lastAction: 'none',
+    actionSequence: [],
+    pageLoadTime: 0,
+    performanceMetrics: {
+      fcp: 0,
+      lcp: 0,
+      fid: 0,
+      cls: 0,
+    },
+    errors: [],
+    deviceInfo: {
+      deviceType: 'unknown',
+      browser: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      platform: typeof navigator !== 'undefined' ? navigator.platform : 'unknown',
+    },
+    isAuthenticated: false,
+  }
+}
+
 const EnhancedFeedbackWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState<'closed' | 'type' | 'details' | 'sentiment' | 'screenshot' | 'success'>('closed')
@@ -86,7 +83,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
     title: '',
     description: '',
     sentiment: 'neutral',
-    userJourney: {}
+    userJourney: createDefaultUserJourney()
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -95,26 +92,9 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const [feedbackTracker, setFeedbackTracker] = useState<ReturnType<typeof getFeedbackTracker> | null>(null)
 
   // Get analytics store state and actions with proper memoization
-  const analyticsActions = useAnalyticsActions()
+  const { trackEvent, trackUserAction, setLoading: _setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
   const _isLoadingAnalytics = useAnalyticsLoading()
   const error = useAnalyticsError()
-  
-  // Memoize the actions to prevent unnecessary re-renders
-  const { trackEvent, trackUserAction, setLoading: _setAnalyticsLoading, setError: setAnalyticsError } = useMemo(() => analyticsActions as {
-    trackEvent: (event: {
-      event_type: string
-      type: string
-      category: string
-      action: string
-      label: string
-      event_data: Record<string, unknown>
-      created_at: string
-      session_id: string
-    }) => void
-    trackUserAction: (action: string, category: string, label?: string, value?: number) => void
-    setLoading: (loading: boolean) => void
-    setError: (error: string | null) => void
-  }, [analyticsActions])
 
   // Initialize feedback tracker on mount
   useEffect(() => {
@@ -151,7 +131,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   // Show error state if there's an error
   if (error) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50" data-testid="feedback-widget-error">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-sm">
           <div className="flex items-center">
             <div className="text-red-600 text-sm">
@@ -166,7 +146,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const handleOpen = () => {
     setIsOpen(true)
     setStep('type')
-    
+
     // Update user journey when widget opens - fixed to prevent infinite loop
     if (feedbackTracker) {
       const userJourney = feedbackTracker.captureUserJourney()
@@ -178,7 +158,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
         return prev
       })
     }
-    
+
     // Track analytics using store
     trackUserAction('feedback_widget_opened', 'engagement', 'Feedback Widget')
     trackEvent({
@@ -210,7 +190,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       title: '',
       description: '',
       sentiment: 'neutral',
-      userJourney: {}
+      userJourney: createDefaultUserJourney()
     })
   }
 
@@ -265,30 +245,57 @@ const EnhancedFeedbackWidget: React.FC = () => {
 
   const handleSubmit = async () => {
     if (isSubmitting) return // Prevent double submission
-    
+
     setIsSubmitting(true)
-    
+
     try {
-      // Generate comprehensive feedback context
-      let feedbackContext = {
-        type: feedback.type,
-        title: feedback.title,
-        description: feedback.description,
-        sentiment: feedback.sentiment,
-        userJourney: feedback.userJourney
-      }
+      let feedbackContext: FeedbackContext
 
       if (feedbackTracker) {
-        feedbackContext = feedbackTracker.generateFeedbackContext(
+        feedbackContext = await feedbackTracker.generateFeedbackContext(
           feedback.type,
           feedback.title,
           feedback.description,
           feedback.sentiment
         )
 
-        // Update with current user journey
-        const currentUserJourney = feedbackTracker.captureUserJourney()
-        feedbackContext.userJourney = currentUserJourney
+         // Update with current user journey
+         const currentUserJourney = feedbackTracker.captureUserJourney()
+        const updatedContext: FeedbackContext = {
+          ...feedbackContext,
+          userJourney: currentUserJourney,
+        }
+
+        if (feedback.screenshot) {
+          updatedContext.screenshot = feedback.screenshot
+        } else if (feedbackContext.screenshot) {
+          updatedContext.screenshot = feedbackContext.screenshot
+        }
+
+        feedbackContext = updatedContext
+      } else {
+        const fallbackContext: FeedbackContext = {
+          feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          timestamp: new Date().toISOString(),
+          source: 'widget',
+          userJourney: feedback.userJourney,
+          type: feedback.type,
+          title: feedback.title,
+          description: feedback.description,
+          sentiment: feedback.sentiment,
+          category: [],
+          priority: 'medium',
+          severity: 'low',
+          consoleLogs: [],
+          networkRequests: [],
+          aiAnalysis: null,
+        }
+
+        if (feedback.screenshot) {
+          fallbackContext.screenshot = feedback.screenshot
+        }
+
+        feedbackContext = fallbackContext
       }
 
       // Submit to API
@@ -313,7 +320,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       if (result.success) {
         setShowSuccess(true)
         setStep('success')
-        
+
         // Track successful submission using analytics store
         trackUserAction('feedback_submitted', 'engagement', 'Feedback Submission')
         trackEvent({
@@ -350,11 +357,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
       // Ensure we don't show success state if there was an error
       setShowSuccess(false)
       setStep('sentiment') // Go back to previous step
-      
+
       // Set error in analytics store
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
       setAnalyticsError(errorMessage)
-      
+
       // Track error event
       trackEvent({
         event_type: 'error',
@@ -562,7 +569,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">Add a screenshot?</h4>
                       <p className="text-sm text-gray-600">This helps us understand the context better</p>
-                      
+
                       <div className="space-y-3">
                         <button
                           onClick={handleScreenshotCapture}
@@ -574,7 +581,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                             {capturingScreenshot ? 'Capturing...' : 'Capture Screenshot'}
                           </span>
                         </button>
-                        
+
                         <button
                           onClick={handleFileUpload}
                           className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
@@ -582,7 +589,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                           <span className="text-sm text-gray-600">Upload Screenshot</span>
                         </button>
-                        
+
                         <input
                           ref={fileInputRef}
                           type="file"
@@ -590,7 +597,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           onChange={handleFileChange}
                           className="hidden"
                         />
-                        
+
                         <button
                           onClick={handleSubmit}
                           disabled={isSubmitting}
@@ -629,14 +636,14 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       >
                         <CheckCircle className="w-8 h-8 text-green-600" />
                       </motion.div>
-                      
+
                       <h4 className="text-xl font-semibold text-gray-900 mb-2">
                         Thank You! 🎉
                       </h4>
                       <p className="text-gray-600 mb-4">
                         Your detailed feedback has been captured with full context. We&apos;ll analyze it and get back to you soon!
                       </p>
-                      
+
                       <div className="flex items-center justify-center gap-1 text-yellow-500">
                         {[1, 2, 3, 4, 5].map((star: number) => (
                           <Star key={star} className="w-5 h-5 fill-current" />
@@ -645,7 +652,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       <p className="text-sm text-gray-500 mt-2">
                         Your feedback helps us create something amazing!
                       </p>
-                      
+
                       <button
                         onClick={handleClose}
                         className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

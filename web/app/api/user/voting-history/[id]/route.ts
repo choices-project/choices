@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';

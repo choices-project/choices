@@ -8,7 +8,8 @@
  * Status: ✅ Production-ready (Native implementation)
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';

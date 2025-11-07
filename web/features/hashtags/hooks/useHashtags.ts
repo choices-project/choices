@@ -1,9 +1,11 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 
+import logger from '@/lib/utils/logger';
+
+
 import { 
-  searchHashtags, 
+searchHashtags, 
   getTrendingHashtags, 
   followHashtag, 
   unfollowHashtag,
@@ -47,7 +49,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to load trending hashtags');
-      console.error('Trending hashtags error:', err);
+      logger.error('Trending hashtags error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +69,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to load user hashtags');
-      console.error('User hashtags error:', err);
+      logger.error('User hashtags error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +91,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to search hashtags');
-      console.error('Search hashtags error:', err);
+      logger.error('Search hashtags error:', err);
       return null;
     } finally {
       setIsLoading(false);
@@ -112,7 +114,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to follow hashtag');
-      console.error('Follow hashtag error:', err);
+      logger.error('Follow hashtag error:', err);
       return false;
     }
   }, []);
@@ -133,7 +135,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to unfollow hashtag');
-      console.error('Unfollow hashtag error:', err);
+      logger.error('Unfollow hashtag error:', err);
       return false;
     }
   }, []);
@@ -152,7 +154,7 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
       }
     } catch (err) {
       setError('Failed to get suggestions');
-      console.error('Suggestions error:', err);
+      logger.error('Suggestions error:', err);
       return [];
     }
   }, []);
@@ -255,7 +257,7 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
         }
       } catch (err) {
         setError('Search failed');
-        console.error('Search error:', err);
+        logger.error('Search error:', err);
       } finally {
         setIsLoading(false);
       }

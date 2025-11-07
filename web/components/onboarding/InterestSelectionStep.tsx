@@ -1,11 +1,13 @@
 'use client';
 
 import { 
-  CheckCircle,
+CheckCircle,
   ArrowRight,
   TrendingUp
 } from 'lucide-react';
 import React, { useState } from 'react';
+
+import logger from '@/lib/utils/logger'
 
 
 type InterestSelectionStepProps = {
@@ -53,7 +55,7 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
       setCustomInterest('');
       
       // Track this interest for trending (in real app, send to API)
-      console.log('New interest added:', interest);
+      logger.info('New interest added:', interest);
     }
   };
 

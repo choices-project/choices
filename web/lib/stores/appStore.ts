@@ -9,11 +9,13 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
+import { createSafeStorage } from './storage';
 import type { BaseStore, FeatureFlag } from './types';
 
 // App store state interface
@@ -339,7 +341,7 @@ export const useAppStore = create<AppStore>()(
       }),
       
       setFeatureFlags: (flags) => set((state) => {
-        state.features = { ...state.features, ...flags };
+        state.features = withOptional(state.features, flags);
         logger.info('Feature flags updated', { flags });
       }),
       
@@ -354,12 +356,12 @@ export const useAppStore = create<AppStore>()(
       
       // Settings actions
       updateSettings: (settings) => set((state) => {
-        state.settings = { ...state.settings, ...settings };
+        state.settings = withOptional(state.settings, settings);
         logger.info('App settings updated', { settings });
       }),
       
       resetSettings: () => set((state) => {
-        state.settings = { ...defaultSettings };
+        state.settings = withOptional(defaultSettings);
         logger.info('App settings reset to defaults');
       }),
       
@@ -408,6 +410,7 @@ export const useAppStore = create<AppStore>()(
     })),
     {
       name: 'app-store',
+    storage: createSafeStorage(),
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,

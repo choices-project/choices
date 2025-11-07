@@ -1,22 +1,21 @@
 /**
  * Extended Health Check API Endpoint
- * 
+ *
  * Comprehensive health checks including:
  * - System metrics
  * - Performance metrics
  * - Database connection pool
  * - Cache status
  * - Rate limiting status
- * 
+ *
  * Created: January 26, 2025
  * Status: ✅ PRODUCTION
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -94,13 +93,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
       }
     };
 
-  const statusCode = health.status === 'unhealthy' ? 503 : 200;
-  
-  const response = successResponse(health);
-  if (health.status === 'unhealthy') {
-    return new Response(response.body, { status: 503, headers: response.headers });
-  }
-  return response;
+  return successResponse(health, undefined, health.status === 'unhealthy' ? 503 : 200);
 });
 
 /**
@@ -146,7 +139,7 @@ async function checkDatabaseHealth() {
 async function checkRateLimitingHealth() {
   try {
     const metrics = await upstashRateLimiter.getMetrics();
-    
+
     return {
       status: 'healthy' as const,
       metrics: {

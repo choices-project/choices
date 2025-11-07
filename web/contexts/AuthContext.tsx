@@ -1,8 +1,10 @@
-'use client'
+'use client';
+
 
 import type { User, Session } from '@supabase/supabase-js'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
+import logger from '@/lib/utils/logger'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 type AuthContextType = {
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return () => subscription.unsubscribe()
       } catch (error) {
-        console.error('Failed to initialize Supabase client:', error)
+        logger.error('Failed to initialize Supabase client:', error)
         if (mounted) {
           setLoading(false)
         }
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const supabase = await getSupabaseBrowserClient()
       await supabase.auth.signOut()
     } catch (error) {
-      console.error('Failed to sign out:', error)
+      logger.error('Failed to sign out:', error)
     }
   }
 
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
     } catch (error) {
-      console.error('Failed to refresh session:', error)
+      logger.error('Failed to refresh session:', error)
     }
   }
 

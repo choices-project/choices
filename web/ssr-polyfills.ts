@@ -77,15 +77,16 @@ if (typeof window === 'undefined') {
 
   // crypto.webcrypto is available in Node.js 18+ without import
   if (typeof (globalThis as any).crypto === 'undefined') {
-    try {
-      // Use Node.js built-in crypto if available
-      const nodeCrypto = require('crypto');
-      if (nodeCrypto?.webcrypto) {
-        (globalThis as any).crypto = nodeCrypto.webcrypto;
-      }
-    } catch {
-      // Edge Runtime or crypto not available - leave undefined
-    }
+    // Use dynamic import to access Node's built-in crypto without breaking bundlers
+    import('crypto')
+      .then(({ webcrypto }) => {
+        if (webcrypto && typeof (globalThis as any).crypto === 'undefined') {
+          (globalThis as any).crypto = webcrypto;
+        }
+      })
+      .catch(() => {
+        // Edge Runtime or crypto not available - leave undefined
+      });
   }
 
   if (typeof (globalThis as any).performance === 'undefined') {

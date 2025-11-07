@@ -20,25 +20,35 @@
 -- ============================================================================
 
 -- Create enum for audit event types
-CREATE TYPE audit_event_type AS ENUM (
-  'authentication',
-  'authorization',
-  'data_access',
-  'data_modification',
-  'analytics_access',
-  'admin_action',
-  'security_event',
-  'system_event',
-  'user_action'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_event_type') THEN
+    CREATE TYPE audit_event_type AS ENUM (
+      'authentication',
+      'authorization',
+      'data_access',
+      'data_modification',
+      'analytics_access',
+      'admin_action',
+      'security_event',
+      'system_event',
+      'user_action'
+    );
+  END IF;
+END $$;
 
 -- Create enum for severity levels
-CREATE TYPE audit_severity AS ENUM (
-  'info',
-  'warning',
-  'error',
-  'critical'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_severity') THEN
+    CREATE TYPE audit_severity AS ENUM (
+      'info',
+      'warning',
+      'error',
+      'critical'
+    );
+  END IF;
+END $$;
 
 -- ============================================================================
 -- Main Audit Logs Table
@@ -87,20 +97,20 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 -- ============================================================================
 
 -- Primary query patterns
-CREATE INDEX idx_audit_logs_user_id ON public.audit_logs(user_id, created_at DESC);
-CREATE INDEX idx_audit_logs_event_type ON public.audit_logs(event_type, created_at DESC);
-CREATE INDEX idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
-CREATE INDEX idx_audit_logs_severity ON public.audit_logs(severity, created_at DESC) WHERE severity IN ('error', 'critical');
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON public.audit_logs(event_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_severity ON public.audit_logs(severity, created_at DESC) WHERE severity IN ('error', 'critical');
 
 -- Security queries
-CREATE INDEX idx_audit_logs_ip_address ON public.audit_logs(ip_address, created_at DESC);
-CREATE INDEX idx_audit_logs_resource ON public.audit_logs(resource, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_ip_address ON public.audit_logs(ip_address, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON public.audit_logs(resource, created_at DESC);
 
 -- JSON metadata queries (GIN index for flexible querying)
-CREATE INDEX idx_audit_logs_metadata ON public.audit_logs USING gin(metadata);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_metadata ON public.audit_logs USING gin(metadata);
 
 -- Retention cleanup
-CREATE INDEX idx_audit_logs_expires_at ON public.audit_logs(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_audit_logs_expires_at ON public.audit_logs(expires_at) WHERE expires_at IS NOT NULL;
 
 -- ============================================================================
 -- Row Level Security (RLS)
@@ -110,33 +120,66 @@ CREATE INDEX idx_audit_logs_expires_at ON public.audit_logs(expires_at) WHERE ex
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Admin users can see all audit logs
-CREATE POLICY "Admins can view all audit logs"
-  ON public.audit_logs
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.user_roles
-      JOIN public.roles ON user_roles.role_id = roles.id
-      WHERE user_roles.user_id = auth.uid()
-      AND roles.name = 'admin'
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'audit_logs'
+      AND policyname = 'Admins can view all audit logs'
+  ) THEN
+    CREATE POLICY "Admins can view all audit logs"
+      ON public.audit_logs
+      FOR SELECT
+      TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1
+          FROM public.user_roles
+          JOIN public.roles ON user_roles.role_id = roles.id
+          WHERE user_roles.user_id = auth.uid()
+          AND roles.name = 'admin'
+        )
+      );
+  END IF;
+END $$;
 
 -- System can insert audit logs (service role)
-CREATE POLICY "Service role can insert audit logs"
-  ON public.audit_logs
-  FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'audit_logs'
+      AND policyname = 'Service role can insert audit logs'
+  ) THEN
+    CREATE POLICY "Service role can insert audit logs"
+      ON public.audit_logs
+      FOR INSERT
+      TO service_role
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- Users can view their own audit logs
-CREATE POLICY "Users can view their own audit logs"
-  ON public.audit_logs
-  FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'audit_logs'
+      AND policyname = 'Users can view their own audit logs'
+  ) THEN
+    CREATE POLICY "Users can view their own audit logs"
+      ON public.audit_logs
+      FOR SELECT
+      TO authenticated
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- ============================================================================
 -- Helper Functions

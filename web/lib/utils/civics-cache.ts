@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * Civics API Caching Utility
  * 
@@ -395,7 +396,7 @@ export class CivicsCacheWarmer {
         }
       }
     } catch (error) {
-      console.error('Cache warming failed:', error);
+      logger.error('Cache warming failed:', error);
     }
   }
 
@@ -413,7 +414,7 @@ export class CivicsCacheWarmer {
         }
       }
     } catch (error) {
-      console.error('State cache warming failed:', error);
+      logger.error('State cache warming failed:', error);
     }
   }
 }

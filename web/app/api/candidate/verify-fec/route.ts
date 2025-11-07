@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
 import { createFECClient } from '@/lib/integrations/fec'

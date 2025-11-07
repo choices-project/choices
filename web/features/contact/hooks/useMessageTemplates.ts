@@ -10,12 +10,14 @@
 import { useState, useCallback, useMemo } from 'react';
 
 import {
-  MESSAGE_TEMPLATES,
+MESSAGE_TEMPLATES,
   type MessageTemplate,
   getTemplateById,
   fillTemplate,
   validateTemplateValues,
 } from '@/lib/contact/message-templates';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 export function useMessageTemplates() {
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplate | null>(null);
@@ -66,10 +68,7 @@ export function useMessageTemplates() {
 
   // Update a template value
   const updateTemplateValue = useCallback((key: string, value: string) => {
-    setTemplateValues(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+    setTemplateValues(prev => withOptional(prev, { [key]: value }));
   }, []);
 
   // Fill the template with current values
@@ -79,7 +78,7 @@ export function useMessageTemplates() {
     try {
       return fillTemplate(selectedTemplate, templateValues, userInfo);
     } catch (error) {
-      console.error('Error filling template:', error);
+      logger.error('Error filling template:', error);
       return null;
     }
   }, [selectedTemplate, templateValues, userInfo]);

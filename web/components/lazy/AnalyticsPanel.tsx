@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { 
-  ResponsiveContainer, 
+ResponsiveContainer, 
   LineChart as LineChartType, 
   BarChart as BarChartType, 
   PieChart as PieChartType,
@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
+import logger from '@/lib/utils/logger';
 
 // Import chart components directly for proper typing
 
@@ -110,7 +111,7 @@ export default function AnalyticsPanel({
       } catch (err) {
         setError('Failed to load analytics data');
         performanceMetrics.addMetric('analytics-panel-error', 1);
-        console.error('Analytics load error:', err);
+        logger.error('Analytics load error:', err);
       } finally {
         setLoading(false);
       }

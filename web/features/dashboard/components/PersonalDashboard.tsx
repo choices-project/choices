@@ -126,7 +126,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
         const { data, timestamp } = JSON.parse(cached);
         // Use cache if less than 10 minutes old
         if (Date.now() - timestamp < 600000) {
-          console.log('📦 Using cached preferences data');
+          logger.info('📦 Using cached preferences data');
           setShowElectedOfficials(data.showElectedOfficials ?? false);
           setShowQuickActions(data.showQuickActions !== false);
           setShowRecentActivity(data.showRecentActivity !== false);
@@ -135,7 +135,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
         }
       }
 
-      console.log('🌐 Fetching optimized preferences...');
+      logger.info('🌐 Fetching optimized preferences...');
       const response = await fetch('/api/dashboard?include=preferences');
       if (response.ok) {
         const data = await response.json();
@@ -152,17 +152,17 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
           timestamp: Date.now()
         }));
         
-        console.log('📋 User dashboard preferences loaded:', preferences);
+        logger.info('📋 User dashboard preferences loaded:', preferences);
       } else {
         // Default preferences if none set
         setShowElectedOfficials(false);
         setShowQuickActions(true);
         setShowRecentActivity(true);
         setShowEngagementScore(true);
-        console.log('📋 No dashboard preferences set, using defaults');
+        logger.info('📋 No dashboard preferences set, using defaults');
       }
     } catch (error) {
-      console.log('📋 Error checking dashboard preferences, using defaults:', error);
+      logger.info('📋 Error checking dashboard preferences, using defaults:', error);
       setShowElectedOfficials(false);
       setShowQuickActions(true);
       setShowRecentActivity(true);
@@ -185,12 +185,12 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       });
 
       if (response.ok) {
-        console.log('📋 User preferences saved successfully');
+        logger.info('📋 User preferences saved successfully');
       } else {
-        console.error('📋 Failed to save user preferences');
+        logger.error('📋 Failed to save user preferences');
       }
     } catch (error) {
-      console.error('📋 Error saving user preferences:', error);
+      logger.error('📋 Error saving user preferences:', error);
     }
   }, []);
 
@@ -204,13 +204,13 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
         const { data, timestamp } = JSON.parse(cached);
         // Use cache if less than 5 minutes old
         if (Date.now() - timestamp < 300000) {
-          console.log('📦 Using cached analytics data');
+          logger.info('📦 Using cached analytics data');
           setAnalytics(data);
           return;
         }
       }
 
-      console.log('🌐 Fetching optimized dashboard data...');
+      logger.info('🌐 Fetching optimized dashboard data...');
       const startTime = Date.now();
       const response = await fetch('/api/dashboard?include=analytics,preferences');
       if (!response.ok) {
@@ -219,7 +219,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       const data = await response.json();
       
       const loadTime = Date.now() - startTime;
-      console.log(`⚡ Dashboard loaded in ${loadTime}ms`);
+      logger.info(`⚡ Dashboard loaded in ${loadTime}ms`);
       
       setAnalytics(data.analytics);
       
@@ -259,13 +259,13 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
         const { data, timestamp } = JSON.parse(cached);
         // Use cache if less than 1 hour old (officials don't change often)
         if (Date.now() - timestamp < 3600000) {
-          console.log('📦 Using cached elected officials data');
+          logger.info('📦 Using cached elected officials data');
           setElectedOfficials(data);
           return;
         }
       }
 
-      console.log('🌐 Loading elected officials...');
+      logger.info('🌐 Loading elected officials...');
       // This would integrate with the civics API to get user's elected officials
       // For now, we'll show a placeholder
       const mockOfficials: ElectedOfficial[] = [
@@ -308,7 +308,7 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
         timestamp: Date.now()
       }));
       
-      console.log('✅ Elected officials loaded');
+      logger.info('✅ Elected officials loaded');
             } catch (error) {
               logger.error('Error loading elected officials:', error as Error);
             }
@@ -320,14 +320,14 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       setIsLoading(true);
       
       // Phase 1: Load user preferences first
-      console.log('📋 Loading user preferences...');
+      logger.info('📋 Loading user preferences...');
       await checkUserPreferences();
       
       // Phase 2: Load critical data (analytics)
       try {
-        console.log('🚀 Loading critical data (analytics)...');
+        logger.info('🚀 Loading critical data (analytics)...');
         await loadPersonalAnalytics();
-        console.log('✅ Critical data loaded, showing dashboard');
+        logger.info('✅ Critical data loaded, showing dashboard');
         setIsLoading(false); // Show dashboard immediately after analytics
       } catch (error) {
         logger.error('Error loading personal analytics:', error as Error);
@@ -338,12 +338,12 @@ export default function PersonalDashboard({ userId: _userId, className = '' }: P
       
       // Phase 3: Load optional data only if user wants it
       if (showElectedOfficials) {
-        console.log('🔄 Loading elected officials (user opted in)...');
+        logger.info('🔄 Loading elected officials (user opted in)...');
         loadElectedOfficials().catch(error => {
           logger.error('Error loading elected officials:', error as Error);
         });
       } else {
-        console.log('⏭️ Skipping elected officials (user preference)');
+        logger.info('⏭️ Skipping elected officials (user preference)');
       }
     };
 

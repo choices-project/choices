@@ -1,5 +1,5 @@
 // Global type declarations
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+ 
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {

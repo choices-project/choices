@@ -419,13 +419,19 @@ export class ScreenReaderSupport {
     
     this.isProcessingQueue = true;
     
-    const announcement = this.announcementQueue.shift()!;
+    const announcement = this.announcementQueue.shift();
+    if (!announcement) {
+      this.isProcessingQueue = false;
+      return;
+    }
+
     this.makeAnnouncement(announcement);
-    
+    const duration = announcement.duration ?? 1000;
+
     setTimeout(() => {
       this.isProcessingQueue = false;
       this.processAnnouncementQueue();
-    }, announcement.duration);
+    }, duration);
   }
 
   /**
@@ -433,13 +439,15 @@ export class ScreenReaderSupport {
    * @param announcement - Announcement to make
    */
   private static makeAnnouncement(announcement: ScreenReaderAnnouncement): void {
-    const liveRegion = this.createLiveRegion(announcement.id!, announcement.priority);
+    const regionId = announcement.id ?? `announcement-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    const liveRegion = this.createLiveRegion(regionId, announcement.priority);
     liveRegion.textContent = announcement.message;
+    const duration = announcement.duration ?? 1000;
     
     // Clear after announcement
     setTimeout(() => {
       liveRegion.textContent = '';
-    }, announcement.duration);
+    }, duration);
   }
 
   /**

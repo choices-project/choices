@@ -1,8 +1,7 @@
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { withErrorHandling, successResponse } from '@/lib/api';
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';

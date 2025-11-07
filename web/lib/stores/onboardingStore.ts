@@ -10,9 +10,12 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
+
+import { createSafeStorage } from './storage';
 
 // Onboarding data types
 type AuthData = {
@@ -205,6 +208,15 @@ const defaultSteps: OnboardingStep[] = [
   },
 ];
 
+const mergeState = <T extends object>(state: T, updates: Partial<T>) =>
+  withOptional(state, updates as Record<string, unknown>) as T;
+
+const mergeStepData = (
+  stepData: Record<number, unknown>,
+  step: number,
+  data: unknown,
+) => withOptional(stepData, { [step]: data } as Record<number, unknown>);
+
 // Create onboarding store with middleware
 export const useOnboardingStore = create<OnboardingStore>()(
   devtools(
@@ -241,11 +253,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
             progress: Math.round(progress)
           });
           
-          return {
-            ...state,
+          return mergeState(state, {
             currentStep: newStep,
-            progress
-          };
+            progress,
+          });
         }),
         
         nextStep: () => set((state) => {
@@ -257,11 +268,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
             progress: Math.round(progress)
           });
           
-          return {
-            ...state,
+          return mergeState(state, {
             currentStep: nextStep,
-            progress
-          };
+            progress,
+          });
         }),
         
         previousStep: () => set((state) => {
@@ -273,11 +283,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
             progress: Math.round(progress)
           });
           
-          return {
-            ...state,
+          return mergeState(state, {
             currentStep: prevStep,
-            progress
-          };
+            progress,
+          });
         }),
         
         goToStep: (step) => {
@@ -291,13 +300,12 @@ export const useOnboardingStore = create<OnboardingStore>()(
             completedSteps: state.completedSteps.length + 1
           });
           
-          return {
-            ...state,
+          return mergeState(state, {
             isCompleted: true,
             isActive: false,
             progress: 100,
-            completedSteps: [...state.completedSteps, state.currentStep]
-          };
+            completedSteps: [...state.completedSteps, state.currentStep],
+          });
         }),
         
         skipOnboarding: () => set({
@@ -324,33 +332,30 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         // Data management actions
         updateFormData: (step, data) => set((state) => ({
-          stepData: {
-            ...state.stepData,
-            [step]: { ...(state.stepData[step] ?? {}), ...data }
-          }
+          stepData: mergeStepData(state.stepData, step, {
+            ...(state.stepData[step] ?? {}),
+            ...(data as Record<string, unknown>),
+          }),
         })),
         
         updateAuthData: (data) => set((state) => ({
-          authData: { ...state.authData, ...data }
+          authData: mergeState(state.authData, data),
         })),
         
         updateProfileData: (data) => set((state) => ({
-          profileData: { ...state.profileData, ...data }
+          profileData: mergeState(state.profileData, data),
         })),
         
         updateValuesData: (data) => set((state) => ({
-          valuesData: { ...state.valuesData, ...data }
+          valuesData: mergeState(state.valuesData, data),
         })),
         
         updatePreferencesData: (data) => set((state) => ({
-          preferencesData: { ...state.preferencesData, ...data }
+          preferencesData: mergeState(state.preferencesData, data),
         })),
         
         clearStepData: (step) => set((state) => ({
-          stepData: {
-            ...state.stepData,
-            [step]: {}
-          }
+          stepData: mergeStepData(state.stepData, step, {}),
         })),
         
         clearAllData: () => set({
@@ -364,23 +369,23 @@ export const useOnboardingStore = create<OnboardingStore>()(
         // Step management actions
         markStepCompleted: (step) => set((state) => ({
           completedSteps: [...state.completedSteps, step],
-          steps: state.steps.map(s => 
-            s.id === step ? { ...s, completed: true } : s
-          )
+          steps: state.steps.map((s) =>
+            s.id === step ? mergeState(s, { completed: true }) : s
+          ),
         })),
         
         markStepSkipped: (step) => set((state) => ({
           skippedSteps: [...state.skippedSteps, step],
-          steps: state.steps.map(s => 
-            s.id === step ? { ...s, skipped: true } : s
-          )
+          steps: state.steps.map((s) =>
+            s.id === step ? mergeState(s, { skipped: true }) : s
+          ),
         })),
         
         markStepIncomplete: (step) => set((state) => ({
-          completedSteps: state.completedSteps.filter(s => s !== step),
-          steps: state.steps.map(s => 
-            s.id === step ? { ...s, completed: false } : s
-          )
+          completedSteps: state.completedSteps.filter((s) => s !== step),
+          steps: state.steps.map((s) =>
+            s.id === step ? mergeState(s, { completed: false }) : s
+          ),
         })),
         
         canProceedToNextStep: (step) => {
@@ -575,6 +580,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
       }),
       {
         name: 'onboarding-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           currentStep: state.currentStep,
           progress: state.progress,

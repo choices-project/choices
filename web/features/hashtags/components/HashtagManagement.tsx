@@ -3,6 +3,9 @@
 import { Hash, Plus, Search, Filter } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
+
 
 import { searchHashtags, createHashtag, updateHashtag, deleteHashtag } from '../lib/hashtag-service';
 import type { Hashtag, HashtagCategory } from '../types';
@@ -111,7 +114,7 @@ export function HashtagManagement({
       const result = await updateHashtag(hashtag.id, updateData);
       
       if (result.success && result.data) {
-        setHashtags(prev => prev.map(h => h.id === hashtag.id ? result.data! : h));
+        setHashtags(prev => prev.map(h => (h.id === hashtag.id ? result.data! : h)));
       } else {
         setError(result.error ?? 'Failed to update hashtag');
       }
@@ -327,7 +330,7 @@ export function HashtagManagement({
                               await onFollow(hashtag);
                             }
                           } catch (error) {
-                            console.error('Error toggling hashtag follow:', error);
+                            logger.error('Error toggling hashtag follow:', error);
                           }
                         }}
                         className={`px-3 py-1 text-sm transition-colors rounded ${

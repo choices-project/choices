@@ -9,13 +9,14 @@ import React, { useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import { 
-  useAdminSystemSettings,
+useAdminSystemSettings,
   useAdminSettingsTab,
   useAdminIsSavingSettings,
   useAdminSystemSettingsActions,
   useAdminLoading,
   useAdminError
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 
 type SystemSettingsProps = {
   onSettingsUpdate?: (settings: any) => void;
@@ -46,7 +47,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
         performanceMetrics.addMetric('system-settings-load', loadTime);
       } catch (error) {
         performanceMetrics.addMetric('system-settings-error', 1);
-        console.error('Error loading system settings:', error);
+        logger.error('Error loading system settings:', error);
         // Error loading system settings - handled by error boundary
       }
     };
@@ -71,7 +72,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
       // Settings saved successfully - notification handled by parent component
     } catch (error) {
       performanceMetrics.addMetric('system-settings-save-error', 1);
-      console.error('Error saving system settings:', error);
+      logger.error('Error saving system settings:', error);
       // Error saving system settings - handled by error boundary
     }
   };

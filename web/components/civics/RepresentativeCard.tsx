@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import logger from '@/lib/utils/logger';
 
 /**
  * Civics Representative Card Component
@@ -8,7 +9,6 @@ import { isFeatureEnabled } from '@/lib/core/feature-flags';
  * 
  * This component displays representative information in a privacy-safe way
  */
-
 'use client';
 
 type Representative = {
@@ -64,7 +64,7 @@ export function RepresentativeCard({ representative, className = '' }: Represent
       });
     } catch (error) {
       // Silently fail - contact tracking is non-critical
-      console.debug('Contact tracking failed:', error);
+      logger.debug('Contact tracking failed:', error);
     }
     
     // Perform the contact action

@@ -8,6 +8,8 @@
  * Status: ✅ CONSOLIDATED
  */
 
+import logger from '@/lib/utils/logger'
+
 import type { 
   ProfileUser, 
   UserProfile, 
@@ -22,7 +24,6 @@ import {
   PROFILE_CONSTANTS,
   PROFILE_DEFAULTS
 } from '../../../types/profile';
-
 // ============================================================================
 // PROFILE VALIDATION
 // ============================================================================
@@ -182,7 +183,7 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     };
 
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    logger.error('Error fetching profile:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch profile',
@@ -236,7 +237,7 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     };
 
   } catch (error) {
-    console.error('Error updating profile:', error);
+    logger.error('Error updating profile:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update profile',
@@ -294,7 +295,7 @@ export async function updateProfileAvatar(file: File): Promise<AvatarUploadResul
     };
 
   } catch (error) {
-    console.error('Error updating avatar:', error);
+    logger.error('Error updating avatar:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update avatar',
@@ -330,7 +331,7 @@ export async function exportUserData(options?: ExportOptions): Promise<ProfileEx
     return result.data;
 
   } catch (error) {
-    console.error('Error exporting data:', error);
+    logger.error('Error exporting data:', error);
     throw error;
   }
 }
@@ -367,7 +368,7 @@ export async function deleteProfile(): Promise<ProfileActionResult> {
     };
 
   } catch (error) {
-    console.error('Error deleting profile:', error);
+    logger.error('Error deleting profile:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete profile',

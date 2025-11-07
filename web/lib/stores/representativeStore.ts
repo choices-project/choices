@@ -9,11 +9,11 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-// Removed React hooks - they should not be used in Zustand stores
 
 import { representativeService } from '@/lib/services/representative-service';
+import logger from '@/lib/utils/logger';
 import type {
   Representative,
   RepresentativeSearchQuery,
@@ -22,6 +22,9 @@ import type {
   UserRepresentative,
   RepresentativeSubscription
 } from '@/types/representative';
+
+import { createSafeStorage } from './storage';
+// Removed React hooks - they should not be used in Zustand stores
 
 
 // ============================================================================
@@ -90,7 +93,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
         // ====================================================================
 
         searchRepresentatives: async (query: RepresentativeSearchQuery) => {
-          console.log('🔍 Store: searchRepresentatives called with query:', query);
+          logger.info('🔍 Store: searchRepresentatives called with query:', query);
           
           set(state => {
             state.searchLoading = true;
@@ -99,25 +102,25 @@ const useRepresentativeStore = create<RepresentativeStore>()(
           });
 
           try {
-            console.log('🔍 Store: Calling representativeService.getRepresentatives with query:', query);
+            logger.info('🔍 Store: Calling representativeService.getRepresentatives with query:', query);
             const results = await representativeService.getRepresentatives(query);
-            console.log('📊 Store: Got results from service:', results);
+            logger.info('📊 Store: Got results from service:', results);
             
             if (results.success) {
               set(state => {
                 state.searchResults = results;
                 state.searchLoading = false;
               });
-              console.log('✅ Store: Updated state with results:', results);
+              logger.info('✅ Store: Updated state with results:', results);
             } else {
               set(state => {
                 state.error = results.error ?? 'Search failed';
                 state.searchLoading = false;
               });
-              console.log('❌ Store: Search failed:', results.error);
+              logger.info('❌ Store: Search failed:', results.error);
             }
           } catch (error) {
-            console.error('❌ Store: Search error:', error);
+            logger.error('❌ Store: Search error:', error);
             set(state => {
               state.error = error instanceof Error ? error.message : 'Search failed';
               state.searchLoading = false;
@@ -201,7 +204,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               }
             });
           } catch (error) {
-            console.error('Error following representative:', error);
+            logger.error('Error following representative:', error);
             set(state => {
               state.error = error instanceof Error ? error.message : 'Failed to follow representative';
             });
@@ -224,7 +227,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               );
             });
           } catch (error) {
-            console.error('Error unfollowing representative:', error);
+            logger.error('Error unfollowing representative:', error);
             set(state => {
               state.error = error instanceof Error ? error.message : 'Failed to unfollow representative';
             });
@@ -274,7 +277,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
               });
             }
           } catch (error) {
-            console.error('Error fetching user representatives:', error);
+            logger.error('Error fetching user representatives:', error);
             set(state => {
               state.error = error instanceof Error ? error.message : 'Failed to fetch user representatives';
               state.loading = false;
@@ -293,7 +296,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
             const data = await response.json();
             return data.following ?? false;
           } catch (error) {
-            console.error('Error checking follow status:', error);
+            logger.error('Error checking follow status:', error);
             return false;
           }
         },
@@ -330,6 +333,7 @@ const useRepresentativeStore = create<RepresentativeStore>()(
       })),
       {
         name: 'representative-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           followedRepresentatives: state.followedRepresentatives,
           userRepresentatives: state.userRepresentatives,

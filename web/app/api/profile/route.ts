@@ -11,7 +11,8 @@
  * @since 1.0.0
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { undefinedToNull } from '@/lib/util/clean';

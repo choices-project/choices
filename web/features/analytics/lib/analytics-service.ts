@@ -31,7 +31,9 @@ type TrustTierAnalyticsFactors = {
 export class AnalyticsService {
   private static instance: AnalyticsService
 
-  private constructor() {}
+  private constructor() {
+    devLog('AnalyticsService initialized')
+  }
 
   static getInstance(): AnalyticsService {
     if (!AnalyticsService.instance) {
@@ -300,15 +302,16 @@ export class AnalyticsService {
         
         // Add new trust tier entry if changed
         if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
+          const verificationMethods: string[] = []
+          if (trustTierScore.factors.biometric_verified) verificationMethods.push('biometric')
+          if (trustTierScore.factors.phone_verified) verificationMethods.push('phone')
+          if (trustTierScore.factors.identity_verified) verificationMethods.push('identity')
+
           trustTierHistory.push({
             trust_tier: trustTierScore.trust_tier,
             upgrade_date: new Date().toISOString(),
             reason: 'Analytics update',
-            verification_methods: [
-              ...(trustTierScore.factors.biometric_verified ? ['biometric'] : []),
-              ...(trustTierScore.factors.phone_verified ? ['phone'] : []),
-              ...(trustTierScore.factors.identity_verified ? ['identity'] : [])
-            ]
+            verification_methods: verificationMethods
           })
         }
 

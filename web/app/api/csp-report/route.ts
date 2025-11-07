@@ -12,6 +12,7 @@
  */
 
 import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';

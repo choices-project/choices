@@ -15,8 +15,9 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError, errorResponse } from '@/lib/api';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -73,11 +74,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    if (userError || !user) {
+      return authError('Authentication required');
     }
 
     const userId = user.id;

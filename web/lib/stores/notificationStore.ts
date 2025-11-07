@@ -14,6 +14,7 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import type { AdminNotification } from '@/features/admin/types';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import type { Notification, BaseStore } from './types';
@@ -115,12 +116,12 @@ export const useNotificationStore = create<NotificationStore>()(
       
       // Notification actions
       addNotification: (notification) => set((state) => {
-        const newNotification: Notification = {
-          ...notification,
+        const sanitized = withOptional(notification as Record<string, unknown>);
+        const newNotification = withOptional(sanitized, {
           id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           timestamp: new Date().toISOString(),
           read: false,
-        } as Notification;
+        }) as Notification;
         
         // Add to notifications array
         if (state.settings.enableStacking) {
@@ -210,12 +211,12 @@ export const useNotificationStore = create<NotificationStore>()(
       
       // Admin notification actions
       addAdminNotification: (notification) => set((state) => {
-        const newAdminNotification: AdminNotification = {
-          ...notification,
+        const sanitized = withOptional(notification as Record<string, unknown>);
+        const newAdminNotification = withOptional(sanitized, {
           id: `admin_notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           created_at: new Date().toISOString(),
           read: false,
-        };
+        }) as AdminNotification;
         
         // Add to admin notifications array
         if (state.settings.enableStacking) {
@@ -279,11 +280,11 @@ export const useNotificationStore = create<NotificationStore>()(
       
       // Settings actions
       updateSettings: (settings) => set((state) => {
-        state.settings = { ...state.settings, ...settings };
+        state.settings = withOptional(state.settings, settings);
       }),
       
       resetSettings: () => set((state) => {
-        state.settings = { ...defaultSettings };
+        state.settings = withOptional(defaultSettings);
         logger.info('Notification settings reset to defaults');
       }),
       

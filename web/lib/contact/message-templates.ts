@@ -8,6 +8,8 @@
  * Status: ✅ PRODUCTION
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 export type MessageTemplate = {
   id: string;
   title: string;
@@ -270,12 +272,11 @@ export function fillTemplate(
   let body = template.body;
 
   // Merge user info into values
-  const allValues = {
-    ...values,
-    ...(userInfo?.name && { userName: userInfo.name }),
-    ...(userInfo?.email && { userEmail: userInfo.email }),
-    ...(userInfo?.address && { userAddress: userInfo.address }),
-  };
+  const allValues = withOptional(values, {
+    ...(userInfo?.name ? { userName: userInfo.name } : {}),
+    ...(userInfo?.email ? { userEmail: userInfo.email } : {}),
+    ...(userInfo?.address ? { userAddress: userInfo.address } : {}),
+  });
 
   // Replace placeholders
   Object.entries(allValues).forEach(([key, value]) => {

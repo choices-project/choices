@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import logger from '@/lib/utils/logger'
 
 type FilingRequirement = {
   found: boolean
@@ -101,7 +102,7 @@ export function FilingAssistant({
         const data = await response.json()
         setRequirements(data)
       } catch (error) {
-        console.error('Failed to fetch filing requirements:', error)
+        logger.error('Failed to fetch filing requirements:', error)
       } finally {
         setLoading(false)
       }

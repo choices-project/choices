@@ -6,6 +6,7 @@
 
 import type { createClient } from '@supabase/supabase-js';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 
@@ -46,35 +47,32 @@ export class EnhancedAnalyticsService {
       ]);
 
       // Enhance existing analytics with new data
-      const enhancedAnalytics = {
-        ...existingAnalytics,
-        // Add new schema-powered insights
-        enhancedInsights: {
-          comprehensiveAnalysis: comprehensiveAnalytics.data,
-          trustTierDistribution: trustTierAnalysis.data,
-          botDetectionResults: botDetection.data,
-          platformMetrics: platformMetrics
-        },
-        // Add session tracking data
-        sessionAnalytics: await this.getSessionAnalytics(pollId),
-        // Add feature usage data
-        featureUsage: await this.getFeatureUsageAnalytics(pollId),
-        // Add system health context
-        systemHealth: await this.getSystemHealthContext(),
-        // Enhanced metadata
-        metadata: {
-          ...existingAnalytics.metadata,
-          enhancedWith: 'new_schema_capabilities',
-          schemaVersion: 'enhanced_2025_10_27',
-          integrationTimestamp: new Date().toISOString()
-        }
+      const enhancedInsights = {
+        comprehensiveAnalysis: comprehensiveAnalytics.data,
+        trustTierDistribution: trustTierAnalysis.data,
+        botDetectionResults: botDetection.data,
+        platformMetrics
       };
+
+      const enhancedMetadata = withOptional(existingAnalytics?.metadata ?? {}, {
+        enhancedWith: 'new_schema_capabilities',
+        schemaVersion: 'enhanced_2025_10_27',
+        integrationTimestamp: new Date().toISOString()
+      });
+
+      const enhancedAnalytics = withOptional(existingAnalytics, {
+        enhancedInsights,
+        sessionAnalytics: await this.getSessionAnalytics(pollId),
+        featureUsage: await this.getFeatureUsageAnalytics(pollId),
+        systemHealth: await this.getSystemHealthContext(),
+        metadata: enhancedMetadata
+      });
 
       // Track this enhancement in platform analytics
       await this.recordPlatformMetric('analytics_enhancement', {
         poll_id: pollId,
         enhancement_type: 'unified_analytics',
-        data_points_added: Object.keys(enhancedAnalytics.enhancedInsights).length
+        data_points_added: Object.keys(enhancedInsights).length
       });
 
       return enhancedAnalytics;
@@ -106,21 +104,19 @@ export class EnhancedAnalyticsService {
         .order('timestamp', { ascending: false });
 
       // Enhance store data with session insights
-      const enhancedStoreData = {
-        ...storeData,
+      const enhancedStoreData = withOptional(storeData, {
         sessionInsights: {
           sessionData: sessionData ?? null,
           featureUsage: featureUsage ?? [],
           sessionMetrics: {
             totalActions: featureUsage?.length ?? 0,
-            sessionDuration: sessionData ? 
-              this.calculateSessionDuration(sessionData) : 0,
+            sessionDuration: sessionData ? this.calculateSessionDuration(sessionData) : 0,
             deviceType: (sessionData?.device_info as any)?.type ?? 'unknown',
             pageViews: sessionData?.page_views ?? 0
           }
         },
         enhancedAt: new Date().toISOString()
-      };
+      });
 
       return enhancedStoreData;
     } catch (error) {
@@ -147,8 +143,7 @@ export class EnhancedAnalyticsService {
       ]);
 
       // Enhance hook data with user-specific insights
-      const enhancedHookData = {
-        ...hookData,
+      const enhancedHookData = withOptional(hookData, {
         userInsights: {
           sessions: userSessions,
           featureUsage: userFeatureUsage,
@@ -161,7 +156,7 @@ export class EnhancedAnalyticsService {
           platformMetricsTracking: true,
           systemHealthMonitoring: true
         }
-      };
+      });
 
       return enhancedHookData;
     } catch (error) {
@@ -189,11 +184,10 @@ export class EnhancedAnalyticsService {
         session_id: sessionId
       });
 
-      return {
-        ...authEvent,
+      return withOptional(authEvent, {
         sessionEnhanced: true,
         trackedInNewSchema: true
-      };
+      });
     } catch (error) {
       logger.error('Auth analytics enhancement error:', error);
       return authEvent;
@@ -212,7 +206,7 @@ export class EnhancedAnalyticsService {
     return data ?? [];
   }
 
-  private async getSessionAnalytics(pollId: string) {
+  private async getSessionAnalytics(_pollId: string) {
     const { data } = await this.supabase
       .from('user_sessions')
       .select('*')
@@ -222,7 +216,7 @@ export class EnhancedAnalyticsService {
     return data ?? [];
   }
 
-  private async getFeatureUsageAnalytics(pollId: string) {
+  private async getFeatureUsageAnalytics(_pollId: string) {
     const { data } = await this.supabase
       .from('feature_usage')
       .select('*')
@@ -369,7 +363,7 @@ export class EnhancedAnalyticsService {
   }
 
   // Additional methods for API compatibility
-  async detectBotBehavior(pollId: string, userId: string) {
+  async detectBotBehavior(pollId: string, _userId: string) {
     try {
       const { data, error } = await this.supabase.rpc('detect_bot_behavior', {
         p_poll_id: pollId,
@@ -440,7 +434,7 @@ export class EnhancedAnalyticsService {
   }
 
   // Additional methods for API compatibility
-  async getAnalyticsDashboard(timeRange?: string) {
+  async getAnalyticsDashboard(_timeRange?: string) {
     try {
       const analyticsSummary = await this.getComprehensiveAnalytics();
       return analyticsSummary;
@@ -474,7 +468,7 @@ export class EnhancedAnalyticsService {
     }
   }
 
-  async getTrustTierAnalysis(pollId: string, timeRange?: string) {
+  async getTrustTierAnalysis(pollId: string, _timeRange?: string) {
     try {
       const { data, error } = await this.supabase.rpc('calculate_trust_filtered_votes', {
         p_poll_id: pollId

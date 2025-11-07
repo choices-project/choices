@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
+import logger from '@/lib/utils/logger';
 
 type AuditLog = {
   id: string;
@@ -53,7 +54,7 @@ export default function AuditLogs() {
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('audit-logs-load', loadTime);
       } catch (error) {
-        console.error('Audit logs load error:', error);
+        logger.error('Audit logs load error:', error);
       } finally {
         setLoading(false);
       }

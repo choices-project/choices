@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, forbiddenError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';

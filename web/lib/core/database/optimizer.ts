@@ -296,7 +296,12 @@ export class QueryOptimizer {
       throw new Error(`Invalid user profile data: ${validationResult.error}`)
     }
 
-    const validatedProfile = validationResult.data!
+    if (!validationResult.data) {
+      logger.error('Validation succeeded but returned no user profile data', { userId })
+      throw new Error('Validated user profile data is undefined')
+    }
+
+    const validatedProfile = validationResult.data
 
           if (useCache) {
             // Store in smart cache if optimization suite is enabled
@@ -378,7 +383,7 @@ export class QueryOptimizer {
       throw new Error(`Invalid polls data: ${validationResult.error}`)
     }
 
-    const validatedPolls = validationResult.data!
+    const validatedPolls = validationResult.data ?? []
 
     const pollsResponse: PollsResponse = {
       polls: validatedPolls.map(poll => {

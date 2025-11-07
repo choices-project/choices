@@ -40,7 +40,7 @@ export class RepresentativeService {
    */
   async getRepresentatives(query?: RepresentativeSearchQuery): Promise<RepresentativeListResponse> {
     try {
-      console.log('🔍 Service: getRepresentatives called with query:', query);
+      logger.info('🔍 Service: getRepresentatives called with query:', query);
       
       // Build query string
       const params = new URLSearchParams();
@@ -60,7 +60,7 @@ export class RepresentativeService {
       
       const apiResult = await response.json();
       
-      console.log('✅ Service: Returning API response');
+      logger.info('✅ Service: Returning API response');
       return {
         success: true,
         data: {
@@ -72,7 +72,7 @@ export class RepresentativeService {
         }
       };
     } catch (error) {
-      console.error('RepresentativeService.getRepresentatives error:', error);
+      logger.error('RepresentativeService.getRepresentatives error:', error);
       return {
         success: false,
         data: {
@@ -236,10 +236,10 @@ export class RepresentativeService {
       await this.delay(200);
       
       // Mock implementation - later this will save to database
-      console.log(`User ${userId} followed representative ${representativeId}`);
+      logger.info(`User ${userId} followed representative ${representativeId}`);
       return true;
     } catch (error) {
-      console.error('Error following representative:', error);
+      logger.error('Error following representative:', error);
       return false;
     }
   }
@@ -252,10 +252,10 @@ export class RepresentativeService {
       await this.delay(200);
       
       // Mock implementation
-      console.log(`User ${userId} unfollowed representative ${representativeId}`);
+      logger.info(`User ${userId} unfollowed representative ${representativeId}`);
       return true;
     } catch (error) {
-      console.error('Error unfollowing representative:', error);
+      logger.error('Error unfollowing representative:', error);
       return false;
     }
   }

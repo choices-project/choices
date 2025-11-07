@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * Real-time Messaging Service
  * 
@@ -7,7 +8,6 @@
  * Created: January 26, 2025
  * Status: ✅ IMPLEMENTED
  */
-
 export type Message = {
   id: string;
   content: string;
@@ -75,7 +75,7 @@ export const contactMessagingService = {
 
       return sentMessage;
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       throw error;
     }
   },
@@ -115,7 +115,7 @@ export const contactMessagingService = {
         subject: msg.subject,
       }));
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
       return [];
     }
   },
@@ -162,7 +162,7 @@ export const contactMessagingService = {
           lastMessageId = lastMessage.id;
         }
       } catch (error) {
-        console.error('Error polling for messages:', error);
+        logger.error('Error polling for messages:', error);
       }
     }, 3000); // Poll every 3 seconds
 

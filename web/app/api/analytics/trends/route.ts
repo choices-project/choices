@@ -15,10 +15,11 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
+import { withErrorHandling, forbiddenError } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
-import { withErrorHandling, successResponse, forbiddenError } from '@/lib/api';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';

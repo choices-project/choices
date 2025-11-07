@@ -297,6 +297,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       metadata
     } = body;
 
+    const resolveVotingMethod = () => {
+      const method = (metadata?.votingMethod ?? settings?.votingMethod ?? 'single')
+        .toString()
+        .toLowerCase();
+      switch (method) {
+        case 'single':
+        case 'single_choice':
+          return 'single_choice';
+        case 'multiple':
+        case 'multiple_choice':
+          return 'multiple_choice';
+        case 'ranked':
+        case 'ranked_choice':
+          return 'ranked_choice';
+        case 'approval':
+          return 'approval';
+        case 'quadratic':
+          return 'quadratic';
+        default:
+          return 'single_choice';
+      }
+    };
+
+    const normalizedVotingMethod = resolveVotingMethod();
+
     // Validate required fields
     if (!title || !question || !options || !Array.isArray(options) || options.length < 2) {
       return errorResponse(
@@ -322,7 +347,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         tags: tags ?? [],
         created_by: user.id,
         status: 'active',
-        visibility: 'public',
+        voting_method: normalizedVotingMethod,
 
         // Sophisticated poll features
         auto_lock_at: autoLockAt,
@@ -346,6 +371,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           auto_lock_duration: settings?.autoLockDuration ?? null,
           moderation_required: settings?.requireModeration ?? false,
           allow_multiple_votes: settings?.allowMultipleVotes ?? false,
+          max_selections: metadata?.maxSelections ?? settings?.maxSelections ?? null,
+          voting_method: normalizedVotingMethod,
           show_results_before_close: settings?.showResultsBeforeClose ?? false,
           allow_comments: settings?.allowComments !== false,
           allow_sharing: settings?.allowSharing !== false,
@@ -359,7 +386,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           allow_sharing: settings?.allowSharing !== false,
           require_authentication: settings?.requireAuthentication ?? false
         },
-        metadata: metadata ?? {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -372,14 +398,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Create poll options
-    const optionsData = options.map((option: any, index: number) => ({
-      poll_id: poll.id,
-      text: option.text ?? option,
-      description: option.description ?? '',
-      order: index,
-      votes: 0,
-      percentage: 0
-    }));
+    const optionsData = options.map((option: any, index: number) => {
+      const text = typeof option === 'string' ? option : option?.text ?? '';
+      return {
+        poll_id: poll.id,
+        text,
+        option_text: text,
+        order_index: index,
+        vote_count: 0,
+      };
+    });
 
     const { error: optionsError } = await supabase
       .from('poll_options')

@@ -6,8 +6,9 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
@@ -85,112 +86,61 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
 
     logger.info(`PWA: Push notification subscription removed`);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Push notifications disabled successfully',
-      timestamp: new Date().toISOString()
-    });
+  return successResponse({
+    message: 'Push notifications disabled successfully',
+    timestamp: new Date().toISOString()
+  });
+});
 
-  } catch (error) {
-    logger.error('PWA: Failed to unsubscribe from push notifications:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to unsubscribe from push notifications',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const GET2 = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID is required'
-      }, { status: 400 });
-    }
-
-    // Get user's notification preferences
-    const preferences = await getNotificationPreferences(userId);
-
-    return NextResponse.json({
-      success: true,
-      userId,
-      preferences,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('PWA: Failed to get notification preferences:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to get notification preferences',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+  if (!userId) {
+    return validationError({ userId: 'User ID is required' });
   }
-}
 
-export async function PUT(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
+  const preferences = await getNotificationPreferences(userId);
 
-    const body = await request.json();
-    const { userId, preferences } = body;
+  return successResponse({
+    userId,
+    preferences,
+    timestamp: new Date().toISOString()
+  });
+});
 
-    if (!userId || !preferences) {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID and preferences are required'
-      }, { status: 400 });
-    }
-
-    logger.info(`PWA: Updating notification preferences for user ${userId}`);
-
-    // Update notification preferences
-    const updated = await updateNotificationPreferences(userId, preferences);
-
-    if (!updated) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to update preferences'
-      }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Notification preferences updated successfully',
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('PWA: Failed to update notification preferences:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to update notification preferences',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
+
+  const body = await request.json();
+  const { userId, preferences } = body;
+
+  if (!userId || !preferences) {
+    return validationError({
+      userId: !userId ? 'User ID is required' : '',
+      preferences: !preferences ? 'Preferences are required' : ''
+    });
+  }
+
+  logger.info(`PWA: Updating notification preferences for user ${userId}`);
+
+  const updated = await updateNotificationPreferences(userId, preferences);
+
+  if (!updated) {
+    return errorResponse('Failed to update preferences', 500);
+  }
+
+  return successResponse({
+    message: 'Notification preferences updated successfully',
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * Validate push subscription

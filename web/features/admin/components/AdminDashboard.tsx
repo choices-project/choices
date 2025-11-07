@@ -1,21 +1,37 @@
 /**
  * Lazy-loaded Admin Dashboard Component
- * 
+ *
  * This component is loaded only when needed to reduce initial bundle size.
  * Includes comprehensive admin functionality with performance monitoring.
  */
 
+import {
+  Bell,
+  Activity,
+  TrendingUp,
+  Share2,
+  Sparkles,
+  Target,
+  Award,
+} from 'lucide-react';
 import React, { Suspense, useEffect } from 'react';
 
 import { createLazyComponent } from '@/lib/performance/lazy-loading';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
-import { 
+import {
   useAdminActiveTab,
   useAdminDashboardStats,
   useAdminDashboardActions,
   useAdminLoading,
   useAdminError
 } from '@/lib/stores';
+import {
+  useAdminStats,
+  useAdminNotifications,
+  useTrendingTopics,
+  useRecentActivity,
+} from '@/lib/stores/adminStore';
+
 
 // Lazy load heavy admin components
 const UserManagement = createLazyComponent(
@@ -65,16 +81,73 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const stats = useAdminDashboardStats();
   const loading = useAdminLoading();
   const error = useAdminError();
+  const adminStats = useAdminStats();
+  const notifications = useAdminNotifications();
+  const trendingTopics = useTrendingTopics();
+  const recentActivity = useRecentActivity();
   const { setActiveTab, loadDashboardStats } = useAdminDashboardActions();
+
+  const unreadNotifications = adminStats.unreadNotifications ?? 0;
+  const firstUnreadNotification = notifications.find((notification) => !notification.read);
+  const topTrendingTopic = trendingTopics?.[0];
+  const latestActivity = recentActivity?.[0];
+  const systemHealthStatus = stats?.systemHealth ?? 'healthy';
+
+  const totalUsers = stats?.totalUsers ?? 0;
+  const activePollsCount = stats?.activePolls ?? 0;
+  const totalVotesCount = stats?.totalVotes ?? 0;
+  const pollsCreatedLast7Days = stats?.pollsCreatedLast7Days ?? 0;
+  const pollsCreatedToday = stats?.pollsCreatedToday ?? 0;
+  const milestoneAlertsLast7Days = stats?.milestoneAlertsLast7Days ?? 0;
+  const shareActionsLast24h = stats?.shareActionsLast24h ?? 0;
+  const topShareChannel = stats?.topShareChannel ?? null;
+  const latestMilestone = stats?.latestMilestone ?? null;
+
+  const formatShareChannel = (channel: string) => {
+    const normalized = channel.toLowerCase();
+    if (normalized === 'x' || normalized === 'share_x') return 'X / Twitter';
+    if (normalized === 'copy_link' || normalized === 'detail_copy_link') return 'Copied link';
+    if (normalized === 'email_link' || normalized === 'email') return 'Email';
+    if (normalized === 'share_modal_opened') return 'Share modal';
+    return channel.replace(/_/g, ' ');
+  };
+
+  const shareSummary =
+    shareActionsLast24h > 0 && topShareChannel
+      ? `${formatShareChannel(topShareChannel.channel)} is leading with ${topShareChannel.count} share action${
+          topShareChannel.count === 1 ? '' : 's'
+        } in the last 24 hours.`
+      : 'Share activity is quiet in the last day.';
+
+  const milestoneSummary =
+    milestoneAlertsLast7Days > 0
+      ? `${milestoneAlertsLast7Days} milestone alert${milestoneAlertsLast7Days === 1 ? '' : 's'} fired in the last 7 days.`
+      : 'No milestone alerts triggered this week.';
+
+  const latestMilestoneText = latestMilestone
+    ? `Poll ${latestMilestone.pollId ?? 'unknown'} crossed ${
+        typeof latestMilestone.milestone === 'number'
+          ? latestMilestone.milestone.toLocaleString()
+          : 'a milestone'
+      } votes on ${new Date(latestMilestone.occurredAt).toLocaleString()}.`
+    : null;
+
+  const latestMilestoneShort = latestMilestone
+    ? `${latestMilestone.pollId ?? 'unknown'} · ${
+        typeof latestMilestone.milestone === 'number'
+          ? `${latestMilestone.milestone.toLocaleString()} votes`
+          : 'milestone reached'
+      }`
+    : null;
 
   useEffect(() => {
     // Track admin dashboard load time
     const startTime = performance.now();
-    
+
     const loadStats = async () => {
       try {
         await loadDashboardStats();
-        
+
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('admin-dashboard-load', loadTime);
       } catch (error) {
@@ -83,7 +156,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         throw error; // Let error boundary handle it
       }
     };
-    
+
     loadStats();
   }, [loadDashboardStats]);
 
@@ -179,6 +252,104 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'overview' && (
           <div className="space-y-8">
+            {/* Insight Highlights */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-5 flex items-start gap-3">
+                <span className="p-2 bg-white/80 rounded-lg shadow-sm">
+                  <Bell className="h-6 w-6 text-blue-600" />
+                </span>
+                <div className="text-sm text-blue-900">
+                  <p className="font-semibold">Alerts & Notifications</p>
+                  <p className="mt-1">
+                    {unreadNotifications > 0
+                      ? `You have ${unreadNotifications} unread admin alert${unreadNotifications === 1 ? '' : 's'}.`
+                      : 'All caught up! We will surface new alerts here.'}
+                  </p>
+                  {firstUnreadNotification && (
+                    <p className="mt-3 text-xs text-blue-700 line-clamp-2">
+                      {firstUnreadNotification.title || firstUnreadNotification.message}
+                    </p>
+                  )}
+                  <p className={`mt-3 text-xs ${milestoneAlertsLast7Days > 0 ? 'text-blue-700' : 'text-blue-600'}`}>
+                    {milestoneSummary}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-purple-100 rounded-lg p-5 flex items-start gap-3 shadow-sm">
+                <span className="p-2 bg-purple-50 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                </span>
+                <div className="text-sm text-purple-900">
+                  <p className="font-semibold">Engagement Focus</p>
+                  <p className="mt-1">
+                    {topTrendingTopic
+                      ? `${topTrendingTopic.title} · Score ${Math.round(topTrendingTopic.trending_score)}`
+                      : 'No topics are trending right now. Keep an eye on analytics for fresh activity.'}
+                  </p>
+                  <p className="mt-3 text-xs text-purple-700">{shareSummary}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('analytics')}
+                    className="mt-3 inline-flex items-center text-xs font-medium text-purple-700 hover:text-purple-800"
+                  >
+                    View analytics
+                    <svg className="ml-1 h-3 w-3" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={`rounded-lg p-5 flex items-start gap-3 shadow-sm border ${
+                  systemHealthStatus === 'healthy'
+                    ? 'border-emerald-200 bg-emerald-50'
+                    : systemHealthStatus === 'warning'
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-red-200 bg-red-50'
+                }`}
+              >
+                <span className="p-2 bg-white/80 rounded-lg shadow-sm">
+                  <Activity
+                    className={`h-6 w-6 ${
+                      systemHealthStatus === 'healthy'
+                        ? 'text-emerald-600'
+                        : systemHealthStatus === 'warning'
+                        ? 'text-amber-600'
+                        : 'text-red-600'
+                    }`}
+                  />
+                </span>
+                <div className="text-sm text-gray-900">
+                  <p className="font-semibold">System Health</p>
+                  <p
+                    className={`mt-1 capitalize ${
+                      systemHealthStatus === 'healthy'
+                        ? 'text-emerald-700'
+                        : systemHealthStatus === 'warning'
+                        ? 'text-amber-700'
+                        : 'text-red-700'
+                    }`}
+                  >
+                    {systemHealthStatus === 'healthy'
+                      ? 'All systems operational.'
+                      : systemHealthStatus === 'warning'
+                      ? 'We are seeing elevated load. Monitor analytics closely.'
+                      : 'Immediate attention required. Review system performance metrics.'}
+                  </p>
+                  {latestActivity && (
+                    <p className="mt-3 text-xs text-gray-600 line-clamp-2">
+                      Latest activity: {latestActivity.title}
+                    </p>
+                  )}
+                  {latestMilestoneText && (
+                    <p className="mt-2 text-xs text-gray-600 line-clamp-2">{latestMilestoneText}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow">
@@ -190,7 +361,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Users</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stats?.totalUsers.toLocaleString()}</p>
+                    <p className="text-2xl font-semibold text-gray-900">{totalUsers.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -204,7 +375,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Active Polls</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stats?.activePolls}</p>
+                    <p className="text-2xl font-semibold text-gray-900">{activePollsCount.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -218,65 +389,69 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Votes</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stats?.totalVotes.toLocaleString()}</p>
+                    <p className="text-2xl font-semibold text-gray-900">{totalVotesCount.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">
-                  <div className={`p-2 rounded-lg ${
-                    stats?.systemHealth === 'healthy' ? 'bg-green-100' :
-                    stats?.systemHealth === 'warning' ? 'bg-yellow-100' : 'bg-red-100'
-                  }`}>
-                    <svg className={`w-6 h-6 ${
-                      stats?.systemHealth === 'healthy' ? 'text-green-600' :
-                      stats?.systemHealth === 'warning' ? 'text-yellow-600' : 'text-red-600'
-                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Sparkles className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">System Health</p>
-                    <p className={`text-2xl font-semibold capitalize ${
-                      stats?.systemHealth === 'healthy' ? 'text-green-600' :
-                      stats?.systemHealth === 'warning' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {stats?.systemHealth}
+                    <p className="text-sm font-medium text-gray-600">Polls Created (7d)</p>
+                    <p className="text-2xl font-semibold text-gray-900">{pollsCreatedLast7Days.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {pollsCreatedToday > 0 ? `${pollsCreatedToday} published today.` : 'No new polls today.'}
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
-                  <div className="text-center">
-                    <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <p className="text-sm font-medium text-gray-600">Create New Poll</p>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-start">
+                  <div className="p-2 bg-sky-100 rounded-lg">
+                    <Target className="w-6 h-6 text-sky-600" />
                   </div>
-                </button>
-                <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
-                  <div className="text-center">
-                    <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                    <p className="text-sm font-medium text-gray-600">Manage Users</p>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Polls Published Today</p>
+                    <p className="text-2xl font-semibold text-gray-900">{pollsCreatedToday.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {pollsCreatedLast7Days > 0
+                        ? `${pollsCreatedLast7Days.toLocaleString()} launched this week.`
+                        : 'No launches this week yet.'}
+                    </p>
                   </div>
-                </button>
-                <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
-                  <div className="text-center">
-                    <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p className="text-sm font-medium text-gray-600">View Analytics</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-start">
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <Award className="w-6 h-6 text-amber-600" />
                   </div>
-                </button>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Milestone Alerts (7d)</p>
+                    <p className="text-2xl font-semibold text-gray-900">{milestoneAlertsLast7Days.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {latestMilestoneShort ?? 'Awaiting the next milestone.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-start">
+                  <div className="p-2 bg-teal-100 rounded-lg">
+                    <Share2 className="w-6 h-6 text-teal-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Share Actions (24h)</p>
+                    <p className="text-2xl font-semibold text-gray-900">{shareActionsLast24h.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-gray-500">{shareSummary}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

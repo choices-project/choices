@@ -176,7 +176,7 @@ export class DataValidationPipeline {
         if (!bill.billNumber) return false;
         // Federal bills: H.R. 1234, S. 1234, etc.
         // State bills: HB 1234, SB 1234, etc.
-        return /^[A-Z\.]+\s*\d+/.test(bill.billNumber);
+        return /^[A-Z.]+\s*\d+/.test(bill.billNumber);
       }) as any
     });
 

@@ -4,15 +4,20 @@ import { cn } from "@/lib/utils"
 
 type SwitchProps = {
   className?: string
+  onCheckedChange?: (checked: boolean) => void
 } & React.InputHTMLAttributes<HTMLInputElement>
 
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, onCheckedChange, onChange, ...props }, ref) => (
     <label className="inline-flex items-center cursor-pointer">
       <input
         type="checkbox"
         ref={ref}
         className="sr-only"
+        onChange={(event) => {
+          onChange?.(event)
+          onCheckedChange?.(event.target.checked)
+        }}
         {...props}
       />
       <div

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { locationService, type LocationQuery, type RepresentativesByLocation } from '@/lib/services/location-service';
+import logger from '@/lib/utils/logger';
 
 export type LocationSearchProps = {
   onLocationFound?: (result: RepresentativesByLocation) => void;
@@ -49,7 +50,7 @@ export function LocationSearch({
     setResult(null);
 
     try {
-      console.log('🔍 LocationSearch: Searching for representatives at:', address);
+      logger.info('🔍 LocationSearch: Searching for representatives at:', address);
       
       const query: LocationQuery = {
         address: address.trim(),
@@ -61,7 +62,7 @@ export function LocationSearch({
       if (locationResult) {
         setResult(locationResult);
         onLocationFound?.(locationResult);
-        console.log('✅ LocationSearch: Found representatives:', locationResult);
+        logger.info('✅ LocationSearch: Found representatives:', locationResult);
       } else {
         setError('No representatives found for this location');
         onError?.('No representatives found for this location');
@@ -70,7 +71,7 @@ export function LocationSearch({
       const errorMessage = err.message || 'Failed to find representatives for this location';
       setError(errorMessage);
       onError?.(errorMessage);
-      console.error('❌ LocationSearch: Error:', err);
+      logger.error('❌ LocationSearch: Error:', err);
     } finally {
       setLoading(false);
     }

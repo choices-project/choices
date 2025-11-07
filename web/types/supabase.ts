@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_activity_log: {
@@ -113,6 +138,72 @@ export type Database = {
           ip_address?: unknown
           referrer?: string | null
           session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string | null
+          created_at: string
+          error_message: string | null
+          error_stack: string | null
+          event_name: string
+          event_type: Database["public"]["Enums"]["audit_event_type"]
+          expires_at: string | null
+          granted: boolean | null
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          request_method: string | null
+          request_path: string | null
+          resource: string | null
+          session_id: string | null
+          severity: Database["public"]["Enums"]["audit_severity"] | null
+          status: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          event_name: string
+          event_type: Database["public"]["Enums"]["audit_event_type"]
+          expires_at?: string | null
+          granted?: boolean | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          request_method?: string | null
+          request_path?: string | null
+          resource?: string | null
+          session_id?: string | null
+          severity?: Database["public"]["Enums"]["audit_severity"] | null
+          status?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_stack?: string | null
+          event_name?: string
+          event_type?: Database["public"]["Enums"]["audit_event_type"]
+          expires_at?: string | null
+          granted?: boolean | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          request_method?: string | null
+          request_path?: string | null
+          resource?: string | null
+          session_id?: string | null
+          severity?: Database["public"]["Enums"]["audit_severity"] | null
+          status?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1088,6 +1179,45 @@ export type Database = {
         }
         Relationships: []
       }
+      idempotency_keys: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          data: Json | null
+          error_message: string | null
+          expires_at: string
+          id: string
+          key: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          data?: Json | null
+          error_message?: string | null
+          expires_at: string
+          id?: string
+          key: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          data?: Json | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          key?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_delivery_logs: {
         Row: {
           created_at: string | null
@@ -1681,83 +1811,41 @@ export type Database = {
           },
         ]
       }
-      poll_participation_analytics: {
+      poll_rankings: {
         Row: {
-          age_group: string | null
-          biometric_verified: boolean | null
-          confidence_level: number | null
           created_at: string | null
-          data_quality_score: number | null
-          education_level: string | null
-          geographic_region: string | null
           id: string
-          identity_verified: boolean | null
-          income_bracket: string | null
-          participated_at: string | null
-          phone_verified: boolean | null
-          political_affiliation: string | null
           poll_id: string
-          trust_score: number | null
-          trust_tier: number
+          rankings: number[]
           updated_at: string | null
-          user_id: string
-          verification_methods: string[] | null
-          voting_history_count: number | null
+          user_id: string | null
         }
         Insert: {
-          age_group?: string | null
-          biometric_verified?: boolean | null
-          confidence_level?: number | null
           created_at?: string | null
-          data_quality_score?: number | null
-          education_level?: string | null
-          geographic_region?: string | null
           id?: string
-          identity_verified?: boolean | null
-          income_bracket?: string | null
-          participated_at?: string | null
-          phone_verified?: boolean | null
-          political_affiliation?: string | null
           poll_id: string
-          trust_score?: number | null
-          trust_tier: number
+          rankings: number[]
           updated_at?: string | null
-          user_id: string
-          verification_methods?: string[] | null
-          voting_history_count?: number | null
+          user_id?: string | null
         }
         Update: {
-          age_group?: string | null
-          biometric_verified?: boolean | null
-          confidence_level?: number | null
           created_at?: string | null
-          data_quality_score?: number | null
-          education_level?: string | null
-          geographic_region?: string | null
           id?: string
-          identity_verified?: boolean | null
-          income_bracket?: string | null
-          participated_at?: string | null
-          phone_verified?: boolean | null
-          political_affiliation?: string | null
           poll_id?: string
-          trust_score?: number | null
-          trust_tier?: number
+          rankings?: number[]
           updated_at?: string | null
-          user_id?: string
-          verification_methods?: string[] | null
-          voting_history_count?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "poll_participation_analytics_poll_id_fkey"
+            foreignKeyName: "poll_rankings_poll_id_fkey"
             columns: ["poll_id"]
             isOneToOne: false
             referencedRelation: "polls"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "poll_participation_analytics_user_id_fkey"
+            foreignKeyName: "poll_rankings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
@@ -3416,6 +3504,16 @@ export type Database = {
       }
     }
     Views: {
+      idempotency_monitor: {
+        Row: {
+          avg_duration_seconds: number | null
+          count: number | null
+          max_duration_seconds: number | null
+          status: string | null
+          stuck_count: number | null
+        }
+        Relationships: []
+      }
       user_voting_history: {
         Row: {
           created_at: string | null
@@ -3567,6 +3665,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      cleanup_expired_audit_logs: { Args: never; Returns: number }
       cleanup_expired_data: {
         Args: never
         Returns: {
@@ -3576,11 +3675,29 @@ export type Database = {
         }[]
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      cleanup_idempotency_keys: { Args: never; Returns: number }
       cleanup_inactive_sessions: { Args: never; Returns: number }
       cleanup_inactive_subscriptions: { Args: never; Returns: undefined }
       cleanup_old_notification_logs: { Args: never; Returns: undefined }
       cleanup_old_sync_logs: { Args: never; Returns: undefined }
       cleanup_performance_data: { Args: never; Returns: Json }
+      create_audit_log: {
+        Args: {
+          p_action?: string
+          p_event_name: string
+          p_event_type: Database["public"]["Enums"]["audit_event_type"]
+          p_granted?: boolean
+          p_ip_address?: unknown
+          p_metadata?: Json
+          p_resource?: string
+          p_retention_days?: number
+          p_severity?: Database["public"]["Enums"]["audit_severity"]
+          p_status?: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       detect_bot_behavior:
         | { Args: { p_user_id: string }; Returns: Json }
         | {
@@ -3588,6 +3705,16 @@ export type Database = {
             Returns: Json
           }
       exec_sql: { Args: { sql: string }; Returns: string }
+      get_audit_log_stats: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: {
+          count: number
+          event_type: Database["public"]["Enums"]["audit_event_type"]
+          severity: Database["public"]["Enums"]["audit_severity"]
+          success_rate: number
+          unique_users: number
+        }[]
+      }
       get_comprehensive_analytics:
         | {
             Args: { p_analysis_window?: unknown; p_poll_id: string }
@@ -3702,7 +3829,17 @@ export type Database = {
       update_trending_scores: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      audit_event_type:
+        | "authentication"
+        | "authorization"
+        | "data_access"
+        | "data_modification"
+        | "analytics_access"
+        | "admin_action"
+        | "security_event"
+        | "system_event"
+        | "user_action"
+      audit_severity: "info" | "warning" | "error" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3828,7 +3965,23 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  public: {
+  graphql_public: {
     Enums: {},
+  },
+  public: {
+    Enums: {
+      audit_event_type: [
+        "authentication",
+        "authorization",
+        "data_access",
+        "data_modification",
+        "analytics_access",
+        "admin_action",
+        "security_event",
+        "system_event",
+        "user_action",
+      ],
+      audit_severity: ["info", "warning", "error", "critical"],
+    },
   },
 } as const

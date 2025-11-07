@@ -8,8 +8,11 @@ import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
+
+const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
 
 export default function AppLayout({
   children,
@@ -33,6 +36,8 @@ export default function AppLayout({
     },
   }))
 
+  usePollCreatedListener();
+
   return (
     <FontProvider>
       <QueryClientProvider client={queryClient}>
@@ -42,16 +47,16 @@ export default function AppLayout({
             <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
               {/* Global Navigation */}
               <GlobalNavigation />
-              
+
               {/* Site Messages - Display below navigation */}
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
                 <SiteMessages />
               </div>
-              
+
               {children}
-              
+
               {/* Enhanced Feedback Widget - Fixed infinite loop issue */}
-              <EnhancedFeedbackWidget />
+              {!DISABLE_FEEDBACK_WIDGET && <EnhancedFeedbackWidget />}
             </ServiceWorkerProvider>
           </UserStoreProvider>
         </AuthProvider>

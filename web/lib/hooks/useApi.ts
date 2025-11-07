@@ -24,6 +24,7 @@ import {
   type TrendingHashtag,
   type TrendingPoll,
 } from '@/lib/api';
+import { withOptional } from '@/lib/util/objects';
 
 // ============================================================================
 // QUERY KEYS
@@ -76,22 +77,29 @@ export const queryKeys = {
 export function useProfile(options?: Omit<UseQueryOptions<UserProfile>, 'queryKey' | 'queryFn'>) {
   const router = useRouter();
 
-  return useQuery({
-    queryKey: queryKeys.profile,
-    queryFn: async () => {
-      const data = await get<{ profile: UserProfile }>('/api/profile');
-      return data.profile;
+  const queryOptions = withOptional(
+    {
+      queryKey: queryKeys.profile,
+      queryFn: async () => {
+        const data = await get<{ profile: UserProfile }>('/api/profile');
+        return data.profile;
+      },
     },
-    ...options,
-    meta: {
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<UserProfile>;
+
+  queryOptions.meta = withOptional(
+    {
       onError: (error: ApiError) => {
         if (error.isAuthError()) {
           router.push('/login');
         }
       },
-      ...options?.meta,
-    },
-  });
+    } as Record<string, unknown>,
+    options?.meta as Record<string, unknown> | undefined
+  ) as any;
+
+  return useQuery(queryOptions);
 }
 
 /**
@@ -106,16 +114,19 @@ export function useUpdateProfile(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    ...options,
-    mutationFn: async (data: Partial<UserProfile>) => {
-      return await patch<UserProfile>('/api/profile', data);
-    },
-    onSuccess: (data, variables, context) => {
-      // Update cache immediately
-      queryClient.setQueryData(queryKeys.profile, data);
-    },
-  });
+  const mutationOptions = withOptional(
+    (options ?? {}) as Record<string, unknown>,
+    {
+      mutationFn: async (data: Partial<UserProfile>) => {
+        return await patch<UserProfile>('/api/profile', data);
+      },
+      onSuccess: (data: UserProfile) => {
+        queryClient.setQueryData(queryKeys.profile, data);
+      },
+    }
+  ) as UseMutationOptions<UserProfile, ApiError, Partial<UserProfile>, unknown>;
+
+  return useMutation(mutationOptions);
 }
 
 /**
@@ -131,16 +142,20 @@ export function useDeleteProfile(
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  return useMutation({
-    ...options,
-    mutationFn: async () => {
-      await del('/api/profile');
-    },
-    onSuccess: () => {
-      queryClient.clear();
-      router.push('/');
-    },
-  });
+  const mutationOptions = withOptional(
+    (options ?? {}) as Record<string, unknown>,
+    {
+      mutationFn: async () => {
+        await del('/api/profile');
+      },
+      onSuccess: () => {
+        queryClient.clear();
+        router.push('/');
+      },
+    }
+  ) as UseMutationOptions<void, ApiError, void, unknown>;
+
+  return useMutation(mutationOptions);
 }
 
 // ============================================================================
@@ -157,14 +172,18 @@ export function useDashboard(
   useCache: boolean = true,
   options?: Omit<UseQueryOptions<DashboardData>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: queryKeys.dashboard,
-    queryFn: async () => {
-      return await get<DashboardData>(`/api/dashboard${useCache ? '' : '?cache=false'}`);
+  const queryOptions = withOptional(
+    {
+      queryKey: queryKeys.dashboard,
+      queryFn: async () => {
+        return await get<DashboardData>(`/api/dashboard${useCache ? '' : '?cache=false'}`);
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<DashboardData>;
+
+  return useQuery(queryOptions);
 }
 
 // ============================================================================
@@ -181,17 +200,21 @@ export function usePolls(
   filters?: { status?: string; limit?: number },
   options?: Omit<UseQueryOptions<Poll[]>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: [...queryKeys.polls, filters],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.limit) params.append('limit', filters.limit.toString());
+  const queryOptions = withOptional(
+    {
+      queryKey: [...queryKeys.polls, filters] as const,
+      queryFn: async () => {
+        const params = new URLSearchParams();
+        if (filters?.status) params.append('status', filters.status);
+        if (filters?.limit) params.append('limit', filters.limit.toString());
 
-      return await get<Poll[]>(`/api/polls?${params}`);
+        return await get<Poll[]>(`/api/polls?${params}`);
+      },
     },
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<Poll[]>;
+
+  return useQuery(queryOptions);
 }
 
 /**
@@ -204,13 +227,17 @@ export function usePoll(
   id: string,
   options?: Omit<UseQueryOptions<Poll>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: queryKeys.poll(id),
-    queryFn: async () => {
-      return await get<Poll>(`/api/polls/${id}`);
+  const queryOptions = withOptional(
+    {
+      queryKey: queryKeys.poll(id),
+      queryFn: async () => {
+        return await get<Poll>(`/api/polls/${id}`);
+      },
     },
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<Poll>;
+
+  return useQuery(queryOptions);
 }
 
 /**
@@ -225,17 +252,20 @@ export function useVote(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    ...options,
-    mutationFn: async ({ pollId, optionId }) => {
-      await post(`/api/polls/${pollId}/vote`, { option_id: optionId });
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate poll data to refetch with new vote count
-      queryClient.invalidateQueries({ queryKey: queryKeys.poll(variables.pollId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.polls });
-    },
-  });
+  const mutationOptions = withOptional(
+    (options ?? {}) as Record<string, unknown>,
+    {
+      mutationFn: async ({ pollId, optionId }: { pollId: string; optionId: string }) => {
+        await post(`/api/polls/${pollId}/vote`, { option_id: optionId });
+      },
+      onSuccess: (_: void, variables: { pollId: string }) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.poll(variables.pollId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.polls });
+      },
+    }
+  ) as UseMutationOptions<void, ApiError, { pollId: string; optionId: string }, unknown>;
+
+  return useMutation(mutationOptions);
 }
 
 // ============================================================================
@@ -252,15 +282,19 @@ export function useTrendingPolls(
   limit: number = 10,
   options?: Omit<UseQueryOptions<TrendingPoll[]>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: [...queryKeys.trendingPolls, limit],
-    queryFn: async () => {
-      const response = await get<{ data: TrendingPoll[] }>(`/api/trending?type=polls&limit=${limit}`);
-      return response.data;
+  const queryOptions = withOptional(
+    {
+      queryKey: [...queryKeys.trendingPolls, limit] as const,
+      queryFn: async () => {
+        const response = await get<{ data: TrendingPoll[] }>(`/api/trending?type=polls&limit=${limit}`);
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<TrendingPoll[]>;
+
+  return useQuery(queryOptions);
 }
 
 /**
@@ -273,15 +307,19 @@ export function useTrendingHashtags(
   limit: number = 20,
   options?: Omit<UseQueryOptions<TrendingHashtag[]>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: [...queryKeys.trendingHashtags, limit],
-    queryFn: async () => {
-      const response = await get<{ data: TrendingHashtag[] }>(`/api/trending?type=hashtags&limit=${limit}`);
-      return response.data;
+  const queryOptions = withOptional(
+    {
+      queryKey: [...queryKeys.trendingHashtags, limit] as const,
+      queryFn: async () => {
+        const response = await get<{ data: TrendingHashtag[] }>(`/api/trending?type=hashtags&limit=${limit}`);
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<TrendingHashtag[]>;
+
+  return useQuery(queryOptions);
 }
 
 // ============================================================================
@@ -300,15 +338,19 @@ export function useSubmitFeedback(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    ...options,
-    mutationFn: async (feedback: Partial<Feedback>) => {
-      return await post<Feedback>('/api/feedback', feedback);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.feedback });
-    },
-  });
+  const mutationOptions = withOptional(
+    (options ?? {}) as Record<string, unknown>,
+    {
+      mutationFn: async (feedback: Partial<Feedback>) => {
+        return await post<Feedback>('/api/feedback', feedback);
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.feedback });
+      },
+    }
+  ) as UseMutationOptions<Feedback, ApiError, Partial<Feedback>, unknown>;
+
+  return useMutation(mutationOptions);
 }
 
 /**
@@ -321,15 +363,19 @@ export function useFeedbackList(
   filters?: Record<string, string>,
   options?: Omit<UseQueryOptions<Feedback[]>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: queryKeys.feedbackList(filters),
-    queryFn: async () => {
-      const params = filters ? new URLSearchParams(filters) : '';
-      const response = await get<{ feedback: Feedback[] }>(`/api/feedback${params ? `?${params}` : ''}`);
-      return response.feedback;
+  const queryOptions = withOptional(
+    {
+      queryKey: queryKeys.feedbackList(filters),
+      queryFn: async () => {
+        const params = filters ? new URLSearchParams(filters) : '';
+        const response = await get<{ feedback: Feedback[] }>(`/api/feedback${params ? `?${params}` : ''}`);
+        return response.feedback;
+      },
     },
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<Feedback[]>;
+
+  return useQuery(queryOptions);
 }
 
 // ============================================================================
@@ -346,17 +392,26 @@ export function useHealth(
   type: 'basic' | 'database' | 'extended' | 'all' = 'basic',
   options?: Omit<UseQueryOptions<any>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: [...queryKeys.health, type],
-    queryFn: async () => {
-      const url = type === 'basic' ? '/api/health' :
-                  type === 'extended' ? '/api/health/extended' :
-                  `/api/health?type=${type}`;
-      return await get(url);
+  const queryOptions = withOptional(
+    {
+      queryKey: [...queryKeys.health, type] as const,
+      queryFn: async () => {
+        const url = type === 'basic'
+          ? '/api/health'
+          : type === 'extended'
+            ? '/api/health/extended'
+            : `/api/health?type=${type}`;
+        return get(url);
+      },
     },
-    ...(type === 'database' ? { refetchInterval: 30000 } : {}), // Conditionally add refetchInterval
-    ...options,
-  });
+    options as Record<string, unknown> | undefined
+  ) as UseQueryOptions<any>;
+
+  if (type === 'database') {
+    queryOptions.refetchInterval = 30000;
+  }
+
+  return useQuery(queryOptions);
 }
 
 // ============================================================================

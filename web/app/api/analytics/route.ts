@@ -13,6 +13,7 @@
  */
 
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 import { withErrorHandling, successResponse } from '@/lib/api';

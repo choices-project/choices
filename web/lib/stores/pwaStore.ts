@@ -10,10 +10,13 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { BeforeInstallPromptEvent } from '@/types/pwa';
+
+import { createSafeStorage } from './storage';
 
 // PWA data types
 export type PWAInstallation = {
@@ -244,15 +247,15 @@ export const usePWAStore = create<PWAStore>()(
         
         // Installation actions
         setInstallation: (installation) => set((state) => ({
-          installation: { ...state.installation, ...installation }
+          installation: mergeInstallationState(state.installation, installation)
         })),
         
         setInstallPrompt: (prompt) => set((state) => ({
-          installation: { ...state.installation, installPrompt: prompt }
+          installation: mergeInstallationState(state.installation, { installPrompt: prompt })
         })),
         
         setCanInstall: (canInstall) => set((state) => ({
-          installation: { ...state.installation, canInstall }
+          installation: mergeInstallationState(state.installation, { canInstall })
         })),
         
         installPWA: async () => {
@@ -268,12 +271,11 @@ export const usePWAStore = create<PWAStore>()(
               
               if (outcome === 'accepted') {
                 set((state) => ({
-                  installation: {
-                    ...state.installation,
+                  installation: mergeInstallationState(state.installation, {
                     isInstalled: true,
                     installedAt: new Date().toISOString(),
                     installPrompt: null,
-                  }
+                  })
                 }));
                 
                 logger.info('PWA installed successfully');
@@ -297,12 +299,18 @@ export const usePWAStore = create<PWAStore>()(
             setError(null);
             
             // PWA uninstallation is handled by the browser
-            set((state) => ({
-              installation: {
-                ...state.installation,
+            set((state) => {
+              const nextInstallation = mergeInstallationState(state.installation, {
                 isInstalled: false,
-              }
-            }));
+                installPrompt: null,
+              });
+
+              Reflect.deleteProperty(nextInstallation, 'installedAt');
+
+              return {
+                installation: nextInstallation,
+              };
+            });
             
             logger.info('PWA uninstalled');
           } catch (error) {
@@ -315,71 +323,65 @@ export const usePWAStore = create<PWAStore>()(
         },
         
         // Offline management actions
-        setOnlineStatus: (isOnline) => set((state) => ({
-          offline: {
-            ...state.offline,
+        setOnlineStatus: (isOnline) => set((state) => {
+          const offline = mergeOfflineState(state.offline, {
             isOnline,
             isOffline: !isOnline,
             lastOnline: isOnline ? new Date().toISOString() : state.offline.lastOnline,
-            offlineSince: isOnline ? (null as any) : new Date().toISOString(),
+            ...(isOnline ? {} : { offlineSince: new Date().toISOString() }),
+          });
+
+          if (isOnline) {
+            Reflect.deleteProperty(offline, 'offlineSince');
           }
-        } as any)),
+
+          return { offline };
+        }),
         
         setOfflineData: (data) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: { ...state.offline.offlineData, ...data }
-          }
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, data)
+          })
         })),
         
         addCachedPage: (page) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: {
-              ...state.offline.offlineData,
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
               cachedPages: [...state.offline.offlineData.cachedPages, page]
-            }
-          }
+            })
+          })
         })),
         
         removeCachedPage: (page) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: {
-              ...state.offline.offlineData,
-              cachedPages: state.offline.offlineData.cachedPages.filter(p => p !== page)
-            }
-          }
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
+              cachedPages: state.offline.offlineData.cachedPages.filter((p) => p !== page)
+            })
+          })
         })),
         
         addCachedResource: (resource) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: {
-              ...state.offline.offlineData,
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
               cachedResources: [...state.offline.offlineData.cachedResources, resource]
-            }
-          }
+            })
+          })
         })),
         
         removeCachedResource: (resource) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: {
-              ...state.offline.offlineData,
-              cachedResources: state.offline.offlineData.cachedResources.filter(r => r !== resource)
-            }
-          }
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
+              cachedResources: state.offline.offlineData.cachedResources.filter((r) => r !== resource)
+            })
+          })
         })),
         
         queueOfflineAction: (action) => set((state) => ({
-          offline: {
-            ...state.offline,
-            offlineData: {
-              ...state.offline.offlineData,
+          offline: mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
               queuedActions: [...state.offline.offlineData.queuedActions, action]
-            }
-          }
+            })
+          })
         })),
         
         processOfflineActions: async () => {
@@ -404,13 +406,11 @@ export const usePWAStore = create<PWAStore>()(
             
             // Clear processed actions
             set((state) => ({
-              offline: {
-                ...state.offline,
-                offlineData: {
-                  ...state.offline.offlineData,
+              offline: mergeOfflineState(state.offline, {
+                offlineData: mergeOfflineData(state.offline.offlineData, {
                   queuedActions: []
-                }
-              }
+                })
+              })
             }));
             
             logger.info('Offline actions processed', {
@@ -427,7 +427,7 @@ export const usePWAStore = create<PWAStore>()(
         
         // Update actions
         setUpdateAvailable: (update) => set((state) => ({
-          update: { ...state.update, ...update }
+          update: mergeUpdateState(state.update, update)
         })),
         
         downloadUpdate: async () => {
@@ -438,19 +438,19 @@ export const usePWAStore = create<PWAStore>()(
             setError(null);
             
             set((state) => ({
-              update: { ...state.update, isDownloading: true }
+              update: mergeUpdateState(state.update, { isDownloading: true })
             }));
             
             // Simulate download progress
             for (let progress = 0; progress <= 100; progress += 10) {
               set((state) => ({
-                update: { ...state.update, downloadProgress: progress }
+                update: mergeUpdateState(state.update, { downloadProgress: progress })
               }));
               await new Promise(resolve => setTimeout(resolve, 100));
             }
             
             set((state) => ({
-              update: { ...state.update, isDownloading: false }
+              update: mergeUpdateState(state.update, { isDownloading: false })
             }));
             
             logger.info('Update downloaded successfully');
@@ -472,7 +472,7 @@ export const usePWAStore = create<PWAStore>()(
             setError(null);
             
             set((state) => ({
-              update: { ...state.update, isInstalling: true }
+              update: mergeUpdateState(state.update, { isInstalling: true })
             }));
             
             // Reload the page to apply update
@@ -489,33 +489,33 @@ export const usePWAStore = create<PWAStore>()(
         },
         
         skipUpdate: () => set((state) => ({
-          update: { ...state.update, isAvailable: false }
+          update: mergeUpdateState(state.update, { isAvailable: false })
         })),
         
         setAutoUpdate: (enabled) => set((state) => ({
-          update: { ...state.update, autoUpdate: enabled }
+          update: mergeUpdateState(state.update, { autoUpdate: enabled })
         })),
         
         // Notification actions
-        addNotification: (notification) => set((state) => ({
-          notifications: [
-            ...state.notifications,
-            {
-              ...notification,
-              id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              createdAt: new Date().toISOString(),
-            }
-          ]
-        })),
+        addNotification: (notification) => set((state) => {
+          const enrichedNotification = withOptional(notification, {
+            id: `notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+            createdAt: new Date().toISOString(),
+          }) as PWANotification;
+
+          return {
+            notifications: [...state.notifications, enrichedNotification]
+          };
+        }),
         
         removeNotification: (id) => set((state) => ({
           notifications: state.notifications.filter(notification => notification.id !== id)
         })),
         
         markNotificationRead: (id) => set((state) => ({
-          notifications: state.notifications.map(notification =>
-            notification.id === id 
-              ? { ...notification, read: true }
+          notifications: state.notifications.map((notification) =>
+            notification.id === id
+              ? withOptional(notification, { read: true })
               : notification
           )
         })),
@@ -526,14 +526,12 @@ export const usePWAStore = create<PWAStore>()(
         setPerformance: (performance) => set({ performance }),
         
         updatePerformanceMetrics: (metrics) => set((state) => ({
-          performance: state.performance 
-            ? { ...state.performance, ...metrics }
-            : { ...metrics } as PWAPerformance
+          performance: mergePerformanceState(state.performance, metrics)
         })),
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: { ...state.preferences, ...preferences }
+          preferences: mergePreferencesState(state.preferences, preferences)
         })),
         
         resetPreferences: () => set({ preferences: defaultPreferences }),
@@ -737,6 +735,7 @@ export const usePWAStore = create<PWAStore>()(
       }),
       {
         name: 'pwa-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           installation: state.installation,
           offline: state.offline,
@@ -879,6 +878,50 @@ export const pwaStoreUtils = {
     return state.update.isAvailable && !state.update.isDownloading && !state.update.isInstalling;
   }
 };
+
+const defaultPerformance: PWAPerformance = {
+  loadTime: 0,
+  timeToInteractive: 0,
+  firstContentfulPaint: 0,
+  largestContentfulPaint: 0,
+  cumulativeLayoutShift: 0,
+  memoryUsage: 0,
+  networkLatency: 0,
+  cacheHitRate: 0,
+  offlineCapability: 0,
+};
+
+const mergeStateStrict = <T extends Record<string, unknown>>(current: T, updates: Partial<T>): T => {
+  const merged = withOptional(current, updates as Record<string, unknown>);
+
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined) {
+      delete (merged as Record<string, unknown>)[key];
+    }
+  }
+
+  return merged as T;
+};
+
+const mergeInstallationState = (current: PWAInstallation, updates: Partial<PWAInstallation>) =>
+  mergeStateStrict(current, updates);
+
+const mergeOfflineState = (current: PWAOffline, updates: Partial<PWAOffline>) =>
+  mergeStateStrict(current, updates);
+
+const mergeOfflineData = (
+  current: PWAOffline['offlineData'],
+  updates: Partial<PWAOffline['offlineData']>
+) => mergeStateStrict(current, updates);
+
+const mergeUpdateState = (current: PWAUpdate, updates: Partial<PWAUpdate>) =>
+  mergeStateStrict(current, updates);
+
+const mergePreferencesState = (current: PWAPreferences, updates: Partial<PWAPreferences>) =>
+  mergeStateStrict(current, updates);
+
+const mergePerformanceState = (current: PWAPerformance | null, updates: Partial<PWAPerformance>) =>
+  mergeStateStrict(current ?? defaultPerformance, updates);
 
 // Store subscriptions for external integrations
 export const pwaStoreSubscriptions = {

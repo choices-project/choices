@@ -16,7 +16,7 @@
 'use client';
 
 import { 
-  Download, 
+Download, 
   Calendar, 
   TrendingUp,
   AlertCircle,
@@ -40,6 +40,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
+import logger from '@/lib/utils/logger'
 
 type TrendDataPoint = {
   date: string;
@@ -88,7 +89,7 @@ export default function TrendsChart({
 
       setData(result.trends);
     } catch (err) {
-      console.error('Failed to fetch trends data:', err);
+      logger.error('Failed to fetch trends data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load trends data');
       
       // Use mock data for development

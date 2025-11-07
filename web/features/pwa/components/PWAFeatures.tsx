@@ -221,7 +221,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         {/* Offline Queue Component */}
         <div data-testid="pwa-offline-queue" className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-orange-800 mb-2">Offline Queue</h3>
-          <p className="text-xs text-orange-700">Actions queued for when you're back online</p>
+          <p className="text-xs text-orange-700">Actions queued for when you&apos;re back online</p>
         </div>
 
         {/* Offline Sync Component */}

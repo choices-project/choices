@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
@@ -11,9 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
-import { logger } from '@/lib/utils/logger';
+import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import logger from '@/lib/utils/logger';
 
-import VotingInterface from '../../../../features/voting/components/VotingInterface';
+import VotingInterface, {
+type VoteSubmission,
+  type VoteAnalyticsPayload,
+} from '../../../../features/voting/components/VotingInterface';
 
 
 type VoteResponse = { ok: boolean; id?: string; error?: string }
@@ -35,15 +39,41 @@ type Poll = {
   allowPostClose?: boolean;
 }
 
-type PollResults = {
+type RankedRound = {
+  round: number;
+  votes: Record<string, number>;
+  percentages: Record<string, number>;
+  eliminated?: string;
+};
+
+type RankedResultsState = {
+  votingMethod: 'ranked';
   totalVotes: number;
-  results: Record<string, number>;
-  participation: number;
-  demographics?: {
-    ageGroups: Record<string, number>;
-    locations: Record<string, number>;
-  };
-}
+  rounds: RankedRound[];
+  optionStats: Array<{
+    optionId: string;
+    optionIndex: number;
+    text?: string;
+    firstChoiceVotes: number;
+    firstChoicePercentage: number;
+    bordaScore: number;
+  }>;
+  winner: string | null;
+};
+
+type StandardResultsState = {
+  votingMethod: 'single' | 'multiple' | 'approval';
+  totalVotes: number;
+  optionTotals: Array<{
+    optionId: string;
+    optionText?: string;
+    voteCount: number;
+    percentage: number;
+  }>;
+  trustTierFilter: number | null;
+};
+
+type PollResultsState = RankedResultsState | StandardResultsState;
 
 type PollClientProps = {
   poll: Poll;
@@ -54,7 +84,46 @@ export default function PollClient({ poll }: PollClientProps) {
   const params = useParams();
   const pollId = params.id as string;
 
-  const [results, setResults] = useState<PollResults | null>(null);
+  const trackEvent = useAnalyticsStore((state) => state.trackEvent);
+  const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
+
+  const recordPollEvent = useCallback(
+    (action: string, payload: VoteAnalyticsPayload = {}) => {
+      if (typeof trackEvent !== 'function') {
+        return;
+      }
+
+      const baseMetadata: Record<string, unknown> = {
+        pollId: poll.id,
+        pollTitle: poll.title,
+        votingMethod: poll.votingMethod,
+        privacyLevel: poll.privacyLevel,
+        status: poll.status,
+        category: poll.category,
+        ...(payload.metadata ?? {}),
+      };
+
+      trackEvent({
+        event_type: 'poll_event',
+        type: 'poll_event',
+        category: payload.category ?? 'poll_interaction',
+        action,
+        event_data: {
+          action,
+          category: payload.category ?? 'poll_interaction',
+          metadata: baseMetadata,
+        },
+        created_at: new Date().toISOString(),
+        session_id: analyticsSessionId ?? 'anonymous',
+        ...(payload.label !== undefined ? { label: payload.label } : {}),
+        ...(payload.value !== undefined ? { value: payload.value } : {}),
+        metadata: baseMetadata,
+      });
+    },
+    [analyticsSessionId, poll.category, poll.id, poll.privacyLevel, poll.status, poll.title, poll.votingMethod, trackEvent]
+  );
+
+  const [results, setResults] = useState<PollResultsState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
@@ -68,8 +137,8 @@ export default function PollClient({ poll }: PollClientProps) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/polls/${poll.id}/vote`, { 
-          method: 'HEAD', 
+        const res = await fetch(`/api/polls/${poll.id}/vote`, {
+          method: 'HEAD',
           cache: 'no-store'
         });
         if (!cancelled) setHasVoted(res.status === 200);
@@ -87,11 +156,90 @@ export default function PollClient({ poll }: PollClientProps) {
 
       // Fetch results data
       const resultsResponse = await fetch(`/api/polls/${pollId}/results`);
-      if (resultsResponse.ok) {
-        const resultsData = await resultsResponse.json();
-        setResults(resultsData);
+      if (!resultsResponse.ok) {
+        setResults(null);
+        if (resultsResponse.status >= 500) {
+          setError('Failed to load poll results. Please try again later.');
+        }
+        return;
       }
+
+      const payload = await resultsResponse.json();
+      if (!payload?.success || !payload.data) {
+        setResults(null);
+        return;
+      }
+
+      const data = payload.data as Record<string, unknown>;
+      const votingMethod = (data.voting_method as string | undefined)?.toLowerCase();
+
+      if (votingMethod === 'ranked') {
+        const optionStatsRaw = Array.isArray(data.option_stats) ? (data.option_stats as Array<Record<string, unknown>>) : [];
+        const roundsRaw = Array.isArray(data.rounds) ? (data.rounds as Array<Record<string, unknown>>) : [];
+
+        const optionStats = optionStatsRaw.map((stat) => {
+          const base: RankedResultsState['optionStats'][number] = {
+            optionId: String(stat.option_id ?? ''),
+            optionIndex: Number(stat.option_index ?? 0),
+            firstChoiceVotes: Number(stat.first_choice_votes ?? 0),
+            firstChoicePercentage: Number(stat.first_choice_percentage ?? 0),
+            bordaScore: Number(stat.borda_score ?? 0),
+          };
+          if (typeof stat.text === 'string') {
+            base.text = stat.text;
+          }
+          return base;
+        });
+
+        const rounds: RankedRound[] = roundsRaw.map((round) => {
+          const base: RankedRound = {
+            round: Number(round.round ?? 0),
+            votes: (round.votes as Record<string, number>) ?? {},
+            percentages: (round.percentages as Record<string, number>) ?? {},
+          };
+          if (typeof round.eliminated === 'string') {
+            base.eliminated = round.eliminated;
+          }
+          return base;
+        });
+
+        setResults({
+          votingMethod: 'ranked',
+          totalVotes: Number(data.total_votes ?? 0),
+          rounds,
+          optionStats,
+          winner: typeof data.winner === 'string' ? data.winner : null,
+        });
+        return;
+      }
+
+      const optionTotalsRaw = Array.isArray(data.results) ? (data.results as Array<Record<string, unknown>>) : [];
+      const totalVotes = Number(data.total_votes ?? 0);
+
+      const optionTotals = optionTotalsRaw.map((row) => {
+        const voteCount = Number(row.vote_count ?? 0);
+        const optionId = String(row.option_id ?? '');
+        const percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
+
+        const base: StandardResultsState['optionTotals'][number] = {
+          optionId,
+          voteCount,
+          percentage,
+        };
+        if (typeof row.option_text === 'string') {
+          base.optionText = row.option_text;
+        }
+        return base;
+      });
+
+      setResults({
+        votingMethod: (votingMethod as 'single' | 'multiple' | 'approval') ?? 'single',
+        totalVotes,
+        optionTotals,
+        trustTierFilter: (data.trust_tier_filter as number | null) ?? null,
+      });
     } catch (err) {
+      setResults(null);
       setError(err instanceof Error ? err.message : 'Failed to load poll data');
     } finally {
       setLoading(false);
@@ -104,53 +252,129 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   }, [pollId, fetchPollData]);
 
-  const handleVote = async (choice: number): Promise<VoteResponse> => {
-    if (!poll) {
+  const hasRecordedViewRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasRecordedViewRef.current) {
+      recordPollEvent('view_poll', {
+        metadata: {
+          context: 'poll_detail',
+        },
+      });
+      hasRecordedViewRef.current = true;
+    }
+  }, [recordPollEvent]);
+
+  const handleVote = useCallback(async (submission: VoteSubmission): Promise<VoteResponse> => {
+    const method = submission.method ?? (poll.votingMethod?.toLowerCase() as VoteSubmission['method']);
+
+    let payload: Record<string, unknown> | null = null;
+
+    switch (method) {
+      case 'single': {
+        const choice = 'choice' in submission ? submission.choice : undefined;
+        if (typeof choice !== 'number') {
+          return {
+            ok: false,
+            error: 'Single-choice submissions require a numeric choice.',
+          };
+        }
+        payload = { choice };
+        break;
+      }
+      case 'multiple': {
+        const selections = 'selections' in submission ? submission.selections : undefined;
+        if (!Array.isArray(selections)) {
+          return {
+            ok: false,
+            error: 'Multiple-choice submissions require an array of selections.',
+          };
+        }
+        payload = { selections };
+        break;
+      }
+      case 'approval': {
+        const approvals = 'approvals' in submission ? submission.approvals : undefined;
+        if (!Array.isArray(approvals)) {
+          return {
+            ok: false,
+            error: 'Approval submissions require an array of approvals.',
+          };
+        }
+        payload = { approvals };
+        break;
+      }
+      case 'ranked': {
+        const rankings = 'rankings' in submission ? submission.rankings : undefined;
+        if (!Array.isArray(rankings)) {
+          return {
+            ok: false,
+            error: 'Ranked-choice submissions require an array of rankings.',
+          };
+        }
+        payload = { rankings };
+        break;
+      }
+      case 'quadratic':
+      case 'range':
+        return {
+          ok: false,
+          error: 'This voting method is not yet supported.',
+        };
+      default:
+        return {
+          ok: false,
+          error: 'Unknown voting method.',
+        };
+    }
+
+    if (payload === null) {
       return {
         ok: false,
-        error: 'No poll found'
+        error: 'Unable to build vote payload.',
       };
     }
 
-    logger.info('Submitting vote for poll', { pollId: poll.id, choice });
     setIsVoting(true);
+    setError(null);
+
     try {
-      // Submit vote to API
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ choice }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit vote');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error ?? 'Failed to submit vote');
       }
 
       const result = await response.json();
-      
-      // Update UI state
+
       setHasVoted(true);
-      // Refresh results
       void fetchPollData();
-      
+
+      const voteId = result.voteId || result.voteIds?.[0] || 'vote-recorded';
+
       return {
         ok: true,
-        id: result.voteId || 'vote-id'
+        id: voteId,
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit vote';
       setError(errorMessage);
       return {
         ok: false,
-        error: errorMessage
+        error: errorMessage,
       };
     } finally {
       setIsVoting(false);
     }
-  };
+  }, [fetchPollData, poll.id, poll.votingMethod]);
 
   const handleShare = async () => {
     // Use SSR-safe browser API access
@@ -163,14 +387,32 @@ export default function PollClient({ poll }: PollClientProps) {
         await clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        recordPollEvent('detail_copy_link', {
+          category: 'poll_share',
+          metadata: {
+            pollUrl: url,
+          },
+        });
       }
     } catch (err) {
-      console.error('Failed to copy URL:', err);
+      logger.error('Failed to copy URL:', err);
+      recordPollEvent('detail_share_failed', {
+        category: 'poll_share',
+        metadata: {
+          pollUrl: url,
+          error: err instanceof Error ? err.message : String(err),
+        },
+      });
     }
   };
 
   const handleStartVoting = () => {
     setShowVotingInterface(true);
+    recordPollEvent('detail_start_voting', {
+      metadata: {
+        context: 'poll_detail',
+      },
+    });
   };
 
   const formatVotingMethod = (method: string) => {
@@ -201,6 +443,25 @@ export default function PollClient({ poll }: PollClientProps) {
       day: 'numeric'
     });
   };
+
+  const VOTING_LABELS: Record<string, string> = {
+    single: 'Single Choice',
+    multiple: 'Multiple Choice',
+    approval: 'Approval Voting',
+    ranked: 'Ranked Choice',
+    range: 'Range Voting',
+    quadratic: 'Quadratic Voting',
+  };
+
+  const handleResultsModeChange = useCallback((mode: ResultsMode) => {
+    setResultsMode(mode);
+    recordPollEvent('detail_results_mode_changed', {
+      label: mode,
+      metadata: {
+        mode,
+      },
+    });
+  }, [recordPollEvent]);
 
 
   const isPollActive = poll.status === 'active';
@@ -234,7 +495,7 @@ export default function PollClient({ poll }: PollClientProps) {
               )}
             </div>
             <div className="flex items-center space-x-3">
-              <Badge 
+              <Badge
                 variant={isPollActive ? "default" : isPollClosed ? "secondary" : "destructive"}
                 className="text-sm"
               >
@@ -316,6 +577,7 @@ export default function PollClient({ poll }: PollClientProps) {
                     onVote={handleVote}
                     isVoting={isVoting}
                     hasVoted={hasVoted}
+                    onAnalyticsEvent={recordPollEvent}
                   />
                 </CardContent>
               </>
@@ -343,7 +605,7 @@ export default function PollClient({ poll }: PollClientProps) {
                 <CardTitle>Results</CardTitle>
                 <ModeSwitch
                   mode={resultsMode}
-                  onModeChange={setResultsMode}
+                  onModeChange={handleResultsModeChange}
                 />
               </div>
             </CardHeader>
@@ -358,44 +620,105 @@ export default function PollClient({ poll }: PollClientProps) {
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {results.participation}%
+                      {VOTING_LABELS[poll.votingMethod] ?? poll.votingMethod}
                     </div>
-                    <div className="text-sm text-gray-600">Participation</div>
+                    <div className="text-sm text-gray-600">Voting Method</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {poll.options.length}
+                      {results.votingMethod === 'ranked'
+                        ? results.optionStats.length
+                        : results.optionTotals.length}
                     </div>
                     <div className="text-sm text-gray-600">Options</div>
                   </div>
                 </div>
 
-                {/* Results by option */}
-                <div className="space-y-3">
-                  {poll.options.map((option: string, index: number) => {
-                    const votes = results.results[`option_${index + 1}`] || 0;
-                    const percentage = results.totalVotes > 0 
-                      ? Math.round((votes / results.totalVotes) * 100) 
-                      : 0;
-                    
-                    return (
-                      <div key={index} className="space-y-2">
+                {results.votingMethod === 'ranked' ? (
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      {results.optionStats.map((stat) => {
+                        const label = stat.text ?? poll.options[stat.optionIndex] ?? `Option ${stat.optionIndex + 1}`;
+                        return (
+                          <div key={stat.optionId} className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="font-medium">{label}</span>
+                              <span className="text-gray-600">
+                                {stat.firstChoiceVotes} first-choice vote{stat.firstChoiceVotes === 1 ? '' : 's'}
+                                {' '}
+                                ({stat.firstChoicePercentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min(100, stat.firstChoicePercentage)}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              Borda score: {stat.bordaScore}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-700">Instant Runoff Rounds</h4>
+                      {results.rounds.map((round) => (
+                        <div key={round.round} className="border rounded-lg p-4 bg-gray-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-gray-800">Round {round.round}</span>
+                            {round.eliminated !== undefined && (
+                              <span className="text-xs text-red-600">
+                                Eliminated: {poll.options[Number(round.eliminated)] ?? `Option ${Number(round.eliminated) + 1}`}
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            {Object.entries(round.votes).map(([optionKey, voteCount]) => {
+                              const percentage = round.percentages[optionKey] ?? 0;
+                              const label = poll.options[Number(optionKey)] ?? `Option ${Number(optionKey) + 1}`;
+                              return (
+                                <div key={`${round.round}-${optionKey}`} className="flex justify-between text-xs text-gray-600">
+                                  <span className="font-medium text-gray-700">{label}</span>
+                                  <span>
+                                    {voteCount} vote{voteCount === 1 ? '' : 's'} ({percentage.toFixed(1)}%)
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+
+                      {results.winner && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-800">
+                          Winner: {poll.options[Number(results.winner)] ?? `Option ${Number(results.winner) + 1}`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {results.optionTotals.map((option, index) => (
+                      <div key={option.optionId || index} className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="font-medium">{option}</span>
+                          <span className="font-medium">{option.optionText ?? `Option ${index + 1}`}</span>
                           <span className="text-gray-600">
-                            {votes} votes ({percentage}%)
+                            {option.voteCount} vote{option.voteCount === 1 ? '' : 's'} ({option.percentage.toFixed(1)}%)
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${percentage}%` }}
+                            style={{ width: `${Math.min(100, option.percentage)}%` }}
                           />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -1,9 +1,9 @@
+import logger from '@/lib/utils/logger';
 /**
  * Simple Performance Monitor
  * 
  * This module provides basic performance monitoring functionality.
  */
-
 export type PerformanceMetric = {
   name: string;
   value: number;
@@ -42,7 +42,7 @@ export class SimplePerformanceMonitor {
         navObserver.observe({ entryTypes: ['navigation'] });
         this.observers.set('navigation', navObserver);
       } catch (error) {
-        console.warn('Failed to initialize navigation observer:', error);
+        logger.warn('Failed to initialize navigation observer:', error);
       }
 
       // Monitor resource timing
@@ -66,7 +66,7 @@ export class SimplePerformanceMonitor {
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.set('resource', resourceObserver);
       } catch (error) {
-        console.warn('Failed to initialize resource observer:', error);
+        logger.warn('Failed to initialize resource observer:', error);
       }
     }
   }

@@ -10,7 +10,15 @@
 
 import { NextResponse } from 'next/server';
 
-import type { ApiSuccessResponse, ApiErrorResponse, ApiMetadata } from './types';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
+
+import type {
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  ApiMetadata,
+  PaginationMetadata,
+} from './types';
 
 // ============================================================================
 // SUCCESS RESPONSE HELPERS
@@ -27,14 +35,16 @@ export function successResponse<T>(
   metadata?: Partial<ApiMetadata>,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T>> {
+  const metadataPayload = withOptional(
+    { timestamp: new Date().toISOString() },
+    metadata
+  );
+
   return NextResponse.json(
     {
       success: true,
       data,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        ...metadata,
-      },
+      metadata: metadataPayload,
     },
     { status }
   );
@@ -48,16 +58,21 @@ export function successResponse<T>(
  */
 export function paginatedResponse<T>(
   data: T[],
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-  },
+  pagination: Pick<PaginationMetadata, 'total' | 'limit' | 'offset'>,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T[]>> {
   const hasMore = pagination.offset + pagination.limit < pagination.total;
   const page = Math.floor(pagination.offset / pagination.limit) + 1;
   const totalPages = Math.ceil(pagination.total / pagination.limit);
+
+  const paginationMetadata: PaginationMetadata = {
+    total: pagination.total,
+    limit: pagination.limit,
+    offset: pagination.offset,
+    hasMore,
+    page,
+    totalPages,
+  };
 
   return NextResponse.json(
     {
@@ -65,12 +80,7 @@ export function paginatedResponse<T>(
       data,
       metadata: {
         timestamp: new Date().toISOString(),
-        pagination: {
-          ...pagination,
-          hasMore,
-          page,
-          totalPages,
-        },
+        pagination: paginationMetadata,
       },
     },
     { status }
@@ -88,14 +98,16 @@ export function successWithMeta<T>(
   customMetadata: Record<string, any>,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T>> {
+  const metadataPayload = withOptional(
+    { timestamp: new Date().toISOString() },
+    customMetadata
+  );
+
   return NextResponse.json(
     {
       success: true,
       data,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        ...customMetadata,
-      },
+      metadata: metadataPayload,
     },
     { status }
   );
@@ -117,18 +129,21 @@ export function errorResponse(
   details?: string | Record<string, any>,
   code?: string
 ): NextResponse<ApiErrorResponse> {
-  return NextResponse.json(
-    {
-      success: false,
-      error,
-      ...(details && { details }),
-      ...(code && { code }),
-      metadata: {
-        timestamp: new Date().toISOString(),
-      },
-    },
-    { status }
-  );
+  const payload: ApiErrorResponse = {
+    success: false,
+    error,
+    metadata: { timestamp: new Date().toISOString() },
+  };
+
+  if (details !== undefined && details !== null) {
+    payload.details = details;
+  }
+
+  if (code !== undefined) {
+    payload.code = code;
+  }
+
+  return NextResponse.json(payload, { status });
 }
 
 /**
@@ -256,7 +271,7 @@ export function withErrorHandling<T extends any[]>(
     try {
       return await handler(...args);
     } catch (error) {
-      console.error('API Error:', error);
+      logger.error('API Error:', error);
       return serverError(error);
     }
   };
@@ -291,7 +306,7 @@ export async function parseBody<T>(
     }
 
     return { success: true, data: body as T };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: errorResponse('Invalid JSON body', 400),
@@ -332,7 +347,7 @@ export function parseQuery<T extends Record<string, 'string' | 'number' | 'boole
       case 'string':
         result[key] = value;
         break;
-      case 'number':
+      case 'number': {
         const num = Number(value);
         if (isNaN(num)) {
           errors[key] = `Expected number, got "${value}"`;
@@ -340,6 +355,7 @@ export function parseQuery<T extends Record<string, 'string' | 'number' | 'boole
           result[key] = num;
         }
         break;
+      }
       case 'boolean':
         if (value !== 'true' && value !== 'false') {
           errors[key] = `Expected boolean, got "${value}"`;
@@ -375,7 +391,7 @@ export function sanitizeResponse<T extends Record<string, any>>(
   data: T,
   removeFields: string[] = []
 ): Omit<T, typeof removeFields[number]> {
-  const sanitized = { ...data };
+  const sanitized = withOptional(data);
 
   for (const field of removeFields) {
     delete sanitized[field];

@@ -7,6 +7,8 @@
  * Status: ACTIVE
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 /**
  * Fetch with CSRF token
  */
@@ -18,20 +20,14 @@ export async function csrfFetch(url: string, options: RequestInit = {}): Promise
     headers.set('X-CSRF-Token', csrfToken);
   }
   
-  return fetch(url, {
-    ...options,
-    headers
-  });
+  return fetch(url, withOptional(options, { headers }));
 }
 
 /**
  * GET request with CSRF protection
  */
 export async function csrfGet(url: string, options: RequestInit = {}): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
-    method: 'GET'
-  });
+  return csrfFetch(url, withOptional(options, { method: 'GET' }));
 }
 
 /**
@@ -41,14 +37,12 @@ export async function csrfPost(url: string, data?: unknown, options: RequestInit
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   
-  const fetchOptions: RequestInit = {
-    ...options,
+  const fetchOptions = withOptional(options, {
     method: 'POST',
-    headers
-  };
-  if (data) {
-    fetchOptions.body = JSON.stringify(data);
-  }
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+  });
+
   return csrfFetch(url, fetchOptions);
 }
 
@@ -59,14 +53,12 @@ export async function csrfPut(url: string, data?: unknown, options: RequestInit 
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   
-  const fetchOptions: RequestInit = {
-    ...options,
+  const fetchOptions = withOptional(options, {
     method: 'PUT',
-    headers
-  };
-  if (data) {
-    fetchOptions.body = JSON.stringify(data);
-  }
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+  });
+
   return csrfFetch(url, fetchOptions);
 }
 
@@ -74,10 +66,7 @@ export async function csrfPut(url: string, data?: unknown, options: RequestInit 
  * DELETE request with CSRF protection
  */
 export async function csrfDelete(url: string, options: RequestInit = {}): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
-    method: 'DELETE'
-  });
+  return csrfFetch(url, withOptional(options, { method: 'DELETE' }));
 }
 
 export default {

@@ -1,24 +1,24 @@
 /**
  * TemporalAnalysisChart Component
- * 
+ *
  * Displays temporal patterns in user engagement.
  * Shows when users are most active (time-of-day, day-of-week).
- * 
+ *
  * Features:
  * - Hour-of-day heatmap (24 hours)
  * - Day-of-week bar chart
  * - Peak times analysis
  * - Activity velocity trends
  * - CSV export functionality
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
 
 'use client';
 
-import { 
-  Download, 
+import {
+Download,
   Clock,
   AlertCircle,
   RefreshCw
@@ -41,6 +41,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import logger from '@/lib/utils/logger'
 
 type HourlyData = {
   hour: number;
@@ -82,9 +83,9 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
  */
 const getActivityColor = (activity: number, maxActivity: number): string => {
   if (maxActivity === 0) return '#e5e7eb'; // gray-200
-  
+
   const ratio = activity / maxActivity;
-  
+
   if (ratio < 0.2) return '#dbeafe'; // blue-100
   if (ratio < 0.4) return '#93c5fd'; // blue-300
   if (ratio < 0.6) return '#60a5fa'; // blue-400
@@ -119,22 +120,22 @@ export default function TemporalAnalysisChart({
 
     try {
       const response = await fetch(`/api/analytics/temporal?range=${dateRange}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch temporal data: ${response.statusText}`);
       }
 
       const result: TemporalData = await response.json();
-      
+
       if (!result.ok) {
         throw new Error('Invalid API response');
       }
 
       setData(result);
     } catch (err) {
-      console.error('Failed to fetch temporal data:', err);
+      logger.error('Failed to fetch temporal data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load temporal data');
-      
+
       // Use mock data for development
       const mockData = generateMockData(dateRange);
       setData(mockData);
@@ -172,11 +173,11 @@ export default function TemporalAnalysisChart({
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `temporal-analysis-${dateRange}-${Date.now()}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -347,15 +348,15 @@ export default function TemporalAnalysisChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.hourly} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="label" 
+                  <XAxis
+                    dataKey="label"
                     tick={{ fontSize: 10 }}
                     angle={-45}
                     textAnchor="end"
                     height={60}
                   />
                   <YAxis label={{ value: 'Activity Count', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload;
@@ -392,12 +393,12 @@ export default function TemporalAnalysisChart({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis label={{ value: 'Activity Count', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload;
                       if (!data) return null;
-                      const percentage = maxDailyActivity > 0 
+                      const percentage = maxDailyActivity > 0
                         ? ((data.activity / maxDailyActivity) * 100).toFixed(1)
                         : 0;
                       return (
@@ -416,8 +417,8 @@ export default function TemporalAnalysisChart({
                   <Legend />
                   <Bar dataKey="activity" name="Activity Count">
                     {data.daily.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
+                      <Cell
+                        key={`cell-${index}`}
                         fill={entry.day === data.peakDay ? '#22c55e' : '#3b82f6'}
                       />
                     ))}
@@ -433,7 +434,7 @@ export default function TemporalAnalysisChart({
                 {data.daily
                   .sort((a, b) => b.activity - a.activity)
                   .map((day, index) => (
-                    <div 
+                    <div
                       key={day.day}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
@@ -466,7 +467,7 @@ export default function TemporalAnalysisChart({
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.velocity} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
+                  <XAxis
                     dataKey="timestamp"
                     tick={{ fontSize: 10 }}
                     angle={-45}
@@ -474,7 +475,7 @@ export default function TemporalAnalysisChart({
                     height={60}
                   />
                   <YAxis label={{ value: 'Velocity (activities/hour)', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload;
@@ -490,10 +491,10 @@ export default function TemporalAnalysisChart({
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="velocity" 
-                    stroke="#a855f7" 
+                  <Line
+                    type="monotone"
+                    dataKey="velocity"
+                    stroke="#a855f7"
                     strokeWidth={2}
                     name="Activity Velocity"
                     dot={{ r: 3 }}
@@ -532,9 +533,9 @@ function generateMockData(_range: string): TemporalData {
     else if (i >= 12 && i <= 14) baseActivity = 90; // Lunch peak
     else if (i >= 18 && i <= 21) baseActivity = 100; // Evening peak
     else if (i >= 22 || i <= 5) baseActivity = 10; // Night low
-    
+
     const activity = baseActivity + Math.floor(Math.random() * 20);
-    
+
     return {
       hour: i,
       activity,
@@ -551,16 +552,20 @@ function generateMockData(_range: string): TemporalData {
 
   // Generate velocity data (last 24 data points)
   const velocity: VelocityData[] = Array.from({ length: 24 }, (_, i) => ({
-    timestamp: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    timestamp: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     }),
     velocity: Math.floor(Math.random() * 50) + 30
   }));
 
   // Calculate peak values
-  const peakHourData = hourly.length > 0 ? hourly.reduce((max, h) => h.activity > max.activity ? h : max, hourly[0]) : { hour: 0, activity: 0, label: '12 AM' };
-  const peakDayData = daily.length > 0 ? daily.reduce((max, d) => d.activity > max.activity ? d : max, daily[0]) : { day: 'Monday', activity: 0, dayIndex: 0 };
+  const peakHourData: HourlyData = hourly.length > 0
+    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), hourly[0]!)
+    : { hour: 0, activity: 0, label: '12 AM' };
+  const peakDayData: DailyData = daily.length > 0
+    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), daily[0]!)
+    : { day: 'Monday', activity: 0, dayIndex: 0 };
   const avgActivity = hourly.length > 0 ? hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length : 0;
 
   return {

@@ -37,7 +37,8 @@ Required variables (see `ENVIRONMENT_VARIABLES.md`):
 Types are pre-generated. If schema changes:
 ```bash
 supabase link --project-ref <your-project-id>
-supabase gen types typescript --linked > utils/supabase/database.types.ts
+cd web && npm run types:generate
+# Runs: npx supabase gen types typescript --project-id <your-project-id> > types/supabase.ts
 ```
 
 ### 4. Run Development Server

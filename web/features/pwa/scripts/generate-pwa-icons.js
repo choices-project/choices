@@ -4,6 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import logger from '@/lib/utils/logger';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -34,8 +36,8 @@ sizes.forEach(size => {
   const svg = createSVGIcon(size);
   const filePath = path.join(iconsDir, `icon-${size}x${size}.svg`);
   fs.writeFileSync(filePath, svg);
-  console.log(`Generated ${filePath}`);
+  logger.info(`Generated ${filePath}`);
 });
 
-console.log('PWA icons generated successfully!');
-console.log('Note: For production, replace these with proper PNG icons.');
+logger.info('PWA icons generated successfully!');
+logger.info('Note: For production, replace these with proper PNG icons.');

@@ -6,6 +6,8 @@
  * Status: ✅ ACTIVE
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 import { devLog } from './logger';
 
 export type ApiLogContext = {
@@ -30,50 +32,52 @@ export class ApiLogger {
     this.startTime = Date.now();
   }
 
-  private createContext(additionalContext: Partial<ApiLogContext> = {}): ApiLogContext {
-    return {
+  private createContext(additionalContext?: Partial<ApiLogContext>): ApiLogContext {
+    const base: ApiLogContext = {
       route: this.route,
       method: this.method,
-      duration: Date.now() - this.startTime,
-      ...additionalContext
+      duration: Date.now() - this.startTime
     };
+
+    if (!additionalContext) {
+      return base;
+    }
+
+    return withOptional(base as Record<string, unknown>, additionalContext as Record<string, unknown>) as ApiLogContext;
   }
 
   info(message: string, metadata?: Record<string, any>) {
-    devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata: metadata ?? {} }),
-      level: 'info'
-    });
+    const context = this.createContext({ metadata: metadata ?? {} });
+    const payload = withOptional(context as Record<string, unknown>, { level: 'info' });
+    devLog(`[${this.method} ${this.route}] ${message}`, payload);
   }
 
   error(message: string, error?: Error, metadata?: Record<string, any>) {
-    const context = { metadata: metadata ?? {} } as any;
-    if (error) context.error = error;
-    devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext(context),
-      level: 'error'
-    });
+    const metadataContext = withOptional(
+      { metadata: metadata ?? {} } as Record<string, unknown>,
+      error ? { error } : undefined
+    ) as Partial<ApiLogContext>;
+    const context = this.createContext(metadataContext);
+    const payload = withOptional(context as Record<string, unknown>, { level: 'error' });
+    devLog(`[${this.method} ${this.route}] ${message}`, payload);
   }
 
   warn(message: string, metadata?: Record<string, any>) {
-    devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata: metadata ?? {} }),
-      level: 'warn'
-    });
+    const context = this.createContext({ metadata: metadata ?? {} });
+    const payload = withOptional(context as Record<string, unknown>, { level: 'warn' });
+    devLog(`[${this.method} ${this.route}] ${message}`, payload);
   }
 
   debug(message: string, metadata?: Record<string, any>) {
-    devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ metadata: metadata ?? {} }),
-      level: 'debug'
-    });
+    const context = this.createContext({ metadata: metadata ?? {} });
+    const payload = withOptional(context as Record<string, unknown>, { level: 'debug' });
+    devLog(`[${this.method} ${this.route}] ${message}`, payload);
   }
 
   success(message: string, statusCode = 200, metadata?: Record<string, any>) {
-    devLog(`[${this.method} ${this.route}] ${message}`, {
-      ...this.createContext({ statusCode, metadata: metadata ?? {} }),
-      level: 'success'
-    });
+    const context = this.createContext({ statusCode, metadata: metadata ?? {} });
+    const payload = withOptional(context as Record<string, unknown>, { level: 'success' });
+    devLog(`[${this.method} ${this.route}] ${message}`, payload);
   }
 }
 

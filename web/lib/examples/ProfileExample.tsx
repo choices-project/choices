@@ -81,7 +81,7 @@ export default function ProfileExample() {
       await updateProfile.mutateAsync({
         display_name: displayName
       });
-    } catch (error) {
+    } catch {
       // Error already handled by onError callback
     }
   };

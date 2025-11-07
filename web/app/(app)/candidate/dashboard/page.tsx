@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUserStore } from '@/lib/stores/userStore'
+import logger from '@/lib/utils/logger'
 import type { CandidatePlatformRow } from '@/types/candidate'
 
 export default function CandidateDashboardPage() {
@@ -63,7 +64,7 @@ export default function CandidateDashboardPage() {
         alert(`❌ ${result.message || 'Verification failed'}`)
       }
     } catch (error) {
-      console.error('FEC verification error:', error)
+      logger.error('FEC verification error:', error)
       alert('Failed to verify with FEC. Please try again.')
     } finally {
       setVerifying(null)

@@ -20,11 +20,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay, HashtagManagement } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { useHashtagStore } from '@/lib/stores';
 import { cn } from '@/lib/utils';
+import logger from '@/lib/utils/logger';
 
 import type { 
-  UserProfile 
+UserProfile 
 } from '../index';
 
 type ProfileHashtagIntegrationProps = {
@@ -43,9 +44,7 @@ export default function ProfileHashtagIntegration({
   const [hashtagIntegration, setHashtagIntegration] = useState<any | null>(null);
 
   // Hashtag store hooks
-  const { hashtags, trendingHashtags, followedHashtags, isLoading, error } = useHashtagStore();
-  const { searchHashtags, clearErrors } = useHashtagActions();
-  const { } = useHashtagStats();
+  const { hashtags, trendingHashtags, followedHashtags } = useHashtagStore();
 
   // Load user hashtags on mount
   useEffect(() => {
@@ -58,7 +57,7 @@ export default function ProfileHashtagIntegration({
     try {
       // Note: followHashtag not available in minimal store
       // This would be implemented when full hashtag system is available
-      console.log('Follow hashtag:', hashtag.id);
+      logger.info('Follow hashtag:', hashtag.id);
       
       // Update local state
       setHashtagIntegration((prev: any) => ({
@@ -75,7 +74,7 @@ export default function ProfileHashtagIntegration({
       // Update profile
       onUpdate?.({});
     } catch (error) {
-      console.error('Failed to follow hashtag:', error);
+      logger.error('Failed to follow hashtag:', error);
     }
   };
 
@@ -84,7 +83,7 @@ export default function ProfileHashtagIntegration({
     try {
       // Note: unfollowHashtag not available in minimal store
       // This would be implemented when full hashtag system is available
-      console.log('Unfollow hashtag:', hashtag.id);
+      logger.info('Unfollow hashtag:', hashtag.id);
       
       // Update local state
       setHashtagIntegration((prev: any) => ({
@@ -96,7 +95,7 @@ export default function ProfileHashtagIntegration({
       // Update profile
       onUpdate?.({});
     } catch (error) {
-      console.error('Failed to unfollow hashtag:', error);
+      logger.error('Failed to unfollow hashtag:', error);
     }
   };
 

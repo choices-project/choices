@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';

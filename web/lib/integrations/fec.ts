@@ -9,6 +9,8 @@
  * @created 2025-01-30
  */
 
+import logger from '@/lib/utils/logger'
+
 import type { FECCommittee } from './fec/client'
 
 export type FECCandidate = {
@@ -69,7 +71,7 @@ export class FECClient {
 
       return null
     } catch (error) {
-      console.error('FEC API error:', error)
+      logger.error('FEC API error:', error)
       // Error logged, return null to indicate verification failure
       return null
     }
@@ -93,7 +95,7 @@ export class FECClient {
 
       return response.results ?? []
     } catch (error) {
-      console.error('FEC API search error:', error)
+      logger.error('FEC API search error:', error)
       // Error logged, return empty array
       return []
     }
@@ -110,7 +112,7 @@ export class FECClient {
 
       return response.results ?? []
     } catch (error) {
-      console.error('FEC API committees error:', error)
+      logger.error('FEC API committees error:', error)
       // Error logged, return empty array
       return []
     }
@@ -170,7 +172,7 @@ export function createFECClient(apiKey?: string): FECClient {
   const key = apiKey ?? process.env.FEC_API_KEY ?? ''
   
   if (!key) {
-    console.warn('FEC_API_KEY not configured. FEC features will be limited.')
+    logger.warn('FEC_API_KEY not configured. FEC features will be limited.')
   }
 
   return new FECClient({

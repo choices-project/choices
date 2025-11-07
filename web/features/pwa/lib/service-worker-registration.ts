@@ -1,3 +1,5 @@
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 /**
  * @fileoverview Service Worker Registration and Lifecycle Management
  * 
@@ -100,33 +102,33 @@ function isProduction(): boolean {
  * @example
  * ```typescript
  * register({
- *   onSuccess: (registration) => console.log('SW registered:', registration),
+ *   onSuccess: (registration) => logger.info('SW registered:', registration),
  *   onUpdate: (registration) => notifyUser('App update available!'),
- *   onError: (error) => console.error('SW registration failed:', error),
+ *   onError: (error) => logger.error('SW registration failed:', error),
  * });
  * ```
  */
 export async function register(config: ServiceWorkerConfig = {}): Promise<ServiceWorkerRegistration | null> {
   // Only register in browser environment
   if (typeof window === 'undefined') {
-    if (config.debug) console.log('[SW] Server-side, skipping registration');
+    if (config.debug) logger.info('[SW] Server-side, skipping registration');
     return null;
   }
   
   // Check browser support
   if (!isServiceWorkerSupported()) {
-    if (config.debug) console.log('[SW] Service workers not supported');
+    if (config.debug) logger.info('[SW] Service workers not supported');
     return null;
   }
   
   // Check environment
   if (!isProduction()) {
-    if (config.debug) console.log('[SW] Non-production environment detected');
+    if (config.debug) logger.info('[SW] Non-production environment detected');
     // Still allow registration in development for testing
   }
   
   try {
-    if (config.debug) console.log('[SW] Registering service worker...');
+    if (config.debug) logger.info('[SW] Registering service worker...');
     
     // Wait for page to load before registering
     if (document.readyState === 'loading') {
@@ -144,8 +146,8 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     state.isRegistered = true;
     
     if (config.debug) {
-      console.log('[SW] Registration successful:', registration);
-      console.log('[SW] Scope:', registration.scope);
+      logger.info('[SW] Registration successful:', registration);
+      logger.info('[SW] Scope:', registration.scope);
     }
     
     // Set up update detection
@@ -155,13 +157,13 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     
     // Check for updates periodically (every hour)
     setInterval(() => {
-      if (config.debug) console.log('[SW] Checking for updates...');
+      if (config.debug) logger.info('[SW] Checking for updates...');
       registration.update();
     }, 60 * 60 * 1000);
     
     // Handle initial state
     if (registration.active) {
-      if (config.debug) console.log('[SW] Service worker active');
+      if (config.debug) logger.info('[SW] Service worker active');
       config.onActive?.();
     }
     
@@ -174,7 +176,7 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     return registration;
     
   } catch (error) {
-    console.error('[SW] Registration failed:', error);
+    logger.error('[SW] Registration failed:', error);
     config.onError?.(error as Error);
     return null;
   }
@@ -191,24 +193,24 @@ function handleUpdateFound(registration: ServiceWorkerRegistration, config: Serv
   
   if (!installingWorker) return;
   
-  if (config.debug) console.log('[SW] Update found, installing new version...');
+  if (config.debug) logger.info('[SW] Update found, installing new version...');
   
   installingWorker.addEventListener('statechange', () => {
     if (installingWorker.state === 'installed') {
       if (navigator.serviceWorker.controller) {
         // New service worker available
-        if (config.debug) console.log('[SW] New version available!');
+        if (config.debug) logger.info('[SW] New version available!');
         state.isUpdateAvailable = true;
         config.onUpdate?.(registration);
       } else {
         // First install
-        if (config.debug) console.log('[SW] Content cached for offline use');
+        if (config.debug) logger.info('[SW] Content cached for offline use');
         config.onActive?.();
       }
     }
     
     if (installingWorker.state === 'activated') {
-      if (config.debug) console.log('[SW] New version activated');
+      if (config.debug) logger.info('[SW] New version activated');
       state.isUpdateAvailable = false;
     }
   });
@@ -222,12 +224,12 @@ function handleUpdateFound(registration: ServiceWorkerRegistration, config: Serv
 function setupNetworkDetection(config: ServiceWorkerConfig): void {
   window.addEventListener('online', () => {
     state.isOffline = false;
-    if (config.debug) console.log('[SW] Network: Online');
+    if (config.debug) logger.info('[SW] Network: Online');
   });
   
   window.addEventListener('offline', () => {
     state.isOffline = true;
-    if (config.debug) console.log('[SW] Network: Offline');
+    if (config.debug) logger.info('[SW] Network: Offline');
   });
 }
 
@@ -246,7 +248,7 @@ function setupNetworkDetection(config: ServiceWorkerConfig): void {
  */
 export async function activateUpdate(): Promise<void> {
   if (!state.registration?.waiting) {
-    console.warn('[SW] No waiting service worker to activate');
+    logger.warn('[SW] No waiting service worker to activate');
     return;
   }
   
@@ -270,7 +272,7 @@ export async function activateUpdate(): Promise<void> {
  * @example
  * ```typescript
  * await unregister();
- * console.log('Service worker unregistered');
+ * logger.info('Service worker unregistered');
  * ```
  */
 export async function unregister(): Promise<boolean> {
@@ -283,7 +285,7 @@ export async function unregister(): Promise<boolean> {
     const success = await registration.unregister();
     
     if (success) {
-      console.log('[SW] Unregistered successfully');
+      logger.info('[SW] Unregistered successfully');
       state.registration = null;
       state.isRegistered = false;
       state.isUpdateAvailable = false;
@@ -291,7 +293,7 @@ export async function unregister(): Promise<boolean> {
     
     return success;
   } catch (error) {
-    console.error('[SW] Unregister failed:', error);
+    logger.error('[SW] Unregister failed:', error);
     return false;
   }
 }
@@ -302,7 +304,7 @@ export async function unregister(): Promise<boolean> {
  * @returns {RegistrationState} Current state
  */
 export function getState(): Readonly<RegistrationState> {
-  return { ...state };
+  return withOptional(state) as Readonly<RegistrationState>;
 }
 
 /**
@@ -341,7 +343,7 @@ export function isUpdateAvailable(): boolean {
  * @example
  * ```typescript
  * const version = await sendMessage({ type: 'GET_VERSION' });
- * console.log('SW version:', version);
+ * logger.info('SW version:', version);
  * ```
  */
 export async function sendMessage(message: any): Promise<any> {
@@ -380,7 +382,7 @@ export async function clearCaches(): Promise<void> {
   }
   
   state.registration.active.postMessage({ type: 'CLEAR_CACHE' });
-  console.log('[SW] Cache clear requested');
+  logger.info('[SW] Cache clear requested');
 }
 
 /**
@@ -393,7 +395,7 @@ export async function getVersion(): Promise<string> {
     const response = await sendMessage({ type: 'GET_VERSION' });
     return response.version;
   } catch (error) {
-    console.error('[SW] Failed to get version:', error);
+    logger.error('[SW] Failed to get version:', error);
     return 'unknown';
   }
 }

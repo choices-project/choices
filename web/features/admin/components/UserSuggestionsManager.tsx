@@ -5,7 +5,7 @@
 // for MVP deployment
 
 import { 
-  CheckCircle, 
+CheckCircle, 
   X, 
   Tag,
   MessageSquare,
@@ -15,6 +15,7 @@ import {
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
+import logger from '@/lib/utils/logger'
 
 type UserSuggestion = {
   id: string;
@@ -68,7 +69,7 @@ export default function UserSuggestionsManager() {
         setSuggestions(data.feedback || data.suggestions || []);
       }
     } catch (error) {
-      console.error('Failed to load user suggestions:', error);
+      logger.error('Failed to load user suggestions:', error);
       // Error loading suggestions - handled by error boundary
     } finally {
       setLoading(false);
@@ -108,7 +109,7 @@ export default function UserSuggestionsManager() {
         );
       }
     } catch (error) {
-      console.error('Failed to update suggestion status:', error);
+      logger.error('Failed to update suggestion status:', error);
       // Error updating suggestion status - handled by error boundary
     }
   };

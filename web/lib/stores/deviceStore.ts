@@ -12,6 +12,9 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { withOptional } from '@/lib/util/objects';
+
+import { createSafeStorage } from './storage';
 
 // ============================================================================
 // TYPES
@@ -104,6 +107,9 @@ export type DeviceStore = {
   
   // Initialization
   initialize: () => void;
+  teardown: () => void;
+  listenersRegistered: boolean;
+  cleanupListeners: (() => void) | null;
 }
 
 // ============================================================================
@@ -258,6 +264,8 @@ export const useDeviceStore = create<DeviceStore>()(
         
         isLoading: false,
         isInitializing: true,
+        listenersRegistered: false,
+        cleanupListeners: null,
         error: null,
 
         // Actions
@@ -321,7 +329,7 @@ export const useDeviceStore = create<DeviceStore>()(
 
         setNetworkInfo: (network: Partial<NetworkInfo>) => {
           set((state) => {
-            state.network = { ...state.network, ...network };
+            state.network = withOptional(state.network, network);
           });
         },
 
@@ -357,10 +365,18 @@ export const useDeviceStore = create<DeviceStore>()(
 
         // Initialization
         initialize: () => {
+          const { cleanupListeners, listenersRegistered } = get();
+
+          if (listenersRegistered) {
+            cleanupListeners?.();
+          }
+
           set((state) => {
             state.isInitializing = true;
             state.error = null;
           });
+
+          const cleanupFns: Array<() => void> = [];
 
           try {
             if (typeof window !== 'undefined') {
@@ -392,17 +408,34 @@ export const useDeviceStore = create<DeviceStore>()(
                 get().setNetworkInfo(detectNetworkInfo());
               };
 
-              // Add event listeners
               window.addEventListener('resize', handleResize);
+              cleanupFns.push(() => window.removeEventListener('resize', handleResize));
+
               window.addEventListener('orientationchange', handleOrientationChange);
+              cleanupFns.push(() => window.removeEventListener('orientationchange', handleOrientationChange));
+
               window.addEventListener('online', handleOnline);
+              cleanupFns.push(() => window.removeEventListener('online', handleOnline));
+
               window.addEventListener('offline', handleOffline);
+              cleanupFns.push(() => window.removeEventListener('offline', handleOffline));
               
               if ('connection' in navigator) {
-                (navigator as any).connection?.addEventListener('change', handleConnectionChange);
+                const connection = (navigator as any).connection;
+                if (connection?.addEventListener) {
+                  connection.addEventListener('change', handleConnectionChange);
+                  cleanupFns.push(() => connection.removeEventListener?.('change', handleConnectionChange));
+                } else if (connection) {
+                  const originalHandler = connection.onchange;
+                  connection.onchange = handleConnectionChange;
+                  cleanupFns.push(() => {
+                    if (connection.onchange === handleConnectionChange) {
+                      connection.onchange = originalHandler ?? null;
+                    }
+                  });
+                }
               }
 
-              // Listen for capability changes
               const mediaQueries = {
                 hover: window.matchMedia('(hover: hover)'),
                 reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
@@ -414,29 +447,56 @@ export const useDeviceStore = create<DeviceStore>()(
                 const handler = (e: MediaQueryListEvent) => {
                   get().setCapability(capability as keyof DeviceCapabilities, e.matches);
                 };
-                mediaQuery.addEventListener('change', handler);
+
+                if (mediaQuery.addEventListener) {
+                  mediaQuery.addEventListener('change', handler);
+                  cleanupFns.push(() => mediaQuery.removeEventListener('change', handler));
+                } else {
+                  mediaQuery.addListener(handler);
+                  cleanupFns.push(() => mediaQuery.removeListener(handler));
+                }
               });
+
+              const release = () => {
+                cleanupFns.forEach((fn) => fn());
+                set((state) => {
+                  state.listenersRegistered = false;
+                  state.cleanupListeners = null;
+                });
+              };
 
               set((state) => {
                 state.isInitializing = false;
+                state.listenersRegistered = true;
+                state.cleanupListeners = release;
               });
             } else {
-              // Server-side fallback
               set((state) => {
                 state.isInitializing = false;
+                state.listenersRegistered = false;
+                state.cleanupListeners = null;
               });
             }
 
           } catch (error) {
+            cleanupFns.forEach((fn) => fn());
             set((state) => {
               state.error = error instanceof Error ? error.message : 'Failed to initialize device detection';
               state.isInitializing = false;
+              state.listenersRegistered = false;
+              state.cleanupListeners = null;
             });
           }
+        },
+
+        teardown: () => {
+          const { cleanupListeners } = get();
+          cleanupListeners?.();
         }
       })),
       {
         name: 'device-storage',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           deviceType: state.deviceType,
           screenSize: state.screenSize,
@@ -538,11 +598,15 @@ export const useDeviceCapabilities = () => {
   const isOnline = useIsOnline();
   const lowData = useLowData();
 
-  return {
-    ...capabilities,
+  return withOptional(capabilities, {
     isOnline,
     isOffline: !isOnline,
     isLowData: lowData,
-    canUseAdvancedFeatures: isOnline && !lowData && capabilities.camera && capabilities.microphone
+    canUseAdvancedFeatures: isOnline && !lowData && capabilities.camera && capabilities.microphone,
+  }) as DeviceCapabilities & {
+    isOnline: boolean;
+    isOffline: boolean;
+    isLowData: boolean;
+    canUseAdvancedFeatures: boolean;
   };
 };

@@ -2,6 +2,8 @@
 // PHASE 2: LEGAL COMPLIANCE FRAMEWORK
 // ============================================================================
 
+import logger from '@/lib/utils/logger';
+
 import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
@@ -22,7 +24,6 @@ import { withOptional } from '../util/objects';
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-
 export type ConsentRecord = {
   userId: string;
   type: 'sms' | 'email' | 'analytics' | 'marketing';
@@ -138,7 +139,7 @@ export class CommunicationComplianceManager {
       
       return true;
     } catch (error) {
-      console.error('SMS sending failed:', error);
+      logger.error('SMS sending failed:', error);
       return false;
     }
   }
@@ -193,7 +194,7 @@ export class CommunicationComplianceManager {
     this.consentRegistry.set(consentKey, consentRecord);
     
     // Log consent change
-    console.log(`Consent recorded: ${userId} ${type} ${granted ? 'granted' : 'denied'}`);
+    logger.info(`Consent recorded: ${userId} ${type} ${granted ? 'granted' : 'denied'}`);
   }
 
   // ============================================================================
@@ -237,7 +238,7 @@ export class CommunicationComplianceManager {
       
       return true;
     } catch (error) {
-      console.error('Email sending failed:', error);
+      logger.error('Email sending failed:', error);
       return false;
     }
   }
@@ -275,7 +276,7 @@ export class CommunicationComplianceManager {
 
       return true;
     } catch (error) {
-      console.error('Unsubscribe processing failed:', error);
+      logger.error('Unsubscribe processing failed:', error);
       return false;
     }
   }
@@ -343,7 +344,7 @@ export class CommunicationComplianceManager {
       
       return true;
     } catch (error) {
-      console.error('Parental consent verification failed:', error);
+      logger.error('Parental consent verification failed:', error);
       return false;
     }
   }
@@ -373,7 +374,7 @@ export class CommunicationComplianceManager {
 
       return true;
     } catch (error) {
-      console.error('Parental consent processing failed:', error);
+      logger.error('Parental consent processing failed:', error);
       return false;
     }
   }
@@ -487,7 +488,7 @@ export class CommunicationComplianceManager {
 
   private initializeComplianceRules(): void {
     // Initialize compliance rules and configurations
-    console.log('Communication compliance rules initialized');
+    logger.info('Communication compliance rules initialized');
   }
 
   private async getUserIP(userId: string): Promise<string> {
@@ -530,7 +531,7 @@ export class CommunicationComplianceManager {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
-    console.log(`Communication logged: ${type} to ${recipient} for user ${userId}, content length: ${contentLength}, hash: ${Math.abs(contentHash)}`);
+    logger.info(`Communication logged: ${type} to ${recipient} for user ${userId}, content length: ${contentLength}, hash: ${Math.abs(contentHash)}`);
   }
 
   private async generateUnsubscribeToken(email: string): Promise<string> {
@@ -591,7 +592,7 @@ export class CommunicationComplianceManager {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
-    console.log(`Parental consent email sent to ${parentEmail} (hash: ${Math.abs(emailHash)}) with token ${token} (hash: ${Math.abs(tokenHash)})`);
+    logger.info(`Parental consent email sent to ${parentEmail} (hash: ${Math.abs(emailHash)}) with token ${token} (hash: ${Math.abs(tokenHash)})`);
   }
 
   private async storePendingConsent(childUserId: string, parentEmail: string, token: string): Promise<void> {
@@ -608,7 +609,7 @@ export class CommunicationComplianceManager {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
-    console.log(`Pending consent stored for child ${childUserId} (hash: ${Math.abs(childHash)}), parent ${parentEmail} (hash: ${Math.abs(parentHash)}), token (hash: ${Math.abs(tokenHash)})`);
+    logger.info(`Pending consent stored for child ${childUserId} (hash: ${Math.abs(childHash)}), parent ${parentEmail} (hash: ${Math.abs(parentHash)}), token (hash: ${Math.abs(tokenHash)})`);
   }
 
   private async validateParentalConsentToken(token: string): Promise<any> {
@@ -628,7 +629,7 @@ export class CommunicationComplianceManager {
 
   private async notifyChildUser(childUserId: string, consentGranted: boolean): Promise<void> {
     // Notify child user of consent status
-    console.log(`Child user ${childUserId} notified of consent status: ${consentGranted}`);
+    logger.info(`Child user ${childUserId} notified of consent status: ${consentGranted}`);
   }
 
   private async getDataSubjectRequestHistory(userId: string): Promise<DataSubjectRequest[]> {
@@ -669,14 +670,14 @@ export class CommunicationComplianceManager {
 
   private async storeDataSubjectRequest(userId: string, request: DataSubjectRequest): Promise<void> {
     // Store data subject request
-    console.log(`Data subject request stored: ${request.id}`);
+    logger.info(`Data subject request stored: ${request.id}`);
   }
 
   private async processDataSubjectRequest(requestId: string, type: string, details: any): Promise<void> {
     // Process data subject request
     const detailsStr = details ? JSON.stringify(details) : 'no details';
     const detailsLength = detailsStr.length;
-    console.log(`Processing data subject request: ${requestId} of type ${type} with ${detailsLength} characters of details`);
+    logger.info(`Processing data subject request: ${requestId} of type ${type} with ${detailsLength} characters of details`);
   }
 
   private async auditTCPACompliance(): Promise<ComplianceViolation[]> {

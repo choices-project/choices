@@ -22,11 +22,11 @@ import type {
 // } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
 
 // Temporary stub types until civics features are re-enabled
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type AddressLookupResult = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Representative = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type CandidateCardV1 = any;
 
 export type TransformedRepresentative = {

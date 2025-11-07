@@ -4,10 +4,11 @@
  */
 
 import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 // Defensive check for module loading - log if this file is being loaded
 if (typeof window !== 'undefined') {
-  console.log('[FEATURE_FLAGS] Module loading on client');
+  logger.info('[FEATURE_FLAGS] Module loading on client');
 }
 
 export const FEATURE_FLAGS = {
@@ -355,7 +356,7 @@ export const featureFlagManager = {
   },
   updateFlagMetadata: (flagId: string, metadata: FeatureFlagMetadata): boolean => {
     // For now, just return true - in a real app, this would update flag metadata
-    console.log(`Updating metadata for flag ${flagId}:`, metadata);
+    logger.info(`Updating metadata for flag ${flagId}:`, metadata);
     return true;
   },
   reset: (): void => {

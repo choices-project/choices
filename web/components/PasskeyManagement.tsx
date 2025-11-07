@@ -45,7 +45,7 @@ export function PasskeyManagement() {
     try {
       setError(null);
       const result = await beginRegister();
-      if (result.ok) {
+      if (result.success) {
         await loadPasskeys();
       } else {
         setError('Failed to add passkey');

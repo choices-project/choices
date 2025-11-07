@@ -9,12 +9,14 @@
  */
 
 'use client';
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import logger from '@/lib/utils/logger';
+
 
 
 import type { UserProfile, ProfileUpdateData, ExportOptions, ProfileActionResult , 
-  UseProfileReturn, 
+UseProfileReturn, 
   UseProfileUpdateReturn, 
   UseProfileAvatarReturn, 
   UseProfileExportReturn 
@@ -174,7 +176,7 @@ export function useProfileExport(): UseProfileExportReturn {
             }
           }
         } catch (error) {
-          console.error('Error downloading export file:', error);
+          logger.error('Error downloading export file:', error);
         }
       }
     },

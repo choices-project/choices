@@ -1,7 +1,7 @@
 'use client';
 
 import { 
-  Fingerprint, 
+Fingerprint, 
   Loader2, 
   CheckCircle, 
   AlertCircle, 
@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 type PasskeyRegisterProps = {
   onSuccess?: (credential: any) => void;
@@ -49,7 +51,7 @@ export function PasskeyRegister({
     try {
       return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     } catch (err) {
-      console.error('Error checking platform authenticator:', err);
+      logger.error('Error checking platform authenticator:', err);
       return false;
     }
   };
@@ -89,15 +91,21 @@ export function PasskeyRegister({
       const credentialOptions = await response.json();
 
       // Create credential
-      const credential = await navigator.credentials.create({
-        publicKey: {
-          ...credentialOptions,
-          authenticatorSelection: {
-            ...credentialOptions.authenticatorSelection,
-            userVerification: 'required',
-            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform'
-          }
+      const publicKeyOptions = withOptional(
+        credentialOptions ?? {},
+        {
+          authenticatorSelection: withOptional(
+            credentialOptions?.authenticatorSelection ?? {},
+            {
+              userVerification: 'required',
+              authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+            }
+          ),
         }
+      );
+
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyOptions,
       }) as PublicKeyCredential;
 
       if (!credential) {

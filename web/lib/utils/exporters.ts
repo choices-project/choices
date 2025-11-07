@@ -1,23 +1,24 @@
+import logger from '@/lib/utils/logger';
 /**
  * Data Export Utilities
- * 
+ *
  * Comprehensive export functionality for analytics data.
  * Supports CSV, JSON, and PNG export formats.
- * 
+ *
  * Features:
  * - CSV export with proper escaping
  * - JSON export with formatting
  * - PNG export for charts (using html2canvas)
  * - Automatic filename generation
  * - Privacy-aware exports (exclude sensitive data)
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
 
 /**
  * Export data to CSV format
- * 
+ *
  * @param data Array of objects to export
  * @param filename Filename without extension
  * @param headers Optional custom headers (defaults to object keys)
@@ -28,28 +29,28 @@ export function exportToCSV<T extends Record<string, any>>(
   headers?: string[]
 ): void {
   if (data.length === 0) {
-    console.warn('No data to export');
+    logger.warn('No data to export');
     return;
   }
 
   // Use provided headers or extract from first object
   const firstItem = data[0];
   if (!firstItem) {
-    console.warn('No data to export');
+    logger.warn('No data to export');
     return;
   }
   const csvHeaders = headers || Object.keys(firstItem);
-  
+
   // Create CSV rows
   const rows = data.map(item => {
     return csvHeaders.map(header => {
       const value = item[header];
-      
+
       // Handle different types
       if (value === null || value === undefined) {
         return '';
       }
-      
+
       // Escape strings with quotes or commas
       if (typeof value === 'string') {
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -57,21 +58,18 @@ export function exportToCSV<T extends Record<string, any>>(
         }
         return value;
       }
-      
+
       // Convert objects to JSON strings
       if (typeof value === 'object') {
         return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
       }
-      
+
       return String(value);
     }).join(',');
   });
 
   // Combine headers and rows
-  const csvContent = [
-    csvHeaders.join(','),
-    ...rows
-  ].join('\n');
+  const csvContent = [csvHeaders.join(','), ...rows].join('\n');
 
   // Download file
   downloadFile(csvContent, `${filename}.csv`, 'text/csv;charset=utf-8;');
@@ -79,7 +77,7 @@ export function exportToCSV<T extends Record<string, any>>(
 
 /**
  * Export data to JSON format
- * 
+ *
  * @param data Data to export (any JSON-serializable type)
  * @param filename Filename without extension
  * @param pretty Whether to format with indentation
@@ -89,7 +87,7 @@ export function exportToJSON<T>(
   filename: string,
   pretty: boolean = true
 ): void {
-  const jsonContent = pretty 
+  const jsonContent = pretty
     ? JSON.stringify(data, null, 2)
     : JSON.stringify(data);
 
@@ -99,7 +97,7 @@ export function exportToJSON<T>(
 /**
  * Export chart/component to PNG image
  * Uses html2canvas library (must be installed: npm install html2canvas)
- * 
+ *
  * @param elementId ID of the element to capture
  * @param filename Filename without extension
  */
@@ -108,31 +106,26 @@ export async function exportToPNG(
   filename: string
 ): Promise<void> {
   try {
-    // Dynamic import to avoid SSR issues
-    // @ts-expect-error - html2canvas is optional dependency
-    const html2canvas = await import('html2canvas').catch(() => {
-      throw new Error('html2canvas not installed. Run: npm install html2canvas');
-    });
-    
+    const html2canvasModule = await import('html2canvas');
+    const html2canvas = html2canvasModule.default ?? html2canvasModule;
+
     const element = document.getElementById(elementId);
-    
+
     if (!element) {
       throw new Error(`Element with ID "${elementId}" not found`);
     }
 
-    // Capture element as canvas
-    const canvas = await html2canvas.default(element, {
+    const canvas = await html2canvas(element, {
       backgroundColor: '#ffffff',
-      scale: 2, // Higher quality
+      scale: 2,
       logging: false
     });
 
-    // Convert to blob and download
     canvas.toBlob((blob: Blob | null) => {
       if (!blob) {
         throw new Error('Failed to create image blob');
       }
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -141,15 +134,15 @@ export async function exportToPNG(
       URL.revokeObjectURL(url);
     });
   } catch (err) {
-    console.error('Failed to export PNG:', err);
-    throw new Error('PNG export failed. Ensure html2canvas is installed: npm install html2canvas');
+    logger.error('Failed to export PNG:', err);
+    throw new Error('PNG export failed. Ensure html2canvas is installed.');
   }
 }
 
 /**
  * Export chart using Chart.js or Recharts native export
  * This is a lighter alternative to html2canvas
- * 
+ *
  * @param chartData Chart data
  * @param filename Filename without extension
  * @param chartType Type of chart for formatting
@@ -166,7 +159,7 @@ export function exportChartData(
 /**
  * Create a shareable link to analytics view
  * Link expires after specified duration
- * 
+ *
  * @param dashboardId Dashboard or widget to share
  * @param expiresInDays Number of days until link expires
  * @returns Shareable URL
@@ -192,14 +185,14 @@ export async function createShareableLink(
     const result = await response.json();
     return result.shareUrl;
   } catch (err) {
-    console.error('Failed to create shareable link:', err);
+    logger.error('Failed to create shareable link:', err);
     throw err;
   }
 }
 
 /**
  * Helper function to download a file
- * 
+ *
  * @param content File content
  * @param filename Filename with extension
  * @param mimeType MIME type
@@ -209,28 +202,28 @@ function downloadFile(
   filename: string,
   mimeType: string
 ): void {
-  const blob = content instanceof Blob 
-    ? content 
+  const blob = content instanceof Blob
+    ? content
     : new Blob([content], { type: mimeType });
-  
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  
+
   link.href = url;
   link.download = filename;
   link.style.visibility = 'hidden';
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   // Clean up
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 /**
  * Generate filename with timestamp
- * 
+ *
  * @param prefix Filename prefix
  * @param extension File extension (without dot)
  * @returns Filename with timestamp
@@ -243,7 +236,7 @@ export function generateFilename(prefix: string, extension: string): string {
 /**
  * Privacy-aware export
  * Removes sensitive fields before exporting
- * 
+ *
  * @param data Data to export
  * @param sensitiveFields Fields to exclude
  */
@@ -255,11 +248,8 @@ export function exportWithPrivacy<T extends Record<string, any>>(
 ): void {
   // Remove sensitive fields
   const sanitized = data.map(item => {
-    const clean = { ...item };
-    sensitiveFields.forEach(field => {
-      delete clean[field];
-    });
-    return clean;
+    const entries = Object.entries(item).filter(([key]) => !sensitiveFields.includes(key));
+    return Object.fromEntries(entries) as T;
   });
 
   // Export based on format
@@ -274,7 +264,7 @@ export function exportWithPrivacy<T extends Record<string, any>>(
  * Batch export multiple datasets
  * Creates a ZIP file with multiple CSV/JSON files
  * Requires jszip: npm install jszip
- * 
+ *
  * @param exports Array of export configurations
  * @param zipFilename Name for the ZIP file
  */
@@ -287,29 +277,26 @@ export async function exportBatch(
   zipFilename: string
 ): Promise<void> {
   try {
-    // Dynamic import to avoid SSR issues
-    // @ts-expect-error - jszip is optional dependency
-    const JSZip = await import('jszip').catch(() => {
-      throw new Error('jszip not installed. Run: npm install jszip');
-    });
-    const zip = new JSZip.default();
+    const jsZipModule = await import('jszip');
+    const JSZip = jsZipModule.default ?? jsZipModule;
+    const zip = new JSZip();
 
     // Add each export to the ZIP
     exports.forEach(({ data, filename, format }) => {
       const content = format === 'csv'
         ? generateCSVContent(data)
         : JSON.stringify(data, null, 2);
-      
+
       zip.file(`${filename}.${format}`, content);
     });
 
     // Generate ZIP blob
     const blob = await zip.generateAsync({ type: 'blob' });
-    
+
     // Download
     downloadFile(blob, `${zipFilename}.zip`, 'application/zip');
   } catch (err) {
-    console.error('Failed to create batch export:', err);
+    logger.error('Failed to create batch export:', err);
     throw new Error('Batch export failed. Ensure jszip is installed: npm install jszip');
   }
 }
@@ -323,9 +310,9 @@ function generateCSVContent<T extends Record<string, any>>(data: T[]): string {
 
   const firstItem = data[0];
   if (!firstItem) return '';
-  
+
   const headers = Object.keys(firstItem);
-  const rows = data.map(item => 
+  const rows = data.map(item =>
     headers.map(h => {
       const val = item[h];
       if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
@@ -341,7 +328,7 @@ function generateCSVContent<T extends Record<string, any>>(data: T[]): string {
 /**
  * Schedule automatic export
  * For recurring reports (future enhancement)
- * 
+ *
  * @param config Export configuration
  */
 export async function scheduleExport(config: {
@@ -351,7 +338,7 @@ export async function scheduleExport(config: {
   recipients: string[];
 }): Promise<void> {
   // Implementation suggestion: Use Next.js API routes with cron or Vercel Cron Jobs
-  console.log('Scheduled export configured:', config);
+  logger.info('Scheduled export configured:', config);
   throw new Error('Scheduled exports not yet implemented');
 }
 

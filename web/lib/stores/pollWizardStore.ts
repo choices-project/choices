@@ -10,8 +10,9 @@
  */
 
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 
@@ -94,6 +95,19 @@ const INITIAL_WIZARD_STATE: PollWizardState = {
   canProceed: false,
   isComplete: false
 };
+
+const mergeWizardData = (data: PollWizardData, updates: Partial<PollWizardData>) =>
+  withOptional(data, updates as Record<string, unknown>) as PollWizardData;
+
+const mergeWizardSettings = (
+  settings: PollWizardData['settings'],
+  updates: Partial<PollWizardData['settings']>
+) => withOptional(settings, updates as Record<string, unknown>) as PollWizardData['settings'];
+
+const mergeWizardErrors = (
+  errors: Record<string, string>,
+  updates: Record<string, string | undefined>
+) => withOptional(errors, updates as Record<string, unknown>) as Record<string, string>;
 
 // Store interface
 type PollWizardStore = {
@@ -199,13 +213,26 @@ const validateStep = (step: number, data: PollWizardData): Record<string, string
 // Create the store
 export const usePollWizardStore = create<PollWizardStore>()(
   devtools(
-    persist(
-      (set, get) => ({
-        ...INITIAL_WIZARD_STATE,
+    (set, get) => ({
+        currentStep: INITIAL_WIZARD_STATE.currentStep,
+        totalSteps: INITIAL_WIZARD_STATE.totalSteps,
+        data: INITIAL_WIZARD_STATE.data,
+        isLoading: INITIAL_WIZARD_STATE.isLoading,
+        errors: INITIAL_WIZARD_STATE.errors,
+        progress: INITIAL_WIZARD_STATE.progress,
+        canGoBack: INITIAL_WIZARD_STATE.canGoBack,
+        canProceed: INITIAL_WIZARD_STATE.canProceed,
+        isComplete: INITIAL_WIZARD_STATE.isComplete,
 
         // Step navigation actions
         nextStep: () => {
           const state = get();
+          const errors = validateStep(state.currentStep, state.data);
+          if (Object.keys(errors).length > 0) {
+            set({ errors, canProceed: false });
+            return;
+          }
+
           const nextStep = Math.min(state.currentStep + 1, state.totalSteps - 1);
           const progress = ((nextStep + 1) / state.totalSteps) * 100;
           
@@ -214,7 +241,8 @@ export const usePollWizardStore = create<PollWizardStore>()(
             progress,
             canGoBack: nextStep > 0,
             canProceed: nextStep < state.totalSteps - 1,
-            isComplete: nextStep === state.totalSteps - 1
+            isComplete: nextStep === state.totalSteps - 1,
+            errors: {},
           });
         },
 
@@ -235,6 +263,12 @@ export const usePollWizardStore = create<PollWizardStore>()(
 
         goToStep: (step: number) => {
           const state = get();
+          const errors = validateStep(state.currentStep, state.data);
+          if (Object.keys(errors).length > 0 && step > state.currentStep) {
+            set({ errors, canProceed: false });
+            return;
+          }
+
           const targetStep = Math.max(0, Math.min(step, state.totalSteps - 1));
           const progress = ((targetStep + 1) / state.totalSteps) * 100;
           
@@ -255,40 +289,43 @@ export const usePollWizardStore = create<PollWizardStore>()(
         // Data update actions
         updateData: (updates: Partial<PollWizardData>) => {
           const state = get();
-          const newData = { ...state.data, ...updates };
+          const newData = mergeWizardData(state.data, updates);
           const errors = validateStep(state.currentStep, newData);
           const canProceed = Object.keys(errors).length === 0;
           
           set({
             data: newData,
             canProceed,
-            errors
+            errors,
           });
         },
 
         updateSettings: (settings: Partial<PollWizardData['settings']>) => {
           const state = get();
-          const newSettings = { ...state.data.settings, ...settings };
-          const newData = { ...state.data, settings: newSettings };
-          
-          set({ data: newData });
+          const newSettings = mergeWizardSettings(state.data.settings, settings);
+          const newData = mergeWizardData(state.data, { settings: newSettings });
+          const errors = validateStep(state.currentStep, newData);
+ 
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         // Options management
         addOption: () => {
           const state = get();
           const newOptions = [...state.data.options, ''];
-          const newData = { ...state.data, options: newOptions };
-          
-          set({ data: newData });
+          const newData = mergeWizardData(state.data, { options: newOptions });
+          const errors = validateStep(state.currentStep, newData);
+
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         removeOption: (index: number) => {
           const state = get();
           const newOptions = state.data.options.filter((_, i) => i !== index);
-          const newData = { ...state.data, options: newOptions };
-          
-          set({ data: newData });
+          const newData = mergeWizardData(state.data, { options: newOptions });
+          const errors = validateStep(state.currentStep, newData);
+
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         updateOption: (index: number, value: string) => {
@@ -296,9 +333,10 @@ export const usePollWizardStore = create<PollWizardStore>()(
           const newOptions = state.data.options.map((option, i) => 
             i === index ? value : option
           );
-          const newData = { ...state.data, options: newOptions };
-          
-          set({ data: newData });
+          const newData = mergeWizardData(state.data, { options: newOptions });
+          const errors = validateStep(state.currentStep, newData);
+
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         // Tags management
@@ -306,25 +344,28 @@ export const usePollWizardStore = create<PollWizardStore>()(
           const state = get();
           if (!state.data.tags.includes(tag)) {
             const newTags = [...state.data.tags, tag];
-            const newData = { ...state.data, tags: newTags };
-            
-            set({ data: newData });
+            const newData = mergeWizardData(state.data, { tags: newTags });
+            const errors = validateStep(state.currentStep, newData);
+ 
+            set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
           }
         },
 
         removeTag: (tag: string) => {
           const state = get();
           const newTags = state.data.tags.filter(t => t !== tag);
-          const newData = { ...state.data, tags: newTags };
-          
-          set({ data: newData });
+          const newData = mergeWizardData(state.data, { tags: newTags });
+          const errors = validateStep(state.currentStep, newData);
+ 
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         updateTags: (tags: string[]) => {
           const state = get();
-          const newData = { ...state.data, tags };
-          
-          set({ data: newData });
+          const newData = mergeWizardData(state.data, { tags });
+          const errors = validateStep(state.currentStep, newData);
+
+          set({ data: newData, errors, canProceed: Object.keys(errors).length === 0 });
         },
 
         // Validation
@@ -351,7 +392,7 @@ export const usePollWizardStore = create<PollWizardStore>()(
         setError: (field: string, error: string) => {
           const state = get();
           set({
-            errors: { ...state.errors, [field]: error }
+            errors: mergeWizardErrors(state.errors, { [field]: error })
           });
         },
 
@@ -415,15 +456,6 @@ export const usePollWizardStore = create<PollWizardStore>()(
           return validateStep(step, state.data);
         }
       }),
-      {
-        name: 'poll-wizard-store',
-        partialize: (state) => ({
-          data: state.data,
-          currentStep: state.currentStep,
-          progress: state.progress
-        })
-      }
-    ),
     { name: 'poll-wizard-store' }
   )
 );

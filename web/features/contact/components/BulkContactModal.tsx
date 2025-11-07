@@ -20,6 +20,7 @@ import {
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
@@ -404,7 +405,7 @@ export default function BulkContactModal({
                         onChange={(e) => {
                           const value = e.target.value;
                           updateTemplateValue(placeholder.key, value);
-                          setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
+                          setLocalTemplateValues(prev => withOptional(prev, { [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"

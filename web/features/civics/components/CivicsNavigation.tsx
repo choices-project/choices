@@ -1,11 +1,13 @@
 'use client';
 
 import { 
-  MapPinIcon, 
+MapPinIcon, 
   UserGroupIcon, 
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
+
+import logger from '@/lib/utils/logger'
 
 type CivicsNavigationProps = {
   onRepresentativesClick: () => void;
@@ -29,7 +31,7 @@ export default function CivicsNavigation({
       setShowAddressForm(false);
       setNewAddress('');
     } catch (error) {
-      console.error('Address update failed:', error);
+      logger.error('Address update failed:', error);
     } finally {
       setAddressLoading(false);
     }

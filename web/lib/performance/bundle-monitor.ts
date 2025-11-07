@@ -1,10 +1,12 @@
+import { stripUndefinedDeep } from '@/lib/util/clean';
+import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 /**
  * Bundle Monitor
- * 
+ *
  * Monitors bundle size and provides alerts when thresholds are exceeded.
  * Integrates with webpack bundle analyzer and provides real-time monitoring.
  */
-
 type BundleMetrics = {
   name: string;
   size: number;
@@ -37,21 +39,22 @@ class BundleMonitor {
   private observers: ((metrics: BundleMetrics[]) => void)[] = [];
 
   constructor(thresholds?: Partial<BundleThresholds>) {
-    this.thresholds = Object.assign({
+    this.thresholds = withOptional({
       maxBundleSize: 512000, // 500KB
       maxChunkSize: 244000,  // 250KB
       warningBundleSize: 400000, // 400KB
       warningChunkSize: 200000,  // 200KB
-    }, thresholds);
+    }, thresholds ?? {});
   }
 
   /**
    * Add bundle metrics
    */
   addMetrics(metrics: Omit<BundleMetrics, 'timestamp'>): void {
-    const bundleMetrics: BundleMetrics = Object.assign({}, metrics, {
+    const bundleMetrics: BundleMetrics = withOptional({
+      ...stripUndefinedDeep(metrics),
       timestamp: Date.now(),
-    });
+    }) as BundleMetrics;
 
     this.metrics.push(bundleMetrics);
     this.checkThresholds(bundleMetrics);
@@ -90,7 +93,7 @@ class BundleMonitor {
       // This would need to be implemented with actual chunk size data
       // For now, we'll estimate based on bundle size
       const estimatedChunkSize = size / metrics.chunks.length;
-      
+
       if (estimatedChunkSize > this.thresholds.maxChunkSize) {
         this.addAlert({
           type: 'error',
@@ -118,12 +121,17 @@ class BundleMonitor {
    */
   private addAlert(alert: BundleAlert): void {
     this.alerts.push(alert);
-    
+
     // Log alert
-    const logMethod = alert.type === 'error' ? console.error : 
-                     alert.type === 'warning' ? console.warn : console.info;
-    
-    logMethod(`[Bundle Monitor] ${alert.message} (${this.formatBytes(alert.size)} > ${this.formatBytes(alert.threshold)})`);
+    const formattedMessage = `[Bundle Monitor] ${alert.message} (${this.formatBytes(alert.size)} > ${this.formatBytes(alert.threshold)})`;
+
+    if (alert.type === 'error') {
+      logger.error(formattedMessage);
+    } else if (alert.type === 'warning') {
+      logger.warn(formattedMessage);
+    } else {
+      logger.info(formattedMessage);
+    }
   }
 
   /**
@@ -159,7 +167,7 @@ class BundleMonitor {
    */
   subscribe(callback: (metrics: BundleMetrics[]) => void): () => void {
     this.observers.push(callback);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.observers.indexOf(callback);
@@ -189,11 +197,11 @@ class BundleMonitor {
   } {
     const totalSize = this.metrics.reduce((sum, metric) => sum + metric.size, 0);
     const averageSize = this.metrics.length > 0 ? totalSize / this.metrics.length : 0;
-    
-    const largestBundle = this.metrics.reduce((largest, current) => 
+
+    const largestBundle = this.metrics.reduce((largest, current) =>
       !largest || current.size > largest.size ? current : largest, null as BundleMetrics | null);
-    
-    const smallestBundle = this.metrics.reduce((smallest, current) => 
+
+    const smallestBundle = this.metrics.reduce((smallest, current) =>
       !smallest || current.size < smallest.size ? current : smallest, null as BundleMetrics | null);
 
     return {
@@ -211,11 +219,11 @@ class BundleMonitor {
    */
   private formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
@@ -241,7 +249,7 @@ class BundleMonitor {
       this.metrics = parsed.metrics || [];
       this.alerts = parsed.alerts || [];
     } catch (error) {
-      console.error('Failed to import metrics:', error);
+      logger.error('Failed to import metrics:', error);
     }
   }
 }

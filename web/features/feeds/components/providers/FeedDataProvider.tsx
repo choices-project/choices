@@ -22,6 +22,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useUserStore } from '@/lib/stores';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import { useHashtagStore } from '@/lib/stores/hashtagStore';
+import logger from '@/lib/utils/logger';
 
 type FeedDataProviderProps = {
   userId?: string;
@@ -97,7 +98,7 @@ export default function FeedDataProvider({
           setError(null);
         }
       } catch (err) {
-        console.error('Failed to load feeds:', err);
+        logger.error('Failed to load feeds:', err);
         if (mounted) {
           setError('Failed to load feeds');
         }
@@ -110,7 +111,7 @@ export default function FeedDataProvider({
       mounted = false;
     };
     // Only run on mount or when userId changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [userId, user?.id]);
 
   // Load trending hashtags on mount - ONCE
@@ -121,7 +122,7 @@ export default function FeedDataProvider({
       try {
         await hashtagStoreRef.current.getTrendingHashtags();
       } catch (err) {
-        console.error('Failed to load trending hashtags:', err);
+        logger.error('Failed to load trending hashtags:', err);
       }
     };
     
@@ -139,7 +140,7 @@ export default function FeedDataProvider({
     try {
       await feedsStoreRef.current.likeFeed(itemId);
     } catch (err) {
-      console.error('Failed to like feed:', err);
+      logger.error('Failed to like feed:', err);
       setError('Failed to like feed');
     }
   }, []);
@@ -148,14 +149,14 @@ export default function FeedDataProvider({
     try {
       await feedsStoreRef.current.bookmarkFeed(itemId);
     } catch (err) {
-      console.error('Failed to bookmark feed:', err);
+      logger.error('Failed to bookmark feed:', err);
       setError('Failed to bookmark feed');
     }
   }, []);
 
   const handleShare = useCallback((itemId: string) => {
     // Social sharing logic here
-    console.log('Sharing feed:', itemId);
+    logger.info('Sharing feed:', itemId);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -163,7 +164,7 @@ export default function FeedDataProvider({
       await feedsStoreRef.current.refreshFeeds();
       setError(null);
     } catch (err) {
-      console.error('Failed to refresh feeds:', err);
+      logger.error('Failed to refresh feeds:', err);
       setError('Failed to refresh feeds');
     }
   }, []);
@@ -191,7 +192,7 @@ export default function FeedDataProvider({
     
     // Refresh feeds with new filter
     feedsStoreRef.current.refreshFeeds().catch(err => {
-      console.error('Failed to refresh feeds with district filter:', err);
+      logger.error('Failed to refresh feeds with district filter:', err);
     });
   }, [districtFilterEnabled, userDistrict]);
 

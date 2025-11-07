@@ -1,9 +1,9 @@
 'use client';
 
-import { 
-  TrendingUp, 
-  BarChart3, 
-  Activity, 
+import {
+  TrendingUp,
+  BarChart3,
+  Activity,
   CheckCircle,
   AlertTriangle,
   Users,
@@ -16,16 +16,17 @@ import React from 'react';
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/features/admin/lib/hooks';
 import { mockChartData } from '@/features/admin/lib/mock-data';
 import { useAdminStore } from '@/features/admin/lib/store';
+import type { ActivityItem } from '@/features/admin/types';
 import { devLog } from '@/lib/utils/logger';
 
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 
 export const DashboardOverview: React.FC = () => {
   const { activityFeed } = useAdminStore();
-  
+
   // Initialize real-time subscriptions
   useRealTimeSubscriptions();
-  
+
   // Fetch data using admin hooks
   const { data: topics, isLoading: topicsLoading } = useTrendingTopics();
   const { data: polls } = useGeneratedPolls();
@@ -166,7 +167,7 @@ export const DashboardOverview: React.FC = () => {
               <p className="text-sm">Activity will appear here as you use the system</p>
             </div>
           ) : (
-            activityFeed.slice(0, 10).map((activity) => (
+            activityFeed.slice(0, 10).map((activity: ActivityItem) => (
               <div
                 key={activity.id}
                 className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"

@@ -4,6 +4,8 @@ import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucid
 import QRCode from 'qrcode'
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 
+import logger from '@/lib/utils/logger'
+
 type Device = {
   id: string
   name: string
@@ -95,7 +97,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             setQrCodeDataUrl(qrDataUrl)
           }
         } catch (error) {
-          console.error('Failed to generate QR code:', error)
+          logger.error('Failed to generate QR code:', error)
         }
       }
       

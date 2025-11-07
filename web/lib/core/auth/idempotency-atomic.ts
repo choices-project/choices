@@ -1,17 +1,17 @@
 /**
  * Atomic Idempotency Management System
- * 
+ *
  * IMPROVED VERSION with race-condition protection via database constraints
  * Uses UNIQUE constraint on idempotency key to prevent double-execution
- * 
+ *
  * Features:
  * - Atomic insert with ON CONFLICT handling
  * - No race conditions under high concurrency
  * - Proper status tracking (processing/completed/failed)
  * - Stuck operation detection
- * 
+ *
  * Migration Required: 20251106_atomic_idempotency.sql
- * 
+ *
  * Created: November 6, 2025
  */
 
@@ -68,7 +68,7 @@ export function createIdempotencyKey(key: string, namespace: string = DEFAULT_OP
 
 /**
  * Execute function with atomic idempotency protection
- * 
+ *
  * This version uses database-level atomicity to prevent race conditions:
  * 1. Try to INSERT key with status='processing' (fails if key exists)
  * 2. If insert succeeds, we have the lock - execute operation
@@ -141,8 +141,8 @@ export async function withAtomicIdempotency<T>(
         }
       } catch (operationError) {
         // Mark as failed
-        const errorMessage = operationError instanceof Error 
-          ? operationError.message 
+        const errorMessage = operationError instanceof Error
+          ? operationError.message
           : 'Unknown error'
 
         await supabaseClient
@@ -154,7 +154,7 @@ export async function withAtomicIdempotency<T>(
           })
           .eq('key', fullKey)
 
-        logger.error('Operation failed during idempotency execution', 
+        logger.error('Operation failed during idempotency execution',
           operationError instanceof Error ? operationError : new Error('Unknown error'),
           { key: fullKey }
         )
@@ -178,7 +178,7 @@ export async function withAtomicIdempotency<T>(
       if (result.success) {
         return {
           success: true,
-          data: result.data,
+          ...(result.data !== undefined ? { data: result.data } : {}),
           isDuplicate: true,
           wasWaiting: true
         }
@@ -187,14 +187,14 @@ export async function withAtomicIdempotency<T>(
       // If waiting failed, return error
       return {
         success: false,
-        error: result.error,
+        ...(result.error ? { error: result.error } : {}),
         isDuplicate: true,
         wasWaiting: true
       }
     }
 
     // Case 3: Some other database error
-    logger.error('Unexpected error inserting idempotency key', 
+    logger.error('Unexpected error inserting idempotency key',
       insertError || new Error('Unknown error'),
       { key: fullKey }
     )
@@ -207,7 +207,7 @@ export async function withAtomicIdempotency<T>(
     }
 
   } catch (error) {
-    logger.error('Critical error in atomic idempotency', 
+    logger.error('Critical error in atomic idempotency',
       error instanceof Error ? error : new Error('Unknown error'),
       { key: fullKey }
     )
@@ -256,9 +256,9 @@ async function waitForCompletion<T>(
 
     // Check if completed
     if (data.status === 'completed') {
-      logger.info('Operation completed by another request', { 
-        key, 
-        waitTime: Date.now() - startTime 
+      logger.info('Operation completed by another request', {
+        key,
+        waitTime: Date.now() - startTime
       })
 
       return {
@@ -318,7 +318,7 @@ export async function cleanupExpiredIdempotencyKeys(): Promise<{ deleted: number
     return { deleted: data || 0 }
 
   } catch (error) {
-    logger.error('Critical error in idempotency cleanup', 
+    logger.error('Critical error in idempotency cleanup',
       error instanceof Error ? error : new Error('Unknown error')
     )
     return {
@@ -380,7 +380,7 @@ export async function getIdempotencyStats(): Promise<{
     return stats
 
   } catch (error) {
-    logger.error('Critical error getting idempotency stats', 
+    logger.error('Critical error getting idempotency stats',
       error instanceof Error ? error : new Error('Unknown error')
     )
     return null

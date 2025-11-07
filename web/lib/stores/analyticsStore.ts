@@ -1,23 +1,27 @@
 /**
  * @fileoverview Analytics Store - Zustand Implementation
- * 
+ *
  * Analytics state management including event tracking,
  * user behavior analytics, performance metrics, and analytics preferences.
  * Consolidates scattered analytics hooks and local state.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
  * @since 1.0.0
  */
 
+import React from 'react';
 import { create } from 'zustand';
-import { devtools , persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
+import { createSafeStorage } from './storage';
+
 // Sophisticated Analytics data types with advanced features
-type AnalyticsEvent = {
+export type AnalyticsEvent = {
   id: string;
   event_type: string;
   user_id?: string;
@@ -114,32 +118,32 @@ type AnalyticsStore = {
   performanceMetrics: PerformanceMetrics | null;
   userBehavior: UserBehaviorData | null;
   dashboard: AnalyticsDashboard | null;
-  
+
   // Chart data management
   chartConfig: ChartConfig | null;
   chartData: ChartData[];
   chartMaxValue: number;
   chartShowTrends: boolean;
   chartShowConfidence: boolean;
-  
+
   // Analytics settings
   preferences: AnalyticsPreferences;
   trackingEnabled: boolean;
   sessionId: string;
-  
+
   // Loading states
   isLoading: boolean;
   isTracking: boolean;
   isSending: boolean;
   error: string | null;
-  
+
   // Actions - Event tracking
   trackEvent: (event: Omit<AnalyticsEvent, 'id' | 'timestamp' | 'sessionId'>) => void;
   trackPageView: (page: string, metadata?: Record<string, unknown>) => void;
   trackUserAction: (action: string, category: string, label?: string, value?: number) => void;
   trackError: (error: Error, context?: Record<string, unknown>) => void;
   trackPerformance: (metrics: Partial<PerformanceMetrics>) => void;
-  
+
   // Actions - Data management
   setEvents: (events: AnalyticsEvent[]) => void;
   addEvent: (event: AnalyticsEvent) => void;
@@ -147,7 +151,7 @@ type AnalyticsStore = {
   setPerformanceMetrics: (metrics: PerformanceMetrics) => void;
   updateUserBehavior: (behavior: Partial<UserBehaviorData>) => void;
   setDashboard: (dashboard: AnalyticsDashboard) => void;
-  
+
   // Actions - Chart data management
   setChartData: (data: ChartData[]) => void;
   setChartConfig: (config: ChartConfig) => void;
@@ -156,18 +160,18 @@ type AnalyticsStore = {
   setChartShowTrends: (showTrends: boolean) => void;
   setChartShowConfidence: (showConfidence: boolean) => void;
   clearChartData: () => void;
-  
+
   // Actions - Preferences
   updatePreferences: (preferences: Partial<AnalyticsPreferences>) => void;
   setTrackingEnabled: (enabled: boolean) => void;
   resetPreferences: () => void;
-  
+
   // Actions - Data operations
   sendAnalytics: () => Promise<void>;
   exportAnalytics: () => Promise<AnalyticsEvent[]>;
   importAnalytics: (events: AnalyticsEvent[]) => void;
   generateReport: (startDate: string, endDate: string) => Promise<AnalyticsDashboard>;
-  
+
   // Actions - Loading states
   setLoading: (loading: boolean) => void;
   setTracking: (tracking: boolean) => void;
@@ -211,7 +215,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         isTracking: false,
         isSending: false,
         error: null,
-        
+
         // Event tracking actions
         // 🔒 PRIVACY: Only tracks if user has explicitly enabled analytics
         trackEvent: (event) => set((state) => {
@@ -224,30 +228,30 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             });
             return state;
           }
-          
-          const newEvent: AnalyticsEvent = {
-            ...event,
+
+          const sanitizedEvent = withOptional(event as AnalyticsEvent);
+          const newEvent = withOptional(sanitizedEvent, {
             id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             timestamp: new Date().toISOString(),
             sessionId: state.sessionId,
-          } as AnalyticsEvent;
-          
+          }) as AnalyticsEvent;
+
           const updatedEvents = [...state.events, newEvent];
-          
+
           // Limit events to prevent memory issues
           const maxEvents = 1000;
           const eventsToKeep = updatedEvents.slice(-maxEvents);
-          
+
           logger.debug('Analytics event tracked (user consented)', {
             type: event.type,
             category: event.category,
             action: event.action,
             sessionId: state.sessionId
           });
-          
+
           return { events: eventsToKeep };
         }),
-        
+
         trackPageView: (page, metadata) => {
           const { trackEvent } = get();
           trackEvent({
@@ -260,15 +264,14 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             action: 'page_view',
             label: page,
             value: 1,
-            metadata: {
-              ...(metadata ?? {}),
+            metadata: withOptional(metadata ?? {}, {
               page,
               userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
               referrer: typeof document !== 'undefined' ? document.referrer : '',
-            },
+            }),
           });
         },
-        
+
         trackUserAction: (action, category, label, value) => {
           const { trackEvent } = get();
           trackEvent({
@@ -283,7 +286,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             value: value ?? 0,
           });
         },
-        
+
         trackError: (error, context) => {
           const { trackEvent } = get();
           trackEvent({
@@ -305,95 +308,94 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             },
           });
         },
-        
+
         trackPerformance: (metrics) => set((state) => {
           if (!state.preferences.performanceTracking) {
             return state;
           }
-          
-          const updatedMetrics = state.performanceMetrics 
-            ? { ...state.performanceMetrics, ...metrics }
-            : metrics as PerformanceMetrics;
-          
+
+          const baseMetrics = state.performanceMetrics ?? ({} as PerformanceMetrics);
+          const updatedMetrics = withOptional(baseMetrics, metrics as Record<string, unknown>) as PerformanceMetrics;
+
           logger.info('Performance metrics tracked', {
             pageLoadTime: updatedMetrics.pageLoadTime,
             timeToInteractive: updatedMetrics.timeToInteractive,
           });
-          
+
           return { performanceMetrics: updatedMetrics };
         }),
-        
+
         // Data management actions
         setEvents: (events) => set({ events }),
-        
+
         addEvent: (event) => set((state) => ({
-          events: [...state.events, event]
+          events: [...state.events, event],
         })),
-        
+
         clearEvents: () => set({ events: [] }),
-        
+
         setPerformanceMetrics: (metrics) => set({ performanceMetrics: metrics }),
-        
+
         updateUserBehavior: (behavior) => set((state) => ({
-          userBehavior: state.userBehavior 
-            ? { ...state.userBehavior, ...behavior }
-            : behavior as UserBehaviorData
+          userBehavior: withOptional(state.userBehavior ?? ({} as UserBehaviorData), behavior as Record<string, unknown>) as UserBehaviorData,
         })),
-        
+
         setDashboard: (dashboard) => set({ dashboard }),
-        
+
         // Chart data management actions
         setChartData: (data) => set({ chartData: data }),
-        
-        setChartConfig: (config) => set({ 
+
+        setChartConfig: (config) => set({
           chartConfig: config,
           chartData: config.data,
           chartMaxValue: config.maxValue,
           chartShowTrends: config.showTrends,
           chartShowConfidence: config.showConfidence
         }),
-        
-        updateChartConfig: (config) => set((state) => ({
-          chartConfig: state.chartConfig 
-            ? { ...state.chartConfig, ...config }
-            : config as ChartConfig,
-          chartData: config.data ?? state.chartData,
-          chartMaxValue: config.maxValue ?? state.chartMaxValue,
-          chartShowTrends: config.showTrends ?? state.chartShowTrends,
-          chartShowConfidence: config.showConfidence ?? state.chartShowConfidence
-        })),
-        
+
+        updateChartConfig: (config) => set((state) => {
+          const updatedConfig = withOptional(state.chartConfig ?? ({} as ChartConfig), config as Record<string, unknown>) as ChartConfig;
+
+          return {
+            chartConfig: updatedConfig,
+            chartData: config.data ?? state.chartData,
+            chartMaxValue: config.maxValue ?? state.chartMaxValue,
+            chartShowTrends: config.showTrends ?? state.chartShowTrends,
+            chartShowConfidence: config.showConfidence ?? state.chartShowConfidence,
+          };
+        }),
+
         setChartMaxValue: (maxValue) => set({ chartMaxValue: maxValue }),
-        
+
         setChartShowTrends: (showTrends) => set({ chartShowTrends: showTrends }),
-        
+
         setChartShowConfidence: (showConfidence) => set({ chartShowConfidence: showConfidence }),
-        
-        clearChartData: () => set({ 
+
+        clearChartData: () => set({
           chartConfig: null,
           chartData: [],
           chartMaxValue: 0,
           chartShowTrends: false,
           chartShowConfidence: false
         }),
-        
+
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: { ...state.preferences, ...preferences }
+          preferences: withOptional(state.preferences, preferences as Record<string, unknown>) as AnalyticsPreferences,
         })),
-        
+
         setTrackingEnabled: (enabled) => set({ trackingEnabled: enabled }),
-        
+
         resetPreferences: () => set({ preferences: defaultPreferences }),
-        
+
         // Data operations
         sendAnalytics: async () => {
           const { setSending, setError } = get();
-          
+
           try {
             setSending(true);
             setError(null);
-            
+
             const state = get();
             const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
               method: 'POST',
@@ -404,14 +406,14 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
                 timestamp: new Date().toISOString(),
               }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to send analytics data');
             }
-            
+
             // Clear sent events
             set({ events: [] });
-            
+
             logger.info('Analytics data sent successfully', {
               eventCount: state.events.length,
               sessionId: state.sessionId
@@ -424,40 +426,40 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             setSending(false);
           }
         },
-        
+
         exportAnalytics: async () => {
           const state = get();
           return state.events;
         },
-        
+
         importAnalytics: (events) => set({ events }),
-        
+
         generateReport: async (startDate, endDate) => {
           const { setLoading, setError } = get();
-          
+
           try {
             setLoading(true);
             setError(null);
-            
+
             const response = await fetch('/api/analytics/unified/report?methods=comprehensive&ai-provider=rule-based', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ startDate, endDate }),
             });
-            
+
             if (!response.ok) {
               throw new Error('Failed to generate analytics report');
             }
-            
+
             const dashboard = await response.json();
             set({ dashboard });
-            
+
             logger.info('Analytics report generated', {
               startDate,
               endDate,
               totalEvents: dashboard.totalEvents
             });
-            
+
             return dashboard;
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -468,7 +470,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             setLoading(false);
           }
         },
-        
+
         // Loading state actions
         setLoading: (loading) => set({ isLoading: loading }),
         setTracking: (tracking) => set({ isTracking: tracking }),
@@ -478,6 +480,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
       }),
       {
         name: 'analytics-store',
+        storage: createSafeStorage(),
         partialize: (state) => ({
           preferences: state.preferences,
           trackingEnabled: state.trackingEnabled,
@@ -507,38 +510,43 @@ export const useAnalyticsChartShowTrends = () => useAnalyticsStore(state => stat
 export const useAnalyticsChartShowConfidence = () => useAnalyticsStore(state => state.chartShowConfidence);
 
 // Action selectors
-export const useAnalyticsActions = () => useAnalyticsStore(state => ({
-  trackEvent: state.trackEvent,
-  trackPageView: state.trackPageView,
-  trackUserAction: state.trackUserAction,
-  trackError: state.trackError,
-  trackPerformance: state.trackPerformance,
-  setEvents: state.setEvents,
-  addEvent: state.addEvent,
-  clearEvents: state.clearEvents,
-  setPerformanceMetrics: state.setPerformanceMetrics,
-  updateUserBehavior: state.updateUserBehavior,
-  setDashboard: state.setDashboard,
-  setChartData: state.setChartData,
-  setChartConfig: state.setChartConfig,
-  updateChartConfig: state.updateChartConfig,
-  setChartMaxValue: state.setChartMaxValue,
-  setChartShowTrends: state.setChartShowTrends,
-  setChartShowConfidence: state.setChartShowConfidence,
-  clearChartData: state.clearChartData,
-  updatePreferences: state.updatePreferences,
-  setTrackingEnabled: state.setTrackingEnabled,
-  resetPreferences: state.resetPreferences,
-  sendAnalytics: state.sendAnalytics,
-  exportAnalytics: state.exportAnalytics,
-  importAnalytics: state.importAnalytics,
-  generateReport: state.generateReport,
-  setLoading: state.setLoading,
-  setTracking: state.setTracking,
-  setSending: state.setSending,
-  setError: state.setError,
-  clearError: state.clearError,
-}));
+export const useAnalyticsActions = () =>
+  React.useMemo(() => {
+    const state = useAnalyticsStore.getState();
+
+    return {
+      trackEvent: state.trackEvent,
+      trackPageView: state.trackPageView,
+      trackUserAction: state.trackUserAction,
+      trackError: state.trackError,
+      trackPerformance: state.trackPerformance,
+      setEvents: state.setEvents,
+      addEvent: state.addEvent,
+      clearEvents: state.clearEvents,
+      setPerformanceMetrics: state.setPerformanceMetrics,
+      updateUserBehavior: state.updateUserBehavior,
+      setDashboard: state.setDashboard,
+      setChartData: state.setChartData,
+      setChartConfig: state.setChartConfig,
+      updateChartConfig: state.updateChartConfig,
+      setChartMaxValue: state.setChartMaxValue,
+      setChartShowTrends: state.setChartShowTrends,
+      setChartShowConfidence: state.setChartShowConfidence,
+      clearChartData: state.clearChartData,
+      updatePreferences: state.updatePreferences,
+      setTrackingEnabled: state.setTrackingEnabled,
+      resetPreferences: state.resetPreferences,
+      sendAnalytics: state.sendAnalytics,
+      exportAnalytics: state.exportAnalytics,
+      importAnalytics: state.importAnalytics,
+      generateReport: state.generateReport,
+      setLoading: state.setLoading,
+      setTracking: state.setTracking,
+      setSending: state.setSending,
+      setError: state.setError,
+      clearError: state.clearError,
+    };
+  }, []);
 
 // Computed selectors
 export const useAnalyticsStats = () => useAnalyticsStore(state => ({
@@ -582,7 +590,7 @@ export const analyticsStoreUtils = {
       userBehavior: state.userBehavior,
     };
   },
-  
+
   /**
    * Get events by type
    */
@@ -590,7 +598,7 @@ export const analyticsStoreUtils = {
     const state = useAnalyticsStore.getState();
     return state.events.filter(event => event.type === type);
   },
-  
+
   /**
    * Get events by category
    */
@@ -598,7 +606,7 @@ export const analyticsStoreUtils = {
     const state = useAnalyticsStore.getState();
     return state.events.filter(event => event.category === category);
   },
-  
+
   /**
    * Get recent events
    */
@@ -608,7 +616,7 @@ export const analyticsStoreUtils = {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
   },
-  
+
   /**
    * Check if tracking is enabled
    */
@@ -616,7 +624,7 @@ export const analyticsStoreUtils = {
     const state = useAnalyticsStore.getState();
     return state.trackingEnabled && state.preferences.trackingEnabled;
   },
-  
+
   /**
    * Get analytics configuration
    */
@@ -651,7 +659,7 @@ export const analyticsStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to performance metrics changes
    */
@@ -668,7 +676,7 @@ export const analyticsStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to tracking enabled changes
    */
@@ -705,7 +713,7 @@ export const analyticsStoreDebug = {
       error: state.error
     });
   },
-  
+
   /**
    * Log analytics summary
    */
@@ -713,7 +721,7 @@ export const analyticsStoreDebug = {
     const summary = analyticsStoreUtils.getAnalyticsSummary();
     logger.debug('Analytics Summary', summary);
   },
-  
+
   /**
    * Log recent events
    */
@@ -721,7 +729,7 @@ export const analyticsStoreDebug = {
     const events = analyticsStoreUtils.getRecentEvents(limit);
     logger.debug('Recent Analytics Events', { events });
   },
-  
+
   /**
    * Reset analytics store
    */

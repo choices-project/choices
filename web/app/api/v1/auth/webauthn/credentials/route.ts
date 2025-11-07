@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -42,53 +43,33 @@ export const GET = withErrorHandling(async (): Promise<any> => {
       );
     }
 
-    logger.info('WebAuthn credentials fetched successfully', { 
-      userId: user.id, 
-      credentialCount: credentials?.length || 0 
+    logger.info('WebAuthn credentials fetched successfully', {
+      userId: user.id,
+      credentialCount: credentials?.length || 0
     });
 
-    return NextResponse.json({
-      success: true,
-      credentials: credentials || []
-    });
+  return successResponse({
+    credentials: credentials || []
+  });
+});
 
-  } catch (error) {
-    logger.error('WebAuthn credentials endpoint error:', error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+export const DELETE2 = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
   }
-}
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const url = new URL(request.url);
+  const credentialId = url.searchParams.get('id');
 
-    const url = new URL(request.url);
-    const credentialId = url.searchParams.get('id');
-    
-    if (!credentialId) {
-      return NextResponse.json(
-        { error: 'Credential ID is required' },
-        { status: 400 }
-      );
-    }
+  if (!credentialId) {
+    return validationError({ credentialId: 'Credential ID is required' });
+  }
 
     // Delete the credential
     const { error: deleteError } = await supabase
@@ -105,21 +86,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    logger.info('WebAuthn credential deleted successfully', { 
-      userId: user.id, 
-      credentialId 
+    logger.info('WebAuthn credential deleted successfully', {
+      userId: user.id,
+      credentialId
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Credential deleted successfully'
-    });
-
-  } catch (error) {
-    logger.error('WebAuthn credential deletion error:', error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+  return successResponse({
+    message: 'Credential deleted successfully'
+  });
+});

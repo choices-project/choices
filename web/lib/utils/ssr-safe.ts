@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * SSR-Safe Utilities
  * 
@@ -19,7 +20,7 @@ export function browserOnly<T>(fn: () => T, fallback?: T): T | undefined {
   if (!isBrowser()) return fallback;
   try { return fn(); } catch (e) { 
     // Use console.warn for shared utility - logger not available in all contexts
-    console.warn("browserOnly failed:", e); 
+    logger.warn("browserOnly failed:", e); 
     return fallback; 
   }
 }
@@ -28,7 +29,7 @@ export function serverOnly<T>(fn: () => T, fallback?: T): T | undefined {
   if (!isServer()) return fallback;
   try { return fn(); } catch (e) { 
     // Use console.warn for shared utility - logger not available in all contexts
-    console.warn("serverOnly failed:", e); 
+    logger.warn("serverOnly failed:", e); 
     return fallback; 
   }
 }

@@ -64,12 +64,18 @@ export function createLazyComponent<T extends ComponentType<Record<string, unkno
       }
     }
     
-    onError?.(lastError!);
-    throw lastError;
+    if (lastError) {
+      onError?.(lastError);
+      throw lastError;
+    }
+
+    const unknownError = new Error('Lazy component failed to load');
+    onError?.(unknownError);
+    throw unknownError;
   });
 
   return function LazyWrapper(props: Record<string, unknown>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return React.createElement(
       Suspense,
       { fallback },

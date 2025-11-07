@@ -4,6 +4,8 @@
 // PHASE 2: DATA RETENTION POLICIES IMPLEMENTATION
 // ============================================================================
 
+import logger from '@/lib/utils/logger';
+
 import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
@@ -24,7 +26,6 @@ import { withOptional } from '../util/objects';
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-
 export type RetentionPolicy = {
   dataType: string;
   retentionPeriod: number; // milliseconds
@@ -320,7 +321,7 @@ export class DataRetentionManager {
         }
       );
     } catch (error) {
-      console.error(`Error getting retention status for ${dataType}:`, error);
+      logger.error(`Error getting retention status for ${dataType}:`, error);
       return null;
     }
   }
@@ -347,7 +348,7 @@ export class DataRetentionManager {
    * Run scheduled cleanup for all data types
    */
   private async runScheduledCleanup(): Promise<void> {
-    console.log('Starting scheduled data retention cleanup...');
+    logger.info('Starting scheduled data retention cleanup...');
     
     const cleanupPromises = Array.from(this.policies.keys()).map(dataType => 
       this.scheduleDataPurge(dataType)
@@ -355,9 +356,9 @@ export class DataRetentionManager {
     
     try {
       await Promise.all(cleanupPromises);
-      console.log('Scheduled data retention cleanup completed');
+      logger.info('Scheduled data retention cleanup completed');
     } catch (error) {
-      console.error('Error during scheduled cleanup:', error);
+      logger.error('Error during scheduled cleanup:', error);
     }
   }
 
@@ -453,7 +454,7 @@ export class DataRetentionManager {
 
       return (Array.isArray(data) ? data.length : 0) || 0;
     } catch (error) {
-      console.error(`Error deleting old ${dataType} data:`, error);
+      logger.error(`Error deleting old ${dataType} data:`, error);
       throw error;
     }
   }
@@ -488,7 +489,7 @@ export class DataRetentionManager {
 
       return (Array.isArray(data) ? data.length : 0) || 0;
     } catch (error) {
-      console.error(`Error anonymizing old ${dataType} data:`, error);
+      logger.error(`Error anonymizing old ${dataType} data:`, error);
       throw error;
     }
   }
@@ -546,7 +547,7 @@ export class DataRetentionManager {
         newestRecord: records.length > 0 ? new Date((records[records.length - 1] as { created_at: string }).created_at) : new Date()
       };
     } catch (error) {
-      console.error(`Error getting statistics for ${dataType}:`, error);
+      logger.error(`Error getting statistics for ${dataType}:`, error);
       return {
         totalRecords: 0,
         oldestRecord: new Date(),
@@ -575,7 +576,7 @@ export class DataRetentionManager {
 
       return count || 0;
     } catch (error) {
-      console.error(`Error counting records to delete for ${dataType}:`, error);
+      logger.error(`Error counting records to delete for ${dataType}:`, error);
       return 0;
     }
   }
@@ -601,7 +602,7 @@ export class DataRetentionManager {
 
       return count || 0;
     } catch (error) {
-      console.error(`Error counting records to anonymize for ${dataType}:`, error);
+      logger.error(`Error counting records to anonymize for ${dataType}:`, error);
       return 0;
     }
   }
@@ -615,7 +616,7 @@ export class DataRetentionManager {
     this.lifecycleEvents.push(lifecycleEvent);
     
     // In production, this would be stored in a database
-    console.log('Data lifecycle event logged:', lifecycleEvent);
+    logger.info('Data lifecycle event logged:', lifecycleEvent);
   }
 }
 

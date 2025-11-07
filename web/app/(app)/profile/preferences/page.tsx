@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
 import { useUser } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 
 export default function ProfilePreferencesPage() {
   const user = useUser();
@@ -28,7 +29,7 @@ export default function ProfilePreferencesPage() {
           setUserInterests(interests);
         }
       } catch (error) {
-        console.error('Failed to load user interests:', error);
+        logger.error('Failed to load user interests:', error);
       } finally {
         setLoading(false);
       }
@@ -64,7 +65,7 @@ export default function ProfilePreferencesPage() {
         throw new Error('Failed to save interests');
       }
     } catch (error) {
-      console.error('Failed to save interests:', error);
+      logger.error('Failed to save interests:', error);
       setMessage('Failed to save interests. Please try again.');
     } finally {
       setSaving(false);

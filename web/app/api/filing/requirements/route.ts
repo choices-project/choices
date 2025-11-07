@@ -1,13 +1,13 @@
-import { type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { 
   getFilingRequirements, 
   calculateFilingDeadline,
   getFilingChecklist,
   type OfficeType
 } from '@/lib/filing/filing-requirements'
-import { withErrorHandling, successResponse, validationError } from '@/lib/api';
-import { logger } from '@/lib/utils/logger'
 
 function isOfficeType(value: string | null): value is OfficeType {
   return value === 'federal' || value === 'state' || value === 'local'

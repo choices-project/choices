@@ -8,8 +8,9 @@
  * Status: ✅ PRODUCTION
  */
 
+import logger from '@/lib/utils/logger'
 import type {
-  Representative,
+Representative,
   RepresentativeSearchQuery,
   RepresentativeSearchResult,
   RepresentativeCommittee
@@ -32,7 +33,7 @@ export class CivicsIntegrationService {
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      console.log('🔍 CivicsIntegration: Fetching representatives with query:', query);
+      logger.info('🔍 CivicsIntegration: Fetching representatives with query:', query);
 
       const supabase = await getSupabaseServerClient();
       if (!supabase) {
@@ -107,7 +108,7 @@ export class CivicsIntegrationService {
       return result;
 
     } catch (error) {
-      console.error('CivicsIntegration.getRepresentatives error:', error);
+      logger.error('CivicsIntegration.getRepresentatives error:', error);
       return {
         representatives: [],
         total: 0,
@@ -127,7 +128,7 @@ export class CivicsIntegrationService {
     try {
       const supabase = await getSupabaseServerClient();
       if (!supabase) {
-        console.warn('Database connection not available for committee data');
+        logger.warn('Database connection not available for committee data');
         return new Map();
       }
 
@@ -150,7 +151,7 @@ export class CivicsIntegrationService {
         .or('title.ilike.%committee%,title.ilike.%chair%,title.ilike.%member%,title.ilike.%vice%');
 
       if (error) {
-        console.warn('Committee data fetch error:', error);
+        logger.warn('Committee data fetch error:', error);
         return new Map();
       }
 
@@ -182,7 +183,7 @@ export class CivicsIntegrationService {
 
       return committeeMap;
     } catch (error) {
-      console.warn('Error fetching committee data:', error);
+      logger.warn('Error fetching committee data:', error);
       return new Map();
     }
   }
@@ -196,7 +197,7 @@ export class CivicsIntegrationService {
     try {
       const supabase = await getSupabaseServerClient();
       if (!supabase) {
-        console.warn('Database connection not available for crosswalk data');
+        logger.warn('Database connection not available for crosswalk data');
         return new Map();
       }
 
@@ -207,7 +208,7 @@ export class CivicsIntegrationService {
         .in('id', representativeIds);
 
       if (repsError || !reps) {
-        console.warn('Representatives fetch error for crosswalk:', repsError);
+        logger.warn('Representatives fetch error for crosswalk:', repsError);
         return new Map();
       }
 
@@ -220,7 +221,7 @@ export class CivicsIntegrationService {
         .in('canonical_id', canonicalIds.filter((id): id is string => id !== null));
 
       if (error) {
-        console.warn('Crosswalk data fetch error:', error);
+        logger.warn('Crosswalk data fetch error:', error);
         return new Map();
       }
 
@@ -241,7 +242,7 @@ export class CivicsIntegrationService {
 
       return crosswalkMap;
     } catch (error) {
-      console.warn('Error fetching crosswalk data:', error);
+      logger.warn('Error fetching crosswalk data:', error);
       return new Map();
     }
   }
@@ -393,7 +394,7 @@ export class CivicsIntegrationService {
       return transformed;
 
     } catch (error) {
-      console.error('Error fetching representative by ID:', error);
+      logger.error('Error fetching representative by ID:', error);
       return null;
     }
   }
@@ -407,7 +408,7 @@ export class CivicsIntegrationService {
     try {
       // Location search should query Supabase after getting jurisdiction from address lookup
       // The /api/v1/civics/address-lookup endpoint handles address → district mapping
-      console.log('Location search should use address lookup endpoint first:', address);
+      logger.info('Location search should use address lookup endpoint first:', address);
       return {
         representatives: [],
         total: 0,
@@ -416,7 +417,7 @@ export class CivicsIntegrationService {
         hasMore: false
       };
     } catch (error) {
-      console.error('Error in location search:', error);
+      logger.error('Error in location search:', error);
       return {
         representatives: [],
         total: 0,
@@ -470,7 +471,7 @@ export class CivicsIntegrationService {
         byState
       };
     } catch (error) {
-      console.error('Error fetching data quality stats:', error);
+      logger.error('Error fetching data quality stats:', error);
       return {
         total: 0,
         highQuality: 0,

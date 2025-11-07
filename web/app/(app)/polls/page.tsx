@@ -78,7 +78,7 @@ export default function PollsPage() {
         await hashtagActions.getTrendingHashtags();
       }
     } catch (error) {
-      console.warn('Failed to load trending hashtags:', error);
+      logger.warn('Failed to load trending hashtags:', error);
     }
   }, [hashtagActions]);
   
@@ -89,7 +89,7 @@ export default function PollsPage() {
         await hashtagActions.searchHashtags(searchQuery);
       }
     } catch (error) {
-      console.warn('Failed to search hashtags:', error);
+      logger.warn('Failed to search hashtags:', error);
     }
     return [];
   }, [hashtagActions]);
@@ -100,7 +100,7 @@ export default function PollsPage() {
       try {
         await getTrendingHashtags();
       } catch (error) {
-        console.warn('Failed to load trending hashtags:', error);
+        logger.warn('Failed to load trending hashtags:', error);
       }
     };
     loadTrending();
@@ -122,11 +122,11 @@ export default function PollsPage() {
           const data = await response.json();
           setPolls(data.polls ?? []);
         } else {
-          console.error('Failed to load polls:', response.statusText);
+          logger.error('Failed to load polls:', response.statusText);
           setPolls([]);
         }
       } catch (err) {
-        console.error('Failed to load polls:', err);
+        logger.error('Failed to load polls:', err);
         setPolls([]);
       } finally {
         setLoading(false);
@@ -168,7 +168,7 @@ export default function PollsPage() {
         // await searchHashtags({ query: query.trim(), limit: 10 });
         logger.debug('Hashtag search:', query.trim());
       } catch (error) {
-        console.warn('Hashtag search failed:', error);
+        logger.warn('Hashtag search failed:', error);
       }
     }
   };

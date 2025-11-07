@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * Candidate Journey Email Service
  * 
@@ -10,8 +11,6 @@
  * 
  * @created 2025-01-30
  */
-
-
 export type EmailType = 
   | 'welcome'
   | 'check_in'
@@ -374,7 +373,7 @@ export async function sendCandidateJourneyEmail(
     if (!resendApiKey) {
       // In development, log email instead of sending
       if (process.env.NODE_ENV === 'development') {
-        console.log('📧 [DEV] Would send email:', {
+        logger.info('📧 [DEV] Would send email:', {
           type,
           to: data.to,
           subject,
@@ -405,7 +404,7 @@ export async function sendCandidateJourneyEmail(
     })
 
     if (result.error) {
-      console.error('Resend email error:', result.error)
+      logger.error('Resend email error:', result.error)
       return { 
         success: false, 
         error: result.error.message || 'Failed to send email' 
@@ -414,7 +413,7 @@ export async function sendCandidateJourneyEmail(
 
     return { success: true }
   } catch (error) {
-    console.error('Email sending error:', error)
+    logger.error('Email sending error:', error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 

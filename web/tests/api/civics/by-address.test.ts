@@ -1,275 +1,144 @@
 /**
  * Civics By-Address API Tests
- * 
+ *
  * Tests for /api/v1/civics/address-lookup endpoint
- * 
+ *
  * Created: January 29, 2025
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { NextRequest } from 'next/server';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 
-import { GET } from '@/app/api/v1/civics/address-lookup/route';
+import { POST, GET } from '@/app/api/v1/civics/address-lookup/route';
 
-// Mock dependencies
-const mockFrom = jest.fn();
-const mockSelect = jest.fn();
-const mockEq = jest.fn();
-const mockOrder = jest.fn();
-
-jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
-  apiRateLimiter: {
-    checkLimit: jest.fn(),
-  },
+jest.mock('@/lib/civics/env-guard', () => ({
+  assertPepperConfig: jest.fn(),
 }));
 
-jest.mock('@/utils/supabase/server', () => ({
-  getSupabaseServerClient: jest.fn(),
+jest.mock('@/lib/civics/privacy-utils', () => ({
+  generateAddressHMAC: jest.fn(() => 'mock-hmac'),
+  setJurisdictionCookie: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('@/lib/utils/api-logger', () => ({
-  createApiLogger: () => ({
+jest.mock('@/lib/utils/logger', () => ({
+  logger: {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  }),
+  },
 }));
 
+const privacyUtilsMock = jest.requireMock('@/lib/civics/privacy-utils') as {
+  generateAddressHMAC: jest.Mock;
+  setJurisdictionCookie: jest.Mock;
+};
+const envGuardMock = jest.requireMock('@/lib/civics/env-guard') as {
+  assertPepperConfig: jest.Mock;
+};
+
+const { generateAddressHMAC, setJurisdictionCookie } = privacyUtilsMock;
+const { assertPepperConfig } = envGuardMock;
+
+const originalFetch = global.fetch;
+let fetchMock: jest.MockedFunction<typeof fetch>;
+
+beforeAll(() => {
+  process.env.GOOGLE_CIVIC_API_KEY = 'test-api-key';
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
+  global.fetch = fetchMock;
+});
+
+afterEach(() => {
+  global.fetch = originalFetch;
+});
+
+const createPostRequest = (body: unknown) =>
+  new Request('http://localhost:3000/api/v1/civics/address-lookup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+const mockFetchSuccess = (overrides: Record<string, unknown> = {}) => {
+  const responseBody = {
+    normalizedInput: { state: 'CA' },
+    divisions: {
+      'ocd-division/country:us/state:ca/cd:12': { name: 'California 12' },
+      'ocd-division/country:us/state:ca': { name: 'California' },
+    },
+    ...overrides,
+  };
+
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify(responseBody), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  );
+};
+
+describe('POST /api/v1/civics/address-lookup', () => {
+  it('returns 200 with jurisdiction data when external API succeeds', async () => {
+    mockFetchSuccess();
+
+    const response = await POST(createPostRequest({ address: '123 Market St, San Francisco, CA' }));
+    const payload = await response.json();
+
+    const status = (response as any)?.status;
+    if (typeof status === 'number') {
+      expect(status).toBe(200);
+    }
+    expect(payload.ok).toBe(true);
+    expect(payload.jurisdiction).toMatchObject({ state: 'CA' });
+    expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'CA' }));
+    expect(generateAddressHMAC).toHaveBeenCalledWith('123 Market St, San Francisco, CA');
+    expect(assertPepperConfig).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('representatives?address='), expect.any(Object));
+  });
+
+  it('returns 400 when address is missing', async () => {
+    const response = await POST(createPostRequest({}));
+    const payload = await response.json();
+
+    const status = (response as any)?.status;
+    if (typeof status === 'number') {
+      expect(status).toBe(400);
+    }
+    expect(payload.error).toBe('address required');
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(setJurisdictionCookie).not.toHaveBeenCalled();
+  });
+
+  it('returns fallback jurisdiction when external API fails', async () => {
+    fetchMock.mockRejectedValue(new Error('network failure'));
+
+    const response = await POST(createPostRequest({ address: '456 Elm St, Austin, Texas' }));
+    const payload = await response.json();
+
+    const status = (response as any)?.status;
+    if (typeof status === 'number') {
+      expect(status).toBe(200);
+    }
+    expect(payload.jurisdiction).toMatchObject({ state: 'TX', fallback: true });
+    expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'TX' }));
+  });
+});
+
 describe('GET /api/v1/civics/address-lookup', () => {
-  let apiRateLimiter: { checkLimit: jest.Mock };
-  let getSupabaseServerClient: jest.Mock;
+  it('always returns 405 with guidance to use POST', async () => {
+    const response = await GET();
+    const payload = await response.json();
 
-  const mockRepresentatives = [
-    {
-      id: 1,
-      name: 'John Doe',
-      party: 'Democratic',
-      office: 'US House',
-      level: 'federal',
-      state: 'IL',
-      district: '13',
-      data_quality_score: 95,
-      data_sources: ['openstates', 'congress_gov'],
-      primary_email: 'john.doe@house.gov',
-      primary_phone: '(202) 225-0000',
-      primary_website: 'https://doe.house.gov',
-      representative_contacts: [],
-      representative_photos: [],
-      representative_social_media: [],
-      representative_activity: [],
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      party: 'Republican',
-      office: 'US Senate',
-      level: 'federal',
-      state: 'IL',
-      district: null,
-      data_quality_score: 90,
-      data_sources: ['openstates'],
-      primary_email: 'jane.smith@senate.gov',
-      primary_phone: '(202) 224-0000',
-      primary_website: 'https://smith.senate.gov',
-      representative_contacts: [],
-      representative_photos: [],
-      representative_social_media: [],
-      representative_activity: [],
-    },
-  ];
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-
-    // Get mocked modules
-    apiRateLimiter = (await import('@/lib/rate-limiting/api-rate-limiter')).apiRateLimiter as any;
-    getSupabaseServerClient = (await import('@/utils/supabase/server')).getSupabaseServerClient as any;
-
-    // Default successful rate limit
-    (apiRateLimiter as any).checkLimit.mockResolvedValue({
-      allowed: true,
-      remaining: 49,
-      resetTime: Date.now() + 15 * 60 * 1000,
-      totalHits: 1,
-    });
-
-    // Default Supabase setup
-    (getSupabaseServerClient as any).mockResolvedValue({
-      from: mockFrom,
-    });
-
-    // Chain mock methods
-    // Build proper query chain
-    const chain = {
-      select: mockSelect,
-      eq: mockEq,
-      order: mockOrder,
-    };
-    
-    (mockFrom as any).mockReturnValue(chain);
-    (mockSelect as any).mockReturnValue(chain);
-    (mockEq as any).mockReturnValue(chain);
-    (mockOrder as any).mockResolvedValue({
-      data: mockRepresentatives,
-      error: null,
-    });
-  });
-
-  it('should return representatives for a valid address', async () => {
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    
-    const response = await GET(request);
-    
-    expect(response).toBeDefined();
-    
-    // Get response data first to verify it works
-    const data = await response.json();
-    
-    // Verify response status if available, otherwise just verify data
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(200);
+    const status = (response as any)?.status;
+    if (typeof status === 'number') {
+      expect(status).toBe(405);
     }
-    
-    expect(data.success).toBe(true);
-    expect(data.data.representatives).toHaveLength(2);
-    expect(data.metadata.source).toBe('database');
-    expect(apiRateLimiter.checkLimit).toHaveBeenCalled();
-  });
-
-  it('should return 400 when address parameter is missing', async () => {
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(400);
-    }
-    expect(data.success).toBe(false);
-    expect(data.error).toBe('Address parameter is required');
-  });
-
-  it('should return 429 when rate limit is exceeded', async () => {
-    (apiRateLimiter as any).checkLimit.mockResolvedValue({
-      allowed: false,
-      remaining: 0,
-      resetTime: Date.now() + 900000,
-      totalHits: 51,
-      retryAfter: 900,
-    });
-
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(429);
-    }
-    expect(data.success).toBe(false);
-    expect(data.error).toBe('Rate limit exceeded');
-    if (response && typeof response === 'object' && 'headers' in response && response.headers) {
-      expect(response.headers.get('Retry-After')).toBe('900');
-    }
-  });
-
-  it('should return empty array when no representatives found', async () => {
-    (mockOrder as any).mockResolvedValue({
-      data: [],
-      error: null,
-    });
-
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=999%20Nonexistent%20St%2C%20Nowhere%2C%20XX%2000000');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(200);
-    }
-    expect(data.success).toBe(true);
-    expect(data.data.representatives).toHaveLength(0);
-    expect(data.message).toContain('No representatives found');
-  });
-
-  it('should return 500 when database query fails', async () => {
-    (mockOrder as any).mockResolvedValue({
-      data: null,
-      error: { message: 'Database connection failed' },
-    });
-
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(500);
-    }
-    expect(data.error).toBe('Database query failed');
-  });
-
-  it('should return 500 when Supabase client is not available', async () => {
-    (getSupabaseServerClient as any).mockResolvedValue(null);
-
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(500);
-    }
-    expect(data.error).toBe('Database connection not available');
-  });
-
-  it('should extract state from address correctly', async () => {
-    const addresses = [
-      '123 Main St, Springfield, IL 62701',
-      '456 Oak Ave, Los Angeles, CA 90001',
-      '789 Pine St, Austin, TX 78701',
-    ];
-
-    for (const address of addresses) {
-      const request = new NextRequest(`http://localhost:3000/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
-      await GET(request);
-
-      // Verify query was called with extracted state
-      expect(mockEq).toHaveBeenCalledWith('state', expect.any(String));
-    }
-  });
-
-  it('should include rate limit headers in response', async () => {
-    (apiRateLimiter as any).checkLimit.mockResolvedValue({
-      allowed: true,
-      remaining: 25,
-      resetTime: Date.now() + 10 * 60 * 1000,
-      totalHits: 25,
-    });
-
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    const response = await GET(request);
-    const data = await response.json();
-
-    if (response && typeof response === 'object' && 'status' in response) {
-      expect(response.status).toBe(200);
-    }
-    expect(data.success).toBe(true);
-    // Rate limit check should be called
-    expect(apiRateLimiter.checkLimit).toHaveBeenCalled();
-  });
-
-  it('should query correct tables with proper relations', async () => {
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    await GET(request);
-
-    expect(mockFrom).toHaveBeenCalledWith('representatives_core');
-    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('representative_contacts'));
-    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('representative_photos'));
-    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('representative_social_media'));
-    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('representative_activity'));
-  });
-
-  it('should order results by level ascending', async () => {
-    const request = new NextRequest('http://localhost:3000/api/v1/civics/address-lookup?address=123%20Main%20St%2C%20Springfield%2C%20IL%2062701');
-    await GET(request);
-
-    expect(mockOrder).toHaveBeenCalledWith('level', { ascending: true });
+    expect(payload.error).toBe('Method not allowed. Use POST with address in body.');
   });
 });
 

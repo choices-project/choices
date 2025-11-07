@@ -1,3 +1,4 @@
+import logger from '@/lib/utils/logger';
 /**
  * @fileoverview Cache Strategy Utilities for Service Worker
  * 
@@ -247,7 +248,7 @@ export function getCacheStrategy(url: string): CacheStrategy {
     
     // Default - network first
     return CacheStrategy.NETWORK_FIRST;
-  } catch (error) {
+  } catch {
     return CacheStrategy.NETWORK_FIRST;
   }
 }
@@ -281,7 +282,7 @@ export function shouldCache(url: string): boolean {
     // This is a URL check, not request method, so we assume GET
     
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -345,7 +346,7 @@ export async function preloadResources(urls: string[]): Promise<void> {
           await cache.put(url, response);
         }
       } catch (error) {
-        console.warn(`Failed to preload ${url}:`, error);
+        logger.warn(`Failed to preload ${url}:`, error);
       }
     })
   );

@@ -1,11 +1,12 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
+
+import logger from '@/lib/utils/logger';
+
 
 
 // Dynamic imports to avoid build-time decorator issues
 // import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
-
 type PrivacyStatus = {
   status: 'active' | 'partial' | 'inactive';
   badge: {
@@ -26,7 +27,7 @@ export function WebAuthnPrivacyBadge() {
         const status = await getPrivacyStatus();
         setStatus(status);
       } catch (error) {
-        console.error('Failed to load privacy status:', error);
+        logger.error('Failed to load privacy status:', error);
       } finally {
         setLoading(false);
       }

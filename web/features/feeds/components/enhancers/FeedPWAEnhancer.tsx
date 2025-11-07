@@ -19,6 +19,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { usePWAStore } from '@/lib/stores/pwaStore';
+import logger from '@/lib/utils/logger';
 
 type FeedPWAEnhancerProps = {
   children: React.ReactNode;
@@ -77,7 +78,7 @@ export default function FeedPWAEnhancer({
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
-      console.log('[PWA] Install prompt result:', result);
+      logger.info('[PWA] Install prompt result:', result);
       (window as any).deferredPrompt = null;
     }
     handleInstallDismiss();

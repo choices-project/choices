@@ -1,7 +1,12 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["web/*"]
+    }
   },
   "include": [
     "web/**/*",
@@ -13,6 +18,7 @@
     "**/*.test.tsx",
     "**/__tests__/**",
     "tests/**",
+    "web/tests/archive/**",
     "**/*.disabled",
     "**/*.disabled.*",
     "**/scripts.disabled/**",
