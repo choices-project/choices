@@ -14,9 +14,35 @@ import { devtools, persist } from 'zustand/middleware';
 
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
-import type { BeforeInstallPromptEvent } from '@/types/pwa';
+import type { BeforeInstallPromptEvent, OfflineVotePayload, OfflineVoteRecord, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
 
 import { createSafeStorage } from './storage';
+
+export type PWAQueuedActionData = Record<string, unknown>;
+
+export type PWAQueuedAction<TData extends PWAQueuedActionData = PWAQueuedActionData> = SharedQueuedAction<TData>;
+
+export type PWAOfflineData<TAction extends PWAQueuedAction = PWAQueuedAction> = {
+  cachedPages: string[];
+  cachedResources: string[];
+  queuedActions: TAction[];
+};
+
+export type OfflineVoteActionData = OfflineVotePayload;
+
+export type OfflineVoteQueuedAction = PWAQueuedAction<OfflineVoteActionData>;
+
+export const isOfflineVoteAction = (
+  action: PWAQueuedAction
+): action is OfflineVoteQueuedAction => {
+  if (typeof action.data !== 'object' || action.data === null) {
+    return false;
+  }
+
+  const { pollId, choice } = action.data as Record<string, unknown>;
+
+  return typeof pollId === 'string' && typeof choice === 'number';
+};
 
 // PWA data types
 export type PWAInstallation = {
@@ -33,16 +59,7 @@ export type PWAOffline = {
   isOffline: boolean;
   lastOnline: string;
   offlineSince?: string;
-  offlineData: {
-    cachedPages: string[];
-    cachedResources: string[];
-    queuedActions: Array<{
-      id: string;
-      action: string;
-      data: unknown;
-      timestamp: string;
-    }>;
-  };
+  offlineData: PWAOfflineData;
 }
 
 type PWAUpdate = {
@@ -52,7 +69,7 @@ type PWAUpdate = {
   version: string;
   releaseNotes: string;
   downloadProgress: number;
-  installPrompt: any;
+  installPrompt: BeforeInstallPromptEvent | null;
   autoUpdate: boolean;
   updateChannel: 'stable' | 'beta' | 'alpha';
 }
@@ -104,6 +121,13 @@ type PWAPerformance = {
   offlineCapability: number;
 }
 
+type PWAStorePersistedState = {
+  installation: PWAInstallation;
+  offline: PWAOffline;
+  preferences: PWAPreferences;
+  performance: PWAPerformance | null;
+};
+
 // PWA store state interface
 type PWAStore = {
   // PWA state
@@ -122,10 +146,12 @@ type PWAStore = {
   isUpdating: boolean;
   isSyncing: boolean;
   error: string | null;
+  offlineQueueSize: number;
+  offlineQueueUpdatedAt: string | null;
   
   // Actions - Installation
   setInstallation: (installation: Partial<PWAInstallation>) => void;
-  setInstallPrompt: (prompt: any) => void;
+  setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => void;
   setCanInstall: (canInstall: boolean) => void;
   installPWA: () => Promise<void>;
   uninstallPWA: () => Promise<void>;
@@ -137,8 +163,9 @@ type PWAStore = {
   removeCachedPage: (page: string) => void;
   addCachedResource: (resource: string) => void;
   removeCachedResource: (resource: string) => void;
-  queueOfflineAction: (action: PWAOffline['offlineData']['queuedActions'][0]) => void;
+  queueOfflineAction: (action: PWAQueuedAction) => void;
   processOfflineActions: () => Promise<void>;
+  setOfflineQueueSize: (size: number, updatedAt?: string) => void;
   
   // Actions - Updates
   setUpdateAvailable: (update: Partial<PWAUpdate>) => void;
@@ -170,7 +197,7 @@ type PWAStore = {
   syncData: () => Promise<void>;
   clearCache: () => Promise<void>;
   exportData: () => Promise<void>;
-  importData: (data: any) => Promise<void>;
+  importData: (data: Partial<PWAStorePersistedState>) => Promise<void>;
   
   // Actions - Loading states
   setLoading: (loading: boolean) => void;
@@ -244,6 +271,8 @@ export const usePWAStore = create<PWAStore>()(
         isUpdating: false,
         isSyncing: false,
         error: null,
+        offlineQueueSize: 0,
+        offlineQueueUpdatedAt: null,
         
         // Installation actions
         setInstallation: (installation) => set((state) => ({
@@ -376,13 +405,19 @@ export const usePWAStore = create<PWAStore>()(
           })
         })),
         
-        queueOfflineAction: (action) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, {
-              queuedActions: [...state.offline.offlineData.queuedActions, action]
-            })
-          })
-        })),
+        queueOfflineAction: (action) => set((state) => {
+          const nextQueuedActions = [...state.offline.offlineData.queuedActions, action];
+          const nextUpdatedAt = new Date().toISOString();
+          return {
+            offline: mergeOfflineState(state.offline, {
+              offlineData: mergeOfflineData(state.offline.offlineData, {
+                queuedActions: nextQueuedActions
+              })
+            }),
+            offlineQueueSize: nextQueuedActions.length,
+            offlineQueueUpdatedAt: nextUpdatedAt,
+          };
+        }),
         
         processOfflineActions: async () => {
           const { setSyncing, setError, offline } = get();
@@ -410,7 +445,9 @@ export const usePWAStore = create<PWAStore>()(
                 offlineData: mergeOfflineData(state.offline.offlineData, {
                   queuedActions: []
                 })
-              })
+              }),
+              offlineQueueSize: 0,
+              offlineQueueUpdatedAt: new Date().toISOString(),
             }));
             
             logger.info('Offline actions processed', {
@@ -424,6 +461,11 @@ export const usePWAStore = create<PWAStore>()(
             setSyncing(false);
           }
         },
+
+        setOfflineQueueSize: (size, updatedAt) => set({
+          offlineQueueSize: size,
+          offlineQueueUpdatedAt: updatedAt ?? new Date().toISOString(),
+        }),
         
         // Update actions
         setUpdateAvailable: (update) => set((state) => ({
@@ -476,7 +518,9 @@ export const usePWAStore = create<PWAStore>()(
             }));
             
             // Reload the page to apply update
-            window.location.reload();
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
             
             logger.info('Update installed successfully');
           } catch (error) {
@@ -544,7 +588,7 @@ export const usePWAStore = create<PWAStore>()(
             setLoading(true);
             setError(null);
             
-            if ('serviceWorker' in navigator) {
+            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
               const registration = await navigator.serviceWorker.register('/service-worker.js');
               logger.info('Service Worker registered:', { scope: registration.scope, active: !!registration.active });
             }
@@ -564,7 +608,7 @@ export const usePWAStore = create<PWAStore>()(
             setLoading(true);
             setError(null);
             
-            if ('serviceWorker' in navigator) {
+            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
               const registrations = await navigator.serviceWorker.getRegistrations();
               for (const registration of registrations) {
                 await registration.unregister();
@@ -587,7 +631,7 @@ export const usePWAStore = create<PWAStore>()(
             setLoading(true);
             setError(null);
             
-            if ('serviceWorker' in navigator) {
+            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
               const registration = await navigator.serviceWorker.getRegistration();
               if (registration) {
                 await registration.update();
@@ -638,7 +682,7 @@ export const usePWAStore = create<PWAStore>()(
             setLoading(true);
             setError(null);
             
-            if ('caches' in window) {
+            if (typeof window !== 'undefined' && 'caches' in window) {
               const cacheNames = await caches.keys();
               await Promise.all(
                 cacheNames.map(cacheName => caches.delete(cacheName))
@@ -673,6 +717,11 @@ export const usePWAStore = create<PWAStore>()(
           try {
             setLoading(true);
             setError(null);
+
+            if (typeof window === 'undefined' || typeof document === 'undefined') {
+              logger.warn('PWA data export skipped: no browser environment detected');
+              return;
+            }
             
             const state = get();
             const data = {
@@ -736,7 +785,7 @@ export const usePWAStore = create<PWAStore>()(
       {
         name: 'pwa-store',
         storage: createSafeStorage(),
-        partialize: (state) => ({
+        partialize: (state): PWAStorePersistedState => ({
           installation: state.installation,
           offline: state.offline,
           preferences: state.preferences,
@@ -773,6 +822,7 @@ export const usePWAActions = () => usePWAStore(state => ({
   removeCachedResource: state.removeCachedResource,
   queueOfflineAction: state.queueOfflineAction,
   processOfflineActions: state.processOfflineActions,
+  setOfflineQueueSize: state.setOfflineQueueSize,
   setUpdateAvailable: state.setUpdateAvailable,
   downloadUpdate: state.downloadUpdate,
   installUpdate: state.installUpdate,
@@ -813,6 +863,7 @@ export const usePWAStats = () => usePWAStore(state => ({
   cachedPages: state.offline.offlineData.cachedPages.length,
   cachedResources: state.offline.offlineData.cachedResources.length,
   queuedActions: state.offline.offlineData.queuedActions.length,
+  offlineQueueSize: state.offlineQueueSize,
   isLoading: state.isLoading,
   isInstalling: state.isInstalling,
   isUpdating: state.isUpdating,
@@ -842,6 +893,8 @@ export const pwaStoreUtils = {
       updateAvailable: state.update.isAvailable,
       notifications: state.notifications.length,
       performance: state.performance,
+      offlineQueueSize: state.offlineQueueSize,
+      offlineQueueUpdatedAt: state.offlineQueueUpdatedAt,
     };
   },
   
@@ -974,7 +1027,22 @@ export const pwaStoreSubscriptions = {
         return update;
       }
     );
-  }
+  },
+
+  /**
+   * Subscribe to offline queue size changes
+   */
+  onOfflineQueueSizeChange: (callback: (size: number, updatedAt: string | null) => void) => {
+    let prevSize: number | null = null;
+    return usePWAStore.subscribe((state) => {
+      const size = state.offlineQueueSize;
+      if (size !== prevSize) {
+        callback(size, state.offlineQueueUpdatedAt);
+      }
+      prevSize = size;
+      return size;
+    });
+  },
 };
 
 // Store debugging utilities
@@ -992,6 +1060,8 @@ export const pwaStoreDebug = {
       notifications: state.notifications.length,
       cachedPages: state.offline.offlineData.cachedPages.length,
       queuedActions: state.offline.offlineData.queuedActions.length,
+      offlineQueueSize: state.offlineQueueSize,
+      offlineQueueUpdatedAt: state.offlineQueueUpdatedAt,
       isLoading: state.isLoading,
       error: state.error
     });

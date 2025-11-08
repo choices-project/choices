@@ -454,17 +454,20 @@ Committee assignments.
 - `created_at` TIMESTAMPTZ
 
 ### `representative_campaign_finance`
-Campaign finance data.
+Campaign finance rollups sourced from the FEC (one row per representative).
 
 **Columns**:
 - `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `election_cycle` TEXT
+- `representative_id` INTEGER (FK to representatives_core, unique)
+- `cycle` INTEGER
 - `total_raised`, `total_spent`, `cash_on_hand` NUMERIC
-- `individual_contributions`, `pac_contributions` NUMERIC
-- `self_funding` NUMERIC
-- `data_source` TEXT
-- `as_of_date` DATE
+- `small_donor_percentage` NUMERIC
+- `top_contributors` JSONB (array of { name, amount, type, industry, influenceScore })
+- `last_filing_date` DATE
+- `source` TEXT
+- `sources` TEXT[]
+- `office_code` TEXT
+- `district` TEXT
 - `created_at`, `updated_at` TIMESTAMPTZ
 
 ### `representative_data_quality`

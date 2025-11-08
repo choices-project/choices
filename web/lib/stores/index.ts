@@ -39,7 +39,26 @@ export {
   useAdminIsReimportRunning,
   useAdminReimportActions
 } from './adminStore';
-export { useFeedsStore } from './feedsStore';
+export {
+  useFeedsStore,
+  useFeeds,
+  useFilteredFeeds,
+  useFeedCategories,
+  useFeedSearch,
+  useSelectedFeed,
+  useFeedPreferences,
+  useFeedFilters,
+  useFeedsLoading,
+  useFeedsError,
+  useFeedsTotalAvailable,
+  useFeedsHasMore,
+  useFeedsPagination,
+  useFeedsActions,
+  useFeedsStats,
+  useBookmarkedFeeds,
+  useUnreadFeeds,
+  useLikedFeeds,
+} from './feedsStore';
 export { 
   useOnboardingStore,
   useOnboardingStep,

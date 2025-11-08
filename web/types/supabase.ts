@@ -2245,10 +2245,16 @@ export type Database = {
         Row: {
           cash_on_hand: number | null
           created_at: string | null
+          cycle: number | null
+          district: string | null
           id: number
           last_filing_date: string | null
+          office_code: string | null
           representative_id: number | null
+          small_donor_percentage: number | null
           source: string
+          sources: string[] | null
+          top_contributors: Json | null
           total_raised: number | null
           total_spent: number | null
           updated_at: string | null
@@ -2256,10 +2262,16 @@ export type Database = {
         Insert: {
           cash_on_hand?: number | null
           created_at?: string | null
+          cycle?: number | null
+          district?: string | null
           id?: number
           last_filing_date?: string | null
+          office_code?: string | null
           representative_id?: number | null
+          small_donor_percentage?: number | null
           source: string
+          sources?: string[] | null
+          top_contributors?: Json | null
           total_raised?: number | null
           total_spent?: number | null
           updated_at?: string | null
@@ -2267,10 +2279,16 @@ export type Database = {
         Update: {
           cash_on_hand?: number | null
           created_at?: string | null
+          cycle?: number | null
+          district?: string | null
           id?: number
           last_filing_date?: string | null
+          office_code?: string | null
           representative_id?: number | null
+          small_donor_percentage?: number | null
           source?: string
+          sources?: string[] | null
+          top_contributors?: Json | null
           total_raised?: number | null
           total_spent?: number | null
           updated_at?: string | null

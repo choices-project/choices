@@ -1,37 +1,15 @@
 /**
  * Google Civic Information API Client
- * 
+ *
  * Production-ready client for the Google Civic Information API with proper
  * error handling, rate limiting, caching, and data validation.
  */
 
 import { logger } from '@/lib/utils/logger';
 
+import type { AddressLookupResult, CivicsRepresentative } from '@/features/civics/lib/types/contracts';
 import { ApplicationError } from '../../errors/base';
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
-
-
-// Processed address lookup result type
-type AddressLookupResult = {
-  district: string;
-  state: string;
-  representatives: Array<{
-    id: string;
-    name: string;
-    party: string;
-    office: string;
-    district: string;
-    state: string;
-    contact: {
-      phone: string | undefined;
-      email: string | undefined;
-      website: string | undefined;
-    };
-  }>;
-  normalizedAddress: string;
-  confidence: number;
-  coordinates: undefined;
-};
 
 export type GoogleCivicConfig = {
   apiKey: string;
@@ -195,10 +173,10 @@ export class GoogleCivicClient {
    */
   private async makeRequest<T = unknown>(endpoint: string, params: Record<string, unknown> = {}): Promise<T> {
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
-    
+
     // Add API key
     url.searchParams.set('key', this.config.apiKey);
-    
+
     // Add other parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -236,7 +214,7 @@ export class GoogleCivicClient {
 
       const data = await response.json();
       this.requestCount++;
-      
+
       logger.debug('Google Civic API request successful', {
         endpoint,
         status: response.status,
@@ -246,7 +224,7 @@ export class GoogleCivicClient {
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof GoogleCivicApiError) {
         throw error;
       }
@@ -270,8 +248,8 @@ export class GoogleCivicClient {
     try {
       // Extract district information from divisions
       const divisions = Object.values(response.divisions);
-      const congressionalDivision = divisions.find(div => 
-        div.name.includes('Congressional District') || 
+      const congressionalDivision = divisions.find(div =>
+        div.name.includes('Congressional District') ||
         div.name.includes('U.S. House')
       );
 
@@ -279,10 +257,19 @@ export class GoogleCivicClient {
       const state = response.normalizedInput.state;
 
       // Transform representatives
-      const representatives = response.officials.map((official, index) => {
-        const office = response.offices.find(off => 
+      const representatives: CivicsRepresentative[] = response.officials.map((official, index) => {
+        const office = response.offices.find(off =>
           off.officialIndices?.includes(index)
         );
+
+        const contact: CivicsRepresentative['contact'] = {};
+        const phone = official.phones?.[0];
+        const email = official.emails?.[0];
+        const website = official.urls?.[0];
+
+        if (phone) contact.phone = phone;
+        if (email) contact.email = email;
+        if (website) contact.website = website;
 
         return {
           id: `google-civic-${index}`,
@@ -291,11 +278,11 @@ export class GoogleCivicClient {
           office: office?.name ?? 'Unknown',
           district: district,
           state: state,
-          contact: {
-            phone: official.phones?.[0],
-            email: official.emails?.[0],
-            website: official.urls?.[0]
-          }
+          source: 'google-civic',
+          sourceId: `official-${index}`,
+          contact,
+          ...(official.photoUrl ? { photoUrl: official.photoUrl } : {}),
+          ...(official.channels && official.channels.length > 0 ? { channels: official.channels } : {})
         };
       });
 
@@ -303,11 +290,11 @@ export class GoogleCivicClient {
         district,
         state,
         representatives,
-        normalizedAddress: response.normalizedInput ? 
+        normalizedAddress: response.normalizedInput ?
           `${response.normalizedInput.line1}, ${response.normalizedInput.city}, ${response.normalizedInput.state} ${response.normalizedInput.zip}` :
           originalAddress,
         confidence: 0.95, // Google Civic API is generally reliable
-        coordinates: undefined // Not provided by this API
+        coordinates: null // Not provided by this API
       };
     } catch (error) {
       logger.error('Failed to transform Google Civic API response', { error, response });
@@ -386,7 +373,7 @@ export class GoogleCivicClient {
  */
 export function createGoogleCivicClient(): GoogleCivicClient {
   const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
-  
+
   if (!apiKey) {
     throw new GoogleCivicApiError('GOOGLE_CIVIC_API_KEY environment variable is required', 500);
   }

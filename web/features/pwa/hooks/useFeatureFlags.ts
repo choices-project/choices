@@ -74,7 +74,7 @@ export function useFeatureFlags() {
         getSystemInfo: () => featureFlagManager.getSystemInfo(),
         systemInfo: featureFlagManager.getSystemInfo(),
         areDependenciesEnabled: (flagId: string) => featureFlagManager.areDependenciesEnabled(flagId),
-        subscribe: (callback: (flags: any) => void) => featureFlagManager.subscribe(callback)
+        subscribe: (callback: (flags: Record<string, boolean>) => void) => featureFlagManager.subscribe(callback)
   };
 }
 

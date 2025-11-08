@@ -8,6 +8,7 @@
  */
 
 import type { Database } from '@/types/database';
+import type { PollHashtagIntegration as CorePollHashtagIntegration } from '@/features/hashtags/types';
 
 // ============================================================================
 // BASE TYPES FROM DATABASE
@@ -151,11 +152,7 @@ export type PollUpdateData = {
   is_shareable?: boolean
 }
 
-export type PollHashtagIntegrationRecord = {
-  poll_id: string
-  hashtag_id: string
-  created_at: string
-}
+export type PollHashtagIntegration = CorePollHashtagIntegration;
 
 export type PollWizardData = {
   title: string

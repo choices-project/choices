@@ -1,6 +1,6 @@
 /**
  * Google Civic Information API Data Transformers
- * 
+ *
  * Transformers for converting Google Civic API responses to our internal data formats
  * with proper validation and error handling.
  */
@@ -9,52 +9,34 @@ import { logger } from '@/lib/utils/logger';
 
 import { withOptional } from '../../util/objects';
 
-import type { 
-  GoogleCivicResponse, 
-  GoogleCivicRepresentative, 
+import type {
+  AddressLookupResult,
+  CandidateCardV1,
+  CandidatePosition,
+  CandidateRecentVote,
+  CivicsRepresentative,
+  CivicsRepresentativeSocialMedia,
+} from '@/features/civics/lib/types/contracts';
+import type {
+  GoogleCivicResponse,
+  GoogleCivicRepresentative,
   GoogleCivicOffice,
-  GoogleCivicDivision 
+  GoogleCivicDivision
 } from './client';
-// import type { 
-//   AddressLookupResult, 
-//   Representative,
-//   CandidateCardV1 
-// } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
 
-// Temporary stub types until civics features are re-enabled
- 
-type AddressLookupResult = any;
- 
-type Representative = any;
- 
-type CandidateCardV1 = any;
-
-export type TransformedRepresentative = {
+export type TransformedRepresentative = CivicsRepresentative & {
   source: 'google-civic';
-  sourceId: string;
-  photoUrl?: string;
-  socialMedia?: {
-    twitter?: string;
-    facebook?: string;
-    instagram?: string;
-  };
-  channels?: Array<{
-    type: string;
-    id: string;
-  }>;
-} & Representative
+};
 
-export type TransformedCandidateCard = {
+export type TransformedCandidateCard = CandidateCardV1 & {
   source: 'google-civic';
-  sourceId: string;
-  lastUpdated: string;
-} & CandidateCardV1
+};
 
 /**
  * Transform Google Civic API response to AddressLookupResult
  */
 export function transformAddressLookup(
-  response: GoogleCivicResponse, 
+  response: GoogleCivicResponse,
   originalAddress: string
 ): AddressLookupResult {
   try {
@@ -66,13 +48,13 @@ export function transformAddressLookup(
 
     // Extract district information
     const { district, state } = extractDistrictInfo(response.divisions, response.normalizedInput.state);
-    
+
     // Transform representatives
     const representatives = transformRepresentatives(response.officials, response.offices, district, state);
-    
+
     // Create normalized address, fallback to original if normalized input is not available
-    const normalizedAddress = response.normalizedInput ? 
-      createNormalizedAddress(response.normalizedInput) : 
+    const normalizedAddress = response.normalizedInput ?
+      createNormalizedAddress(response.normalizedInput) :
       originalAddress;
 
     return {
@@ -81,7 +63,7 @@ export function transformAddressLookup(
       representatives,
       normalizedAddress,
       confidence: calculateConfidence(response),
-      coordinates: undefined // Google Civic API doesn't provide coordinates
+      coordinates: null // Google Civic API doesn't provide coordinates
     };
   } catch (error) {
     logger.error('Failed to transform address lookup response', { error, response });
@@ -101,31 +83,38 @@ export function transformRepresentatives(
   return officials.map((official, index) => {
     const office = findOfficeForOfficial(offices, index);
     const socialMedia = extractSocialMedia(official.channels);
-    
-    return withOptional(
-      {
-        id: `google-civic-${index}-${Date.now()}`,
-        name: official.name,
-        party: official.party ?? 'Unknown',
-        office: office?.name ?? 'Unknown Office',
-        district,
-        state,
-        contact: withOptional(
-          {},
-          {
-            phone: official.phones?.[0],
-            email: official.emails?.[0]
-          }
-        ),
-        source: 'google-civic' as const,
-        sourceId: `official-${index}`
-      },
-      {
-        photoUrl: official.photoUrl,
-        socialMedia,
-        channels: official.channels ?? undefined
-      }
-    );
+    const contact: TransformedRepresentative['contact'] = {};
+    const primaryPhone = official.phones?.[0];
+    const primaryEmail = official.emails?.[0];
+    const primaryUrl = official.urls?.[0];
+
+    if (primaryPhone) contact.phone = primaryPhone;
+    if (primaryEmail) contact.email = primaryEmail;
+    if (primaryUrl) contact.website = primaryUrl;
+
+    const representative: TransformedRepresentative = {
+      id: `google-civic-${index}-${Date.now()}`,
+      name: official.name,
+      party: official.party ?? 'Unknown',
+      office: office?.name ?? 'Unknown Office',
+      district,
+      state,
+      contact,
+      source: 'google-civic',
+      sourceId: `official-${index}`
+    };
+
+    if (official.photoUrl) {
+      representative.photoUrl = official.photoUrl;
+    }
+    if (socialMedia) {
+      representative.socialMedia = socialMedia;
+    }
+    if (official.channels && official.channels.length > 0) {
+      representative.channels = official.channels;
+    }
+
+    return representative;
   });
 }
 
@@ -136,11 +125,11 @@ export function transformToCandidateCard(
   representative: TransformedRepresentative,
   additionalData?: {
     bio?: string;
-    positions?: Array<{ issue: string; stance: string; source?: string }>;
-    recentVotes?: Array<{ bill: string; vote: 'yes' | 'no' | 'abstain'; date: string }>;
+    positions?: CandidatePosition[];
+    recentVotes?: CandidateRecentVote[];
   }
 ): TransformedCandidateCard {
-  return {
+  const card: TransformedCandidateCard = {
     id: representative.id,
     name: representative.name,
     party: representative.party,
@@ -148,15 +137,28 @@ export function transformToCandidateCard(
     district: representative.district,
     state: representative.state,
     imageUrl: representative.photoUrl ?? '',
-    bio: additionalData?.bio,
-    website: representative.contact.website ?? '',
-    socialMedia: representative.socialMedia,
-    positions: additionalData?.positions,
-    recentVotes: additionalData?.recentVotes,
     source: 'google-civic',
     sourceId: representative.sourceId,
     lastUpdated: new Date().toISOString()
   };
+
+  if (additionalData?.bio) {
+    card.bio = additionalData.bio;
+  }
+  if (representative.contact.website) {
+    card.website = representative.contact.website;
+  }
+  if (representative.socialMedia) {
+    card.socialMedia = representative.socialMedia;
+  }
+  if (additionalData?.positions?.length) {
+    card.positions = additionalData.positions;
+  }
+  if (additionalData?.recentVotes?.length) {
+    card.recentVotes = additionalData.recentVotes;
+  }
+
+  return card;
 }
 
 /**
@@ -167,10 +169,10 @@ function extractDistrictInfo(
   state: string
 ): { district: string; state: string } {
   const divisionValues = Object.values(divisions);
-  
+
   // Look for congressional district
-  const congressionalDivision = divisionValues.find(div => 
-    div.name.includes('Congressional District') || 
+  const congressionalDivision = divisionValues.find(div =>
+    div.name.includes('Congressional District') ||
     div.name.includes('U.S. House') ||
     div.name.includes('House of Representatives')
   );
@@ -183,8 +185,8 @@ function extractDistrictInfo(
   }
 
   // Look for state-level district
-  const stateDivision = divisionValues.find(div => 
-    div.name.includes('State') && 
+  const stateDivision = divisionValues.find(div =>
+    div.name.includes('State') &&
     (div.name.includes('District') || div.name.includes('Senate') || div.name.includes('House'))
   );
 
@@ -210,7 +212,7 @@ function findOfficeForOfficial(
   offices: GoogleCivicOffice[],
   officialIndex: number
 ): GoogleCivicOffice | undefined {
-  return offices.find(office => 
+  return offices.find(office =>
     office.officialIndices?.includes(officialIndex)
   );
 }
@@ -220,12 +222,12 @@ function findOfficeForOfficial(
  */
 function extractSocialMedia(
   channels?: Array<{ type: string; id: string }>
-): { twitter?: string; facebook?: string; instagram?: string } | undefined {
+): CivicsRepresentativeSocialMedia | undefined {
   if (!channels || channels.length === 0) {
     return undefined;
   }
 
-  const socialMedia: { twitter?: string; facebook?: string; instagram?: string } = {};
+  const socialMedia: CivicsRepresentativeSocialMedia = {};
 
   channels.forEach(channel => {
     switch (channel.type.toLowerCase()) {
@@ -237,6 +239,12 @@ function extractSocialMedia(
         break;
       case 'instagram':
         socialMedia.instagram = `https://instagram.com/${channel.id}`;
+        break;
+      case 'youtube':
+        socialMedia.youtube = `https://youtube.com/${channel.id}`;
+        break;
+      case 'tiktok':
+        socialMedia.tiktok = `https://www.tiktok.com/@${channel.id}`;
         break;
     }
   });
@@ -296,6 +304,10 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
           logger.warn('Representative missing required fields', { representative: rep });
           return false;
         }
+        if (!rep.source || !rep.sourceId) {
+          logger.warn('Representative missing source metadata', { representative: rep });
+          return false;
+        }
       }
     }
 
@@ -316,22 +328,36 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
  * Clean and normalize representative data
  */
 export function cleanRepresentativeData(representative: TransformedRepresentative): TransformedRepresentative {
-  return withOptional(
-    Object.assign({}, representative, {
-      name: representative.name.trim(),
-      party: representative.party.trim() ?? 'Unknown',
-      office: representative.office.trim(),
-      district: representative.district.trim(),
-      state: representative.state.trim().toUpperCase(),
-      contact: withOptional(
-        {},
-        {
-          phone: representative.contact.phone?.trim(),
-          email: representative.contact.email?.trim().toLowerCase(),
-          website: representative.contact.website?.trim(),
-          address: representative.contact.address
-        }
-      )
-    })
-  );
+  const contact: TransformedRepresentative['contact'] = {};
+  if (representative.contact.phone) {
+    contact.phone = representative.contact.phone.trim();
+  }
+  if (representative.contact.email) {
+    contact.email = representative.contact.email.trim().toLowerCase();
+  }
+  if (representative.contact.website) {
+    contact.website = representative.contact.website.trim();
+  }
+
+  const cleaned: TransformedRepresentative = {
+    ...representative,
+    name: representative.name.trim(),
+    party: representative.party.trim() ?? 'Unknown',
+    office: representative.office.trim(),
+    district: representative.district.trim(),
+    state: representative.state.trim().toUpperCase(),
+    contact,
+  };
+
+  if (representative.photoUrl) {
+    cleaned.photoUrl = representative.photoUrl.trim();
+  }
+  if (representative.socialMedia) {
+    cleaned.socialMedia = representative.socialMedia;
+  }
+  if (representative.channels) {
+    cleaned.channels = representative.channels;
+  }
+
+  return cleaned;
 }

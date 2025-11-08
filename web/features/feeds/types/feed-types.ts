@@ -4,6 +4,7 @@
  */
 
 import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
+import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 
 /**
  * Feed item with calculated personalization score (0-1).
@@ -56,13 +57,7 @@ export type PollHashtag = string;
 /**
  * Hashtag engagement analytics.
  */
-export type HashtagAnalytic = {
-  hashtag: string;
-  poll_count: number;
-  engagement_rate: number;
-  user_interest_level: number;
-  trending_position?: number;
-}
+export type HashtagAnalytic = FeedHashtagAnalytics;
 
 /**
  * Personalized feed based on user's hashtag interests.

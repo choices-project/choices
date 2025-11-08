@@ -13,9 +13,12 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
-import type { UserProfile, ProfileUpdateData as ProfileUpdateDataType } from '@/types/profile';
+import type {
+  UserProfile,
+  ProfileUpdateData as ProfileUpdateDataType,
+  PrivacySettings,
+} from '@/types/profile';
 import type { Representative } from '@/types/representative';
 
 import { createSafeStorage } from './storage';
@@ -23,6 +26,24 @@ import type { BaseStore } from './types';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
+type PrivacySettingKey = keyof NonNullable<ProfileUpdateData['privacy_settings']>;
+type PrivacySettingValue<K extends PrivacySettingKey> =
+  NonNullable<ProfileUpdateData['privacy_settings']>[K];
+
+const mergeProfileUpdateData = (
+  current: ProfileUpdateData,
+  updates: Partial<ProfileUpdateData>
+): ProfileUpdateData => {
+  const next: ProfileUpdateData = { ...current };
+  (Object.entries(updates) as Array<
+    [keyof ProfileUpdateData, ProfileUpdateData[keyof ProfileUpdateData]]
+  >).forEach(([key, value]) => {
+    if (value !== undefined) {
+      next[key] = value;
+    }
+  });
+  return next;
+};
 
 // User store state interface
 type UserStore = {
@@ -82,7 +103,10 @@ type UserStore = {
   updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
   updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => void;
   updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => void;
-  updatePrivacySetting: (setting: string, value: any) => void;
+  updatePrivacySetting: <K extends PrivacySettingKey>(
+    setting: K,
+    value: PrivacySettingValue<K>
+  ) => void;
   setProfileEditing: (editing: boolean) => void;
   setProfileEditError: (field: string, error: string) => void;
   clearProfileEditError: (field: string) => void;
@@ -99,7 +123,7 @@ type UserStore = {
   setAddressLoading: (loading: boolean) => void;
   setSavedSuccessfully: (saved: boolean) => void;
   lookupAddress: (address: string) => Promise<Representative[]>;
-  handleAddressUpdate: (address: string) => Promise<void>;
+  handleAddressUpdate: (address: string, temporary?: boolean) => Promise<void>;
   
   // Actions - Avatar
   setAvatarFile: (file: File | null) => void;
@@ -293,15 +317,17 @@ export const useUserStore = create<UserStore>()(
       
       // Profile actions
       setProfile: (profile) => set((state) => {
-        state.profile = profile as any;
+        state.profile = profile;
       }),
       
       updateProfile: (updates) => set((state) => {
         if (state.profile) {
-          const newProfile: any = Object.assign({}, state.profile, updates, {
-            updated_at: new Date().toISOString()
-          });
-          state.profile = newProfile;
+          const nextProfile: UserProfile = {
+            ...state.profile,
+            ...updates,
+            updated_at: new Date().toISOString(),
+          };
+          state.profile = nextProfile;
         }
       }),
       
@@ -357,16 +383,21 @@ export const useUserStore = create<UserStore>()(
       
       updateProfileEditData: (updates) => set((state) => {
         if (state.profileEditData) {
-          state.profileEditData = withOptional(
-            state.profileEditData,
-            updates as Record<string, unknown>
-          ) as ProfileUpdateData;
+          state.profileEditData = mergeProfileUpdateData(state.profileEditData, updates);
+        } else if (Object.keys(updates).length > 0) {
+          state.profileEditData = mergeProfileUpdateData(
+            {} as ProfileUpdateData,
+            updates
+          );
         }
       }),
       
       updateProfileField: (field, value) => set((state) => {
         if (state.profileEditData) {
-          (state.profileEditData as any)[field] = value;
+          state.profileEditData = {
+            ...state.profileEditData,
+            [field]: value,
+          };
         }
       }),
       
@@ -376,13 +407,23 @@ export const useUserStore = create<UserStore>()(
           const newArray = currentArray.includes(value)
             ? currentArray.filter((item: string) => item !== value)
             : [...currentArray, value];
-          state.profileEditData[field] = newArray;
+          state.profileEditData = {
+            ...state.profileEditData,
+            [field]: newArray,
+          };
         }
       }),
       
       updatePrivacySetting: (setting, value) => set((state) => {
         if (state.profileEditData?.privacy_settings) {
-          (state.profileEditData.privacy_settings as Record<string, unknown>)[setting] = value;
+          state.profileEditData.privacy_settings = {
+            ...state.profileEditData.privacy_settings,
+            [setting]: value,
+          };
+        } else if (state.profileEditData) {
+          state.profileEditData.privacy_settings = {
+            [setting]: value,
+          } as ProfileUpdateData['privacy_settings'];
         }
       }),
       
@@ -465,7 +506,7 @@ export const useUserStore = create<UserStore>()(
             // 1. User has opted in to location collection, OR
             // 2. Temporary flag is false and we have consent
             const canStoreLocation: boolean = Boolean(
-              (state.profile as any)?.privacy_settings?.collectLocationData
+              state.profile?.privacy_settings?.collectLocationData
             );
             
             // Always update representatives (they requested them)

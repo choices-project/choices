@@ -340,6 +340,6 @@ export function useProfileDisplay() {
     initials,
     trustTier: profile.trust_tier,
     trustTierDisplay,
-    isAdmin: (profile as any).is_admin ?? false,
+    isAdmin: profile.is_admin ?? false,
   };
 }

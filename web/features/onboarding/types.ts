@@ -1,7 +1,8 @@
 import type React from 'react';
+import type { Representative } from '@/types/representative';
 /**
  * Onboarding Feature - Centralized Type Definitions
- * 
+ *
  * This file consolidates all type definitions for the onboarding feature,
  * providing a single source of truth for type safety and consistency.
  */
@@ -98,18 +99,21 @@ export type ProfileData = {
 
 export type ValuesData = {
   primaryConcerns: string[];
-  communityFocus: 'local' | 'regional' | 'national' | 'global';
+  communityFocus: CommunityFocus;
   participationStyle: 'observer' | 'contributor' | 'leader';
 }
+
+export type CommunityFocus = 'local' | 'regional' | 'national' | 'global';
 
 export type ValueCategory = {
   title: string;
   icon: React.ReactNode;
   color: string;
+  concerns: string[];
 }
 
 export type CommunityOption = {
-  value: string;
+  value: CommunityFocus;
   label: string;
   description: string;
 }
@@ -118,64 +122,83 @@ export type ParticipationOption = {
   value: 'observer' | 'contributor' | 'leader';
   label: string;
   description: string;
+  icon?: React.ReactNode;
 }
 
 // ============================================================================
 // COMPONENT PROPS
 // ============================================================================
 
+export type AuthSetupStepData = {
+  authMethod?: AuthMethod;
+  email?: string;
+  oauthProvider?: 'google' | 'github';
+  authSetupCompleted?: boolean;
+};
+
 export type AuthSetupStepProps = {
-  data: any;
-  onUpdate: (updates: any) => void;
+  data: AuthSetupStepData;
+  onUpdate: (updates: Partial<AuthSetupStepData>) => void;
   onNext: () => void;
   onBack: () => void;
-}
+};
+
+export type ProfileSetupStepData = {
+  displayName?: string;
+  profileVisibility?: ProfileVisibility;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  profileSetupCompleted?: boolean;
+};
 
 export type ProfileSetupStepProps = {
-  data: {
-    displayName?: string;
-    profileVisibility?: string;
-    emailNotifications?: boolean;
-    pushNotifications?: boolean;
-    profileSetupCompleted?: boolean;
-  };
-  onUpdate: (updates: {
-    displayName?: string;
-    profileVisibility?: string;
-    emailNotifications?: boolean;
-    pushNotifications?: boolean;
-    profileSetupCompleted?: boolean;
-  }) => void;
+  data: ProfileSetupStepData;
+  onUpdate: (updates: Partial<ProfileSetupStepData>) => void;
   onNext: () => void;
   onBack: () => void;
-}
+};
+
+export type ParticipationStyle = 'observer' | 'contributor' | 'leader';
+
+export type ValuesStepData = {
+  primaryConcerns?: string[];
+  communityFocus?: CommunityFocus[];
+  participationStyle?: ParticipationStyle;
+  valuesCompleted?: boolean;
+  stepProgress?: {
+    currentStep: string;
+    completedSteps: string[];
+    timeSpent?: number;
+  };
+};
 
 export type ValuesStepProps = {
-  data: {
-    primaryConcerns?: string[];
-    communityFocus?: string[];
-    participationStyle?: 'observer' | 'contributor' | 'leader';
-    valuesCompleted?: boolean;
-  };
-  onUpdate: (updates: {
-    primaryConcerns?: string[];
-    communityFocus?: string[];
-    participationStyle?: 'observer' | 'contributor' | 'leader';
-    valuesCompleted?: boolean;
-    stepProgress?: {
-      currentStep: string;
-      completedSteps: string[];
-    };
-  }) => void;
+  data: ValuesStepData;
+  onUpdate: (updates: Partial<ValuesStepData>) => void;
   onNext: () => void;
-}
+  onBack: () => void;
+};
+
+export type PrivacySelection = {
+  shareProfile: boolean;
+  shareDemographics: boolean;
+  allowAnalytics: boolean;
+};
+
+export type CompleteStepData = {
+  displayName?: string;
+  primaryConcerns?: string[];
+  communityFocus?: CommunityFocus[];
+  participationStyle?: ParticipationStyle;
+  privacy?: Partial<PrivacySelection>;
+};
 
 export type CompleteStepProps = {
-  data: any;
+  data: CompleteStepData;
   onComplete: () => void;
   onBack: () => void;
   isLoading?: boolean;
-}
+};
 
 export type DataUsageStepLiteProps = {
   onNext: () => void;
@@ -187,10 +210,24 @@ export type LocationInputProps = {
   onError: (error: string) => void;
 }
 
+export type OnboardingJurisdiction = {
+  state?: string | null;
+  district?: string | null;
+  county?: string | null;
+  fallback?: boolean | null;
+};
+
+export type UserOnboardingResult = {
+  address?: string | null;
+  state?: string | null;
+  jurisdiction?: OnboardingJurisdiction | null;
+  representatives?: Representative[];
+};
+
 export type UserOnboardingProps = {
-  onComplete: (userData: { address?: string; state?: string; representatives?: any[] }) => void;
+  onComplete: (userData: UserOnboardingResult) => void;
   onSkip: () => void;
-}
+};
 
 export type InterestSelectionProps = {
   initialInterests?: string[];
@@ -211,9 +248,9 @@ export type PlatformTourProps = {
 }
 
 export type UserProfileProps = {
-  onRepresentativesUpdate: (representatives: any[]) => void;
+  onRepresentativesUpdate: (representatives: Representative[]) => void;
   onClose: () => void;
-}
+};
 
 // ============================================================================
 // TRUST LEVEL SYSTEM
@@ -244,7 +281,7 @@ export type OnboardingProgressResponse = {
     user_id: string;
     current_step: OnboardingStep;
     completed_steps: OnboardingStep[];
-    step_data: Record<string, any>;
+    step_data: Record<string, unknown>;
     started_at: string | null;
     last_activity_at: string | null;
     completed_at: string | null;
@@ -270,11 +307,20 @@ export type OnboardingProgressResponse = {
 
 export type OnboardingAction = 'start' | 'update' | 'complete';
 
+export type OnboardingStepPayload = {
+  welcome?: Record<string, unknown>;
+  auth?: AuthSetupStepData;
+  profile?: ProfileSetupStepData;
+  values?: ValuesStepData;
+  privacy?: PrivacyPreferences;
+  completion?: CompleteStepData;
+};
+
 export type OnboardingUpdateRequest = {
   step: OnboardingStep;
-  data?: Record<string, any>;
+  data?: Partial<OnboardingStepPayload>;
   action: OnboardingAction;
-}
+};
 
 export type OnboardingCompletionRequest = {
   preferences: {

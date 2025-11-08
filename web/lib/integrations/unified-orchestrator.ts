@@ -1,22 +1,48 @@
 /**
  * Unified Data Integration Orchestrator
- * 
+ *
  * Manages multiple data sources and provides unified access to government data
  * Implements data quality scoring, conflict resolution, and source prioritization
- * 
+ *
  * @author Agent E
  * @date 2025-01-15
  */
 
-import type { UserLocation, ElectoralRace } from '@/lib/types/electoral-unified';
+import type {
+  UserLocation,
+  ElectoralRace,
+  Representative,
+  CampaignFinance,
+  Activity,
+} from '@/lib/types/electoral-unified';
+import { NotImplementedError } from '@/lib/errors';
 import { logger } from '@/lib/utils/logger';
 
 import { createCongressGovClient } from './congress-gov/client';
 import { createFECClient } from './fec/client';
+import type { FECCandidate } from './fec/client';
 import { createGoogleCivicClient } from './google-civic/client';
 import { createGovTrackClient } from './govtrack/client';
 import { createOpenStatesClient } from './open-states/client';
 import { createOpenSecretsClient } from './opensecrets/client';
+import type { GoogleCivicElectionInfo } from '@/types/external/google-civic';
+import {
+  extractDivisionMetadata,
+  determineRaceImportance,
+  estimateDeadline,
+  buildLookupAddress,
+  deriveKeyIssuesFromBills,
+  determineOfficeCode,
+  normalizeDistrict,
+  getCurrentFecCycle,
+  calculateCashOnHand,
+  resolveLastFilingDate,
+  buildCampaignActivity,
+  createCampaignDataFallback,
+  type CampaignCandidateSummary,
+  type ActiveCampaignData,
+  type RaceContext,
+} from '@choices/civics-shared';
 
 
 // Unified data types
@@ -27,7 +53,7 @@ export type UnifiedRepresentative = {
   openStatesId?: string;
   fecId?: string;
   crpId?: string;
-  
+
   // Basic Information
   name: string;
   firstName: string;
@@ -37,7 +63,7 @@ export type UnifiedRepresentative = {
   district?: string;
   chamber: 'federal' | 'state' | 'local';
   level: 'house' | 'senate' | 'assembly' | 'council';
-  
+
   // Contact & Social
   email?: string;
   phone?: string;
@@ -48,7 +74,7 @@ export type UnifiedRepresentative = {
     instagram?: string;
     youtube?: string;
   };
-  
+
   // Data Sources
   dataSources: {
     congressGov: boolean;
@@ -58,7 +84,7 @@ export type UnifiedRepresentative = {
     googleCivic: boolean;
     govTrack: boolean;
   };
-  
+
   // Metadata
   lastUpdated: string;
   dataQuality: 'high' | 'medium' | 'low';
@@ -69,7 +95,7 @@ export type UnifiedRepresentative = {
 export type UnifiedVote = {
   id: string;
   representativeId: string;
-  
+
   // Vote Details
   billId?: string;
   billTitle?: string;
@@ -77,19 +103,19 @@ export type UnifiedVote = {
   description: string;
   vote: 'yes' | 'no' | 'abstain' | 'not_voting';
   result: 'passed' | 'failed' | 'tabled';
-  
+
   // Context
   chamber: string;
   congress?: number;
   session?: string;
   date: string;
   partyLineVote: boolean;
-  
+
   // Analysis
   constituentAlignment?: number; // -100 to +100
   partyAlignment: number;        // -100 to +100
   ideologyScore?: number;        // -100 to +100
-  
+
   // Sources
   sources: string[];
   lastUpdated: string;
@@ -100,7 +126,7 @@ export type UnifiedCampaignFinance = {
   id: string;
   representativeId: string;
   cycle: number;
-  
+
   // Contributions
   totalRaised: number;
   individualContributions: number;
@@ -109,7 +135,7 @@ export type UnifiedCampaignFinance = {
   unionContributions: number;
   selfFunding: number;
   smallDonorPercentage: number; // <$200 donations percentage
-  
+
   // Top Contributors
   topContributors: Array<{
     name: string;
@@ -119,25 +145,41 @@ export type UnifiedCampaignFinance = {
     influenceScore: number; // 0-100
     issueAlignment?: number; // -100 to +100 for specific issues
   }>;
-  
+
   // Analysis Scores
   independenceScore: number; // 0-100 (higher = more independent)
   corporateInfluence: number; // 0-100
   pacInfluence: number; // 0-100
   smallDonorInfluence: number; // 0-100
-  
+
   // Expenditures
   totalSpent: number;
   advertising: number;
   staff: number;
   travel: number;
   fundraising: number;
-  
+
   // Sources
   sources: string[];
   lastUpdated: string;
   dataQuality: 'high' | 'medium' | 'low';
 }
+
+type OrchestratorCandidateSummary = CampaignCandidateSummary & {
+  finance: UnifiedCampaignFinance | null;
+  totalRaised: number | null;
+  totalSpent: number | null;
+  cashOnHand: number | null;
+  smallDonorPercentage: number | null;
+  party: string | null;
+  status: string | null;
+  incumbentStatus: string | null;
+  lastFilingDate: string | null;
+};
+
+type OrchestratorCampaignData = ActiveCampaignData & {
+  candidates: OrchestratorCandidateSummary[];
+};
 
 export type DataQualityScore = {
   representativeId: string;
@@ -166,17 +208,22 @@ const SOURCE_PRIORITY = {
   'manual': 50
 } as const;
 
+type OrchestratorClients = {
+  googleCivic?: ReturnType<typeof createGoogleCivicClient>;
+  congressGov?: ReturnType<typeof createCongressGovClient>;
+  openStates?: ReturnType<typeof createOpenStatesClient>;
+  fec?: ReturnType<typeof createFECClient>;
+  openSecrets?: ReturnType<typeof createOpenSecretsClient>;
+  govTrack?: ReturnType<typeof createGovTrackClient>;
+};
+
 export class UnifiedDataOrchestrator {
-  private clients: {
-    googleCivic: ReturnType<typeof createGoogleCivicClient>;
-    congressGov: ReturnType<typeof createCongressGovClient>;
-    openStates: ReturnType<typeof createOpenStatesClient>;
-    fec: ReturnType<typeof createFECClient>;
-    openSecrets: ReturnType<typeof createOpenSecretsClient>;
-    govTrack: ReturnType<typeof createGovTrackClient>;
-  };
+  private clients: OrchestratorClients;
+  private electionContext: Map<string, RaceContext>;
 
   constructor() {
+    this.clients = {};
+    this.electionContext = new Map();
     try {
       this.clients = {
         googleCivic: createGoogleCivicClient(),
@@ -189,8 +236,7 @@ export class UnifiedDataOrchestrator {
     } catch (error) {
       logger.warn('Some API clients failed to initialize', { error });
       // Initialize with available clients only
-       
-      this.clients = {} as any;
+      this.clients = {};
     }
   }
 
@@ -308,7 +354,7 @@ export class UnifiedDataOrchestrator {
             ...(congress !== undefined && { congress }),
             limit: 100
           });
-          
+
           for (const vote of congressVotes) {
             votes.push({
               id: `${vote.congress}-${vote.session}-${vote.rollCall}`,
@@ -341,7 +387,7 @@ export class UnifiedDataOrchestrator {
           const openStatesVotes = await this.clients.openStates.getVotes({
             limit: 100
           });
-          
+
           for (const vote of openStatesVotes) {
             votes.push({
               id: vote.id,
@@ -434,18 +480,18 @@ export class UnifiedDataOrchestrator {
       if (representative) {
         // Basic info score
         scores.basicInfo = this.calculateBasicInfoScore(representative);
-        
+
         // Voting record score
         const votes = await this.getVotingRecord(representativeId);
         scores.votingRecord = this.calculateVotingRecordScore(votes);
-        
+
         // Campaign finance score
         const finance = await this.getCampaignFinance(representativeId, 2024);
         scores.campaignFinance = this.calculateCampaignFinanceScore(finance);
-        
+
         // Social media score
         scores.socialMedia = this.calculateSocialMediaScore(representative);
-        
+
         // Public statements score (placeholder)
         scores.publicStatements = 0; // Would need social media integration
       }
@@ -475,7 +521,7 @@ export class UnifiedDataOrchestrator {
    */
   getUsageMetrics(): Record<string, unknown> {
     const metrics: Record<string, unknown> = {};
-    
+
     if (this.clients.congressGov) {
       metrics['congress-gov'] = this.clients.congressGov.getUsageMetrics();
     }
@@ -488,7 +534,7 @@ export class UnifiedDataOrchestrator {
     if (this.clients.openSecrets) {
       metrics['open-secrets'] = this.clients.openSecrets.getUsageMetrics();
     }
-    
+
     return metrics;
   }
 
@@ -496,12 +542,12 @@ export class UnifiedDataOrchestrator {
   private mergeRepresentativeData(sources: Array<{ source: string; data: unknown; priority: number }>): UnifiedRepresentative {
     // Sort by priority (highest first)
     sources.sort((a, b) => b.priority - a.priority);
-    
+
     const firstSource = sources[0];
     if (!firstSource) {
       throw new Error('No data sources provided for merge');
     }
-    
+
     // Type guard for representative data from various sources
     const sourceData = firstSource.data as Record<string, unknown>;
     const merged: Partial<UnifiedRepresentative> & Record<string, unknown> = {
@@ -527,7 +573,7 @@ export class UnifiedDataOrchestrator {
       if (merged.dataSources && sourceName in merged.dataSources) {
         (merged.dataSources)[sourceName] = true;
       }
-      
+
       const dataRecord = data as Record<string, unknown>;
       // Merge basic info (prioritize higher-priority sources)
       if (!merged.name && dataRecord.fullName) merged.name = dataRecord.fullName as string;
@@ -539,7 +585,7 @@ export class UnifiedDataOrchestrator {
       if (!merged.email && dataRecord.email) merged.email = dataRecord.email as string;
       if (!merged.phone && dataRecord.phone) merged.phone = dataRecord.phone as string;
       if (!merged.website && dataRecord.website) merged.website = dataRecord.website as string;
-      
+
       // Merge social media
       if (merged.socialMedia && dataRecord.twitter_id) merged.socialMedia.twitter = dataRecord.twitter_id as string;
       if (merged.socialMedia && dataRecord.facebook_id) merged.socialMedia.facebook = dataRecord.facebook_id as string;
@@ -548,7 +594,7 @@ export class UnifiedDataOrchestrator {
 
     // Calculate completeness
     merged.completeness = this.calculateCompleteness(merged);
-    
+
     // Determine data quality
     if (merged.completeness >= 80) merged.dataQuality = 'high';
     else if (merged.completeness >= 60) merged.dataQuality = 'medium';
@@ -643,31 +689,586 @@ export class UnifiedDataOrchestrator {
     return Math.round((socialPlatforms / 4) * 100); // 4 main platforms
   }
 
-  // Missing method stubs - minimal implementations to satisfy type expectations
-  async getUpcomingElections(_loc: UserLocation): Promise<ElectoralRace[]> {
-    logger.info('getUpcomingElections called');
-    return [];
+  private summarizeLocation(location?: UserLocation) {
+    if (!location) {
+      return undefined;
+    }
+
+    return {
+      stateCode: location.stateCode,
+      zipCode: location.zipCode,
+      hasCoordinates: Boolean(location.coordinates),
+      hasAddress: Boolean(location.address),
+    };
   }
 
-  async getActiveCampaignData(_candidateId: string): Promise<unknown> {
-    logger.info('getActiveCampaignData called');
+  private throwNotImplemented(method: string, extras?: Record<string, unknown>): never {
+    const message = `${method} is not yet wired to the civics data pipeline.`;
+
+    if (extras) {
+      logger.warn('UnifiedDataOrchestrator method not implemented', { method, extras });
+      throw new NotImplementedError(message, {
+        context: { method: `UnifiedDataOrchestrator.${method}` },
+        value: extras,
+      });
+    }
+
+    logger.warn('UnifiedDataOrchestrator method not implemented', { method });
+    throw new NotImplementedError(message, {
+      context: { method: `UnifiedDataOrchestrator.${method}` },
+    });
+  }
+
+  // Explicitly surface missing implementations so callers can degrade gracefully
+  async getUpcomingElections(location: UserLocation): Promise<ElectoralRace[]> {
+    const address = buildLookupAddress(location);
+
+    if (!this.clients.googleCivic) {
+      logger.warn('Google Civic client not available when requesting upcoming elections');
+      return [await this.buildFallbackRace(location)];
+    }
+
+    if (!address) {
+      logger.warn('Unable to derive address for upcoming elections lookup', {
+        location: this.summarizeLocation(location),
+      });
+      return [await this.buildFallbackRace(location)];
+    }
+
+    try {
+      const electionInfo = await this.clients.googleCivic.getElectionInfo(address);
+      const elections = electionInfo?.elections ?? [];
+
+      if (elections.length === 0) {
+        logger.info('No upcoming elections returned for location', {
+          location: this.summarizeLocation(location),
+        });
+        return [await this.buildFallbackRace(location)];
+      }
+
+      const races = await Promise.all(
+        elections.map((election) => this.transformElection(election, location)),
+      );
+
+      // Filter out any elections we failed to transform
+      const validRaces = races.filter((race): race is ElectoralRace => Boolean(race));
+
+      if (validRaces.length === 0) {
+        logger.warn('Election transformation produced no valid races, using fallback', {
+          location: this.summarizeLocation(location),
+        });
+        return [await this.buildFallbackRace(location)];
+      }
+
+      return validRaces;
+    } catch (error) {
+      logger.error('Failed to load upcoming elections from Google Civic', {
+        location: this.summarizeLocation(location),
+        error,
+      });
+      return [await this.buildFallbackRace(location)];
+    }
+  }
+
+  async getActiveCampaignData(raceId: string): Promise<OrchestratorCampaignData> {
+    const context = this.electionContext.get(raceId);
+
+    if (!context) {
+      logger.warn('No election context available for race', { raceId });
+      return createCampaignDataFallback(raceId);
+    }
+
+    if (!this.clients.fec) {
+      logger.warn('FEC client unavailable when requesting campaign data', { raceId });
+      return createCampaignDataFallback(raceId);
+    }
+
+    const stateCode = context.stateCode;
+    const officeCode = determineOfficeCode(context.office);
+
+    if (!stateCode || !officeCode) {
+      logger.warn('Insufficient data to determine campaign query parameters', {
+        raceId,
+        context,
+      });
+      return createCampaignDataFallback(raceId);
+    }
+
+    const cycle = getCurrentFecCycle();
+    const params: {
+      state: string;
+      office: string;
+      cycle: number;
+      limit: number;
+      district?: string;
+    } = {
+      state: stateCode,
+      office: officeCode,
+      cycle,
+      limit: 25,
+    };
+
+    if (officeCode === 'H') {
+      const normalizedDistrict = normalizeDistrict(context.district);
+      if (normalizedDistrict) {
+        params.district = normalizedDistrict;
+      }
+    }
+
+    let candidateResults: FECCandidate[] = [];
+    try {
+      const candidatesResponse = await this.clients.fec.getCandidates(params);
+      candidateResults = (candidatesResponse?.results ?? []) as FECCandidate[];
+    } catch (error) {
+      logger.error('FEC candidate lookup failed', { raceId, params, error });
+      return createCampaignDataFallback(raceId);
+    }
+
+    if (candidateResults.length === 0) {
+      logger.info('FEC returned no candidates for race', { raceId, params });
+      return createCampaignDataFallback(raceId);
+    }
+
+    const topCandidates = candidateResults.slice(0, 5);
+    const candidateSummaries: OrchestratorCandidateSummary[] = [];
+
+    for (const candidate of topCandidates) {
+      let finance: UnifiedCampaignFinance | null = null;
+
+      try {
+        finance = (await this.getCampaignFinance(candidate.candidate_id, cycle)) ?? null;
+      } catch (error) {
+        logger.debug('Campaign finance lookup failed for candidate', {
+          candidateId: candidate.candidate_id,
+          error,
+        });
+      }
+
+      candidateSummaries.push({
+        candidateId: candidate.candidate_id,
+        name: candidate.name,
+        party: candidate.party_full ?? candidate.party ?? null,
+        status: candidate.candidate_status ?? null,
+        incumbentStatus: candidate.incumbent_challenge ?? null,
+        totalRaised: finance ? finance.totalRaised : null,
+        totalSpent: finance ? finance.totalSpent : null,
+        cashOnHand: finance ? calculateCashOnHand(finance) : null,
+        smallDonorPercentage: finance ? finance.smallDonorPercentage : null,
+        lastFilingDate: resolveLastFilingDate(finance, candidate),
+        finance,
+      });
+    }
+
+    const recentActivity = buildCampaignActivity(candidateSummaries, cycle);
+
+    return {
+      source: 'fec',
+      fetchedAt: new Date().toISOString(),
+      cycle,
+      candidates: candidateSummaries,
+      recentActivity,
+      constituentQuestions: 0,
+      candidateResponses: 0,
+    };
+  }
+
+  async getJurisdictionKeyIssues(
+    location: UserLocation,
+  ): Promise<Array<{ issue: string; mentions: number; source?: string; latestAction?: string }>> {
+    const stateCode = this.resolveStateCode(location);
+
+    if (!stateCode) {
+      logger.warn('Unable to determine state code for jurisdiction issue lookup', {
+        location: this.summarizeLocation(location),
+      });
+      return [];
+    }
+
+    if (!this.clients.openStates) {
+      logger.warn('OpenStates client unavailable for jurisdiction issue lookup');
+      return [];
+    }
+
+    try {
+      const bills = await this.clients.openStates.getBills({
+        state: stateCode.toLowerCase(),
+        limit: 50,
+      });
+
+      if (!bills || bills.length === 0) {
+        logger.info('OpenStates returned no bills for state', { stateCode });
+        return [];
+      }
+
+      const signals = deriveKeyIssuesFromBills(bills, {
+        source: 'openstates',
+        limit: 8,
+      });
+
+      if (signals.length === 0) {
+        logger.warn('No subjects derived from OpenStates bills', { stateCode });
+      }
+
+      return signals;
+    } catch (error) {
+      logger.error('Failed to derive jurisdiction key issues from OpenStates', {
+        stateCode,
+        error,
+      });
+      return [];
+    }
+  }
+
+  async getCandidatePostGovernmentEmployment(candidateId: string): Promise<unknown[]> {
+    this.throwNotImplemented('getCandidatePostGovernmentEmployment', { candidateId });
+  }
+
+  async getCandidateCorporateConnections(candidateId: string): Promise<unknown[]> {
+    this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
+  }
+
+  async getCandidatePolicyPositions(candidateId: string): Promise<unknown[]> {
+    this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
+  }
+
+  private buildLookupAddress(location: UserLocation): string | null {
+    if (location.address) {
+      return location.address;
+    }
+
+    const segments: string[] = [];
+    if (location.city) {
+      segments.push(location.city);
+    }
+    if (location.stateCode) {
+      segments.push(location.stateCode);
+    }
+    if (location.zipCode) {
+      segments.push(location.zipCode);
+    }
+
+    if (segments.length > 0) {
+      return segments.join(', ');
+    }
+
+    if (location.coordinates) {
+      return `${location.coordinates.lat}, ${location.coordinates.lng}`;
+    }
+
     return null;
   }
 
-  async getJurisdictionKeyIssues(_loc: UserLocation): Promise<string[]> {
-    return [];
+  private async transformElection(
+    election: GoogleCivicElectionInfo['elections'][number],
+    location: UserLocation,
+  ): Promise<ElectoralRace | null> {
+    const { stateCode, district, jurisdiction } = extractDivisionMetadata(
+      election.ocdDivisionId,
+      location.stateCode,
+    );
+
+    const electionDate = election.electionDay;
+    const cycle = this.extractElectionCycle(electionDate);
+
+    const incumbent = this.createPlaceholderRepresentative({
+      id: `incumbent-${election.id}`,
+      name: 'Incumbent TBD',
+      party: 'Unknown',
+      office: election.name,
+      jurisdiction,
+      ...(stateCode ? { state: stateCode } : location.stateCode ? { state: location.stateCode } : {}),
+      ...(district ? { district } : {}),
+    });
+
+    const raceFinance = this.createPlaceholderCampaignFinance(`race-${election.id}`, cycle, 'google-civic');
+
+    const race: ElectoralRace = {
+      raceId: election.id,
+      office: election.name,
+      jurisdiction,
+      electionDate,
+      incumbent,
+      challengers: [],
+      allCandidates: [],
+      keyIssues: [],
+      campaignFinance: raceFinance,
+      pollingData: null,
+      voterRegistrationDeadline: estimateDeadline(electionDate, 21), // ~3 weeks prior
+      earlyVotingStart: estimateDeadline(electionDate, -14), // ~2 weeks after (placeholder)
+      absenteeBallotDeadline: estimateDeadline(electionDate, 7), // ~1 week prior
+      recentActivity: [],
+      constituentQuestions: 0,
+      candidateResponses: 0,
+      status: 'upcoming',
+      importance: determineRaceImportance(election.name, jurisdiction),
+    };
+
+    const electionContext = {
+      jurisdiction,
+      office: election.name,
+    } as { jurisdiction: string; stateCode?: string; district?: string; office?: string };
+
+    if (stateCode) {
+      electionContext.stateCode = stateCode;
+    }
+    if (district) {
+      electionContext.district = district;
+    }
+
+    this.electionContext.set(election.id, electionContext);
+
+    return race;
   }
 
-  async getCandidatePostGovernmentEmployment(_candidateId: string): Promise<unknown[]> {
-    return [];
+  private extractElectionCycle(electionDate: string | undefined): number {
+    if (!electionDate) {
+      return new Date().getFullYear();
+    }
+
+    const parsed = new Date(electionDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return new Date().getFullYear();
+    }
+
+    return parsed.getUTCFullYear();
   }
 
-  async getCandidateCorporateConnections(_candidateId: string): Promise<unknown[]> {
-    return [];
+  private determineRaceImportance(
+    electionName: string,
+    jurisdiction: string,
+  ): 'high' | 'medium' | 'low' {
+    const normalizedName = electionName.toLowerCase();
+
+    if (
+      normalizedName.includes('presidential') ||
+      normalizedName.includes('general') ||
+      normalizedName.includes('federal')
+    ) {
+      return 'high';
+    }
+
+    if (normalizedName.includes('primary') || normalizedName.includes('statewide')) {
+      return 'medium';
+    }
+
+    if (jurisdiction.toLowerCase().includes('municipal')) {
+      return 'low';
+    }
+
+    return 'medium';
   }
 
-  async getCandidatePolicyPositions(_candidateId: string): Promise<unknown[]> {
-    return [];
+  private estimateDeadline(dateString: string, offsetDays: number): string {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return 'TBD';
+    }
+
+    const adjusted = new Date(date);
+    adjusted.setUTCDate(date.getUTCDate() - offsetDays);
+    return adjusted.toISOString().slice(0, 10);
+  }
+
+  private extractDivisionMetadata(
+    divisionId: string | undefined,
+    fallbackState?: string,
+  ): {
+    stateCode?: string;
+    district?: string;
+    jurisdiction: string;
+  } {
+    if (!divisionId) {
+      const base: { jurisdiction: string; stateCode?: string } = {
+        jurisdiction: fallbackState ?? 'US',
+      };
+      if (fallbackState) {
+        base.stateCode = fallbackState.toUpperCase();
+      }
+      return base;
+    }
+
+    const stateMatch = divisionId.match(/state:([a-z]{2})/i);
+    const districtMatch = divisionId.match(/(?:cd|sldl|sldu):([a-z0-9]+)/i);
+    const countyMatch = divisionId.match(/county:([a-z_]+)/i);
+    const localityMatch = divisionId.match(/place:([a-z_]+)/i);
+
+    const stateCode =
+      stateMatch?.[1]?.toUpperCase() ?? (fallbackState ? fallbackState.toUpperCase() : undefined);
+    const district = districtMatch?.[1]?.toUpperCase();
+
+    const jurisdictionSegments = [
+      'ocd-division',
+      stateCode ? `state:${stateCode}` : null,
+      countyMatch ? `county:${countyMatch[1]}` : null,
+      localityMatch ? `locality:${localityMatch[1]}` : null,
+      district ? `district:${district}` : null,
+    ].filter(Boolean) as string[];
+
+    const result: { jurisdiction: string; stateCode?: string; district?: string } = {
+      jurisdiction: jurisdictionSegments.join('/'),
+    };
+
+    if (stateCode) {
+      result.stateCode = stateCode;
+    }
+    if (district) {
+      result.district = district;
+    }
+
+    return result;
+  }
+
+  private resolveStateCode(location: UserLocation): string | null {
+    if (location.stateCode) {
+      return location.stateCode.toUpperCase();
+    }
+
+    const federalDistrict = location.federal?.house?.district;
+    if (federalDistrict && federalDistrict.includes('-')) {
+      return federalDistrict.split('-')[0]?.toUpperCase() ?? null;
+    }
+
+    const locality = location.local?.city?.mayor;
+    if (locality) {
+      const match = locality.match(/\b([A-Z]{2})\b/);
+      if (match?.[1]) {
+        return match[1].toUpperCase();
+      }
+    }
+
+    return null;
+  }
+
+  private createPlaceholderRepresentative(options: {
+    id: string;
+    name: string;
+    party?: string;
+    office?: string;
+    jurisdiction?: string;
+    state?: string;
+    district?: string;
+  }): Representative {
+    const campaignFinance = this.createPlaceholderCampaignFinance(
+      options.id,
+      new Date().getFullYear(),
+      'placeholder',
+    );
+
+    const representative: Representative = {
+      id: options.id,
+      name: options.name,
+      party: options.party ?? 'Unknown',
+      office: options.office ?? 'Unknown Office',
+      jurisdiction: options.jurisdiction ?? options.state ?? 'US',
+      socialMedia: {},
+      votingRecord: {
+        totalVotes: 0,
+        partyLineVotes: 0,
+        constituentAlignment: 0,
+        keyVotes: [],
+      },
+      campaignFinance,
+      engagement: {
+        responseRate: 0,
+        averageResponseTime: 0,
+        constituentQuestions: 0,
+        publicStatements: 0,
+      },
+      walk_the_talk_score: {
+        overall: 0,
+        promise_fulfillment: 0,
+        constituentAlignment: 0,
+        financial_independence: 0,
+      },
+      recentActivity: [],
+      platform: [],
+    };
+
+    if (options.district) {
+      representative.district = options.district;
+    }
+    if (options.state && !options.jurisdiction) {
+      representative.jurisdiction = options.state;
+    }
+
+    return representative;
+  }
+
+  private createPlaceholderCampaignFinance(
+    id: string,
+    cycle: number,
+    source: string,
+  ): CampaignFinance {
+    return {
+      id,
+      representativeId: id,
+      cycle,
+      totalRaised: 0,
+      individualContributions: 0,
+      pacContributions: 0,
+      corporateContributions: 0,
+      unionContributions: 0,
+      selfFunding: 0,
+      smallDonorPercentage: 0,
+      topContributors: [],
+      independenceScore: 0,
+      corporateInfluence: 0,
+      pacInfluence: 0,
+      smallDonorInfluence: 0,
+      totalSpent: 0,
+      advertising: 0,
+      staff: 0,
+      travel: 0,
+      fundraising: 0,
+      sources: [source],
+      lastUpdated: new Date().toISOString(),
+      dataQuality: 'low',
+    };
+  }
+
+  private async buildFallbackRace(location: UserLocation): Promise<ElectoralRace> {
+    const placeholderRepresentative = this.createPlaceholderRepresentative({
+      id: 'placeholder-incumbent',
+      name: 'Information Pending',
+      jurisdiction: location.stateCode ?? 'US',
+      ...(location.stateCode ? { state: location.stateCode } : {}),
+    });
+
+    const fallbackContext = {
+      jurisdiction: location.stateCode ?? 'US',
+      office: 'Upcoming Election',
+    } as { jurisdiction: string; stateCode?: string; office?: string };
+
+    if (location.stateCode) {
+      fallbackContext.stateCode = location.stateCode.toUpperCase();
+    }
+
+    this.electionContext.set('placeholder-race', fallbackContext);
+
+    return {
+      raceId: 'placeholder-race',
+      office: 'Upcoming Election',
+      jurisdiction: location.stateCode ?? 'US',
+      electionDate: new Date().toISOString().slice(0, 10),
+      incumbent: placeholderRepresentative,
+      challengers: [],
+      allCandidates: [],
+      keyIssues: [],
+      campaignFinance: this.createPlaceholderCampaignFinance(
+        'placeholder-race',
+        new Date().getFullYear(),
+        'placeholder',
+      ),
+      pollingData: null,
+      voterRegistrationDeadline: 'TBD',
+      earlyVotingStart: 'TBD',
+      absenteeBallotDeadline: 'TBD',
+      recentActivity: [],
+      constituentQuestions: 0,
+      candidateResponses: 0,
+      status: 'upcoming',
+      importance: 'medium',
+    };
   }
 }
 

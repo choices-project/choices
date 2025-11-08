@@ -20,9 +20,10 @@ import type React from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { useUserStore } from '@/lib/stores';
-import { useFeedsStore } from '@/lib/stores/feedsStore';
+import { useFeedsStore, useFeedsPagination } from '@/lib/stores/feedsStore';
 import { useHashtagStore } from '@/lib/stores/hashtagStore';
 import logger from '@/lib/utils/logger';
+import type { FeedItem } from '@/lib/stores/types/feeds';
 
 type FeedDataProviderProps = {
   userId?: string;
@@ -30,7 +31,7 @@ type FeedDataProviderProps = {
   enableInfiniteScroll?: boolean;
   maxItems?: number;
   children: (props: {
-    feeds: any[];
+    feeds: FeedItem[];
     isLoading: boolean;
     error: string | null;
     onLike: (id: string) => Promise<void>;
@@ -43,7 +44,7 @@ type FeedDataProviderProps = {
     trendingHashtags: string[];
     districtFilterEnabled: boolean;
     onDistrictFilterToggle: () => void;
-    onLoadMore?: () => void;
+    onLoadMore?: () => Promise<void>;
     hasMore?: boolean;
   }) => React.ReactNode;
 };
@@ -62,9 +63,10 @@ export default function FeedDataProvider({
   children 
 }: FeedDataProviderProps) {
   // Get ONLY data from stores (not functions)
-  const feeds = useFeedsStore(state => state.feeds);
+  const feeds = useFeedsStore(state => state.filteredFeeds);
   const isLoading = useFeedsStore(state => state.isLoading);
   const storeError = useFeedsStore(state => state.error);
+  const { totalAvailable, loaded, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
   const trendingHashtags = useHashtagStore(state => 
     state.trendingHashtags.map(h => {
       if (typeof h === 'string') return h;
@@ -77,12 +79,38 @@ export default function FeedDataProvider({
   // Get functions ONCE using getState() - no re-subscription
   const feedsStoreRef = useRef(useFeedsStore.getState());
   const hashtagStoreRef = useRef(useHashtagStore.getState());
+  useEffect(() => {
+    feedsStoreRef.current = useFeedsStore.getState();
+    const unsubscribe = useFeedsStore.subscribe((state) => {
+      feedsStoreRef.current = state;
+    });
+    return unsubscribe;
+  }, []);
+  useEffect(() => {
+    hashtagStoreRef.current = useHashtagStore.getState();
+    const unsubscribe = useHashtagStore.subscribe((state) => {
+      hashtagStoreRef.current = state;
+    });
+    return unsubscribe;
+  }, []);
+  useEffect(() => {
+    feedsStoreRef.current = useFeedsStore.getState();
+    const unsubscribe = useFeedsStore.subscribe((state) => {
+      feedsStoreRef.current = state;
+    });
+    return unsubscribe;
+  }, []);
+  useEffect(() => {
+    hashtagStoreRef.current = useHashtagStore.getState();
+    const unsubscribe = useHashtagStore.subscribe((state) => {
+      hashtagStoreRef.current = state;
+    });
+    return unsubscribe;
+  }, []);
   
   // Local state for hashtag filtering and district filtering
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Load feeds on mount - ONCE
@@ -187,7 +215,7 @@ export default function FeedDataProvider({
     if (newValue && userDistrict) {
       feedsStoreRef.current.setFilters({ district: userDistrict });
     } else {
-      feedsStoreRef.current.setFilters({});
+      feedsStoreRef.current.setFilters({ district: null });
     }
     
     // Refresh feeds with new filter
@@ -196,17 +224,32 @@ export default function FeedDataProvider({
     });
   }, [districtFilterEnabled, userDistrict]);
 
-  const handleLoadMore = useCallback(() => {
-    if (!enableInfiniteScroll || !hasMore || isLoading) return;
-    setCurrentPage(prev => prev + 1);
-  }, [enableInfiniteScroll, hasMore, isLoading]);
+  const handleLoadMore = useCallback(async () => {
+    if (!enableInfiniteScroll) return;
+    if (!storeHasMore) return;
+    if (feeds.length >= maxItems) return;
 
-  // Check if there's more content to load
-  useEffect(() => {
-    const itemsPerPage = 10;
-    const totalExpected = currentPage * itemsPerPage;
-    setHasMore(feeds.length >= totalExpected && feeds.length < maxItems);
-  }, [currentPage, feeds.length, maxItems]);
+    const previousCount = feedsStoreRef.current.feeds.length;
+
+    try {
+      await loadMoreFeeds();
+      const nextState = useFeedsStore.getState();
+
+      if (nextState.error) {
+        setError(nextState.error);
+        return;
+      }
+
+      if (nextState.feeds.length === previousCount) {
+        return;
+      }
+
+      setError(null);
+    } catch (err) {
+      logger.error('Failed to load more feeds:', err);
+      setError('Failed to load more feeds');
+    }
+  }, [enableInfiniteScroll, storeHasMore, feeds.length, maxItems, loadMoreFeeds]);
 
   // Filter feeds by selected hashtags
   const filteredFeeds = selectedHashtags.length > 0
@@ -214,6 +257,9 @@ export default function FeedDataProvider({
         feed.tags.some(tag => selectedHashtags.includes(tag))
       )
     : feeds;
+
+  const effectiveLimit = totalAvailable > 0 ? Math.min(maxItems, totalAvailable) : maxItems;
+  const hasMore = enableInfiniteScroll && storeHasMore && feeds.length < effectiveLimit;
 
   return children({
     feeds: filteredFeeds,
@@ -229,7 +275,7 @@ export default function FeedDataProvider({
     trendingHashtags,
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictFilterToggle,
-    ...(enableInfiniteScroll && handleLoadMore ? { onLoadMore: handleLoadMore } : {}),
+    ...(enableInfiniteScroll ? { onLoadMore: handleLoadMore } : {}),
     ...(enableInfiniteScroll ? { hasMore } : {})
   });
 }

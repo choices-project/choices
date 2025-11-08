@@ -1,0 +1,19 @@
+{
+  "name": "@choices/civics-shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared civics helpers for Choices ingest and web applications.",
+  "scripts": {
+    "test": "node --test ./tests"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./index.js",
+      "types": "./index.d.ts"
+    }
+  }
+}
+

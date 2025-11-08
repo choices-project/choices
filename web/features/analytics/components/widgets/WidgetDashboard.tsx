@@ -31,42 +31,17 @@ import type { Layout as GridLayout } from 'react-grid-layout';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import DistrictHeatmap from '@/features/admin/components/DistrictHeatmap';
 import { logger } from '@/lib/utils/logger';
 
 import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
+import { getWidget } from '../../lib/widgetRegistry';
 import { getPreset, getAllPresets } from '../../lib/widgetPresets';
 import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
 import type { WidgetConfig } from '../../types/widget';
-import DemographicsChart from '../DemographicsChart';
-import PollHeatmap from '../PollHeatmap';
-import TemporalAnalysisChart from '../TemporalAnalysisChart';
-import TrendsChart from '../TrendsChart';
-import TrustTierComparisonChart from '../TrustTierComparisonChart';
 
 import { WidgetGrid } from './WidgetGrid';
 import { WidgetRenderer } from './WidgetRenderer';
 import { WidgetSelector } from './WidgetSelector';
-
-
-
-
-// Import existing analytics components
-
-
-// ============================================================================
-// WIDGET COMPONENT MAP
-// ============================================================================
-
-const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  'trends': TrendsChart,
-  'demographics': DemographicsChart,
-  'temporal': TemporalAnalysisChart,
-  'trust-tiers': TrustTierComparisonChart,
-  'poll-heatmap': PollHeatmap,
-  'district-heatmap': DistrictHeatmap,
-};
-
 // ============================================================================
 // WIDGET DASHBOARD PROPS
 // ============================================================================
@@ -89,15 +64,13 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
   // Store state
   const isEditing = useWidgetStore(selectIsEditing);
   const widgets = useWidgetStore(selectAllWidgets);
-  const { 
-    setEditing, 
-    loadLayout, 
-    saveLayout,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  } = useWidgetStore();
+  const setEditing = useWidgetStore((state) => state.setEditing);
+  const loadLayout = useWidgetStore((state) => state.loadLayout);
+  const saveLayout = useWidgetStore((state) => state.saveLayout);
+  const undo = useWidgetStore((state) => state.undo);
+  const redo = useWidgetStore((state) => state.redo);
+  const canUndo = useWidgetStore((state) => state.canUndo);
+  const canRedo = useWidgetStore((state) => state.canRedo);
 
   // Local state
   const [isSaving, setIsSaving] = useState(false);
@@ -209,28 +182,32 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
   }, []);
 
   const renderWidget = useCallback((widget: WidgetConfig) => {
-    const WidgetComponent = WIDGET_COMPONENTS[widget.type];
-    
-    if (!WidgetComponent) {
+    const registryEntry = getWidget(widget.type);
+
+    if (!registryEntry) {
       logger.warn('Unknown widget type', { type: widget.type });
       return null;
     }
 
+    const WidgetComponent = registryEntry.component;
+
     return (
-      <div key={widget.id} data-grid={{ 
-        i: widget.id,
-        x: widget.position.x,
-        y: widget.position.y,
-        w: widget.size.w,
-        h: widget.size.h,
-        minW: widget.minSize?.w ?? 2,
-        minH: widget.minSize?.h ?? 2,
-      }}>
-        <WidgetRenderer
-          config={widget}
-          isEditing={isEditing}
-        >
-          <WidgetComponent />
+      <div
+        key={widget.id}
+        data-grid={{
+          i: widget.id,
+          x: widget.position.x,
+          y: widget.position.y,
+          w: widget.size.w,
+          h: widget.size.h,
+          minW: widget.minSize?.w ?? registryEntry.metadata.minSize.w,
+          minH: widget.minSize?.h ?? registryEntry.metadata.minSize.h,
+          maxW: widget.maxSize?.w ?? registryEntry.metadata.maxSize?.w,
+          maxH: widget.maxSize?.h ?? registryEntry.metadata.maxSize?.h,
+        }}
+      >
+        <WidgetRenderer config={widget} isEditing={isEditing}>
+          <WidgetComponent id={widget.id} config={widget} />
         </WidgetRenderer>
       </div>
     );

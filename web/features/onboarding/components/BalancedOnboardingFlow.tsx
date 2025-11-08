@@ -1,10 +1,10 @@
 /**
  * @fileoverview Balanced Onboarding Flow Component
- * 
- * Comprehensive onboarding flow with 5 essential steps: Welcome, Privacy, 
- * Demographics, Authentication, and Completion. Provides a balanced user 
+ *
+ * Comprehensive onboarding flow with 5 essential steps: Welcome, Privacy,
+ * Demographics, Authentication, and Completion. Provides a balanced user
  * experience with progressive disclosure and privacy-first design.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -20,8 +20,10 @@ import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
 import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
-import { useUser, useUserLoading , 
-useOnboardingStep,
+import {
+  useUser,
+  useUserLoading,
+  useOnboardingStep,
   useOnboardingData,
   useOnboardingActions,
   useOnboardingLoading,
@@ -118,7 +120,7 @@ const PrivacyStep: React.FC<{
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Location Data</h3>
                 <p className="text-gray-600">
-                  We only need your state/district to find your representatives. 
+                  We only need your state/district to find your representatives.
                   We never store your exact address.
                 </p>
               </div>
@@ -131,7 +133,7 @@ const PrivacyStep: React.FC<{
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Demographics</h3>
                 <p className="text-gray-600">
-                  Age and education help us show you relevant polls and 
+                  Age and education help us show you relevant polls and
                   match you with similar voters.
                 </p>
               </div>
@@ -144,7 +146,7 @@ const PrivacyStep: React.FC<{
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Protection</h3>
                 <p className="text-gray-600">
-                  All data is encrypted, anonymized, and never sold. 
+                  All data is encrypted, anonymized, and never sold.
                   You can delete your data anytime.
                 </p>
               </div>
@@ -250,11 +252,11 @@ const DemographicsStep: React.FC<{
               Find Your District
             </h3>
             <p className="text-gray-600 mb-4">
-              Enter your address to find your congressional district and representatives. 
+              Enter your address to find your congressional district and representatives.
               We only store your district, never your full address.
             </p>
-            
-            <AddressLookup 
+
+            <AddressLookup
               autoSave={true}
               onDistrictSaved={(district) => {
                 // Update demographics with district info
@@ -268,14 +270,14 @@ const DemographicsStep: React.FC<{
                 });
               }}
             />
-            
+
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">
-                <strong>Why we ask:</strong> Your district helps us show you relevant representatives, 
+                <strong>Why we ask:</strong> Your district helps us show you relevant representatives,
                 local civic actions, and polls that matter to your area.
               </p>
               <p className="text-sm text-gray-600 mt-2">
-                <strong>Privacy:</strong> We never store your full address. Only your district (e.g., &quot;CA-12&quot;) 
+                <strong>Privacy:</strong> We never store your full address. Only your district (e.g., &quot;CA-12&quot;)
                 is saved, and you can remove it anytime from your profile settings.
               </p>
             </div>
@@ -290,7 +292,7 @@ const DemographicsStep: React.FC<{
             <p className="text-gray-600 mb-4">
               This helps us show you relevant polls and match you with similar voters
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -313,7 +315,7 @@ const DemographicsStep: React.FC<{
                   <option value="65+">65+</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Education Level
@@ -333,7 +335,7 @@ const DemographicsStep: React.FC<{
                   <option value="graduate">Graduate Degree</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Political Engagement
@@ -363,7 +365,7 @@ const DemographicsStep: React.FC<{
           >
             ← Back
           </button>
-          
+
           <div className="flex space-x-4">
             <button
               onClick={onSkip}
@@ -380,7 +382,7 @@ const DemographicsStep: React.FC<{
             </button>
           </div>
         </div>
-        
+
         <p className="text-sm text-gray-500 text-center mt-4">
           You can always add this information later
         </p>
@@ -500,7 +502,7 @@ const AuthStep: React.FC<{
             >
               ← Back to options
             </button>
-            
+
             <div className="flex space-x-4">
               <button
                 onClick={onSkip}
@@ -587,7 +589,7 @@ const AuthStep: React.FC<{
           >
             ← Back
           </button>
-          
+
           <div className="flex space-x-4">
             <button
               onClick={onSkip}
@@ -597,7 +599,7 @@ const AuthStep: React.FC<{
             </button>
           </div>
         </div>
-        
+
         <p className="text-sm text-gray-500 text-center mt-4">
           You can start without an account, but with limited features
         </p>
@@ -831,7 +833,7 @@ const CompleteStep: React.FC<{
 
 /**
  * Balanced Onboarding Flow Component
- * 
+ *
  * A comprehensive onboarding flow that guides users through 6 essential steps:
  * 1. Welcome - Introduction and value proposition
  * 2. Privacy - Data usage and privacy preferences
@@ -839,13 +841,13 @@ const CompleteStep: React.FC<{
  * 4. Auth - Authentication setup (email, social, passkey, or anonymous)
  * 5. Profile - Display name, visibility, and notification preferences
  * 6. Complete - Success confirmation and next steps
- * 
+ *
  * Features:
  * - Automatic auth step skipping for users with existing passkey credentials
  * - Progress tracking and data persistence
  * - Responsive design with mobile-first approach
  * - Integration with Supabase authentication
- * 
+ *
  * @returns {JSX.Element} The complete onboarding flow interface
  */
 const BalancedOnboardingFlow: React.FC = () => {
@@ -872,8 +874,8 @@ const BalancedOnboardingFlow: React.FC = () => {
 
           // Check onboarding completion based on presence of key fields
           const isOnboardingCompleted = !!(
-            profile?.demographics && 
-            profile?.primary_concerns && 
+            profile?.demographics &&
+            profile?.primary_concerns &&
             profile?.community_focus &&
             profile?.participation_style
           );
@@ -908,17 +910,46 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleFinish = async () => {
+    const valuesData = onboardingData?.valuesData as
+      | {
+          primaryConcerns?: string[];
+          communityFocus?: string[];
+          participationStyle?: string;
+          primaryInterests?: string[];
+          priorities?: string[];
+        }
+      | undefined;
+
+    const primaryConcerns = Array.isArray(valuesData?.primaryConcerns)
+      ? valuesData?.primaryConcerns
+      : Array.isArray(valuesData?.primaryInterests)
+        ? valuesData?.primaryInterests
+        : [];
+
+    const communityFocusSelections = Array.isArray(valuesData?.communityFocus)
+      ? valuesData?.communityFocus
+      : Array.isArray(valuesData?.priorities)
+        ? valuesData?.priorities
+        : [];
+
+    const participationStyle =
+      valuesData?.participationStyle === 'observer' ||
+      valuesData?.participationStyle === 'contributor' ||
+      valuesData?.participationStyle === 'leader'
+        ? valuesData.participationStyle
+        : 'observer';
+
     try {
       // Update user profile to mark onboarding as completed
       if (user) {
         const supabase = await getSupabaseBrowserClient();
         const { error } = await supabase
           .from('user_profiles')
-          .update({ 
+          .update({
             demographics: {},
-            primary_concerns: onboardingData?.valuesData?.primaryInterests ?? [],
-            community_focus: onboardingData?.valuesData?.priorities ?? [],
-            participation_style: 'observer',
+            primary_concerns: primaryConcerns,
+            community_focus: communityFocusSelections,
+            participation_style: participationStyle,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
@@ -930,7 +961,7 @@ const BalancedOnboardingFlow: React.FC = () => {
 
     // Complete onboarding
     completeOnboarding();
-    
+
     // Redirect to main app
     window.location.href = '/civics';
     } catch (error) {
@@ -988,8 +1019,8 @@ const BalancedOnboardingFlow: React.FC = () => {
         />
       )}
       {currentStep === 2 && (
-        <DemographicsStep 
-          onNext={handleNext} 
+        <DemographicsStep
+          onNext={handleNext}
           onBack={handleBack}
           onSkip={handleNext}
           demographics={(onboardingData?.valuesData as UserDemographics) ?? {}}
@@ -1000,8 +1031,8 @@ const BalancedOnboardingFlow: React.FC = () => {
         <AuthStep onNext={handleNext} onBack={handleBack} onSkip={handleNext} error={error} isLoading={loading} />
       )}
       {currentStep === 4 && (
-        <ProfileStep 
-          onNext={handleNext} 
+        <ProfileStep
+          onNext={handleNext}
           onBack={handleBack}
           onSkip={handleSkip}
           profile={onboardingData?.profileData ?? {}}
@@ -1009,7 +1040,7 @@ const BalancedOnboardingFlow: React.FC = () => {
         />
       )}
       {currentStep === 5 && (
-        <CompleteStep 
+        <CompleteStep
           onFinish={handleFinish}
           demographics={(onboardingData?.valuesData as UserDemographics) ?? {}}
         />

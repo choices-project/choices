@@ -1,7 +1,32 @@
 {
+  "name": "@choices/civics-backend",
+  "private": true,
+  "type": "module",
+  "description": "Stand-alone civics ingest service for the Choices platform.",
+  "scripts": {
+    "clean": "rm -rf build",
+    "build": "tsc -p tsconfig.json",
+    "sample": "npm run build --silent && node build/run-sample.js",
+    "prioritize": "npm run build --silent && node build/prioritize-low-quality.js",
+    "preview": "npm run build --silent && node build/run-preview.js",
+    "audit:crosswalk": "npm run build --silent && node build/audit/crosswalk.js",
+    "fix:crosswalk": "npm run build --silent && node build/scripts/fix-crosswalk-corruption.js",
+    "enrich:finance": "npm run build --silent && node build/scripts/enrich-fec-finance.js",
+    "sync:contacts": "npm run build --silent && node build/scripts/sync-contacts.js",
+    "sync:social": "npm run build --silent && node build/scripts/sync-social.js",
+    "sync:photos": "npm run build --silent && node build/scripts/sync-photos.js",
+    "sync:data-sources": "npm run build --silent && node build/scripts/sync-data-sources.js",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
   "dependencies": {
+    "@choices/civics-shared": "file:../civics-shared",
     "@supabase/supabase-js": "^2.78.0",
     "dotenv": "^17.2.3",
     "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
   }
 }

@@ -64,6 +64,7 @@
     "bundle:report": "npm run build && npx webpack-bundle-analyzer .next/static/chunks/*.js"
   },
   "dependencies": {
+    "@choices/civics-shared": "file:../services/civics-shared",
     "@emotion/is-prop-valid": "~1.4.0",
     "@heroicons/react": "~2.2.0",
     "@radix-ui/react-checkbox": "~1.3.3",

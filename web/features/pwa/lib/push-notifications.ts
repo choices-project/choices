@@ -31,7 +31,7 @@ export type NotificationOptions = {
   icon?: string;
   badge?: string;
   tag?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   requireInteraction?: boolean;
   silent?: boolean;
 }
@@ -42,6 +42,10 @@ export type NotificationOptions = {
  * @returns {boolean} True if supported
  */
 export function isPushNotificationSupported(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
   return 'PushManager' in window && 
          'Notification' in window &&
          'serviceWorker' in navigator;
@@ -53,7 +57,7 @@ export function isPushNotificationSupported(): boolean {
  * @returns {NotificationPermission} Permission status (granted, denied, default)
  */
 export function getNotificationPermission(): NotificationPermission {
-  if (!('Notification' in window)) {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'denied';
   }
   
@@ -322,6 +326,10 @@ export async function showNotification(options: NotificationOptions): Promise<vo
  * @returns {Uint8Array} Uint8Array representation
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  if (typeof window === 'undefined') {
+    throw new Error('urlBase64ToUint8Array requires a browser environment');
+  }
+
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/-/g, '+')

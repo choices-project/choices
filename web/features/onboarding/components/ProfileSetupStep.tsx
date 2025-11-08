@@ -253,8 +253,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
               </div>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                   onClick={() => setProfileVisibility('public')}>
+              <label className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="radio"
                   name="visibility"
@@ -272,10 +271,9 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                     <Badge variant="default">Most Social</Badge>
                   </div>
                 </div>
-              </div>
+              </label>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                   onClick={() => setProfileVisibility('friends_only')}>
+              <label className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="radio"
                   name="visibility"
@@ -292,10 +290,9 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                     <Badge variant="outline">Balanced</Badge>
                   </div>
                 </div>
-              </div>
+              </label>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                   onClick={() => setProfileVisibility('private')}>
+              <label className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="radio"
                   name="visibility"
@@ -312,10 +309,9 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                     <Badge variant="secondary">Private</Badge>
                   </div>
                 </div>
-              </div>
+              </label>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                   onClick={() => setProfileVisibility('anonymous')}>
+              <label className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="radio"
                   name="visibility"
@@ -332,7 +328,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                     <Badge variant="destructive">Most Private</Badge>
                   </div>
                 </div>
-              </div>
+              </label>
             </div>
           </div>
         </CardContent>

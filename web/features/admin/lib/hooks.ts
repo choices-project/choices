@@ -3,7 +3,15 @@ import React from 'react';
 
 import { logger, devLog } from '@/lib/utils/logger';
 
-import type { TrendingTopic, GeneratedPoll, SystemMetrics, BreakingNewsStory, PollContext } from '../types';
+import type {
+  TrendingTopic,
+  GeneratedPoll,
+  SystemMetrics,
+  BreakingNewsStory,
+  PollContext,
+  AdminRealtimeEvent,
+  FeedbackRealtimeEvent,
+} from '../types';
 
 import { realTimeService } from './real-time-service';
 import { useAdminStore } from './store';
@@ -461,23 +469,103 @@ export const useGeneratePollContext = () => {
 // Real-time subscription hook
 export const useRealTimeSubscriptions = () => {
   const [subscriptions, setSubscriptions] = React.useState<string[]>([]);
+  const [lastAdminEvent, setLastAdminEvent] = React.useState<AdminRealtimeEvent | null>(null);
+  const [latestFeedbackEvent, setLatestFeedbackEvent] = React.useState<FeedbackRealtimeEvent | null>(null);
+
+  const setSystemMetrics = useAdminStore((state) => state.setSystemMetrics);
+  const addNotification = useAdminStore((state) => state.addNotification);
+  const addActivityItem = useAdminStore((state) => state.addActivityItem);
+
+  const handleAdminEvent = React.useCallback((event: AdminRealtimeEvent) => {
+    setLastAdminEvent(event);
+
+    switch (event.type) {
+      case 'system-metrics': {
+        setSystemMetrics(event.payload);
+        logger.debug('Real-time admin metrics update received', event.payload);
+        break;
+      }
+      case 'notification': {
+        addNotification({
+          type: event.payload.type,
+          title: event.payload.title,
+          message: event.payload.message,
+          read: event.payload.read,
+          metadata: event.payload.metadata,
+          action: event.payload.action,
+          timestamp: event.payload.timestamp,
+          created_at: event.payload.created_at,
+        });
+        logger.info('Real-time admin notification received', {
+          notificationId: event.payload.id,
+          title: event.payload.title,
+          type: event.payload.type,
+        });
+        break;
+      }
+      case 'activity': {
+        addActivityItem({
+          type: event.payload.type,
+          title: event.payload.title,
+          description: event.payload.description,
+          user_id: event.payload.user_id,
+          metadata: event.payload.metadata,
+        });
+        logger.debug('Real-time admin activity recorded', {
+          id: event.payload.id,
+          type: event.payload.type,
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  }, [addActivityItem, addNotification, setSystemMetrics]);
+
+  const handleFeedbackEvent = React.useCallback((event: FeedbackRealtimeEvent) => {
+    setLatestFeedbackEvent(event);
+    const { payload } = event;
+
+    const summary = `${payload.type.toUpperCase()}: ${payload.title}`;
+    const metadata = {
+      feedbackId: payload.feedbackId,
+      priority: payload.priority,
+      severity: payload.severity,
+      sentiment: payload.sentiment,
+      category: payload.category,
+    };
+
+    if (event.type === 'feedback-received') {
+      addNotification({
+        type: payload.priority === 'urgent' || payload.priority === 'high' ? 'warning' : 'info',
+        title: 'New Feedback Received',
+        message: summary,
+        metadata,
+      });
+      logger.info('Real-time feedback received', {
+        feedbackId: payload.feedbackId,
+        priority: payload.priority,
+      });
+    } else if (event.type === 'feedback-updated') {
+      addNotification({
+        type: 'info',
+        title: 'Feedback Updated',
+        message: summary,
+        metadata,
+      });
+      logger.debug('Real-time feedback updated', {
+        feedbackId: payload.feedbackId,
+        status: payload.severity,
+      });
+    }
+  }, [addNotification]);
 
   React.useEffect(() => {
     // Subscribe to admin updates
-    const adminSubscriptionId = realTimeService.subscribeToAdminUpdates(
-      (_data) => {
-        // Handle admin updates
-        // Real-time admin update received
-      }
-    );
+    const adminSubscriptionId = realTimeService.subscribeToAdminUpdates(handleAdminEvent);
 
     // Subscribe to feedback updates
-    const feedbackSubscriptionId = realTimeService.subscribeToFeedbackUpdates(
-      (_data) => {
-        // Handle feedback updates
-        // Real-time feedback update received
-      }
-    );
+    const feedbackSubscriptionId = realTimeService.subscribeToFeedbackUpdates(handleFeedbackEvent);
 
     setSubscriptions([adminSubscriptionId, feedbackSubscriptionId]);
 
@@ -486,7 +574,7 @@ export const useRealTimeSubscriptions = () => {
       realTimeService.unsubscribe(adminSubscriptionId);
       realTimeService.unsubscribe(feedbackSubscriptionId);
     };
-  }, []);
+  }, [handleAdminEvent, handleFeedbackEvent]);
 
   return {
     subscriptions,
@@ -494,7 +582,9 @@ export const useRealTimeSubscriptions = () => {
     closeAll: () => {
       subscriptions.forEach(id => realTimeService.unsubscribe(id));
       setSubscriptions([]);
-    }
+    },
+    lastAdminEvent,
+    latestFeedbackEvent,
   };
 };
 

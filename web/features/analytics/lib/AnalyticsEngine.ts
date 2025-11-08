@@ -121,6 +121,21 @@ export class AnalyticsEngine {
       });
     });
 
+    window.addEventListener('pwa-analytics', ((event: Event) => {
+      const detail = (event as CustomEvent).detail ?? {};
+      const { eventName, properties } = detail as {
+        eventName?: string;
+        properties?: Record<string, unknown>;
+      };
+
+      this.track({
+        type: 'pwa_event',
+        category: 'pwa',
+        action: eventName ?? 'pwa_custom_event',
+        properties: properties ?? (typeof detail === 'object' ? detail : {}),
+      });
+    }) as EventListener);
+
     // Service worker events
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
@@ -142,6 +157,16 @@ export class AnalyticsEngine {
             properties: {
               cacheName: event.data.cacheName
             }
+          });
+        } else if (event.data.type === 'OFFLINE_QUEUE_UPDATED') {
+          this.track({
+            type: 'pwa_event',
+            category: 'pwa',
+            action: 'offline_queue_updated',
+            properties: {
+              size: event.data.size,
+              updatedAt: event.data.updatedAt,
+            },
           });
         }
       });

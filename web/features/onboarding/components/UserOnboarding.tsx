@@ -3,27 +3,21 @@
 import React, { useState } from 'react';
 
 import {
-useOnboardingStep,
+  useOnboardingStep,
   useOnboardingActions,
   useUserStore,
   useNotificationStore
 } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
-import type { UserOnboardingProps } from '../types';
-
-type Jurisdiction = {
-  state?: string | null;
-  district?: string | null;
-  county?: string | null;
-  fallback?: boolean | null;
-};
+import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
+import type { OnboardingJurisdiction, UserOnboardingProps, UserOnboardingResult } from '../types';
 
 type LoadRepresentativesOptions = {
   source: 'address' | 'state';
   fallback?: boolean;
   skipLoading?: boolean;
-  jurisdiction?: Jurisdiction | null;
+  jurisdiction?: OnboardingJurisdiction | null;
 };
 
 /**
@@ -52,6 +46,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   // User store for address and representatives
   const currentAddress = useUserStore(state => state.currentAddress);
+  const currentStateValue = useUserStore(state => state.currentState);
   const representatives = useUserStore(state => state.representatives);
   const addressLoading = useUserStore(state => state.addressLoading);
   const setCurrentAddress = useUserStore(state => state.setCurrentAddress);
@@ -60,17 +55,12 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const setAddressLoading = useUserStore(state => state.setAddressLoading);
 
   // Notification store for user feedback
-  const addNotification = useNotificationStore((state: any) => state.addNotification);
+  const addNotification = useNotificationStore(state => state.addNotification);
 
   // ✅ Keep local state for component-specific concerns
   const [selectedState] = useState('CA'); // Default state selection
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [completionPayload, setCompletionPayload] = useState<{
-    address?: string;
-    state?: string;
-    jurisdiction?: Jurisdiction | null;
-    representatives: unknown[];
-  } | null>(null);
+  const [completionPayload, setCompletionPayload] = useState<UserOnboardingResult | null>(null);
 
   const loadRepresentativesForState = async (
     state: string,
@@ -94,7 +84,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       }
 
       const result = await response.json();
-      const representativesList = result.data?.representatives ?? [];
+      const representativesList = extractRepresentatives(result);
 
       setRepresentatives(representativesList);
       setCurrentState(state);
@@ -107,7 +97,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
         localStorage.setItem('userJurisdiction', JSON.stringify(jurisdiction));
       }
 
-      const payload: Exclude<typeof completionPayload, null> = {
+      const payload: UserOnboardingResult = {
         state,
         jurisdiction,
         representatives: representativesList,
@@ -190,8 +180,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
         throw new Error(result?.error ?? 'Address lookup failed');
       }
 
-      const jurisdiction: Jurisdiction = result.jurisdiction ?? {};
-      const resolvedState = jurisdiction.state ?? null;
+      const jurisdiction = normalizeJurisdiction(result.jurisdiction);
+      const resolvedState = jurisdiction?.state ?? null;
 
       localStorage.setItem('userAddress', currentAddress);
 
@@ -212,7 +202,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
       await loadRepresentativesForState(resolvedState, {
         source: 'address',
-        fallback: Boolean(jurisdiction?.fallback),
+        fallback: Boolean(jurisdiction?.fallback ?? false),
         skipLoading: true,
         jurisdiction,
       });
@@ -363,7 +353,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">All Set!</h2>
             <p className="text-gray-600 mb-6">
-              We found {(completionPayload?.representatives as unknown[] | undefined)?.length ?? representatives.length} representatives for your area.
+              We found {(completionPayload?.representatives?.length ?? representatives.length)} representatives for your area.
               You can always update this information later.
             </p>
 
@@ -371,9 +361,15 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
               onClick={() => {
                 if (completionPayload) {
                   onComplete(completionPayload);
-                } else {
-                  onComplete({ address: currentAddress, representatives });
+                  return;
                 }
+                const fallbackPayload: UserOnboardingResult = {
+                  address: currentAddress,
+                  state: currentStateValue,
+                  jurisdiction: null,
+                  representatives,
+                };
+                onComplete(fallbackPayload);
               }}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >

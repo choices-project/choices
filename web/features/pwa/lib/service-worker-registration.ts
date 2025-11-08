@@ -337,8 +337,8 @@ export function isUpdateAvailable(): boolean {
 /**
  * Send message to service worker
  * 
- * @param {any} message - Message to send
- * @returns {Promise<any>} Response from service worker
+ * @param message - Message to send
+ * @returns Response from service worker
  * 
  * @example
  * ```typescript
@@ -346,7 +346,16 @@ export function isUpdateAvailable(): boolean {
  * logger.info('SW version:', version);
  * ```
  */
-export async function sendMessage(message: any): Promise<any> {
+export type ServiceWorkerMessage<
+  TType extends string = string,
+  TPayload extends Record<string, unknown> = Record<string, unknown>,
+> = {
+  type: TType;
+} & TPayload;
+
+export async function sendMessage<TMessage extends ServiceWorkerMessage, TResponse = unknown>(
+  message: TMessage
+): Promise<TResponse> {
   if (!state.registration?.active) {
     throw new Error('No active service worker');
   }
@@ -355,10 +364,11 @@ export async function sendMessage(message: any): Promise<any> {
     const messageChannel = new MessageChannel();
     
     messageChannel.port1.onmessage = (event) => {
-      if (event.data.error) {
-        reject(event.data.error);
+      const { data } = event;
+      if (data && typeof data === 'object' && 'error' in data) {
+        reject((data as { error: unknown }).error);
       } else {
-        resolve(event.data);
+        resolve(data as TResponse);
       }
     };
     

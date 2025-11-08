@@ -40,29 +40,10 @@ import {
   useUserIsUploadingAvatar,
   useUserActions
 } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
-
 import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
 import type { ProfileEditProps } from '../index';
-
-// Local ProfileUpdateData type with correct naming convention
-type ProfileUpdateData = {
-  display_name?: string;
-  bio?: string;
-  username?: string;
-  primary_concerns?: string[];
-  community_focus?: string[];
-  participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
-  privacy_settings?: {
-    profile_visibility?: 'public' | 'private' | 'friends';
-    show_email?: boolean;
-    show_activity?: boolean;
-    allow_messages?: boolean;
-    share_demographics?: boolean;
-    allow_analytics?: boolean;
-  };
-  demographics?: Record<string, any>;
-}
+import type { ProfileUpdateData, ProfileDemographics, PrivacySettings } from '@/types/profile';
+import { PROFILE_DEFAULTS } from '@/types/profile';
 
 // Constants for form options
 const COMMUNITY_FOCUS_OPTIONS = [
@@ -91,6 +72,94 @@ const PRIMARY_CONCERNS_OPTIONS = [
   'National Security'
 ];
 
+const PARTICIPATION_OPTIONS: ProfileUpdateData['participation_style'][] = [
+  'observer',
+  'participant',
+  'leader',
+  'organizer',
+];
+
+const basePrivacyDefaults: Partial<PrivacySettings> = {
+  collectLocationData: false,
+  collectVotingHistory: false,
+  trackInterests: false,
+  trackFeedActivity: false,
+  collectAnalytics: false,
+  trackRepresentativeInteractions: false,
+  showReadHistory: false,
+  showBookmarks: false,
+  showLikes: false,
+  shareActivity: false,
+  participateInTrustTier: false,
+  personalizeFeeds: false,
+  personalizeRecommendations: false,
+  retainVotingHistory: false,
+  retainSearchHistory: false,
+  retainLocationHistory: false,
+  allow_analytics: false,
+  show_activity: true,
+  allow_messages: true,
+  share_demographics: false,
+  show_email: false,
+  profile_visibility: 'public',
+};
+
+const defaultPrivacySettings: Partial<PrivacySettings> = {
+  ...basePrivacyDefaults,
+  ...(PROFILE_DEFAULTS.privacy_settings ?? {}),
+};
+
+const defaultDemographics: ProfileDemographics =
+  PROFILE_DEFAULTS.demographics ? { ...PROFILE_DEFAULTS.demographics } : {};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const toStringArray = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
+
+const toParticipationStyle = (value: unknown): ProfileUpdateData['participation_style'] =>
+  PARTICIPATION_OPTIONS.includes(value as ProfileUpdateData['participation_style'])
+    ? (value as ProfileUpdateData['participation_style'])
+    : 'observer';
+
+const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
+  if (!isRecord(value)) {
+    return { ...defaultPrivacySettings };
+  }
+
+  const result: Partial<PrivacySettings> = { ...defaultPrivacySettings };
+  Object.entries(value).forEach(([key, raw]) => {
+    if (typeof raw === 'boolean') {
+      result[key as keyof PrivacySettings] = raw;
+    } else if (key === 'profile_visibility' && typeof raw === 'string') {
+      result.profile_visibility = raw as PrivacySettings['profile_visibility'];
+    }
+  });
+
+  return result;
+};
+
+const parseDemographics = (value: unknown): ProfileDemographics => {
+  if (!isRecord(value)) {
+    return { ...defaultDemographics };
+  }
+  return { ...defaultDemographics, ...(value as ProfileDemographics) };
+};
+
+const buildInitialFormData = (userProfile: ProfileEditProps['profile']): ProfileUpdateData => ({
+  display_name: userProfile.display_name ?? '',
+  bio: userProfile.bio ?? '',
+  username: userProfile.username ?? '',
+  primary_concerns: toStringArray(userProfile.primary_concerns ?? []),
+  community_focus: toStringArray(userProfile.community_focus ?? []),
+  participation_style: toParticipationStyle(userProfile.participation_style),
+  privacy_settings: parsePrivacySettings(userProfile.privacy_settings),
+  demographics: parseDemographics(userProfile.demographics),
+});
+
 export default function ProfileEdit({ 
   profile, 
   onSave, 
@@ -104,23 +173,7 @@ export default function ProfileEdit({
   const { displayName, initials } = useProfileDisplay();
   
   // Local form data state
-  const [formData, setFormData] = useState<ProfileUpdateData>({
-    display_name: '',
-    bio: '',
-    username: '',
-    primary_concerns: [],
-    community_focus: [],
-    participation_style: 'observer',
-    privacy_settings: {
-      profile_visibility: 'public',
-      show_email: false,
-      show_activity: true,
-      allow_messages: true,
-      share_demographics: false,
-      allow_analytics: true
-    },
-    demographics: {}
-  });
+  const [formData, setFormData] = useState<ProfileUpdateData>(() => buildInitialFormData(profile));
   const avatarFile = useUserAvatarFile();
   const avatarPreview = useUserAvatarPreview();
   const isUploadingAvatar = useUserIsUploadingAvatar();
@@ -140,25 +193,7 @@ export default function ProfileEdit({
 
   // Initialize form data (local and store)
   React.useEffect(() => {
-    const profileAny = profile as any;
-    const initialData = {
-      display_name: profileAny.display_name ?? '',
-      bio: profile.bio ?? '',
-      username: profile.username ?? '',
-      primary_concerns: profileAny.primary_concerns ?? [],
-      community_focus: profileAny.community_focus ?? [],
-      participation_style: (profileAny.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') ?? 'observer',
-      privacy_settings: (profileAny.privacy_settings) ?? {
-        profile_visibility: 'public',
-        show_email: false,
-        show_activity: true,
-        allow_messages: true,
-        share_demographics: false,
-        allow_analytics: true
-      },
-      demographics: (profileAny.demographics as Record<string, any>) ?? {}
-    };
-    
+    const initialData = buildInitialFormData(profile);
     setFormData(initialData);
     setProfileEditData(initialData);
   }, [profile, setProfileEditData]);
@@ -173,20 +208,28 @@ export default function ProfileEdit({
   }
 
   // Handle form field changes
-  const handleFieldChange = (field: keyof ProfileUpdateData, value: any) => {
-    setFormData(prev => withOptional(prev, { [field]: value }) as ProfileUpdateData);
-    updateProfileEditData({ [field]: value });
+  const handleFieldChange = <K extends keyof ProfileUpdateData>(field: K, value: ProfileUpdateData[K]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    updateProfileEditData({ [field]: value } as Partial<ProfileUpdateData>);
     setError(null);
     setSuccess(null);
   };
 
   // Handle array field changes (concerns, focus)
   const handleArrayFieldChange = (field: 'primary_concerns' | 'community_focus', value: string) => {
-    const newArray = formData[field]?.includes(value) 
-      ? formData[field]?.filter(item => item !== value)
-      : [...(formData[field] ?? []), value];
-    
-    setFormData(prev => withOptional(prev, { [field]: newArray }) as ProfileUpdateData);
+    const currentValues = formData[field] ?? [];
+    const updatedValues = currentValues.includes(value)
+      ? currentValues.filter(item => item !== value)
+      : [...currentValues, value];
+
+    setFormData(prev => ({
+      ...prev,
+      [field]: updatedValues,
+    }));
+    updateProfileEditData({ [field]: updatedValues } as Partial<ProfileUpdateData>);
     
     // Note: Store sync handled by save action, not individual field updates
   };
@@ -253,24 +296,7 @@ export default function ProfileEdit({
 
   // Handle cancel
   const handleCancel = () => {
-    const profileAny = profile as any
-    setFormData({
-      display_name: profileAny.display_name ?? '',
-      bio: profile.bio ?? '',
-      username: profile.username ?? '',
-      primary_concerns: profileAny.primary_concerns ?? [],
-      community_focus: profileAny.community_focus ?? [],
-      participation_style: (profileAny.participation_style as 'observer' | 'participant' | 'leader' | 'organizer') ?? 'observer',
-      privacy_settings: (profileAny.privacy_settings) ?? {
-        profile_visibility: 'public',
-        show_email: false,
-        show_activity: true,
-        allow_messages: true,
-        share_demographics: false,
-        allow_analytics: true
-      },
-      demographics: (profileAny.demographics as Record<string, any>) ?? {}
-    });
+    setFormData(buildInitialFormData(profile));
     setError(null);
     setSuccess(null);
     onCancel?.();

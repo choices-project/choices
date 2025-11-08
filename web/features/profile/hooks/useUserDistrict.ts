@@ -10,6 +10,7 @@
 'use client';
 
 import { useProfileStore } from '@/lib/stores/profileStore';
+import type { ProfileDemographics } from '@/types/profile';
 
 export type UserDistrict = {
   state?: string;
@@ -37,9 +38,10 @@ export function useUserDistrict(): UserDistrict | null {
     return null;
   }
 
-  const demographics = typeof profile.demographics === 'object' && profile.demographics !== null
-    ? profile.demographics as any
-    : null;
+  const demographics =
+    typeof profile.demographics === 'object' && profile.demographics !== null
+      ? (profile.demographics as ProfileDemographics)
+      : null;
 
   if (!demographics?.location) {
     return null;

@@ -14,9 +14,11 @@ import {
   Smartphone,
   Download
 } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { useFeatureFlags } from "@/features/pwa/hooks/useFeatureFlags"
+import { useVotingActions, useVotingIsVoting } from '@/lib/stores/votingStore';
+import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
 import { devLog } from '@/lib/utils/logger';
 
 import { usePWAUtils } from '../hooks/usePWAUtils'
@@ -52,12 +54,37 @@ export function PWAVotingInterface({
   const { isEnabled: pwaEnabled } = useFeatureFlags()
   const pwaFeatureEnabled = pwaEnabled('PWA')
   const { utils: pwaUtils } = usePWAUtils()
+  const {
+    setBallots,
+    setSelectedBallot,
+    setCurrentBallot,
+    setVoting,
+    setError: setVotingError,
+    clearError: clearVotingError,
+    addVotingRecord,
+  } = useVotingActions();
+  const storeIsVoting = useVotingIsVoting();
   
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [hasVoted, setHasVoted] = useState(false)
-  const [isVoting, setIsVoting] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
   const [showPWAFeatures, setShowPWAFeatures] = useState(false)
+
+  const pollDetailsForBallot = useMemo(
+    () => ({
+      id: poll.id,
+      title: poll.question,
+      description: null,
+      options: [...poll.options],
+      votingMethod: 'single',
+      totalVotes: poll.totalVotes,
+      endtime: poll.expiresAt,
+      status: poll.isActive ? 'active' : 'closed',
+      category: poll.category,
+      createdAt: null,
+    }),
+    [poll]
+  );
 
   useEffect(() => {
     setIsOnline(navigator.onLine)
@@ -74,48 +101,72 @@ export function PWAVotingInterface({
     }
   }, [])
 
-  const handleVote = async (choice: number) => {
-    if (hasVoted || isVoting) return
+  useEffect(() => {
+    const optionVoteCounts = poll.results
+      ? Object.entries(poll.results).reduce<Record<string, number>>((acc, [index, value]) => {
+          acc[String(index)] = Number(value ?? 0)
+          return acc
+        }, {})
+      : undefined
 
-    // Validate choice is within valid range
+    const ballot = createBallotFromPoll(pollDetailsForBallot, {
+      totalVotes: poll.totalVotes,
+      optionVoteCounts,
+    })
+
+    setBallots([ballot])
+    setSelectedBallot(ballot)
+    setCurrentBallot(ballot)
+  }, [
+    poll.results,
+    poll.totalVotes,
+    pollDetailsForBallot,
+    setBallots,
+    setCurrentBallot,
+    setSelectedBallot,
+  ])
+
+  const handleVote = async (choice: number) => {
+    if (hasVoted || storeIsVoting) return
+
     if (choice < 0 || choice >= poll.options.length) {
-      devLog('Invalid choice:', { choice })
+      const message = 'Invalid choice selected.'
+      devLog(message, { choice })
+      setVotingError(message)
       return
     }
 
-    setIsVoting(true)
+    setVoting(true)
+    clearVotingError()
     setSelectedChoice(choice)
 
     try {
       if (pwaFeatureEnabled && pwaUtils && !isOnline) {
-        // Store offline vote
         await pwaUtils.pwaManager.storeOfflineVote({
           pollId: poll.id,
-          choice
+          choice,
         })
-        
-        // Track offline action (PWA analytics is archived)
-        // if (pwaUtils.pwaAnalytics) {
-        //   pwaUtils.pwaAnalytics.trackOfflineAction()
-        //   pwaUtils.pwaAnalytics.trackFeatureUsage('offlinevote')
-        // }
-        
+
         devLog('PWA: Vote stored offline')
       }
 
-      // Call the parent vote handler with validated choice
       await onVote(choice)
       setHasVoted(true)
-      
-      // Track analytics (PWA analytics is archived)
-      // if (pwaUtils && pwaUtils.pwaAnalytics) {
-      //   pwaUtils.pwaAnalytics.trackFeatureUsage('votecast')
-      //   pwaUtils.pwaAnalytics.trackDataCollection(1)
-      // }
+
+      addVotingRecord(
+        createVotingRecordFromPollSubmission({
+          poll: pollDetailsForBallot,
+          submission: { method: 'single', choice },
+          voteId: `${poll.id}-pwa-${Date.now().toString(36)}`,
+        })
+      )
     } catch (error) {
-      devLog('Vote failed:', { error })
+      const message =
+        error instanceof Error ? error.message : 'Failed to record vote'
+      devLog('Vote failed:', { error: message })
+      setVotingError(message)
     } finally {
-      setIsVoting(false)
+      setVoting(false)
     }
   }
 
@@ -143,7 +194,7 @@ export function PWAVotingInterface({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" data-testid="pwa-voting-interface">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-start justify-between">
@@ -197,22 +248,22 @@ export function PWAVotingInterface({
       {!hasVoted && !isExpired() && (
         <div className="p-6">
           <div className="space-y-3">
-            {poll.options.map((option: any, index: any) => (
+            {poll.options.map((option, index) => (
               <motion.button
                 key={index}
                 onClick={() => handleVote(index)}
-                disabled={isVoting}
+                disabled={storeIsVoting}
                 className={`w-full p-4 rounded-lg border-2 transition-all duration-200 text-left ${
                   selectedChoice === index
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                } ${isVoting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                whileHover={!isVoting ? { scale: 1.02 } : {}}
-                whileTap={!isVoting ? { scale: 0.98 } : {}}
+                } ${storeIsVoting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                whileHover={!storeIsVoting ? { scale: 1.02 } : {}}
+                whileTap={!storeIsVoting ? { scale: 0.98 } : {}}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-900">{option}</span>
-                  {isVoting && selectedChoice === index && (
+                  {storeIsVoting && selectedChoice === index && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
                   )}
                 </div>
@@ -240,7 +291,7 @@ export function PWAVotingInterface({
         <div className="p-6 bg-gray-50">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
           <div className="space-y-3">
-            {poll.options.map((option: any, index: any) => {
+            {poll.options.map((option, index) => {
               const votes = poll.results?.[index] ?? 0
               const percentage = calculatePercentage(votes)
               

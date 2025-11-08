@@ -8,7 +8,7 @@
  * Status: ✅ ACTIVE
  */
 
-import type { Database } from './database';
+import type { Database, Json } from './database';
 
 // Base types from database
 export type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
@@ -24,6 +24,23 @@ export type UserProfile = {
   completionPercentage?: number;
 } & UserProfileRow
 
+export type ProfileLocation = {
+  state?: string;
+  district?: string;
+  county?: string;
+  postalCode?: string;
+  latitude?: number;
+  longitude?: number;
+} & Record<string, Json | undefined>;
+
+export type ProfileDemographics = {
+  location?: ProfileLocation;
+  languages?: string[];
+  pronouns?: string;
+  ageRange?: string;
+  metadata?: Record<string, Json>;
+} & Record<string, Json | undefined>;
+
 // Profile editing types
 export type ProfileUpdateData = {
   display_name?: string;
@@ -32,15 +49,8 @@ export type ProfileUpdateData = {
   primary_concerns?: string[];
   community_focus?: string[];
   participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
-  privacy_settings?: {
-    profile_visibility?: 'public' | 'private' | 'friends';
-    show_email?: boolean;
-    show_activity?: boolean;
-    allow_messages?: boolean;
-    share_demographics?: boolean;
-    allow_analytics?: boolean;
-  };
-  demographics?: Record<string, any>;
+  privacy_settings?: Partial<PrivacySettings>;
+  demographics?: ProfileDemographics;
 }
 
 // Profile preferences
@@ -176,6 +186,22 @@ export type ProfileActionResult = {
   error?: string;
 }
 
+export type ProfileActivityRecord = {
+  id: string;
+  type: string;
+  created_at: string;
+  description?: string;
+  metadata?: Record<string, Json>;
+};
+
+export type ProfileCommentRecord = Record<string, Json | undefined> & {
+  id?: string;
+  created_at?: string;
+  body?: string;
+  target_type?: string;
+  target_id?: string;
+};
+
 export type ProfileValidationResult = {
   isValid: boolean;
   errors: Record<string, string>;
@@ -197,9 +223,9 @@ export type AvatarValidation = {
 export type ProfileExportData = {
   profile: UserProfile;
   preferences: ProfilePreferences;
-  activity: any[];
-  votes: any[];
-  comments: any[];
+  activity: ProfileActivityRecord[];
+  votes: Database['public']['Tables']['votes']['Row'][];
+  comments: ProfileCommentRecord[];
 }
 
 export type ExportOptions = {
@@ -308,7 +334,7 @@ export const PROFILE_DEFAULTS = {
   participation_style: 'observer' as const,
   primary_concerns: [] as string[],
   community_focus: [] as string[],
-  demographics: {} as Record<string, any>,
+  demographics: {} satisfies ProfileDemographics,
   privacy_settings: {
     profile_visibility: 'public' as const,
     show_email: false,
@@ -316,5 +342,5 @@ export const PROFILE_DEFAULTS = {
     allow_messages: true,
     share_demographics: false,
     allow_analytics: true,
-  },
+  } satisfies Partial<PrivacySettings>,
 } as const;

@@ -24,7 +24,7 @@ import {
   Bell,
   Shield,
   Zap,
-  Database,
+  Database as DatabaseIcon,
   BarChart3,
   Flame,
   Clock
@@ -43,6 +43,10 @@ import { logger } from '@/lib/utils/logger';
 
 import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
 import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
+import type { Database } from '@/types/database';
+
+type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
+type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
 
 import DemographicsChart from './DemographicsChart';
 import PollHeatmap from './PollHeatmap';
@@ -100,8 +104,8 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     ...(sessionId ? { sessionId } : {})
   }));
 
-  const [systemHealth, setSystemHealth] = useState<any[]>([]);
-  const [siteMessages, setSiteMessages] = useState<any[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthRow[]>([]);
+  const [siteMessages, setSiteMessages] = useState<SiteMessageRow[]>([]);
   const [showDetails, setShowDetails] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -156,6 +160,19 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
         </Button>
       </div>
     );
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const enhancedInsights = data.enhancedInsights;
+  const botDetection = enhancedInsights?.botDetectionResults ?? null;
+  const trustTierDistribution = enhancedInsights?.trustTierDistribution;
+  const platformMetricsSummary = enhancedInsights?.platformMetrics ?? [];
+
+  if (!data) {
+    return null;
   }
 
   if (!data) {
@@ -214,7 +231,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
         </Badge>
         {enableNewSchema && (
           <Badge variant="default" className="bg-green-100 text-green-800">
-            <Database className="h-3 w-3 mr-1" />
+            <DatabaseIcon className="h-3 w-3 mr-1" />
             New Schema Enabled
           </Badge>
         )}
@@ -326,7 +343,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
       </div>
 
       {/* Enhanced Insights */}
-      {data.enhancedInsights && (
+      {enhancedInsights && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -340,23 +357,23 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Bot Detection */}
-              {data.enhancedInsights.botDetectionResults && (
+              {botDetection ? (
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold flex items-center gap-2">
                     <Shield className="h-4 w-4" />
                     Bot Detection
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Risk Score: {data.enhancedInsights.botDetectionResults.riskScore || 0}
+                    Risk Score: {botDetection.riskScore}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Confidence: {data.enhancedInsights.botDetectionResults.confidence || 0}%
+                    Confidence: {botDetection.confidence}%
                   </p>
                 </div>
-              )}
+              ) : null}
 
               {/* Trust Tier Distribution */}
-              {data.enhancedInsights.trustTierDistribution && (
+              {trustTierDistribution ? (
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -366,17 +383,17 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
                     Analysis complete
                   </p>
                 </div>
-              )}
+              ) : null}
 
               {/* Platform Metrics */}
-              {data.enhancedInsights.platformMetrics && (
+              {platformMetricsSummary.length > 0 && (
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <Database className="h-4 w-4" />
+                    <DatabaseIcon className="h-4 w-4" />
                     Platform Metrics
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {data.enhancedInsights.platformMetrics.length} data points
+                    {platformMetricsSummary.length} data points
                   </p>
                 </div>
               )}
@@ -433,17 +450,17 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
             <div className="space-y-2">
               {systemHealth.map((check, index) => (
                 <div key={index} className="flex items-center justify-between p-2 border rounded">
-                  <span className="font-medium">{check.check_name}</span>
-                  <Badge 
-                    variant={check.status === 'ok' ? 'default' : check.status === 'warning' ? 'secondary' : 'destructive'}
+                  <span className="font-medium">{check.service_name}</span>
+                    <Badge 
+                    variant={check.health_status === 'ok' ? 'default' : check.health_status === 'warning' ? 'secondary' : 'destructive'}
                     className={
-                      check.status === 'ok' ? 'bg-green-100 text-green-800' :
-                      check.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                      check.health_status === 'ok' ? 'bg-green-100 text-green-800' :
+                      check.health_status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }
                   >
-                    {check.status === 'ok' ? <CheckCircle className="h-3 w-3 mr-1" /> : <AlertCircle className="h-3 w-3 mr-1" />}
-                    {check.status}
+                    {check.health_status === 'ok' ? <CheckCircle className="h-3 w-3 mr-1" /> : <AlertCircle className="h-3 w-3 mr-1" />}
+                    {check.health_status}
                   </Badge>
                 </div>
               ))}
@@ -467,7 +484,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
                 <div key={index} className="p-3 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">{message.title}</h4>
-                    <Badge variant="outline">{message.priority}</Badge>
+                    <Badge variant="outline">{message.priority ?? 'standard'}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{message.message}</p>
                 </div>

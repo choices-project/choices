@@ -3,8 +3,7 @@
 import { CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react';
 import React from 'react';
 
-
-import type { CompleteStepProps } from '../types';
+import type { CompleteStepProps, ParticipationStyle } from '../types';
 
 /**
  * Complete Step Component
@@ -25,7 +24,8 @@ import type { CompleteStepProps } from '../types';
  * @returns {JSX.Element} Completion confirmation interface
  */
 export default function CompleteStep({ data, onComplete, onBack, isLoading = false }: CompleteStepProps) {
-  const getParticipationIcon = (style: string) => {
+  const participationStyle: ParticipationStyle = data.participationStyle ?? 'observer';
+  const getParticipationIcon = (style: ParticipationStyle) => {
     switch (style) {
       case 'observer': return '👁️'
       case 'contributor': return '💡'
@@ -34,7 +34,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
     }
   }
 
-  const getParticipationLabel = (style: string) => {
+  const getParticipationLabel = (style: ParticipationStyle) => {
     switch (style) {
       case 'observer': return 'Observer'
       case 'contributor': return 'Contributor'
@@ -127,9 +127,9 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
               <TrendingUp className="w-5 h-5 text-purple-500 mr-2" />
               Your participation style
             </h4>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">{getParticipationIcon(data.participationStyle)}</span>
-              <span className="text-gray-700">{getParticipationLabel(data.participationStyle)}</span>
+          <div className="flex items-center space-x-2">
+              <span className="text-2xl">{getParticipationIcon(participationStyle)}</span>
+              <span className="text-gray-700">{getParticipationLabel(participationStyle)}</span>
             </div>
           </div>
 

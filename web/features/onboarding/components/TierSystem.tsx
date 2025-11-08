@@ -76,7 +76,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
 
       {/* Tiers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        {tiers.map((tier: any, index: any) => (
+        {tiers.map((tier, index) => (
           <motion.div
             key={tier.level}
             className={`relative p-6 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${
@@ -128,7 +128,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
 
             {/* Features */}
             <div className="space-y-3 mb-8">
-              {tier.features.map((feature: any, featureIndex: any) => (
+              {tier.features.map((feature, featureIndex) => (
                 <motion.div
                   key={featureIndex}
                   className="flex items-center gap-3"
@@ -202,11 +202,11 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
             Trust Level Comparison
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tiers.map((tier: any) => (
+            {tiers.map((tier) => (
               <div key={tier.level} className="p-4 bg-white rounded-lg border">
                 <h4 className="font-medium text-gray-900 mb-2">{tier.name}</h4>
                 <ul className="space-y-1 text-sm text-gray-600">
-                  {tier.features.map((feature: any, index: any) => (
+                  {tier.features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="w-3 h-3 text-green-500" />
                       {feature}

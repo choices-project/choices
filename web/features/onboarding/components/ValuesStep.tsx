@@ -1,72 +1,38 @@
-import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+'use client';
 
+import { Heart, Users, Globe, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
-'use client'
-
-type ValueCategory = {
-  title: string
-  icon: React.ReactNode
-  color: string
-  concerns: string[]
-}
-
-type CommunityOption = {
-  value: string
-  label: string
-  description: string
-}
-
-type ParticipationOption = {
-  value: 'observer' | 'contributor' | 'leader'
-  label: string
-  description: string
-  icon: React.ReactNode
-}
-
-type ValuesStepProps = {
-  data: {
-    primaryConcerns?: string[]
-    communityFocus?: string[]
-    participationStyle?: 'observer' | 'contributor' | 'leader'
-    valuesCompleted?: boolean
-  }
-  onUpdate: (_updates: {
-    primaryConcerns?: string[]
-    communityFocus?: string[]
-    participationStyle?: 'observer' | 'contributor' | 'leader'
-    valuesCompleted?: boolean
-    stepProgress?: {
-      currentStep: string
-      completedSteps: string[]
-      timeSpent: number
-    }
-  }) => void
-  onNext: () => void
-  onBack: () => void
-}
+import type {
+  ValueCategory,
+  CommunityOption,
+  ParticipationOption,
+  ValuesStepProps,
+  ParticipationStyle,
+  CommunityFocus,
+} from '../types';
 
 /**
  * Values Step Component
- * 
+ *
  * Handles user values and preferences selection during onboarding:
  * - Primary concerns selection (up to 5 from categories like Economic Justice, Environmental Protection)
  * - Community focus definition (local, regional, national, global)
  * - Participation style selection (observer, contributor, leader)
- * 
+ *
  * Features:
  * - Interactive concern selection with visual feedback
  * - Community focus with clear descriptions
  * - Participation style with detailed explanations
  * - Progress tracking and validation
- * 
+ *
  * @param {ValuesStepProps} props - Component props
  * @returns {JSX.Element} Values selection interface
  */
 export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesStepProps) {
-  const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns ?? [])
-  const [communityFocus, setCommunityFocus] = useState<string[]>(data.communityFocus ?? [])
-  const [participationStyle, setParticipationStyle] = useState(data.participationStyle ?? 'observer')
+  const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns ?? []);
+  const [communityFocus, setCommunityFocus] = useState<CommunityFocus[]>(data.communityFocus ?? []);
+  const [participationStyle, setParticipationStyle] = useState<ParticipationStyle>(data.participationStyle ?? 'observer');
 
   // Sync component state with data changes
   useEffect(() => {
@@ -87,21 +53,21 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
       : selectedConcerns.length < 5
       ? [...selectedConcerns, concern]
       : selectedConcerns
-    
+
     setSelectedConcerns(newConcerns)
     onUpdate({ primaryConcerns: newConcerns })
   }
 
-  const handleCommunityToggle = (focus: string) => {
+  const handleCommunityToggle = (focus: CommunityFocus) => {
     const newFocus = communityFocus.includes(focus)
       ? communityFocus.filter(f => f !== focus)
       : [...communityFocus, focus]
-    
+
     setCommunityFocus(newFocus)
     onUpdate({ communityFocus: newFocus })
   }
 
-  const handleParticipationChange = (style: 'observer' | 'contributor' | 'leader') => {
+  const handleParticipationChange = (style: ParticipationStyle) => {
     setParticipationStyle(style)
     onUpdate({ participationStyle: style })
   }
@@ -161,7 +127,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
     }
   ]
 
-  const communityOptions = [
+  const communityOptions: CommunityOption[] = [
     { value: 'local', label: 'My local community', description: 'City and neighborhood issues' },
     { value: 'regional', label: 'My region/state', description: 'State and regional concerns' },
     { value: 'national', label: 'National issues', description: 'Country-wide challenges' },
@@ -206,7 +172,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
         <h3 className="text-xl font-semibold text-gray-900">
           Primary Concerns ({selectedConcerns.length}/5)
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {valueCategories.map((category: ValueCategory) => (
             <div key={category.title} className="space-y-3">
@@ -311,7 +277,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           Continue
         </button>
       </div>
-      
+
       <div className="text-center text-sm text-gray-500">
         Step 3 of 6
       </div>

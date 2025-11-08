@@ -76,12 +76,15 @@
 - RLS policies
 - **Status**: ✅ Production-ready
 
-### Feed System - ✅ COMPLETE
+### Feed System - ✅ COMPLETE (Nov 8, 2025)
 - Unified feed (polls + civic actions)
 - Personalization scoring
 - Content filtering (category, type, **district**)
+- Privacy-aware interactions (likes, bookmarks, reads)
+- Persistent user preferences + exact optional handling
+- Infinite scroll with typed pagination helpers (`useFeedsPagination`)
 - Hashtag trending
-- **Status**: ✅ Backend operational, UI integration pending
+- **Status**: ✅ Production ready (store audit + UI integration complete)
 - **Tables**: `feeds`, `feed_items`, `feed_interactions`
 
 ### Admin Dashboard - ✅ COMPLETE
@@ -89,6 +92,11 @@
 - System health monitoring
 - User management
 - Performance monitoring
+- **Enhanced Feedback Tracker**
+  - Session-aware telemetry (performance, actions, network requests)
+  - Automatic console capture with max-history guard (`maxTrackedConsoleLogs`)
+  - Screenshot hook and Supabase realtime fan-out
+  - Single-instance lifecycle with teardown via `resetFeedbackTracker`
 - **Status**: ✅ Fully operational
 
 ### Candidate Platform - ✅ COMPLETE

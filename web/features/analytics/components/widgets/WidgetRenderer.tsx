@@ -35,14 +35,19 @@ import type { WidgetConfig } from '../../types/widget';
 // ERROR BOUNDARY
 // ============================================================================
 
-class WidgetErrorBoundary extends React.Component<
-  { children: React.ReactNode; widgetId: string; onError?: (error: Error) => void },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+type WidgetErrorBoundaryProps = {
+  children: React.ReactNode;
+  widgetId: string;
+  onError?: (error: Error) => void;
+};
+
+type WidgetErrorBoundaryState = {
+  hasError: boolean;
+  error: Error | null;
+};
+
+class WidgetErrorBoundary extends React.Component<WidgetErrorBoundaryProps, WidgetErrorBoundaryState> {
+  override state: WidgetErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };

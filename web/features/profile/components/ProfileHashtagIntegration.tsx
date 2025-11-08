@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay, HashtagManagement } from '@/features/hashtags';
-import type { Hashtag } from '@/features/hashtags/types';
+import type { Hashtag, ProfileHashtagIntegration as ProfileHashtagIntegrationData } from '@/features/hashtags/types';
 import { useHashtagStore } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
@@ -34,6 +34,17 @@ type ProfileHashtagIntegrationProps = {
   className?: string;
 }
 
+const createEmptyIntegration = (): ProfileHashtagIntegrationData => ({
+  user_id: '',
+  primary_hashtags: [],
+  interest_hashtags: [],
+  custom_hashtags: [],
+  followed_hashtags: [],
+  hashtag_preferences: null,
+  hashtag_activity: [],
+  last_updated: new Date().toISOString(),
+});
+
 export default function ProfileHashtagIntegration({
   profile: _profile,
   onUpdate,
@@ -41,7 +52,7 @@ export default function ProfileHashtagIntegration({
 }: ProfileHashtagIntegrationProps) {
   const [activeTab, setActiveTab] = useState('interests');
   const [isEditing, setIsEditing] = useState(false);
-  const [hashtagIntegration, setHashtagIntegration] = useState<any | null>(null);
+  const [hashtagIntegration, setHashtagIntegration] = useState<ProfileHashtagIntegrationData>(createEmptyIntegration);
 
   // Hashtag store hooks
   const { hashtags, trendingHashtags, followedHashtags } = useHashtagStore();
@@ -60,16 +71,17 @@ export default function ProfileHashtagIntegration({
       logger.info('Follow hashtag:', hashtag.id);
       
       // Update local state
-      setHashtagIntegration((prev: any) => ({
-        user_id: prev?.user_id || '',
-        primary_hashtags: prev?.primary_hashtags || [],
-        interest_hashtags: prev?.interest_hashtags || [],
-        custom_hashtags: prev?.custom_hashtags || [],
-        followed_hashtags: [...(prev?.followed_hashtags || []), hashtag.id],
-        hashtag_preferences: prev?.hashtag_preferences,
-        hashtag_activity: prev?.hashtag_activity || [],
-        last_updated: new Date().toISOString()
-      }));
+      setHashtagIntegration(prev => {
+        const current = prev ?? createEmptyIntegration();
+        const alreadyFollowing = current.followed_hashtags.includes(hashtag.id);
+        return {
+          ...current,
+          followed_hashtags: alreadyFollowing
+            ? current.followed_hashtags
+            : [...current.followed_hashtags, hashtag.id],
+          last_updated: new Date().toISOString(),
+        };
+      });
       
       // Update profile
       onUpdate?.({});
@@ -86,11 +98,14 @@ export default function ProfileHashtagIntegration({
       logger.info('Unfollow hashtag:', hashtag.id);
       
       // Update local state
-      setHashtagIntegration((prev: any) => ({
-        ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
-        followed_hashtags: (prev?.followed_hashtags || []).filter((id: string) => id !== hashtag.id),
-        last_updated: new Date().toISOString()
-      }));
+      setHashtagIntegration(prev => {
+        const current = prev ?? createEmptyIntegration();
+        return {
+          ...current,
+          followed_hashtags: current.followed_hashtags.filter(id => id !== hashtag.id),
+          last_updated: new Date().toISOString(),
+        };
+      });
       
       // Update profile
       onUpdate?.({});
@@ -100,36 +115,42 @@ export default function ProfileHashtagIntegration({
   };
 
   // Handle hashtag reordering
-  const handleReorderHashtags = (reorderedHashtags: any[]) => {
+  const handleReorderHashtags = (reorderedHashtags: Array<Pick<Hashtag, 'id'>>) => {
     // Update local state with reordered hashtags
-    setHashtagIntegration((prev: any) => ({
-      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
-      followed_hashtags: reorderedHashtags.map(h => h.id),
-      last_updated: new Date().toISOString(),
-      user_id: prev?.user_id || ''
-    }));
+    setHashtagIntegration(prev => {
+      const current = prev ?? createEmptyIntegration();
+      return {
+        ...current,
+        followed_hashtags: reorderedHashtags.map(h => h.id),
+        last_updated: new Date().toISOString(),
+      };
+    });
   };
 
   // Handle custom interests update
   const handleCustomInterestsUpdate = (interests: string[]) => {
-    setHashtagIntegration((prev: any) => ({
-      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
-      custom_hashtags: interests,
-      last_updated: new Date().toISOString(),
-      user_id: prev?.user_id || ''
-    }));
+    setHashtagIntegration(prev => {
+      const current = prev ?? createEmptyIntegration();
+      return {
+        ...current,
+        custom_hashtags: interests,
+        last_updated: new Date().toISOString(),
+      };
+    });
     
     onUpdate?.({});
   };
 
   // Handle primary hashtags update
   const handlePrimaryHashtagsUpdate = (hashtagIds: string[]) => {
-    setHashtagIntegration((prev: any) => ({
-      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
-      primary_hashtags: hashtagIds,
-      last_updated: new Date().toISOString(),
-      user_id: prev?.user_id || ''
-    }));
+    setHashtagIntegration(prev => {
+      const current = prev ?? createEmptyIntegration();
+      return {
+        ...current,
+        primary_hashtags: hashtagIds,
+        last_updated: new Date().toISOString(),
+      };
+    });
     
     onUpdate?.({});
   };
@@ -226,7 +247,7 @@ export default function ProfileHashtagIntegration({
                 </div>
               ) : (
                 <HashtagDisplay
-                  hashtags={followedHashtagObjects as any}
+                  hashtags={followedHashtagObjects}
                   showCount={true}
                   showCategory={true}
                   clickable={true}
@@ -261,7 +282,7 @@ export default function ProfileHashtagIntegration({
                 </div>
               ) : (
                 <HashtagDisplay
-                  hashtags={primaryHashtagObjects as any}
+                  hashtags={primaryHashtagObjects}
                   showCount={true}
                   showCategory={true}
                   clickable={true}
@@ -338,7 +359,7 @@ export default function ProfileHashtagIntegration({
                             size="sm"
                             className="h-4 w-4 p-0 ml-1"
                             onClick={() => {
-                              const newCustom = (hashtagIntegration?.custom_hashtags || []).filter((_: any, i: number) => i !== index);
+                              const newCustom = hashtagIntegration.custom_hashtags.filter((_, i) => i !== index);
                               handleCustomInterestsUpdate(newCustom);
                             }}
                           >

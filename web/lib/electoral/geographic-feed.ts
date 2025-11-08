@@ -9,6 +9,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import { NotImplementedError } from '@/lib/errors';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
@@ -217,10 +218,8 @@ export class GeographicElectoralFeed {
    * Get upcoming elections for the jurisdiction
    */
   private async getUpcomingElections(location: UserLocation): Promise<ElectoralRace[]> {
-    const elections: ElectoralRace[] = [];
-
     try {
-      logger.info('Getting upcoming elections for location', { location });
+      logger.info('Getting upcoming elections for location', { location: this.getLocationSummary(location) });
 
       // Get election data from orchestrator
       const orchestrator = await createUnifiedDataOrchestrator();
@@ -235,46 +234,37 @@ export class GeographicElectoralFeed {
           ElectoralRaceSchema,
           electionData,
           'getUpcomingElections'
-        )
+        );
 
         // If no valid races, return mock data
         if (validRaces.length === 0) {
-          return [await this.getMockElectoralRace()]
+          logger.warn('No valid upcoming elections returned; using fallback', {
+            location: this.getLocationSummary(location)
+          });
+          return [await this.getMockElectoralRace()];
         }
 
-        return Promise.all(validRaces.map((race) => this.normalizeSchemaRace(race)))
+        return Promise.all(validRaces.map((race) => this.normalizeSchemaRace(race)));
       }
 
       // Fallback to mock data if no real data available
 
-      elections.push({
-        raceId: 'ca-12-house-2024',
-        office: 'U.S. House of Representatives',
-        jurisdiction: 'CA-12',
-        electionDate: '2024-11-05',
-        incumbent: await this.getMockRepresentative('Nancy Pelosi'),
-        challengers: [
-          await this.getMockRepresentative('John Smith'),
-          await this.getMockRepresentative('Jane Doe')
-        ],
-        allCandidates: [],
-        keyIssues: ['Healthcare', 'Climate Change', 'Housing'],
-        campaignFinance: await this.getMockCampaignFinance('incumbent'),
-        recentActivity: [],
-        constituentQuestions: 0,
-        candidateResponses: 0,
-        status: 'upcoming',
-        importance: 'high',
-        voterRegistrationDeadline: '2024-10-15',
-        earlyVotingStart: '2024-10-20',
-        absenteeBallotDeadline: '2024-10-30'
+      logger.warn('Orchestrator returned no election data; using fallback', {
+        location: this.getLocationSummary(location)
       });
-
+      return [await this.getMockElectoralRace()];
     } catch (error) {
-      logger.error('Failed to get upcoming elections', { error });
-    }
+      if (error instanceof NotImplementedError) {
+        logger.warn('Upcoming election pipeline not implemented, falling back to mock data', {
+          location: this.getLocationSummary(location),
+          reason: error.message
+        });
+        return [await this.getMockElectoralRace()];
+      }
 
-    return elections;
+      logger.error('Failed to get upcoming elections', { error });
+      return [await this.getMockElectoralRace()];
+    }
   }
 
   /**
@@ -313,7 +303,14 @@ export class GeographicElectoralFeed {
             });
           }
         } catch (error) {
-          logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
+          if (error instanceof NotImplementedError) {
+            logger.warn('Campaign enrichment not implemented; returning base race data', {
+              raceId: race.raceId,
+              reason: error.message
+            });
+          } else {
+            logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
+          }
         }
 
         return Object.assign({}, race, {
@@ -346,8 +343,21 @@ export class GeographicElectoralFeed {
       const issues: Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }> = [];
 
       // Get issue data from orchestrator
-      const orchestrator = await createUnifiedDataOrchestrator();
-      const issueData = await orchestrator.getJurisdictionKeyIssues(location);
+      let issueData: unknown[] | undefined;
+      try {
+        const orchestrator = await createUnifiedDataOrchestrator();
+        issueData = await orchestrator.getJurisdictionKeyIssues(location);
+      } catch (error) {
+        if (error instanceof NotImplementedError) {
+          logger.warn('Jurisdiction key issues not implemented, falling back to heuristic analysis', {
+            location: this.getLocationSummary(location),
+            reason: error.message
+          });
+          issueData = undefined;
+        } else {
+          throw error;
+        }
+      }
 
       if (issueData && Array.isArray(issueData)) {
         for (const issueItem of issueData) {
@@ -384,6 +394,15 @@ export class GeographicElectoralFeed {
       logger.error('Failed to identify key issues', { error });
       return [];
     }
+  }
+
+  private getLocationSummary(location: UserLocation) {
+    return {
+      stateCode: location.stateCode,
+      zipCode: location.zipCode,
+      hasCoordinates: Boolean(location.coordinates),
+      hasAddress: Boolean(location.address)
+    };
   }
 
   /**

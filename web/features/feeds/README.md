@@ -271,6 +271,7 @@ const feed = await feedService.generatePersonalizedFeed(
 ### Zustand Stores Used
 
 - **`useFeedsStore`** - Feed items, loading, actions
+- **`useFeedsPagination`** - Total/loaded counts, `hasMore`, and `loadMoreFeeds` helper
 - **`useHashtagStore`** - Hashtags, trending, following
 - **`usePWAStore`** - PWA state, installation, notifications
 - **`useUserStore`** - User data, preferences

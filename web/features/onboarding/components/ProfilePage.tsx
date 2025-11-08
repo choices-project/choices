@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 /**
  * Enhanced Profile Page Component
@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProfile, useProfileLoadingStates, useProfileErrorStates, useProfileExport } from '@/features/profile/hooks/use-profile';
+import type { UserProfile } from '@/types/profile';
 
 'use client';
 
@@ -69,7 +70,25 @@ export default function ProfilePage() {
     );
   }
 
-  const profileData = profile as any;
+  const profileData = profile as UserProfile;
+  const profilePreferences = useMemo(() => {
+    if (profileData && typeof profileData === 'object' && 'preferences' in profileData) {
+      const prefs = (profileData as Record<string, unknown>).preferences;
+      if (prefs && typeof prefs === 'object') {
+        return prefs as Record<string, unknown>;
+      }
+    }
+    return {};
+  }, [profileData]);
+  const profilePrivacySettings = useMemo(() => {
+    if (profileData && typeof profileData === 'object' && 'privacy_settings' in profileData) {
+      const settings = (profileData as Record<string, unknown>).privacy_settings;
+      if (settings && typeof settings === 'object') {
+        return settings as Record<string, unknown>;
+      }
+    }
+    return {};
+  }, [profileData]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -185,7 +204,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Preferences */}
-      {profileData.preferences && Object.keys(profileData.preferences).length > 0 && (
+      {Object.keys(profilePreferences).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Preferences</CardTitle>
@@ -195,7 +214,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {Object.entries(profileData.preferences).map(([key, value]) => (
+              {Object.entries(profilePreferences).map(([key, value]) => (
                 <div key={key} className="flex justify-between">
                   <span className="text-sm font-medium capitalize">
                     {key.replace(/_/g, ' ')}
@@ -211,7 +230,7 @@ export default function ProfilePage() {
       )}
 
       {/* Privacy Settings */}
-      {profileData.privacy_settings && Object.keys(profileData.privacy_settings).length > 0 && (
+      {Object.keys(profilePrivacySettings).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Privacy Settings</CardTitle>
@@ -221,7 +240,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {Object.entries(profileData.privacy_settings).map(([key, value]) => (
+              {Object.entries(profilePrivacySettings).map(([key, value]) => (
                 <div key={key} className="flex justify-between">
                   <span className="text-sm font-medium capitalize">
                     {key.replace(/_/g, ' ')}

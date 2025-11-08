@@ -9,6 +9,7 @@ const bundleAnalyzer = withBundleAnalyzer({
 const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
+  transpilePackages: ['@choices/civics-shared'],
 
   experimental: {
     // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)

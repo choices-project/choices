@@ -15,24 +15,37 @@ import type { AuthSetupStepProps, AuthMethod } from '../types';
 
 /**
  * Authentication Setup Step Component
- * 
+ *
  * Handles user authentication setup during onboarding with multiple options:
  * - Email authentication with Supabase
  * - Social login (Google, GitHub)
  * - WebAuthn/Passkey registration
  * - Anonymous access
  * - Skip option for testing
- * 
+ *
  * Features:
  * - Email validation and error handling
  * - Social OAuth integration
  * - Passkey registration with fallback
  * - E2E testing bypass
  * - Responsive design
- * 
+ *
  * @param {AuthSetupStepProps} props - Component props
  * @returns {JSX.Element} Authentication setup interface
  */
+const toErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    const candidate = (error as { message?: unknown }).message;
+    if (typeof candidate === 'string') {
+      return candidate;
+    }
+  }
+  return 'An unexpected error occurred. Please try again.';
+};
+
 export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepProps) {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
   const [email, setEmail] = useState(data?.email || '')
@@ -81,17 +94,17 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       })
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      setSuccess(true)
-      onUpdate({ 
+      setSuccess(true);
+      onUpdate({
         email,
         authMethod: 'email',
-        authSetupCompleted: true 
-      })
-    } catch (err: any) {
-      setError(err.message || 'Failed to send verification email')
+        authSetupCompleted: true,
+      });
+    } catch (err: unknown) {
+      setError(toErrorMessage(err) || 'Failed to send verification email');
     } finally {
       setIsLoading(false)
     }
@@ -116,26 +129,26 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       })
 
       if (error) {
-        throw error
+        throw error;
       }
-    } catch (err: any) {
-      setError(err.message || `Failed to sign in with ${provider}`)
-      setIsLoading(false)
+    } catch (err: unknown) {
+      setError(toErrorMessage(err) || `Failed to sign in with ${provider}`);
+      setIsLoading(false);
     }
   }
 
   const handleWebAuthnAuth = () => {
-    onUpdate({ 
+    onUpdate({
       authMethod: 'webauthn',
-      authSetupCompleted: true 
+      authSetupCompleted: true
     })
     setSuccess(true)
   }
 
   const handleAnonymousAuth = () => {
-    onUpdate({ 
+    onUpdate({
       authMethod: 'anonymous',
-      authSetupCompleted: true 
+      authSetupCompleted: true
     })
     setSuccess(true)
   }
@@ -160,7 +173,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer" 
+        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setAuthMethod('email')}>
           <CardHeader>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
@@ -298,7 +311,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
 
       <div className="text-center">
         <Button onClick={handleNext} size="lg" >
-          Continue with {authMethod === 'email' ? 'Email' : 
+          Continue with {authMethod === 'email' ? 'Email' :
                          authMethod === 'social' ? 'Social Login' :
                          authMethod === 'webauthn' ? 'Passkey' :
                          authMethod === 'anonymous' ? 'Anonymous' : 'Skip'}
@@ -345,7 +358,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-sm">{error}</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setError(null)}
                   className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
                 >
@@ -366,8 +379,8 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               </div>
             )}
 
-            <Button 
-              onClick={handleEmailSignup} 
+            <Button
+              onClick={handleEmailSignup}
               disabled={isLoading || !email}
               className="w-full"
             >
@@ -389,7 +402,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
+            <Button
               onClick={() => handleSocialAuth('google')}
               disabled={isLoading}
               variant="outline"
@@ -404,7 +417,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               Continue with Google
             </Button>
 
-            <Button 
+            <Button
               onClick={() => handleSocialAuth('github')}
               disabled={isLoading}
               variant="outline"
@@ -459,7 +472,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               mode="register"
               primary={true}
               onSuccess={handleWebAuthnAuth}
-              onError={(error) => setError(error)}
+              onError={(errorMessage) => setError(errorMessage ?? 'Passkey registration failed')}
               className="w-full"
             />
 
@@ -514,7 +527,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               </div>
             </div>
 
-            <Button 
+            <Button
               onClick={handleAnonymousAuth}
               className="w-full"
             >

@@ -6,48 +6,46 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
+import type {
+  DeviceFingerprint,
+  OfflineVoteRecord,
+  PWAExportedUserData,
+  PWAUser,
+  PWAUserProfile,
+} from '@/types/pwa';
 
 import { isFeatureEnabled } from './feature-flags';
 
-export type PWAUser = {
-  stableId: string;
-  pseudonym: string;
-  trustTier: 'T0' | 'T1' | 'T2' | 'T3';
-  verificationScore: number;
-  profileVisibility: 'anonymous' | 'pseudonymous' | 'public';
-  dataSharingLevel: 'minimal' | 'demographic' | 'full';
-  lastActivity: string;
-  pwaFeatures?: {
-    webAuthnEnabled: boolean;
-    pushNotificationsEnabled: boolean;
-    offlineVotingEnabled: boolean;
-    encryptedStorageEnabled: boolean;
-  };
-  createdAt: string;
-  lastActive: Date;
-}
+const OFFLINE_VOTES_STORAGE_KEY = 'offline_votes';
+const PWA_USER_STORAGE_KEY = 'pwa_user';
 
-export type PWAUserProfile = {
-  stableId: string;
-  pseudonym: string;
-  trustTier: string;
-  verificationScore: number;
-  deviceFingerprint: any;
-  pwaFeatures: {
-    webAuthnEnabled: boolean;
-    pushNotificationsEnabled: boolean;
-    offlineVotingEnabled: boolean;
-    encryptedStorageEnabled: boolean;
+const toOfflineVoteRecord = (value: unknown): OfflineVoteRecord | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.pollId !== 'string' || typeof record.choice !== 'number') {
+    return null;
+  }
+
+  const metadata =
+    typeof record.metadata === 'object' && record.metadata !== null
+      ? (record.metadata as Record<string, unknown>)
+      : undefined;
+
+  const timestamp =
+    typeof record.timestamp === 'number' && Number.isFinite(record.timestamp)
+      ? record.timestamp
+      : Date.now();
+
+  return {
+    pollId: record.pollId,
+    choice: record.choice,
+    metadata,
+    timestamp,
   };
-  privacySettings: {
-    dataCollection: boolean;
-    analytics: boolean;
-    notifications: boolean;
-    offlineStorage: boolean;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
+};
 
 export class PWAAuth {
   private pwaEnabled = false;
@@ -82,7 +80,7 @@ export class PWAAuth {
         encryptedStorageEnabled: true
       },
       createdAt: new Date().toISOString(),
-      lastActive: new Date()
+      lastActive: new Date().toISOString()
     };
 
     this.currentUser = user;
@@ -103,10 +101,13 @@ export class PWAAuth {
       return Promise.resolve(null);
     }
 
+    const now = new Date().toISOString();
+
     this.currentUser = {
       ...this.currentUser,
       ...updates,
-      lastActive: new Date()
+      lastActive: now,
+      lastActivity: updates.lastActivity ?? this.currentUser.lastActivity ?? now,
     };
 
     this.saveUserToStorage(this.currentUser);
@@ -117,6 +118,11 @@ export class PWAAuth {
   async enableWebAuthn(stableId: string): Promise<boolean> {
     if (!this.pwaEnabled) {
       devLog('PWA: Feature disabled, cannot enable WebAuthn');
+      return false;
+    }
+
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      devLog('PWA: WebAuthn not available in current environment');
       return false;
     }
 
@@ -187,6 +193,11 @@ export class PWAAuth {
       return false;
     }
 
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      devLog('PWA: Push notifications not available in current environment');
+      return false;
+    }
+
     if (this.currentUser?.stableId !== stableId) {
       devLog('PWA: User not found or not current user');
       return false;
@@ -204,9 +215,17 @@ export class PWAAuth {
         // Subscribe to push notifications
         if ('serviceWorker' in navigator && 'PushManager' in window) {
           const registration = await navigator.serviceWorker.ready;
+          const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
+          if (!vapidKey) {
+            devLog('PWA: VAPID public key not configured');
+            return false;
+          }
+
+          const applicationServerKey = this.urlBase64ToUint8Array(vapidKey);
+
           const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: new Uint8Array(this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''))
+            applicationServerKey
           });
 
           if (subscription) {
@@ -240,6 +259,11 @@ export class PWAAuth {
       return false;
     }
 
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      devLog('PWA: WebAuthn not available in current environment');
+      return false;
+    }
+
     if (!this.currentUser.pwaFeatures?.webAuthnEnabled) {
       devLog('PWA: WebAuthn not enabled for user');
       return false;
@@ -258,7 +282,7 @@ export class PWAAuth {
       if (assertion) {
         // Update last active time
         await this.updateUserProfile({
-          lastActive: new Date()
+          lastActive: new Date().toISOString()
         });
 
         devLog('PWA: WebAuthn authentication successful');
@@ -320,7 +344,7 @@ export class PWAAuth {
         notifications: true,
         offlineStorage: true
       },
-      createdAt: new Date(this.currentUser.createdAt),
+      createdAt: this.currentUser.createdAt,
       updatedAt: this.currentUser.lastActive
     };
   }
@@ -332,15 +356,20 @@ export class PWAAuth {
     }
 
     try {
+      if (typeof window === 'undefined') {
+        devLog('PWA: Cannot delete user outside browser environment');
+        return Promise.resolve(false);
+      }
+
       // Clear local storage
-      localStorage.removeItem('pwa_user');
-      localStorage.removeItem('offline_votes');
+      window.localStorage.removeItem(PWA_USER_STORAGE_KEY);
+      window.localStorage.removeItem(OFFLINE_VOTES_STORAGE_KEY);
       
       // Clear encrypted storage
-      const keys = Object.keys(localStorage);
+      const keys = Object.keys(window.localStorage);
       keys.forEach(key => {
         if (key.startsWith('encrypted_')) {
-          localStorage.removeItem(key);
+          window.localStorage.removeItem(key);
         }
       });
 
@@ -354,7 +383,7 @@ export class PWAAuth {
   }
 
   // Export user data
-  exportUserData(): any {
+  exportUserData(): PWAExportedUserData | null {
     if (!this.currentUser) {
       return null;
     }
@@ -398,6 +427,10 @@ export class PWAAuth {
   }
 
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
+    if (typeof window === 'undefined') {
+      throw new Error('urlBase64ToUint8Array requires a browser environment');
+    }
+
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
       .replace(/-/g, '+')
@@ -409,44 +442,86 @@ export class PWAAuth {
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
     }
-    return outputArray as Uint8Array;
+    return outputArray;
   }
 
-  private getDeviceFingerprint(): any {
+  private getDeviceFingerprint(): DeviceFingerprint {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return {
+        userAgent: 'server',
+        platform: 'server',
+        screenResolution: '0x0',
+        language: 'en',
+        timezone: 'UTC',
+        webAuthn: false,
+        standalone: false,
+      };
+    }
+
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
     return {
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       screenResolution: `${screen.width}x${screen.height}`,
       language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      webAuthn: 'credentials' in navigator,
+      standalone,
     };
   }
 
-  private getOfflineVotes(): any[] {
+  private getOfflineVotes(): OfflineVoteRecord[] {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
-      const stored = localStorage.getItem('offline_votes');
-      return stored ? JSON.parse(stored) : [];
+      const stored = window.localStorage.getItem(OFFLINE_VOTES_STORAGE_KEY);
+      if (!stored) {
+        return [];
+      }
+
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed
+        .map(toOfflineVoteRecord)
+        .filter((record): record is OfflineVoteRecord => record !== null);
     } catch {
       return [];
     }
   }
 
   private saveUserToStorage(user: PWAUser): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
-      localStorage.setItem('pwa_user', JSON.stringify(user));
+      window.localStorage.setItem(PWA_USER_STORAGE_KEY, JSON.stringify(user));
     } catch (error) {
       devLog('PWA: Failed to save user to storage:', { error });
     }
   }
 
   private loadUserFromStorage(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
-      const stored = localStorage.getItem('pwa_user');
+      const stored = window.localStorage.getItem(PWA_USER_STORAGE_KEY);
       if (stored) {
-        this.currentUser = JSON.parse(stored);
+        this.currentUser = JSON.parse(stored) as PWAUser;
         // Update last active time
         if (this.currentUser) {
-          this.currentUser.lastActive = new Date();
+          this.currentUser.lastActive = new Date().toISOString();
+          this.currentUser.lastActivity = new Date().toISOString();
         }
       }
     } catch (error) {

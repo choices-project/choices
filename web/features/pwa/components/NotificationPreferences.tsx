@@ -134,7 +134,7 @@ export default function NotificationPreferences({ className = '' }: Notification
 
   if (!notificationsSupported) {
     return (
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md" data-testid="notification-preferences-unsupported">
         <div className="flex">
           <div className="flex-shrink-0">
             <AlertCircle className="h-5 w-5 text-yellow-400" aria-hidden="true" />

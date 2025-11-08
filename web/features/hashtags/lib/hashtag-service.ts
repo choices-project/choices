@@ -1,9 +1,9 @@
 /**
  * Hashtag Service
- * 
+ *
  * Core service layer for hashtag operations including CRUD, search, trending,
  * analytics, and cross-feature integration
- * 
+ *
  * Created: December 19, 2024
  * Updated: October 11, 2025
  * Status: ✅ ACTIVE
@@ -13,6 +13,9 @@ import { logger } from '@/lib/utils/logger';
 import type { Database, Json } from '@/types/supabase';
 
 import { getSupabaseBrowserClient } from '../../../utils/supabase/client';
+import {
+  HASHTAG_CATEGORIES,
+} from '../types';
 import type {
   Hashtag,
   HashtagSuggestion,
@@ -23,69 +26,228 @@ import type {
   HashtagSearchResponse,
   HashtagEngagement,
   HashtagAnalytics,
-  HashtagApiResponse
+  HashtagApiResponse,
+  HashtagMetadata,
+  UserHashtagPreferences,
+  HashtagUserPreferences,
+  CategoryTrendSummary,
+  ProfileHashtagIntegration,
+  UpdateHashtagUserPreferencesInput,
+  HashtagFilterPreferences,
+  HashtagNotificationPreferences,
+  HashtagActivity,
+  PollHashtagIntegration,
+  FeedHashtagIntegration,
+  HashtagValidation,
+  FeedHashtagAnalytics,
 } from '../types';
 
-// Database types
 type HashtagRow = Database['public']['Tables']['hashtags']['Row'];
-type _HashtagInsert = Database['public']['Tables']['hashtags']['Insert'];
-type _HashtagUpdate = Database['public']['Tables']['hashtags']['Update'];
+type UserHashtagRow = Database['public']['Tables']['user_hashtags']['Row'];
+type UserHashtagWithRelation = UserHashtagRow & { hashtag?: HashtagRow | null };
+type HashtagUserPreferencesRow = Database['public']['Tables']['hashtag_user_preferences']['Row'];
+type HashtagEngagementRow = Database['public']['Tables']['hashtag_engagement']['Row'];
 
-// JSON field types
-export type HashtagMetadata = {
-  source?: string;
-  auto_generated?: boolean;
-  moderation_notes?: string;
-  [key: string]: unknown;
-}
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
-export type UserHashtagPreferences = {
-  notifications?: boolean;
-  auto_follow?: boolean;
-  [key: string]: unknown;
-}
+const isJsonValue = (value: unknown): value is Json => {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return true;
+  }
 
-export type HashtagActivity = {
-  id: string;
-  hashtag_id: string;
-  hashtag: {
-    id: string;
-    name: string;
-    display_name: string;
-    usage_count: number;
-    follower_count: number;
-    is_trending: boolean;
-    trend_score: number;
-    created_at: string;
-    updated_at: string;
-    is_verified: boolean;
-    is_featured: boolean;
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+
+  return isRecord(value) && Object.values(value).every(isJsonValue);
+};
+
+const parseJsonRecord = (value: Json | null): Record<string, Json> | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const result: Record<string, Json> = {};
+  Object.entries(value).forEach(([key, entry]) => {
+    if (isJsonValue(entry)) {
+      result[key] = entry;
+    }
+  });
+
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+const normalizeHashtagCategory = (category: string | null): HashtagCategory =>
+  category && HashtagCategorySet.has(category as HashtagCategory)
+    ? (category as HashtagCategory)
+    : 'community';
+
+const parseMetadata = (metadata: Json | null): HashtagMetadata | undefined => {
+  const record = parseJsonRecord(metadata);
+  return record ? (record as HashtagMetadata) : undefined;
+};
+
+const parseUserHashtagPreferences = (
+  preferences: Json | null
+): UserHashtagPreferences | undefined => {
+  const record = parseJsonRecord(preferences);
+  return record ? (record as UserHashtagPreferences) : undefined;
+};
+
+const parseHashtagUserPreferences = (
+  row: HashtagUserPreferencesRow | null
+): HashtagUserPreferences | null => {
+  if (!row) {
+    return null;
+  }
+
+  const followedHashtags =
+    Array.isArray(row.followed_hashtags) && row.followed_hashtags.every((item) => typeof item === 'string')
+      ? (row.followed_hashtags as string[])
+      : [];
+
+  const hashtagFilters = parseJsonRecord(row.hashtag_filters ?? null);
+  const notificationPreferences = parseJsonRecord(row.notification_preferences ?? null);
+
+  const preferences: HashtagUserPreferences = {
+    userId: row.user_id,
+    followedHashtags,
+    hashtagFilters: (hashtagFilters ?? {}) as HashtagUserPreferences['hashtagFilters'],
+    notificationPreferences: (notificationPreferences ?? {}) as HashtagUserPreferences['notificationPreferences'],
   };
-  content_type: 'poll' | 'comment' | 'profile' | 'feed';
-  content_id: string;
-  user_id: string;
-  created_at: string;
-}
 
-// Helper function to transform database data to Hashtag type
-function transformHashtagData(data: HashtagRow): Hashtag {
-  const result: Hashtag = {
+  if (row.created_at) {
+    preferences.createdAt = row.created_at;
+  }
+
+  if (row.updated_at) {
+    preferences.updatedAt = row.updated_at;
+  }
+
+  return preferences;
+};
+
+// Database types
+const HashtagCategorySet = new Set<HashtagCategory>(HASHTAG_CATEGORIES);
+
+const ensureHashtagRow = (row?: HashtagRow | null, fallbackId?: string): HashtagRow => {
+  if (row) {
+    return row;
+  }
+
+  const id = fallbackId ?? `missing_${Date.now()}`;
+  return {
+    id,
+    name: fallbackId ?? id,
+    category: null,
+    created_at: null,
+    created_by: null,
+    description: null,
+    follower_count: null,
+    is_featured: null,
+    is_trending: null,
+    is_verified: null,
+    metadata: null,
+    trending_score: null,
+    updated_at: null,
+    usage_count: null,
+  };
+};
+
+const transformHashtagData = (data: HashtagRow): Hashtag => {
+  const metadata = parseMetadata(data.metadata);
+  const displayNameFromMetadata =
+    metadata && typeof metadata.display_name === 'string' ? (metadata.display_name as string) : undefined;
+
+  const hashtag: Hashtag = {
     id: String(data.id),
-    name: String(data.name),
-    display_name: String(data.name),
-    category: 'general' as HashtagCategory,
-    usage_count: 0,
-    is_trending: false,
-    is_verified: false,
-    is_featured: false,
-    follower_count: 0,
-    trend_score: 0,
-    created_at: String(data.created_at ?? new Date().toISOString()),
-    updated_at: String(data.updated_at ?? new Date().toISOString()),
-    metadata: {}
+    name: data.name,
+    category: normalizeHashtagCategory(data.category),
+    usage_count: data.usage_count ?? 0,
+    is_trending: Boolean(data.is_trending),
+    is_verified: Boolean(data.is_verified),
+    is_featured: Boolean(data.is_featured),
+    follower_count: data.follower_count ?? 0,
+    trend_score: data.trending_score ?? 0,
+    created_at: data.created_at ?? new Date().toISOString(),
+    updated_at: data.updated_at ?? new Date().toISOString(),
   };
-  return result;
-}
+
+  const displayName = displayNameFromMetadata ?? data.description ?? data.name;
+  if (displayName) {
+    hashtag.display_name = displayName;
+  }
+
+  if (data.description) {
+    hashtag.description = data.description;
+  }
+
+  if (data.created_by) {
+    hashtag.created_by = data.created_by;
+  }
+
+  if (metadata) {
+    hashtag.metadata = metadata;
+  }
+
+  return hashtag;
+};
+
+const transformUserHashtag = (row: UserHashtagWithRelation): UserHashtag => {
+  const hashtagRow = ensureHashtagRow(row.hashtag ?? null, row.hashtag_id);
+
+  const userHashtag: UserHashtag = {
+    id: row.id,
+    user_id: row.user_id,
+    hashtag_id: row.hashtag_id,
+    hashtag: transformHashtagData(hashtagRow),
+    followed_at: row.followed_at ?? new Date().toISOString(),
+    is_primary: Boolean(row.is_primary),
+    usage_count: row.usage_count ?? 0,
+  };
+
+  if (row.last_used_at) {
+    userHashtag.last_used_at = row.last_used_at;
+  }
+
+  if (row.created_at) {
+    userHashtag.created_at = row.created_at;
+  }
+
+  const preferences = parseUserHashtagPreferences(row.preferences);
+  if (preferences) {
+    userHashtag.preferences = preferences;
+  }
+
+  return userHashtag;
+};
+
+const transformHashtagEngagement = (row: HashtagEngagementRow): HashtagEngagement => {
+  const engagement: HashtagEngagement = {
+    id: row.id,
+    hashtag_id: row.hashtag_id,
+    user_id: row.user_id,
+    engagement_type: row.engagement_type,
+    timestamp: row.timestamp ?? new Date().toISOString(),
+  };
+
+  if (row.created_at) {
+    engagement.created_at = row.created_at;
+  }
+
+  const metadata = parseJsonRecord(row.metadata ?? null);
+  if (metadata) {
+    engagement.metadata = metadata as Record<string, unknown>;
+  }
+
+  return engagement;
+};
 
 const supabaseClientPromise = getSupabaseBrowserClient();
 
@@ -104,7 +266,7 @@ export async function getHashtagById(id: string): Promise<HashtagApiResponse<Has
       .select('*')
       .eq('id', id)
       .single();
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -117,9 +279,9 @@ export async function getHashtagById(id: string): Promise<HashtagApiResponse<Has
 
     return { success: true, data: transformHashtagData(data) };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch hashtag'
     };
   }
 }
@@ -131,13 +293,13 @@ export async function getHashtagByName(name: string): Promise<HashtagApiResponse
   const supabase = await supabaseClientPromise;
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
-    
+
     const result = await supabase
       .from('hashtags')
       .select('*')
       .eq('name', normalizedName)
       .single();
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -146,9 +308,9 @@ export async function getHashtagByName(name: string): Promise<HashtagApiResponse
 
     return { success: true, data: transformHashtagData(data) };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch hashtag'
     };
   }
 }
@@ -157,14 +319,14 @@ export async function getHashtagByName(name: string): Promise<HashtagApiResponse
  * Create new hashtag
  */
 export async function createHashtag(
-  name: string, 
+  name: string,
   description?: string,
   category?: HashtagCategory
 ): Promise<HashtagApiResponse<Hashtag>> {
   const supabase = await supabaseClientPromise;
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
-    
+
     // Check if hashtag already exists
     const existing = await getHashtagByName(normalizedName);
     if (existing.success && existing.data) {
@@ -188,7 +350,7 @@ export async function createHashtag(
       .insert(insertData)
       .select()
       .single();
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -197,9 +359,9 @@ export async function createHashtag(
 
     return { success: true, data: transformHashtagData(data) };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create hashtag'
     };
   }
 }
@@ -208,7 +370,7 @@ export async function createHashtag(
  * Update hashtag
  */
 export async function updateHashtag(
-  id: string, 
+  id: string,
   updates: Partial<Hashtag>
 ): Promise<HashtagApiResponse<Hashtag>> {
   const supabase = await supabaseClientPromise;
@@ -227,14 +389,14 @@ export async function updateHashtag(
       ...(updates.metadata !== undefined && { metadata: updates.metadata as Json }),
       updated_at: new Date().toISOString()
     };
-    
+
     const result = await supabase
       .from('hashtags')
       .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
-    
+
     const { data, error } = result;
 
     if (error) {
@@ -243,9 +405,9 @@ export async function updateHashtag(
 
     return { success: true, data: transformHashtagData(data) };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update hashtag'
     };
   }
 }
@@ -267,9 +429,9 @@ export async function deleteHashtag(id: string): Promise<HashtagApiResponse<bool
 
     return { success: true, data: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete hashtag'
     };
   }
 }
@@ -339,9 +501,9 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
 
     return { success: true, data: result };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to search hashtags' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to search hashtags'
     };
   }
 }
@@ -359,7 +521,7 @@ export async function getTrendingHashtags(
       .from('hashtags')
       .select('*')
       .eq('is_trending', true)
-      .order('trend_score', { ascending: false })
+      .order('trending_score', { ascending: false })
       .limit(limit);
 
     if (category) {
@@ -372,52 +534,51 @@ export async function getTrendingHashtags(
       return { success: false, error: error.message };
     }
 
-    // Get category trends metadata if category filter is applied
-    let categoryMetadata: Record<string, number> | null = null;
+    let categorySummary: CategoryTrendSummary | null = null;
     if (category) {
       try {
-        categoryMetadata = await calculateCategoryTrends(category);
-      } catch (error) {
-        logger.warn('Failed to calculate category trends:', error);
+        categorySummary = await calculateCategoryTrends(category);
+      } catch (summaryError) {
+        logger.warn('Failed to calculate category trends:', summaryError);
       }
     }
 
-    // Transform to trending hashtags with additional metrics
-    const trendingHashtags: TrendingHashtag[] = await Promise.all((hashtags ?? []).map(async (hashtag) => {
-      const transformedHashtag = transformHashtagData(hashtag);
-      const trendingHashtag: TrendingHashtag = {
-        hashtag: transformedHashtag,
-        trend_score: (hashtag as HashtagRow).trending_score ?? 0,
-        growth_rate: await calculateGrowthRate(transformedHashtag),
-        peak_usage: await calculateUsage24h(transformedHashtag),
-        time_period: '24h'
-      };
-      
-      // Store additional metrics for internal use (not part of TrendingHashtag type)
-      (trendingHashtag as any).usage_7d = await calculateUsage7d(transformedHashtag);
-      (trendingHashtag as any).peak_position = await calculatePeakPosition((hashtag as HashtagRow).id);
-      (trendingHashtag as any).current_position = await calculateCurrentPosition((hashtag as HashtagRow).id);
-      
-      // Add category context metadata if available
-      if (categoryMetadata && category) {
-        (trendingHashtag as any).categoryContext = {
-          category,
-          totalTrendScore: categoryMetadata.total_trend_score,
-          totalUsage: categoryMetadata.total_usage,
-          trendingCount: categoryMetadata.trending_count,
-          averageTrendScore: categoryMetadata.average_trend_score,
-          averageUsage: categoryMetadata.average_usage
+    const trendingHashtags: TrendingHashtag[] = await Promise.all(
+      (hashtags ?? []).map(async (hashtagRow) => {
+        const transformed = transformHashtagData(hashtagRow);
+
+        const [growthRate, peakUsage, usage7d, peakPosition, currentPosition] = await Promise.all([
+          calculateGrowthRate(transformed),
+          calculateUsage24h(transformed),
+          calculateUsage7d(transformed),
+          calculatePeakPosition(hashtagRow.id),
+          calculateCurrentPosition(hashtagRow.id),
+        ]);
+
+        const trending: TrendingHashtag = {
+          hashtag: transformed,
+          trend_score: hashtagRow.trending_score ?? 0,
+          growth_rate: growthRate,
+          peak_usage: peakUsage,
+          time_period: '24h',
+          usage_7d: usage7d,
+          peak_position: peakPosition,
+          current_position: currentPosition,
         };
-      }
-      
-      return trendingHashtag;
-    }));
+
+        if (categorySummary && category) {
+          trending.categoryContext = categorySummary;
+        }
+
+        return trending;
+      })
+    );
 
     return { success: true, data: trendingHashtags };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch trending hashtags' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch trending hashtags',
     };
   }
 }
@@ -433,7 +594,7 @@ export async function getHashtagSuggestions(
   const supabase = await supabaseClientPromise;
   try {
     const normalizedInput = input.toLowerCase().replace(/^#/, '');
-    
+
     // Search for matching hashtags
     const { data: hashtags, error } = await supabase
       .from('hashtags')
@@ -471,7 +632,7 @@ export async function getHashtagSuggestions(
                 .select('*')
                 .eq('name', relatedName)
                 .single();
-              
+
               if (relatedHashtag) {
                 suggestions.push({
                   hashtag: transformHashtagData(relatedHashtag),
@@ -493,9 +654,9 @@ export async function getHashtagSuggestions(
 
     return { success: true, data: suggestions };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch hashtag suggestions' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch hashtag suggestions'
     };
   }
 }
@@ -534,7 +695,7 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
         hashtag_id: hashtagId,
         followed_at: new Date().toISOString(),
         is_primary: false,
-        usage_count: 0
+        usage_count: 0,
       })
       .select(`
         *,
@@ -546,16 +707,20 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
       return { success: false, error: error.message };
     }
 
+    if (!data) {
+      return { success: false, error: 'Failed to follow hashtag' };
+    }
+
     // Update follower count manually
     const { data: currentHashtag } = await supabase
       .from('hashtags')
       .select('follower_count')
       .eq('id', hashtagId)
       .single();
-    
+
     if (currentHashtag) {
       const updateData: Database['public']['Tables']['hashtags']['Update'] = {
-        follower_count: (currentHashtag.follower_count ?? 0) + 1
+        follower_count: (currentHashtag.follower_count ?? 0) + 1,
       };
       await supabase
         .from('hashtags')
@@ -563,19 +728,14 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
         .eq('id', hashtagId);
     }
 
-    return { success: true, data: {
-      ...(data as any),
-      hashtag: transformHashtagData((data as any).hashtag as HashtagRow),
-      followed_at: (data as any).followed_at ?? new Date().toISOString(),
-      is_primary: (data as any).is_primary ?? false,
-      usage_count: (data as any).usage_count ?? 0,
-      last_used_at: (data as any).last_used_at ?? new Date().toISOString(),
-      preferences: (data as any).preferences ?? {}
-    } as unknown as UserHashtag };
+    return {
+      success: true,
+      data: transformUserHashtag(data as UserHashtagWithRelation),
+    };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to follow hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to follow hashtag'
     };
   }
 }
@@ -607,7 +767,7 @@ export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResp
       .select('follower_count')
       .eq('id', hashtagId)
       .single();
-    
+
     if (currentHashtag) {
       const updateData: Database['public']['Tables']['hashtags']['Update'] = {
         follower_count: Math.max((currentHashtag.follower_count ?? 0) - 1, 0)
@@ -620,9 +780,9 @@ export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResp
 
     return { success: true, data: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to unfollow hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to unfollow hashtag'
     };
   }
 }
@@ -651,19 +811,13 @@ export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: (data ?? []).map(item => ({
-      ...(item as any),
-      hashtag: transformHashtagData((item as any).hashtag as HashtagRow),
-      followed_at: (item as any).followed_at ?? new Date().toISOString(),
-      is_primary: (item as any).is_primary ?? false,
-      usage_count: (item as any).usage_count ?? 0,
-      last_used_at: (item as any).last_used_at ?? new Date().toISOString(),
-      preferences: (item as any).preferences ?? {}
-    } as unknown as UserHashtag)) };
+    const userHashtags = (data ?? []).map((row) => transformUserHashtag(row as UserHashtagWithRelation));
+
+    return { success: true, data: userHashtags };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch user hashtags' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch user hashtags'
     };
   }
 }
@@ -687,9 +841,9 @@ export async function getHashtagAnalytics(
 
     return { success: true, data: analytics };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch hashtag analytics' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch hashtag analytics'
     };
   }
 }
@@ -726,9 +880,9 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
 
     return { success: true, data: statsResponse };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch hashtag stats' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch hashtag stats'
     };
   }
 }
@@ -740,7 +894,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
 /**
  * Validate hashtag name
  */
-export async function validateHashtagName(name: string): Promise<HashtagApiResponse<any>> {
+export async function validateHashtagName(name: string): Promise<HashtagApiResponse<HashtagValidation>> {
   const _supabase = await supabaseClientPromise; // ensure client ready for potential calls
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
@@ -761,29 +915,34 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
       errors.push('Hashtag can only contain letters, numbers, and underscores');
     }
 
-    // Check availability
     const existing = await getHashtagByName(normalizedName);
-    const _isAvailable = !existing.success || !existing.data;
+    const isAvailable = !existing.success || !existing.data;
 
-    const validation = {
+    const availability: HashtagValidation['availability'] = {
+      is_available: errors.length === 0 && isAvailable,
+      similar_hashtags: [],
+    };
+
+    const conflictReason = errors[0];
+    if (typeof conflictReason === 'string' && conflictReason.length > 0) {
+      availability.conflict_reason = conflictReason;
+    }
+
+    const validation: HashtagValidation = {
       name: normalizedName,
       is_valid: errors.length === 0,
       errors,
       warnings,
       suggestions,
       normalized_name: normalizedName,
-      availability: {
-        is_available: errors.length === 0,
-        similar_hashtags: [],
-        conflict_reason: errors.length > 0 ? errors[0] : undefined
-      }
+      availability,
     };
 
     return { success: true, data: validation };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to validate hashtag' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to validate hashtag',
     };
   }
 }
@@ -795,89 +954,67 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
 /**
  * Get profile hashtag integration
  */
-export async function getProfileHashtagIntegration(userId: string): Promise<HashtagApiResponse<any>> {
+export async function getProfileHashtagIntegration(
+  userId: string
+): Promise<HashtagApiResponse<ProfileHashtagIntegration>> {
   const supabase = await supabaseClientPromise;
   try {
-    // Get user's followed hashtags
-    const { data: userHashtags, error: userHashtagsError } = await supabase
+    const { data: userHashtagRows, error: userHashtagsError } = await supabase
       .from('user_hashtags')
       .select('*, hashtag:hashtags(*)')
       .eq('user_id', userId);
 
     if (userHashtagsError) throw userHashtagsError;
 
-    // Get user's hashtag preferences from hashtag_user_preferences table
-    let preferences, preferencesError;
+    let preferencesRow: HashtagUserPreferencesRow | null = null;
     try {
       const result = await supabase
         .from('hashtag_user_preferences')
         .select('*')
         .eq('user_id', userId)
         .single();
-      preferences = result.data;
-      preferencesError = result.error;
+      preferencesRow = result.data;
+      if (result.error) {
+        throw result.error;
+      }
     } catch (tableError) {
       logger.warn('Error fetching user hashtag preferences', { tableError });
-      preferences = null;
-      preferencesError = tableError;
+      preferencesRow = null;
     }
 
-    if (preferencesError) throw preferencesError;
-
-    // Get user's hashtag activity from hashtag_engagement table
-    let activity, activityError;
-    try {
-      const result = await supabase
-        .from('hashtag_engagement')
-        .select('*')
-        .eq('user_id', userId)
-        .order('timestamp', { ascending: false })
-        .limit(50);
-      activity = result.data as HashtagActivity[] | null;
-      activityError = result.error;
-    } catch (tableError) {
-      logger.warn('Error fetching hashtag engagement', { tableError });
-      activity = null;
-      activityError = tableError;
-    }
+    const { data: engagementRows, error: activityError } = await supabase
+      .from('hashtag_engagement')
+      .select('*')
+      .eq('user_id', userId)
+      .order('timestamp', { ascending: false })
+      .limit(50);
 
     if (activityError) throw activityError;
 
-    const integration = {
+    const userHashtags = (userHashtagRows ?? []).map((row) => transformUserHashtag(row as UserHashtagWithRelation));
+    const primaryHashtags = userHashtags.filter((uh) => uh.is_primary).map((uh) => uh.hashtag.name);
+    const interestHashtags = userHashtags.filter((uh) => !uh.is_primary).map((uh) => uh.hashtag.name);
+    const followedHashtags = userHashtags.map((uh) => uh.hashtag.name);
+
+    const hashtagPreferences = parseHashtagUserPreferences(preferencesRow);
+    const hashtagActivity = (engagementRows ?? []).map((row) => transformHashtagEngagement(row as HashtagEngagementRow));
+
+    const integration: ProfileHashtagIntegration = {
       user_id: userId,
-      primary_hashtags: userHashtags?.filter((uh: any) => uh.is_primary).map((uh: any) => uh.hashtag.name) ?? [],
-      interest_hashtags: userHashtags?.filter((uh: any) => !uh.is_primary).map((uh: any) => uh.hashtag.name) ?? [],
+      primary_hashtags: primaryHashtags,
+      interest_hashtags: interestHashtags,
       custom_hashtags: await getUserCustomHashtags(userId),
-      followed_hashtags: userHashtags?.map((uh: any) => uh.hashtag.name) ?? [],
-      hashtag_preferences: (preferences ?? {
-        user_id: userId,
-        default_categories: [],
-        auto_follow_suggestions: false,
-        trending_notifications: false,
-        related_hashtag_suggestions: false,
-        privacy_settings: {
-          show_followed_hashtags: true,
-          show_hashtag_activity: true,
-          allow_hashtag_recommendations: true
-        },
-        notification_preferences: {
-          new_trending_hashtags: false,
-          hashtag_updates: false,
-          related_content: true,
-          weekly_digest: false
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }) as unknown as any,
-      hashtag_activity: (activity ?? []) as unknown as HashtagEngagement[],
-      last_updated: new Date().toISOString()
+      followed_hashtags: followedHashtags,
+      hashtag_preferences: hashtagPreferences,
+      hashtag_activity: hashtagActivity,
+      last_updated: new Date().toISOString(),
     };
 
     return { success: true, data: integration };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch profile hashtag integration' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch profile hashtag integration',
     };
   }
 }
@@ -885,10 +1022,9 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
 /**
  * Get poll hashtag integration
  */
-export async function getPollHashtagIntegration(pollId: string): Promise<HashtagApiResponse<any>> {
+export async function getPollHashtagIntegration(pollId: string): Promise<HashtagApiResponse<PollHashtagIntegration>> {
   const supabase = await supabaseClientPromise;
   try {
-    // Get poll details with hashtags
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('hashtags, primary_hashtag, total_views')
@@ -897,31 +1033,32 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
 
     if (pollError) throw pollError;
 
-    // Get hashtag engagement data (fallback to hashtag_usage if table doesn't exist)
-    let engagement, engagementError;
+    let engagementData, engagementError;
     try {
       const result = await supabase
         .from('hashtag_engagement')
         .select('engagement_type')
         .eq('content_id', pollId)
         .eq('content_type', 'poll');
-      engagement = result.data;
+      engagementData = result.data;
       engagementError = result.error;
     } catch (tableError) {
-      // Fallback to hashtag_usage table
       logger.warn('hashtag_engagement table not available, using hashtag_usage', { tableError });
       const result = await supabase
         .from('hashtag_usage')
-        .select('*')
+        .select('engagement_type')
         .eq('content_id', pollId)
         .eq('content_type', 'poll');
-      engagement = result.data;
+      engagementData = result.data;
       engagementError = result.error;
     }
 
     if (engagementError) throw engagementError;
 
-    // Get related polls
+    const engagementEvents = (engagementData ?? []) as Array<{ engagement_type?: string | null }>;
+    const hashtagClicks = engagementEvents.filter((event) => event.engagement_type === 'click').length;
+    const hashtagShares = engagementEvents.filter((event) => event.engagement_type === 'share').length;
+
     const { data: relatedPolls, error: relatedError } = await supabase
       .from('polls')
       .select('id')
@@ -931,27 +1068,37 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
 
     if (relatedError) throw relatedError;
 
-    // Calculate trending score
     const trendingScore = poll.hashtags?.length ? poll.hashtags.length * 10 : 0;
 
-    const integration = {
+    const pollHashtags = Array.isArray(poll.hashtags)
+      ? poll.hashtags.filter((value): value is string => typeof value === 'string')
+      : [];
+
+    const relatedPollIds = (relatedPolls ?? [])
+      .map((p) => (typeof p.id === 'string' ? p.id : null))
+      .filter((id): id is string => Boolean(id));
+
+    const integration: PollHashtagIntegration = {
       poll_id: pollId,
-      hashtags: poll.hashtags ?? [],
-      primary_hashtag: poll.primary_hashtag ?? undefined,
+      hashtags: pollHashtags,
       hashtag_engagement: {
         total_views: poll.total_views ?? 0,
-        hashtag_clicks: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'click').length ?? 0,
-        hashtag_shares: (engagement as unknown as HashtagEngagement[])?.filter(e => e.action === 'share').length ?? 0
+        hashtag_clicks: hashtagClicks,
+        hashtag_shares: hashtagShares,
       },
-      related_polls: relatedPolls?.map(p => p.id) ?? [],
-      hashtag_trending_score: trendingScore
+      related_polls: relatedPollIds,
+      hashtag_trending_score: trendingScore,
     };
+
+    if (typeof poll.primary_hashtag === 'string' && poll.primary_hashtag.length > 0) {
+      integration.primary_hashtag = poll.primary_hashtag;
+    }
 
     return { success: true, data: integration };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch poll hashtag integration' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch poll hashtag integration',
     };
   }
 }
@@ -959,10 +1106,9 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
 /**
  * Get feed hashtag integration
  */
-export async function getFeedHashtagIntegration(feedId: string): Promise<HashtagApiResponse<any>> {
+export async function getFeedHashtagIntegration(feedId: string): Promise<HashtagApiResponse<FeedHashtagIntegration>> {
   const supabase = await supabaseClientPromise;
   try {
-    // Get feed details (fallback to user_profiles if feeds table doesn't exist)
     let feed, feedError;
     try {
       const result = await supabase
@@ -973,7 +1119,6 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
       feed = result.data;
       feedError = result.error;
     } catch (tableError) {
-      // Fallback to user_profiles table
       logger.warn('feeds table not available, using user_profiles', { tableError });
       const result = await supabase
         .from('user_profiles')
@@ -981,26 +1126,26 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
         .eq('id', feedId)
         .single();
       const feedData = result.data as { hashtag_filters?: string[]; id: string } | null;
-      feed = feedData ? {
-        hashtag_filters: feedData.hashtag_filters ?? [],
-        user_id: feedData.id
-      } : null;
+      feed = feedData
+        ? {
+            hashtag_filters: feedData.hashtag_filters ?? [],
+            user_id: feedData.id,
+          }
+        : null;
       feedError = result.error;
     }
 
     if (feedError) throw feedError;
 
-    // Get trending hashtags
     const { data: trendingHashtags, error: trendingError } = await supabase
       .from('hashtags')
       .select('name')
       .eq('is_trending', true)
-      .order('trend_score', { ascending: false })
+      .order('trending_score', { ascending: false })
       .limit(10);
 
     if (trendingError) throw trendingError;
 
-    // Get hashtag content from feed_items table
     let hashtagContent, contentError;
     try {
       const result = await supabase
@@ -1020,7 +1165,6 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     if (contentError) throw contentError;
 
-    // Get personalized hashtags for user
     const { data: personalizedHashtags, error: personalError } = await supabase
       .from('user_hashtags')
       .select('hashtag:hashtags(name)')
@@ -1030,38 +1174,83 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     if (personalError) throw personalError;
 
-    // Get hashtag analytics using basic analytics (hashtag_analytics table doesn't exist)
-    let analytics, analyticsError;
-    try {
-      analytics = {
-        total_hashtags: hashtagContent?.length ?? 0,
-        trending_count: trendingHashtags?.length ?? 0,
-        engagement_rate: 0,
-        last_updated: new Date().toISOString()
-      };
-      analyticsError = null;
-    } catch (tableError) {
-      logger.warn('Error calculating basic analytics', { tableError });
-      analytics = null;
-      analyticsError = tableError;
-    }
+    const personalizedHashtagNames = (personalizedHashtags ?? [])
+      .map((row) => {
+        const record = row as { hashtag: { name: string | null } | null };
+        return record.hashtag?.name ?? null;
+      })
+      .filter((name): name is string => typeof name === 'string' && name.length > 0);
 
-    if (analyticsError) throw analyticsError;
+    const feedAnalyticsMap = new Map<string, FeedHashtagAnalytics>();
 
-    const integration = {
+    (trendingHashtags ?? []).forEach((row, index) => {
+      const rawHashtag = row as Record<string, unknown>;
+      const hashtagName = typeof rawHashtag.name === 'string' ? (rawHashtag.name as string) : null;
+      if (!hashtagName) {
+        return;
+      }
+
+      const usageCount = typeof rawHashtag.usage_count === 'number' ? (rawHashtag.usage_count as number) : 0;
+      const trendScore = typeof rawHashtag.trend_score === 'number' ? (rawHashtag.trend_score as number) : 0;
+      const updatedAt = typeof rawHashtag.updated_at === 'string' ? (rawHashtag.updated_at as string) : undefined;
+
+      feedAnalyticsMap.set(hashtagName, {
+        hashtag: hashtagName,
+        poll_count: usageCount,
+        engagement_rate: trendScore,
+        user_interest_level: 0,
+        trending_position: index + 1,
+        last_activity: updatedAt ? new Date(updatedAt).toISOString() : new Date().toISOString(),
+      });
+    });
+
+    personalizedHashtagNames.forEach((name) => {
+      const existing = feedAnalyticsMap.get(name);
+      if (existing) {
+        existing.user_interest_level = Math.max(existing.user_interest_level, 1);
+      } else {
+        feedAnalyticsMap.set(name, {
+          hashtag: name,
+          poll_count: 0,
+          engagement_rate: 0,
+          user_interest_level: 1,
+          last_activity: new Date().toISOString(),
+        });
+      }
+    });
+
+    const feedAnalytics = Array.from(feedAnalyticsMap.values());
+
+    const feedHashtagContent: FeedHashtagIntegration['hashtag_content'] = Array.isArray(hashtagContent)
+      ? hashtagContent.map((item) => ({ ...(item as Record<string, unknown>) }))
+      : [];
+
+    const trendingHashtagNames: string[] = [];
+    (trendingHashtags ?? []).forEach((row) => {
+      const rawHashtag = row as Record<string, unknown>;
+      if (typeof rawHashtag.name === 'string') {
+        trendingHashtagNames.push(rawHashtag.name as string);
+      }
+    });
+
+    const feedHashtagFilters: string[] = Array.isArray(feed?.hashtag_filters)
+      ? (feed?.hashtag_filters as unknown[]).filter((value): value is string => typeof value === 'string')
+      : [];
+
+    const integration: FeedHashtagIntegration = {
       feed_id: feedId,
-      hashtag_filters: feed?.hashtag_filters ?? [],
-      trending_hashtags: trendingHashtags?.map(h => h.name) ?? [],
-      hashtag_content: (hashtagContent ?? []) as unknown as any[],
-      hashtag_analytics: (analytics ?? {}) as unknown as HashtagAnalytics,
-      personalized_hashtags: personalizedHashtags?.map((uh: any) => uh.hashtag.name) ?? []
+      hashtag_filters: feedHashtagFilters,
+      trending_hashtags: trendingHashtagNames,
+      hashtag_content: feedHashtagContent,
+      hashtag_analytics: feedAnalytics,
+      personalized_hashtags: personalizedHashtagNames,
     };
 
     return { success: true, data: integration };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch feed hashtag integration' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch feed hashtag integration',
     };
   }
 }
@@ -1072,7 +1261,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
 function generateSuggestions(query: string, hashtags: Hashtag[]): HashtagSuggestion[] {
   if (!query || hashtags.length === 0) return [];
-  
+
   return hashtags
     .slice(0, 5)
     .map(h => ({
@@ -1102,21 +1291,21 @@ async function generateRelatedQueries(query: string): Promise<string[]> {
 
     // Generate related queries based on hashtag names and usage patterns
     const relatedQueries: string[] = [];
-    
+
     hashtags?.forEach(hashtag => {
       const name = hashtag.name;
-      
+
       // Add the hashtag name itself
       if (name !== normalizedQuery) {
         relatedQueries.push(name);
       }
-      
+
       // Add variations (remove # if present, add common suffixes)
       const baseName = name.replace('#', '');
       if (baseName !== normalizedQuery) {
         relatedQueries.push(baseName);
       }
-      
+
       // Add common variations
       const variations = [
         `${baseName}2024`,
@@ -1126,7 +1315,7 @@ async function generateRelatedQueries(query: string): Promise<string[]> {
         `${baseName}news`,
         `${baseName}update`
       ];
-      
+
       variations.forEach(variation => {
         if (!relatedQueries.includes(variation) && relatedQueries.length < 10) {
           relatedQueries.push(variation);
@@ -1239,20 +1428,20 @@ function determineSuggestionReason(hashtag: Hashtag, input: string): 'trending' 
 function calculateConfidenceScore(hashtag: Hashtag, input: string): number {
   const normalizedInput = input.toLowerCase();
   const normalizedHashtag = hashtag.name.toLowerCase();
-  
+
   // Exact match gets highest confidence
   if (normalizedHashtag === normalizedInput) return 1.0;
-  
+
   // Starts with input gets high confidence
   if (normalizedHashtag.startsWith(normalizedInput)) return 0.9;
-  
+
   // Contains input gets medium confidence
   if (normalizedHashtag.includes(normalizedInput)) return 0.7;
-  
+
   // High usage hashtags get higher confidence
   if (hashtag.usage_count > 1000) return 0.6;
   if (hashtag.usage_count > 100) return 0.4;
-  
+
   return 0.2;
 }
 
@@ -1337,21 +1526,21 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
 
 /**
  * Calculate related hashtags for a given hashtag
- * 
+ *
  * Finds hashtags in the same category with high usage counts. Useful for:
  * - Hashtag suggestion systems (integrate with getHashtagSuggestions ENABLED_)
  * - Related hashtag displays on hashtag detail pages
  * - Recommendation engines
- * 
+ *
  * @param hashtagId - The ID of the hashtag to find related hashtags for
  * @returns Array of related hashtag names (up to 5, sorted by usage)
- * 
+ *
  * @example
  * ```ts
  * const related = await calculateRelatedHashtags('hashtag-id-123');
  * // Returns: ['#hashtag1', '#hashtag2', ...]
  * ```
- * 
+ *
  * Integrated into getHashtagSuggestions for enhanced related suggestions
  */
 export async function calculateRelatedHashtags(hashtagId: string): Promise<string[]> {
@@ -1386,92 +1575,123 @@ export async function calculateRelatedHashtags(hashtagId: string): Promise<strin
 
 /**
  * Calculate category trends metrics
- * 
+ *
  * Provides aggregate statistics for trending hashtags within a category. Useful for:
  * - Category-based trending displays (getTrendingHashtags with category filter)
  * - Category analytics dashboards
  * - Performance benchmarking (getHashtagPerformanceInsights)
- * 
+ *
  * @param category - The category to analyze
  * @returns Object with category trend metrics:
  *   - total_trend_score: Sum of all trending scores in category
- *   - total_usage: Sum of all usage counts in category  
+ *   - total_usage: Sum of all usage counts in category
  *   - trending_count: Number of trending hashtags in category
  *   - average_trend_score: Average trending score
  *   - average_usage: Average usage count
- * 
+ *
  * @example
  * ```ts
  * const trends = await calculateCategoryTrends('politics');
  * // Returns: { total_trend_score: 1250, total_usage: 5000, trending_count: 15, ... }
  * ```
- * 
+ *
  * Integrated into getTrendingHashtags when category filter is applied for category context metadata
  */
-export async function calculateCategoryTrends(category: string): Promise<Record<string, number>> {
+export async function calculateCategoryTrends(category: HashtagCategory): Promise<CategoryTrendSummary | null> {
   const supabase = await supabaseClientPromise;
   try {
-    // Get category trending data
     const { data: categoryData, error } = await supabase
       .from('hashtags')
       .select('trending_score, usage_count')
       .eq('category', category)
       .eq('is_trending', true);
 
-    if (error || !categoryData?.length) return {};
+    if (error || !categoryData?.length) {
+      return null;
+    }
 
     const totalTrendScore = categoryData.reduce((sum, h) => sum + (h.trending_score ?? 0), 0);
     const totalUsage = categoryData.reduce((sum, h) => sum + (h.usage_count ?? 0), 0);
+    const trendingCount = categoryData.length;
 
     return {
-      total_trend_score: totalTrendScore,
-      total_usage: totalUsage,
-      trending_count: categoryData.length,
-      average_trend_score: totalTrendScore / categoryData.length,
-      average_usage: totalUsage / categoryData.length
+      category,
+      totalTrendScore,
+      totalUsage,
+      trendingCount,
+      averageTrendScore: trendingCount > 0 ? totalTrendScore / trendingCount : 0,
+      averageUsage: trendingCount > 0 ? totalUsage / trendingCount : 0,
     };
   } catch (error) {
     logger.error('Failed to calculate category trends:', error);
-    return {};
+    return null;
   }
 }
 
-async function getRecentActivity() {
+async function getRecentActivity(): Promise<HashtagActivity[]> {
   const supabase = await supabaseClientPromise;
   try {
-    // Get recent hashtag usage activity
     const { data: recentUsage, error } = await supabase
       .from('hashtag_usage')
       .select('*, hashtag:hashtags(name), user:profiles(username)')
       .order('created_at', { ascending: false })
       .limit(20);
 
-    if (error) return [];
+    if (error || !recentUsage) {
+      return [];
+    }
 
-    return recentUsage?.map(usage => ({
-      id: usage.id,
-      hashtag_id: usage.hashtag_id,
-      hashtag: {
-        id: usage.hashtag_id,
-        name: usage.hashtag?.name ?? '',
-        display_name: usage.hashtag?.name ?? '',
+    return recentUsage.map((usage) => {
+      const usageRecord = usage as Record<string, unknown>;
+
+      const hashtag: Hashtag = {
+        id: String(usage.hashtag_id),
+        name: usage.hashtag?.name ?? String(usage.hashtag_id),
+        display_name: usage.hashtag?.name ?? String(usage.hashtag_id),
+        category: 'community',
         usage_count: 0,
-        follower_count: 0,
         is_trending: false,
-        trend_score: 0,
-        created_at: usage.created_at || new Date().toISOString(),
-        updated_at: usage.created_at || new Date().toISOString(),
         is_verified: false,
-        is_featured: false
-      },
-      content_type: 'poll' as const,
-      content_id: '',
-      user_id: usage.user_id,
-      created_at: usage.created_at,
-      context: undefined,
-      sentiment: 'neutral' as const,
-      engagement_score: 0
-    })) ?? [];
+        is_featured: false,
+        follower_count: 0,
+        trend_score: 0,
+        created_at: usage.created_at ?? new Date().toISOString(),
+        updated_at: usage.created_at ?? new Date().toISOString(),
+      };
+
+      const contentId = typeof usageRecord['content_id'] === 'string' ? (usageRecord['content_id'] as string) : '';
+      const userId = typeof usageRecord['user_id'] === 'string' ? (usageRecord['user_id'] as string) : '';
+      const context = typeof usageRecord['context'] === 'string' ? (usageRecord['context'] as string) : undefined;
+      const sentimentValue = typeof usageRecord['sentiment'] === 'string' ? (usageRecord['sentiment'] as string) : undefined;
+      const engagementScore = typeof usageRecord['engagement_score'] === 'number' ? (usageRecord['engagement_score'] as number) : undefined;
+
+      const contentType = (usageRecord['content_type'] as HashtagActivity['content_type']) ?? 'feed';
+      const createdAt = usage.created_at ?? new Date().toISOString();
+
+      const activity: HashtagActivity = {
+        id: usage.id,
+        hashtag_id: usage.hashtag_id,
+        hashtag,
+        content_type: contentType,
+        content_id: contentId,
+        user_id: userId,
+        created_at: createdAt,
+      };
+
+      if (context) {
+        activity.context = context;
+      }
+
+      if (sentimentValue === 'positive' || sentimentValue === 'neutral' || sentimentValue === 'negative') {
+        activity.sentiment = sentimentValue;
+      }
+
+      if (typeof engagementScore === 'number') {
+        activity.engagement_score = engagementScore;
+      }
+
+      return activity;
+    });
   } catch (error) {
     logger.error('Failed to get recent activity:', error);
     return [];
@@ -1481,16 +1701,41 @@ async function getRecentActivity() {
 /**
  * Update user preferences
  */
-export async function updateUserPreferences(preferences: Partial<any>): Promise<HashtagApiResponse<any>> {
+export async function updateUserPreferences(
+  preferences: UpdateHashtagUserPreferencesInput
+): Promise<HashtagApiResponse<HashtagUserPreferences>> {
   const supabase = await supabaseClientPromise;
   try {
+    const now = new Date().toISOString();
+
+    const { data: existingRow } = await supabase
+      .from('hashtag_user_preferences')
+      .select('*')
+      .eq('user_id', preferences.userId)
+      .single();
+
+    const currentFollowed =
+      Array.isArray(existingRow?.followed_hashtags) && existingRow.followed_hashtags.every((item) => typeof item === 'string')
+        ? (existingRow.followed_hashtags as string[])
+        : [];
+
+    const currentFilters = parseJsonRecord(existingRow?.hashtag_filters ?? null) ?? {};
+    const currentNotifications = parseJsonRecord(existingRow?.notification_preferences ?? null) ?? {};
+
+    const nextFollowed = preferences.followedHashtags ?? currentFollowed;
+    const nextFilters = preferences.hashtagFilters ?? (currentFilters as HashtagFilterPreferences);
+    const nextNotifications =
+      preferences.notificationPreferences ?? (currentNotifications as HashtagNotificationPreferences);
+
     const { data, error } = await supabase
       .from('hashtag_user_preferences')
       .upsert({
-        user_id: preferences.user_id ?? '',
-        preferences: preferences as unknown as any,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        user_id: preferences.userId,
+        followed_hashtags: nextFollowed as unknown as Json,
+        hashtag_filters: nextFilters as unknown as Json,
+        notification_preferences: nextNotifications as unknown as Json,
+        created_at: existingRow?.created_at ?? now,
+        updated_at: now,
       })
       .select()
       .single();
@@ -1499,11 +1744,26 @@ export async function updateUserPreferences(preferences: Partial<any>): Promise<
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as unknown as any };
+    const parsed = parseHashtagUserPreferences(data);
+    if (parsed) {
+      return { success: true, data: parsed };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: preferences.userId,
+        followedHashtags: nextFollowed,
+        hashtagFilters: nextFilters,
+        notificationPreferences: nextNotifications,
+        createdAt: existingRow?.created_at ?? now,
+        updatedAt: now,
+      },
+    };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update user preferences' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update user preferences',
     };
   }
 }
@@ -1511,7 +1771,7 @@ export async function updateUserPreferences(preferences: Partial<any>): Promise<
 /**
  * Get user preferences
  */
-export async function getUserPreferences(): Promise<HashtagApiResponse<any>> {
+export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUserPreferences | null>> {
   const supabase = await supabaseClientPromise;
   try {
     const { data, error } = await supabase
@@ -1523,11 +1783,11 @@ export async function getUserPreferences(): Promise<HashtagApiResponse<any>> {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as unknown as any };
+    return { success: true, data: parseHashtagUserPreferences(data) };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get user preferences' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get user preferences',
     };
   }
 }

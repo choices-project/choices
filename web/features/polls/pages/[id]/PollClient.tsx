@@ -14,6 +14,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotificationStore, useAnalyticsStore } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
+import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
+import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
 
 const PRIVACY_LABELS: Record<string, string> = {
   public: 'Public',
@@ -68,6 +70,7 @@ type PollClientProps = {
     category?: string;
     votingMethod?: string;
     createdAt?: string;
+    endtime?: string;
     userVote?: string;
     canVote?: boolean;
   };
@@ -86,6 +89,18 @@ export default function PollClient({ poll }: PollClientProps) {
   const addNotification = useNotificationStore((state) => state.addNotification);
   const trackEvent = useAnalyticsStore((state) => state.trackEvent);
   const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
+  const {
+    setBallots,
+    setSelectedBallot,
+    setCurrentBallot,
+    setLoading: setVotingLoading,
+    setVoting,
+    setError: setVotingError,
+    clearError: clearVotingError,
+    addVotingRecord,
+  } = useVotingActions();
+  const votingStoreError = useVotingError();
+  const storeIsVoting = useVotingIsVoting();
 
   const recordPollEvent = useCallback(
     (
@@ -148,6 +163,29 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const pollId = poll.id;
 
+  const pollDetailsForBallot = useMemo(
+    () => ({
+      id: poll.id,
+      title: poll.title,
+      description: poll.description ?? null,
+      options: [...(poll.options ?? [])],
+      votingMethod: poll.votingMethod ?? 'single',
+      totalVotes:
+        typeof poll.totalVotes === 'number'
+          ? poll.totalVotes
+          : typeof poll.totalvotes === 'number'
+          ? poll.totalvotes
+          : undefined,
+      endtime: poll.endtime ?? null,
+      status: poll.status ?? 'active',
+      category: poll.category ?? null,
+      createdAt: poll.createdAt ?? null,
+    }),
+    [poll]
+  );
+
+  const combinedError = error ?? votingStoreError ?? null;
+
   useEffect(() => {
     let cancelled = false;
 
@@ -175,8 +213,12 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const fetchPollData = useCallback(async () => {
     try {
+      const generalError = 'Failed to load poll results. Please try again later.';
+
       setLoading(true);
+      setVotingLoading(true);
       setError(null);
+      clearVotingError();
 
       const resultsResponse = await fetch(`/api/polls/${pollId}/results`, {
         cache: 'no-store',
@@ -186,7 +228,8 @@ export default function PollClient({ poll }: PollClientProps) {
       if (!resultsResponse.ok) {
         setResults(null);
         if (resultsResponse.status >= 500) {
-          setError('Failed to load poll results. Please try again later.');
+          setError(generalError);
+          setVotingError(generalError);
         }
         return;
       }
@@ -194,20 +237,55 @@ export default function PollClient({ poll }: PollClientProps) {
       const payload = await resultsResponse.json();
       if (payload?.success) {
         setResults(payload.data as PollResultsResponse);
+        clearVotingError();
       } else {
         setResults(null);
+        clearVotingError();
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load poll data';
       setResults(null);
-      setError(err instanceof Error ? err.message : 'Failed to load poll data');
+      setError(errorMessage);
+      setVotingError(errorMessage);
     } finally {
       setLoading(false);
+      setVotingLoading(false);
     }
-  }, [pollId]);
+  }, [pollId, clearVotingError, setVotingError, setVotingLoading]);
 
   useEffect(() => {
     void fetchPollData();
   }, [fetchPollData]);
+
+  useEffect(() => {
+    const totalVotesContext =
+      results?.total_votes ??
+      pollDetailsForBallot.totalVotes ??
+      (typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined);
+
+    const optionVoteCounts =
+      results?.results.reduce<Record<string, number>>((acc, row) => {
+        const key = String(row.option_id);
+        acc[key] = Number(row.vote_count ?? 0);
+        return acc;
+      }, {}) ?? undefined;
+
+    const ballot = createBallotFromPoll(pollDetailsForBallot, {
+      totalVotes: totalVotesContext,
+      optionVoteCounts,
+    });
+
+    setBallots([ballot]);
+    setSelectedBallot(ballot);
+    setCurrentBallot(ballot);
+  }, [
+    poll.totalvotes,
+    pollDetailsForBallot,
+    results,
+    setBallots,
+    setCurrentBallot,
+    setSelectedBallot,
+  ]);
 
   const optionVoteLookup = useMemo(() => {
     const map = new Map<string, number>();
@@ -309,7 +387,6 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [canVote, pollStatus, user]);
 
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote ?? null);
-  const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
@@ -366,12 +443,13 @@ export default function PollClient({ poll }: PollClientProps) {
   );
 
   const handleVote = async (option: NormalizedOption) => {
-    if (!user || !canVote || pollStatus !== 'active') {
+    if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
       return;
     }
 
-    setIsVoting(true);
     setError(null);
+    clearVotingError();
+    setVoting(true);
 
     try {
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
@@ -410,13 +488,27 @@ export default function PollClient({ poll }: PollClientProps) {
       });
       void fetchPollData();
 
+      const voteId =
+        typeof resultData.voteId === 'string'
+          ? resultData.voteId
+          : `vote-${poll.id}-${Date.now().toString(36)}`;
+
+      addVotingRecord(
+        createVotingRecordFromPollSubmission({
+          poll: pollDetailsForBallot,
+          submission: { method: 'single', choice: option.index },
+          voteId,
+        })
+      );
+
       return {
         ok: true,
-        id: resultData.voteId ?? 'vote-recorded',
+        id: voteId,
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to vote';
       setError(errorMessage);
+      setVotingError(errorMessage);
       addNotification({
         type: 'error',
         title: 'Unable to vote',
@@ -436,7 +528,7 @@ export default function PollClient({ poll }: PollClientProps) {
         error: errorMessage,
       };
     } finally {
-      setIsVoting(false);
+      setVoting(false);
     }
   };
 
@@ -608,9 +700,9 @@ export default function PollClient({ poll }: PollClientProps) {
         </Alert>
       )}
 
-      {error && (
+      {combinedError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
-          {error}
+          {combinedError}
         </div>
       )}
 
@@ -640,10 +732,10 @@ export default function PollClient({ poll }: PollClientProps) {
                 type="button"
                 variant={selectedOption === option.id ? 'secondary' : 'default'}
                 onClick={() => handleVote(option)}
-                disabled={isVoting || hasVoted}
+                disabled={storeIsVoting || hasVoted}
                 data-testid={`vote-button-${option.index}`}
               >
-                {selectedOption === option.id ? 'Voted' : isVoting ? 'Voting…' : 'Vote'}
+                {selectedOption === option.id ? 'Voted' : storeIsVoting ? 'Voting…' : 'Vote'}
               </Button>
             )}
           </div>

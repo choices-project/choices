@@ -10,9 +10,11 @@
 
 import { isValidEmail } from '@/lib/utils/format-utils';
 
-import type { 
-  ProfileUpdateData, 
-  ProfileValidationResult
+import type {
+  ProfileUpdateData,
+  ProfileValidationResult,
+  PrivacySettings,
+  ProfileUser,
 } from '../index';
 
 import { 
@@ -161,7 +163,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   // Participation style validation
   if (data.participation_style) {
     const style = data.participation_style;
-    if (style && !Object.keys(PARTICIPATION_STYLES).includes(style as any)) {
+    if (style && !(style in PARTICIPATION_STYLES)) {
       errors.push(`Participation style must be one of: ${Object.keys(PARTICIPATION_STYLES).join(', ')}`);
     }
   }
@@ -169,7 +171,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   // Privacy settings validation
   if (data.privacy_settings) {
     const settings = data.privacy_settings;
-    if (settings?.profile_visibility && !Object.keys(PRIVACY_LEVELS).includes(settings.profile_visibility as any)) {
+    if (settings?.profile_visibility && !(settings.profile_visibility in PRIVACY_LEVELS)) {
       errors.push(`Profile visibility must be one of: ${Object.keys(PRIVACY_LEVELS).join(', ')}`);
     }
   }
@@ -214,16 +216,23 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
  * Validate profile completeness
  * Checks if profile has all required fields
  */
-export function validateProfileCompleteness(profile: any): { 
-  isComplete: boolean; 
-  missingFields: string[]; 
-  completionPercentage: number 
+export function validateProfileCompleteness(
+  profile: Pick<ProfileUser, 'display_name' | 'username' | 'email'>
+): {
+  isComplete: boolean;
+  missingFields: string[];
+  completionPercentage: number;
 } {
-  const requiredFields = ['display_name', 'username', 'email'];
+  const requiredFields: Array<keyof Pick<ProfileUser, 'display_name' | 'username' | 'email'>> = [
+    'display_name',
+    'username',
+    'email',
+  ];
   const missingFields: string[] = [];
 
-  requiredFields.forEach(field => {
-    if (!profile[field] || profile[field].trim().length === 0) {
+  requiredFields.forEach((field) => {
+    const value = profile[field];
+    if (typeof value !== 'string' || value.trim().length === 0) {
       missingFields.push(field.replace('_', ' '));
     }
   });
@@ -268,12 +277,15 @@ export function validateAvatarFile(file: File): { isValid: boolean; error?: stri
  * Validate privacy settings
  * Ensures privacy settings are valid and consistent
  */
-export function validatePrivacySettings(settings: any): { isValid: boolean; error?: string } {
+export function validatePrivacySettings(settings: Partial<PrivacySettings> | null | undefined): {
+  isValid: boolean;
+  error?: string;
+} {
   if (!settings) {
     return { isValid: true }; // Privacy settings are optional
   }
 
-  if (settings.profile_visibility && !Object.keys(PRIVACY_LEVELS).includes(settings.profile_visibility)) {
+  if (settings.profile_visibility && !(settings.profile_visibility in PRIVACY_LEVELS)) {
     return {
       isValid: false,
       error: `Profile visibility must be one of: ${Object.keys(PRIVACY_LEVELS).join(', ')}`

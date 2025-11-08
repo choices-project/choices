@@ -53,7 +53,7 @@ const extractRecordField = (source: AnalyticsRecord, key: string): Record<string
   return isRecord(value) ? value : {};
 };
 
-const toJson = (value: unknown): Json => {
+export const toJsonValue = (value: unknown): Json => {
   if (value === undefined) {
     return null;
   }
@@ -356,8 +356,8 @@ export class EnhancedAnalyticsService {
   }
 
   private async trackAuthEventInSession(authEvent: AuthEventPayload, sessionId: string): Promise<void> {
-    const sanitizedEvent = toJson(authEvent);
-    const metadataPayload = toJson({
+    const sanitizedEvent = toJsonValue(authEvent);
+    const metadataPayload = toJsonValue({
       auth_events: [sanitizedEvent],
       last_auth_event: new Date().toISOString()
     });
@@ -371,7 +371,7 @@ export class EnhancedAnalyticsService {
   }
 
   private async updateSessionWithAuth(sessionId: string, authEvent: AuthEventPayload): Promise<void> {
-    const metadataPayload = toJson({
+    const metadataPayload = toJsonValue({
       authenticated: authEvent.success ?? null,
       auth_method: authEvent.method ?? null
     });
@@ -387,7 +387,7 @@ export class EnhancedAnalyticsService {
   }
 
   async trackFeatureUsage(userId: string | null, featureName: string, context: DimensionsRecord): Promise<void> {
-    const contextPayload = toJson(context);
+    const contextPayload = toJsonValue(context);
 
     await this.supabase
       .from('feature_usage')
@@ -402,7 +402,7 @@ export class EnhancedAnalyticsService {
   }
 
   async recordPlatformMetric(metricName: string, dimensions: DimensionsRecord): Promise<void> {
-    const dimensionsPayload = toJson(dimensions);
+    const dimensionsPayload = toJsonValue(dimensions);
 
     await this.supabase
       .from('platform_analytics')
@@ -418,8 +418,8 @@ export class EnhancedAnalyticsService {
 
   async updateSystemHealth(checkName: string, status: 'ok' | 'warning' | 'critical', details?: DimensionsRecord): Promise<void> {
     try {
-      const detailsPayload = details ? toJson(details) : null;
-      const metadataPayload = toJson({ check_name: checkName });
+      const detailsPayload = details ? toJsonValue(details) : null;
+      const metadataPayload = toJsonValue({ check_name: checkName });
 
       const { error } = await this.supabase.from('system_health').upsert({
         service_name: checkName,
@@ -512,8 +512,8 @@ export class EnhancedAnalyticsService {
         metadataRecord.action = sessionData.action;
       }
 
-      const metadataPayload = toJson(metadataRecord);
-      const deviceInfoPayload = sessionData.deviceInfo !== undefined ? toJson(sessionData.deviceInfo) : null;
+      const metadataPayload = toJsonValue(metadataRecord);
+      const deviceInfoPayload = sessionData.deviceInfo !== undefined ? toJsonValue(sessionData.deviceInfo) : null;
 
       const payload: Database['public']['Tables']['user_sessions']['Insert'] = {
         user_id: sessionData.userId ?? null,

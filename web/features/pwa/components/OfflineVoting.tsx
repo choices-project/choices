@@ -11,10 +11,11 @@
 'use client'
 
 import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
+import { isOfflineVoteAction, usePWAStore, type OfflineVoteActionData } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
+import type { OfflineVoteRecord } from '@/types/pwa';
 
 type OfflineVotingProps = {
   /** Poll ID to filter votes for */
@@ -33,35 +34,45 @@ type OfflineVotingProps = {
  * @param props - Component props
  * @returns Offline voting UI or null if no votes
  */
+type OfflineVoteDisplay = OfflineVoteRecord & {
+  id: string;
+};
+
 export default function OfflineVoting({ pollId, className = '' }: OfflineVotingProps) {
   const { offline } = usePWAStore()
-  const [offlineVotes, setOfflineVotes] = useState<any[]>([])
+  const [offlineVotes, setOfflineVotes] = useState<OfflineVoteDisplay[]>([])
   const [_isVoting, setIsVoting] = useState(false)
   
   // Get real offline votes for this poll from store
-  const pollVotes = offline.offlineData.queuedActions.filter(
-    action => action.action.includes('vote') && action.data && 
-    (action.data as any).pollId === pollId
+  const pollVotes = useMemo(
+    () =>
+      offline.offlineData.queuedActions
+        .filter(isOfflineVoteAction)
+        .filter((action) => action.data.pollId === pollId),
+    [offline.offlineData.queuedActions, pollId]
   )
 
   useEffect(() => {
     // Use real votes from store, fallback to mock if none exist
     if (pollVotes.length > 0) {
-      setOfflineVotes(pollVotes.map(action => ({
-        id: action.id,
-        pollId,
-        choice: (action.data as any).choice || 0,
-        timestamp: new Date(action.timestamp).getTime()
-      })))
+      setOfflineVotes(
+        pollVotes.map((action) => ({
+          id: action.id,
+          pollId,
+          choice: action.data.choice,
+          timestamp: new Date(action.timestamp).getTime(),
+          metadata: action.data.metadata,
+        }))
+      )
     } else {
       // Keep mock votes for demo purposes if no real votes
-      const mockVotes = [
+      const mockVotes: OfflineVoteDisplay[] = [
         { id: '1', pollId, choice: 0, timestamp: Date.now() - 300000 },
         { id: '2', pollId, choice: 1, timestamp: Date.now() - 180000 }
       ]
       setOfflineVotes(mockVotes)
     }
-  }, [pollId, pollVotes.length])
+  }, [pollId, pollVotes])
 
   const _handleVote = (choice: number) => {
     setIsVoting(true)

@@ -5,13 +5,16 @@
     "baseUrl": ".",
     "moduleResolution": "node",
     "paths": {
-      "@/*": ["web/*"]
+      "@/*": ["web/*"],
+      "@choices/civics-shared": ["services/civics-shared/index"],
+      "@choices/civics-shared/*": ["services/civics-shared/*"]
     }
   },
   "include": [
     "web/**/*",
     "scripts/**/*",
-    "docs/**/*"
+    "docs/**/*",
+    "services/civics-shared/**/*.d.ts"
   ],
   "exclude": [
     "**/*.test.ts",

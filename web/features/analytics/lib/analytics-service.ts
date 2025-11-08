@@ -157,7 +157,7 @@ const parseTrustTierAnalyticsRow = (value: unknown): TrustTierAnalyticsRecord | 
     trust_score: typeof record.trust_score === 'number' ? record.trust_score : null,
     factors: parseTrustTierFactors(record.factors),
     created_at: typeof record.created_at === 'string' ? record.created_at : null,
-    calculated_at: typeof record.calculated_at === 'string' ? record.calculated_at : undefined
+    calculated_at: typeof record.calculated_at === 'string' ? record.calculated_at : null
   };
 };
 
@@ -333,11 +333,6 @@ export class AnalyticsService {
 
       // Insert analytics record
       const factorPayload: TrustTierAnalyticsInsertPayload['factors'] = {
-        age_group: demographicData?.age_group,
-        geographic_region: demographicData?.geographic_region,
-        education_level: demographicData?.education_level,
-        income_bracket: demographicData?.income_bracket,
-        political_affiliation: demographicData?.political_affiliation,
         voting_history_count: trustTierScore.factors.voting_history_count,
         biometric_verified: trustTierScore.factors.biometric_verified,
         phone_verified: trustTierScore.factors.phone_verified,
@@ -347,6 +342,22 @@ export class AnalyticsService {
         confidence_level: trustTierScore.score,
         last_activity: new Date().toISOString()
       };
+
+      if (demographicData?.age_group) {
+        factorPayload.age_group = demographicData.age_group;
+      }
+      if (demographicData?.geographic_region) {
+        factorPayload.geographic_region = demographicData.geographic_region;
+      }
+      if (demographicData?.education_level) {
+        factorPayload.education_level = demographicData.education_level;
+      }
+      if (demographicData?.income_bracket) {
+        factorPayload.income_bracket = demographicData.income_bracket;
+      }
+      if (demographicData?.political_affiliation) {
+        factorPayload.political_affiliation = demographicData.political_affiliation;
+      }
 
       const insertPayload: TrustTierAnalyticsInsertPayload = {
         user_id: userId,
@@ -681,12 +692,24 @@ export class AnalyticsService {
         : 0
 
       // Calculate trust tier breakdown from votes
-      const trustTierBreakdown = votesData?.reduce((acc, vote) => {
-        const tier = vote.trust_tier ?? 1
-        const tierKey = `T${tier}` as TrustTier
-        acc[tierKey] = (acc[tierKey] ?? 0) + 1
-        return acc
-      }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
+      const voteRows: Array<{ trust_tier: number | null }> = Array.isArray(votesData)
+        ? (votesData as Array<{ trust_tier: number | null }>)
+        : [];
+
+      const trustTierBreakdown: Record<TrustTier, number> = {
+        T0: 0,
+        T1: 0,
+        T2: 0,
+        T3: 0
+      }
+
+      voteRows.forEach((vote) => {
+        const tierValue = vote.trust_tier ?? 1
+        const tierKey = `T${tierValue}` as TrustTier
+        if (tierKey in trustTierBreakdown) {
+          trustTierBreakdown[tierKey] += 1
+        }
+      })
 
       const demographicInsights: PollDemographicInsights = {
         id: pollData.id,
@@ -701,8 +724,13 @@ export class AnalyticsService {
         average_confidence_level: confidence_level,
         data_quality_distribution: {},
         verification_method_distribution: {},
-        trust_tier_by_demographic: {},
-        demographic_by_trust_tier: {},
+        trust_tier_by_demographic: {} as Record<string, Record<TrustTier, number>>,
+        demographic_by_trust_tier: {
+          T0: {},
+          T1: {},
+          T2: {},
+          T3: {}
+        },
         created_at: pollData.created_at ?? new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -827,18 +855,31 @@ export class AnalyticsService {
 
       // Group by date and count
       const dailyCounts = new Map<string, number>()
-      (trends ?? []).forEach((trend) => {
-        if (isRecord(trend) && typeof trend.created_at === 'string') {
-          const date = new Date(trend.created_at).toISOString().split('T')[0]
-          dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
-        }
-      })
+      const trendRows: Array<{ created_at: string | null }> = Array.isArray(trends)
+        ? (trends as Array<{ created_at: string | null }>)
+        : []
 
-      // Convert to array format
-      return Array.from(dailyCounts.entries()).map(([date, count]) => ({
-        date,
-        count
-      })).sort((a, b) => a.date.localeCompare(b.date))
+      trendRows.forEach((trend) => {
+        const createdAt = trend.created_at;
+        if (typeof createdAt === 'string') {
+          const isoString = new Date(createdAt).toISOString();
+          const [dateKeyRaw] = isoString.split('T', 1);
+          const dateKey = dateKeyRaw ?? isoString;
+          dailyCounts.set(dateKey, (dailyCounts.get(dateKey) ?? 0) + 1);
+        }
+      });
+
+      const dailyResponses: Array<{ date: string; count: number }> = Array.from(
+        dailyCounts.entries()
+      ).map(
+        ([date, count]): { date: string; count: number } => ({
+          date,
+          count
+        })
+      )
+
+      dailyResponses.sort((a, b) => a.date.localeCompare(b.date))
+      return dailyResponses
     } catch (error) {
       devLog('Error getting daily response trends:', { error })
       return []

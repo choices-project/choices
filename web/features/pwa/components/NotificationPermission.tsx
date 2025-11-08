@@ -69,7 +69,7 @@ export default function NotificationPermission({ className = '' }: NotificationP
 
   if (!notificationsSupported) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`}>
+      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`} data-testid="notification-permission-unsupported">
         <div className="flex items-center space-x-2 text-yellow-800">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">Notifications are not supported in your browser</span>
@@ -79,7 +79,7 @@ export default function NotificationPermission({ className = '' }: NotificationP
   }
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg p-4 ${className}`}>
+    <div className={`bg-white border border-gray-200 rounded-lg p-4 ${className}`} data-testid="notification-permission">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <Bell className="w-5 h-5 text-blue-600" />

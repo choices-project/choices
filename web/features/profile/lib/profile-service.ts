@@ -10,6 +10,7 @@
 
 import logger from '@/lib/utils/logger';
 
+import type { Json } from '@/types/database';
 import type {
   ProfileUser,
   UserProfile,
@@ -18,12 +19,208 @@ import type {
   ProfileValidationResult,
   AvatarUploadResult,
   ProfileExportData,
-  ExportOptions
+  ExportOptions,
+  PrivacySettings,
+  ProfileDemographics,
 } from '../../../types/profile';
 import {
   PROFILE_CONSTANTS,
-  PROFILE_DEFAULTS
+  PROFILE_DEFAULTS,
 } from '../../../types/profile';
+
+type ProfileApiEnvelope = {
+  success?: unknown;
+  data?: unknown;
+  profile?: unknown;
+  error?: unknown;
+};
+
+type ProfileApiRecord = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isJsonValue = (value: unknown): value is Json => {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+
+  if (isRecord(value)) {
+    return Object.values(value).every(isJsonValue);
+  }
+
+  return false;
+};
+
+const toStringOrUndefined = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? value : undefined;
+
+const toStringOrNull = (value: unknown): string | null =>
+  typeof value === 'string' ? value : null;
+
+const toBooleanOrNull = (value: unknown): boolean | null =>
+  typeof value === 'boolean' ? value : null;
+
+const toStringArrayOrNull = (value: unknown): string[] | null =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string')
+    ? (value as string[])
+    : null;
+
+const sanitizeJsonRecord = (value: Record<string, unknown>): Record<string, Json> => {
+  const result: Record<string, Json> = {};
+  Object.entries(value).forEach(([key, raw]) => {
+    if (isJsonValue(raw)) {
+      result[key] = raw;
+    }
+  });
+  return result;
+};
+
+const toProfileDemographics = (value: unknown): ProfileDemographics | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const sanitized = sanitizeJsonRecord(value);
+  return Object.keys(sanitized).length > 0 ? (sanitized as ProfileDemographics) : null;
+};
+
+const PRIVACY_VISIBILITY_SET = new Set(PROFILE_CONSTANTS.PROFILE_VISIBILITY);
+
+const PRIVACY_BOOLEAN_KEYS: Array<keyof PrivacySettings> = [
+  'collectLocationData',
+  'collectVotingHistory',
+  'trackInterests',
+  'trackFeedActivity',
+  'collectAnalytics',
+  'trackRepresentativeInteractions',
+  'showReadHistory',
+  'showBookmarks',
+  'showLikes',
+  'shareActivity',
+  'participateInTrustTier',
+  'personalizeFeeds',
+  'personalizeRecommendations',
+  'retainVotingHistory',
+  'retainSearchHistory',
+  'retainLocationHistory',
+  'allow_analytics',
+  'show_activity',
+  'allow_messages',
+  'share_demographics',
+  'show_email',
+];
+
+const toPrivacySettings = (value: unknown): Partial<PrivacySettings> | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const result: Partial<PrivacySettings> = {};
+
+  PRIVACY_BOOLEAN_KEYS.forEach((key) => {
+    const raw = value[key as string];
+    if (typeof raw === 'boolean') {
+      result[key] = raw;
+    }
+  });
+
+  const visibility = value.profile_visibility;
+  if (typeof visibility === 'string' && PRIVACY_VISIBILITY_SET.has(visibility)) {
+    result.profile_visibility = visibility as PrivacySettings['profile_visibility'];
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+};
+
+const toJsonValue = (value: unknown): Json | null => (isJsonValue(value) ? (value as Json) : null);
+
+const pickProfilePayload = (envelope: ProfileApiEnvelope): ProfileApiRecord | null => {
+  if (isRecord(envelope.profile)) {
+    return envelope.profile;
+  }
+  if (isRecord(envelope.data)) {
+    return envelope.data;
+  }
+  return null;
+};
+
+const buildProfileUser = (record: ProfileApiRecord): ProfileUser | null => {
+  const id =
+    toStringOrUndefined(record.id) ??
+    toStringOrUndefined(record.userid) ??
+    toStringOrUndefined(record.user_id);
+  const email = toStringOrUndefined(record.email);
+  const username = toStringOrUndefined(record.username);
+
+  if (!id || !email || !username) {
+    return null;
+  }
+
+  const createdAtSource = record.created_at ?? record.createdat;
+  const updatedAtSource = record.updated_at ?? record.updatedat;
+
+  const primaryConcerns = toStringArrayOrNull(record.primary_concerns) ?? [];
+  const communityFocus = toStringArrayOrNull(record.community_focus) ?? [];
+
+  const demographics =
+    toProfileDemographics(record.demographics) ??
+    ((PROFILE_DEFAULTS.demographics ?? null) as ProfileDemographics | null);
+
+  const privacySettings =
+    toPrivacySettings(record.privacy_settings) ?? PROFILE_DEFAULTS.privacy_settings ?? null;
+
+  const participationStyle =
+    toStringOrUndefined(record.participation_style) ??
+    PROFILE_DEFAULTS.participation_style ??
+    null;
+
+  const trustTier =
+    toStringOrUndefined(record.trust_tier) ?? PROFILE_DEFAULTS.trust_tier ?? null;
+
+  const userId =
+    toStringOrUndefined(record.user_id) ??
+    toStringOrUndefined(record.userid) ??
+    id;
+
+  const profile: ProfileUser = {
+    id,
+    email,
+    username,
+    display_name: toStringOrNull(record.display_name ?? record.displayname),
+    bio: toStringOrNull(record.bio),
+    avatar_url: toStringOrNull(record.avatar_url ?? record.avatar),
+    trust_tier: trustTier,
+    is_admin: toBooleanOrNull(record.is_admin),
+    is_active: toBooleanOrNull(record.is_active),
+    created_at: toStringOrNull(createdAtSource),
+    updated_at: toStringOrNull(updatedAtSource),
+    user_id: userId,
+    primary_concerns: primaryConcerns,
+    community_focus: communityFocus,
+    participation_style: participationStyle,
+    demographics,
+    privacy_settings: privacySettings,
+    analytics_dashboard_mode: toStringOrNull(record.analytics_dashboard_mode),
+    dashboard_layout: toJsonValue(record.dashboard_layout),
+  };
+
+  return profile;
+};
+
+const removeUndefined = <T extends Record<string, unknown>>(record: T): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(record).filter(([, value]) => value !== undefined)
+  );
 // ============================================================================
 // PROFILE VALIDATION
 // ============================================================================
@@ -106,44 +303,25 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
  * Transform API response to ProfileUser format
  * Handles different API response formats
  */
-export function transformApiResponseToProfile(apiData: any): ProfileUser | null {
-  if (!apiData?.success) {
+export function transformApiResponseToProfile(apiData: unknown): ProfileUser | null {
+  if (!isRecord(apiData) || apiData.success !== true) {
     return null;
   }
 
-  const profile = apiData.data ?? apiData.profile;
-  if (!profile) {
+  const profileRecord = pickProfilePayload(apiData as ProfileApiEnvelope);
+  if (!profileRecord) {
     return null;
   }
 
-  const profileAny = profile
-  return {
-    id: profile.id ?? profile.userid ?? profile.user_id,
-    email: profile.email,
-    username: profile.username,
-    display_name: profile.display_name ?? profileAny.displayname,
-    bio: profile.bio,
-    avatar_url: profile.avatar_url ?? profileAny.avatar,
-    trust_tier: profile.trust_tier ?? PROFILE_DEFAULTS.trust_tier,
-    is_admin: profileAny.is_admin ?? false,
-    is_active: profile.is_active !== false,
-    created_at: profile.created_at ?? profileAny.createdat ?? new Date().toISOString(),
-    updated_at: profile.updated_at ?? profileAny.updatedat ?? new Date().toISOString(),
-    user_id: profile.user_id ?? profileAny.userid ?? profile.id,
-    primary_concerns: profileAny.primary_concerns ?? [],
-    community_focus: profileAny.community_focus ?? [],
-    participation_style: profileAny.participation_style ?? PROFILE_DEFAULTS.participation_style,
-    demographics: profileAny.demographics ?? {},
-    privacy_settings: profileAny.privacy_settings ?? PROFILE_DEFAULTS.privacy_settings,
-  } as any;
+  return buildProfileUser(profileRecord);
 }
 
 /**
  * Transform ProfileUpdateData to API format
  * Handles different field naming conventions
  */
-export function transformProfileUpdateToApi(data: ProfileUpdateData): any {
-  return {
+export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<string, unknown> {
+  const payload = {
     display_name: data.display_name,
     bio: data.bio,
     username: data.username,
@@ -153,6 +331,8 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): any {
     privacy_settings: data.privacy_settings,
     demographics: data.demographics,
   };
+
+  return removeUndefined(payload);
 }
 
 // ============================================================================

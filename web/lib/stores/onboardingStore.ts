@@ -15,6 +15,8 @@ import { devtools, persist } from 'zustand/middleware';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
+import type { AuthSetupStepData } from '@/features/onboarding/types';
+
 import { createSafeStorage } from './storage';
 
 // Onboarding data types
@@ -120,7 +122,7 @@ type OnboardingStore = {
   restartOnboarding: () => void;
   
   // Actions - Data management
-  updateFormData: (step: number, data: any) => void;
+  updateFormData: (step: number, data: Record<string, unknown>) => void;
   updateAuthData: (data: Partial<AuthData>) => void;
   updateProfileData: (data: Partial<ProfileData>) => void;
   updateValuesData: (data: Partial<ValuesData>) => void;
@@ -216,6 +218,31 @@ const mergeStepData = (
   step: number,
   data: unknown,
 ) => withOptional(stepData, { [step]: data } as Record<number, unknown>);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  isRecord(value) ? value : {};
+
+const getString = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+
+const getBoolean = (value: unknown): boolean | undefined =>
+  typeof value === 'boolean' ? value : undefined;
+
+const getStringArray = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
+
+const getAuthMethod = (value: unknown): AuthSetupStepData['authMethod'] | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const authMethods: AuthSetupStepData['authMethod'][] = ['email', 'social', 'webauthn', 'anonymous', 'skip'];
+  return (authMethods as string[]).includes(value) ? (value as AuthSetupStepData['authMethod']) : undefined;
+};
 
 // Create onboarding store with middleware
 export const useOnboardingStore = create<OnboardingStore>()(
@@ -331,12 +358,15 @@ export const useOnboardingStore = create<OnboardingStore>()(
         }),
         
         // Data management actions
-        updateFormData: (step, data) => set((state) => ({
-          stepData: mergeStepData(state.stepData, step, {
-            ...(state.stepData[step] ?? {}),
-            ...(data as Record<string, unknown>),
-          }),
-        })),
+        updateFormData: (step, data) => set((state) => {
+          const existing = asRecord(state.stepData[step]);
+          return {
+            stepData: mergeStepData(state.stepData, step, {
+              ...existing,
+              ...data,
+            }),
+          };
+        }),
         
         updateAuthData: (data) => set((state) => ({
           authData: mergeState(state.authData, data),
@@ -390,23 +420,33 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         canProceedToNextStep: (step) => {
           const state = get();
-          const currentStepData = state.stepData[step] as any;
+          const currentStepData = asRecord(state.stepData[step]);
           const stepConfig = state.steps.find(s => s.id === step);
           
           if (!stepConfig?.required) return true;
           
-          // Add validation logic here based on step requirements
           switch (step) {
             case 0: // Welcome step
               return true;
-            case 1: // Auth step
-              return !!(currentStepData?.email && currentStepData?.password);
-            case 2: // Profile step
-              return !!(currentStepData?.firstName && currentStepData?.lastName);
-            case 3: // Values step
-              return !!(currentStepData?.primaryInterests?.length > 0);
-            case 4: // Privacy step
-              return !!(currentStepData?.privacyAccepted);
+            case 1: { // Auth step
+              const method = getAuthMethod(currentStepData.authMethod);
+              const completed = getBoolean(currentStepData.authSetupCompleted);
+              const email = getString(currentStepData.email);
+              return method === 'skip' || Boolean(completed) || !!email;
+            }
+            case 2: { // Profile step
+              const completed = getBoolean(currentStepData.profileSetupCompleted);
+              const displayName = getString(currentStepData.displayName);
+              const visibility = getString(currentStepData.profileVisibility);
+              return Boolean(completed) || !!displayName || !!visibility;
+            }
+            case 3: { // Values step
+              const primaryConcerns = getStringArray(currentStepData.primaryConcerns);
+              const communityFocus = getStringArray(currentStepData.communityFocus);
+              return primaryConcerns.length > 0 && communityFocus.length > 0;
+            }
+            case 4: // Privacy step (currently informational)
+              return true;
             case 5: // Complete step
               return true;
             default:
@@ -416,30 +456,36 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         getStepValidationErrors: (step) => {
           const state = get();
-          const currentStepData = state.stepData[step] as any;
+          const currentStepData = asRecord(state.stepData[step]);
           const errors: string[] = [];
           
           switch (step) {
-            case 1: // Auth step
-              if (!currentStepData?.email) errors.push('Email is required');
-              if (!currentStepData?.password) errors.push('Password is required');
-              if (currentStepData?.password !== currentStepData?.confirmPassword) {
-                errors.push('Passwords do not match');
+            case 1: { // Auth step
+              const method = getAuthMethod(currentStepData.authMethod);
+              if (!method) {
+                errors.push('Select an authentication method.');
+              }
+              if (method === 'email' && !getString(currentStepData.email)) {
+                errors.push('Provide a valid email address for the email login option.');
               }
               break;
-            case 2: // Profile step
-              if (!currentStepData?.firstName) errors.push('First name is required');
-              if (!currentStepData?.lastName) errors.push('Last name is required');
-              break;
-            case 3: // Values step
-              if (!currentStepData?.primaryInterests?.length) {
-                errors.push('Please select at least one interest');
+            }
+            case 2: { // Profile step
+              if (!getString(currentStepData.profileVisibility)) {
+                errors.push('Choose a profile visibility setting.');
               }
               break;
-            case 4: // Privacy step
-              if (!currentStepData?.privacyAccepted) {
-                errors.push('You must accept the privacy policy');
+            }
+            case 3: { // Values step
+              if (getStringArray(currentStepData.primaryConcerns).length === 0) {
+                errors.push('Select at least one primary concern.');
               }
+              if (getStringArray(currentStepData.communityFocus).length === 0) {
+                errors.push('Select at least one community focus.');
+              }
+              break;
+            }
+            default:
               break;
           }
           

@@ -9,17 +9,9 @@
 
 import type { 
   Hashtag, 
-  HashtagCategory
+  HashtagCategory,
+  HashtagValidation
 } from '../types';
-
-// Local type definition
-type HashtagValidation = {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  suggestions: string[];
-  normalizedName: string;
-}
 
 // ============================================================================
 // HASHTAG VALIDATION UTILITIES
@@ -70,12 +62,23 @@ export function validateHashtagName(name: string): HashtagValidation {
     suggestions.push(normalizedName.toLowerCase());
   }
 
+  const availability: HashtagValidation['availability'] = {
+    is_available: errors.length === 0,
+    similar_hashtags: [],
+  };
+
+  if (errors.length > 0) {
+    availability.conflict_reason = errors[0];
+  }
+
   return {
-    isValid: errors.length === 0,
+    name,
+    is_valid: errors.length === 0,
     errors,
     warnings,
     suggestions,
-    normalizedName
+    normalized_name: normalizedName,
+    availability,
   };
 }
 

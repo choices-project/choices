@@ -1,13 +1,13 @@
 /**
  * Widget Selector Component
- * 
+ *
  * UI for selecting and adding widgets to the dashboard.
  * Features:
  * - Browse available widgets
  * - Filter by category
  * - Preview widget info
  * - Add to dashboard
- * 
+ *
  * Created: November 5, 2025
  * Status: PRODUCTION
  */
@@ -19,7 +19,7 @@ import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,9 +29,9 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { WIDGET_REGISTRY, generateWidgetId } from '../../lib/widgetRegistry';
+import { createWidgetConfig, getWidget, listWidgets } from '../../lib/widgetRegistry';
 import { useWidgetStore } from '../../stores/widgetStore';
-import type { WidgetType } from '../../types/widget';
+import type { WidgetCategory, WidgetType } from '../../types/widget';
 
 // ============================================================================
 // WIDGET SELECTOR PROPS
@@ -51,48 +51,35 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
   onWidgetAdd,
 }) => {
   const [open, setOpen] = useState(false);
-  const { addWidget } = useWidgetStore();
+  const addWidget = useWidgetStore((state) => state.addWidget);
 
   const handleAddWidget = (widgetType: WidgetType) => {
-    const widgetMeta = WIDGET_REGISTRY[widgetType];
-    
-    if (!widgetMeta) {
+    const registryEntry = getWidget(widgetType);
+
+    if (!registryEntry) {
       return;
     }
 
-    // Create new widget config from metadata
-    const newWidget = {
-      ...widgetMeta.defaultConfig,
-      id: generateWidgetId(widgetType),
-      type: widgetType,
-      title: widgetMeta.name,
-      description: widgetMeta.description,
-      icon: widgetMeta.icon,
-      enabled: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      // Adjust position to avoid overlaps (simple stacking for now)
+    const newWidget = createWidgetConfig(widgetType, {
       position: {
         x: 0,
-        y: 999, // Will be auto-placed by grid
+        y: 999, // Allow grid to auto-place
       },
-      size: {
-        w: widgetMeta.defaultConfig.position?.w ?? 4,
-        h: widgetMeta.defaultConfig.position?.h ?? 3,
-      },
-      settings: {
-        refreshInterval: widgetMeta.defaultConfig.refreshInterval,
-        filters: widgetMeta.defaultConfig.filters,
-      },
-    };
+    });
 
     addWidget(newWidget);
     onWidgetAdd?.(widgetType);
     setOpen(false);
   };
 
-  const widgets = Object.values(WIDGET_REGISTRY);
-  const categories = Array.from(new Set(widgets.map((w: any) => w.category)));
+  const widgets = listWidgets();
+  const categories = Array.from(
+    new Set(
+      widgets
+        .map((entry) => entry.metadata.category)
+        .filter((category): category is WidgetCategory => Boolean(category))
+    )
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -125,33 +112,33 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
           {/* All Widgets */}
           <TabsContent value="all" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
-              {widgets.map((widget: any) => (
-                <Card key={widget.type} className="hover:border-primary transition-colors">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl">{widget.icon}</span>
-                        <CardTitle className="text-base">{widget.name}</CardTitle>
+              {widgets.map((entry) => {
+                const { metadata } = entry;
+                return (
+                  <Card key={metadata.type} className="hover:border-primary transition-colors">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">{metadata.icon}</span>
+                          <CardTitle className="text-base">{metadata.name}</CardTitle>
+                        </div>
+                        <Button size="sm" onClick={() => handleAddWidget(metadata.type)}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddWidget(widget.type)}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <CardDescription className="text-xs">
-                      {widget.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Permission: {widget.requiredPermission}</span>
-                      <span className="capitalize">{widget.category}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <CardDescription className="text-xs">
+                        {metadata.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Permission: {metadata.requiredPermission ?? 'n/a'}</span>
+                        <span className="capitalize">{metadata.category}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </TabsContent>
 
@@ -160,38 +147,38 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
             <TabsContent key={category} value={category} className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 {widgets
-                  .filter((w: any) => w.category === category)
-                  .map((widget: any) => (
-                    <Card key={widget.type} className="hover:border-primary transition-colors">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-2xl">{widget.icon}</span>
-                            <CardTitle className="text-base">{widget.name}</CardTitle>
+                  .filter((entry) => entry.metadata.category === category)
+                  .map((entry) => {
+                    const { metadata } = entry;
+                    return (
+                      <Card key={metadata.type} className="hover:border-primary transition-colors">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-2xl">{metadata.icon}</span>
+                              <CardTitle className="text-base">{metadata.name}</CardTitle>
+                            </div>
+                            <Button size="sm" onClick={() => handleAddWidget(metadata.type)}>
+                              <Plus className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddWidget(widget.type)}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <CardDescription className="text-xs">
-                          {widget.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Permission: {widget.requiredPermission}</span>
-                          <div className="flex items-center space-x-1">
-                            {widget.supportedExports.length > 0 && (
-                              <span title="Exportable">📥</span>
-                            )}
+                          <CardDescription className="text-xs">
+                            {metadata.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Permission: {metadata.requiredPermission ?? 'n/a'}</span>
+                            <div className="flex items-center space-x-1">
+                              {(metadata.supportedExports?.length ?? 0) > 0 && (
+                                <span title="Exportable">📥</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
               </div>
             </TabsContent>
           ))}

@@ -1,21 +1,13 @@
 /**
  * Data Transformation Pipeline
- * 
+ *
  * Optimized data transformation pipeline focused on state and federal government data.
  * Transforms raw API responses into structured, normalized data for database storage.
  */
 
 import { logger } from '@/lib/utils/logger';
-// withOptional not used in this file
-// Define AddressLookupResult locally since it's not exported from civics/ingest
-type AddressLookupResult = {
-  district: string;
-  state: string;
-  representatives: unknown[];
-  normalizedAddress: string;
-  confidence: number;
-  coordinates?: { lat: number; lng: number };
-};
+
+import type { AddressLookupResult } from '@/features/civics/lib/types/contracts';
 
 export type GovernmentLevel = {
   level: 'federal' | 'state' | 'local';
@@ -125,7 +117,7 @@ export const GOVERNMENT_LEVELS: GovernmentLevel[] = [
     jurisdiction: 'US',
     offices: [
       'President',
-      'Vice President', 
+      'Vice President',
       'U.S. Senate',
       'U.S. House of Representatives',
       'Supreme Court'
@@ -239,7 +231,7 @@ export class DataTransformationPipeline {
     const baseRecords = 50; // Governor, Lt Gov, AG, etc.
     const houseSeats = this.getEstimatedHouseSeats(stateCode);
     const senateSeats = this.getEstimatedSenateSeats(stateCode);
-    
+
     return baseRecords + houseSeats + senateSeats;
   }
 
@@ -281,30 +273,31 @@ export class DataTransformationPipeline {
 
     try {
       // Transform representatives
-      const normalizedReps = data.representatives.map((rep: unknown) => {
+      const normalizedReps = data.representatives.map((rep) => {
         recordsTransformed++;
-        
-        // Type guard for representative data
-        if (!rep || typeof rep !== 'object') {
-          errors.push('Invalid representative data: not an object');
-          return null;
-        }
-        
-        const repObj = rep as Record<string, unknown>;
-        const normalized: any = {
-          id: String(repObj.id ?? ''),
-          name: String(repObj.name ?? ''),
-          party: String(repObj.party ?? ''),
-          office: String(repObj.office ?? ''),
-          level: this.determineLevel(String(repObj.office ?? '')),
+
+        const contact: NormalizedRepresentative['contact'] = {};
+        if (rep.contact?.phone) contact.phone = rep.contact.phone;
+        if (rep.contact?.email) contact.email = rep.contact.email;
+        if (rep.contact?.website) contact.website = rep.contact.website;
+
+        const normalized: NormalizedRepresentative = {
+          id: rep.id,
+          name: rep.name,
+          party: rep.party,
+          office: rep.office,
+          level: this.determineLevel(rep.office),
           jurisdiction: data.state,
-          contact: repObj.contact as NormalizedRepresentative['contact'],
-          socialMedia: repObj.socialMedia as NormalizedRepresentative['socialMedia'],
-          sources: ['google-civic'],
+          contact,
+          sources: [rep.source],
           lastUpdated: new Date().toISOString()
         };
-        if (repObj.district) {
-          normalized.district = String(repObj.district);
+
+        if (rep.district) {
+          normalized.district = rep.district;
+        }
+        if (rep.socialMedia) {
+          normalized.socialMedia = rep.socialMedia;
         }
 
         if (this.validateRepresentative(normalized)) {
@@ -354,18 +347,18 @@ export class DataTransformationPipeline {
    */
   private determineLevel(office: string): 'federal' | 'state' | 'local' {
     const officeLower = office.toLowerCase();
-    
-    if (officeLower.includes('u.s.') || officeLower.includes('united states') || 
+
+    if (officeLower.includes('u.s.') || officeLower.includes('united states') ||
         officeLower.includes('congress') || officeLower.includes('senate') ||
         officeLower.includes('house of representatives') || officeLower.includes('president')) {
       return 'federal';
     }
-    
+
     if (officeLower.includes('state') || officeLower.includes('governor') ||
         officeLower.includes('state senate') || officeLower.includes('state house')) {
       return 'state';
     }
-    
+
     return 'local';
   }
 
@@ -412,13 +405,13 @@ export class DataTransformationPipeline {
    */
   private calculateAccuracy(records: unknown[]): number {
     if (records.length === 0) return 0;
-    
+
     let validFields = 0;
     let totalFields = 0;
-    
+
     for (const record of records) {
       if (!record || typeof record !== 'object') continue;
-      
+
       const recordObj = record as Record<string, unknown>;
       for (const [key, value] of Object.entries(recordObj)) {
         totalFields++;
@@ -431,7 +424,7 @@ export class DataTransformationPipeline {
         }
       }
     }
-    
+
     return validFields / totalFields;
   }
 
@@ -440,18 +433,18 @@ export class DataTransformationPipeline {
    */
   private calculateConsistency(records: unknown[]): number {
     if (records.length === 0) return 0;
-    
+
     // Check for consistent data formats, required fields, etc.
     let consistentRecords = 0;
-    
+
     for (const record of records) {
       if (!record || typeof record !== 'object') continue;
-      
+
       if (this.isRecordConsistent(record)) {
         consistentRecords++;
       }
     }
-    
+
     return consistentRecords / records.length;
   }
 
@@ -463,7 +456,7 @@ export class DataTransformationPipeline {
     if (!record || typeof record !== 'object') {
       return false;
     }
-    
+
     const recordObj = record as Record<string, unknown>;
     return !!(
       recordObj.id &&

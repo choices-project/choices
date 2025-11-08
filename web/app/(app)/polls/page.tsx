@@ -4,7 +4,7 @@ import { Plus, TrendingUp, Clock, Users, BarChart3, Search, Hash, Flame, Star, E
 import Link from 'next/link';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import type { HashtagSearchQuery } from '@/features/hashtags/types';
+import type { HashtagSearchQuery, PollHashtagIntegration } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
@@ -23,12 +23,7 @@ type EnhancedPoll = {
   createdAt: string;
   hashtags?: string[];
   primary_hashtag?: string;
-  hashtag_engagement?: {
-    total_views: number;
-    hashtag_clicks: number;
-    hashtag_shares: number;
-  };
-  hashtag_trending_score?: number;
+  hashtagIntegration?: PollHashtagIntegration;
   trending_position?: number;
   engagement_rate?: number;
   user_interest_level?: number;
@@ -36,7 +31,7 @@ type EnhancedPoll = {
     name: string;
     verified: boolean;
   };
-}
+};
 
 // Removed unused type definitions
 
@@ -50,6 +45,54 @@ const CATEGORIES = [
   { id: 'environment', name: 'Environment', icon: '🌱', color: 'bg-lime-100 text-lime-700' },
   { id: 'social', name: 'Social', icon: '👥', color: 'bg-teal-100 text-teal-700' }
 ];
+
+const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
+  const hashtags = Array.isArray(rawPoll.hashtags)
+    ? rawPoll.hashtags.filter((tag: unknown): tag is string => typeof tag === 'string')
+    : [];
+
+  const hashtagIntegration: PollHashtagIntegration | undefined = rawPoll.hashtag_engagement
+    ? {
+        poll_id: rawPoll.id,
+        hashtags,
+        primary_hashtag:
+          typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined,
+        hashtag_engagement: {
+          total_views: rawPoll.hashtag_engagement?.total_views ?? 0,
+          hashtag_clicks: rawPoll.hashtag_engagement?.hashtag_clicks ?? 0,
+          hashtag_shares: rawPoll.hashtag_engagement?.hashtag_shares ?? 0,
+        },
+        related_polls: Array.isArray(rawPoll.related_polls)
+          ? rawPoll.related_polls.filter((id: unknown): id is string => typeof id === 'string')
+          : [],
+        hashtag_trending_score: rawPoll.hashtag_trending_score ?? 0,
+      }
+    : undefined;
+
+  return {
+    id: rawPoll.id,
+    title: rawPoll.title,
+    description: rawPoll.description ?? '',
+    status: rawPoll.status ?? 'active',
+    category: rawPoll.category ?? 'general',
+    tags: Array.isArray(rawPoll.tags)
+      ? rawPoll.tags.filter((tag: unknown): tag is string => typeof tag === 'string')
+      : [],
+    totalVotes: rawPoll.totalVotes ?? rawPoll.total_votes ?? 0,
+    createdAt: rawPoll.createdAt ?? rawPoll.created_at ?? new Date().toISOString(),
+    hashtags,
+    primary_hashtag:
+      typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined,
+    hashtagIntegration,
+    trending_position: rawPoll.trending_position ?? undefined,
+    engagement_rate: rawPoll.engagement_rate ?? undefined,
+    user_interest_level: rawPoll.user_interest_level ?? undefined,
+    author: {
+      name: rawPoll.author?.name ?? 'Anonymous',
+      verified: Boolean(rawPoll.author?.verified),
+    },
+  };
+};
 
 export default function PollsPage() {
   const [polls, setPolls] = useState<EnhancedPoll[]>([]);
@@ -120,7 +163,9 @@ export default function PollsPage() {
         const response = await fetch(`/api/polls?${params.toString()}`);
         if (response.ok) {
           const data = await response.json();
-          setPolls(data.polls ?? []);
+          const apiPolls = Array.isArray(data.polls) ? data.polls : [];
+          const mappedPolls = apiPolls.map(mapApiPollToEnhanced);
+          setPolls(mappedPolls);
         } else {
           logger.error('Failed to load polls:', response.statusText);
           setPolls([]);
@@ -369,10 +414,10 @@ export default function PollsPage() {
                     <Clock className="h-4 w-4 mr-1" />
                     {new Date(poll.createdAt).toLocaleDateString()}
                   </div>
-                  {poll.hashtag_engagement && (
+                  {poll.hashtagIntegration?.hashtag_engagement && (
                     <div className="flex items-center">
                       <Eye className="h-4 w-4 mr-1" />
-                      {poll.hashtag_engagement.total_views} views
+                      {poll.hashtagIntegration.hashtag_engagement.total_views} views
                     </div>
                   )}
                 </div>

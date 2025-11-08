@@ -19,13 +19,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
-import type { Hashtag } from '@/features/hashtags/types';
+import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
 
-import type { Poll, PollHashtagIntegrationRecord } from '../types';
+import type { Poll } from '../types';
 
 type PollHashtagIntegrationProps = {
   poll: Poll;
@@ -34,6 +33,52 @@ type PollHashtagIntegrationProps = {
   className?: string;
 }
 
+const createIntegrationFromPoll = (poll: Poll): PollHashtagIntegration => {
+  const hashtags = Array.isArray(poll.hashtags)
+    ? poll.hashtags.filter((value): value is string => typeof value === 'string')
+    : [];
+
+  const totalViews = typeof (poll as Record<string, unknown>).total_views === 'number'
+    ? ((poll as Record<string, unknown>).total_views as number)
+    : 0;
+
+  const integration: PollHashtagIntegration = {
+    poll_id: poll.id,
+    hashtags,
+    hashtag_engagement: {
+      total_views: totalViews,
+      hashtag_clicks: 0,
+      hashtag_shares: 0,
+    },
+    related_polls: [],
+    hashtag_trending_score: 0,
+  };
+
+  if (typeof (poll as Record<string, unknown>).primary_hashtag === 'string') {
+    integration.primary_hashtag = (poll as Record<string, unknown>).primary_hashtag as string;
+  }
+
+  return integration;
+};
+
+const createIntegrationWithHashtags = (
+  poll: Poll,
+  hashtags: string[],
+  previous?: PollHashtagIntegration | null,
+  trendingScore?: number,
+): PollHashtagIntegration => ({
+  poll_id: poll.id,
+  hashtags,
+  primary_hashtag: previous?.primary_hashtag ?? hashtags[0],
+  hashtag_engagement: {
+    total_views: previous?.hashtag_engagement.total_views ?? 0,
+    hashtag_clicks: previous?.hashtag_engagement.hashtag_clicks ?? 0,
+    hashtag_shares: previous?.hashtag_engagement.hashtag_shares ?? 0,
+  },
+  related_polls: previous?.related_polls ?? [],
+  hashtag_trending_score: trendingScore ?? previous?.hashtag_trending_score ?? 0,
+});
+
 export default function PollHashtagIntegration({
   poll,
   onUpdate,
@@ -41,12 +86,8 @@ export default function PollHashtagIntegration({
   className
 }: PollHashtagIntegrationProps) {
   const [activeTab, setActiveTab] = useState('hashtags');
-  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegrationRecord | null>(
-    poll.hashtags ? {
-      poll_id: poll.id,
-      hashtag_id: poll.id,
-      created_at: new Date().toISOString()
-    } : null
+  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegration | null>(
+    poll.hashtags ? createIntegrationFromPoll(poll) : null
   );
 
   // Hashtag store hooks
@@ -61,25 +102,24 @@ export default function PollHashtagIntegration({
 
   // Track hashtag engagement in real-time
   const _trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
-    // Since PollHashtagIntegrationRecord doesn't have hashtag_engagement,
-    // we'll track this separately
     logger.info(`Hashtag engagement tracked: ${action}`);
-    // Engagement tracking: extend analytics service to track hashtag engagement metrics
+    // TODO: Integrate with analytics service to persist hashtag engagement metrics
   };
 
   // Handle hashtag updates with enhanced analytics
   const handleHashtagUpdate = (newHashtags: string[]) => {
-    const updatedIntegration: PollHashtagIntegrationRecord = {
-      poll_id: poll.id,
-      hashtag_id: poll.id,
-      created_at: new Date().toISOString()
-    };
+    const trendingScore = _calculateTrendingScore(newHashtags);
+    const updatedIntegration = createIntegrationWithHashtags(
+      poll,
+      newHashtags,
+      hashtagIntegration,
+      trendingScore,
+    );
 
     setHashtagIntegration(updatedIntegration);
-    
-    // Update poll with new hashtags
+
     onUpdate({
-      hashtags: newHashtags
+      hashtags: newHashtags,
     });
   };
 
@@ -98,20 +138,19 @@ export default function PollHashtagIntegration({
   // Handle primary hashtag change
   const handlePrimaryHashtagChange = (hashtag: string) => {
     if (hashtagIntegration) {
-      const updatedIntegration = withOptional(hashtagIntegration, {
-        primary_hashtag: hashtag
+      setHashtagIntegration({
+        ...hashtagIntegration,
+        primary_hashtag: hashtag,
       });
-      
-      setHashtagIntegration(updatedIntegration);
       onUpdate({
-        hashtags: [hashtag]
+        hashtags: [hashtag],
       });
     }
   };
 
   // Get hashtag objects for display
   const pollHashtagObjects = poll.hashtags?.map((hashtagName: string) => 
-    hashtags.find((h: any) => h.name === hashtagName)
+    hashtags.find((h) => h.name === hashtagName)
   ).filter(Boolean) as Hashtag[] ?? [];
 
   // Get trending hashtags for suggestions
@@ -130,7 +169,7 @@ export default function PollHashtagIntegration({
         {hashtagIntegration && (
           <Badge variant="secondary" className="flex items-center gap-1">
             <Hash className="h-3 w-3" />
-            {poll.hashtags?.length || 0} hashtags
+            {hashtagIntegration.hashtags.length}
           </Badge>
         )}
       </div>
@@ -144,7 +183,7 @@ export default function PollHashtagIntegration({
                 <Eye className="h-4 w-4 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium">Views</p>
-                   <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{hashtagIntegration.hashtag_engagement.total_views}</p>
                 </div>
               </div>
             </CardContent>
@@ -156,7 +195,7 @@ export default function PollHashtagIntegration({
                 <Share2 className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium">Shares</p>
-                  <p className="text-2xl font-bold">{0}</p>
+                  <p className="text-2xl font-bold">{hashtagIntegration.hashtag_engagement.hashtag_shares}</p>
                 </div>
               </div>
             </CardContent>
@@ -168,7 +207,7 @@ export default function PollHashtagIntegration({
                 <TrendingUp className="h-4 w-4 text-orange-600" />
                 <div>
                   <p className="text-sm font-medium">Trending Score</p>
-                   <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{hashtagIntegration.hashtag_trending_score}</p>
                 </div>
               </div>
             </CardContent>

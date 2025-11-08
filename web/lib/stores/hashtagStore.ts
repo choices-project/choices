@@ -20,7 +20,13 @@ import type {
   HashtagSearchResponse,
   HashtagSuggestion,
   HashtagAnalytics,
-  HashtagCategory
+  HashtagCategory,
+  HashtagUserPreferences,
+  ProfileHashtagIntegration,
+  PollHashtagIntegration,
+  FeedHashtagIntegration,
+  HashtagValidation,
+  UpdateHashtagUserPreferencesInput,
 } from '@/features/hashtags/types';
 import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
@@ -29,45 +35,6 @@ import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 // Additional type definitions for hashtag store
-type HashtagUserPreferences = {
-  defaultCategory: HashtagCategory;
-  autoFollowTrending: boolean;
-  notificationSettings: {
-    newTrending: boolean;
-    mentions: boolean;
-    follows: boolean;
-  };
-}
-
-type ProfileHashtagIntegration = {
-  id: string;
-  profile_id: string;
-  hashtag_id: string;
-  is_primary: boolean;
-  created_at: string;
-}
-
-type PollHashtagIntegration = {
-  id: string;
-  poll_id: string;
-  hashtag_id: string;
-  relevance_score: number;
-  created_at: string;
-}
-
-type FeedHashtagIntegration = {
-  id: string;
-  feed_id: string;
-  hashtag_id: string;
-  weight: number;
-  created_at: string;
-}
-
-type HashtagValidation = {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
 
 const defaultHashtagFilters: HashtagStore['filters'] = {
   selectedCategory: 'all',
@@ -84,10 +51,48 @@ const mergeFilters = (
   updates: Partial<HashtagStore['filters']>
 ) => withOptional(filters, updates as Record<string, unknown>) as HashtagStore['filters'];
 
-const mergeUserPreferences = (
-  preferences: HashtagUserPreferences,
+const mergeHashtagUserPreferences = (
+  current: HashtagUserPreferences,
   updates: Partial<HashtagUserPreferences>
-) => withOptional(preferences, updates as Record<string, unknown>) as HashtagUserPreferences;
+): HashtagUserPreferences => {
+  const merged: HashtagUserPreferences = {
+    ...current,
+    hashtagFilters: { ...(current.hashtagFilters ?? {}) },
+    notificationPreferences: { ...(current.notificationPreferences ?? {}) },
+  };
+
+  if (updates.followedHashtags !== undefined) {
+    merged.followedHashtags = updates.followedHashtags;
+  }
+
+  if (updates.hashtagFilters !== undefined) {
+    merged.hashtagFilters = {
+      ...merged.hashtagFilters,
+      ...updates.hashtagFilters,
+    };
+  }
+
+  if (updates.notificationPreferences !== undefined) {
+    merged.notificationPreferences = {
+      ...merged.notificationPreferences,
+      ...updates.notificationPreferences,
+    };
+  }
+
+  if (updates.userId !== undefined) {
+    merged.userId = updates.userId;
+  }
+
+  if (updates.createdAt !== undefined) {
+    merged.createdAt = updates.createdAt;
+  }
+
+  if (updates.updatedAt !== undefined) {
+    merged.updatedAt = updates.updatedAt;
+  }
+
+  return merged;
+};
 
 const cloneFilters = () => withOptional(defaultHashtagFilters);
 
@@ -479,7 +484,7 @@ export const useHashtagStore = create<HashtagStore>()(
               set((state) => {
                 state.userHashtags = result.data ?? [];
                 state.followedHashtags = (result.data ?? []).map(uh => uh.hashtag_id);
-                state.primaryHashtags = (result.data ?? []).filter(uh => (uh as any).is_primary).map(uh => uh.hashtag_id);
+                state.primaryHashtags = (result.data ?? []).filter(uh => uh.is_primary).map(uh => uh.hashtag_id);
                 state.isLoading = false;
               });
             } else {
@@ -501,20 +506,50 @@ export const useHashtagStore = create<HashtagStore>()(
         }),
 
         // Preferences
-        updateUserPreferences: async (preferences) => {
+        updateUserPreferences: async (updates) => {
           set((state) => {
             state.isUpdating = true;
             state.error = null;
           });
 
           try {
-            const { updateUserPreferences: updatePreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
-            const result = await updatePreferencesService(preferences);
+            const currentPreferences = get().userPreferences;
+            if (!currentPreferences?.userId) {
+              set((state) => {
+                state.error = 'User preferences are not loaded';
+                state.isUpdating = false;
+              });
+              return false;
+            }
+
+            const payload: UpdateHashtagUserPreferencesInput = {
+              userId: currentPreferences.userId,
+              ...(updates.followedHashtags !== undefined ? { followedHashtags: updates.followedHashtags } : {}),
+              ...(updates.hashtagFilters !== undefined ? { hashtagFilters: updates.hashtagFilters } : {}),
+              ...(updates.notificationPreferences !== undefined
+                ? { notificationPreferences: updates.notificationPreferences }
+                : {}),
+            };
+
+            if (Object.keys(payload).length === 1) {
+              set((state) => {
+                state.isUpdating = false;
+              });
+              return true;
+            }
+
+            const { updateUserPreferences: updatePreferencesService } = await import(
+              '@/features/hashtags/lib/hashtag-service'
+            );
+            const result = await updatePreferencesService(payload);
 
             if (result.success) {
               set((state) => {
-                if (state.userPreferences) {
-                  state.userPreferences = mergeUserPreferences(state.userPreferences, preferences);
+                if (result.data) {
+                  state.userPreferences = result.data;
+                } else if (state.userPreferences) {
+                  state.userPreferences = mergeHashtagUserPreferences(state.userPreferences, updates);
+                  state.userPreferences.updatedAt = new Date().toISOString();
                 }
                 state.isUpdating = false;
               });
@@ -542,12 +577,14 @@ export const useHashtagStore = create<HashtagStore>()(
           });
 
           try {
-            const { getUserPreferences: getPreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
+            const { getUserPreferences: getPreferencesService } = await import(
+              '@/features/hashtags/lib/hashtag-service'
+            );
             const result = await getPreferencesService();
 
             if (result.success && result.data) {
               set((state) => {
-                state.userPreferences = withOptional(result.data) as HashtagUserPreferences;
+                state.userPreferences = result.data;
                 state.isLoading = false;
               });
             } else {

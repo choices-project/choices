@@ -3,25 +3,26 @@ import { devtools } from 'zustand/middleware';
 
 import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/util/objects';
-
 
 import type {
-  AdminNotification,
-  NewAdminNotification,
-  TrendingTopic,
-  GeneratedPoll,
-  SystemMetrics,
   ActivityItem,
+  AdminFeatureFlagCategories,
+  AdminFeatureFlagsState,
+  AdminNotification,
   AdminStore,
-  FeatureFlagConfig
+  FeatureFlag,
+  FeatureFlagConfig,
+  GeneratedPoll,
+  NewAdminNotification,
+  SystemMetrics,
+  TrendingTopic,
 } from '../types';
 
 // Helper utilities for state creation/merging
 const createNotification = (data: NewAdminNotification): AdminNotification => {
   const issuedAt = data.timestamp ?? new Date().toISOString();
   const createdAt = data.created_at ?? issuedAt;
-  const base: AdminNotification = {
+  return {
     id: crypto.randomUUID(),
     timestamp: issuedAt,
     created_at: createdAt,
@@ -29,72 +30,97 @@ const createNotification = (data: NewAdminNotification): AdminNotification => {
     title: data.title,
     message: data.message,
     read: data.read ?? false,
+    ...(data.action ? { action: data.action } : {}),
+    ...(data.metadata ? { metadata: data.metadata } : {}),
   };
-
-  return withOptional(base, {
-    action: data.action,
-    metadata: data.metadata,
-  });
 };
 
 const mergeNotification = (
   notification: AdminNotification,
   updates: Partial<AdminNotification>
-): AdminNotification =>
-  withOptional(notification, updates as Record<string, unknown>) as AdminNotification;
+): AdminNotification => {
+  const patch: Partial<AdminNotification> = { ...updates };
+  (Object.keys(patch) as Array<keyof AdminNotification>).forEach((key) => {
+    if (patch[key] === undefined) {
+      delete patch[key];
+    }
+  });
+
+  if (Object.keys(patch).length === 0) {
+    return notification;
+  }
+
+  return { ...notification, ...patch };
+};
 
 const createActivityItem = (
   data: Omit<ActivityItem, 'id' | 'timestamp'>
-): ActivityItem =>
-  withOptional(
-    {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-    },
-    data as Record<string, unknown>
-  ) as ActivityItem;
-
-const mergeFeatureFlags = (
-  state: AdminStore['featureFlags'],
-  updates: Partial<AdminStore['featureFlags']>
-): AdminStore['featureFlags'] =>
-  withOptional(state, updates as Record<string, unknown>) as AdminStore['featureFlags'];
+): ActivityItem => ({
+  id: crypto.randomUUID(),
+  timestamp: new Date().toISOString(),
+  ...data,
+});
 
 const cloneFlags = (flags: Record<string, boolean>): Record<string, boolean> =>
   Object.fromEntries(Object.entries(flags)) as Record<string, boolean>;
 
-const mergeFlagRecords = (
-  flags: Record<string, boolean>,
-  updates: Record<string, boolean>
-): Record<string, boolean> =>
-  withOptional(flags, updates as Record<string, unknown>) as Record<string, boolean>;
-
-const deriveFlagLists = (flags: Record<string, boolean>) => ({
+const calculateFlagLists = (flags: Record<string, boolean>) => ({
   enabledFlags: Object.keys(flags).filter((key) => flags[key]),
   disabledFlags: Object.keys(flags).filter((key) => !flags[key]),
 });
 
-const updateFeatureFlagsState = (
-  featureFlags: AdminStore['featureFlags'],
-  updates: Record<string, boolean>,
-  options?: { replace?: boolean } & Partial<AdminStore['featureFlags']>
-): AdminStore['featureFlags'] => {
-  const { replace, ...rest } = options ?? {};
-  const updatedFlags = replace
-    ? cloneFlags(updates)
-    : mergeFlagRecords(featureFlags.flags, updates);
-  const lists = deriveFlagLists(updatedFlags);
+const recalcFeatureFlags = (
+  previous: AdminFeatureFlagsState,
+  flags: Record<string, boolean>,
+  overrides?: Partial<Pick<AdminFeatureFlagsState, 'isLoading' | 'error'>>
+): AdminFeatureFlagsState => {
+  const { enabledFlags, disabledFlags } = calculateFlagLists(flags);
+  const next: AdminFeatureFlagsState = {
+    ...previous,
+    flags,
+    enabledFlags,
+    disabledFlags,
+  };
 
-  return mergeFeatureFlags(featureFlags, {
-    flags: updatedFlags,
-    enabledFlags: lists.enabledFlags,
-    disabledFlags: lists.disabledFlags,
-    ...rest,
-  });
+  if (overrides) {
+    if (overrides.isLoading !== undefined) {
+      next.isLoading = overrides.isLoading;
+    }
+    if (overrides.error !== undefined) {
+      next.error = overrides.error;
+    }
+  }
+
+  return next;
+};
+
+const formatFlagName = (flagId: string): string =>
+  flagId
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const resolveCategory = (
+  categories: AdminFeatureFlagCategories,
+  flagId: string
+): string => {
+  if (categories.core.includes(flagId)) return 'core';
+  if (categories.enhanced.includes(flagId)) return 'enhanced';
+  if (categories.civics.includes(flagId)) return 'civics';
+  if (categories.future.includes(flagId)) return 'future';
+  if (categories.performance.includes(flagId)) return 'performance';
+  return 'general';
+};
+
+const isBooleanRecord = (value: unknown): value is Record<string, boolean> => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return Object.values(value).every((flagValue) => typeof flagValue === 'boolean');
 };
 
 const defaultFeatureFlags = cloneFlags(FEATURE_FLAGS);
-const defaultFlagLists = deriveFlagLists(defaultFeatureFlags);
+const defaultFlagLists = calculateFlagLists(defaultFeatureFlags);
 
 // Store implementation
 export const useAdminStore = create<AdminStore>()(
@@ -383,20 +409,12 @@ export const useAdminStore = create<AdminStore>()(
       enableFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.enable(flagId);
         if (success) {
-          set((state: any) => {
-            const newFlags = { ...state.featureFlags.flags, [flagId]: true };
-            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
-            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
-
-            return {
-              featureFlags: {
-                ...state.featureFlags,
-                flags: newFlags,
-                enabledFlags,
-                disabledFlags
-              }
-            };
-          });
+          set((state: AdminStore) => ({
+            featureFlags: recalcFeatureFlags(state.featureFlags, {
+              ...state.featureFlags.flags,
+              [flagId]: true,
+            }),
+          }));
 
           logger.info('Feature flag enabled', { flagId, action: 'enable_flag' });
         }
@@ -406,20 +424,12 @@ export const useAdminStore = create<AdminStore>()(
       disableFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.disable(flagId);
         if (success) {
-          set((state: any) => {
-            const newFlags = { ...state.featureFlags.flags, [flagId]: false };
-            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
-            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
-
-            return {
-              featureFlags: {
-                ...state.featureFlags,
-                flags: newFlags,
-                enabledFlags,
-                disabledFlags
-              }
-            };
-          });
+          set((state: AdminStore) => ({
+            featureFlags: recalcFeatureFlags(state.featureFlags, {
+              ...state.featureFlags.flags,
+              [flagId]: false,
+            }),
+          }));
 
           logger.info('Feature flag disabled', { flagId, action: 'disable_flag' });
         }
@@ -429,20 +439,12 @@ export const useAdminStore = create<AdminStore>()(
       toggleFeatureFlag: (flagId: string) => {
         const success = featureFlagManager.toggle(flagId);
         if (success) {
-          set((state: any) => {
-            const newFlags = { ...state.featureFlags.flags, [flagId]: !state.featureFlags.flags[flagId] };
-            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
-            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
-
-            return {
-              featureFlags: {
-                ...state.featureFlags,
-                flags: newFlags,
-                enabledFlags,
-                disabledFlags
-              }
-            };
-          });
+          set((state: AdminStore) => ({
+            featureFlags: recalcFeatureFlags(state.featureFlags, {
+              ...state.featureFlags.flags,
+              [flagId]: !state.featureFlags.flags[flagId],
+            }),
+          }));
 
           logger.info('Feature flag toggled', { flagId, action: 'toggle_flag' });
         }
@@ -459,67 +461,95 @@ export const useAdminStore = create<AdminStore>()(
 
       getAllFeatureFlags: () => {
         const state = get();
-        return Object.entries(state.featureFlags.flags).map(([key, enabled]) => ({
-          id: key,
-          name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-          enabled,
-          description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
-          key,
-          category: state.featureFlags.categories.core?.includes(key) ? 'core' :
-                   state.featureFlags.categories.enhanced?.includes(key) ? 'enhanced' :
-                   state.featureFlags.categories.civics?.includes(key) ? 'civics' :
-                   state.featureFlags.categories.future?.includes(key) ? 'future' :
-                   state.featureFlags.categories.performance?.includes(key) ? 'performance' : 'general'
-        }));
+        return Object.entries(state.featureFlags.flags).map(([key, enabled]) => {
+          const managerFlag = featureFlagManager.getFlag(key);
+          if (managerFlag) {
+            return managerFlag;
+          }
+          return {
+            id: key,
+            name: formatFlagName(key),
+            description: `Feature flag for ${formatFlagName(key)}`,
+            enabled,
+            category: resolveCategory(state.featureFlags.categories, key),
+          } satisfies FeatureFlag;
+        });
       },
 
       exportFeatureFlagConfig: () => {
         return featureFlagManager.exportConfig();
       },
 
-      importFeatureFlagConfig: (config: FeatureFlagConfig) => {
+      importFeatureFlagConfig: (configInput: unknown) => {
+        const rawConfig =
+          typeof configInput === 'object' && configInput !== null
+            ? (configInput as Record<string, unknown>)
+            : null;
+
+        if (!rawConfig) {
+          logger.error('Failed to import feature flag config', undefined, { action: 'import_config' });
+          return false;
+        }
+
+        const flags = rawConfig.flags;
+        if (!isBooleanRecord(flags)) {
+          logger.error('Invalid feature flag configuration: flags must be a boolean record', undefined, {
+            action: 'import_config',
+          });
+          return false;
+        }
+
+        const normalizedConfig: FeatureFlagConfig = {
+          flags,
+          timestamp:
+            typeof rawConfig.timestamp === 'string' ? rawConfig.timestamp : new Date().toISOString(),
+          version: typeof rawConfig.version === 'string' ? rawConfig.version : '1.0.0',
+        };
+
         try {
-          featureFlagManager.importConfig(config as any);
-          set((state: any) => ({
-            featureFlags: {
-              ...state.featureFlags,
-              flags: config.flags ?? [],
-              enabledFlags: (config.flags ?? []).filter(flag => flag.enabled).map(flag => flag.id),
-              disabledFlags: (config.flags ?? []).filter(flag => !flag.enabled).map(flag => flag.id)
-            }
+          featureFlagManager.importConfig(normalizedConfig);
+          const nextFlags = featureFlagManager.exportConfig().flags;
+          set((state: AdminStore) => ({
+            featureFlags: recalcFeatureFlags(state.featureFlags, { ...nextFlags }),
           }));
 
-          logger.info('Feature flag config imported', { config, action: 'import_config' });
+          logger.info('Feature flag config imported', { action: 'import_config' });
           return true;
         } catch (error) {
-          logger.error('Failed to import feature flag config', error instanceof Error ? error : undefined, { action: 'import_config' });
+          logger.error(
+            'Failed to import feature flag config',
+            error instanceof Error ? error : undefined,
+            { action: 'import_config' }
+          );
           return false;
         }
       },
 
       resetFeatureFlags: () => {
         featureFlagManager.reset();
-        set((state: any) => ({
-          featureFlags: {
-            ...state.featureFlags,
-            flags: { ...FEATURE_FLAGS },
-            enabledFlags: Object.keys(FEATURE_FLAGS).filter(key => FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS]),
-            disabledFlags: Object.keys(FEATURE_FLAGS).filter(key => !FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS])
-          }
+        const nextFlags = featureFlagManager.exportConfig().flags;
+        set((state: AdminStore) => ({
+          featureFlags: recalcFeatureFlags(state.featureFlags, { ...nextFlags }),
         }));
 
         logger.info('Feature flags reset to defaults', { action: 'reset_flags' });
       },
 
       setFeatureFlagLoading: (loading: boolean) => {
-        set((state: any) => ({
-          featureFlags: { ...state.featureFlags, isLoading: loading }
+        set((state: AdminStore) => ({
+          featureFlags: {
+            ...state.featureFlags,
+            isLoading: loading,
+          },
         }));
       },
 
       setFeatureFlagError: (error: string | null) => {
-        set((state: any) => ({
-          featureFlags: { ...state.featureFlags, error }
+        set((state: AdminStore) => ({
+          featureFlags: {
+            ...state.featureFlags,
+            error,
+          },
         }));
       }
     }),

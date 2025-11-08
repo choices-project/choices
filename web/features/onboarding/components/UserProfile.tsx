@@ -1,7 +1,7 @@
 'use client';
 
-import { 
-MapPinIcon, 
+import {
+  MapPinIcon,
   UserGroupIcon,
   CheckIcon,
   PencilIcon
@@ -19,7 +19,11 @@ import {
   useUserSavedSuccessfully,
   useUserActions
 } from '@/lib/stores';
-import logger from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger';
+
+import type { Representative } from '@/types/representative';
+
+import { extractRepresentatives, parseStoredRepresentatives } from '../lib/representatives';
 
 import type { UserProfileProps } from '../types';
 
@@ -65,16 +69,14 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     // Load current user data from localStorage
     const savedAddress = localStorage.getItem('userAddress');
     const savedState = localStorage.getItem('userState');
-    const savedRepresentatives = localStorage.getItem('userRepresentatives');
-    
+    const storedRepresentatives = parseStoredRepresentatives(
+      localStorage.getItem('userRepresentatives')
+    );
+
     if (savedAddress) setCurrentAddress(savedAddress);
     if (savedState) setCurrentState(savedState);
-    if (savedRepresentatives) {
-      try {
-        setRepresentatives(JSON.parse(savedRepresentatives));
-      } catch (e) {
-        logger.error('Failed to parse saved representatives:', e);
-      }
+    if (storedRepresentatives.length > 0) {
+      setRepresentatives(storedRepresentatives);
     }
   }, [setCurrentAddress, setCurrentState, setRepresentatives]);
 
@@ -84,21 +86,18 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(newAddress)}`);
       if (!response.ok) throw new Error('Address lookup failed');
       const result = await response.json();
-      
-      // API returns { data: { representatives: [...] } }
-      // Extract representatives array from the nested data structure
-      const representatives = result.data?.representatives || [];
+      const normalizedRepresentatives = extractRepresentatives(result);
       
       // Update state
       setCurrentAddress(newAddress);
-      setRepresentatives(representatives);
+      setRepresentatives(normalizedRepresentatives);
       
       // Save to localStorage
       localStorage.setItem('userAddress', newAddress);
-      localStorage.setItem('userRepresentatives', JSON.stringify(representatives));
+      localStorage.setItem('userRepresentatives', JSON.stringify(normalizedRepresentatives));
       
       // Notify parent component
-      onRepresentativesUpdate(representatives);
+      onRepresentativesUpdate(normalizedRepresentatives);
       
       setShowAddressForm(false);
       setNewAddress('');
@@ -118,21 +117,18 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       const response = await fetch(`/api/v1/civics/by-state?state=${state}&level=federal&limit=20`);
       if (!response.ok) throw new Error('State lookup failed');
       const result = await response.json();
-      
-      // API returns { data: { representatives: [...] } }
-      // Extract representatives array from the nested data structure
-      const representatives = result.data?.representatives || [];
+      const normalizedRepresentatives = extractRepresentatives(result);
       
       // Update state
       setCurrentState(state);
-      setRepresentatives(representatives);
+      setRepresentatives(normalizedRepresentatives);
       
       // Save to localStorage
       localStorage.setItem('userState', state);
-      localStorage.setItem('userRepresentatives', JSON.stringify(representatives));
+      localStorage.setItem('userRepresentatives', JSON.stringify(normalizedRepresentatives));
       
       // Notify parent component
-      onRepresentativesUpdate(representatives);
+      onRepresentativesUpdate(normalizedRepresentatives);
       
       setSavedSuccessfully(true);
       setTimeout(() => setSavedSuccessfully(false), 3000);
@@ -241,11 +237,11 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               </h3>
               
               <div className="space-y-3">
-                {representatives.slice(0, 5).map((rep: any, index: number) => (
+                {representatives.slice(0, 5).map((rep: Representative, index: number) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                    {rep.photo ? (
+                    {rep.primary_photo_url ? (
                       <Image 
-                        src={rep.photo} 
+                        src={rep.primary_photo_url} 
                         alt={rep.name}
                         width={40}
                         height={40}
@@ -254,13 +250,13 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-600">
-                          {rep.name.split(' ').map((n: string) => n[0]).join('')}
+                          {rep.name.split(' ').map((n) => n[0]).join('')}
                         </span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">{rep.name}</p>
-                      <p className="text-sm text-gray-600">{rep.title}</p>
+                      <p className="text-sm text-gray-600">{rep.office}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       rep.party === 'Democratic' 

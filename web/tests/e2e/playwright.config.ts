@@ -19,7 +19,8 @@ const maybeWebServer = shouldStartServer
       env: {
         ...process.env,
         NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
-        NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET: '1',
+        NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
+          process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
       },
     }
   : undefined;

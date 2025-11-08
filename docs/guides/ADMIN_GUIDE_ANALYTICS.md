@@ -373,6 +373,11 @@ All exports respect k-anonymity and exclude opted-out users.
 
 ## 💬 Feedback
 
+### Using the Enhanced Feedback Console
+- View the **Console Logs** section inside each feedback detail to audit browser messages captured at submit time (capped at 100 entries with timestamps and severity).
+- Look for **red badges** on realtime notifications—these indicate high-severity console activity or error bursts.
+- Filter by sentiment/priority to triage urgent issues first; console entries help reproduce the exact user journey.
+
 Have suggestions for new analytics features?
 - Use the feedback widget
 - Tag as "Analytics"

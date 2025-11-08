@@ -2,11 +2,11 @@
 
 **Status:** ✅ Enabled (Feature Flag: `pwa`)  
 **Created:** 2024-12-19  
-**Last Updated:** 2024-12-19  
+**Last Updated:** 2025-11-08  
 
 ## 📋 Overview
 
-Progressive Web App functionality provides native app-like experience in web browsers, including offline capabilities, push notifications, and app installation. This feature is now fully enabled and optimized for mobile civic engagement.
+Progressive Web App functionality provides native app-like experience in web browsers, including offline capabilities, push notifications, app installation, and resilient background sync. The 2025-11 refresh replaced legacy `any` usage with shared TypeScript contracts, aligned the utility surface with the Zustand PWA store, and added Jest coverage for the critical offline flows.
 
 ## 🎯 Intended Functionality
 
@@ -31,92 +31,65 @@ web/features/pwa/
 ├── README.md                    # This documentation
 ├── index.ts                     # Feature flag wrapper and exports
 ├── lib/
-│   ├── pwa-utils.ts            # Core PWA utilities
-│   ├── service-worker.ts       # Service worker implementation
-│   └── notification-manager.ts # Push notification handling
+│   ├── background-sync.ts          # Typed offline queue + Sync API
+│   ├── feature-flags.ts            # Thin wrappers around global flags
+│   ├── pwa-auth-integration.ts     # PWA user management + privacy storage
+│   ├── pwa-utils.ts                # PWAManager, PWAWebAuthn, PrivacyStorage
+│   ├── push-notifications.ts       # Subscription + permission helpers
+│   ├── service-worker-registration.ts # Client SW coordination helpers
+│   └── PWAAnalytics.ts             # Analytics bridge for PWA events
 ├── components/
-│   ├── InstallPrompt.tsx       # App installation prompt
-│   ├── OfflineIndicator.tsx    # Offline status indicator
-│   └── NotificationSettings.tsx # Notification preferences
-└── assets/
-    ├── manifest.json           # Web app manifest
-    ├── icons/                  # App icons for different sizes
-    └── sw.js                   # Service worker file
+│   ├── InstallPrompt.tsx
+│   ├── OfflineIndicator.tsx
+│   ├── OfflineQueue.tsx
+│   ├── OfflineVoting.tsx
+│   ├── NotificationPreferences.tsx
+│   ├── PWAInstaller.tsx
+│   ├── PWAStatus.tsx
+│   └── PWAUserProfile.tsx
+├── hooks/
+│   ├── useFeatureFlags.ts
+│   └── usePWAUtils.ts
+└── tests/unit/pwa/                # Jest tests covering auth + utilities
 ```
 
 ## 🔧 Implementation Details
 
+### Shared Types (`web/types/pwa.ts`)
+
+- `PWAManagerStatus`, `PWAStatusSnapshot`, `DeviceFingerprint`, `OfflineVotePayload`, `OfflineVoteRecord`, and `PWAUser/PWAUserProfile` define the canonical shape of PWA data.
+- `web/lib/types/pwa.ts` re-exports the same contracts for consumers that rely on path aliases.
+- All utilities, Zustand stores, and hooks consume these types; there is no remaining `any` usage in the PWA stack.
+
 ### Core Utilities (`lib/pwa-utils.ts`)
 
-**Key Functions:**
-- `isPwaSupported()`: Check browser PWA support
-- `canInstallPwa()`: Check if app can be installed
-- `installPwa()`: Trigger app installation
-- `isOffline()`: Check offline status
-- `registerServiceWorker()`: Register service worker
-- `unregisterServiceWorker()`: Unregister service worker
+- `PWAManager` exposes typed helpers for installation detection, notification permissions, offline vote storage, and device fingerprinting with SSR guards.
+- `PWAWebAuthn` and `PrivacyStorage` provide typed WebAuthn + encrypted storage flows.
+- `cacheData/getCachedData<T>()` use generics to round-trip arbitrary payloads without casting.
 
-**Browser APIs Used:**
-- `navigator.serviceWorker`: Service worker registration
-- `window.addEventListener('beforeinstallprompt')`: Installation prompt
-- `navigator.onLine`: Online/offline status
-- `caches`: Cache API for offline storage
-- `Notification`: Push notification API
+### Offline Queue & Background Sync (`lib/background-sync.ts`)
 
-### Service Worker (`lib/service-worker.ts`)
+- `queueAction<TPayload>()` stores typed payloads in `localStorage` (with SSR short-circuit) and registers background sync tags (`sync-votes`, etc.).
+- Retrieval functions validate queue entries (`isQueuedAction`) before use, preventing malformed payloads from breaking sync.
+- Queue state persists to IndexedDB (`choices-pwa-offline-queue/actions`) so the service worker can process actions even when tabs are closed; `localStorage` remains a compatibility cache that mirrors the latest state for tab-level consumers/tests.
+- Helper functions wrap the background/periodic sync APIs with a narrowed `ServiceWorkerRegistration` interface.
 
-**Core Functionality:**
-- **Caching Strategy**: Cache-first for static assets, network-first for API calls
-- **Offline Fallbacks**: Serve cached content when offline
-- **Background Sync**: Queue actions for when connection is restored
-- **Push Notifications**: Handle incoming push messages
+### Push Notifications (`lib/push-notifications.ts`)
 
-**Cache Strategies:**
-```typescript
-// Static assets (CSS, JS, images)
-cacheFirst: ['/static/', '/_next/static/']
+- Permission + subscription lifecycles use typed option objects and guard for non-browser environments.
+- `NotificationOptions` now accepts a typed `Record<string, unknown>` payload instead of `any`.
+- Events fire analytics hooks (`window.dispatchEvent('pwa-analytics', …)`) with sanitized details.
 
-// API calls
-networkFirst: ['/api/']
+### Analytics & Instrumentation (`lib/PWAAnalytics.ts`)
 
-// HTML pages
-staleWhileRevalidate: ['/']
-```
+- Bridges PWA events to Supabase-backed analytics with typed rows (`AnalyticsEventRow`, `PWAEvent`).
+- Calculates performance scores from sanitized aggregates and generates trend data for dashboards.
+- Exposed via the analytics widget system (`pwa-offline-queue`) to monitor backlog size, last sync times, and background sync health from the admin dashboard. A Playwright harness (`/e2e/pwa-analytics`) and widget-level tests keep the analytics flow verifiable.
 
-### Notification Manager (`lib/notification-manager.ts`)
+### React Integration
 
-**Features:**
-- Request notification permissions
-- Send push notifications
-- Handle notification clicks
-- Manage notification preferences
-- Background notification handling
-
-### React Components
-
-#### `InstallPrompt.tsx`
-- **Purpose**: Prompt users to install the PWA
-- **Features**:
-  - Detect installability
-  - Show installation benefits
-  - Handle installation flow
-  - Dismiss and remember preferences
-
-#### `OfflineIndicator.tsx`
-- **Purpose**: Show offline status to users
-- **Features**:
-  - Real-time connection status
-  - Offline mode indicators
-  - Connection restoration notifications
-  - Cached content indicators
-
-#### `NotificationSettings.tsx`
-- **Purpose**: Manage notification preferences
-- **Features**:
-  - Enable/disable notifications
-  - Configure notification types
-  - Test notification delivery
-  - Privacy controls
+- Components (`PWAUserProfile`, `OfflineQueue`, `PWAStatus`, etc.) consume the typed utilities and Zustand selectors without local casts.
+- Hooks (`usePWAUtils`, `useFeatureFlags`) memoize typed instances and expose friendly loading/error states for UI composition.
 
 ## 🗄️ Database Schema Requirements
 
@@ -190,24 +163,19 @@ CREATE POLICY "Users can manage own push subscriptions" ON push_subscriptions
 ## 🚧 Current Implementation Status
 
 ### ✅ Completed
-- [x] Basic PWA utility functions
-- [x] Service worker structure
-- [x] Notification manager framework
-- [x] React components for UI
-- [x] Feature flag system integration
-- [x] File structure organization
+- [x] Shared PWA type definitions consumed by stores, utilities, and components
+- [x] PWAManager + offline vote storage with sanitized persistence
+- [x] Background sync queue + typed payload validation (IndexedDB + localStorage mirror)
+- [x] Service worker parity with new typings (cache policies, sync tags, analytics broadcasts)
+- [x] Push notification helpers with SSR guards
+- [x] PWA analytics bridge & admin widget (`pwa-offline-queue`)
+- [x] Jest coverage (`web/tests/unit/pwa/*`) for auth integration, queue management, and service-worker bridge
+- [x] Playwright coverage for the offline queue widget (`web/tests/e2e/specs/pwa-offline-queue-widget.spec.ts`)
 
-### ❌ Not Implemented
-- [ ] Web app manifest configuration
-- [ ] Service worker implementation
-- [ ] Push notification server setup
-- [ ] Database schema and migrations
-- [ ] API endpoints for PWA functionality
-- [ ] Offline data caching strategy
-- [ ] App icon generation
-- [ ] Background sync implementation
-- [ ] Comprehensive testing
-- [ ] Performance optimization
+### 🚧 In Progress
+- [ ] Extended PWA analytics dashboards + reporting UI
+- [ ] End-to-end coverage for install prompts, sync recovery, and notification permission journeys
+- [ ] Performance regression tests across Lighthouse + Playwright
 
 ## 🔒 Security Considerations
 
@@ -227,7 +195,7 @@ CREATE POLICY "Users can manage own push subscriptions" ON push_subscriptions
 ## 🧪 Testing Requirements
 
 ### Unit Tests
-- [ ] PWA utility functions
+- [x] PWA utility functions (`pwa-utils`, `background-sync`, `pwa-auth-integration`)
 - [ ] Service worker logic
 - [ ] Notification manager
 - [ ] Component rendering and behavior
@@ -235,7 +203,7 @@ CREATE POLICY "Users can manage own push subscriptions" ON push_subscriptions
 ### Integration Tests
 - [ ] Service worker registration
 - [ ] Push notification flow
-- [ ] Offline functionality
+- [ ] Offline functionality (queue + sync)
 - [ ] App installation flow
 
 ### Performance Tests

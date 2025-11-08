@@ -1,9 +1,9 @@
 /**
  * Widget System Types
- * 
+ *
  * Comprehensive type definitions for the analytics widget system.
  * Supports drag-and-drop, customization, and persistence.
- * 
+ *
  * Created: November 5, 2025
  * Status: PRODUCTION
  */
@@ -14,7 +14,7 @@ import type { Layout as GridLayout } from 'react-grid-layout';
 // WIDGET TYPES
 // ============================================================================
 
-export type WidgetType = 
+export type WidgetType =
   | 'trends'
   | 'demographics'
   | 'temporal'
@@ -22,14 +22,15 @@ export type WidgetType =
   | 'poll-heatmap'
   | 'district-heatmap'
   | 'custom'
-  // OLD widget registry types (for backward compatibility)
+  // Registry-backed widget types
   | 'trends-chart'
   | 'demographics-chart'
   | 'temporal-analysis'
   | 'trust-tier-comparison'
   | 'kpi-card'
   | 'custom-table'
-  | 'custom-query';
+  | 'custom-query'
+  | 'pwa-offline-queue';
 
 export type WidgetSize = {
   w: number; // Width in grid units (12-column grid)
@@ -52,15 +53,15 @@ export type BaseWidgetConfig = {
   description?: string;
   icon?: string;
   enabled: boolean;
-}
+};
 
-export type WidgetLayoutConfig = {
+export type WidgetLayoutConfig = BaseWidgetConfig & {
   position: WidgetPosition;
   size: WidgetSize;
   minSize?: WidgetSize;
   maxSize?: WidgetSize;
   static?: boolean; // Cannot be moved/resized
-} & BaseWidgetConfig
+};
 
 export type WidgetSettings = {
   // Common settings
@@ -69,18 +70,18 @@ export type WidgetSettings = {
     start: Date;
     end: Date;
   };
-  
-  // Widget-specific settings
-  filters?: Record<string, any>;
-  displayOptions?: Record<string, any>;
-  customizations?: Record<string, any>;
-}
 
-export type WidgetConfig = {
+  // Widget-specific settings
+  filters?: Record<string, unknown>;
+  displayOptions?: Record<string, unknown>;
+  customizations?: Record<string, unknown>;
+};
+
+export type WidgetConfig = WidgetLayoutConfig & {
   settings: WidgetSettings;
   createdAt: Date;
   updatedAt: Date;
-} & WidgetLayoutConfig
+};
 
 // ============================================================================
 // DASHBOARD LAYOUT
@@ -94,7 +95,7 @@ export type DashboardLayout = {
   name: string;
   description?: string;
   widgets: WidgetConfig[];
-  
+
   // Responsive layouts for different breakpoints
   breakpoints?: {
     lg?: GridLayout[];
@@ -102,7 +103,7 @@ export type DashboardLayout = {
     sm?: GridLayout[];
     xs?: GridLayout[];
   };
-  
+
   isDefault: boolean;
   isPreset: boolean; // System preset vs user-created
   createdAt: Date;
@@ -113,18 +114,28 @@ export type DashboardLayout = {
 // WIDGET METADATA
 // ============================================================================
 
+export type WidgetCategory =
+  | 'overview'
+  | 'detailed'
+  | 'engagement'
+  | 'geographic'
+  | 'polls'
+  | 'users'
+  | 'districts'
+  | 'general';
+
 export type WidgetMetadata = {
   type: WidgetType;
   name: string;
   description: string;
   icon: string;
-  category: 'overview' | 'detailed' | 'engagement' | 'geographic';
-  
+  category: WidgetCategory;
+
   // Default configuration
   defaultSize: WidgetSize;
   minSize: WidgetSize;
   maxSize?: WidgetSize;
-  
+
   // Capabilities
   capabilities: {
     resizable: boolean;
@@ -132,42 +143,41 @@ export type WidgetMetadata = {
     configurable: boolean;
     exportable: boolean;
   };
-  
+
+  // Optional metadata for registry integrations
+  dataSource?: string;
+  supportedExports?: string[];
+  requiredPermission?: string;
+  tags?: string[];
+
   // Data requirements
   dataRequirements?: {
     adminOnly?: boolean;
     permissions?: string[];
     features?: string[];
   };
-}
+};
 
 // ============================================================================
 // WIDGET REGISTRY
 // ============================================================================
 
+export type WidgetConfigOverrides = Partial<
+  Omit<WidgetConfig, 'type' | 'position' | 'size' | 'settings'>
+> & {
+  position?: Partial<WidgetPosition>;
+  size?: Partial<WidgetSize>;
+  settings?: Partial<WidgetSettings>;
+};
+
 export type WidgetRegistryEntry = {
   metadata: WidgetMetadata;
   component: React.ComponentType<WidgetProps>;
   configComponent?: React.ComponentType<WidgetConfigProps>;
-}
-
-export type WidgetRegistry = Map<WidgetType, WidgetRegistryEntry>;
-
-// For the OLD widget registry system that uses a plain object (Record)
-export type WidgetRegistration = {
-  type: WidgetType;
-  name: string;
-  description: string;
-  component: any;
-  icon: string;
-  defaultConfig: any;
-  dataSource: string;
-  supportedExports: string[];
-  requiredPermission: string;
-  category: string;
+  createConfig: (overrides?: WidgetConfigOverrides) => WidgetConfig;
 };
 
-export type WidgetRegistryType = Partial<Record<WidgetType, WidgetRegistration>>;
+export type WidgetRegistry = Map<WidgetType, WidgetRegistryEntry>;
 
 // ============================================================================
 // WIDGET COMPONENT PROPS
@@ -193,7 +203,7 @@ export type WidgetConfigProps = {
 // WIDGET ACTIONS
 // ============================================================================
 
-export type WidgetAction = 
+export type WidgetAction =
   | { type: 'ADD_WIDGET'; payload: WidgetConfig }
   | { type: 'REMOVE_WIDGET'; payload: { id: string } }
   | { type: 'UPDATE_WIDGET'; payload: { id: string; changes: Partial<WidgetConfig> } }
@@ -212,12 +222,12 @@ export type WidgetState = {
   layouts: DashboardLayout[];
   currentLayout: DashboardLayout | null;
   widgets: Map<string, WidgetConfig>;
-  
+
   // UI state
   isEditing: boolean;
   selectedWidgetId: string | null;
   isDragging: boolean;
-  
+
   // History for undo/redo
   history: DashboardLayout[];
   historyIndex: number;

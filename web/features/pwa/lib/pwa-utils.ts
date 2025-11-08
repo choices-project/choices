@@ -5,6 +5,15 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import type {
+  BeforeInstallPromptEvent,
+  DeviceFingerprint,
+  OfflineVotePayload,
+  OfflineVoteRecord,
+  PWAStatusSnapshot,
+} from '@/types/pwa';
+
+const OFFLINE_VOTES_STORAGE_KEY = 'offline_votes';
 
 export type PWAConfig = {
   name: string;
@@ -88,37 +97,31 @@ export class PWAUtils {
     return navigator.onLine;
   }
 
-  static async cacheData(key: string, data: any): Promise<void> {
+  static async cacheData<T>(key: string, data: T): Promise<void> {
     if (typeof window !== 'undefined' && 'caches' in window) {
       const cache = await caches.open('choices-cache');
       await cache.put(key, new Response(JSON.stringify(data)));
     }
   }
 
-  static async getCachedData(key: string): Promise<unknown> {
+  static async getCachedData<T>(key: string): Promise<T | null> {
     if (typeof window !== 'undefined' && 'caches' in window) {
       const cache = await caches.open('choices-cache');
       const response = await cache.match(key);
       if (response) {
-        return await response.json();
+        return (await response.json()) as T;
       }
     }
     return null;
   }
 }
 
-export type BeforeInstallPromptEvent = {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-} & Event
-
-// PWA event types for TypeScript
-
 // PWA Manager class for managing PWA functionality
 export class PWAManager {
-  getDeviceFingerprint(): Promise<any> {
+  getDeviceFingerprint(): Promise<DeviceFingerprint> {
     if (typeof window === 'undefined') {
       return Promise.resolve({
+        userAgent: 'server',
         platform: 'server',
         screenResolution: '0x0',
         language: 'en',
@@ -128,13 +131,18 @@ export class PWAManager {
       });
     }
     
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
     return Promise.resolve({
+      userAgent: navigator.userAgent,
       platform: navigator.platform,
       screenResolution: `${screen.width}x${screen.height}`,
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       webAuthn: 'credentials' in navigator,
-      standalone: window.matchMedia('(display-mode: standalone)').matches
+      standalone,
     });
   }
 
@@ -171,7 +179,7 @@ export class PWAManager {
     }
   }
 
-  getPWAStatus(): Promise<any> {
+  getPWAStatus(): Promise<PWAStatusSnapshot> {
     if (typeof window === 'undefined') {
       return Promise.resolve({
         installable: false,
@@ -199,15 +207,33 @@ export class PWAManager {
            (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   }
 
-  storeOfflineVote(vote: any): Promise<void> {
-    // Store offline vote in local storage
-    const offlineVotes = JSON.parse(localStorage.getItem('offlineVotes') ?? '[]');
-    offlineVotes.push(vote);
-    localStorage.setItem('offlineVotes', JSON.stringify(offlineVotes));
+  storeOfflineVote(vote: OfflineVotePayload): Promise<void> {
+    if (typeof window === 'undefined') {
+      return Promise.resolve();
+    }
+
+    const record: OfflineVoteRecord = {
+      ...vote,
+      timestamp: Date.now(),
+    };
+
+    try {
+      const offlineVotes: OfflineVoteRecord[] = JSON.parse(
+        window.localStorage.getItem(OFFLINE_VOTES_STORAGE_KEY) ?? '[]'
+      );
+      offlineVotes.push(record);
+      window.localStorage.setItem(OFFLINE_VOTES_STORAGE_KEY, JSON.stringify(offlineVotes));
+    } catch (error) {
+      logger.error('Failed to store offline vote:', error instanceof Error ? error : new Error(String(error)));
+    }
+
     return Promise.resolve();
   }
 
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
+    if (typeof window === 'undefined') {
+      throw new Error('urlBase64ToUint8Array requires a browser environment');
+    }
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
       .replace(/-/g, '+')
@@ -226,7 +252,7 @@ export class PWAManager {
 // PWA WebAuthn class - delegates to existing WebAuthn implementation
 export class PWAWebAuthn {
   // Use existing WebAuthn implementation instead of duplicating
-  async registerUser(_username: string): Promise<any> {
+  async registerUser(_username: string): Promise<Credential | null> {
     // Delegate to native WebAuthn registration flow
     const response = await fetch('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
@@ -241,7 +267,7 @@ export class PWAWebAuthn {
     return navigator.credentials.create({ publicKey: options });
   }
 
-  async authenticateUser(): Promise<any> {
+  async authenticateUser(): Promise<Credential | null> {
     // Delegate to native WebAuthn authentication flow
     const response = await fetch('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
@@ -260,7 +286,7 @@ export class PWAWebAuthn {
 // Privacy Storage class - delegates to existing encryption system
 export class PrivacyStorage {
   // Use existing encryption system instead of duplicating
-  async storeEncryptedData(key: string, data: any): Promise<void> {
+  async storeEncryptedData<T>(key: string, data: T): Promise<void> {
     try {
       // Delegate to existing privacy data management system
       const response = await fetch('/api/privacy/encrypt', {
@@ -282,7 +308,7 @@ export class PrivacyStorage {
     }
   }
 
-  async getEncryptedData(key: string): Promise<any> {
+  async getEncryptedData<T>(key: string): Promise<T | null> {
     try {
       const encryptedData = localStorage.getItem(key);
       if (!encryptedData) return null;
@@ -298,12 +324,12 @@ export class PrivacyStorage {
         throw new Error('Failed to decrypt data');
       }
       
-      return await response.json();
+      return (await response.json()) as T;
     } catch (error) {
       logger.error('Failed to decrypt data:', error instanceof Error ? error : new Error(String(error)));
       // Fallback to unencrypted data
       const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
+      return data ? (JSON.parse(data) as T) : null;
     }
   }
 

@@ -16,34 +16,22 @@ import {
 import React, { useState, useEffect } from 'react';
 
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
-
-type UserProfile = {
-  stableId: string
-  pseudonym?: string
-  trustTier: 'T0' | 'T1' | 'T2' | 'T3'
-  verificationScore: number
-  profileVisibility: 'anonymous' | 'pseudonymous' | 'public'
-  dataSharingLevel: 'minimal' | 'demographic' | 'full'
-  demographics?: {
-    ageRange?: string
-    educationLevel?: string
-    incomeBracket?: string
-    regionCode?: string
-  }
-  createdAt: string
-  lastActivity: string
-}
+import type { DeviceFingerprint, PWAFeatures, PWAUser } from '@/types/pwa';
 
 type PWAUserProfileProps = {
-  user?: UserProfile
-  onUpdate?: (_profile: Partial<UserProfile>) => void
+  user?: PWAUser
+  onUpdate?: (_profile: Partial<PWAUser>) => void
+}
+
+type BrowserFeatureSnapshot = PWAFeatures & {
+  encryptedStorage: boolean;
 }
 
 export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)
-  const [pwaFeatures, setPwaFeatures] = useState({
+  const [deviceFingerprint, setDeviceFingerprint] = useState<DeviceFingerprint | null>(null)
+  const [pwaFeatures, setPwaFeatures] = useState<BrowserFeatureSnapshot>({
     installable: false,
     offline: false,
     pushNotifications: false,
@@ -59,13 +47,13 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     pwaManager.getDeviceFingerprint().then(setDeviceFingerprint)
     
     // Check PWA features
-    const features = {
+    const features: BrowserFeatureSnapshot = {
       installable: 'beforeinstallprompt' in window,
       offline: 'serviceWorker' in navigator,
       pushNotifications: 'PushManager' in window,
       webAuthn: 'credentials' in navigator,
       backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as ServiceWorkerContainer & { sync?: unknown }),
-      encryptedStorage: 'crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto
+      encryptedStorage: 'crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto,
     }
     setPwaFeatures(features)
     
@@ -141,28 +129,9 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
   }
 
-  const getTrustTierInfo = (tier: string) => {
-    const tiers = {
-      T0: { name: 'Anonymous', color: 'text-gray-600', bg: 'bg-gray-100' },
-      T1: { name: 'Verified Human', color: 'text-blue-600', bg: 'bg-blue-100' },
-      T2: { name: 'Trusted Participant', color: 'text-green-600', bg: 'bg-green-100' },
-      T3: { name: 'Validator', color: 'text-purple-600', bg: 'bg-purple-100' }
-    }
-    return tiers[tier as keyof typeof tiers] || tiers.T0
-  }
-
-  const getVisibilityInfo = (visibility: string) => {
-    const visibilities = {
-      anonymous: { name: 'Anonymous', icon: EyeOff, color: 'text-gray-600' },
-      pseudonymous: { name: 'Pseudonymous', icon: Eye, color: 'text-blue-600' },
-      public: { name: 'Public', icon: User, color: 'text-green-600' }
-    }
-    return visibilities[visibility as keyof typeof visibilities] || visibilities.anonymous
-  }
-
   if (!user) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-empty">
         <div className="text-center">
           <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Profile Found</h3>
@@ -172,13 +141,10 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     )
   }
 
-  const tierInfo = getTrustTierInfo(user.trustTier)
-  const visibilityInfo = getVisibilityInfo(user.profileVisibility)
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="pwa-user-profile">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-status">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-xl">
@@ -258,7 +224,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
 
       {/* Demographics (if shared) */}
       {user.demographics && user.dataSharingLevel !== 'minimal' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-demographics">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Demographics</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {user.demographics.ageRange && (
@@ -290,7 +256,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       )}
 
       {/* PWA Features */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-features">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">PWA Features</h3>
           <button
@@ -307,7 +273,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             whileHover={{ scale: 1.02 }}
             className="p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
           >
-            <div className="flex items-center space-x-3 mb-3">
+        <div className="flex items-center space-x-3 mb-3">
               <Fingerprint className="w-5 h-5 text-blue-600" />
               <h4 className="font-medium text-gray-900">Biometric Auth</h4>
             </div>

@@ -17,10 +17,11 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
-import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
+import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
+import type { FeedbackTrackerOptions } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import {
@@ -41,16 +42,48 @@ type FeedbackData = {
 
 const createDefaultUserJourney = (): UserJourney => {
   const now = new Date().toISOString()
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return {
+      currentPage: '',
+      currentPath: '',
+      pageTitle: '',
+      referrer: '',
+      userAgent: 'unknown',
+      screenResolution: 'unknown',
+      viewportSize: 'unknown',
+      timeOnPage: 0,
+      sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+      sessionStartTime: now,
+      totalPageViews: 0,
+      activeFeatures: [],
+      lastAction: 'none',
+      actionSequence: [],
+      pageLoadTime: 0,
+      performanceMetrics: {},
+      errors: [],
+      deviceInfo: {
+        deviceType: 'desktop',
+        platform: 'unknown',
+        browser: 'unknown',
+        os: 'unknown',
+        language: 'en-US',
+        timezone: 'UTC',
+        screenResolution: 'unknown',
+        viewportSize: 'unknown',
+        userAgent: 'unknown',
+      },
+      isAuthenticated: false,
+    }
+  }
+
   return {
-    currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
-    currentPath: typeof window !== 'undefined' ? window.location.href : '',
+    currentPage: window.location.pathname,
+    currentPath: window.location.href,
     pageTitle: typeof document !== 'undefined' ? document.title : '',
     referrer: typeof document !== 'undefined' ? document.referrer : '',
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-    screenResolution:
-      typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : 'unknown',
-    viewportSize:
-      typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'unknown',
+    userAgent: navigator.userAgent,
+    screenResolution: `${window.screen.width}x${window.screen.height}`,
+    viewportSize: `${window.innerWidth}x${window.innerHeight}`,
     timeOnPage: 0,
     sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
     sessionStartTime: now,
@@ -59,17 +92,18 @@ const createDefaultUserJourney = (): UserJourney => {
     lastAction: 'none',
     actionSequence: [],
     pageLoadTime: 0,
-    performanceMetrics: {
-      fcp: 0,
-      lcp: 0,
-      fid: 0,
-      cls: 0,
-    },
+    performanceMetrics: {},
     errors: [],
     deviceInfo: {
-      deviceType: 'unknown',
-      browser: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      platform: typeof navigator !== 'undefined' ? navigator.platform : 'unknown',
+      deviceType: window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop',
+      platform: navigator.platform ?? 'unknown',
+      browser: navigator.userAgent,
+      os: navigator.userAgent,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      screenResolution: `${window.screen.width}x${window.screen.height}`,
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      userAgent: navigator.userAgent,
     },
     isAuthenticated: false,
   }
@@ -96,12 +130,43 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const _isLoadingAnalytics = useAnalyticsLoading()
   const error = useAnalyticsError()
 
-  // Initialize feedback tracker on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setFeedbackTracker(getFeedbackTracker())
+  const trackerOptions = useMemo<FeedbackTrackerOptions | undefined>(() => {
+    if (typeof navigator === 'undefined') {
+      return undefined
+    }
+
+    const automated =
+      Boolean((navigator as Navigator & { webdriver?: boolean }).webdriver) ||
+      /playwright|puppeteer|cypress/i.test(navigator.userAgent ?? '')
+
+    if (!automated) {
+      return undefined
+    }
+
+    return {
+      enablePerformanceTracking: false,
+      enableNetworkTracking: false,
+      enableInteractionTracking: false,
+      maxTrackedErrors: 10,
+      maxTrackedActions: 25,
+      maxTrackedNetworkRequests: 5,
+      maxTrackedConsoleLogs: 50
     }
   }, [])
+
+  // Initialize feedback tracker on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const tracker = getFeedbackTracker(trackerOptions)
+    setFeedbackTracker(tracker)
+
+    return () => {
+      resetFeedbackTracker()
+    }
+  }, [trackerOptions])
 
   // Track user journey on mount - fixed to prevent infinite loop
   useEffect(() => {
@@ -265,6 +330,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
           ...feedbackContext,
           userJourney: currentUserJourney,
         }
+      setFeedback((prev) => ({ ...prev, userJourney: currentUserJourney }))
 
         if (feedback.screenshot) {
           updatedContext.screenshot = feedback.screenshot
@@ -310,7 +376,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
           description: feedback.description,
           sentiment: feedback.sentiment,
           screenshot: feedback.screenshot,
-          userJourney: feedback.userJourney,
+          userJourney: feedbackContext.userJourney,
           feedbackContext // Include the full context for AI analysis
         }),
       })

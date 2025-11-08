@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
+import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {
@@ -87,6 +89,19 @@ export default function PollClient({ poll }: PollClientProps) {
   const trackEvent = useAnalyticsStore((state) => state.trackEvent);
   const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
 
+  const {
+    setBallots,
+    setSelectedBallot,
+    setCurrentBallot,
+    setLoading: setVotingLoading,
+    setVoting,
+    setError: setVotingError,
+    clearError: clearVotingError,
+    addVotingRecord,
+  } = useVotingActions();
+  const votingStoreError = useVotingError();
+  const storeIsVoting = useVotingIsVoting();
+
   const recordPollEvent = useCallback(
     (action: string, payload: VoteAnalyticsPayload = {}) => {
       if (typeof trackEvent !== 'function') {
@@ -127,10 +142,27 @@ export default function PollClient({ poll }: PollClientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
-  const [isVoting, setIsVoting] = useState(false);
   const [showVotingInterface, setShowVotingInterface] = useState(false);
   const [resultsMode, setResultsMode] = useState<ResultsMode>('live');
   const [copied, setCopied] = useState(false);
+
+  const pollDetailsForBallot = useMemo(
+    () => ({
+      id: poll.id,
+      title: poll.title,
+      description: poll.description,
+      options: [...poll.options],
+      votingMethod: poll.votingMethod,
+      totalVotes: poll.totalvotes,
+      endtime: poll.endtime,
+      status: poll.status,
+      category: poll.category,
+      createdAt: poll.createdAt,
+    }),
+    [poll]
+  );
+
+  const combinedError = error ?? votingStoreError ?? null;
 
   // Client-side vote status check
   useEffect(() => {
@@ -152,14 +184,19 @@ export default function PollClient({ poll }: PollClientProps) {
   const fetchPollData = useCallback(async () => {
     try {
       setLoading(true);
+      setVotingLoading(true);
       setError(null);
+      clearVotingError();
+
+      const generalError = 'Failed to load poll results. Please try again later.';
 
       // Fetch results data
       const resultsResponse = await fetch(`/api/polls/${pollId}/results`);
       if (!resultsResponse.ok) {
         setResults(null);
         if (resultsResponse.status >= 500) {
-          setError('Failed to load poll results. Please try again later.');
+          setError(generalError);
+          setVotingError(generalError);
         }
         return;
       }
@@ -167,6 +204,7 @@ export default function PollClient({ poll }: PollClientProps) {
       const payload = await resultsResponse.json();
       if (!payload?.success || !payload.data) {
         setResults(null);
+        clearVotingError();
         return;
       }
 
@@ -238,19 +276,60 @@ export default function PollClient({ poll }: PollClientProps) {
         optionTotals,
         trustTierFilter: (data.trust_tier_filter as number | null) ?? null,
       });
+      clearVotingError();
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load poll data';
       setResults(null);
-      setError(err instanceof Error ? err.message : 'Failed to load poll data');
+      setError(errorMessage);
+      setVotingError(errorMessage);
     } finally {
       setLoading(false);
+      setVotingLoading(false);
     }
-  }, [pollId]);
+  }, [pollId, clearVotingError, setVotingError, setVotingLoading]);
 
   useEffect(() => {
     if (pollId) {
       fetchPollData();
     }
   }, [pollId, fetchPollData]);
+
+  useEffect(() => {
+    const optionVoteCounts: Record<string, number> = {};
+    let totalVotesContext: number | undefined =
+      typeof pollDetailsForBallot.totalVotes === 'number'
+        ? pollDetailsForBallot.totalVotes
+        : undefined;
+
+    if (results) {
+      totalVotesContext = results.totalVotes;
+      if (results.votingMethod === 'ranked') {
+        for (const stat of results.optionStats) {
+          optionVoteCounts[String(stat.optionId)] = stat.firstChoiceVotes;
+        }
+      } else {
+        for (const total of results.optionTotals) {
+          optionVoteCounts[String(total.optionId)] = total.voteCount;
+        }
+      }
+    }
+
+    const hasCounts = Object.keys(optionVoteCounts).length > 0;
+    const ballot = createBallotFromPoll(pollDetailsForBallot, {
+      totalVotes: totalVotesContext,
+      optionVoteCounts: hasCounts ? optionVoteCounts : undefined,
+    });
+
+    setBallots([ballot]);
+    setSelectedBallot(ballot);
+    setCurrentBallot(ballot);
+  }, [
+    pollDetailsForBallot,
+    results,
+    setBallots,
+    setCurrentBallot,
+    setSelectedBallot,
+  ]);
 
   const hasRecordedViewRef = useRef(false);
 
@@ -335,8 +414,9 @@ export default function PollClient({ poll }: PollClientProps) {
       };
     }
 
-    setIsVoting(true);
+    setVoting(true);
     setError(null);
+    clearVotingError();
 
     try {
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
@@ -358,7 +438,18 @@ export default function PollClient({ poll }: PollClientProps) {
       setHasVoted(true);
       void fetchPollData();
 
-      const voteId = result.voteId || result.voteIds?.[0] || 'vote-recorded';
+      const voteId: string =
+        (typeof result.voteId === 'string' && result.voteId) ||
+        (Array.isArray(result.voteIds) ? result.voteIds.find((value: unknown): value is string => typeof value === 'string') : undefined) ||
+        'vote-recorded';
+
+      addVotingRecord(
+        createVotingRecordFromPollSubmission({
+          poll: pollDetailsForBallot,
+          submission,
+          voteId,
+        })
+      );
 
       return {
         ok: true,
@@ -367,14 +458,24 @@ export default function PollClient({ poll }: PollClientProps) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit vote';
       setError(errorMessage);
+      setVotingError(errorMessage);
       return {
         ok: false,
         error: errorMessage,
       };
     } finally {
-      setIsVoting(false);
+      setVoting(false);
     }
-  }, [fetchPollData, poll.id, poll.votingMethod]);
+  }, [
+    addVotingRecord,
+    clearVotingError,
+    fetchPollData,
+    poll.id,
+    poll.votingMethod,
+    pollDetailsForBallot,
+    setVoting,
+    setVotingError,
+  ]);
 
   const handleShare = async () => {
     // Use SSR-safe browser API access
@@ -526,10 +627,10 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
 
         {/* Error Display */}
-        {error && (
+        {combinedError && (
           <Alert variant="destructive" className="mt-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{combinedError}</AlertDescription>
           </Alert>
         )}
 
@@ -575,7 +676,7 @@ export default function PollClient({ poll }: PollClientProps) {
                       endtime: poll.endtime
                     }}
                     onVote={handleVote}
-                    isVoting={isVoting}
+                    isVoting={storeIsVoting}
                     hasVoted={hasVoted}
                     onAnalyticsEvent={recordPollEvent}
                   />

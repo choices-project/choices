@@ -8,6 +8,8 @@
  * Status: ✅ REFACTORED - Production Ready
  */
 
+import type { FeedHashtagAnalytics, PollHashtagIntegration } from '@/features/hashtags/types';
+
 import type { 
   UserPreferences
 } from '@/features/civics/lib/types/civics-types';
@@ -31,35 +33,17 @@ export type PollRecommendation = {
 }
 
 // Enhanced hashtag-polls integration types
-export type HashtagPollIntegration = {
-  poll_id: string;
-  hashtags: string[];
-  primary_hashtag: string;
-  hashtag_engagement: {
-    total_views: number;
-    hashtag_clicks: number;
-    hashtag_shares: number;
-  };
-  trending_score: number;
+export type HashtagPollIntegration = PollHashtagIntegration & {
   user_relevance_score: number;
   feed_priority: number;
-}
-
-export type HashtagFeedAnalytics = {
-  hashtag: string;
-  poll_count: number;
-  engagement_rate: number;
-  trending_position: number;
-  user_interest_level: number;
-  last_activity: Date;
-}
+};
 
 export type PersonalizedHashtagFeed = {
   user_id: string;
   hashtag_interests: string[];
   recommended_polls: PollRecommendation[];
   trending_hashtags: string[];
-  hashtag_analytics: HashtagFeedAnalytics[];
+  hashtag_analytics: FeedHashtagAnalytics[];
   feed_score: number;
   last_updated: Date;
 }
@@ -250,22 +234,21 @@ export abstract class BaseHashtagPollsIntegrationService {
   /**
    * Get analytics for specific hashtags
    */
-  async getHashtagAnalytics(hashtags: string[]): Promise<HashtagFeedAnalytics[]> {
+  async getHashtagAnalytics(hashtags: string[]): Promise<FeedHashtagAnalytics[]> {
     try {
       if (!this.supabase || hashtags.length === 0) return [];
 
-      const analytics: HashtagFeedAnalytics[] = [];
+      const analytics: FeedHashtagAnalytics[] = [];
 
       for (const hashtag of hashtags) {
         const cacheKey = `hashtag_analytics_${hashtag}`;
-        const cached = this.getFromCache(cacheKey);
-        
+        const cached = this.getFromCache(cacheKey) as FeedHashtagAnalytics | null;
+
         if (cached) {
           analytics.push(cached);
           continue;
         }
 
-        // Query polls with this hashtag
         const { data: polls, error } = await this.supabase
           .from('polls')
           .select('id, engagement_score, total_votes, created_at')
@@ -282,24 +265,28 @@ export abstract class BaseHashtagPollsIntegrationService {
           ? polls.reduce((sum: number, p: any) => sum + (p.engagement_score ?? 0), 0) / pollCount
           : 0;
 
-        const lastActivity = polls.length > 0
+        const lastActivityDate = polls.length > 0
           ? new Date(Math.max(...polls.map((p: any) => new Date(p.created_at).getTime())))
           : new Date();
 
-        const hashtagAnalytics: HashtagFeedAnalytics = {
+        const userInterest = this.calculateUserInterestLevel(pollCount, avgEngagement);
+
+        const hashtagAnalytics: FeedHashtagAnalytics = {
           hashtag,
           poll_count: pollCount,
           engagement_rate: avgEngagement,
-          trending_position: 0, // Will be calculated after sorting
-          user_interest_level: this.calculateUserInterestLevel(pollCount, avgEngagement),
-          last_activity: lastActivity,
+          user_interest_level: userInterest,
+          last_activity: lastActivityDate.toISOString(),
         };
 
         this.setInCache(cacheKey, hashtagAnalytics);
         analytics.push(hashtagAnalytics);
       }
 
-      return analytics;
+      return analytics.map((item, index) => ({
+        ...item,
+        trending_position: item.trending_position ?? index + 1,
+      }));
     } catch (error) {
       logger.error('Error getting hashtag analytics:', error as Error);
       return [];
@@ -425,22 +412,32 @@ export abstract class BaseHashtagPollsIntegrationService {
         return null;
       }
 
-      const hashtags = poll.hashtags ?? [];
-      const primaryHashtag = hashtags[0] ?? '';
+      const hashtags: string[] = Array.isArray(poll.hashtags)
+        ? poll.hashtags.filter((tag: unknown): tag is string => typeof tag === 'string')
+        : [];
 
-      return {
+      const primaryHashtag = typeof poll.primary_hashtag === 'string'
+        ? poll.primary_hashtag
+        : hashtags[0];
+
+      const integration: HashtagPollIntegration = {
         poll_id: pollId,
         hashtags,
         primary_hashtag: primaryHashtag,
         hashtag_engagement: {
           total_views: poll.view_count ?? 0,
-          hashtag_clicks: 0, // Would track separately
-          hashtag_shares: 0, // Would track separately
+          hashtag_clicks: poll.hashtag_engagement?.hashtag_clicks ?? 0,
+          hashtag_shares: poll.hashtag_engagement?.hashtag_shares ?? 0,
         },
-        trending_score: this.calculateTrendingScore(poll),
-        user_relevance_score: 0, // Would calculate based on user
+        related_polls: Array.isArray(poll.related_polls)
+          ? poll.related_polls.filter((id: unknown): id is string => typeof id === 'string')
+          : [],
+        hashtag_trending_score: this.calculateTrendingScore(poll),
+        user_relevance_score: 0, // Calculated per-user in higher-level contexts
         feed_priority: this.calculateFeedPriority(poll),
       };
+
+      return integration;
     } catch (error) {
       logger.error('Error getting hashtag poll integration:', error as Error);
       return null;
@@ -483,7 +480,7 @@ export abstract class BaseHashtagPollsIntegrationService {
    */
   private calculateFeedScore(
     recommendations: PollRecommendation[],
-    analytics: HashtagFeedAnalytics[]
+    analytics: FeedHashtagAnalytics[]
   ): number {
     if (recommendations.length === 0) return 0;
     

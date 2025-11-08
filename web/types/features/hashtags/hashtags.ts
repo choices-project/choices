@@ -12,76 +12,40 @@
 // CORE HASHTAG TYPES
 // ============================================================================
 
-import type { Json } from '@/types/supabase';
+import type {
+  Hashtag as CoreHashtag,
+  UserHashtag as CoreUserHashtag,
+  TrendingHashtag as CoreTrendingHashtag,
+  HashtagCategory as CoreHashtagCategory,
+  HashtagActivity as CoreHashtagActivity,
+  HashtagUserPreferences as CoreHashtagUserPreferences,
+  ProfileHashtagIntegration as CoreProfileHashtagIntegration,
+  PollHashtagIntegration as CorePollHashtagIntegration,
+  FeedHashtagIntegration as CoreFeedHashtagIntegration,
+  FeedHashtagAnalytics as CoreFeedHashtagAnalytics,
+  HashtagValidation as CoreHashtagValidation,
+  HashtagSuggestion as CoreHashtagSuggestion,
+  HashtagSearchQuery as CoreHashtagSearchQuery,
+  HashtagSearchResponse as CoreHashtagSearchResponse,
+  HashtagEngagement as CoreHashtagEngagement,
+  HashtagAnalytics as CoreHashtagAnalytics,
+  CategoryTrendSummary as CoreCategoryTrendSummary,
+  HashtagMetadata as CoreHashtagMetadata,
+} from '@/features/hashtags/types';
 
-export type Hashtag = {
-  id: string;
-  name: string;
-  display_name?: string;
-  description?: string;
-  category: HashtagCategory;
-  usage_count: number;
-  follower_count?: number;
-  is_trending: boolean;
-  trend_score?: number;
-  engagement_rate?: number;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  is_verified: boolean;
-  is_featured?: boolean;
-  metadata?: Json | null;
-};
+export type Hashtag = CoreHashtag;
 
-export type UserHashtag = {
-  id: string;
-  user_id: string;
-  hashtag_id: string;
-  hashtag: Hashtag;
-  followed_at: string;
-  is_primary: boolean;
-  usage_count: number;
-  last_used_at?: string;
-  preferences?: {
-    notifications: boolean;
-    auto_follow_related: boolean;
-    priority: 'low' | 'medium' | 'high';
-  };
-}
+export type UserHashtag = CoreUserHashtag;
 
-export type HashtagUsage = {
-  id: string;
-  hashtag_id: string;
-  hashtag: Hashtag;
-  content_type: 'poll' | 'comment' | 'profile' | 'feed';
-  content_id: string;
-  user_id: string;
-  created_at: string;
-  context?: string;
-  sentiment?: 'positive' | 'neutral' | 'negative';
-  engagement_score?: number;
-}
+export type HashtagUsage = CoreHashtagActivity;
 
-export type TrendingHashtag = {
-  hashtag: Hashtag;
-  trend_score: number;
-  growth_rate: number;
-  usage_count_24h?: number;
-  usage_count_7d?: number;
-  peak_usage?: number;
-  peak_position?: number;
-  current_position?: number;
-  related_hashtags?: string[];
-  trending_since?: string;
-  category_trends?: Record<string, number>;
-  time_period?: string;
-};
+export type TrendingHashtag = CoreTrendingHashtag;
 
 // ============================================================================
 // HASHTAG CATEGORIES AND CLASSIFICATION
 // ============================================================================
 
-export type HashtagCategory = string;
+export type HashtagCategory = CoreHashtagCategory;
 
 export type HashtagCategoryInfo = {
   name: HashtagCategory;
@@ -123,68 +87,15 @@ export type HashtagFollow = {
   priority: number;
 }
 
-export type HashtagEngagement = {
-  hashtag_id: string;
-  user_id: string;
-  action: 'view' | 'click' | 'share' | 'create' | 'follow' | 'unfollow';
-  engagement_type?: HashtagEngagement['action'];
-  content_id?: string;
-  content_type?: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-};
+export type HashtagEngagement = CoreHashtagEngagement;
 
-export type HashtagAnalytics = {
-  hashtag_id: string;
-  period: string;
-  total_usage: number;
-  unique_users: number;
-  engagement_rate: number;
-  trend_score: number;
-  demographics?: {
-    age_groups: Record<string, number>;
-    locations: Record<string, number>;
-    interests: Record<string, number>;
-  };
-  metadata?: Record<string, any>;
-  generated_at: string;
-  metrics?: {
-    usage_count: number;
-    unique_users: number;
-    engagement_rate: number;
-    growth_rate: number;
-    peak_usage: number;
-    average_usage: number;
-    top_content: string[];
-    top_users: string[];
-    related_hashtags: string[];
-    sentiment_distribution: Record<string, number>;
-    geographic_distribution: Record<string, number>;
-    demographic_distribution: Record<string, number>;
-  };
-};
+export type HashtagAnalytics = CoreHashtagAnalytics;
 
 // ============================================================================
 // HASHTAG SEARCH AND DISCOVERY
 // ============================================================================
 
-export type HashtagSearchQuery = {
-  query: string;
-  category?: HashtagCategory;
-  limit?: number;
-  offset?: number;
-  sort_by?: 'relevance' | 'popularity' | 'trending' | 'recent';
-  include_trending?: boolean;
-  include_verified?: boolean;
-  filters?: {
-    category?: HashtagCategory;
-    is_trending?: boolean;
-    is_verified?: boolean;
-    min_usage_count?: number;
-    created_after?: string;
-    created_before?: string;
-  };
-};
+export type HashtagSearchQuery = CoreHashtagSearchQuery;
 
 export type HashtagSearchResult = {
   hashtag: Hashtag;
@@ -192,34 +103,9 @@ export type HashtagSearchResult = {
   match_type: 'exact' | 'partial' | 'fuzzy';
 };
 
-export type HashtagSearchResponse = {
-  hashtags: Hashtag[];
-  total_count: number;
-  suggestions: HashtagSuggestion[];
-  related_queries: string[];
-  filters_applied: Record<string, any>;
-  search_time_ms: number;
-};
+export type HashtagSearchResponse = CoreHashtagSearchResponse;
 
-export type HashtagSuggestion = {
-  hashtag: Hashtag;
-  reason: string;
-  confidence: number;
-  confidence_score?: number;
-  source: 'trending' | 'related' | 'personalized' | 'category' | 'search' | 'similar' | 'popular' | 'personal';
-  category?: HashtagCategory;
-  usage_count?: number;
-  is_trending?: boolean;
-  is_verified?: boolean;
-  context?: string;
-  metadata?: {
-    trending_score?: number;
-    related_hashtags?: string[];
-    category_match?: boolean;
-    user_history?: boolean;
-    social_proof?: number;
-  };
-};
+export type HashtagSuggestion = CoreHashtagSuggestion;
 
 // ============================================================================
 // HASHTAG CONTENT INTEGRATION
@@ -298,19 +184,7 @@ export type HashtagTrendingAlgorithm = {
 // HASHTAG VALIDATION AND MODERATION
 // ============================================================================
 
-export type HashtagValidation = {
-  name: string;
-  is_valid: boolean;
-  errors: string[];
-  warnings: string[];
-  suggestions: string[];
-  normalized_name: string;
-  availability: {
-    is_available: boolean;
-    similar_hashtags: string[];
-    conflict_reason?: string;
-  };
-}
+export type HashtagValidation = CoreHashtagValidation;
 
 export type HashtagModeration = {
   id?: string;
@@ -393,63 +267,13 @@ export type HashtagStatsResponse = {
 // HASHTAG USER PREFERENCES
 // ============================================================================
 
-export type HashtagUserPreferences = {
-  user_id: string;
-  default_categories: HashtagCategory[];
-  auto_follow_suggestions: boolean;
-  trending_notifications: boolean;
-  related_hashtag_suggestions: boolean;
-  privacy_settings: {
-    show_followed_hashtags: boolean;
-    show_hashtag_activity: boolean;
-    allow_hashtag_recommendations: boolean;
-  };
-  notification_preferences: {
-    new_trending_hashtags: boolean;
-    hashtag_updates: boolean;
-    related_content: boolean;
-    weekly_digest: boolean;
-  };
-  created_at: string;
-  updated_at: string;
-}
+// Re-exported above from core feature types
 
 // ============================================================================
 // HASHTAG CROSS-FEATURE INTEGRATION
 // ============================================================================
 
-export type ProfileHashtagIntegration = {
-  user_id: string;
-  primary_hashtags: string[];
-  interest_hashtags: string[];
-  custom_hashtags: string[];
-  followed_hashtags: string[];
-  hashtag_preferences: HashtagUserPreferences;
-  hashtag_activity: HashtagEngagement[];
-  last_updated: string;
-}
-
-export type PollHashtagIntegration = {
-  poll_id: string;
-  hashtags: string[];
-  primary_hashtag?: string;
-  hashtag_engagement: {
-    total_views: number;
-    hashtag_clicks: number;
-    hashtag_shares: number;
-  };
-  related_polls: string[];
-  hashtag_trending_score: number;
-}
-
-export type FeedHashtagIntegration = {
-  feed_id: string;
-  hashtag_filters: string[];
-  trending_hashtags: string[];
-  hashtag_content: HashtagContent[];
-  hashtag_analytics: HashtagAnalytics;
-  personalized_hashtags: string[];
-}
+// Re-exported above from core feature types
 
 // ============================================================================
 // HASHTAG UTILITY TYPES
@@ -593,3 +417,7 @@ export type HashtagStore = {
   getFollowedHashtags: () => UserHashtag[];
   getTrendingHashtagsByCategory: (category: HashtagCategory) => TrendingHashtag[];
 }
+
+export type HashtagMetadata = CoreHashtagMetadata;
+
+export type CategoryTrendSummary = CoreCategoryTrendSummary;

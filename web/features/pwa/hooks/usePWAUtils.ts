@@ -6,18 +6,19 @@ import { devLog } from '@/lib/utils/logger';
 
 // Import types from respective PWA modules
 import type { PWAAuth } from '../lib/pwa-auth-integration';
-// PWA utils types not implemented yet
-type PWAManager = any;
-type PWAWebAuthn = any;
-type PrivacyStorage = any;
-// import type { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
+
+type PWAUtilsModule = typeof import('../lib/pwa-utils');
+
+type PWAManagerInstance = InstanceType<PWAUtilsModule['PWAManager']>;
+type PWAWebAuthnInstance = InstanceType<PWAUtilsModule['PWAWebAuthn']>;
+type PrivacyStorageInstance = InstanceType<PWAUtilsModule['PrivacyStorage']>;
 
 type PWAUtils = {
   pwaAuth: PWAAuth;
-  pwaManager: PWAManager;
+  pwaManager: PWAManagerInstance;
   pwaAnalytics: null; // Archived PWA feature
-  pwaWebAuthn: PWAWebAuthn;
-  privacyStorage: PrivacyStorage;
+  pwaWebAuthn: PWAWebAuthnInstance;
+  privacyStorage: PrivacyStorageInstance;
 }
 
 export function usePWAUtils() {
@@ -39,9 +40,10 @@ export function usePWAUtils() {
         ])
         
         // Import PWA utilities
-        const [pwaUtilsModule] = await Promise.all([
-          import('../lib/pwa-utils')
-        ])
+        const [pwaUtilsModule, bridgeModule] = (await Promise.all([
+          import('../lib/pwa-utils'),
+          import('../lib/service-worker-bridge'),
+        ])) as [PWAUtilsModule, typeof import('../lib/service-worker-bridge')]
         
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,
@@ -50,6 +52,8 @@ export function usePWAUtils() {
           pwaWebAuthn: new pwaUtilsModule.PWAWebAuthn(),
           privacyStorage: new pwaUtilsModule.PrivacyStorage()
         })
+
+        bridgeModule.initializeServiceWorkerBridge()
       } catch (err) {
         devLog('Error loading PWA utils:', { error: err })
         setError(err instanceof Error ? err.message : 'Unknown error')

@@ -73,6 +73,11 @@ const executiveDashboard: LayoutPreset = {
       createWidget('trust-tiers', 'Trust Tier Analysis', 6, 4, 6, 4, {
         filters: {},
       }),
+      
+      // PWA offline queue health
+      createWidget('pwa-offline-queue', 'Offline Queue Health', 0, 8, 4, 3, {
+        refreshInterval: 30,
+      }),
     ],
     isDefault: false,
     isPreset: true,
@@ -102,10 +107,13 @@ const detailedAnalytics: LayoutPreset = {
         filters: { category: 'All Categories', limit: 30 },
       }),
       
-      // Bottom row: Trust Tiers and District Heatmap
-      createWidget('trust-tiers', 'Trust Tier Comparison', 0, 7, 6, 4),
-      createWidget('district-heatmap', 'District Engagement', 6, 7, 6, 4, {
+      // Bottom row: Trust Tiers, District Heatmap, PWA Queue Health
+      createWidget('trust-tiers', 'Trust Tier Comparison', 0, 7, 4, 4),
+      createWidget('district-heatmap', 'District Engagement', 4, 7, 4, 4, {
         filters: { state: 'All States', level: 'federal' },
+      }),
+      createWidget('pwa-offline-queue', 'Offline Queue Health', 8, 7, 4, 3, {
+        refreshInterval: 30,
       }),
     ],
     isDefault: false,
@@ -139,6 +147,10 @@ const mobileDashboard: LayoutPreset = {
       
       createWidget('poll-heatmap', 'Poll Engagement', 0, 11, 12, 4, {
         filters: { limit: 10 },
+      }),
+      
+      createWidget('pwa-offline-queue', 'Offline Queue Health', 0, 15, 12, 3, {
+        refreshInterval: 30,
       }),
     ],
     isDefault: false,
@@ -199,7 +211,10 @@ const defaultDashboard: LayoutPreset = {
     widgets: [
       createWidget('trends', 'Activity Trends', 0, 0, 6, 4),
       createWidget('demographics', 'User Demographics', 6, 0, 6, 4),
-      createWidget('poll-heatmap', 'Poll Engagement', 0, 4, 12, 4),
+      createWidget('poll-heatmap', 'Poll Engagement', 0, 4, 8, 4),
+      createWidget('pwa-offline-queue', 'Offline Queue Health', 8, 4, 4, 3, {
+        refreshInterval: 30,
+      }),
     ],
     isDefault: true,
     isPreset: true,

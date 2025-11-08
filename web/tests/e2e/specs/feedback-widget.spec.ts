@@ -23,6 +23,12 @@ const openFeedbackWidget = async (page: Page) => {
 };
 
 test.describe('Feedback Widget', () => {
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(() => {
+      globalThis.__playwrightAnalytics?.reset?.();
+    });
+  });
+
   test.beforeEach(({ page }) => {
     page.on('console', (msg) => {
        
@@ -66,6 +72,10 @@ test.describe('Feedback Widget', () => {
 
     try {
       await navigateHome(page);
+      await page.evaluate(() => {
+        console.info('feedback-e2e-info');
+        console.warn({ key: 'feedback-e2e-object', status: 'test' });
+      });
       await openFeedbackWidget(page);
 
       await page.getByRole('button', { name: 'Bug Report' }).click();
@@ -89,6 +99,27 @@ test.describe('Feedback Widget', () => {
       expect(typeof payload?.description).toBe('string');
       expect(payload?.userJourney).toMatchObject({ currentPage: expect.stringContaining('/') });
       expect(payload?.feedbackContext).toBeDefined();
+
+      const context = payload?.feedbackContext as Record<string, unknown>;
+      expect(context).toBeDefined();
+
+      expect(typeof context?.feedbackId).toBe('string');
+      expect(typeof context?.timestamp).toBe('string');
+      expect(Array.isArray(context?.consoleLogs)).toBe(true);
+      expect((context?.consoleLogs as unknown[] | undefined)?.length ?? 0).toBeGreaterThan(0);
+      expect(JSON.stringify(context?.consoleLogs)).toContain('feedback-e2e-info');
+      expect(context?.category).toEqual(expect.arrayContaining(['bug']));
+      expect(context?.priority).toMatch(/low|medium|high|urgent/);
+      expect(context?.severity).toMatch(/minor|moderate|major|critical/);
+      expect(context?.userJourney).toMatchObject({
+        currentPage: expect.stringContaining('/'),
+        deviceInfo: expect.objectContaining({
+          deviceType: expect.any(String),
+          browser: expect.any(String),
+        }),
+        sessionId: expect.any(String),
+      });
+      expect(Array.isArray(context?.networkRequests)).toBe(true);
 
       await expect(page.getByText('Thank You! 🎉')).toBeVisible();
       await page.getByRole('button', { name: 'Close' }).click();

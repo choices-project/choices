@@ -21,6 +21,85 @@ import {
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
+
+const buildPollHashtagIntegration = (poll: any): PollHashtagIntegration | undefined => {
+  if (!poll.hashtags) {
+    return undefined;
+  }
+
+  const hashtags: string[] = Array.isArray(poll.hashtags)
+    ? poll.hashtags.filter((tag: unknown): tag is string => typeof tag === 'string')
+    : [];
+
+  const primaryHashtag = typeof poll.primary_hashtag === 'string' ? poll.primary_hashtag : undefined;
+  const engagement = poll.hashtag_engagement ?? null;
+
+  if (!hashtags.length && !primaryHashtag && !engagement) {
+    return undefined;
+  }
+
+  return {
+    poll_id: poll.id,
+    hashtags,
+    primary_hashtag: primaryHashtag,
+    hashtag_engagement: {
+      total_views: engagement?.total_views ?? 0,
+      hashtag_clicks: engagement?.hashtag_clicks ?? 0,
+      hashtag_shares: engagement?.hashtag_shares ?? 0,
+    },
+    related_polls: Array.isArray(poll.related_polls)
+      ? poll.related_polls.filter((id: unknown): id is string => typeof id === 'string')
+      : [],
+    hashtag_trending_score: poll.hashtag_trending_score ?? 0,
+  };
+};
+
+const mapPollRecord = (
+  poll: any,
+  authorProfiles: Record<string, any>,
+  includeHashtagData: boolean,
+  trendingHashtags: Array<{ hashtag: Hashtag }>,
+): Record<string, unknown> => {
+  const basePoll: Record<string, unknown> = {
+    id: poll.id,
+    title: poll.title,
+    description: poll.description,
+    category: poll.category,
+    status: poll.status,
+    totalVotes: poll.total_votes ?? 0,
+    createdAt: poll.created_at,
+    endsAt: poll.end_date,
+    tags: Array.isArray(poll.tags)
+      ? poll.tags.filter((tag: unknown): tag is string => typeof tag === 'string')
+      : [],
+    author: {
+      name: authorProfiles[poll.created_by]?.display_name ?? authorProfiles[poll.created_by]?.username ?? 'Anonymous',
+      verified: authorProfiles[poll.created_by]?.is_admin ?? false,
+    },
+  };
+
+  if (includeHashtagData) {
+    const integration = buildPollHashtagIntegration(poll);
+    if (integration) {
+      basePoll.hashtags = integration.hashtags;
+      basePoll.primary_hashtag = integration.primary_hashtag;
+      basePoll.hashtagIntegration = integration;
+    }
+  }
+
+  if (trendingHashtags.length > 0 && Array.isArray(poll.hashtags)) {
+    const positions = poll.hashtags
+      .map((hashtag: string) => trendingHashtags.findIndex((th) => th.hashtag.name === hashtag) + 1)
+      .filter((position: number) => position > 0);
+
+    if (positions.length > 0) {
+      basePoll.trending_position = Math.min(...positions);
+    }
+  }
+
+  return basePoll;
+};
 
 /**
  * Get polls with filtering and sorting
@@ -149,7 +228,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Get trending hashtags for analytics if needed (server-side query)
-    let trendingHashtags: any[] = [];
+    let trendingHashtags: Array<{ hashtag: Hashtag }> = [];
     if (sort === 'trending' || status === 'trending' || includeAnalytics) {
       try {
         const { data: hashtagData, error: hashtagError } = await supabase
@@ -160,11 +239,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           .limit(10);
 
         if (!hashtagError && hashtagData) {
-          trendingHashtags = (hashtagData as any[]).map((th: any) => ({
-            hashtag: th,
-            trend_score: th.trend_score ?? 0,
-            growth_rate: 0, // Would need additional calculation
-            peak_usage: th.usage_count ?? 0
+          trendingHashtags = (hashtagData as Hashtag[]).map((hashtag) => ({
+            hashtag,
           }));
         }
       } catch (error) {
@@ -173,81 +249,53 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     }
 
-    // Transform data to match frontend interface with hashtag integration
-    let transformedPolls = polls?.map((poll: any) => {
-      const basePoll = {
-        id: poll.id,
-        title: poll.title,
-        description: poll.description,
-        category: poll.category,
-        author: {
-          name: userProfiles[poll.created_by]?.display_name ?? userProfiles[poll.created_by]?.username ?? 'Anonymous',
-          verified: userProfiles[poll.created_by]?.is_admin ?? false
-        },
-        status: poll.status,
-        totalVotes: poll.total_votes ?? 0,
-        createdAt: poll.created_at,
-        endsAt: poll.end_date,
-        tags: poll.tags ?? []
-      };
+    const transformedPolls = (polls ?? []).map((poll) =>
+      mapPollRecord(poll, userProfiles, includeHashtagData, trendingHashtags)
+    );
 
-      // Add hashtag data if available
-      if (includeHashtagData && poll.hashtags) {
-        (basePoll as any).hashtags = poll.hashtags;
-        (basePoll as any).primary_hashtag = poll.primary_hashtag;
-        (basePoll as any).hashtag_engagement = poll.hashtag_engagement;
-      }
-
-      // Calculate trending position if we have trending hashtags
-      if (trendingHashtags.length > 0 && poll.hashtags) {
-        const pollHashtags = poll.hashtags ?? [];
-        const trendingPositions = pollHashtags
-          .map((hashtag: string) => trendingHashtags.findIndex((th: any) => th.hashtag.name === hashtag) + 1)
-          .filter((pos: number) => pos > 0);
-
-        if (trendingPositions.length > 0) {
-          (basePoll as any).trending_position = Math.min(...trendingPositions);
-        }
-      }
-
-      return basePoll;
-    }) ?? [];
-
-    // Sort by trending if requested
     if (sort === 'trending') {
-      transformedPolls = transformedPolls.sort((a, b) => {
-        const aPos = (a as any).trending_position ?? 999;
-        const bPos = (b as any).trending_position ?? 999;
+      transformedPolls.sort((a, b) => {
+        const aPos = (a as Record<string, unknown>).trending_position as number | undefined ?? 999;
+        const bPos = (b as Record<string, unknown>).trending_position as number | undefined ?? 999;
         return aPos - bPos;
       });
     }
 
-    // Filter trending polls if status is trending
-    if (status === 'trending') {
-      transformedPolls = transformedPolls.filter(poll => (poll as any).trending_position && (poll as any).trending_position > 0);
-    }
+    const filteredPolls =
+      status === 'trending'
+        ? transformedPolls.filter(
+            (poll) =>
+              ((poll as Record<string, unknown>).trending_position as number | undefined ?? 0) > 0,
+          )
+        : transformedPolls;
 
     logger.info('Polls fetched successfully', {
-      count: transformedPolls.length,
+      count: filteredPolls.length,
       filters: { status, category, hashtags, search, sort },
       includeHashtagData,
-      includeAnalytics
+      includeAnalytics,
     });
 
-    return successResponse({
-      polls: transformedPolls,
-      analytics: includeAnalytics ? {
-        trendingHashtags: trendingHashtags.slice(0, 10),
-        totalHashtags: trendingHashtags.length
-      } : undefined
-    }, {
-      pagination: {
-        limit,
-        offset,
-        total: transformedPolls.length,
-        hasMore: transformedPolls.length === limit
-      }
-    });
+    return successResponse(
+      {
+        polls: filteredPolls,
+        analytics:
+          includeAnalytics
+            ? {
+                trendingHashtags: trendingHashtags.slice(0, 10),
+                totalHashtags: trendingHashtags.length,
+              }
+            : undefined,
+      },
+      {
+        pagination: {
+          limit,
+          offset,
+          total: filteredPolls.length,
+          hasMore: filteredPolls.length === limit,
+        },
+      },
+    );
 });
 
 /**

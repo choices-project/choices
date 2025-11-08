@@ -13,229 +13,231 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
+import type { ApiSuccessResponse } from '@/lib/api/types';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
-import type { PrivacySettings } from '@/types/profile';
 
+import {
+  type FeedCategory,
+  type FeedFilters,
+  type FeedItem,
+  type FeedPreferences,
+  type FeedSearch,
+  type FeedEngagement,
+  type FeedUserInteraction,
+  type FeedsStore,
+  type FeedsApiPayload,
+} from './types/feeds';
 import { createSafeStorage } from './storage';
-/**
- * Database types for feeds
- *
- * Note: feed_items.item_data is stored as Json in the database for flexibility.
- * The FeedItem type below represents the unpacked/enriched structure.
- *
- * @see Database['public']['Tables']['feed_items']['Row'] - Raw DB type
- * @see Database['public']['Tables']['feeds']['Row'] - Feed container type
- */
-// Feed data types - enriched from database Json fields
-type FeedItem = {
-  id: string;
-  title: string;
-  content: string;
-  summary: string;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-    verified: boolean;
-  };
-  category: string;
-  tags: string[];
-  type: 'article' | 'video' | 'podcast' | 'poll' | 'event' | 'news' | 'civic_action';
-  source: {
-    name: string;
-    url: string;
-    logo?: string;
-    verified: boolean;
-  };
-  publishedAt: string;
-  updatedAt: string;
-  readTime: number; // minutes
-  engagement: {
-    likes: number;
-    shares: number;
-    comments: number;
-    views: number;
-  };
-  userInteraction: {
-    liked: boolean;
-    shared: boolean;
-    bookmarked: boolean;
-    read: boolean;
-    readAt?: string;
-  };
-  metadata: {
-    image?: string;
-    videoUrl?: string;
-    audioUrl?: string;
-    externalUrl?: string;
-    location?: string;
-    language: string;
-  };
-  district?: string | null; // District for location-specific content (e.g., "CA-12")
-  pollData?: {
-    id: string;
-    title: string;
-    options: any[];
-    totalVotes: number;
-    status: string;
-    primaryHashtag?: string;
-  };
-  civicActionData?: {
-    id: string;
-    actionType: string;
-    targetDistrict?: string | null;
-    targetState?: string | null;
-    currentSignatures: number;
-    requiredSignatures: number;
-    status: string;
-  };
-}
 
-type FeedCategory = {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  icon: string;
-  count: number;
-  enabled: boolean;
-}
+type FetchFeedsParams = {
+  category?: string | null;
+  district?: string | null;
+  limit?: number;
+  sort?: string | null;
+};
 
-type FeedFilters = {
-  categories: string[];
-  types: string[];
-  sources: string[];
-  dateRange: {
-    start: string;
-    end: string;
-  };
-  readStatus: 'all' | 'read' | 'unread';
-  engagement: 'all' | 'popular' | 'trending';
-  language: string;
-  tags: string[];
-  district?: string; // District filter (e.g., "CA-12")
-}
+type FeedSearchResponse = {
+  items: FeedItem[];
+  total: number;
+  suggestions?: string[];
+};
 
-type FeedPreferences = {
-  defaultView: 'list' | 'grid' | 'magazine';
-  sortBy: 'newest' | 'oldest' | 'popular' | 'trending' | 'relevance';
-  itemsPerPage: number;
-  autoRefresh: boolean;
-  refreshInterval: number; // minutes
-  notifications: {
-    newContent: boolean;
-    trendingContent: boolean;
-    categoryUpdates: boolean;
-    authorUpdates: boolean;
-  };
-  privacy: {
-    showReadHistory: boolean;
-    showBookmarks: boolean;
-    showLikes: boolean;
-    shareActivity: boolean;
-  };
-  content: {
-    showImages: boolean;
-    showVideos: boolean;
-    showAudio: boolean;
-    autoPlay: boolean;
-    quality: 'low' | 'medium' | 'high';
-  };
-}
+const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => {
+  switch (sortBy) {
+    case 'popular':
+      return 'popular';
+    case 'trending':
+      return 'trending';
+    case 'newest':
+      return 'newest';
+    case 'oldest':
+      return 'oldest';
+    case 'relevance':
+      return 'trending';
+    default:
+      return 'trending';
+  }
+};
 
-type FeedSearch = {
-  query: string;
-  results: FeedItem[];
-  totalResults: number;
-  currentPage: number;
-  totalPages: number;
-  filters: FeedFilters;
-  suggestions: string[];
-  recentSearches: string[];
-}
+const buildFeedsQueryString = (params: FetchFeedsParams = {}): string => {
+  const searchParams = new URLSearchParams();
 
-// Feeds store state interface
-type FeedsStore = {
-  // Feed data
-  feeds: FeedItem[];
-  filteredFeeds: FeedItem[];
-  categories: FeedCategory[];
-  search: FeedSearch;
+  if (params.limit != null) {
+    searchParams.set('limit', String(params.limit));
+  }
+  if (params.category && params.category !== 'all') {
+    searchParams.set('category', params.category);
+  }
+  if (params.district) {
+    searchParams.set('district', params.district);
+  }
+  if (params.sort) {
+    searchParams.set('sort', params.sort);
+  }
 
-  // UI state
-  currentView: 'list' | 'grid' | 'magazine';
-  selectedFeed: FeedItem | null;
-  selectedCategory: string | null;
+  return searchParams.toString();
+};
 
-  // Filters and preferences
-  filters: FeedFilters;
-  preferences: FeedPreferences;
+const filterFeeds = (feeds: FeedItem[], filters: FeedFilters): FeedItem[] => {
+  if (!feeds.length) {
+    return feeds;
+  }
 
-  // 🔒 Privacy settings (from user profile)
-  privacySettings: PrivacySettings | null;
+  return feeds.filter((feed) => {
+    if (filters.categories.length > 0 && !filters.categories.includes(feed.category)) {
+      return false;
+    }
+    if (filters.types.length > 0 && !filters.types.includes(feed.type)) {
+      return false;
+    }
+    if (filters.sources.length > 0 && !filters.sources.includes(feed.source.name)) {
+      return false;
+    }
+    if (filters.readStatus === 'read' && !feed.userInteraction.read) {
+      return false;
+    }
+    if (filters.readStatus === 'unread' && feed.userInteraction.read) {
+      return false;
+    }
+    if (filters.tags.length > 0 && !filters.tags.some((tag) => feed.tags.includes(tag))) {
+      return false;
+    }
+    if (filters.language && filters.language !== 'all' && feed.metadata.language !== filters.language) {
+      return false;
+    }
+    if (filters.dateRange.start) {
+      const feedDate = new Date(feed.publishedAt).getTime();
+      const startDate = new Date(filters.dateRange.start).getTime();
+      if (!Number.isNaN(startDate) && feedDate < startDate) {
+        return false;
+      }
+    }
+    if (filters.dateRange.end) {
+      const feedDate = new Date(feed.publishedAt).getTime();
+      const endDate = new Date(filters.dateRange.end).getTime();
+      if (!Number.isNaN(endDate) && feedDate > endDate) {
+        return false;
+      }
+    }
+    if (filters.district && feed.district && feed.district !== filters.district) {
+      return false;
+    }
 
-  // Loading states
-  isLoading: boolean;
-  isSearching: boolean;
-  isRefreshing: boolean;
-  isUpdating: boolean;
-  error: string | null;
+    return true;
+  });
+};
 
-  // Actions - Feed management
-  setFeeds: (feeds: FeedItem[]) => void;
-  addFeed: (feed: FeedItem) => void;
-  updateFeed: (id: string, updates: Partial<FeedItem>) => void;
-  removeFeed: (id: string) => void;
-  refreshFeeds: () => Promise<void>;
-  loadMoreFeeds: () => Promise<void>;
+const mergeUniqueFeeds = (current: FeedItem[], incoming: FeedItem[]): FeedItem[] => {
+  if (!incoming.length) {
+    return current;
+  }
 
-  // Actions - Filtering and search
-  setFilters: (filters: Partial<FeedFilters>) => void;
-  clearFilters: () => void;
-  searchFeeds: (query: string) => Promise<void>;
-  setSearchQuery: (query: string) => void;
-  clearSearch: () => void;
+  const seenIds = new Set(current.map((feed) => feed.id));
+  const next = current.slice();
 
-  // Actions - Feed interactions (🔒 privacy-aware)
-  likeFeed: (id: string) => void;
-  unlikeFeed: (id: string) => void;
-  shareFeed: (id: string) => void;
-  bookmarkFeed: (id: string) => void;
-  unbookmarkFeed: (id: string) => void;
-  markAsRead: (id: string) => void;
-  markAsUnread: (id: string) => void;
+  for (const feed of incoming) {
+    if (!seenIds.has(feed.id)) {
+      next.push(feed);
+      seenIds.add(feed.id);
+    }
+  }
 
-  // 🔒 Privacy management
-  setPrivacySettings: (settings: PrivacySettings | null) => void;
+  return next;
+};
 
-  // Actions - Categories
-  setCategories: (categories: FeedCategory[]) => void;
-  toggleCategory: (categoryId: string) => void;
-  setSelectedCategory: (categoryId: string | null) => void;
+const parseFeedsPayload = (
+  raw: unknown,
+  fallback: Pick<FetchFeedsParams, 'category' | 'district' | 'sort'>
+): FeedsApiPayload => {
+  if (raw && typeof raw === 'object' && 'success' in raw) {
+    const successPayload = raw as ApiSuccessResponse<FeedsApiPayload>;
+    return successPayload.data;
+  }
 
-  // Actions - Preferences
-  updatePreferences: (preferences: Partial<FeedPreferences>) => void;
-  resetPreferences: () => void;
+  if (raw && typeof raw === 'object' && 'feeds' in raw) {
+    const payload = raw as Partial<FeedsApiPayload>;
+    if (Array.isArray(payload.feeds)) {
+      return {
+        feeds: payload.feeds as FeedItem[],
+        count: typeof payload.count === 'number' ? payload.count : payload.feeds.length,
+        filters: {
+          category: payload.filters?.category ?? fallback.category ?? 'all',
+          district: payload.filters?.district ?? fallback.district ?? null,
+          sort: payload.filters?.sort ?? fallback.sort ?? 'trending',
+        },
+      };
+    }
+  }
 
-  // Actions - View management
-  setCurrentView: (view: 'list' | 'grid' | 'magazine') => void;
-  setSelectedFeed: (feed: FeedItem | null) => void;
+  if (Array.isArray(raw)) {
+    const feeds = raw as FeedItem[];
+    return {
+      feeds,
+      count: feeds.length,
+      filters: {
+        category: fallback.category ?? 'all',
+        district: fallback.district ?? null,
+        sort: fallback.sort ?? 'trending',
+      },
+    };
+  }
 
-  // Actions - Data operations
-  loadFeeds: (category?: string) => Promise<void>;
-  loadCategories: () => Promise<void>;
-  saveUserInteraction: (feedId: string, interaction: Partial<FeedItem['userInteraction']>) => Promise<void>;
+  throw new Error('Invalid feeds response payload');
+};
 
-  // Actions - Loading states
-  setLoading: (loading: boolean) => void;
-  setSearching: (searching: boolean) => void;
-  setRefreshing: (refreshing: boolean) => void;
-  setUpdating: (updating: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-}
+const fetchFeedsFromApi = async (params: FetchFeedsParams = {}): Promise<FeedsApiPayload> => {
+  const query = buildFeedsQueryString(params);
+  const endpoint = `/api/feeds${query ? `?${query}` : ''}`;
+
+  const response = await fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch feeds (status ${response.status})`);
+  }
+
+  const raw = await response.json();
+  return parseFeedsPayload(raw, {
+    category: params.category ?? 'all',
+    district: params.district ?? null,
+    sort: params.sort ?? 'trending',
+  });
+};
+
+const parseFeedSearchPayload = (raw: unknown): FeedSearchResponse => {
+  if (raw && typeof raw === 'object' && 'success' in raw) {
+    const successPayload = raw as ApiSuccessResponse<FeedSearchResponse>;
+    return successPayload.data;
+  }
+
+  if (raw && typeof raw === 'object' && 'items' in raw) {
+    const payload = raw as Partial<FeedSearchResponse>;
+    if (Array.isArray(payload.items) && typeof payload.total === 'number') {
+      return {
+        items: payload.items as FeedItem[],
+        total: payload.total,
+        suggestions: payload.suggestions ?? [],
+      };
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    const items = raw as FeedItem[];
+    return {
+      items,
+      total: items.length,
+      suggestions: [],
+    };
+  }
+
+  throw new Error('Invalid feed search response payload');
+};
 
 // Default feed preferences
 const defaultPreferences: FeedPreferences = {
@@ -276,52 +278,83 @@ const defaultFilters: FeedFilters = {
   },
   readStatus: 'all',
   engagement: 'all',
-  language: 'en',
+  language: 'all',
   tags: [],
+  district: null,
+};
+
+const assignDefined = <T extends Record<string, unknown>>(
+  base: T,
+  updates: Partial<T>
+): T => {
+  const next: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined) continue;
+    next[key] = value;
+  }
+  return next as T;
 };
 
 const mergeFeed = (feed: FeedItem, updates: Partial<FeedItem>) =>
-  withOptional(feed, updates as Record<string, unknown>) as FeedItem;
+  assignDefined(feed, updates);
 
 const mergeUserInteraction = (
-  interaction: FeedItem['userInteraction'],
-  updates: Partial<FeedItem['userInteraction']>
+  interaction: FeedUserInteraction,
+  updates: Partial<FeedUserInteraction>
 ) =>
-  withOptional(interaction, updates as Record<string, unknown>) as FeedItem['userInteraction'];
+  assignDefined(interaction, updates);
 
 const mergeEngagement = (
-  engagement: FeedItem['engagement'],
-  updates: Partial<FeedItem['engagement']>
+  engagement: FeedEngagement,
+  updates: Partial<FeedEngagement>
 ) =>
-  withOptional(engagement, updates as Record<string, unknown>) as FeedItem['engagement'];
+  assignDefined(engagement, updates);
 
-const mergeFilters = (filters: FeedFilters, updates: Partial<FeedFilters>) =>
-  withOptional(filters, updates as Record<string, unknown>) as FeedFilters;
+const mergeFilters = (filters: FeedFilters, updates: Partial<FeedFilters>) => {
+  const { dateRange, ...rest } = updates;
+  const next = assignDefined(filters, rest);
+  if (dateRange) {
+    next.dateRange = assignDefined(filters.dateRange, dateRange);
+  }
+  return next;
+};
 
 const mergeSearchState = (search: FeedSearch, updates: Partial<FeedSearch>) =>
-  withOptional(search, updates as Record<string, unknown>) as FeedSearch;
+  assignDefined(search, updates);
 
 const mergeCategory = (category: FeedCategory, updates: Partial<FeedCategory>) =>
-  withOptional(category, updates as Record<string, unknown>) as FeedCategory;
+  assignDefined(category, updates);
 
-const mergePreferences = (preferences: FeedPreferences, updates: Partial<FeedPreferences>) =>
-  withOptional(preferences, updates as Record<string, unknown>) as FeedPreferences;
-
-const cloneFilters = (): FeedFilters => {
-  const base = mergeFilters(withOptional(defaultFilters), {});
-  return mergeFilters(base, {
-    dateRange: withOptional(defaultFilters.dateRange),
-  });
+const mergePreferences = (preferences: FeedPreferences, updates: Partial<FeedPreferences>) => {
+  const { notifications, privacy, content, ...rest } = updates;
+  const next = assignDefined(preferences, rest);
+  if (notifications) {
+    next.notifications = assignDefined(preferences.notifications, notifications);
+  }
+  if (privacy) {
+    next.privacy = assignDefined(preferences.privacy, privacy);
+  }
+  if (content) {
+    next.content = assignDefined(preferences.content, content);
+  }
+  return next;
 };
 
-const clonePreferences = (): FeedPreferences => {
-  const base = mergePreferences(withOptional(defaultPreferences), {});
-  return mergePreferences(base, {
-    notifications: withOptional(defaultPreferences.notifications),
-    privacy: withOptional(defaultPreferences.privacy),
-    content: withOptional(defaultPreferences.content),
-  });
-};
+const cloneFilters = (): FeedFilters => ({
+  ...defaultFilters,
+  categories: [...defaultFilters.categories],
+  types: [...defaultFilters.types],
+  sources: [...defaultFilters.sources],
+  tags: [...defaultFilters.tags],
+  dateRange: { ...defaultFilters.dateRange },
+});
+
+const clonePreferences = (): FeedPreferences => ({
+  ...defaultPreferences,
+  notifications: { ...defaultPreferences.notifications },
+  privacy: { ...defaultPreferences.privacy },
+  content: { ...defaultPreferences.content },
+});
 
 const prependItem = <T>(items: T[], item: T): T[] => {
   const next = items.slice();
@@ -354,6 +387,8 @@ export const useFeedsStore = create<FeedsStore>()(
         filters: cloneFilters(),
         preferences: clonePreferences(),
         privacySettings: null, // 🔒 Will be set from user profile
+        totalAvailableFeeds: 0,
+        hasMoreFeeds: false,
         isLoading: false,
         isSearching: false,
         isRefreshing: false,
@@ -361,12 +396,21 @@ export const useFeedsStore = create<FeedsStore>()(
         error: null,
 
         // Feed management actions
-        setFeeds: (feeds) => set({ feeds, filteredFeeds: feeds }),
-
-        addFeed: (feed) => set((state) => ({
-          feeds: prependItem(state.feeds, feed),
-          filteredFeeds: prependItem(state.filteredFeeds, feed),
+        setFeeds: (feeds) => set((state) => ({
+          feeds,
+          filteredFeeds: filterFeeds(feeds, state.filters),
+          totalAvailableFeeds: feeds.length,
+          hasMoreFeeds: false,
         })),
+
+        addFeed: (feed) => set((state) => {
+          const nextFeeds = prependItem(state.feeds, feed);
+          return {
+            feeds: nextFeeds,
+            filteredFeeds: filterFeeds(nextFeeds, state.filters),
+            totalAvailableFeeds: state.totalAvailableFeeds + 1,
+          };
+        }),
 
         updateFeed: (id, updates) => set((state) => ({
           feeds: state.feeds.map((feed) =>
@@ -380,29 +424,38 @@ export const useFeedsStore = create<FeedsStore>()(
         removeFeed: (id) => set((state) => ({
           feeds: state.feeds.filter(feed => feed.id !== id),
           filteredFeeds: state.filteredFeeds.filter(feed => feed.id !== id),
+          totalAvailableFeeds: Math.max(0, state.totalAvailableFeeds - 1),
         })),
 
         refreshFeeds: async () => {
           const { isRefreshing } = get();
-          if (isRefreshing) return; // Prevent multiple simultaneous calls
+          if (isRefreshing) return;
 
           try {
             set({ isRefreshing: true, error: null });
 
-            const response = await fetch('/api/feeds', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ category: null }),
+            const currentState = get();
+            const payload = await fetchFeedsFromApi({
+              category: currentState.selectedCategory,
+              district: currentState.filters.district ?? null,
+              limit: currentState.preferences.itemsPerPage,
+              sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
             });
 
-            if (!response?.ok) {
-              throw new Error('Failed to refresh feeds');
-            }
+            const nextFeeds = payload.feeds;
+            set({
+              feeds: nextFeeds,
+              filteredFeeds: filterFeeds(nextFeeds, currentState.filters),
+              totalAvailableFeeds: payload.count,
+              hasMoreFeeds: payload.count > nextFeeds.length,
+              isRefreshing: false,
+            });
 
-            const feeds = await response.json();
-            set({ feeds, filteredFeeds: feeds, isRefreshing: false });
-
-            logger.info('Feeds refreshed successfully');
+            logger.info('Feeds refreshed successfully', {
+              count: payload.count,
+              category: payload.filters.category,
+              district: payload.filters.district,
+            });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             set({ error: errorMessage, isRefreshing: false });
@@ -412,29 +465,33 @@ export const useFeedsStore = create<FeedsStore>()(
 
         loadMoreFeeds: async () => {
           const { isLoading } = get();
-          if (isLoading) return; // Prevent multiple simultaneous calls
+          const currentState = get();
+          if (isLoading || !currentState.hasMoreFeeds) return;
 
           try {
             set({ isLoading: true, error: null });
 
-            const response = await fetch('/api/feeds', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ category: null }),
+            const limit = currentState.feeds.length + currentState.preferences.itemsPerPage;
+            const payload = await fetchFeedsFromApi({
+              category: currentState.selectedCategory,
+              district: currentState.filters.district ?? null,
+              limit,
+              sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
             });
 
-            if (!response.ok) {
-              throw new Error('Failed to load more feeds');
-            }
+            const mergedFeeds = mergeUniqueFeeds(currentState.feeds, payload.feeds);
+            set({
+              feeds: mergedFeeds,
+              filteredFeeds: filterFeeds(mergedFeeds, currentState.filters),
+              totalAvailableFeeds: payload.count,
+              hasMoreFeeds: payload.count > mergedFeeds.length,
+              isLoading: false,
+            });
 
-            const newFeeds = await response.json();
-            set((state) => ({
-              feeds: state.feeds.concat(newFeeds),
-              filteredFeeds: state.filteredFeeds.concat(newFeeds),
-              isLoading: false
-            }));
-
-            logger.info('More feeds loaded');
+            logger.info('More feeds loaded', {
+              appended: payload.feeds.length,
+              total: mergedFeeds.length,
+            });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             set({ error: errorMessage, isLoading: false });
@@ -445,44 +502,19 @@ export const useFeedsStore = create<FeedsStore>()(
         // Filtering and search actions
         setFilters: (filters) => set((state) => {
           const newFilters = mergeFilters(state.filters, filters);
-
-          // Apply filters to feeds
-          const filtered = state.feeds.filter(feed => {
-            if (newFilters.categories && newFilters.categories.length > 0 && !newFilters.categories.includes(feed.category)) {
-              return false;
-            }
-            if (newFilters.types && newFilters.types.length > 0 && !newFilters.types.includes(feed.type)) {
-              return false;
-            }
-            if (newFilters.sources && newFilters.sources.length > 0 && !newFilters.sources.includes(feed.source.name)) {
-              return false;
-            }
-            if (newFilters.readStatus === 'read' && !feed.userInteraction.read) {
-              return false;
-            }
-            if (newFilters.readStatus === 'unread' && feed.userInteraction.read) {
-              return false;
-            }
-            if (newFilters.tags && newFilters.tags.length > 0 && !newFilters.tags.some(tag => feed.tags.includes(tag))) {
-              return false;
-            }
-            // District filtering: show items from user's district OR platform-wide content (null district)
-            if (newFilters.district) {
-              if (feed.district && feed.district !== newFilters.district) {
-                return false; // Exclude content from other districts
-              }
-              // Items with null district are platform-wide and always shown
-            }
-            return true;
-          });
-
-          return { filters: newFilters, filteredFeeds: filtered };
+          return {
+            filters: newFilters,
+            filteredFeeds: filterFeeds(state.feeds, newFilters),
+          };
         }),
 
-        clearFilters: () => set((state) => ({
-          filters: cloneFilters(),
-          filteredFeeds: state.feeds,
-        })),
+        clearFilters: () => set((state) => {
+          const resetFilters = cloneFilters();
+          return {
+            filters: resetFilters,
+            filteredFeeds: filterFeeds(state.feeds, resetFilters),
+          };
+        }),
 
         searchFeeds: async (query) => {
           const { setSearching, setError } = get();
@@ -493,7 +525,7 @@ export const useFeedsStore = create<FeedsStore>()(
 
             const response = await fetch('/api/feeds/search', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
               body: JSON.stringify({ query }),
             });
 
@@ -501,22 +533,23 @@ export const useFeedsStore = create<FeedsStore>()(
               throw new Error('Failed to search feeds');
             }
 
-            const results = await response.json();
+            const payload = parseFeedSearchPayload(await response.json());
 
             set((state) => ({
               search: mergeSearchState(state.search, {
                 query,
-                results: results.items,
-                totalResults: results.total,
+                results: payload.items,
+                totalResults: payload.total,
                 currentPage: 1,
-                totalPages: Math.ceil(results.total / state.preferences.itemsPerPage),
+                totalPages: Math.max(1, Math.ceil(payload.total / state.preferences.itemsPerPage)),
+                suggestions: payload.suggestions ?? [],
               }),
             }));
 
             logger.info('Feeds searched', {
               query,
-              results: results.items.length,
-              total: results.total
+              returned: payload.items.length,
+              total: payload.total,
             });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -543,96 +576,164 @@ export const useFeedsStore = create<FeedsStore>()(
 
         // Feed interaction actions (🔒 Privacy-aware)
         // Note: These update UI state immediately, but only persist if user has consented
-        likeFeed: (id) => {
-          const state = get();
-
-          // 🔒 PRIVACY CHECK: Only persist if user has opted in
-          const canTrack = hasPrivacyConsent(state.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+        likeFeed: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
 
           if (!canTrack) {
             logger.debug('Feed like not tracked - no user consent', { feedId: id });
           }
 
-          set((state) => updateFeedInBothArrays(state, id, (feed) =>
-            mergeFeed(feed, {
-              userInteraction: mergeUserInteraction(feed.userInteraction, { liked: true }),
-              engagement: mergeEngagement(feed.engagement, {
-                likes: feed.engagement.likes + 1,
-              }),
-            })
-          ));
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, { liked: true }),
+                engagement: mergeEngagement(feed.engagement, {
+                  likes: feed.engagement.likes + 1,
+                }),
+              })
+            )
+          );
 
-          // Only save to backend if user has consented
           if (canTrack) {
-            get().saveUserInteraction(id, { liked: true }).catch(err =>
-              logger.error('Failed to save like interaction', err)
-            );
+            try {
+              await get().saveUserInteraction(id, { liked: true });
+            } catch (error) {
+              logger.error('Failed to save like interaction', error);
+            }
           }
         },
 
-        unlikeFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) =>
-          mergeFeed(feed, {
-            userInteraction: mergeUserInteraction(feed.userInteraction, { liked: false }),
-            engagement: mergeEngagement(feed.engagement, {
-              likes: Math.max(0, feed.engagement.likes - 1),
-            }),
-          })
-        )),
+        unlikeFeed: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
 
-        shareFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) =>
-          mergeFeed(feed, {
-            userInteraction: mergeUserInteraction(feed.userInteraction, { shared: true }),
-            engagement: mergeEngagement(feed.engagement, {
-              shares: feed.engagement.shares + 1,
-            }),
-          })
-        )),
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, { liked: false }),
+                engagement: mergeEngagement(feed.engagement, {
+                  likes: Math.max(0, feed.engagement.likes - 1),
+                }),
+              })
+            )
+          );
 
-        bookmarkFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) =>
-          mergeFeed(feed, {
-            userInteraction: mergeUserInteraction(feed.userInteraction, { bookmarked: true }),
-          })
-        )),
+          if (canTrack) {
+            try {
+              await get().saveUserInteraction(id, { liked: false });
+            } catch (error) {
+              logger.error('Failed to persist unlike interaction', error);
+            }
+          }
+        },
 
-        unbookmarkFeed: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) =>
-          mergeFeed(feed, {
-            userInteraction: mergeUserInteraction(feed.userInteraction, { bookmarked: false }),
-          })
-        )),
+        shareFeed: (id) =>
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, { shared: true }),
+                engagement: mergeEngagement(feed.engagement, {
+                  shares: feed.engagement.shares + 1,
+                }),
+              })
+            )
+          ),
 
-        markAsRead: (id) => {
-          const state = get();
+        bookmarkFeed: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
 
-          // 🔒 PRIVACY CHECK: Read tracking is particularly sensitive
-          const canTrack = hasPrivacyConsent(state.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, { bookmarked: true }),
+              })
+            )
+          );
+
+          if (canTrack) {
+            try {
+              await get().saveUserInteraction(id, { bookmarked: true });
+            } catch (error) {
+              logger.error('Failed to save bookmark interaction', error);
+            }
+          }
+        },
+
+        unbookmarkFeed: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, { bookmarked: false }),
+              })
+            )
+          );
+
+          if (canTrack) {
+            try {
+              await get().saveUserInteraction(id, { bookmarked: false });
+            } catch (error) {
+              logger.error('Failed to remove bookmark interaction', error);
+            }
+          }
+        },
+
+        markAsRead: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
 
           if (!canTrack) {
             logger.debug('Feed read tracking skipped - no user consent', { feedId: id });
-            // Don't track read status at all if user hasn't consented
             return;
           }
 
-          // User has consented - track the read
-          set((state) => updateFeedInBothArrays(state, id, (feed) =>
-            mergeFeed(feed, {
-              userInteraction: mergeUserInteraction(feed.userInteraction, {
-                read: true,
-                readAt: new Date().toISOString(),
-              }),
-            })
-          ));
+          const readAt = new Date().toISOString();
 
-          // Persist to backend
-          get().saveUserInteraction(id, { read: true, readAt: new Date().toISOString() }).catch(err =>
-            logger.error('Failed to save read interaction', err)
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, {
+                  read: true,
+                  readAt,
+                }),
+              })
+            )
           );
+
+          try {
+            await get().saveUserInteraction(id, { read: true, readAt });
+          } catch (error) {
+            logger.error('Failed to save read interaction', error);
+          }
         },
 
-        markAsUnread: (id) => set((state) => updateFeedInBothArrays(state, id, (feed) =>
-          mergeFeed(feed, {
-            userInteraction: mergeUserInteraction(feed.userInteraction, { read: false }),
-          })
-        )),
+        markAsUnread: async (id) => {
+          const currentState = get();
+          const canTrack = hasPrivacyConsent(currentState.privacySettings, PrivacyDataType.FEED_ACTIVITY);
+
+          set((state) =>
+            updateFeedInBothArrays(state, id, (feed) =>
+              mergeFeed(feed, {
+                userInteraction: mergeUserInteraction(feed.userInteraction, {
+                  read: false,
+                  readAt: null,
+                }),
+              })
+            )
+          );
+
+          if (canTrack) {
+            try {
+              await get().saveUserInteraction(id, { read: false, readAt: null });
+            } catch (error) {
+              logger.error('Failed to persist unread interaction', error);
+            }
+          }
+        },
 
         // Category actions
         setCategories: (categories) => set({ categories }),
@@ -664,28 +765,32 @@ export const useFeedsStore = create<FeedsStore>()(
           try {
             set({ isLoading: true, error: null });
 
-            const response = await fetch('/api/feeds', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ category }),
+            const currentState = get();
+            const payload = await fetchFeedsFromApi({
+              category: category ?? currentState.selectedCategory,
+              district: currentState.filters.district ?? null,
+              limit: currentState.preferences.itemsPerPage,
+              sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
             });
 
-            if (response?.ok) {
-              const feeds = await response.json();
-              set({ feeds, filteredFeeds: feeds, isLoading: false });
+            const nextSelectedCategory = category ?? currentState.selectedCategory;
+            set({
+              feeds: payload.feeds,
+              filteredFeeds: filterFeeds(payload.feeds, currentState.filters),
+              isLoading: false,
+              selectedCategory: nextSelectedCategory ?? null,
+              totalAvailableFeeds: payload.count,
+              hasMoreFeeds: payload.count > payload.feeds.length,
+            });
 
-              logger.info('Feeds loaded', {
-                category,
-                count: feeds.length
-              });
-            } else {
-              // No fallback data - just set empty state
-              set({ feeds: [], filteredFeeds: [], isLoading: false });
-            }
+            logger.info('Feeds loaded', {
+              category: payload.filters.category,
+              count: payload.count,
+            });
           } catch (error) {
-            // No fallback data - just set empty state on error
-            set({ feeds: [], filteredFeeds: [], isLoading: false });
-            logger.info('API error, using empty state:', { error: error instanceof Error ? error.message : 'Unknown error' });
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            set({ feeds: [], filteredFeeds: [], isLoading: false, error: errorMessage });
+            logger.error('Failed to load feeds:', error instanceof Error ? error : new Error(errorMessage));
           }
         },
 
@@ -693,17 +798,35 @@ export const useFeedsStore = create<FeedsStore>()(
           try {
             set({ isLoading: true, error: null });
 
-            const response = await fetch('/api/feeds/categories');
+            const response = await fetch('/api/feeds/categories', {
+              method: 'GET',
+              headers: { Accept: 'application/json' },
+            });
 
             if (!response.ok) {
               throw new Error('Failed to load categories');
             }
 
-            const categories = await response.json();
-            set({ categories, isLoading: false });
+            const raw = await response.json();
+            const categories = Array.isArray(raw)
+              ? raw
+              : Array.isArray(raw?.data)
+                ? raw.data
+                : Array.isArray(raw?.categories)
+                  ? raw.categories
+                  : [];
+
+            if (!Array.isArray(categories)) {
+              throw new Error('Invalid categories response payload');
+            }
+
+            set({
+              categories: categories as FeedCategory[],
+              isLoading: false,
+            });
 
             logger.info('Feed categories loaded', {
-              count: categories.length
+              count: categories.length,
             });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -750,9 +873,11 @@ export const useFeedsStore = create<FeedsStore>()(
         setPrivacySettings: (settings) => {
           set({ privacySettings: settings });
           logger.debug('Feed privacy settings updated', {
-            canTrackActivity: settings?.trackFeedActivity ?? false
+            canTrackActivity: hasPrivacyConsent(settings, PrivacyDataType.FEED_ACTIVITY),
           });
         },
+        setTotalAvailableFeeds: (count) => set({ totalAvailableFeeds: Math.max(0, count) }),
+        setHasMoreFeeds: (hasMore) => set({ hasMoreFeeds: hasMore }),
       }),
       {
         name: 'feeds-store',
@@ -811,6 +936,22 @@ export const useFeedPreferences = () => useFeedsStore(state => state.preferences
 export const useFeedFilters = () => useFeedsStore(state => state.filters);
 export const useFeedsLoading = () => useFeedsStore(state => state.isLoading);
 export const useFeedsError = () => useFeedsStore(state => state.error);
+export const useFeedsTotalAvailable = () => useFeedsStore(state => state.totalAvailableFeeds);
+export const useFeedsHasMore = () => useFeedsStore(state => state.hasMoreFeeds);
+export const useFeedsPagination = () => {
+  const loadMoreFeeds = useFeedsStore(state => state.loadMoreFeeds);
+  const totalAvailable = useFeedsStore(state => state.totalAvailableFeeds);
+  const loaded = useFeedsStore(state => state.feeds.length);
+  const hasMore = useFeedsStore(state => state.hasMoreFeeds);
+
+  return {
+    totalAvailable,
+    loaded,
+    remaining: Math.max(0, totalAvailable - loaded),
+    hasMore,
+    loadMoreFeeds,
+  };
+};
 
 // Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
 export const useFeedsActions = () => useFeedsStore(state => state);
@@ -822,6 +963,8 @@ export const useFeedsStats = () => {
   const totalCategories = useFeedsStore(state => state.categories.length);
   const enabledCategories = useFeedsStore(state => state.categories.filter(cat => cat.enabled).length);
   const searchResults = useFeedsStore(state => state.search.results.length);
+  const totalAvailable = useFeedsStore(state => state.totalAvailableFeeds);
+  const hasMoreFeeds = useFeedsStore(state => state.hasMoreFeeds);
   const isLoading = useFeedsStore(state => state.isLoading);
   const isSearching = useFeedsStore(state => state.isSearching);
   const error = useFeedsStore(state => state.error);
@@ -832,6 +975,8 @@ export const useFeedsStats = () => {
     totalCategories,
     enabledCategories,
     searchResults,
+    totalAvailable,
+    hasMoreFeeds,
     isLoading,
     isSearching,
     error,
@@ -860,6 +1005,8 @@ export const feedsStoreUtils = {
     return {
       totalFeeds: state.feeds.length,
       filteredFeeds: state.filteredFeeds.length,
+      totalAvailableFeeds: state.totalAvailableFeeds,
+      hasMoreFeeds: state.hasMoreFeeds,
       categories: state.categories.length,
       searchResults: state.search.results.length,
       preferences: state.preferences,
@@ -883,11 +1030,24 @@ export const feedsStoreUtils = {
   },
 
   /**
+   * Get pagination metadata
+   */
+  getPagination: () => {
+    const state = useFeedsStore.getState();
+    return {
+      totalAvailableFeeds: state.totalAvailableFeeds,
+      loadedFeeds: state.feeds.length,
+      hasMoreFeeds: state.hasMoreFeeds,
+    };
+  },
+
+  /**
    * Get trending feeds
    */
   getTrendingFeeds: () => {
     const state = useFeedsStore.getState();
     return state.feeds
+      .slice()
       .sort((a, b) => (b.engagement.likes + b.engagement.shares) - (a.engagement.likes + a.engagement.shares))
       .slice(0, 10);
   },
@@ -898,6 +1058,7 @@ export const feedsStoreUtils = {
   getRecentFeeds: (limit = 10) => {
     const state = useFeedsStore.getState();
     return state.feeds
+      .slice()
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
       .slice(0, limit);
   }
@@ -949,6 +1110,8 @@ export const feedsStoreDebug = {
     logger.debug('Feeds Store State', {
       totalFeeds: state.feeds.length,
       filteredFeeds: state.filteredFeeds.length,
+      totalAvailableFeeds: state.totalAvailableFeeds,
+      hasMoreFeeds: state.hasMoreFeeds,
       categories: state.categories.length,
       searchResults: state.search.results.length,
       currentView: state.currentView,
@@ -987,3 +1150,15 @@ export const feedsStoreDebug = {
     logger.info('Feeds store reset');
   }
 };
+
+export type {
+  FeedItem,
+  FeedCategory,
+  FeedFilters,
+  FeedPreferences,
+  FeedSearch,
+  FeedUserInteraction,
+  FeedEngagement,
+  FeedsStore,
+  FeedsApiPayload,
+} from './types/feeds';
