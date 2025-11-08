@@ -18,7 +18,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { useFeatureFlags } from "@/features/pwa/hooks/useFeatureFlags"
 import { useVotingActions, useVotingIsVoting } from '@/lib/stores/votingStore';
-import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
+import {
+  createBallotFromPoll,
+  createVotingRecordFromPollSubmission,
+  type PollBallotContext,
+} from '@/features/voting/lib/pollAdapters';
 import { devLog } from '@/lib/utils/logger';
 
 import { usePWAUtils } from '../hooks/usePWAUtils'
@@ -109,10 +113,12 @@ export function PWAVotingInterface({
         }, {})
       : undefined
 
-    const ballot = createBallotFromPoll(pollDetailsForBallot, {
-      totalVotes: poll.totalVotes,
-      optionVoteCounts,
-    })
+    const ballotContext: PollBallotContext = {
+      ...(typeof poll.totalVotes === 'number' ? { totalVotes: poll.totalVotes } : {}),
+      ...(optionVoteCounts && Object.keys(optionVoteCounts).length > 0 ? { optionVoteCounts } : {}),
+    }
+
+    const ballot = createBallotFromPoll(pollDetailsForBallot, ballotContext)
 
     setBallots([ballot])
     setSelectedBallot(ballot)

@@ -52,11 +52,12 @@ npm run sample       # optional: exercises shared helpers without Supabase
 | `npm run inspect:schema` | Print live Supabase column types/lengths | Uses `public.get_table_columns(text)` |
 | `npm run audit:duplicates` | List duplicate `representatives_core` canonicals | Exits non-zero if duplicates exist |
 | `npm run fix:duplicates -- [--canonical=ID] [--apply] [--force]` | Remove duplicate canonicals safely | Moves crosswalk links; dry-run by default |
+| `npm run report:gaps` | Summarize enrichment gaps (FEC, Congress.gov, state contacts) | Prints counts and sample rows to prioritise API usage |
 | `npm run stage:openstates` | Load OpenStates YAML into Supabase staging tables | `OPENSTATES_PEOPLE_DIR` can override the default directory |
 | `npm run merge:openstates` | Execute the SQL merge function | Calls `sync_representatives_from_openstates()` |
 | `npm run prioritize` | List lowest-quality representatives | Orders by Supabase `data_quality_score` to target enrichment |
 | `npm run sync:contacts` / `social` / `photos` / `data-sources` | Legacy REST writers (being replaced by SQL merge) | Still available until SQL-first flow covers all cases |
-| `npm run enrich:finance` | Pull FEC totals & persist finance rollups | Writes to `representative_campaign_finance` and bumps `data_quality_score` |
+| `npm run enrich:finance` | Pull FEC totals & persist finance rollups | Default run targets reps missing finance rows; supports stale rechecks and cycle overrides |
 | `npm run audit:crosswalk` | Audit Supabase canonical ID crosswalk | Flags mismatches or missing IDs |
 | `npm run fix:crosswalk` | Repair corrupted canonical IDs | Deterministically reassigns IDs then re-runs audit |
 
@@ -65,6 +66,14 @@ All sync/enrich commands support:
 - `--states=CA,NY` – filter to specific states (case-insensitive).
 - `--limit=250` – cap records processed (where applicable).
 - `--dry-run` – execute without writing to Supabase (reports counts only).
+
+Finance-specific flags:
+
+- `--stale-days=14` – reprocess rows whose finance record was last updated ≥14 days ago (still includes brand-new gaps).
+- `--include-existing` – bypass the missing/stale filter and refresh every match (use sparingly; honours throttling but hits the API hard).
+- `--cycle=2024` – override the inferred FEC cycle (defaults to the current even year).
+
+The finance script records explicit “no-data” rows when the FEC API returns nothing. These rows carry `sources=['fec:no-data', 'fec:<cycle>']` and are surfaced by `npm run report:gaps`, ensuring we avoid re-requesting them until the row becomes stale.
 
 ## Operational workflow (SQL-first)
 
@@ -93,6 +102,7 @@ Each sync script uses replace-by-source semantics: prior rows inserted with `sou
 - `npm run fix:duplicates -- --canonical=fec:H4CA27111` — deletes extra rows for a single canonical (dry-run by default).
 - `npm run fix:duplicates -- --apply` — sweep all duplicates; the script migrates crosswalk entries and skips rows with dependent data unless `--force` is provided.
 - Logs show what will be deleted; nothing is removed until `--apply` is passed.
+- Deduplication always keeps the representative backed by official sources (`congress_gov_id`, `govinfo_id`, or `congress.gov` provenance) and only falls back to Wikipedia-derived rows when no official record exists.
 
 ## Additional documentation
 

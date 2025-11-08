@@ -56,13 +56,16 @@ export default function OfflineVoting({ pollId, className = '' }: OfflineVotingP
     // Use real votes from store, fallback to mock if none exist
     if (pollVotes.length > 0) {
       setOfflineVotes(
-        pollVotes.map((action) => ({
-          id: action.id,
-          pollId,
-          choice: action.data.choice,
-          timestamp: new Date(action.timestamp).getTime(),
-          metadata: action.data.metadata,
-        }))
+        pollVotes.map((action) => {
+          const metadata = action.data.metadata;
+          return {
+            id: action.id,
+            pollId,
+            choice: action.data.choice,
+            timestamp: new Date(action.timestamp).getTime(),
+            ...(metadata ? { metadata } : {}),
+          };
+        })
       )
     } else {
       // Keep mock votes for demo purposes if no real votes

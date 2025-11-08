@@ -15,7 +15,11 @@ import { useNotificationStore, useAnalyticsStore } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
-import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
+import {
+  createBallotFromPoll,
+  createVotingRecordFromPollSubmission,
+  type PollBallotContext,
+} from '@/features/voting/lib/pollAdapters';
 
 const PRIVACY_LABELS: Record<string, string> = {
   public: 'Public',
@@ -163,26 +167,27 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const pollId = poll.id;
 
-  const pollDetailsForBallot = useMemo(
-    () => ({
+  const pollDetailsForBallot = useMemo(() => {
+    const totalVotes =
+      typeof poll.totalVotes === 'number'
+        ? poll.totalVotes
+        : typeof poll.totalvotes === 'number'
+        ? poll.totalvotes
+        : undefined;
+
+    return {
       id: poll.id,
       title: poll.title,
       description: poll.description ?? null,
       options: [...(poll.options ?? [])],
       votingMethod: poll.votingMethod ?? 'single',
-      totalVotes:
-        typeof poll.totalVotes === 'number'
-          ? poll.totalVotes
-          : typeof poll.totalvotes === 'number'
-          ? poll.totalvotes
-          : undefined,
+      ...(totalVotes !== undefined ? { totalVotes } : {}),
       endtime: poll.endtime ?? null,
       status: poll.status ?? 'active',
       category: poll.category ?? null,
       createdAt: poll.createdAt ?? null,
-    }),
-    [poll]
-  );
+    };
+  }, [poll]);
 
   const combinedError = error ?? votingStoreError ?? null;
 
@@ -270,10 +275,14 @@ export default function PollClient({ poll }: PollClientProps) {
         return acc;
       }, {}) ?? undefined;
 
-    const ballot = createBallotFromPoll(pollDetailsForBallot, {
-      totalVotes: totalVotesContext,
-      optionVoteCounts,
-    });
+    const ballotContext: PollBallotContext = {
+      ...(typeof totalVotesContext === 'number' ? { totalVotes: totalVotesContext } : {}),
+      ...(optionVoteCounts && Object.keys(optionVoteCounts).length > 0
+        ? { optionVoteCounts }
+        : {}),
+    };
+
+    const ballot = createBallotFromPoll(pollDetailsForBallot, ballotContext);
 
     setBallots([ballot]);
     setSelectedBallot(ballot);

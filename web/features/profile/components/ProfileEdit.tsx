@@ -72,7 +72,7 @@ const PRIMARY_CONCERNS_OPTIONS = [
   'National Security'
 ];
 
-const PARTICIPATION_OPTIONS: ProfileUpdateData['participation_style'][] = [
+const PARTICIPATION_OPTIONS: NonNullable<ProfileUpdateData['participation_style']>[] = [
   'observer',
   'participant',
   'leader',
@@ -120,22 +120,31 @@ const toStringArray = (value: unknown): string[] =>
     ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
     : [];
 
-const toParticipationStyle = (value: unknown): ProfileUpdateData['participation_style'] =>
-  PARTICIPATION_OPTIONS.includes(value as ProfileUpdateData['participation_style'])
+const PROFILE_VISIBILITY_OPTIONS = ['public', 'private', 'friends'] as const;
+type ProfileVisibilityOption = (typeof PROFILE_VISIBILITY_OPTIONS)[number];
+
+const isProfileVisibility = (value: unknown): value is ProfileVisibilityOption =>
+  typeof value === 'string' &&
+  PROFILE_VISIBILITY_OPTIONS.includes(value as ProfileVisibilityOption);
+
+const toParticipationStyle = (
+  value: unknown
+): ProfileUpdateData['participation_style'] =>
+  typeof value === 'string' && PARTICIPATION_OPTIONS.includes(value as NonNullable<ProfileUpdateData['participation_style']>)
     ? (value as ProfileUpdateData['participation_style'])
-    : 'observer';
+    : undefined;
 
 const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
   if (!isRecord(value)) {
     return { ...defaultPrivacySettings };
   }
 
-  const result: Partial<PrivacySettings> = { ...defaultPrivacySettings };
+  const result = { ...defaultPrivacySettings } as Partial<PrivacySettings>;
   Object.entries(value).forEach(([key, raw]) => {
     if (typeof raw === 'boolean') {
-      result[key as keyof PrivacySettings] = raw;
-    } else if (key === 'profile_visibility' && typeof raw === 'string') {
-      result.profile_visibility = raw as PrivacySettings['profile_visibility'];
+      (result as Record<string, boolean | undefined>)[key] = raw;
+    } else if (key === 'profile_visibility' && isProfileVisibility(raw)) {
+      result.profile_visibility = raw;
     }
   });
 
@@ -149,16 +158,20 @@ const parseDemographics = (value: unknown): ProfileDemographics => {
   return { ...defaultDemographics, ...(value as ProfileDemographics) };
 };
 
-const buildInitialFormData = (userProfile: ProfileEditProps['profile']): ProfileUpdateData => ({
-  display_name: userProfile.display_name ?? '',
-  bio: userProfile.bio ?? '',
-  username: userProfile.username ?? '',
-  primary_concerns: toStringArray(userProfile.primary_concerns ?? []),
-  community_focus: toStringArray(userProfile.community_focus ?? []),
-  participation_style: toParticipationStyle(userProfile.participation_style),
-  privacy_settings: parsePrivacySettings(userProfile.privacy_settings),
-  demographics: parseDemographics(userProfile.demographics),
-});
+const buildInitialFormData = (userProfile: ProfileEditProps['profile']): ProfileUpdateData => {
+  const participationStyle = toParticipationStyle(userProfile.participation_style);
+
+  return {
+    display_name: userProfile.display_name ?? '',
+    bio: userProfile.bio ?? '',
+    username: userProfile.username ?? '',
+    primary_concerns: toStringArray(userProfile.primary_concerns ?? []),
+    community_focus: toStringArray(userProfile.community_focus ?? []),
+    ...(participationStyle ? { participation_style: participationStyle } : {}),
+    privacy_settings: parsePrivacySettings(userProfile.privacy_settings),
+    demographics: parseDemographics(userProfile.demographics),
+  };
+};
 
 export default function ProfileEdit({ 
   profile, 
@@ -488,15 +501,21 @@ export default function ProfileEdit({
               <Label htmlFor="participation_style">Participation Style</Label>
               <Select
                 value={formData.participation_style ?? ''}
-                onValueChange={(value) => handleFieldChange('participation_style', value)}
+                onValueChange={(value) =>
+                  handleFieldChange(
+                    'participation_style',
+                    (value || undefined) as ProfileUpdateData['participation_style']
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your participation style" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="observer">Observer</SelectItem>
-                  <SelectItem value="contributor">Contributor</SelectItem>
+                  <SelectItem value="participant">Participant</SelectItem>
                   <SelectItem value="leader">Leader</SelectItem>
+                  <SelectItem value="organizer">Organizer</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -42,7 +42,7 @@ export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/Trending
 export { 
   hashtagPollsIntegrationServiceClient as hashtagPollsIntegrationService,
   type HashtagPollIntegration,
-  type HashtagFeedAnalytics,
+  type FeedHashtagAnalytics,
   type PersonalizedHashtagFeed
 } from './lib/hashtag-polls-integration-client';
 

@@ -217,6 +217,23 @@ type OrchestratorClients = {
   govTrack?: ReturnType<typeof createGovTrackClient>;
 };
 
+const toOrchestratorCampaignData = (data: ActiveCampaignData): OrchestratorCampaignData => ({
+  ...data,
+  candidates: (data.candidates ?? []).map((candidate) => ({
+    candidateId: candidate.candidateId,
+    name: candidate.name,
+    party: candidate.party ?? null,
+    status: candidate.status ?? null,
+    incumbentStatus: candidate.incumbentStatus ?? null,
+    totalRaised: candidate.totalRaised ?? null,
+    totalSpent: candidate.totalSpent ?? null,
+    cashOnHand: candidate.cashOnHand ?? null,
+    smallDonorPercentage: candidate.smallDonorPercentage ?? null,
+    lastFilingDate: candidate.lastFilingDate ?? null,
+    finance: (candidate.finance as UnifiedCampaignFinance | null) ?? null,
+  })),
+});
+
 export class UnifiedDataOrchestrator {
   private clients: OrchestratorClients;
   private electionContext: Map<string, RaceContext>;
@@ -775,12 +792,12 @@ export class UnifiedDataOrchestrator {
 
     if (!context) {
       logger.warn('No election context available for race', { raceId });
-      return createCampaignDataFallback(raceId);
+      return toOrchestratorCampaignData(createCampaignDataFallback(raceId));
     }
 
     if (!this.clients.fec) {
       logger.warn('FEC client unavailable when requesting campaign data', { raceId });
-      return createCampaignDataFallback(raceId);
+      return toOrchestratorCampaignData(createCampaignDataFallback(raceId));
     }
 
     const stateCode = context.stateCode;
@@ -791,7 +808,7 @@ export class UnifiedDataOrchestrator {
         raceId,
         context,
       });
-      return createCampaignDataFallback(raceId);
+      return toOrchestratorCampaignData(createCampaignDataFallback(raceId));
     }
 
     const cycle = getCurrentFecCycle();
@@ -821,12 +838,12 @@ export class UnifiedDataOrchestrator {
       candidateResults = (candidatesResponse?.results ?? []) as FECCandidate[];
     } catch (error) {
       logger.error('FEC candidate lookup failed', { raceId, params, error });
-      return createCampaignDataFallback(raceId);
+      return toOrchestratorCampaignData(createCampaignDataFallback(raceId));
     }
 
     if (candidateResults.length === 0) {
       logger.info('FEC returned no candidates for race', { raceId, params });
-      return createCampaignDataFallback(raceId);
+      return toOrchestratorCampaignData(createCampaignDataFallback(raceId));
     }
 
     const topCandidates = candidateResults.slice(0, 5);
@@ -861,7 +878,7 @@ export class UnifiedDataOrchestrator {
 
     const recentActivity = buildCampaignActivity(candidateSummaries, cycle);
 
-    return {
+    const campaignData: OrchestratorCampaignData = {
       source: 'fec',
       fetchedAt: new Date().toISOString(),
       cycle,
@@ -870,6 +887,8 @@ export class UnifiedDataOrchestrator {
       constituentQuestions: 0,
       candidateResponses: 0,
     };
+
+    return campaignData;
   }
 
   async getJurisdictionKeyIssues(

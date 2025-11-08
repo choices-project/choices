@@ -402,8 +402,11 @@ export async function clearCaches(): Promise<void> {
  */
 export async function getVersion(): Promise<string> {
   try {
-    const response = await sendMessage({ type: 'GET_VERSION' });
-    return response.version;
+    const response = await sendMessage<
+      { type: 'GET_VERSION' },
+      { version?: string }
+    >({ type: 'GET_VERSION' });
+    return typeof response.version === 'string' ? response.version : 'unknown';
   } catch (error) {
     logger.error('[SW] Failed to get version:', error);
     return 'unknown';

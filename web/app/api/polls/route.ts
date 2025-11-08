@@ -233,15 +233,78 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         const { data: hashtagData, error: hashtagError } = await supabase
           .from('hashtags')
-          .select('id, name, display_name, trend_score, usage_count, follower_count')
+          .select(
+            [
+              'id',
+              'name',
+              'description',
+              'category',
+              'metadata',
+              'is_trending',
+              'is_verified',
+              'is_featured',
+              'trending_score',
+              'usage_count',
+              'follower_count',
+              'created_at',
+              'updated_at',
+            ].join(','),
+          )
           .eq('is_trending', true)
-          .order('trend_score', { ascending: false })
+          .order('trending_score', { ascending: false })
           .limit(10);
 
-        if (!hashtagError && hashtagData) {
-          trendingHashtags = (hashtagData as Hashtag[]).map((hashtag) => ({
-            hashtag,
-          }));
+        if (!hashtagError && Array.isArray(hashtagData)) {
+          trendingHashtags = hashtagData.map((row) => {
+            const raw = row as unknown as Record<string, unknown>;
+            const metadataValue = raw.metadata;
+            const metadata =
+              metadataValue && typeof metadataValue === 'object'
+                ? (metadataValue as Record<string, unknown>)
+                : undefined;
+            const baseDisplayName =
+              metadata && typeof metadata.display_name === 'string'
+                ? (metadata.display_name as string)
+                : typeof raw.name === 'string'
+                ? (raw.name as string)
+                : '';
+
+            const hashtag: Hashtag = {
+              id: String(raw.id),
+              name: typeof raw.name === 'string' ? (raw.name as string) : '',
+              display_name:
+                baseDisplayName || (typeof raw.name === 'string' ? (raw.name as string) : String(raw.id ?? '')),
+              category: (raw.category ?? 'custom') as Hashtag['category'],
+              usage_count: typeof raw.usage_count === 'number' ? (raw.usage_count as number) : 0,
+              is_trending: Boolean(raw.is_trending),
+              is_verified: Boolean(raw.is_verified),
+              created_at: typeof raw.created_at === 'string' ? (raw.created_at as string) : new Date().toISOString(),
+              updated_at:
+                typeof raw.updated_at === 'string'
+                  ? (raw.updated_at as string)
+                  : typeof raw.created_at === 'string'
+                    ? (raw.created_at as string)
+                    : new Date().toISOString(),
+            };
+
+            if (typeof raw.description === 'string') {
+              hashtag.description = raw.description as string;
+            }
+            if (typeof raw.is_featured === 'boolean') {
+              hashtag.is_featured = raw.is_featured as boolean;
+            }
+            if (typeof raw.follower_count === 'number') {
+              hashtag.follower_count = raw.follower_count as number;
+            }
+            if (typeof raw.trending_score === 'number') {
+              hashtag.trend_score = raw.trending_score as number;
+            }
+            if (metadata) {
+              hashtag.metadata = metadata;
+            }
+
+            return { hashtag };
+          });
         }
       } catch (error) {
         logger.warn('Failed to get trending hashtags:', { error: error instanceof Error ? error.message : 'Unknown error' });

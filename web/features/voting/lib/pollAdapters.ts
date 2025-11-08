@@ -43,15 +43,22 @@ const toCandidate = (
   const voteCount =
     voteLookup?.[id] ?? voteLookup?.[String(index)] ?? undefined;
 
-  return {
+  const candidate: BallotCandidate = {
     id,
     name,
-    party: category ?? undefined,
     incumbent: false,
     endorsements: [],
     positions: [],
-    voteCount,
   };
+
+  if (typeof category === 'string' && category.length > 0) {
+    candidate.party = category;
+  }
+  if (voteCount !== undefined) {
+    candidate.voteCount = voteCount;
+  }
+
+  return candidate;
 };
 
 const toContest = (
@@ -79,7 +86,7 @@ const toContest = (
       ? context.optionVoteCounts
       : undefined;
 
-  return {
+  const contest: BallotContest = {
     id: `${poll.id}-primary`,
     title: poll.title,
     description: poll.description ?? '',
@@ -95,8 +102,13 @@ const toContest = (
       'Review the options and cast your vote according to the poll instructions.',
     maxSelections,
     minSelections,
-    totalVotes: context?.totalVotes,
   };
+
+  if (context?.totalVotes !== undefined) {
+    contest.totalVotes = context.totalVotes;
+  }
+
+  return contest;
 };
 
 export const createBallotFromPoll = (
@@ -135,8 +147,6 @@ export const createBallotFromPoll = (
     metadata: {
       jurisdiction: 'digital-platform',
       district: poll.category ?? 'general',
-      turnout: totalVotes ?? 0,
-      totalVoters: totalVotes ?? 0,
     },
   };
 };

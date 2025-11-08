@@ -1,20 +1,71 @@
 /**
  * PWA Analytics System
- * 
+ *
  * Comprehensive analytics for Progressive Web App features including:
  * - Installation tracking and conversion rates
  * - Offline usage patterns and engagement
  * - Service worker performance metrics
  * - Push notification effectiveness
  * - Cache hit rates and performance
- * 
+ *
  * Created: October 10, 2025
  * Updated: October 10, 2025
  */
 
 import type { AnalyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
+import type { Database, Json } from '@/types/supabase';
+
+const cleanObject = (input: Record<string, unknown>): Record<string, unknown> => {
+  const output: Record<string, unknown> = {};
+  Object.entries(input).forEach(([key, value]) => {
+    if (value !== undefined) {
+      output[key] = value;
+    }
+  });
+  return output;
+};
+
+const toJson = (value: unknown): Json => {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => toJson(item)) as Json;
+  }
+
+  if (typeof value === 'object') {
+    const result: Record<string, Json> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([key, nested]) => {
+      result[key] = toJson(nested);
+    });
+    return result;
+  }
+
+  return String(value);
+};
+
+const toJsonObject = (input: Record<string, unknown>): Record<string, Json> => {
+  const cleaned = cleanObject(input);
+  const result: Record<string, Json> = {};
+  Object.entries(cleaned).forEach(([key, value]) => {
+    result[key] = toJson(value);
+  });
+  return result;
+};
+
+const getEventDataRecord = (value: Json | null): Record<string, Json> | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, Json>;
+};
 
 // Track PWA events using existing analytics system
 export async function trackPWAEvent(
@@ -25,17 +76,18 @@ export async function trackPWAEvent(
     const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseBrowserClient());
     if (!supabase) return;
 
-    const eventData = withOptional(properties, {
+    const eventData = toJsonObject({
+      ...properties,
       pwa_event_type: eventType,
       platform: navigator.platform,
       user_agent: navigator.userAgent,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     await supabase.from('analytics_events').insert({
       event_type: 'user_registered', // Use existing event type
       event_category: 'pwa',
-      event_data: eventData
+      event_data: eventData as Json,
     });
   } catch (error) {
     logger.warn('Failed to track PWA event:', error);
@@ -55,12 +107,12 @@ export async function trackPWAPerformance(
     await supabase.from('analytics_events').insert({
       event_type: 'poll_created', // Use existing event type
       event_category: 'pwa',
-      event_data: {
+      event_data: toJson({
         pwa_performance_type: metricType,
         metric_value: value,
-        metadata,
-        timestamp: new Date().toISOString()
-      }
+        metadata: toJson(metadata),
+        timestamp: new Date().toISOString(),
+      }),
     });
   } catch (error) {
     logger.warn('Failed to track PWA performance:', error);
@@ -140,10 +192,10 @@ type PerformanceAggregateRow = {
   errors?: number;
 };
 
-type AnalyticsEventRow = {
-  created_at: string;
-  event_data: Record<string, unknown> | null;
-};
+type AnalyticsEventRow = Pick<
+  Database['public']['Tables']['analytics_events']['Row'],
+  'created_at' | 'event_data'
+>;
 
 class PWAAnalytics {
   private analyticsEngine: AnalyticsEngine;
@@ -167,7 +219,7 @@ class PWAAnalytics {
     if (!this.isEnabled) return;
 
     this.pwaEvents.push(event);
-    
+
     // Track with main analytics engine
     this.analyticsEngine.track({
       type: 'pwa_installation',
@@ -192,7 +244,7 @@ class PWAAnalytics {
     if (!this.isEnabled) return;
 
     this.pwaEvents.push(event);
-    
+
     this.analyticsEngine.track({
       type: 'pwa_offline',
       category: 'feature',
@@ -216,7 +268,7 @@ class PWAAnalytics {
     if (!this.isEnabled) return;
 
     this.pwaEvents.push(event);
-    
+
     this.analyticsEngine.track({
       type: 'pwa_performance',
       category: 'performance',
@@ -240,7 +292,7 @@ class PWAAnalytics {
     if (!this.isEnabled) return;
 
     this.pwaEvents.push(event);
-    
+
     this.analyticsEngine.track({
       type: 'pwa_notification',
       category: 'feature',
@@ -276,8 +328,8 @@ class PWAAnalytics {
     const offlineDurations = offlineEvents
       .filter(e => e.offlineDuration)
       .map(e => e.offlineDuration!);
-    const averageOfflineSessionDuration = offlineDurations.length > 0 
-      ? offlineDurations.reduce((a, b) => a + b, 0) / offlineDurations.length 
+    const averageOfflineSessionDuration = offlineDurations.length > 0
+      ? offlineDurations.reduce((a, b) => a + b, 0) / offlineDurations.length
       : 0;
 
     const cacheHits = performanceEvents.filter(e => e.eventType === 'cache_hit').length;
@@ -361,8 +413,8 @@ class PWAAnalytics {
       const installRate = data.prompts > 0 ? data.installations / data.prompts : 0;
       const offlineUsage = data.totalSessions > 0 ? data.offlineSessions / data.totalSessions : 0;
       const performanceScore = this.calculatePerformanceScore(data);
-      const userSatisfaction = data.satisfaction.length > 0 
-        ? data.satisfaction.reduce((a, b) => a + b, 0) / data.satisfaction.length 
+      const userSatisfaction = data.satisfaction.length > 0
+        ? data.satisfaction.reduce((a, b) => a + b, 0) / data.satisfaction.length
         : 0;
       const errorRate = data.totalSessions > 0 ? data.errors / data.totalSessions : 0;
 
@@ -393,7 +445,7 @@ class PWAAnalytics {
   }> {
     const engagement = this.calculateEngagementMetrics();
     const platforms = Array.from(this.platformMetrics.values());
-    
+
     // Generate trend data (last 30 days)
     const trends = await this.generateTrendData();
 
@@ -468,11 +520,11 @@ class PWAAnalytics {
       const originalRequestPermission = Notification.requestPermission.bind(Notification);
       Notification.requestPermission = async () => {
         const result = await originalRequestPermission();
-        
+
         this.trackNotification({
           eventType: result === 'granted' ? 'notification_permission_granted' : 'notification_permission_denied'
         });
-        
+
         return result;
       };
     }
@@ -495,7 +547,7 @@ class PWAAnalytics {
 
     // Send to analytics backend
     this.sendToBackend(this.pwaEvents);
-    
+
     // Clear processed events
     this.pwaEvents = [];
   }
@@ -535,13 +587,13 @@ class PWAAnalytics {
     const cacheMisses = data.cacheMisses ?? 0;
     const totalSessions = data.totalSessions ?? 0;
     const errors = data.errors ?? 0;
-    
-    const cacheHitRate = (cacheHits + cacheMisses) > 0 
-      ? cacheHits / (cacheHits + cacheMisses) 
+
+    const cacheHitRate = (cacheHits + cacheMisses) > 0
+      ? cacheHits / (cacheHits + cacheMisses)
       : 0;
-    
+
     const errorRate = totalSessions > 0 ? errors / totalSessions : 0;
-    
+
     // Performance score based on cache hit rate and error rate
     return Math.max(0, Math.min(100, (cacheHitRate * 100) - (errorRate * 100)));
   }
@@ -557,13 +609,13 @@ class PWAAnalytics {
     try {
       // Get real analytics data from the analytics service
       await import('@/features/analytics/lib/analytics-service');
-      
+
       // Get PWA installation events from the last 30 days
       const installations = await this.getInstallationTrends();
-      
+
       // Get offline usage patterns
       const offlineUsage = await this.getOfflineUsageTrends();
-      
+
       // Get performance metrics
       const performance = await this.getPerformanceTrends();
 
@@ -607,10 +659,10 @@ class PWAAnalytics {
 
       // Group by date and count installations
       const dailyCounts = new Map<string, number>();
-      data?.forEach(event => {
-        const eventData = event;
-        if (!eventData.created_at) return;
-        const date = new Date(eventData.created_at).toISOString().split('T')[0];
+      (data ?? []).forEach((event) => {
+        const createdAt = event?.created_at;
+        if (!createdAt) return;
+        const date = new Date(createdAt).toISOString().split('T')[0];
         if (date) {
           dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1);
         }
@@ -645,7 +697,7 @@ class PWAAnalytics {
 
       // Use existing analytics_events table for offline analytics
       const { data, error } = await supabase
-        .from<AnalyticsEventRow>('analytics_events')
+        .from('analytics_events')
         .select('created_at, event_data')
         .eq('event_type', 'poll_created')
         .eq('event_category', 'pwa')
@@ -659,18 +711,22 @@ class PWAAnalytics {
 
       // Calculate offline usage rate by date
       const dailyStats = new Map<string, { offline: number; total: number }>();
-      (data ?? []).forEach((event) => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        const eventData = event.event_data;
-        const performanceType =
-          eventData && typeof eventData === 'object'
-            ? (eventData['pwa_performance_type'] as string | undefined)
-            : undefined;
+      const events = (data ?? []) as AnalyticsEventRow[];
+      events.forEach((event) => {
+        const createdAt = event.created_at;
+        if (!createdAt) {
+          return;
+        }
+        const date = new Date(createdAt).toISOString().split('T')[0];
+        const eventData = getEventDataRecord(event.event_data);
+        const performanceType = eventData?.pwa_performance_type;
+        const performanceTypeValue =
+          typeof performanceType === 'string' ? performanceType : undefined;
 
-        if (date && performanceType) {
+        if (date && performanceTypeValue) {
           const stats = dailyStats.get(date) ?? { offline: 0, total: 0 };
           stats.total++;
-          if (performanceType === 'offline_usage_time') {
+          if (performanceTypeValue === 'offline_usage_time') {
             stats.offline++;
           }
           dailyStats.set(date, stats);
@@ -704,7 +760,7 @@ class PWAAnalytics {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { data, error } = await supabase
-        .from<AnalyticsEventRow>('analytics_events')
+        .from('analytics_events')
         .select('created_at, event_data')
         .eq('event_type', 'poll_created')
         .eq('event_category', 'pwa')
@@ -715,16 +771,19 @@ class PWAAnalytics {
 
       // Calculate average performance score by date
       const dailyScores = new Map<string, number[]>();
-      (data ?? []).forEach((event) => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        const eventData = event.event_data;
-        const metricValue =
-          eventData && typeof eventData === 'object'
-            ? (eventData['metric_value'] as number | undefined)
-            : undefined;
+      const events = (data ?? []) as AnalyticsEventRow[];
+      events.forEach((event) => {
+        const createdAt = event.created_at;
+        if (!createdAt) {
+          return;
+        }
+        const date = new Date(createdAt).toISOString().split('T')[0];
+        const eventData = getEventDataRecord(event.event_data);
+        const metricValue = eventData?.metric_value;
+        const numericValue = typeof metricValue === 'number' ? metricValue : undefined;
 
-        if (date && typeof metricValue === 'number') {
-          const score = metricValue ?? 0;
+        if (date && typeof numericValue === 'number') {
+          const score = numericValue ?? 0;
           const scores = dailyScores.get(date) ?? [];
           scores.push(score);
           dailyScores.set(date, scores);

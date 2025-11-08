@@ -42,7 +42,7 @@ const toOfflineVoteRecord = (value: unknown): OfflineVoteRecord | null => {
   return {
     pollId: record.pollId,
     choice: record.choice,
-    metadata,
+    ...(metadata ? { metadata } : {}),
     timestamp,
   };
 };

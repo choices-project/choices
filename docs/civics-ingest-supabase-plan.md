@@ -54,6 +54,36 @@ This document enumerates the outstanding work needed to ensure the rebuilt civic
 7. ⚙️ **Validation + auditing (planned)**
    - TODO: add regression tests and expanded crosswalk auditing.
 
+## Upcoming Roadmap (Federal + State Enrichment)
+
+### Phase 1 — Baseline & Reporting
+- Run `npm run ingest:qa` and `npm run preview -- --states=CA --limit=5` to confirm a clean baseline.
+- Generate gap reports:
+  - Federal representatives with `fec_id` but no `representative_campaign_finance` row.
+  - Federal representatives missing `congress_gov_id` / `govinfo_id`.
+  - State representatives missing core contact fields (phone/email/website).
+- Capture API notes (current rate limits, error types, typical response sizes) for FEC and OpenStates.
+
+### Phase 2 — FEC Enrichment Push
+- Use the gap report to batch `npm run enrich:finance` runs with controlled `--limit`/`--offset`/`--states`.
+- Log processed/succeeded/rate-limited counts for each run (append to shared ingest log).
+- Default runs now target **only missing finance rows**; add `--stale-days=<n>` when we want to revisit entries last refreshed more than _n_ days ago. `--include-existing` remains available for full backfills.
+- **Progress:** VA and CA batches completed (6/7 and 4/6 successes respectively; remaining rows have no FEC totals returned). Finance rows now exist for those canonical IDs with `cycle=2024` even when the totals are null.
+- **Next states (highest remaining gap counts):** TX (14), FL (10), NY (9), NC (8), IN/NJ/MI/PA/OR/GA (6 each). Prioritise these to whittle the 171-record backlog.
+- “No totals found” responses now get persisted as `fec:no-data` placeholder rows so repeat cron jobs skip them until they become stale; `report:gaps` surfaces these separately for manual follow-up.
+- Re-run `npm run ingest:qa` and spot-check freshly enriched federal representatives.
+
+### Phase 3 — OpenStates API Planning
+- Identify state-level gaps (contacts/social/committees) via Supabase queries.
+- Document OpenStates API constraints (rate limit, pagination, filter capabilities).
+- Prototype a small fetch (one state / handful of reps) and store raw responses for schema mapping.
+- Outline CLI contract (`--states`, `--limit`, `--dry-run`, caching strategy).
+
+### Phase 4 — OpenStates API Enrichment
+- Implement the enrichment CLI (phased rollout: start with contacts, then committees/social).
+- Persist raw API payloads in `representative_data_sources.raw_data` for auditing.
+- Update docs (`README`, operations guide) and re-run `npm run ingest:qa` after each new data class.
+
 ## Sequencing / Milestones
 
 1. **Milestone A – Contacts & Social (P0)**

@@ -545,8 +545,8 @@ export const useHashtagStore = create<HashtagStore>()(
 
             if (result.success) {
               set((state) => {
-                if (result.data) {
-                  state.userPreferences = result.data;
+                if (result.data !== undefined) {
+                  state.userPreferences = result.data ?? null;
                 } else if (state.userPreferences) {
                   state.userPreferences = mergeHashtagUserPreferences(state.userPreferences, updates);
                   state.userPreferences.updatedAt = new Date().toISOString();
@@ -584,7 +584,7 @@ export const useHashtagStore = create<HashtagStore>()(
 
             if (result.success && result.data) {
               set((state) => {
-                state.userPreferences = result.data;
+                state.userPreferences = result.data ?? null;
                 state.isLoading = false;
               });
             } else {

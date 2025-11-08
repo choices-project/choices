@@ -465,7 +465,7 @@ export default function HashtagPollsFeed({
                           {Math.round(analytic.user_interest_level * 100)}%
                         </span>
                       </div>
-                      {analytic.trending_position > 0 && (
+                      {typeof analytic.trending_position === 'number' && analytic.trending_position > 0 && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Trending:</span>
                           <span className="font-medium text-green-600">

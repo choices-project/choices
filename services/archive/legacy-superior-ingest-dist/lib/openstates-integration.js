@@ -1,0 +1,577 @@
+/**
+ * OpenStates People Database Integration
+ * Integrates 25,000+ YAML files with comprehensive representative data
+ *
+ * NOTE: This is NOT the OpenStates API (which has 250/day rate limits)
+ * This is the OpenStates People Database - a comprehensive offline dataset
+ *
+ * Created: October 8, 2025
+ * Updated: October 8, 2025
+ */
+// Utility function for optional object properties
+const withOptional = (obj, keys) => {
+    const result = {};
+    keys.forEach(key => {
+        if (obj[key] !== undefined) {
+            result[key] = obj[key];
+        }
+    });
+    return result;
+};
+// Logger functionality - implement as needed for backend
+const logger = {
+    info: (message, data) => console.log(`[INFO] ${message}`, data ? JSON.stringify(data, null, 2) : ''),
+    warn: (message, data) => console.warn(`[WARN] ${message}`, data ? JSON.stringify(data, null, 2) : ''),
+    error: (message, data) => console.error(`[ERROR] ${message}`, data ? JSON.stringify(data, null, 2) : ''),
+    debug: (message, data) => console.debug(`[DEBUG] ${message}`, data ? JSON.stringify(data, null, 2) : '')
+};
+import { CurrentElectorateVerifier } from './current-electorate-verifier.js';
+export default class OpenStatesIntegration {
+    dataPath;
+    currentDate;
+    verifier;
+    constructor(config) {
+        this.dataPath = config.dataPath;
+        this.currentDate = config.currentDate;
+        this.verifier = new CurrentElectorateVerifier();
+    }
+    /**
+     * Map role type to appropriate title
+     */
+    getRoleTitle(roleType) {
+        const titleMap = {
+            'upper': 'Senator',
+            'lower': 'Assembly Member',
+            'executive': 'Governor',
+            'mayor': 'Mayor',
+            'councilmember': 'Council Member',
+            'commissioner': 'Commissioner',
+            'judge': 'Judge',
+            'committee_member': 'Committee Member',
+            'committee_chair': 'Committee Chair',
+            'committee_vice_chair': 'Committee Vice Chair'
+        };
+        return titleMap[roleType] || roleType;
+    }
+    /**
+     * Check if a person is currently in office
+     */
+    isCurrentPerson(person) {
+        // Check if person has any current roles (no end_date or end_date in future)
+        if (person.roles && person.roles.length > 0) {
+            const currentRoles = person.roles.filter(role => {
+                if (!role.start_date)
+                    return false;
+                const startDate = new Date(role.start_date);
+                const endDate = role.end_date ? new Date(role.end_date) : null;
+                // Role is current if:
+                // 1. It started before or on current date AND
+                // 2. It has no end date (ongoing) OR end date is in the future
+                const isCurrent = startDate <= this.currentDate && (!endDate || endDate > this.currentDate);
+                logger.info(`   🔍 Checking role for ${person.name}: start=${role.start_date}, end=${role.end_date || 'none'}, current=${isCurrent}`);
+                return isCurrent;
+            });
+            const isCurrent = currentRoles.length > 0;
+            logger.info(`   ${isCurrent ? '✅' : '❌'} ${person.name}: ${isCurrent ? 'CURRENT' : 'NON-CURRENT'} (${currentRoles.length} current roles)`);
+            return isCurrent;
+        }
+        logger.info(`   ❌ ${person.name}: NO ROLES`);
+        return false;
+    }
+    isKnownNonCurrent(_person) {
+        return false;
+    }
+    /**
+     * Process state data and return only current representatives with comprehensive data
+     */
+    async processStateData(stateCode, limit) {
+        logger.info(`🔍 Processing OpenStates People Database for ${stateCode}...`);
+        logger.info(`   System Date: ${this.currentDate.toISOString()}`);
+        logger.info(`   Data Path: ${this.dataPath}`);
+        logger.info(`   NOTE: This is the OpenStates People Database (offline), NOT the OpenStates API`);
+        logger.info(`   GOAL: Extract all current legislators and committee information for efficient API usage`);
+        // Check if we're running in a browser environment
+        if (typeof window !== 'undefined') {
+            logger.info('⚠️  OpenStates People Database integration requires server-side execution');
+            logger.info('   This should be called from API routes, not client-side code');
+            return [];
+        }
+        // Server-side execution - Node.js modules are available
+        try {
+            const fs = await import('fs');
+            const path = await import('path');
+            const yaml = await import('js-yaml');
+            // Convert state code to lowercase for filesystem access
+            const stateCodeLower = stateCode.toLowerCase();
+            const statePath = path.join(this.dataPath, stateCodeLower);
+            const currentPeople = [];
+            logger.info(`   Checking state path: ${statePath}`);
+            if (!fs.existsSync(statePath)) {
+                logger.info(`⚠️  OpenStates People Database path not found: ${statePath}`);
+                logger.info(`   This is expected if OpenStates People Database is not available`);
+                logger.info(`   Falling back to empty results - OpenStates API and other live APIs will be used instead`);
+                return currentPeople;
+            }
+            // Process legislature data (main legislators)
+            const legislaturePath = path.join(statePath, 'legislature');
+            if (fs.existsSync(legislaturePath)) {
+                const files = fs.readdirSync(legislaturePath);
+                logger.info(`   Found ${files.length} legislature files`);
+                for (const file of files) {
+                    if (file.endsWith('.yml')) {
+                        try {
+                            const filePath = path.join(legislaturePath, file);
+                            const content = fs.readFileSync(filePath, 'utf8');
+                            const person = yaml.load(content);
+                            if (!person?.name) {
+                                logger.info(`   ⚠️  Skipping invalid person data in ${file}`);
+                                continue;
+                            }
+                            // Apply current electorate filtering using system date
+                            if (this.isCurrentPerson(person) && !this.isKnownNonCurrent(person)) {
+                                // Add person to current people (will be enhanced after committee processing)
+                                currentPeople.push(person);
+                                logger.info(`   ✅ Current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'}) - ID: ${person.id}`);
+                            }
+                            else {
+                                logger.info(`   ❌ Non-current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'})`);
+                            }
+                        }
+                        catch (error) {
+                            console.error(`   ⚠️  Error processing ${file}:`, error);
+                            // Continue processing other files
+                        }
+                    }
+                }
+            }
+            else {
+                logger.info(`   No legislature directory found at: ${legislaturePath}`);
+            }
+            // Skip committee processing for small limits to improve performance
+            if (limit && limit > 0 && limit < 50) {
+                logger.info(`   ⚡ Skipping committee processing for efficiency (limit: ${limit})`);
+            }
+            else {
+                // Process committee data if available
+                const committeePath = path.join(statePath, 'committees');
+                if (fs.existsSync(committeePath)) {
+                    logger.info(`   📋 Processing committee data for ${stateCode}...`);
+                    const committeeFiles = fs.readdirSync(committeePath);
+                    logger.info(`   📋 Found ${committeeFiles.length} committee files`);
+                    logger.info(`   📋 Current people count before committee processing: ${currentPeople.length}`);
+                    // Process committee files to extract member information
+                    for (const file of committeeFiles) {
+                        if (file.endsWith('.yml')) {
+                            try {
+                                const filePath = path.join(committeePath, file);
+                                const content = fs.readFileSync(filePath, 'utf8');
+                                const committee = yaml.load(content);
+                                if (committee?.members) {
+                                    logger.info(`   📋 Processing committee: ${committee.name || 'Unknown'} (${committee.members.length} members)`);
+                                    // Extract committee member information
+                                    for (const member of committee.members) {
+                                        if (member.person_id) {
+                                            logger.info(`   📋 Processing member: ${member.name} (${member.role}) - ID: ${member.person_id}`);
+                                            // Find existing person or create new entry
+                                            let person = currentPeople.find(p => p.id === member.person_id);
+                                            if (!person) {
+                                                // Create minimal person entry for committee member
+                                                const roleType = member.role === 'chair' ? 'committee_chair' :
+                                                    member.role === 'vice chair' ? 'committee_vice_chair' :
+                                                        'committee_member';
+                                                person = {
+                                                    id: member.person_id,
+                                                    name: member.name || 'Unknown',
+                                                    roles: [{
+                                                            type: roleType,
+                                                            title: committee.name || 'Unknown Committee',
+                                                            jurisdiction: stateCode,
+                                                            start_date: member.start_date,
+                                                            end_date: member.end_date,
+                                                            member_role: member.role || 'member'
+                                                        }]
+                                                };
+                                                currentPeople.push(person);
+                                                logger.info(`   📋 Created new person entry for committee member: ${member.name}`);
+                                            }
+                                            else {
+                                                // Add committee role to existing person
+                                                logger.info(`   📋 Found existing person: ${person.name}, adding committee role`);
+                                                if (!person.roles)
+                                                    person.roles = [];
+                                                const roleType = member.role === 'chair' ? 'committee_chair' :
+                                                    member.role === 'vice chair' ? 'committee_vice_chair' :
+                                                        'committee_member';
+                                                person.roles.push({
+                                                    type: roleType,
+                                                    title: committee.name || 'Unknown Committee',
+                                                    jurisdiction: stateCode,
+                                                    start_date: member.start_date,
+                                                    end_date: member.end_date,
+                                                    member_role: member.role || 'member'
+                                                });
+                                                logger.info(`   📋 Added committee role: ${roleType} - ${member.role}`);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (error) {
+                                console.error(`   ⚠️  Error processing committee file ${file}:`, error);
+                            }
+                        }
+                    }
+                }
+                else {
+                    logger.info(`   📋 No committee directory found at: ${committeePath}`);
+                }
+            }
+            logger.info(`📋 Committee processing completed for ${stateCode}`);
+            logger.info(`✨ Enhancing person data for ${currentPeople.length} current representatives...`);
+            // Enhance all person data AFTER committee processing is complete
+            const enhancedPeople = [];
+            for (const person of currentPeople) {
+                const enhancedPerson = await this.enhancePersonData(person, stateCode);
+                enhancedPeople.push(enhancedPerson);
+            }
+            logger.info(`✅ Processed ${enhancedPeople.length} current representatives for ${stateCode}`);
+            // Apply limit if specified
+            if (limit && limit > 0) {
+                const limitedPeople = enhancedPeople.slice(0, limit);
+                logger.info(`🔢 Limited to ${limitedPeople.length} representatives (requested: ${limit})`);
+                return limitedPeople;
+            }
+            return enhancedPeople;
+        }
+        catch (error) {
+            console.error('❌ Error in OpenStates People Database integration:', error);
+            logger.info('   This is expected if OpenStates People Database is not available');
+            logger.info('   The system will fall back to OpenStates API and other live APIs for data collection');
+            return [];
+        }
+    }
+    async enhancePersonData(person, _stateCode) {
+        // Start with the original person data
+        const enhanced = { ...person };
+        // Extract OpenStates ID for efficient API calls
+        if (person.id) {
+            logger.info(`   📋 OpenStates ID: ${person.id} for ${person.name}`);
+        }
+        // Extract current role information
+        if (person.roles && person.roles.length > 0) {
+            const currentRole = person.roles.find(role => role.start_date &&
+                (!role.end_date || new Date(role.end_date) > this.currentDate));
+            if (currentRole) {
+                // Map role type to appropriate title
+                const roleTitle = this.getRoleTitle(currentRole.type);
+                enhanced.current_role = {
+                    type: currentRole.type,
+                    title: roleTitle,
+                    jurisdiction: currentRole.jurisdiction,
+                    district: currentRole.district,
+                    start_date: currentRole.start_date,
+                    end_date: currentRole.end_date
+                };
+                logger.info(`   🏛️  Current Role: ${currentRole.type} - ${roleTitle}`);
+            }
+        }
+        // Extract contact information
+        if (person.contact_details) {
+            enhanced.contact_info = {
+                email: person.contact_details.find(c => c.type === 'email')?.value,
+                phone: person.contact_details.find(c => c.type === 'voice')?.value,
+                address: person.contact_details.find(c => c.type === 'address')?.value,
+                fax: person.contact_details.find(c => c.type === 'fax')?.value
+            };
+        }
+        // Extract social media links
+        if (person.contact_details) {
+            enhanced.social_media = person.contact_details
+                .filter(c => c.type === 'url' && c.note)
+                .map(c => ({
+                platform: c.note?.toLowerCase() || 'other',
+                url: c.value,
+                note: c.note
+            }));
+        }
+        // Extract party affiliation (handle array structure)
+        if (person.party) {
+            if (Array.isArray(person.party) && person.party.length > 0) {
+                enhanced.party_affiliation = person.party[0].name || person.party[0];
+                logger.info(`   🏛️  Party: ${enhanced.party_affiliation}`);
+            }
+            else {
+                enhanced.party_affiliation = person.party;
+                logger.info(`   🏛️  Party: ${person.party}`);
+            }
+        }
+        // Extract biographical information
+        if (person.biography) {
+            enhanced.biography = person.biography;
+        }
+        // Extract photo information
+        if (person.image) {
+            enhanced.photo_url = person.image;
+        }
+        // Extract source information
+        if (person.sources) {
+            enhanced.sources = person.sources.map(source => {
+                const result = {
+                    url: source.url,
+                    retrieved: new Date().toISOString()
+                };
+                if (source.note) {
+                    result.note = source.note;
+                }
+                return result;
+            });
+        }
+        // Extract committee memberships
+        if (person.roles) {
+            logger.info(`   📋 Checking roles for ${person.name}: ${person.roles.length} total roles`);
+            const committeeRoles = person.roles.filter(role => role.type === 'committee_member' ||
+                role.type === 'committee_chair' ||
+                role.type === 'committee_vice_chair');
+            logger.info(`   📋 Committee roles found: ${committeeRoles.length}`);
+            if (committeeRoles.length > 0) {
+                enhanced.committee_memberships = committeeRoles.map(role => ({
+                    committee: role.title, // Committee name is stored in title
+                    role: role.member_role || 'member', // Member role (chair, member, etc.)
+                    jurisdiction: role.jurisdiction,
+                    start_date: role.start_date,
+                    end_date: role.end_date
+                }));
+                logger.info(`   📋 Committee Memberships: ${committeeRoles.length} committees`);
+                logger.info(`   📋 Committee details:`, { committees: committeeRoles.map(r => `${r.type} - ${r.title}`) });
+            }
+            else {
+                logger.info(`   📋 No committee roles found for ${person.name}`);
+            }
+        }
+        else {
+            logger.info(`   📋 No roles found for ${person.name}`);
+        }
+        return enhanced;
+    }
+    /**
+     * Get all current representatives for a state
+     */
+    async getCurrentRepresentatives(stateCode, limit) {
+        return this.processStateData(stateCode, limit);
+    }
+    /**
+     * Get representatives by role type
+     */
+    async getRepresentativesByRole(stateCode, roleType) {
+        const allRepresentatives = await this.getCurrentRepresentatives(stateCode);
+        return allRepresentatives.filter(person => person.roles?.some(role => role.type === roleType));
+    }
+    /**
+     * Get representatives by district
+     */
+    async getRepresentativesByDistrict(stateCode, district) {
+        const allRepresentatives = await this.getCurrentRepresentatives(stateCode);
+        return allRepresentatives.filter(person => person.roles?.some(role => role.district === district));
+    }
+    /**
+     * Get representatives by party
+     */
+    async getRepresentativesByParty(stateCode, party) {
+        const allRepresentatives = await this.getCurrentRepresentatives(stateCode);
+        return allRepresentatives.filter(person => person.party === party);
+    }
+    /**
+     * Search representatives by name
+     */
+    async searchRepresentatives(stateCode, query) {
+        const allRepresentatives = await this.getCurrentRepresentatives(stateCode);
+        const searchQuery = query.toLowerCase();
+        return allRepresentatives.filter(person => person.name.toLowerCase().includes(searchQuery) ||
+            person.given_name?.toLowerCase().includes(searchQuery) ||
+            person.family_name?.toLowerCase().includes(searchQuery) ||
+            person.nickname?.toLowerCase().includes(searchQuery));
+    }
+    /**
+     * Get representative by ID
+     */
+    async getRepresentativeById(stateCode, id) {
+        const allRepresentatives = await this.getCurrentRepresentatives(stateCode);
+        return allRepresentatives.find(person => person.id === id) || null;
+    }
+    /**
+     * Get contact information for a representative
+     */
+    getContactInfo(person) {
+        return person.contact_details || [];
+    }
+    /**
+     * Get social media links for a representative
+     */
+    getSocialMediaLinks(person) {
+        return person.links?.filter(link => link.url.includes('twitter.com') ||
+            link.url.includes('facebook.com') ||
+            link.url.includes('instagram.com') ||
+            link.url.includes('linkedin.com')) || [];
+    }
+    /**
+     * Get official sources for a representative
+     */
+    getOfficialSources(person) {
+        return person.sources || [];
+    }
+    /**
+     * Get current roles for a representative
+     */
+    getCurrentRoles(person) {
+        // For now, return all roles - this would need more sophisticated logic
+        return person.roles || [];
+    }
+    /**
+     * Check if OpenStates People database is available
+     */
+    async isDatabaseAvailable() {
+        try {
+            // Check if we're running in a browser environment
+            if (typeof window !== 'undefined') {
+                return false;
+            }
+            const fs = await import('fs');
+            const path = await import('path');
+            const dataPath = path.join(this.dataPath);
+            return fs.existsSync(dataPath);
+        }
+        catch (error) {
+            logger.info('OpenStates People database not available:', { error: error instanceof Error ? error.message : String(error) });
+            return false;
+        }
+    }
+    /**
+     * Get all available states
+     */
+    async getAvailableStates() {
+        try {
+            // Check if database is available
+            if (!(await this.isDatabaseAvailable())) {
+                logger.info('OpenStates People database not available, returning hardcoded state list');
+                return [
+                    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+                    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+                    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+                    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+                    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+                ];
+            }
+            // Read available states from filesystem
+            const fs = await import('fs');
+            const path = await import('path');
+            const dataPath = path.join(this.dataPath);
+            const states = fs.readdirSync(dataPath).filter(item => {
+                const itemPath = path.join(dataPath, item);
+                return fs.statSync(itemPath).isDirectory();
+            }).map(state => state.toUpperCase()); // Convert to uppercase for consistency
+            logger.info(`Found ${states.length} available states in OpenStates People database`);
+            return states;
+        }
+        catch (error) {
+            logger.info('Error reading available states, returning hardcoded list:', { error: error instanceof Error ? error.message : String(error) });
+            return [
+                'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+                'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+                'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+                'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+                'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+            ];
+        }
+    }
+    /**
+     * Get statistics for a state
+     */
+    async getStateStatistics(stateCode) {
+        const representatives = await this.getCurrentRepresentatives(stateCode);
+        const byParty = {};
+        const byRole = {};
+        const byDistrict = {};
+        representatives.forEach(person => {
+            // Count by party
+            const party = person.party || 'Unknown';
+            byParty[party] = (byParty[party] || 0) + 1;
+            // Count by role
+            person.roles?.forEach(role => {
+                byRole[role.type] = (byRole[role.type] || 0) + 1;
+            });
+            // Count by district
+            person.roles?.forEach(role => {
+                if (role.district) {
+                    byDistrict[role.district] = (byDistrict[role.district] || 0) + 1;
+                }
+            });
+        });
+        return {
+            totalRepresentatives: representatives.length,
+            byParty,
+            byRole,
+            byDistrict
+        };
+    }
+    /**
+     * Get integration status and capabilities
+     */
+    async getIntegrationStatus() {
+        const isAvailable = await this.isDatabaseAvailable();
+        const availableStates = await this.getAvailableStates();
+        return {
+            isAvailable,
+            dataPath: this.dataPath,
+            currentDate: this.currentDate.toISOString(),
+            availableStates,
+            capabilities: [
+                'Current electorate filtering',
+                'State-level data processing',
+                'Role-based filtering',
+                'Party-based filtering',
+                'District-based filtering',
+                'Name-based search',
+                'Contact information extraction',
+                'Social media link extraction',
+                'Official source extraction',
+                'Statistics generation'
+            ],
+            fallbackMode: !isAvailable
+        };
+    }
+    /**
+     * Test the integration with a simple operation
+     */
+    async testIntegration() {
+        try {
+            logger.info('🧪 Testing OpenStates Integration...');
+            const status = await this.getIntegrationStatus();
+            const availableStates = await this.getAvailableStates();
+            logger.info('✅ OpenStates Integration test completed');
+            logger.info(`   Available: ${status.isAvailable}`);
+            logger.info(`   States: ${availableStates.length}`);
+            logger.info(`   Fallback Mode: ${status.fallbackMode}`);
+            return {
+                success: true,
+                message: 'OpenStates Integration is working correctly',
+                details: {
+                    status,
+                    availableStates: availableStates.slice(0, 5), // First 5 states
+                    totalStates: availableStates.length
+                }
+            };
+        }
+        catch (error) {
+            console.error('❌ OpenStates Integration test failed:', error);
+            return {
+                success: false,
+                message: 'OpenStates Integration test failed',
+                details: {
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    fallbackMode: true
+                }
+            };
+        }
+    }
+}
+//# sourceMappingURL=openstates-integration.js.map

@@ -73,7 +73,12 @@ const mergeWidgetSettings = (
     };
   }
 
-  merged.dateRange = overrides?.dateRange ?? base?.dateRange;
+  const nextDateRange = overrides?.dateRange ?? base?.dateRange;
+  if (nextDateRange) {
+    merged.dateRange = nextDateRange;
+  } else {
+    delete merged.dateRange;
+  }
 
   return merged;
 };

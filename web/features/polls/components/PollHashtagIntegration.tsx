@@ -66,18 +66,22 @@ const createIntegrationWithHashtags = (
   hashtags: string[],
   previous?: PollHashtagIntegration | null,
   trendingScore?: number,
-): PollHashtagIntegration => ({
-  poll_id: poll.id,
-  hashtags,
-  primary_hashtag: previous?.primary_hashtag ?? hashtags[0],
-  hashtag_engagement: {
-    total_views: previous?.hashtag_engagement.total_views ?? 0,
-    hashtag_clicks: previous?.hashtag_engagement.hashtag_clicks ?? 0,
-    hashtag_shares: previous?.hashtag_engagement.hashtag_shares ?? 0,
-  },
-  related_polls: previous?.related_polls ?? [],
-  hashtag_trending_score: trendingScore ?? previous?.hashtag_trending_score ?? 0,
-});
+): PollHashtagIntegration => {
+  const primaryHashtag = previous?.primary_hashtag ?? hashtags[0];
+
+  return {
+    poll_id: poll.id,
+    hashtags,
+    ...(primaryHashtag ? { primary_hashtag: primaryHashtag } : {}),
+    hashtag_engagement: {
+      total_views: previous?.hashtag_engagement.total_views ?? 0,
+      hashtag_clicks: previous?.hashtag_engagement.hashtag_clicks ?? 0,
+      hashtag_shares: previous?.hashtag_engagement.hashtag_shares ?? 0,
+    },
+    related_polls: previous?.related_polls ?? [],
+    hashtag_trending_score: trendingScore ?? previous?.hashtag_trending_score ?? 0,
+  };
+};
 
 export default function PollHashtagIntegration({
   poll,

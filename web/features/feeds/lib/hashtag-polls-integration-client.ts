@@ -16,15 +16,15 @@ import {
   BaseHashtagPollsIntegrationService,
   type PollRecommendation,
   type HashtagPollIntegration,
-  type HashtagFeedAnalytics,
   type PersonalizedHashtagFeed,
 } from './hashtag-polls-integration-base';
+import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 
 // Re-export types for convenience
 export type {
   PollRecommendation,
   HashtagPollIntegration,
-  HashtagFeedAnalytics,
+  FeedHashtagAnalytics,
   PersonalizedHashtagFeed,
 };
 

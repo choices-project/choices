@@ -864,6 +864,7 @@ export const usePWAStats = () => usePWAStore(state => ({
   cachedResources: state.offline.offlineData.cachedResources.length,
   queuedActions: state.offline.offlineData.queuedActions.length,
   offlineQueueSize: state.offlineQueueSize,
+  offlineQueueUpdatedAt: state.offlineQueueUpdatedAt,
   isLoading: state.isLoading,
   isInstalling: state.isInstalling,
   isUpdating: state.isUpdating,

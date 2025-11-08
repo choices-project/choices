@@ -2,18 +2,18 @@
 
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  User, 
-  Shield, 
-  Eye, 
-  EyeOff, 
-  Download, 
+import {
+  User,
+  Shield,
+  Eye,
+  EyeOff,
+  Download,
   Fingerprint,
   Zap,
   RefreshCw,
   Lock
 } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 import type { DeviceFingerprint, PWAFeatures, PWAUser } from '@/types/pwa';
@@ -26,6 +26,33 @@ type PWAUserProfileProps = {
 type BrowserFeatureSnapshot = PWAFeatures & {
   encryptedStorage: boolean;
 }
+
+type IconComponent = React.ComponentType<{ className?: string | undefined }>;
+
+type TierDisplayMeta = {
+  name: string;
+  color: string;
+  bg: string;
+};
+
+const TIER_META: Record<PWAUser['trustTier'], TierDisplayMeta> = {
+  T0: { name: 'Tier 0 • Newcomer', color: 'text-gray-600', bg: 'border-gray-200 bg-gray-50' },
+  T1: { name: 'Tier 1 • Verified', color: 'text-blue-600', bg: 'border-blue-200 bg-blue-50' },
+  T2: { name: 'Tier 2 • Trusted', color: 'text-purple-600', bg: 'border-purple-200 bg-purple-50' },
+  T3: { name: 'Tier 3 • Champion', color: 'text-emerald-600', bg: 'border-emerald-200 bg-emerald-50' },
+};
+
+type VisibilityDisplayMeta = {
+  name: string;
+  color: string;
+  icon: IconComponent;
+};
+
+const VISIBILITY_META: Record<PWAUser['profileVisibility'], VisibilityDisplayMeta> = {
+  anonymous: { name: 'Anonymous Profile', color: 'text-gray-600', icon: EyeOff },
+  pseudonymous: { name: 'Pseudonymous Profile', color: 'text-indigo-600', icon: Eye },
+  public: { name: 'Public Profile', color: 'text-green-600', icon: Eye },
+};
 
 export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProps) {
   const [isEditing, setIsEditing] = useState(false)
@@ -45,7 +72,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
   useEffect(() => {
     // Get device fingerprint
     pwaManager.getDeviceFingerprint().then(setDeviceFingerprint)
-    
+
     // Check PWA features
     const features: BrowserFeatureSnapshot = {
       installable: 'beforeinstallprompt' in window,
@@ -56,21 +83,21 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       encryptedStorage: 'crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto,
     }
     setPwaFeatures(features)
-    
+
     // Check notification permission
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission)
     }
-    
+
     // Check online status
     setIsOnline(navigator.onLine)
-    
+
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
-    
+
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
-    
+
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
@@ -116,7 +143,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
         pwaFeatures,
         timestamp: new Date().toISOString()
       }
-      
+
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -140,6 +167,13 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       </div>
     )
   }
+
+  const tierInfo = useMemo(() => TIER_META[user.trustTier] ?? TIER_META.T0, [user.trustTier])
+  const visibilityInfo = useMemo(
+    () => VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous,
+    [user.profileVisibility]
+  )
+  const VisibilityIcon = visibilityInfo.icon
 
   return (
     <div className="space-y-6" data-testid="pwa-user-profile">
@@ -174,7 +208,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             </div>
             <div className="flex items-center space-x-2">
               <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${user.verificationScore}%` }}
                 />
@@ -185,7 +219,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
 
           <div className="p-4 rounded-lg border border-gray-200">
             <div className="flex items-center space-x-2 mb-2">
-              <visibilityInfo.icon className={`w-5 h-5 ${visibilityInfo.color}`} />
+              <VisibilityIcon className={`w-5 h-5 ${visibilityInfo.color}`} />
               <span className={`font-medium ${visibilityInfo.color}`}>{visibilityInfo.name}</span>
             </div>
             <p className="text-sm text-gray-600">

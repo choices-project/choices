@@ -67,8 +67,9 @@ export function validateHashtagName(name: string): HashtagValidation {
     similar_hashtags: [],
   };
 
-  if (errors.length > 0) {
-    availability.conflict_reason = errors[0];
+  const [firstError] = errors;
+  if (firstError) {
+    availability.conflict_reason = firstError;
   }
 
   return {

@@ -30,6 +30,41 @@ type RepresentativeRow = {
   data_sources: string[] | null;
 };
 
+type RepresentativeFinanceRow = {
+  id: number;
+  updated_at: string | null;
+  last_filing_date: string | null;
+  cycle: number | null;
+  total_raised: number | null;
+};
+
+type RepresentativeRecord = RepresentativeRow & {
+  representative_campaign_finance: RepresentativeFinanceRow | null;
+};
+
+type SupabaseRepresentativeRecord = RepresentativeRow & {
+  representative_campaign_finance?:
+    | RepresentativeFinanceRow
+    | RepresentativeFinanceRow[]
+    | null;
+};
+
+type EnrichmentStatus = 'updated' | 'no-data' | 'rate-limited' | 'skipped';
+
+type SuccessfulEnrichmentResult = {
+  representative: RepresentativeRecord;
+  finance: FinanceUpsertRow;
+  quality: ReturnType<typeof evaluateDataQuality>;
+  status: 'updated' | 'no-data';
+};
+
+type EnrichmentResult =
+  | SuccessfulEnrichmentResult
+  | {
+      representative: RepresentativeRecord;
+      status: Exclude<EnrichmentStatus, 'updated' | 'no-data'>;
+    };
+
 type FinanceUpsertRow = {
   representative_id: number;
   total_raised: number | null;
@@ -58,6 +93,9 @@ type CliOptions = {
   state?: string[];
   fec?: string[];
   dryRun?: boolean;
+  includeExisting?: boolean;
+  staleDays?: number;
+  cycle?: number;
 };
 
 const FEC_THROTTLE_MS = Number(process.env.FEC_THROTTLE_MS ?? '1200');
@@ -84,6 +122,9 @@ function parseArgs(): CliOptions {
       case 'offset':
         if (value) options.offset = Number(value);
         break;
+      case 'cycle':
+        if (value) options.cycle = Number(value);
+        break;
       case 'state':
         if (value) {
           options.state = value
@@ -103,6 +144,12 @@ function parseArgs(): CliOptions {
       case 'dry-run':
         options.dryRun = true;
         break;
+      case 'include-existing':
+        options.includeExisting = true;
+        break;
+      case 'stale-days':
+        if (value) options.staleDays = Number(value);
+        break;
       default:
         break;
     }
@@ -115,12 +162,17 @@ function parseArgs(): CliOptions {
   return options;
 }
 
+function getDefaultCycle(): number {
+  const year = new Date().getFullYear();
+  return year % 2 === 0 ? year : year - 1;
+}
+
 async function fetchRepresentatives(options: CliOptions) {
   const client = getSupabaseClient();
   let query = client
     .from('representatives_core')
     .select(
-      'id,name,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources',
+      'id,name,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources,representative_campaign_finance!left(id,updated_at,last_filing_date,cycle,total_raised)',
     )
     .eq('is_active', true)
     .eq('level', 'federal')
@@ -134,10 +186,13 @@ async function fetchRepresentatives(options: CliOptions) {
     query = query.in('fec_id', options.fec);
   }
 
-  if (typeof options.offset === 'number' && typeof options.limit === 'number') {
-    query = query.range(options.offset, options.offset + options.limit - 1);
-  } else if (typeof options.limit === 'number') {
-    query = query.limit(options.limit);
+  const baseLimit = options.limit ?? 50;
+  const fetchLimit = options.includeExisting ? baseLimit : Math.max(baseLimit * 3, 150);
+
+  if (typeof options.offset === 'number') {
+    query = query.range(options.offset, options.offset + fetchLimit - 1);
+  } else {
+    query = query.limit(fetchLimit);
   }
 
   const { data, error } = await query;
@@ -146,7 +201,53 @@ async function fetchRepresentatives(options: CliOptions) {
     throw new Error(`Failed to fetch representatives: ${error.message}`);
   }
 
-  return (data ?? []) as RepresentativeRow[];
+  const rows = (data ?? []) as SupabaseRepresentativeRecord[];
+
+  const normalizedRows = rows.map((row) => {
+    const finance = row.representative_campaign_finance;
+    const normalizedFinance = Array.isArray(finance)
+      ? finance[0] ?? null
+      : (finance ?? null);
+
+    return {
+      ...row,
+      representative_campaign_finance: normalizedFinance,
+    } as RepresentativeRecord;
+  });
+
+  normalizedRows.sort((a, b) => {
+    const aDate = a.representative_campaign_finance?.updated_at
+      ? new Date(a.representative_campaign_finance.updated_at).getTime()
+      : 0;
+    const bDate = b.representative_campaign_finance?.updated_at
+      ? new Date(b.representative_campaign_finance.updated_at).getTime()
+      : 0;
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return -1;
+    if (!bDate) return 1;
+    return aDate - bDate;
+  });
+
+  const staleDays = options.staleDays ?? 0;
+  const staleCutoff =
+    !options.includeExisting && staleDays > 0
+      ? Date.now() - staleDays * 24 * 60 * 60 * 1000
+      : null;
+
+  const filtered = normalizedRows.filter((row) => {
+    if (options.includeExisting) return true;
+    const finance = row.representative_campaign_finance;
+    if (!finance) return true;
+    if (staleCutoff) {
+      const updatedAt = finance.updated_at ? new Date(finance.updated_at).getTime() : NaN;
+      if (!Number.isNaN(updatedAt) && updatedAt < staleCutoff) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  return options.limit ? filtered.slice(0, options.limit) : filtered;
 }
 
 function extractLastFilingDate(totals: any): string | null {
@@ -167,20 +268,24 @@ function buildFinanceRecord(options: {
   cycle: number;
   totals: any;
   contributors: any[];
+  status: 'ok' | 'no-data';
 }): {
   finance: FinanceUpsertRow;
   enrichment: FederalEnrichment;
 } {
-  const { representative, cycle, totals, contributors } = options;
+  const { representative, cycle, totals, contributors, status } = options;
+  const contributorInput = status === 'no-data' ? [] : contributors;
+  const totalsData = totals ?? {};
 
   const smallDonorPercentage =
-    totals.individual_unitemized_contributions && totals.individual_contributions
+    totalsData.individual_unitemized_contributions && totalsData.individual_contributions
       ? Math.round(
-          (totals.individual_unitemized_contributions / totals.individual_contributions) * 1000,
+          (totalsData.individual_unitemized_contributions / totalsData.individual_contributions) *
+            1000,
         ) / 10
       : null;
 
-  const topContributors = contributors.slice(0, 5).map((entry) => ({
+  const topContributors = contributorInput.slice(0, 5).map((entry) => ({
     name: entry?.employer ?? entry?.committee_name ?? 'Unknown',
     amount: entry?.total ?? entry?.sum ?? 0,
     type: entry?.entity_type ?? 'employer',
@@ -196,17 +301,20 @@ function buildFinanceRecord(options: {
 
   const financeRow: FinanceUpsertRow = {
     representative_id: representative.id,
-    total_raised: totals.total_receipts ?? null,
-    total_spent: totals.total_disbursements ?? null,
-    cash_on_hand: totals.cash_on_hand_end_period ?? null,
+    total_raised: totalsData.total_receipts ?? null,
+    total_spent: totalsData.total_disbursements ?? null,
+    cash_on_hand: totalsData.cash_on_hand_end_period ?? null,
     small_donor_percentage: smallDonorPercentage,
-    last_filing_date: extractLastFilingDate(totals),
+    last_filing_date: extractLastFilingDate(totalsData),
     top_contributors: topContributors,
     cycle,
     office_code: null,
     district: representative.district ?? null,
-    sources: [`fec:${cycle}`],
-    source: `fec:${cycle}`,
+    sources:
+      status === 'no-data'
+        ? [`fec:${cycle}`, 'fec:no-data']
+        : [`fec:${cycle}`],
+    source: status === 'no-data' ? 'fec:no-data' : `fec:${cycle}`,
     updated_at: new Date().toISOString(),
   };
 
@@ -276,7 +384,7 @@ async function updateRepresentativeMetadata(
   const { error } = await client
     .from('representatives_core')
     .update({
-      data_quality_score: Math.round(qualityScore * 100) / 100,
+      data_quality_score: Math.round(qualityScore * 100),
       data_sources: Array.from(sources),
     })
     .eq('id', rep.id);
@@ -286,9 +394,15 @@ async function updateRepresentativeMetadata(
   }
 }
 
-async function enrichRepresentative(rep: RepresentativeRow, options: CliOptions) {
-  if (!rep.fec_id) return null;
-  const cycle = new Date().getFullYear() % 2 === 0 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+async function enrichRepresentative(
+  rep: RepresentativeRecord,
+  options: CliOptions,
+): Promise<EnrichmentResult> {
+  if (!rep.fec_id) {
+    return { representative: rep, status: 'skipped' };
+  }
+
+  const cycle = options.cycle ?? getDefaultCycle();
 
   await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
   let totals: any;
@@ -297,28 +411,31 @@ async function enrichRepresentative(rep: RepresentativeRow, options: CliOptions)
   } catch (error) {
     const message = (error as Error).message ?? '';
     if (message.includes('OVER_RATE_LIMIT') || message.includes('429')) {
-      console.warn(`Rate limit hit for ${rep.name} (${rep.fec_id}). Try re-running later with a slower throttle or upgraded key.`);
-      return null;
+      console.warn(
+        `Rate limit hit for ${rep.name} (${rep.fec_id}). Try re-running later with a slower throttle or upgraded key.`,
+      );
+      return { representative: rep, status: 'rate-limited' };
     }
     throw error;
   }
 
-  if (!totals) {
-    console.warn(`No FEC totals found for ${rep.name} (${rep.fec_id}) – skipping.`);
-    return null;
-  }
+  const status: 'ok' | 'no-data' = totals ? 'ok' : 'no-data';
 
-  await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
   let contributorsRaw: any[] = [];
-  try {
-    contributorsRaw = await fetchCandidateTopContributors(rep.fec_id, cycle, 5);
-  } catch (error) {
-    const message = (error as Error).message ?? '';
-    if (message.includes('OVER_RATE_LIMIT') || message.includes('429')) {
-      console.warn(`Rate limit hit fetching contributors for ${rep.name} (${rep.fec_id}).`);
-    } else {
-      throw error;
+  if (status === 'ok') {
+    await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
+    try {
+      contributorsRaw = await fetchCandidateTopContributors(rep.fec_id, cycle, 5);
+    } catch (error) {
+      const message = (error as Error).message ?? '';
+      if (message.includes('OVER_RATE_LIMIT') || message.includes('429')) {
+        console.warn(`Rate limit hit fetching contributors for ${rep.name} (${rep.fec_id}).`);
+      } else {
+        throw error;
+      }
     }
+  } else {
+    console.warn(`No FEC totals found for ${rep.name} (${rep.fec_id}) – recording empty row.`);
   }
 
   const { finance, enrichment } = buildFinanceRecord({
@@ -326,18 +443,19 @@ async function enrichRepresentative(rep: RepresentativeRow, options: CliOptions)
     cycle,
     totals,
     contributors: contributorsRaw,
+    status,
   });
 
   const { emails, phones, links } = buildContactArrays(rep);
 
-  const federalEnrichment = enrichment;
   const quality = evaluateDataQuality({
     canonical: { emails, phones, links },
-    federal: federalEnrichment,
+    federal: enrichment,
   });
 
   if (options.dryRun) {
-    console.log(`[dry-run] Would upsert finance for ${rep.name} (${rep.fec_id}) with cycle ${cycle}.`);
+    const tag = status === 'no-data' ? 'no-data' : `cycle ${cycle}`;
+    console.log(`[dry-run] Would upsert finance for ${rep.name} (${rep.fec_id}) with ${tag}.`);
   } else {
     await upsertFinance([finance]);
     await updateRepresentativeMetadata(rep, finance, quality.overall);
@@ -347,12 +465,14 @@ async function enrichRepresentative(rep: RepresentativeRow, options: CliOptions)
     representative: rep,
     finance,
     quality,
+    status: status === 'no-data' ? 'no-data' : 'updated',
   };
 }
 
 async function main() {
   try {
     const options = parseArgs();
+    options.cycle = options.cycle ?? getDefaultCycle();
 
     if (options.limit) {
       console.log(`Limiting enrichment to ${options.limit} representatives.`);
@@ -363,9 +483,21 @@ async function main() {
     if (options.fec?.length) {
       console.log(`Filtering by FEC IDs: ${options.fec.join(', ')}`);
     }
+    if (options.staleDays && !options.includeExisting) {
+      console.log(`Including finance rows stale for >= ${options.staleDays} days.`);
+    }
+    if (options.includeExisting) {
+      console.log('include-existing enabled: re-enriching all matching representatives.');
+      if (options.staleDays) {
+        console.warn('stale-days ignored when include-existing is set.');
+      }
+    } else if (!options.staleDays) {
+      console.log('Targeting representatives missing finance rows.');
+    }
     if (options.dryRun) {
       console.log('Running in dry-run mode (no Supabase updates will be made).');
     }
+    console.log(`Using FEC cycle ${options.cycle}.`);
 
     const reps = await fetchRepresentatives(options);
     if (reps.length === 0) {
@@ -375,19 +507,32 @@ async function main() {
 
     console.log(`Fetching FEC finance for ${reps.length} representatives...`);
 
-    let succeeded = 0;
+    let updatedCount = 0;
+    let noDataCount = 0;
+    let rateLimited = 0;
     for (const rep of reps) {
       try {
         const output = await enrichRepresentative(rep, options);
-        if (output && !options.dryRun) {
-          succeeded += 1;
+        if (!output) continue;
+        if (output.status === 'updated') {
+          if (!options.dryRun) updatedCount += 1;
+        } else if (output.status === 'no-data') {
+          if (!options.dryRun) noDataCount += 1;
+        } else if (output.status === 'rate-limited') {
+          rateLimited += 1;
         }
       } catch (error) {
         console.error(`Failed to enrich ${rep.name} (${rep.fec_id}):`, (error as Error).message);
       }
     }
 
-    console.log(`✅ Finance enrichment complete (${succeeded}/${reps.length}).`);
+    if (options.dryRun) {
+      console.log('✅ Dry-run complete.');
+    } else {
+      console.log(
+        `✅ Finance enrichment complete. Updated: ${updatedCount}, recorded no-data: ${noDataCount}, rate-limited: ${rateLimited}.`,
+      );
+    }
   } catch (error) {
     console.error('Finance enrichment failed:', error);
     process.exit(1);

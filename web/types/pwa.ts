@@ -248,9 +248,3 @@ export type StatusItemProps = {
   value: string;
   status: 'success' | 'warning' | 'error' | 'info';
 }
-
-declare global {
-  interface Window {
-    __pwaQueueHarness?: PWAQueueHarness;
-  }
-}

@@ -94,7 +94,14 @@ const toProfileDemographics = (value: unknown): ProfileDemographics | null => {
   return Object.keys(sanitized).length > 0 ? (sanitized as ProfileDemographics) : null;
 };
 
-const PRIVACY_VISIBILITY_SET = new Set(PROFILE_CONSTANTS.PROFILE_VISIBILITY);
+type PrivacyVisibilityValue = Exclude<PrivacySettings['profile_visibility'], undefined>;
+
+const PRIVACY_VISIBILITY_SET = new Set<PrivacyVisibilityValue>(
+  PROFILE_CONSTANTS.PROFILE_VISIBILITY,
+);
+
+const isPrivacyVisibility = (value: unknown): value is PrivacyVisibilityValue =>
+  typeof value === 'string' && PRIVACY_VISIBILITY_SET.has(value as PrivacyVisibilityValue);
 
 const PRIVACY_BOOLEAN_KEYS: Array<keyof PrivacySettings> = [
   'collectLocationData',
@@ -130,13 +137,13 @@ const toPrivacySettings = (value: unknown): Partial<PrivacySettings> | null => {
   PRIVACY_BOOLEAN_KEYS.forEach((key) => {
     const raw = value[key as string];
     if (typeof raw === 'boolean') {
-      result[key] = raw;
+      (result as Record<string, boolean | undefined>)[key as string] = raw;
     }
   });
 
   const visibility = value.profile_visibility;
-  if (typeof visibility === 'string' && PRIVACY_VISIBILITY_SET.has(visibility)) {
-    result.profile_visibility = visibility as PrivacySettings['profile_visibility'];
+  if (isPrivacyVisibility(visibility)) {
+    result.profile_visibility = visibility;
   }
 
   return Object.keys(result).length > 0 ? result : null;

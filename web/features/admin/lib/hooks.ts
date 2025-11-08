@@ -11,6 +11,8 @@ import type {
   PollContext,
   AdminRealtimeEvent,
   FeedbackRealtimeEvent,
+  NewAdminNotification,
+  ActivityItem,
 } from '../types';
 
 import { realTimeService } from './real-time-service';
@@ -486,16 +488,23 @@ export const useRealTimeSubscriptions = () => {
         break;
       }
       case 'notification': {
-        addNotification({
+        const notificationPayload: NewAdminNotification = {
           type: event.payload.type,
           title: event.payload.title,
           message: event.payload.message,
           read: event.payload.read,
-          metadata: event.payload.metadata,
-          action: event.payload.action,
           timestamp: event.payload.timestamp,
           created_at: event.payload.created_at,
-        });
+        };
+
+        if (event.payload.metadata) {
+          notificationPayload.metadata = event.payload.metadata;
+        }
+        if (event.payload.action) {
+          notificationPayload.action = event.payload.action;
+        }
+
+        addNotification(notificationPayload);
         logger.info('Real-time admin notification received', {
           notificationId: event.payload.id,
           title: event.payload.title,
@@ -504,13 +513,21 @@ export const useRealTimeSubscriptions = () => {
         break;
       }
       case 'activity': {
-        addActivityItem({
+        const activityPayload: Omit<ActivityItem, 'id' | 'timestamp'> = {
           type: event.payload.type,
           title: event.payload.title,
           description: event.payload.description,
-          user_id: event.payload.user_id,
-          metadata: event.payload.metadata,
-        });
+        };
+
+        if (event.payload.user_id) {
+          activityPayload.user_id = event.payload.user_id;
+        }
+
+        if (event.payload.metadata) {
+          activityPayload.metadata = event.payload.metadata;
+        }
+
+        addActivityItem(activityPayload);
         logger.debug('Real-time admin activity recorded', {
           id: event.payload.id,
           type: event.payload.type,

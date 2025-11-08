@@ -52,7 +52,7 @@ npm run ingest:qa                  # schema check, duplicate audit, 5-record pre
 | `sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | (Legacy) Delete by representative, dedupe per platform |
 | `sync:photos` | Primary portrait URL | `representative_photos` | (Legacy) Delete `source = 'openstates_yaml'`, insert canonical portrait |
 | `sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
-| `enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Upsert on `representative_id`; throttled for rate limits |
+| `enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Writes missing rows by default; supports stale refresh + explicit cycle overrides |
 
 All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid Cloudflare 414 responses.
 
@@ -62,6 +62,9 @@ All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid C
 - `--limit=250` — Process at most N records (useful for testing).
 - `--dry-run` — No database writes; CLI prints the number of affected representatives.
 - `--offset`, `--fec` (finance script only) — Iterate through subsets or target specific FEC IDs.
+- `--stale-days=14` (finance) — Revisit representatives whose finance row is ≥14 days old (in addition to brand-new gaps).
+- `--include-existing` (finance) — Re-enrich every matching representative regardless of freshness (use sparingly).
+- `--cycle=2024` (finance) — Override the inferred even-year FEC cycle.
 
 ### 2.4 Error handling & logging
 
@@ -92,6 +95,25 @@ Output lists each representative-facing table along with exact types, lengths an
 - `npm run fix:duplicates -- --canonical=<id>` — removes extras for a single canonical. Dry-run by default; pass `--apply` to delete rows.  
   Use `--force` if dependent data exists and you are confident it should be dropped.
 - Always rerun `npm run ingest:qa` after any fixes to confirm the dataset is clean.
+- Deduplication keeps the representative backed by official sources (`congress_gov_id`, `govinfo_id`, or `congress.gov` provenance) and only falls back to Wikipedia-derived records when no official source exists.
+
+### 2.7 Gap reporting
+
+- `npm run report:gaps` — prints headline counts for:
+  - Federal reps with FEC IDs who lack `representative_campaign_finance` rows.
+  - Federal reps with recorded `fec:no-data` rows (FEC returned no totals; script will retry once stale).
+  - Federal reps missing `congress_gov_id` / `govinfo_id`.
+  - State reps missing `primary_phone`.
+- Use this output to prioritise enrichment batches (e.g., targeted `--state` runs for `npm run enrich:finance`, or planning OpenStates API calls).
+- Run after each enrichment cycle to monitor progress.
+
+### 2.8 Finance auto-update cadence
+
+- **Daily / weekly cron:** `npm run enrich:finance -- --limit=40 --stale-days=7`  
+  Processes up to 40 representatives needing finance updates (missing rows first, then stale ones). Increase the throttle window if the FEC API still rate-limits.
+- **Zero-impact validation:** Always dry-run first (`--dry-run`) when testing new filters or keys.
+- **No-data handling:** When the FEC API returns no totals, the script stores a placeholder row (`sources` contains `fec:no-data`) so subsequent runs skip it until the row becomes stale (controlled by `--stale-days`).
+- **Monitoring:** Follow each run with `npm run report:gaps` to confirm the missing-count drops and to review the “Recorded FEC no-data rows” table for manual follow-up.
 
 ## 3. Testing & validation
 

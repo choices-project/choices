@@ -1,5 +1,7 @@
 // Global type declarations
- 
+
+import type { PWAQueueHarness } from './pwa';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
@@ -26,6 +28,9 @@ declare global {
     console?: Console & {
       filter?(predicate: (msg: any) => boolean): any[];
     };
+
+    // PWA harness bridge for e2e utilities
+    __pwaQueueHarness?: PWAQueueHarness;
     
     // Webpack properties for testing
     __webpack_require__?: any;
