@@ -82,13 +82,23 @@ describe('service worker bridge', () => {
     initializeServiceWorkerBridge();
 
     const handler = listeners.get('message');
-    handler?.({ data: { type: 'CACHE_HIT', cacheName: 'choices-pwa-cache' } } as MessageEvent);
+    handler?.({
+      data: {
+        type: 'CACHE_HIT',
+        cache: 'choices-pwa-cache',
+        url: 'https://choices.dev/',
+        strategy: 'cache-first',
+      },
+    } as MessageEvent);
 
     expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({
       type: 'pwa-analytics',
       detail: expect.objectContaining({
         eventName: 'cache-hit',
-        properties: expect.objectContaining({ cacheName: 'choices-pwa-cache' }),
+        properties: expect.objectContaining({
+          cache: 'choices-pwa-cache',
+          url: 'https://choices.dev/',
+        }),
       }),
     }));
 

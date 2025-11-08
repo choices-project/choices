@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       admin_activity_log: {
@@ -1811,29 +1786,113 @@ export type Database = {
           },
         ]
       }
+      poll_participation_analytics: {
+        Row: {
+          age_group: string | null
+          biometric_verified: boolean | null
+          confidence_level: number | null
+          created_at: string | null
+          data_quality_score: number | null
+          education_level: string | null
+          geographic_region: string | null
+          id: string
+          identity_verified: boolean | null
+          income_bracket: string | null
+          participated_at: string | null
+          phone_verified: boolean | null
+          political_affiliation: string | null
+          poll_id: string
+          trust_score: number | null
+          trust_tier: number
+          updated_at: string | null
+          user_id: string
+          verification_methods: string[] | null
+          voting_history_count: number | null
+        }
+        Insert: {
+          age_group?: string | null
+          biometric_verified?: boolean | null
+          confidence_level?: number | null
+          created_at?: string | null
+          data_quality_score?: number | null
+          education_level?: string | null
+          geographic_region?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          income_bracket?: string | null
+          participated_at?: string | null
+          phone_verified?: boolean | null
+          political_affiliation?: string | null
+          poll_id: string
+          trust_score?: number | null
+          trust_tier: number
+          updated_at?: string | null
+          user_id: string
+          verification_methods?: string[] | null
+          voting_history_count?: number | null
+        }
+        Update: {
+          age_group?: string | null
+          biometric_verified?: boolean | null
+          confidence_level?: number | null
+          created_at?: string | null
+          data_quality_score?: number | null
+          education_level?: string | null
+          geographic_region?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          income_bracket?: string | null
+          participated_at?: string | null
+          phone_verified?: boolean | null
+          political_affiliation?: string | null
+          poll_id?: string
+          trust_score?: number | null
+          trust_tier?: number
+          updated_at?: string | null
+          user_id?: string
+          verification_methods?: string[] | null
+          voting_history_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_participation_analytics_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_participation_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poll_rankings: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           poll_id: string
           rankings: number[]
-          updated_at: string | null
+          updated_at: string
           user_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           poll_id: string
           rankings: number[]
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           poll_id?: string
           rankings?: number[]
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: [
@@ -3532,6 +3591,92 @@ export type Database = {
         }
         Relationships: []
       }
+      openstates_people_current_roles_v: {
+        Row: {
+          district: string | null
+          division: string | null
+          end_date: string | null
+          end_reason: string | null
+          is_current: boolean | null
+          jurisdiction: string | null
+          member_role: string | null
+          openstates_id: string | null
+          openstates_person_id: number | null
+          role_id: number | null
+          role_type: string | null
+          start_date: string | null
+          state_code: string | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "openstates_people_roles_openstates_person_id_fkey"
+            columns: ["openstates_person_id"]
+            isOneToOne: false
+            referencedRelation: "openstates_people_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      openstates_people_primary_contacts_v: {
+        Row: {
+          contact_type: string | null
+          created_at: string | null
+          is_primary: boolean | null
+          note: string | null
+          openstates_id: string | null
+          openstates_person_id: number | null
+          value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "openstates_people_contacts_openstates_person_id_fkey"
+            columns: ["openstates_person_id"]
+            isOneToOne: false
+            referencedRelation: "openstates_people_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      openstates_people_social_v: {
+        Row: {
+          created_at: string | null
+          handle: string | null
+          openstates_id: string | null
+          openstates_person_id: number | null
+          platform: string | null
+          social_id: number | null
+          url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "openstates_people_social_media_openstates_person_id_fkey"
+            columns: ["openstates_person_id"]
+            isOneToOne: false
+            referencedRelation: "openstates_people_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      openstates_people_sources_v: {
+        Row: {
+          created_at: string | null
+          note: string | null
+          openstates_id: string | null
+          openstates_person_id: number | null
+          source_id: number | null
+          url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "openstates_people_sources_openstates_person_id_fkey"
+            columns: ["openstates_person_id"]
+            isOneToOne: false
+            referencedRelation: "openstates_people_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_voting_history: {
         Row: {
           created_at: string | null
@@ -3742,6 +3887,13 @@ export type Database = {
             Args: { p_poll_id: string; p_trust_tiers?: number[] }
             Returns: Json
           }
+      get_duplicate_canonical_ids: {
+        Args: never
+        Returns: {
+          canonical_id: string
+          ids: number[]
+        }[]
+      }
       get_hashtag_trending_history: {
         Args: { p_hashtag_id: string }
         Returns: {
@@ -3806,6 +3958,15 @@ export type Database = {
           votes_per_hour: number
         }[]
       }
+      get_table_columns: {
+        Args: { target_table: string }
+        Returns: {
+          character_maximum_length: number
+          column_name: string
+          data_type: string
+          is_nullable: string
+        }[]
+      }
       get_trust_tier_progression: { Args: { p_user_id: string }; Returns: Json }
       get_user_voting_history: { Args: { p_user_id: string }; Returns: Json }
       link_anonymous_votes_to_user: {
@@ -3827,6 +3988,7 @@ export type Database = {
         Args: { p_job_name: string; p_job_type: string }
         Returns: Json
       }
+      sync_representatives_from_openstates: { Args: never; Returns: undefined }
       update_cache_performance_metrics: {
         Args: {
           p_cache_key: string
@@ -3983,9 +4145,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       audit_event_type: [

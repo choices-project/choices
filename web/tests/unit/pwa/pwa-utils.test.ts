@@ -6,12 +6,12 @@ import { PWAManager } from '@/features/pwa/lib/pwa-utils';
 import { queueAction, QueuedActionType } from '@/features/pwa/lib/background-sync';
 import { isPWAServiceWorkerMessage, PWA_SERVICE_WORKER_MESSAGE_TYPES } from '@/types/pwa';
 
-const setOfflineQueueSizeMock = jest.fn();
+const mockSetOfflineQueueSize = jest.fn();
 
 jest.mock('@/lib/stores/pwaStore', () => ({
   usePWAStore: {
     getState: () => ({
-      setOfflineQueueSize: setOfflineQueueSizeMock,
+      setOfflineQueueSize: mockSetOfflineQueueSize,
     }),
   },
 }));
@@ -19,7 +19,7 @@ jest.mock('@/lib/stores/pwaStore', () => ({
 describe('PWA client utilities', () => {
   beforeEach(() => {
     localStorage.clear();
-    setOfflineQueueSizeMock.mockClear();
+    mockSetOfflineQueueSize.mockClear();
   });
 
   describe('PWAManager.storeOfflineVote', () => {
@@ -105,7 +105,7 @@ describe('PWA client utilities', () => {
       });
       expect(typeof stored[0].timestamp).toBe('number');
 
-      expect(setOfflineQueueSizeMock).toHaveBeenCalledWith(1, expect.any(String));
+      expect(mockSetOfflineQueueSize).toHaveBeenCalledWith(1, expect.any(String));
 
       const analyticsEvent = dispatchSpy.mock.calls
         .map((call) => call[0])

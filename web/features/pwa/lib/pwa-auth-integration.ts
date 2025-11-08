@@ -59,7 +59,7 @@ export class PWAAuth {
   // Create a new PWA user
   createUser(): Promise<PWAUser> {
     if (!this.pwaEnabled) {
-      throw new Error('PWA feature is disabled');
+      return Promise.reject(new Error('PWA feature is disabled'));
     }
 
     const stableId = this.generateStableId();

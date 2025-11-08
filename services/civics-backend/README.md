@@ -12,13 +12,25 @@ The package is designed to be reusable outside the Choices web app: point it at 
 
 ## Environment prerequisites
 
-Create `services/civics-backend/.env.local` with:
+Copy `env.example` to `.env.local` and fill in the values:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - API keys as needed (`FEC_API_KEY`, `OPENSTATES_API_KEY`, `GOOGLE_CIVIC_API_KEY`, etc.)
 
 > Never commit `.env.local`. The CLI automatically loads it via `dotenv`.
+
+### Quick start (CLI happy path)
+
+```bash
+cd services/civics-backend
+cp env.example .env.local               # edit with your Supabase + API keys
+npm install
+npm run ingest:openstates               # stage OpenStates YAML + run SQL merge
+npm run ingest:qa                       # schema check, duplicate audit, 5-record preview
+```
+
+If `ingest:qa` exits non-zero, follow the printed instructions (usually `npm run audit:duplicates` or `npm run fix:duplicates`).
 
 ## Install & build
 
@@ -34,14 +46,18 @@ npm run sample       # optional: exercises shared helpers without Supabase
 
 | Command | Purpose | Notes |
 | --- | --- | --- |
+| `npm run ingest:openstates` | Convenience wrapper for `stage:openstates` → `merge:openstates` | Requires `.env.local` and local OpenStates YAML |
+| `npm run ingest:qa` | One-stop verification (schema inspection, duplicate audit, 5-rep preview) | Fails the run if issues are detected |
+| `npm run preview [-- STATE]` | Preview canonical reps without writing | Accepts `--limit`/`--states`; ideal for spot checks |
+| `npm run inspect:schema` | Print live Supabase column types/lengths | Uses `public.get_table_columns(text)` |
+| `npm run audit:duplicates` | List duplicate `representatives_core` canonicals | Exits non-zero if duplicates exist |
+| `npm run fix:duplicates -- [--canonical=ID] [--apply] [--force]` | Remove duplicate canonicals safely | Moves crosswalk links; dry-run by default |
+| `npm run stage:openstates` | Load OpenStates YAML into Supabase staging tables | `OPENSTATES_PEOPLE_DIR` can override the default directory |
+| `npm run merge:openstates` | Execute the SQL merge function | Calls `sync_representatives_from_openstates()` |
 | `npm run prioritize` | List lowest-quality representatives | Orders by Supabase `data_quality_score` to target enrichment |
-| `npm run preview [-- STATE]` | Preview canonical reps without writing | Merges OpenStates YAML + Supabase + crosswalk for inspection |
-| `npm run sync:contacts [--options]` | Upsert `representative_contacts` | Replaces prior `openstates_yaml` rows with deduped emails/phones/faxes/addresses |
-| `npm run sync:social [--options]` | Upsert `representative_social_media` | Normalises handles/URLs from YAML + Supabase primaries |
-| `npm run sync:photos [--options]` | Upsert `representative_photos` | Maintains canonical portrait with `is_primary` flag |
-| `npm run sync:data-sources [--options]` | Upsert `representative_data_sources` | Records provenance for each upstream source feeding the representative |
-| `npm run enrich:finance [--options]` | Pull FEC totals & persist finance rollups | Writes to `representative_campaign_finance` and bumps `data_quality_score` |
-| `npm run audit:crosswalk` | Audit Supabase canonical ID crosswalk | Flags duplicates/mismatches before writing |
+| `npm run sync:contacts` / `social` / `photos` / `data-sources` | Legacy REST writers (being replaced by SQL merge) | Still available until SQL-first flow covers all cases |
+| `npm run enrich:finance` | Pull FEC totals & persist finance rollups | Writes to `representative_campaign_finance` and bumps `data_quality_score` |
+| `npm run audit:crosswalk` | Audit Supabase canonical ID crosswalk | Flags mismatches or missing IDs |
 | `npm run fix:crosswalk` | Repair corrupted canonical IDs | Deterministically reassigns IDs then re-runs audit |
 
 All sync/enrich commands support:
@@ -50,30 +66,40 @@ All sync/enrich commands support:
 - `--limit=250` – cap records processed (where applicable).
 - `--dry-run` – execute without writing to Supabase (reports counts only).
 
-## Operational workflow
+## Operational workflow (SQL-first)
 
-1. **Preview** — `npm run preview -- CA` to sample upcoming changes.  
-2. **Contacts** — `npm run sync:contacts -- --dry-run` then rerun without the flag to persist.  
-3. **Social** — `npm run sync:social -- --dry-run` followed by a live run.  
-4. **Photos** — `npm run sync:photos -- --dry-run` to confirm portraits before persisting.  
-5. **Provenance** — `npm run sync:data-sources -- --dry-run` to audit source coverage.  
-6. **Finance** — `npm run enrich:finance -- --dry-run` for a spot-check, then execute live.  
-7. **Audit** — `npm run audit:crosswalk` to verify canonical IDs, applying `npm run fix:crosswalk` if required.
+1. `npm run ingest:openstates` – Stage the YAML and run the SQL merge.
+2. `npm run ingest:qa` – Schema inspection, duplicate audit, and a 5-record preview snapshot.
+3. If duplicates are reported:
+   - `npm run fix:duplicates -- --canonical=<id>` to clean one canonical, or  
+   - `npm run fix:duplicates -- --apply` to process all duplicate sets (skips rows with dependent data unless `--force` is supplied).
+4. Optional enrichments (FEC, contacts/social/photos) remain available while the SQL-first pipeline fully replaces the legacy writers.
+5. Commit migrations/docs updates when schema changes occur (`supabase/migrations/*.sql`, `docs/DATABASE_SCHEMA.md`, `docs/civics-backend-operations.md`).
 
 Each sync script uses replace-by-source semantics: prior rows inserted with `source = 'openstates_yaml'` are deleted before new data is written, ensuring idempotent reruns with no duplication.
 
-## Resiliency & data guarantees
+## Quality gates & data guarantees
 
-- **Chunked Supabase queries** prevent Cloudflare 414 errors when querying large ID lists.  
-- **Supabase ID required** — records without a `representatives_core.id` are skipped to avoid orphan rows.  
-- **Deterministic ordering** — first entry per platform/contact becomes `is_primary`, ensuring stable diffs.  
-- **Dry runs** are cheap: every CLI accepts `--dry-run` and reports the number of rows it would upsert.  
-- **Strict typing** — `npm run lint` enforces TypeScript safety across ingest modules and writers.
+- **`npm run ingest:qa`** codifies the minimum QA checklist: schema alignment, duplicate detection, and preview output.
+- **Chunked Supabase queries** prevent Cloudflare 414 errors when querying large ID lists.
+- **Supabase ID required** — records without a `representatives_core.id` are skipped to avoid orphan rows.
+- **Deterministic ordering** — first entry per platform/contact becomes `is_primary`, ensuring stable diffs.
+- **Dry runs evolve into live runs** — every legacy sync/enrich command accepts `--dry-run`.
+- **Strict typing** — `npm run lint` (tsc --noEmit) enforces compile-time guarantees across the ingest codebase.
+
+## Duplicate resolution toolkit
+
+- `npm run audit:duplicates` — surfaces canonicals with more than one `representatives_core` row (uses the `public.get_duplicate_canonical_ids()` SQL helper).
+- `npm run fix:duplicates -- --canonical=fec:H4CA27111` — deletes extra rows for a single canonical (dry-run by default).
+- `npm run fix:duplicates -- --apply` — sweep all duplicates; the script migrates crosswalk entries and skips rows with dependent data unless `--force` is provided.
+- Logs show what will be deleted; nothing is removed until `--apply` is passed.
 
 ## Additional documentation
 
-- `docs/civics-backend-operations.md` – architecture, data flow, and runbook for this service.
+- `docs/civics-backend-operations.md` – architecture, runbook, quick start, and QA guidance.
+- `docs/civics-ingest-checklist.md` – printable checklist for each data load (pre-ingest, ingest, post-ingest).
 - `docs/civics-ingest-supabase-plan.md` – table-by-table roadmap for remaining Supabase integrations.
 - `docs/product-quality-roadmap.md` – broader platform remediation priorities.
+- `services/civics-backend/env.example` – reference environment file for new contributors.
 
 Keep these resources updated when new scripts land or data contracts evolve so downstream teams can trust and reuse the ingest pipeline.

@@ -16,6 +16,13 @@
     "sync:social": "npm run build --silent && node build/scripts/sync-social.js",
     "sync:photos": "npm run build --silent && node build/scripts/sync-photos.js",
     "sync:data-sources": "npm run build --silent && node build/scripts/sync-data-sources.js",
+    "stage:openstates": "npm run build --silent && node build/scripts/stage-openstates.js",
+    "merge:openstates": "npm run build --silent && node build/scripts/run-openstates-merge.js",
+    "inspect:schema": "npm run build --silent && node build/scripts/inspect-schema.js",
+    "audit:duplicates": "npm run build --silent && node build/scripts/report-duplicates.js",
+    "fix:duplicates": "npm run build --silent && node build/scripts/fix-duplicates.js",
+    "ingest:openstates": "npm run build --silent && node build/scripts/stage-openstates.js && node build/scripts/run-openstates-merge.js",
+    "ingest:qa": "npm run build --silent && node build/scripts/inspect-schema.js && node build/scripts/report-duplicates.js && node build/run-preview.js --limit 5",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

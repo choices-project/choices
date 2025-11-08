@@ -98,6 +98,15 @@ export type PWAQueuedAction<TData = Record<string, unknown>> = {
   timestamp: string;
 };
 
+export type PWAQueueHarness = {
+  setQueueState?: (
+    size: number,
+    options?: { cachedPages?: number; cachedResources?: number; isOffline?: boolean }
+  ) => void;
+  setOnlineStatus?: (isOnline: boolean) => void;
+  reset?: () => void;
+};
+
 export type PWAServiceWorkerMessage =
   | { type: 'OFFLINE_QUEUE_UPDATED'; size: number; updatedAt: string }
   | { type: 'CACHE_HIT'; cache: string; url: string; strategy?: string }
@@ -238,4 +247,10 @@ export type StatusItemProps = {
   label: string;
   value: string;
   status: 'success' | 'warning' | 'error' | 'info';
+}
+
+declare global {
+  interface Window {
+    __pwaQueueHarness?: PWAQueueHarness;
+  }
 }

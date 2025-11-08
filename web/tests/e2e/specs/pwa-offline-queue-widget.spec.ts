@@ -11,19 +11,6 @@ const enableAnalytics = async (page: Page) => {
   await page.evaluate(() => globalThis.__playwrightAnalytics?.enable());
 };
 
-declare global {
-  interface Window {
-    __pwaQueueHarness?: {
-      setQueueState?: (
-        size: number,
-        options?: { cachedPages?: number; cachedResources?: number; isOffline?: boolean }
-      ) => void;
-      setOnlineStatus?: (isOnline: boolean) => void;
-      reset?: () => void;
-    };
-  }
-}
-
 test.describe('PWA offline queue widget', () => {
   test.beforeEach(async ({ page }) => {
     page.on('console', (msg) => {

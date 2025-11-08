@@ -7,6 +7,7 @@ import PWAOfflineQueueWidget from '@/features/analytics/components/widgets/PWAOf
 import type { WidgetConfig } from '@/features/analytics/types/widget';
 import { AnalyticsTestBridge } from '@/app/(app)/e2e/_components/AnalyticsTestBridge';
 import { usePWAStore } from '@/lib/stores/pwaStore';
+import type { PWAQueueHarness } from '@/types/pwa';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -26,19 +27,6 @@ const createWidgetConfig = (): WidgetConfig => ({
   updatedAt: new Date(),
 });
 
-declare global {
-  interface Window {
-    __pwaQueueHarness?: {
-      setQueueState: (
-        size: number,
-        options?: { cachedPages?: number; cachedResources?: number; isOffline?: boolean }
-      ) => void;
-      setOnlineStatus: (isOnline: boolean) => void;
-      reset: () => void;
-    };
-  }
-}
-
 const day = 24 * 60 * 60 * 1000;
 
 function buildCachedEntries(count: number, prefix: string): string[] {
@@ -53,7 +41,7 @@ export default function PWAAnalyticsHarnessPage() {
       return;
     }
 
-    const setQueueState: Window['__pwaQueueHarness']['setQueueState'] = (size, options) => {
+    const setQueueState: NonNullable<PWAQueueHarness['setQueueState']> = (size, options) => {
       const timestamp = new Date().toISOString();
       const currentState = usePWAStore.getState();
       const pages = options?.cachedPages ?? currentState.offline.offlineData.cachedPages.length;
@@ -63,7 +51,7 @@ export default function PWAAnalyticsHarnessPage() {
         id: `action-${index}`,
         action: 'vote',
         data: { index },
-        timestamp: Date.now() - index * 1000,
+        timestamp: new Date(Date.now() - index * 1000).toISOString(),
       }));
 
       usePWAStore.setState((state) => ({
@@ -95,7 +83,7 @@ export default function PWAAnalyticsHarnessPage() {
       );
     };
 
-    const setOnlineStatus: Window['__pwaQueueHarness']['setOnlineStatus'] = (isOnline) => {
+    const setOnlineStatus: NonNullable<PWAQueueHarness['setOnlineStatus']> = (isOnline) => {
       usePWAStore.setState((state) => ({
         offline: {
           ...state.offline,
@@ -105,7 +93,7 @@ export default function PWAAnalyticsHarnessPage() {
       }));
     };
 
-    const reset = () => {
+    const reset: NonNullable<PWAQueueHarness['reset']> = () => {
       usePWAStore.setState((state) => ({
         offline: {
           ...state.offline,
@@ -123,11 +111,13 @@ export default function PWAAnalyticsHarnessPage() {
       }));
     };
 
-    window.__pwaQueueHarness = {
+    const harness: PWAQueueHarness = {
       setQueueState,
       setOnlineStatus,
       reset,
     };
+
+    window.__pwaQueueHarness = harness;
 
     reset();
 

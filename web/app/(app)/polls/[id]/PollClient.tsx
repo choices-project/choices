@@ -13,7 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
-import { createBallotFromPoll, createVotingRecordFromPollSubmission } from '@/features/voting/lib/pollAdapters';
+import {
+  createBallotFromPoll,
+  createVotingRecordFromPollSubmission,
+} from '@/features/voting/lib/pollAdapters';
+import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {
@@ -315,10 +319,12 @@ export default function PollClient({ poll }: PollClientProps) {
     }
 
     const hasCounts = Object.keys(optionVoteCounts).length > 0;
-    const ballot = createBallotFromPoll(pollDetailsForBallot, {
-      totalVotes: totalVotesContext,
-      optionVoteCounts: hasCounts ? optionVoteCounts : undefined,
-    });
+    const ballotContext: PollBallotContext = {
+      ...(typeof totalVotesContext === 'number' ? { totalVotes: totalVotesContext } : {}),
+      ...(hasCounts ? { optionVoteCounts } : {}),
+    };
+
+    const ballot = createBallotFromPoll(pollDetailsForBallot, ballotContext);
 
     setBallots([ballot]);
     setSelectedBallot(ballot);

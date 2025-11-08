@@ -377,59 +377,72 @@ Tracks message delivery status.
 ## Representatives & Officials
 
 ### `representatives_core`
-Core representative/elected official data.
+Canonical record for every active representative and elected official. Column lengths reflect the live Supabase schema (verified via `scripts/inspect-schema.ts`).
 
-**Columns** (25):
-- `id` SERIAL PRIMARY KEY
-- `name` TEXT
-- `office` TEXT
-- `level` TEXT (federal, state, local)
-- `state` TEXT
-- `district` TEXT
-- `party` TEXT
-- `bioguide_id`, `openstates_id`, `fec_id`, `google_civic_id`, `congress_gov_id` TEXT
-- `primary_email`, `primary_phone`, `primary_website` TEXT
-- `primary_photo_url` TEXT
-- `twitter_handle`, `facebook_url`, `instagram_handle`, `linkedin_url`, `youtube_channel` TEXT
-- `term_start_date`, `term_end_date`, `next_election_date` DATE
-- `data_quality_score` NUMERIC
-- `verification_status` TEXT
-- `data_sources` TEXT[]
-- `created_at`, `updated_at`, `last_verified` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `name` | `varchar(255)` | Full display name |
+| `office` | `varchar(255)` | Title/role (e.g. “State Representative”) |
+| `level` | `varchar(20)` | `federal` \| `state` \| `local` |
+| `state` | `varchar(2)` | USPS postal abbreviation |
+| `district` | `varchar(50)` | Legislative district (nullable) |
+| `party` | `varchar(100)` | Party affiliation |
+| `openstates_id` | `varchar(255)` | Raw OpenStates person ID |
+| `canonical_id` | `varchar(255)` | Choices canonical identifier |
+| `is_active` | `boolean` | Current term flag |
+| `created_at`, `updated_at`, `last_verified` | `timestamptz` | Audit columns |
+| `data_quality_score` | `integer` | Legacy scoring field (nullable) |
+| `verification_status` | `varchar(50)` | `verified` \| `unverified` etc. |
+| `bioguide_id`, `fec_id`, `google_civic_id`, `legiscan_id`, `congress_gov_id`, `govinfo_id` | `varchar(20-50)` | Identifier fields (`bioguide_id`/`fec_id` are `varchar(20)`) |
+| `wikipedia_url`, `ballotpedia_url`, `facebook_url`, `linkedin_url`, `primary_website`, `primary_photo_url` | `varchar(500)` | Long-form provenance URLs |
+| `twitter_handle`, `instagram_handle` | `varchar(50)` | Handles without the `@` |
+| `youtube_channel` | `varchar(100)` | YouTube channel or custom handle |
+| `primary_email` | `varchar(255)` | Preferred email |
+| `primary_phone` | `varchar(20)` | Normalised phone |
+| `term_start_date`, `term_end_date`, `next_election_date` | `date` | Term metadata |
+| `data_sources` | `jsonb` | Aggregated provenance entries |
 
 ### `representative_photos`
-Multiple photos per representative.
+Photo gallery sourced from OpenStates and enrichment providers.
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `photo_url` TEXT
-- `source` TEXT
-- `is_primary` BOOLEAN
-- `created_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `url` | `text` | Image URL |
+| `source` | `varchar(100)` | Origin (e.g. `openstates_yaml`) |
+| `width`, `height` | `integer` | Optional dimension hints |
+| `alt_text`, `attribution` | `text` | Accessibility metadata |
+| `is_primary` | `boolean` | True for main profile photo |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_social_media`
-Social media accounts.
+Denormalised social handles per platform (one row per representative + platform).
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `platform` TEXT (twitter, facebook, instagram, etc.)
-- `handle` TEXT
-- `url` TEXT
-- `verified` BOOLEAN
-- `created_at`, `updated_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `platform` | `varchar(50)` | `twitter`, `facebook`, etc. |
+| `handle` | `varchar(100)` | Platform-specific username |
+| `url` | `text` | Canonical profile URL (nullable) |
+| `is_primary`, `is_verified`, `verified` | `boolean` | Flags carried from sources |
+| `followers_count` | `bigint` | Optional enrichment metric |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_contacts`
-Contact information.
+Stores phone/email/address/contact rows with a uniqueness constraint on `(representative_id, contact_type, value)`.
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `contact_type` TEXT (office, district, email, phone)
-- `contact_value` TEXT
-- `is_primary` BOOLEAN
-- `created_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `contact_type` | `varchar(50)` | Normalised category (`phone`, `email`, `website`, `address`, `fax`) |
+| `value` | `text` | Raw contact string |
+| `is_primary`, `is_verified` | `boolean` | Flags from source or ingest |
+| `source` | `varchar(100)` | Provenance (`openstates_yaml`, etc.) |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_activity`
 Activity tracking (votes, bills, etc.).
@@ -445,67 +458,75 @@ Activity tracking (votes, bills, etc.).
 ### `representative_committees`
 Committee assignments.
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `committee_name` TEXT
-- `position` TEXT (member, chair, ranking)
-- `start_date`, `end_date` DATE
-- `created_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `committee_name` | `varchar(255)` | Normalised title/committee |
+| `role` | `varchar(100)` | Role within committee (nullable) |
+| `start_date`, `end_date` | `date` | Membership term |
+| `is_current` | `boolean` | Derived flag |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_campaign_finance`
 Campaign finance rollups sourced from the FEC (one row per representative).
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core, unique)
-- `cycle` INTEGER
-- `total_raised`, `total_spent`, `cash_on_hand` NUMERIC
-- `small_donor_percentage` NUMERIC
-- `top_contributors` JSONB (array of { name, amount, type, industry, influenceScore })
-- `last_filing_date` DATE
-- `source` TEXT
-- `sources` TEXT[]
-- `office_code` TEXT
-- `district` TEXT
-- `created_at`, `updated_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | Unique FK → `representatives_core.id` |
+| `cycle` | `integer` | Election cycle |
+| `total_raised`, `total_spent`, `cash_on_hand` | `numeric` | Monetary summary |
+| `small_donor_percentage` | `numeric` | Derived ratio |
+| `top_contributors` | `jsonb` | Array of structured contributor objects |
+| `last_filing_date` | `date` | Latest available filing |
+| `source` | `varchar(50)` | Primary ingest source (e.g. `fec`) |
+| `sources` | `text[]` | Secondary provenance |
+| `office_code`, `district` | `text` | FEC metadata |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_data_quality`
 Data quality scoring.
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `completeness_score` NUMERIC
-- `freshness_score` NUMERIC
-- `verification_score` NUMERIC
-- `overall_score` NUMERIC
-- `last_checked` TIMESTAMPTZ
-- `created_at`, `updated_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `data_completeness`, `overall_confidence`, `primary_source_score`, `secondary_source_score`, `source_reliability` | `numeric` | Component quality metrics |
+| `validation_method` | `varchar(50)` | e.g. `openstates_sync` |
+| `last_validated` | `timestamptz` | Timestamp of scoring |
+| `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_data_sources`
 Track data sources per representative.
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `source_name` TEXT
-- `source_type` TEXT
-- `last_synced` TIMESTAMPTZ
-- `sync_status` TEXT
-- `created_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` |
+| `source_name` | `varchar(50)` | Human-friendly label |
+| `source_type` | `varchar(50)` | System identifier (`openstates`, `openstates_source`, etc.) |
+| `confidence` | `varchar(20)` | `high`, `medium`, etc. |
+| `validation_status` | `varchar(20)` | `synced`, `stale`, etc. |
+| `last_updated`, `updated_at`, `created_at` | `timestamptz` | Timestamps |
+| `raw_data` | `jsonb` | Structured payload (e.g. source URLs) |
+
+> **Uniqueness**: `(representative_id, source_name, source_type)` must be unique (`unique_representative_data_sources`).
 
 ### `representative_crosswalk_enhanced` & `representative_enhanced_crosswalk`
 ID mapping between external systems (two variations).
 
-**Columns**:
-- `id` SERIAL PRIMARY KEY
-- `representative_id` INTEGER (FK to representatives_core)
-- `external_system` TEXT
-- `external_id` TEXT
-- `confidence_score` NUMERIC
-- `verified` BOOLEAN
-- `created_at`, `updated_at` TIMESTAMPTZ
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `integer` | Primary key |
+| `representative_id` | `integer` | FK → `representatives_core.id` (nullable for orphan IDs) |
+| `canonical_id` | `varchar(255)` | Canonical Choices identifier |
+| `source_system` | `varchar(50)` | e.g. `openstates`, `fec`, `bioguide` |
+| `source_id` | `varchar(255)` | External identifier |
+| `source_confidence` | `varchar(20)` | Confidence flag |
+| `last_verified`, `created_at`, `updated_at` | `timestamptz` | Audit columns |
+
+> **Uniqueness**: `(source_system, source_id)` enforced by `unique_representative_crosswalk_enhanced`.
 
 ### `id_crosswalk`
 General-purpose ID crosswalk table.

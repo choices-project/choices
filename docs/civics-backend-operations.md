@@ -6,39 +6,51 @@ This guide explains how the rebuilt ingest service is structured, how data flows
 
 ```
 OpenStates YAML ─┐
-Supabase core ───┼─> CanonicalRepresentative (merge layer)
-ID crosswalk  ───┘
-                           ┌─ sync:contacts  -> representative_contacts
-CanonicalRepresentative ───┤─ sync:social    -> representative_social_media
-                           ├─ sync:photos    -> representative_photos
-                           └─ enrich:finance -> representative_campaign_finance
+Supabase staging ─┴─> SQL Merge (`sync_representatives_from_openstates`)
+Federal Supabase ─┘           │
+                              ├─ representatives_core
+                              ├─ representative_contacts / social / photos
+                              ├─ representative_data_sources / data_quality
+                              └─ representative_campaign_finance (via enrich:finance)
 ```
 
-- **Canonical builder** (`src/ingest/openstates/people.ts`): streams OpenStates people YAML, filters to active representatives, and produces strongly typed `CanonicalRepresentative` records (IDs, contact info, offices, social profiles, photos).
-- **Supabase merge layer** (`src/ingest/supabase/representatives.ts`): fetches existing Supabase rows in deterministic chunks, applies canonical ID crosswalks, merges official contact/social/photo details, and assigns `supabaseRepresentativeId`.
-- **Persistence utilities** (`src/persist/*.ts`): idempotent writers that purge previous `openstates_yaml` rows before inserting deduplicated data.
+- **Stage loader** (`src/scripts/stage-openstates.ts`): parses OpenStates YAML, writes source rows into the `openstates_people_*` tables in bulk.
+- **SQL merge function** (`sync_representatives_from_openstates()`): set-based merge that upserts `representatives_core`, contacts, social, photos, provenance, and quality metrics.
+- **Legacy persistence utilities** (`src/persist/*.ts`): still available while the SQL pipeline is rolled out; executes replace-by-source writes via REST.
 - **CLI scripts** (`src/scripts/*.ts`): orchestration commands with shared argument parsing (`--states`, `--limit`, `--dry-run`).
 - **Shared helpers** (`@choices/civics-shared`): reused logic for FEC office codes, district normalization, finance scoring, etc.
 
 ## 2. Key workflows
 
+### 2.0 Quick start (operators)
+
+```bash
+cd services/civics-backend
+cp env.example .env.local          # populate with Supabase + API keys
+npm install
+npm run ingest:openstates          # stage OpenStates YAML + run SQL merge
+npm run ingest:qa                  # schema check, duplicate audit, 5-record preview
+```
+
+`ingest:qa` fails fast if the schema drifts, duplicate canonical IDs exist, or the preview script cannot read sample data.
+
 ### 2.1 Preview & verification
 
-1. `npm run preview` — Inspect canonical reps (no writes).
-2. `npm run sync:contacts -- --dry-run` — Confirm counts.
-3. Repeat for `sync:social` and `sync:photos`.
-4. `npm run enrich:finance -- --dry-run` — Spot-check finance payloads.
-5. `npm run audit:crosswalk` — Ensure canonical IDs remain healthy.
-
-Remove `--dry-run` once satisfied with the output.
+1. `npm run ingest:openstates` — Stage YAML + execute `sync_representatives_from_openstates()`.
+2. `npm run ingest:qa` — Schema inspection, duplicate audit, and a 5-record preview snapshot.
+3. `npm run preview -- --states=CA --limit=10` — Optional: inspect a state slice before shipping.
+4. Legacy writers (`sync:contacts`, `sync:social`, `sync:photos`, `sync:data-sources`) remain available with `--dry-run` until the SQL-first flow covers every table.
+5. `npm run enrich:finance -- --dry-run` — Validate FEC enrichment, then rerun without `--dry-run`.
+6. `npm run audit:crosswalk` — Ensure canonical IDs remain healthy; apply `npm run fix:crosswalk` if required.
 
 ### 2.2 Data sync commands
 
 | Script | Source fields | Destination table | Replace semantics |
 | --- | --- | --- | --- |
-| `sync:contacts` | Emails, phones, faxes, postal addresses | `representative_contacts` | Delete `source = 'openstates_yaml'` then insert |
-| `sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | Delete by representative, dedupe per platform |
-| `sync:photos` | Primary portrait URL | `representative_photos` | Delete `source = 'openstates_yaml'`, insert canonical portrait |
+| `stage:openstates` | Raw OpenStates YAML | `openstates_people_*` staging tables | Bulk upsert (1000 row chunks); set `OPENSTATES_PEOPLE_DIR` env var |
+| `sync:contacts` | Emails, phones, faxes, postal addresses | `representative_contacts` | (Legacy) Delete `source = 'openstates_yaml'` then insert |
+| `sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | (Legacy) Delete by representative, dedupe per platform |
+| `sync:photos` | Primary portrait URL | `representative_photos` | (Legacy) Delete `source = 'openstates_yaml'`, insert canonical portrait |
 | `sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
 | `enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Upsert on `representative_id`; throttled for rate limits |
 
@@ -58,6 +70,29 @@ All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid C
 - Missing Supabase IDs result in a skipped representative (no orphan records).
 - Crosswalk conflicts retain the canonical IDs already established unless an explicit repair script runs.
 
+### 2.5 Schema inspection
+
+Need to confirm live column lengths or nullability before changing ingest logic?
+
+```
+cd services/civics-backend
+npm run build --silent && node scripts/inspect-schema.js
+```
+
+Requirements:
+
+- `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` must be present in the environment (load `.env.local` first).
+- The script calls the SQL function `public.get_table_columns(text)` (added via `supabase/migrations/20251108024500_create_get_table_columns_function.sql`) to read `information_schema.columns`.
+
+Output lists each representative-facing table along with exact types, lengths and nullability so documentation and merges stay aligned with Supabase.
+
+### 2.6 Duplicate canonicals
+
+- `npm run audit:duplicates` — surfaces canonicals with more than one `representatives_core` row (uses `public.get_duplicate_canonical_ids()`).
+- `npm run fix:duplicates -- --canonical=<id>` — removes extras for a single canonical. Dry-run by default; pass `--apply` to delete rows.  
+  Use `--force` if dependent data exists and you are confident it should be dropped.
+- Always rerun `npm run ingest:qa` after any fixes to confirm the dataset is clean.
+
 ## 3. Testing & validation
 
 - `npm run lint` — Type-checks the entire ingest service (`tsc --noEmit`).
@@ -68,9 +103,9 @@ All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid C
 ## 4. Extending the pipeline
 
 1. **Add new data sources**  
-   - Create a persistence utility under `src/persist/`.  
-   - Follow the replace-by-source pattern (delete existing rows before inserting).  
-   - Add a CLI wrapper under `src/scripts/` and register it in `package.json`.
+   - Extend the SQL merge (or create additional staging tables).  
+   - Prefer set-based upserts to per-representative REST writes.  
+   - Provide CLI helpers to stage new data before running the merge function.
 
 2. **Track provenance & quality**  
    - See `docs/civics-ingest-supabase-plan.md` for remaining tables (`representative_data_sources`, `representative_data_quality`).  

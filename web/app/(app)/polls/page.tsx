@@ -69,6 +69,15 @@ const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
       }
     : undefined;
 
+  const primaryHashtag =
+    typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined;
+  const trendingPosition =
+    typeof rawPoll.trending_position === 'number' ? rawPoll.trending_position : undefined;
+  const engagementRate =
+    typeof rawPoll.engagement_rate === 'number' ? rawPoll.engagement_rate : undefined;
+  const userInterestLevel =
+    typeof rawPoll.user_interest_level === 'number' ? rawPoll.user_interest_level : undefined;
+
   return {
     id: rawPoll.id,
     title: rawPoll.title,
@@ -80,13 +89,12 @@ const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
       : [],
     totalVotes: rawPoll.totalVotes ?? rawPoll.total_votes ?? 0,
     createdAt: rawPoll.createdAt ?? rawPoll.created_at ?? new Date().toISOString(),
-    hashtags,
-    primary_hashtag:
-      typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined,
-    hashtagIntegration,
-    trending_position: rawPoll.trending_position ?? undefined,
-    engagement_rate: rawPoll.engagement_rate ?? undefined,
-    user_interest_level: rawPoll.user_interest_level ?? undefined,
+    ...(hashtags.length > 0 ? { hashtags } : {}),
+    ...(primaryHashtag ? { primary_hashtag: primaryHashtag } : {}),
+    ...(hashtagIntegration ? { hashtagIntegration } : {}),
+    ...(trendingPosition !== undefined ? { trending_position: trendingPosition } : {}),
+    ...(engagementRate !== undefined ? { engagement_rate: engagementRate } : {}),
+    ...(userInterestLevel !== undefined ? { user_interest_level: userInterestLevel } : {}),
     author: {
       name: rawPoll.author?.name ?? 'Anonymous',
       verified: Boolean(rawPoll.author?.verified),
@@ -103,17 +111,17 @@ export default function PollsPage() {
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [sortBy, _setSortBy] = useState<'newest' | 'popular' | 'trending' | 'engagement'>('trending');
   const [viewMode, _setViewMode] = useState<'grid' | 'list' | 'trending'>('trending');
-  
+
   // Hashtag store integration
   const hashtagStore = useHashtagStore();
   const hashtagStats = useHashtagStats();
   const hashtagActions = useHashtagActions();
-  
+
   // Get hashtag data from store
   const _hashtags = hashtagStore?.hashtags ?? [];
   const _trendingHashtags = hashtagStore?.trendingHashtags ?? [];
   const _trendingCount = hashtagStats?.trendingCount ?? 0;
-  
+
   // Use useCallback to prevent infinite loops
   const getTrendingHashtags = useCallback(async () => {
     try {
@@ -124,7 +132,7 @@ export default function PollsPage() {
       logger.warn('Failed to load trending hashtags:', error);
     }
   }, [hashtagActions]);
-  
+
   const _searchHashtags = useCallback(async (query: string) => {
     try {
       if (hashtagActions?.searchHashtags) {
@@ -451,7 +459,7 @@ export default function PollsPage() {
                     )}
                   </div>
                 )}
-                
+
                 {/* Hashtags with Engagement */}
                 {poll.hashtags && poll.hashtags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -470,7 +478,7 @@ export default function PollsPage() {
                     )}
                   </div>
                 )}
-                
+
                 {/* Primary Hashtag Highlight */}
                 {poll.primary_hashtag && (
                   <div className="flex items-center gap-1">
