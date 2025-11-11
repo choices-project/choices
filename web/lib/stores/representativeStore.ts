@@ -1,14 +1,15 @@
 /**
  * Representative Store - Zustand Implementation
- * 
- * State management for representative data, search, and user interactions
- * Integrates with the representative service and provides reactive state
- * 
+ *
+ * Centralised state management for representative discovery, detail caching,
+ * and user follow interactions.
+ *
  * Created: October 28, 2025
- * Status: ✅ FOUNDATION
+ * Status: 🟡 MODERNISING
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -16,365 +17,575 @@ import { representativeService } from '@/lib/services/representative-service';
 import logger from '@/lib/utils/logger';
 import type {
   Representative,
-  RepresentativeSearchQuery,
   RepresentativeLocationQuery,
+  RepresentativeSearchQuery,
   RepresentativeListResponse,
-  UserRepresentative,
-  RepresentativeSubscription
+  RepresentativeSubscription,
+  UserRepresentative
 } from '@/types/representative';
+import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
 
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
-// Removed React hooks - they should not be used in Zustand stores
+import type { BaseStore } from './types';
 
+const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 
-// ============================================================================
-// STORE STATE INTERFACE
-// ============================================================================
+export type RepresentativeFollowRecord = {
+  id: string;
+  notify_on_votes: boolean;
+  notify_on_committee_activity: boolean;
+  notify_on_public_statements: boolean;
+  notify_on_events: boolean;
+  notes?: string | null;
+  tags?: string[] | null;
+  created_at: string;
+  updated_at: string;
+};
 
-type RepresentativeStore = {
-  // Core representative data
+export type UserRepresentativeEntry = {
+  follow: RepresentativeFollowRecord;
+  representative: Representative;
+};
+
+export type RepresentativeState = {
   representatives: Representative[];
+  currentRepresentativeId: number | null;
   currentRepresentative: Representative | null;
-  
-  // Search and discovery
+
   searchResults: RepresentativeListResponse | null;
   searchQuery: RepresentativeSearchQuery | null;
+  lastSearchAt: number | null;
+
   locationRepresentatives: Representative[];
-  
-  // User interactions
+
   followedRepresentatives: number[];
   userRepresentatives: UserRepresentative[];
+  userRepresentativeEntries: UserRepresentativeEntry[];
+  userRepresentativesTotal: number;
+  userRepresentativesHasMore: boolean;
   subscriptions: RepresentativeSubscription[];
-  
-  // UI state
-  loading: boolean;
-  error: string | null;
+
+  detailCache: Record<number, Representative>;
+  detailCacheTimestamps: Record<number, number>;
+
+  isLoading: boolean;
   searchLoading: boolean;
-  
-  // Actions
-  searchRepresentatives: (query: RepresentativeSearchQuery) => Promise<void>;
-  findByLocation: (query: RepresentativeLocationQuery) => Promise<void>;
-  getRepresentativeById: (id: number) => Promise<void>;
-  followRepresentative: (representativeId: number) => Promise<void>;
-  unfollowRepresentative: (representativeId: number) => Promise<void>;
-  getUserRepresentatives: () => Promise<void>;
+  detailLoading: boolean;
+  followMutationLoading: boolean;
+  error: string | null;
+};
+
+export type RepresentativeActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
+  setSearchLoading: (loading: boolean) => void;
+  setDetailLoading: (loading: boolean) => void;
+  setFollowMutationLoading: (loading: boolean) => void;
+
+  searchRepresentatives: (query: RepresentativeSearchQuery) => Promise<RepresentativeListResponse | null>;
+  findByLocation: (query: RepresentativeLocationQuery) => Promise<RepresentativeListResponse | null>;
+  getRepresentativeById: (
+    id: number,
+    options?: { forceRefresh?: boolean }
+  ) => Promise<Representative | null>;
+
+  followRepresentative: (representativeId: number) => Promise<boolean>;
+  unfollowRepresentative: (representativeId: number) => Promise<boolean>;
+  getUserRepresentatives: () => Promise<UserRepresentativeEntry[]>;
   checkFollowStatus: (representativeId: number) => Promise<boolean>;
-  
-  // UI actions
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
+
+  invalidateRepresentativeDetail: (representativeId: number) => void;
+  invalidateAllRepresentativeDetails: () => void;
+  resetRepresentativeState: () => void;
   clearSearch: () => void;
-  clearError: () => void;
-}
+};
 
-// ============================================================================
-// STORE IMPLEMENTATION
-// ============================================================================
+export type RepresentativeStore = RepresentativeState & RepresentativeActions;
 
-const useRepresentativeStore = create<RepresentativeStore>()(
+type RepresentativeStoreCreator = StateCreator<
+  RepresentativeStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+
+export const createInitialRepresentativeState = (): RepresentativeState => ({
+  representatives: [],
+  currentRepresentativeId: null,
+  currentRepresentative: null,
+
+  searchResults: null,
+  searchQuery: null,
+  lastSearchAt: null,
+
+  locationRepresentatives: [],
+
+  followedRepresentatives: [],
+  userRepresentatives: [],
+  userRepresentativeEntries: [],
+  userRepresentativesTotal: 0,
+  userRepresentativesHasMore: false,
+  subscriptions: [],
+
+  detailCache: {},
+  detailCacheTimestamps: {},
+
+  isLoading: false,
+  searchLoading: false,
+  detailLoading: false,
+  followMutationLoading: false,
+  error: null
+});
+
+const isCacheValid = (timestamp?: number | null) => {
+  if (!timestamp) return false;
+  return Date.now() - timestamp < DETAIL_CACHE_TTL;
+};
+
+export const createRepresentativeActions = (
+  set: Parameters<RepresentativeStoreCreator>[0],
+  get: Parameters<RepresentativeStoreCreator>[1]
+): RepresentativeActions => {
+  const setState = set as unknown as (recipe: (draft: RepresentativeState) => void) => void;
+  const { setLoading, setError, clearError } = createBaseStoreActions<RepresentativeState>(setState);
+
+  const setSearchLoading = (loading: boolean) =>
+    setState((state) => {
+      state.searchLoading = loading;
+    });
+
+  const setDetailLoading = (loading: boolean) =>
+    setState((state) => {
+      state.detailLoading = loading;
+    });
+
+  const setFollowMutationLoading = (loading: boolean) =>
+    setState((state) => {
+      state.followMutationLoading = loading;
+    });
+
+  const updateDetailCache = (representative: Representative | null) => {
+    if (!representative) return;
+
+    setState((state) => {
+      state.detailCache[representative.id] = representative;
+      state.detailCacheTimestamps[representative.id] = Date.now();
+      state.currentRepresentative = representative;
+      state.currentRepresentativeId = representative.id;
+    });
+  };
+
+  return {
+    setLoading,
+    setError,
+    clearError,
+    setSearchLoading,
+    setDetailLoading,
+    setFollowMutationLoading,
+
+    searchRepresentatives: async (query) => {
+      logger.info('RepresentativeStore.searchRepresentatives', query);
+      setSearchLoading(true);
+      setLoading(true);
+      clearError();
+
+      try {
+        const result = await representativeService.getRepresentatives(query);
+
+        if (result.success && result.data) {
+          setState((state) => {
+            state.searchResults = result;
+            state.representatives = result.data.representatives;
+            state.searchQuery = query;
+            state.lastSearchAt = Date.now();
+          });
+          return result;
+        }
+
+        const errorMessage = result.error ?? 'Failed to fetch representatives';
+        setError(errorMessage);
+        return null;
+      } catch (error) {
+        logger.error('RepresentativeStore.searchRepresentatives error', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch representatives');
+        return null;
+      } finally {
+        setSearchLoading(false);
+        setLoading(false);
+      }
+    },
+
+    findByLocation: async (query) => {
+      logger.info('RepresentativeStore.findByLocation', query);
+      setLoading(true);
+      clearError();
+
+      try {
+        const result = await representativeService.findByLocation(query);
+
+        if (result.success && result.data) {
+          setState((state) => {
+            state.locationRepresentatives = result.data.representatives;
+          });
+          return result;
+        }
+
+        const errorMessage = result.error ?? 'Failed to find representatives by location';
+        setError(errorMessage);
+        return null;
+      } catch (error) {
+        logger.error('RepresentativeStore.findByLocation error', error);
+        setError(error instanceof Error ? error.message : 'Failed to find representatives by location');
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+
+    getRepresentativeById: async (id, options) => {
+      const { forceRefresh = false } = options ?? {};
+      const state = get();
+
+      if (!forceRefresh && isCacheValid(state.detailCacheTimestamps[id])) {
+        const cached = state.detailCache[id] ?? null;
+        if (cached) {
+          setState((draft) => {
+            draft.currentRepresentativeId = cached.id;
+            draft.currentRepresentative = cached;
+          });
+          return cached;
+        }
+      }
+
+      setDetailLoading(true);
+      setLoading(true);
+      clearError();
+
+      try {
+        const response = await representativeService.getRepresentativeById(id);
+
+        if (response.success && response.data) {
+          const representative = response.data as Representative;
+          updateDetailCache(representative);
+          return representative;
+        }
+
+        const message = response.error ?? 'Representative not found';
+        setError(message);
+        return null;
+      } catch (error) {
+        logger.error('RepresentativeStore.getRepresentativeById error', error);
+        setError(error instanceof Error ? error.message : 'Failed to load representative');
+        return null;
+      } finally {
+        setDetailLoading(false);
+        setLoading(false);
+      }
+    },
+
+    followRepresentative: async (representativeId) => {
+      setFollowMutationLoading(true);
+      clearError();
+
+      try {
+        const response = await fetch(`/api/representatives/${representativeId}/follow`, {
+          method: 'POST'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to follow representative');
+        }
+
+        setState((state) => {
+          if (!state.followedRepresentatives.includes(representativeId)) {
+            state.followedRepresentatives.push(representativeId);
+          }
+        });
+
+        return true;
+      } catch (error) {
+        logger.error('RepresentativeStore.followRepresentative error', error);
+        setError(error instanceof Error ? error.message : 'Failed to follow representative');
+        return false;
+      } finally {
+        setFollowMutationLoading(false);
+      }
+    },
+
+    unfollowRepresentative: async (representativeId) => {
+      setFollowMutationLoading(true);
+      clearError();
+
+      try {
+        const response = await fetch(`/api/representatives/${representativeId}/follow`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to unfollow representative');
+        }
+
+        setState((state) => {
+          state.followedRepresentatives = state.followedRepresentatives.filter(
+            (idValue) => idValue !== representativeId
+          );
+        });
+
+        return true;
+      } catch (error) {
+        logger.error('RepresentativeStore.unfollowRepresentative error', error);
+        setError(error instanceof Error ? error.message : 'Failed to unfollow representative');
+        return false;
+      } finally {
+        setFollowMutationLoading(false);
+      }
+    },
+
+    getUserRepresentatives: async () => {
+      setLoading(true);
+      clearError();
+
+      try {
+        const response = await fetch('/api/representatives/my');
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setState((state) => {
+              state.userRepresentativeEntries = [];
+              state.userRepresentatives = [];
+              state.followedRepresentatives = [];
+              state.userRepresentativesTotal = 0;
+              state.userRepresentativesHasMore = false;
+              state.error = 'Please sign in to view your followed representatives';
+            });
+            return [];
+          }
+          throw new Error('Failed to fetch user representatives');
+        }
+
+        const data = await response.json() as {
+          success: boolean;
+          data?: {
+            representatives?: Array<{
+              follow: RepresentativeFollowRecord;
+              representative: Representative;
+            }>;
+            total?: number;
+            hasMore?: boolean;
+          };
+        };
+
+        if (!data.success || !data.data?.representatives) {
+          setState((state) => {
+            state.userRepresentatives = [];
+            state.userRepresentativeEntries = [];
+            state.followedRepresentatives = [];
+            state.userRepresentativesTotal = 0;
+            state.userRepresentativesHasMore = false;
+          });
+          return [];
+        }
+
+        const entries = data.data.representatives.map<UserRepresentativeEntry>((item) => ({
+          follow: item.follow,
+          representative: item.representative
+        }));
+
+        const normalised = entries.map<UserRepresentative>((entry) => ({
+          id: entry.follow.id,
+          user_id: '', // TODO: populate via authenticated context during hydration
+          representative_id: entry.representative.id,
+          relationship_type: 'following',
+          created_at: entry.follow.created_at,
+          updated_at: entry.follow.updated_at
+        }));
+
+        setState((state) => {
+          state.userRepresentativeEntries = entries;
+          state.userRepresentatives = normalised;
+          state.followedRepresentatives = normalised.map((item) => item.representative_id);
+          state.userRepresentativesTotal = data.data?.total ?? normalised.length;
+          state.userRepresentativesHasMore = data.data?.hasMore ?? false;
+        });
+
+        return entries;
+      } catch (error) {
+        logger.error('RepresentativeStore.getUserRepresentatives error', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch user representatives');
+        setState((state) => {
+          state.userRepresentativeEntries = [];
+          state.userRepresentatives = [];
+          state.followedRepresentatives = [];
+          state.userRepresentativesTotal = 0;
+          state.userRepresentativesHasMore = false;
+        });
+        return [];
+      } finally {
+        setLoading(false);
+      }
+    },
+
+    checkFollowStatus: async (representativeId) => {
+      try {
+        const response = await fetch(`/api/representatives/${representativeId}/follow`);
+
+        if (!response.ok) {
+          return false;
+        }
+
+        const data = await response.json() as { following?: boolean };
+        return Boolean(data.following);
+      } catch (error) {
+        logger.error('RepresentativeStore.checkFollowStatus error', error);
+        return false;
+      }
+    },
+
+    invalidateRepresentativeDetail: (representativeId) => {
+      setState((state) => {
+        delete state.detailCache[representativeId];
+        delete state.detailCacheTimestamps[representativeId];
+
+        if (state.currentRepresentativeId === representativeId) {
+          state.currentRepresentativeId = null;
+          state.currentRepresentative = null;
+        }
+      });
+    },
+
+    invalidateAllRepresentativeDetails: () => {
+      setState((state) => {
+        state.detailCache = {};
+        state.detailCacheTimestamps = {};
+        state.currentRepresentativeId = null;
+        state.currentRepresentative = null;
+      });
+    },
+
+    resetRepresentativeState: () => {
+      setState(() => createInitialRepresentativeState());
+    },
+
+    clearSearch: () => {
+      setState((state) => {
+        state.searchResults = null;
+        state.searchQuery = null;
+        state.representatives = [];
+        state.lastSearchAt = null;
+      });
+      clearError();
+    }
+  };
+};
+
+export const representativeStoreCreator: RepresentativeStoreCreator = (set, get) =>
+  Object.assign(createInitialRepresentativeState(), createRepresentativeActions(set, get));
+
+export const useRepresentativeStore = create<RepresentativeStore>()(
   devtools(
     persist(
-      immer((set, _get) => ({
-        // Initial state
-        representatives: [],
-        currentRepresentative: null,
-        searchResults: null,
-        searchQuery: null,
-        locationRepresentatives: [],
-        followedRepresentatives: [],
-        userRepresentatives: [],
-        subscriptions: [],
-        loading: false,
-        error: null,
-        searchLoading: false,
-
-        // ====================================================================
-        // SEARCH ACTIONS
-        // ====================================================================
-
-        searchRepresentatives: async (query: RepresentativeSearchQuery) => {
-          logger.info('🔍 Store: searchRepresentatives called with query:', query);
-          
-          set(state => {
-            state.searchLoading = true;
-            state.error = null;
-            state.searchQuery = query;
-          });
-
-          try {
-            logger.info('🔍 Store: Calling representativeService.getRepresentatives with query:', query);
-            const results = await representativeService.getRepresentatives(query);
-            logger.info('📊 Store: Got results from service:', results);
-            
-            if (results.success) {
-              set(state => {
-                state.searchResults = results;
-                state.searchLoading = false;
-              });
-              logger.info('✅ Store: Updated state with results:', results);
-            } else {
-              set(state => {
-                state.error = results.error ?? 'Search failed';
-                state.searchLoading = false;
-              });
-              logger.info('❌ Store: Search failed:', results.error);
-            }
-          } catch (error) {
-            logger.error('❌ Store: Search error:', error);
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Search failed';
-              state.searchLoading = false;
-            });
-          }
-        },
-
-        findByLocation: async (query: RepresentativeLocationQuery) => {
-          set(state => {
-            state.loading = true;
-            state.error = null;
-          });
-
-          try {
-            const response = await representativeService.findByLocation(query);
-            
-            if (response.success && response.data) {
-              set(state => {
-                state.locationRepresentatives = response.data.representatives;
-                state.loading = false;
-              });
-            } else {
-              set(state => {
-                state.error = response.error ?? 'Location search failed';
-                state.loading = false;
-              });
-            }
-          } catch (error) {
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Location search failed';
-              state.loading = false;
-            });
-          }
-        },
-
-        getRepresentativeById: async (id: number) => {
-          set(state => {
-            state.loading = true;
-            state.error = null;
-          });
-
-          try {
-            const response = await representativeService.getRepresentativeById(id);
-            
-            if (response.success && response.data) {
-              set(state => {
-                state.currentRepresentative = (response.data as Representative) ?? null;
-                state.loading = false;
-              });
-            } else {
-              set(state => {
-                state.error = response.error ?? 'Representative not found';
-                state.loading = false;
-              });
-            }
-          } catch (error) {
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Failed to load representative';
-              state.loading = false;
-            });
-          }
-        },
-
-        // ====================================================================
-        // USER INTERACTION ACTIONS
-        // ====================================================================
-
-        followRepresentative: async (representativeId: number) => {
-          try {
-            const response = await fetch(`/api/representatives/${representativeId}/follow`, {
-              method: 'POST'
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to follow representative');
-            }
-
-            set(state => {
-              if (!state.followedRepresentatives.includes(representativeId)) {
-                state.followedRepresentatives.push(representativeId);
-              }
-            });
-          } catch (error) {
-            logger.error('Error following representative:', error);
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Failed to follow representative';
-            });
-          }
-        },
-
-        unfollowRepresentative: async (representativeId: number) => {
-          try {
-            const response = await fetch(`/api/representatives/${representativeId}/follow`, {
-              method: 'DELETE'
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to unfollow representative');
-            }
-
-            set(state => {
-              state.followedRepresentatives = state.followedRepresentatives.filter(
-                id => id !== representativeId
-              );
-            });
-          } catch (error) {
-            logger.error('Error unfollowing representative:', error);
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Failed to unfollow representative';
-            });
-          }
-        },
-
-        getUserRepresentatives: async () => {
-          set(state => {
-            state.loading = true;
-            state.error = null;
-          });
-
-          try {
-            const response = await fetch('/api/representatives/my');
-
-            if (!response.ok) {
-              throw new Error('Failed to fetch user representatives');
-            }
-
-            const data = await response.json() as {
-              success: boolean;
-              data?: {
-                representatives?: Array<{
-                  follow: { id: string; created_at: string; updated_at: string };
-                  representative: { id: number };
-                }>;
-              };
-            };
-
-            if (data.success && data.data?.representatives) {
-              set(state => {
-                if (data.data?.representatives) {
-                  state.userRepresentatives = data.data.representatives.map((item) => ({
-                    id: item.follow.id,
-                    user_id: '', // Set from auth context when needed
-                    representative_id: item.representative.id,
-                    relationship_type: 'following' as const,
-                    created_at: item.follow.created_at,
-                    updated_at: item.follow.updated_at
-                  }));
-                  // Update followed list
-                  state.followedRepresentatives = data.data.representatives.map(
-                    (item) => item.representative.id
-                  );
-                }
-                state.loading = false;
-              });
-            }
-          } catch (error) {
-            logger.error('Error fetching user representatives:', error);
-            set(state => {
-              state.error = error instanceof Error ? error.message : 'Failed to fetch user representatives';
-              state.loading = false;
-            });
-          }
-        },
-
-        checkFollowStatus: async (representativeId: number): Promise<boolean> => {
-          try {
-            const response = await fetch(`/api/representatives/${representativeId}/follow`);
-
-            if (!response.ok) {
-              return false;
-            }
-
-            const data = await response.json();
-            return data.following ?? false;
-          } catch (error) {
-            logger.error('Error checking follow status:', error);
-            return false;
-          }
-        },
-
-        // ====================================================================
-        // UI ACTIONS
-        // ====================================================================
-
-        setLoading: (loading: boolean) => {
-          set(state => {
-            state.loading = loading;
-          });
-        },
-
-        setError: (error: string | null) => {
-          set(state => {
-            state.error = error;
-          });
-        },
-
-        clearSearch: () => {
-          set(state => {
-            state.searchResults = null;
-            state.searchQuery = null;
-            state.error = null;
-          });
-        },
-
-        clearError: () => {
-          set(state => {
-            state.error = null;
-          });
-        },
-      })),
+      immer(representativeStoreCreator),
       {
         name: 'representative-store',
         storage: createSafeStorage(),
         partialize: (state) => ({
           followedRepresentatives: state.followedRepresentatives,
           userRepresentatives: state.userRepresentatives,
-          subscriptions: state.subscriptions,
-        }),
+          subscriptions: state.subscriptions
+        })
       }
     ),
-    {
-      name: 'representative-store',
-    }
+    { name: 'representative-store' }
   )
 );
 
-// ============================================================================
-// SELECTOR HOOKS (for better performance) - REMOVED TO AVOID CONFLICTS
-// ============================================================================
-
-// ============================================================================
-// ACTION HOOKS (with proper memoization)
-// ============================================================================
-
-// ============================================================================
-// ACTION HOOKS (individual hooks to avoid infinite loops)
-// ============================================================================
-
-export const useSearchRepresentatives = () => useRepresentativeStore(state => state.searchRepresentatives);
-export const useFindByLocation = () => useRepresentativeStore(state => state.findByLocation);
-export const useGetRepresentativeById = () => useRepresentativeStore(state => state.getRepresentativeById);
-export const useFollowRepresentative = () => useRepresentativeStore(state => state.followRepresentative);
-export const useUnfollowRepresentative = () => useRepresentativeStore(state => state.unfollowRepresentative);
-export const useGetUserRepresentatives = () => useRepresentativeStore(state => state.getUserRepresentatives);
-export const useClearSearch = () => useRepresentativeStore(state => state.clearSearch);
-export const useClearError = () => useRepresentativeStore(state => state.clearError);
-
-// Export the store instance for direct access
 export const representativeStore = useRepresentativeStore;
 
-// Proper Zustand selectors (no React hooks in store file)
-export const useRepresentativeSearchResults = () => useRepresentativeStore((state) => state.searchResults);
-export const useRepresentativeLoading = () => useRepresentativeStore((state) => state.searchLoading);
-export const useRepresentativeError = () => useRepresentativeStore((state) => state.error);
-export const useRepresentatives = () => useRepresentativeStore((state) => state.representatives);
-export const useCurrentRepresentative = () => useRepresentativeStore((state) => state.currentRepresentative);
-export const useFollowedRepresentatives = () => useRepresentativeStore((state) => state.followedRepresentatives);
+export const representativeSelectors = {
+  representatives: (state: RepresentativeStore) => state.representatives,
+  searchResults: (state: RepresentativeStore) => state.searchResults,
+  searchQuery: (state: RepresentativeStore) => state.searchQuery,
+  locationRepresentatives: (state: RepresentativeStore) => state.locationRepresentatives,
+  userRepresentativeEntries: (state: RepresentativeStore) => state.userRepresentativeEntries,
+  userRepresentativesTotal: (state: RepresentativeStore) => state.userRepresentativesTotal,
+  userRepresentativesHasMore: (state: RepresentativeStore) => state.userRepresentativesHasMore,
+
+  isLoading: (state: RepresentativeStore) => state.isLoading,
+  searchLoading: (state: RepresentativeStore) => state.searchLoading,
+  detailLoading: (state: RepresentativeStore) => state.detailLoading,
+  followMutationLoading: (state: RepresentativeStore) => state.followMutationLoading,
+  error: (state: RepresentativeStore) => state.error,
+
+  currentRepresentative: (state: RepresentativeStore) => state.currentRepresentative,
+  currentRepresentativeId: (state: RepresentativeStore) => state.currentRepresentativeId,
+  followedRepresentatives: (state: RepresentativeStore) => state.followedRepresentatives,
+  isRepresentativeFollowed:
+    (representativeId: number) =>
+      (state: RepresentativeStore) => state.followedRepresentatives.includes(representativeId),
+
+  representativeFromCache:
+    (representativeId: number) =>
+      (state: RepresentativeStore) => state.detailCache[representativeId] ?? null
+} as const;
+
+// Action hooks
+export const useSearchRepresentatives = () =>
+  useRepresentativeStore((state) => state.searchRepresentatives);
+export const useFindByLocation = () => useRepresentativeStore((state) => state.findByLocation);
+export const useGetRepresentativeById = () =>
+  useRepresentativeStore((state) => state.getRepresentativeById);
+export const useFollowRepresentative = () =>
+  useRepresentativeStore((state) => state.followRepresentative);
+export const useUnfollowRepresentative = () =>
+  useRepresentativeStore((state) => state.unfollowRepresentative);
+export const useGetUserRepresentatives = () =>
+  useRepresentativeStore((state) => state.getUserRepresentatives);
+export const useClearSearch = () => useRepresentativeStore((state) => state.clearSearch);
+export const useClearError = () => useRepresentativeStore((state) => state.clearError);
+export const useInvalidateRepresentativeDetail = () =>
+  useRepresentativeStore((state) => state.invalidateRepresentativeDetail);
+export const useResetRepresentativeState = () =>
+  useRepresentativeStore((state) => state.resetRepresentativeState);
+
+// Selector hooks
+export const useRepresentativeSearchResults = () =>
+  useRepresentativeStore(representativeSelectors.searchResults);
+export const useRepresentativeLoading = () =>
+  useRepresentativeStore(representativeSelectors.searchLoading);
+export const useRepresentativeError = () =>
+  useRepresentativeStore(representativeSelectors.error);
+export const useRepresentatives = () =>
+  useRepresentativeStore(representativeSelectors.representatives);
+export const useCurrentRepresentative = () =>
+  useRepresentativeStore(representativeSelectors.currentRepresentative);
+export const useFollowedRepresentatives = () =>
+  useRepresentativeStore(representativeSelectors.followedRepresentatives);
+export const useLocationRepresentatives = () =>
+  useRepresentativeStore(representativeSelectors.locationRepresentatives);
+export const useRepresentativeGlobalLoading = () =>
+  useRepresentativeStore(representativeSelectors.isLoading);
+export const useRepresentativeDetailLoading = () =>
+  useRepresentativeStore(representativeSelectors.detailLoading);
+export const useRepresentativeFollowLoading = () =>
+  useRepresentativeStore(representativeSelectors.followMutationLoading);
+export const useUserRepresentativeEntries = () =>
+  useRepresentativeStore(representativeSelectors.userRepresentativeEntries);
+export const useUserRepresentativeMeta = () =>
+  useRepresentativeStore((state) => ({
+    total: representativeSelectors.userRepresentativesTotal(state),
+    hasMore: representativeSelectors.userRepresentativesHasMore(state)
+  }));
+export const useRepresentativeById = (representativeId: number | null) =>
+  useRepresentativeStore((state) => {
+    if (representativeId == null) {
+      return null;
+    }
+
+    if (state.currentRepresentativeId === representativeId) {
+      return state.currentRepresentative;
+    }
+
+    return state.detailCache[representativeId] ?? null;
+  });
+export const useRepresentativeFilters = () =>
+  useRepresentativeStore((state) => ({
+    query: state.searchQuery,
+    lastSearchAt: state.lastSearchAt
+  }));

@@ -8,6 +8,8 @@
  */
 import 'dotenv/config';
 
+import { determineOfficeCode } from '@choices/civics-shared';
+
 import { getSupabaseClient } from '../clients/supabase.js';
 import {
   fetchCandidateTotals,
@@ -15,10 +17,12 @@ import {
 } from '../clients/fec.js';
 import { evaluateDataQuality } from '../utils/data-quality.js';
 import type { FederalEnrichment } from '../enrich/federal.js';
+import { upsertFinanceDataQuality } from '../persist/data-quality.js';
 
 type RepresentativeRow = {
   id: number;
   name: string;
+  office: string | null;
   canonical_id: string | null;
   state: string | null;
   district: string | null;
@@ -172,7 +176,7 @@ async function fetchRepresentatives(options: CliOptions) {
   let query = client
     .from('representatives_core')
     .select(
-      'id,name,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources,representative_campaign_finance!left(id,updated_at,last_filing_date,cycle,total_raised)',
+      'id,name,office,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources,representative_campaign_finance!left(id,updated_at,last_filing_date,cycle,total_raised)',
     )
     .eq('is_active', true)
     .eq('level', 'federal')
@@ -268,7 +272,7 @@ function buildFinanceRecord(options: {
   cycle: number;
   totals: any;
   contributors: any[];
-  status: 'ok' | 'no-data';
+  status: 'updated' | 'no-data';
 }): {
   finance: FinanceUpsertRow;
   enrichment: FederalEnrichment;
@@ -308,7 +312,7 @@ function buildFinanceRecord(options: {
     last_filing_date: extractLastFilingDate(totalsData),
     top_contributors: topContributors,
     cycle,
-    office_code: null,
+    office_code: determineOfficeCode(options.representative.office ?? '') ?? null,
     district: representative.district ?? null,
     sources:
       status === 'no-data'
@@ -419,10 +423,10 @@ async function enrichRepresentative(
     throw error;
   }
 
-  const status: 'ok' | 'no-data' = totals ? 'ok' : 'no-data';
+  const status: 'updated' | 'no-data' = totals ? 'updated' : 'no-data';
 
   let contributorsRaw: any[] = [];
-  if (status === 'ok') {
+  if (status === 'updated') {
     await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
     try {
       contributorsRaw = await fetchCandidateTopContributors(rep.fec_id, cycle, 5);
@@ -459,13 +463,18 @@ async function enrichRepresentative(
   } else {
     await upsertFinance([finance]);
     await updateRepresentativeMetadata(rep, finance, quality.overall);
+    await upsertFinanceDataQuality({
+      representativeId: rep.id,
+      score: quality,
+      status,
+    });
   }
 
   return {
     representative: rep,
     finance,
     quality,
-    status: status === 'no-data' ? 'no-data' : 'updated',
+    status,
   };
 }
 

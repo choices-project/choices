@@ -1,37 +1,23 @@
 'use client';
 
-/**
- * Comprehensive Admin Dashboard Component
- * 
- * Unified admin command center featuring:
- * - Real-time platform analytics and metrics
- * - Site messages management and preview
- * - User management and activity monitoring
- * - System health and performance metrics
- * - Quick actions for common admin tasks
- * 
- * Created: January 19, 2025
- * Updated: October 19, 2025
- * Status: ✅ ACTIVE
- */
-
 import {
-  Users,
-  BarChart3,
-  MessageSquare,
   Activity,
-  Zap,
   AlertTriangle,
+  BarChart3,
   CheckCircle,
   Clock,
-  Plus,
-  Edit,
-  Trash2,
-  RefreshCw,
   Database,
-  Server
+  Edit,
+  MessageSquare,
+  Plus,
+  RefreshCw,
+  Server,
+  Trash2,
+  Users,
+  Zap,
+  Flame,
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -44,718 +30,539 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { logger } from '@/lib/utils/logger';
-
-type PlatformAnalytics = {
-  totalUsers: number;
-  totalPolls: number;
-  totalVotes: number;
-  activePolls: number;
-  totalFeedback: number;
-  systemHealth: {
-    status: 'healthy' | 'warning' | 'critical';
-    uptime: number;
-    responseTime: number;
-    errorRate: number;
-  };
-  engagement: {
-    dailyActiveUsers: number;
-    weeklyActiveUsers: number;
-    monthlyActiveUsers: number;
-    participationRate: number;
-  };
-  recentActivity: Array<{
-    id: string;
-    type: 'user_registration' | 'poll_created' | 'vote_cast' | 'feedback_submitted';
-    description: string;
-    timestamp: string;
-    user_id?: string;
-  }>;
-}
-
-type SiteMessage = {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'error' | 'success' | 'announcement';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status?: 'active' | 'inactive' | 'scheduled';
-  is_active: boolean;
-  start_date?: string;
-  end_date?: string;
-  target_audience?: string | null;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-}
-
-type SystemMetrics = {
-  database: {
-    connections: number;
-    queryTime: number;
-    cacheHitRate: number;
-  };
-  server: {
-    cpu: number;
-    memory: number;
-    disk: number;
-    uptime: number;
-  };
-  performance: {
-    avgResponseTime: number;
-    requestsPerSecond: number;
-    errorRate: number;
-  };
-}
+import {
+  useAdminActions,
+  useAdminDashboardStats,
+  useAdminError,
+  useAdminLoading,
+  useAdminNotifications,
+  useAdminStats,
+  useRecentActivity,
+  useSystemMetrics,
+} from '@/lib/stores';
+import {
+  useHashtagActions,
+  useHashtagError,
+  useHashtagLoading,
+  useTrendingHashtags,
+} from '@/lib/stores';
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 
 type ComprehensiveAdminDashboardProps = {
   className?: string;
-}
+};
+
+type NewSiteMessage = {
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  is_active: boolean;
+};
 
 export default function ComprehensiveAdminDashboard({ className = '' }: ComprehensiveAdminDashboardProps) {
-  // Platform data state
-  const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
-  const [siteMessages, setSiteMessages] = useState<SiteMessage[]>([]);
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
-  
-  // UI state
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState('overview');
-  
-  // Message creation form state
-  /** Controls visibility of the message creation modal */
+  const dashboardStats = useAdminDashboardStats();
+  const adminStats = useAdminStats();
+  const notifications = useAdminNotifications();
+  const recentActivity = useRecentActivity();
+  const systemMetrics = useSystemMetrics();
+  const loading = useAdminLoading();
+  const error = useAdminError();
+
+  const { refreshData, addAdminNotification, markNotificationAsRead, clearAdminNotifications } = useAdminActions();
+
+  const trendingHashtags = useTrendingHashtags();
+  const { isLoading: hashtagLoading } = useHashtagLoading();
+  const { error: hashtagError } = useHashtagError();
+  const { getTrendingHashtags } = useHashtagActions();
+
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'messages' | 'performance' | 'system' | 'activity'>(
+    'overview',
+  );
   const [showMessageForm, setShowMessageForm] = useState(false);
-  /** Form data for new site message - matches API schema */
-  const [newMessage, setNewMessage] = useState<{
-    title: string;
-    message: string;
-    type: 'info' | 'warning' | 'error' | 'success';
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    status: 'active' | 'scheduled' | 'expired';
-    is_active: boolean;
-  }>({
+  const [newMessage, setNewMessage] = useState<NewSiteMessage>({
     title: '',
     message: '',
     type: 'info',
     priority: 'medium',
-    status: 'active',
-    is_active: true
+    is_active: true,
   });
-  
-  // Auto-refresh state
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Admin dashboard preferences
-  const [_showSystemHealth, _setShowSystemHealth] = useState(true);
-  const [_showUserManagement, _setShowUserManagement] = useState(true);
-  const [_showAnalytics, _setShowAnalytics] = useState(true);
-  const [_showSiteMessages, _setShowSiteMessages] = useState(true);
 
-  // Load platform analytics with optimized API
-  const loadPlatformAnalytics = useCallback(async () => {
-    try {
-      logger.info('🌐 Fetching optimized admin dashboard data...');
-      const startTime = Date.now();
-      // Add timeout protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch('/api/admin/dashboard?include=overview,analytics,health,activity', {
-        signal: controller.signal,
-        headers: { 'Cache-Control': 'max-age=60' }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      
-      const loadTime = Date.now() - startTime;
-      logger.info(`⚡ Admin dashboard loaded in ${loadTime}ms`);
-      
-      // Transform optimized data to match existing interface
-      const transformedAnalytics: PlatformAnalytics = {
-        totalUsers: data.overview?.total_users ?? 0,
-        totalPolls: data.overview?.total_polls ?? 0,
-        totalVotes: data.overview?.total_votes ?? 0,
-        activePolls: data.overview?.active_polls ?? 0,
-        totalFeedback: 0, // Would need separate query
-        systemHealth: {
-          status: data.system_health?.status === 'operational' ? 'healthy' : 'warning',
-          uptime: data.system_health?.uptime_percentage ?? 0,
-          responseTime: data.system_health?.database_latency_ms ?? 0,
-          errorRate: 0 // Would need calculation
-        },
-        engagement: {
-          dailyActiveUsers: 0, // Would need separate query
-          weeklyActiveUsers: 0, // Would need separate query
-          monthlyActiveUsers: 0, // Would need separate query
-          participationRate: data.overview?.engagement_rate ?? 0
-        },
-        recentActivity: data.recent_activity?.recent_votes?.map((vote: any) => ({
-          id: vote.id,
-          type: 'vote_cast' as const,
-          description: `User voted on poll ${vote.poll_id}`,
-          timestamp: vote.created_at,
-          user_id: vote.user_id
-        })) ?? []
-      };
-      
-      setAnalytics(transformedAnalytics);
-      logger.info('Platform analytics loaded', { 
-        analytics: transformedAnalytics,
-        loadTime,
-        fromCache: data.fromCache
-      });
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        logger.warn('Platform analytics request timed out - using default data');
-        // Set default analytics to prevent empty state
-        setAnalytics({
-          totalUsers: 0,
-          totalPolls: 0,
-          totalVotes: 0,
-          activePolls: 0,
-          totalFeedback: 0,
-          systemHealth: { status: 'healthy', uptime: 0, responseTime: 0, errorRate: 0 },
-          engagement: { dailyActiveUsers: 0, weeklyActiveUsers: 0, monthlyActiveUsers: 0, participationRate: 0 },
-          recentActivity: []
-        });
-      } else {
-        logger.error('Error loading platform analytics:', error as Error);
-        setError('Failed to load platform analytics');
-      }
-    }
-  }, []);
-
-  /**
-   * Load site messages from admin API
-   * 
-   * Fetches all site messages for admin management.
-   * Includes timeout protection and error handling.
-   * 
-   * @returns Promise that resolves when messages are loaded
-   */
-  const loadSiteMessages = useCallback(async () => {
-    try {
-      // Add timeout protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
-      const response = await fetch('/api/admin/site-messages', {
-        signal: controller.signal,
-        headers: { 'Cache-Control': 'max-age=30' }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setSiteMessages(data.messages ?? []);
-      logger.info('Site messages loaded', { count: data.messages?.length ?? 0 });
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        logger.warn('Site messages request timed out');
-        setSiteMessages([]); // Set empty array instead of failing
-      } else {
-        logger.error('Error loading site messages:', error as Error);
-      }
-    }
-  }, []);
-
-  // Load system metrics
-  const loadSystemMetrics = useCallback(async () => {
-    try {
-      // Add timeout protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
-      const response = await fetch('/api/admin/health?type=status', {
-        signal: controller.signal,
-        headers: { 'Cache-Control': 'max-age=60' }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setSystemMetrics(data);
-      logger.info('System metrics loaded', { metrics: data });
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        logger.warn('System metrics request timed out');
-        setSystemMetrics({
-          database: { connections: 0, queryTime: 0, cacheHitRate: 0 },
-          server: { cpu: 0, memory: 0, disk: 0, uptime: 0 },
-          performance: { avgResponseTime: 0, requestsPerSecond: 0, errorRate: 0 }
-        }); // Set default metrics
-      } else {
-        logger.error('Error loading system metrics:', error as Error);
-      }
-    }
-  }, []);
-
-  // Load dashboard data with timeout protection and progressive enhancement
   useEffect(() => {
-    const loadDashboardData = async () => {
-      setIsLoading(true);
-      
-      // Set a timeout to prevent hanging
-      const timeoutId = setTimeout(() => {
-        if (isLoading) {
-          logger.warn('Dashboard loading timeout - showing partial data');
-          setIsLoading(false);
-        }
-      }, 8000); // 8 second timeout
-      
-      try {
-        // Load analytics first with timeout protection
-        const analyticsPromise = loadPlatformAnalytics().catch(error => {
-          logger.error('Error loading platform analytics:', error as Error);
-          return null; // Don't fail the whole dashboard
-        });
-        
-        // Wait for analytics with timeout
-        await Promise.race([
-          analyticsPromise,
-          new Promise(resolve => setTimeout(resolve, 5000)) // 5 second timeout for analytics
-        ]);
-        
-        setIsLoading(false); // Show dashboard as soon as analytics load
-        clearTimeout(timeoutId);
-        
-        // Load other data in background (non-blocking, with individual timeouts)
-        Promise.race([
-          loadSiteMessages(),
-          new Promise(resolve => setTimeout(resolve, 3000))
-        ]).catch(error => {
-          logger.error('Error loading site messages:', error as Error);
-        });
-        
-        Promise.race([
-          loadSystemMetrics(),
-          new Promise(resolve => setTimeout(resolve, 3000))
-        ]).catch(error => {
-          logger.error('Error loading system metrics:', error as Error);
-        });
-        
-      } catch (error) {
-        logger.error('Error loading dashboard data:', error as Error);
-        setError('Failed to load dashboard data');
-        setIsLoading(false);
-        clearTimeout(timeoutId);
-      }
-    };
+    void refreshData();
+    void getTrendingHashtags(undefined, 6);
+  }, [refreshData, getTrendingHashtags]);
 
-    loadDashboardData();
-  }, []); // Only run once on mount
-
-  // Auto-refresh effect (only when enabled)
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const interval = setInterval(async () => {
-      setIsRefreshing(true);
-      try {
-        await Promise.all([
-          loadPlatformAnalytics(),
-          loadSiteMessages(),
-          loadSystemMetrics()
-        ]);
-      } catch (error) {
-        logger.error('Error in auto-refresh:', error as Error);
-      } finally {
-        setIsRefreshing(false);
-      }
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [autoRefresh, loadPlatformAnalytics, loadSiteMessages, loadSystemMetrics]);
-
-  // Manual refresh function
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
-        loadPlatformAnalytics(),
-        loadSiteMessages(),
-        loadSystemMetrics()
-      ]);
-    } catch (error) {
-      logger.error('Error refreshing dashboard:', error as Error);
+      await Promise.all([refreshData(), getTrendingHashtags(undefined, 6)]);
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Quick actions
-  const quickActions = [
-    {
-      id: 'create-message',
-      label: 'Create Site Message',
-      icon: Plus,
-      action: () => setShowMessageForm(true),
-      description: 'Create a new site-wide message'
-    },
-    {
-      id: 'view-users',
-      label: 'Manage Users',
-      icon: Users,
-      href: '/admin/users',
-      description: 'View and manage user accounts'
-    },
-    {
-      id: 'view-feedback',
-      label: 'Review Feedback',
-      icon: MessageSquare,
-      href: '/admin/feedback',
-      description: 'Review user feedback and suggestions'
-    },
-    {
-      id: 'system-status',
-      label: 'System Status',
-      icon: Server,
-      href: '/admin/system',
-      description: 'Monitor system health and performance'
+  const handleCreateMessage = () => {
+    if (!newMessage.title.trim() || !newMessage.message.trim()) {
+      return;
     }
-  ];
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    addAdminNotification({
+      id,
+      timestamp,
+      type: newMessage.type,
+      title: newMessage.title,
+      message: newMessage.message,
+      read: !newMessage.is_active,
+      created_at: timestamp,
+      metadata: {
+        priority: newMessage.priority,
+        status: newMessage.is_active ? 'active' : 'inactive',
+      },
+    });
+    setNewMessage({
+      title: '',
+      message: '',
+      type: 'info',
+      priority: 'medium',
+      is_active: true,
+    });
+    setShowMessageForm(false);
+  };
 
-  if (isLoading) {
+  const analytics = useMemo(() => {
+    const totalUsers = dashboardStats?.totalUsers ?? adminStats.totalUsers ?? 0;
+    const totalPolls = dashboardStats?.activePolls ?? 0;
+    const totalVotes = dashboardStats?.totalVotes ?? 0;
+    const systemStatus = dashboardStats?.systemHealth ?? 'healthy';
+    const uptime = systemMetrics?.system_uptime ?? 0;
+    const responseTime = systemMetrics?.performance_metrics?.response_time_avg ?? 0;
+    const errorRate = systemMetrics?.performance_metrics?.error_rate ?? 0;
+    const participationRate = dashboardStats?.pollsCreatedLast7Days && totalUsers
+      ? Math.min(100, (dashboardStats.pollsCreatedLast7Days / Math.max(totalUsers, 1)) * 100)
+      : 0;
+
+    return {
+      totalUsers,
+      totalPolls,
+      totalVotes,
+      systemHealth: {
+        status: systemStatus,
+        uptime,
+        responseTime,
+        errorRate,
+      },
+      engagement: {
+        dailyActiveUsers: recentActivity.length,
+        participationRate,
+      },
+    };
+  }, [adminStats.totalUsers, dashboardStats, recentActivity.length, systemMetrics]);
+
+  const siteMessages = useMemo(() => {
+    return notifications.map((notification) => {
+      const priorityMeta = notification.metadata?.priority;
+      const statusMeta = notification.metadata?.status;
+      const updatedMeta = notification.metadata?.updated_at;
+      const createdAt =
+        typeof notification.created_at === 'string'
+          ? notification.created_at
+          : notification.timestamp;
+      const updatedAt =
+        typeof updatedMeta === 'string'
+          ? updatedMeta
+          : typeof notification.created_at === 'string'
+          ? notification.created_at
+          : notification.timestamp;
+
+      return {
+        id: notification.id,
+        title: notification.title ?? 'Untitled message',
+        message: notification.message,
+        type: notification.type ?? 'info',
+        priority:
+          typeof priorityMeta === 'string'
+            ? (priorityMeta as NewSiteMessage['priority'])
+            : 'medium',
+        status:
+          typeof statusMeta === 'string'
+            ? (statusMeta as 'active' | 'inactive' | 'scheduled')
+            : notification.read
+            ? 'inactive'
+            : 'active',
+        is_active: !notification.read,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      };
+    });
+  }, [notifications]);
+
+  const activeMessages = siteMessages.filter((message) => message.is_active).length;
+  const criticalMessages = siteMessages.filter((message) => message.priority === 'critical').length;
+
+  if (loading) {
     return (
       <div className={`space-y-6 ${className}`}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
+        <Skeleton className="h-12 w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, index) => (
+            <Skeleton key={index} className="h-32 w-full" />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={`space-y-6 ${className}`}>
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive" className={className}>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Platform management and monitoring</p>
+          <h1 className="text-3xl font-bold">Comprehensive Admin Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Unified oversight for analytics, messaging, system monitoring, and admin workflows
+          </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="rounded"
-              />
-              Auto-refresh
-            </label>
-            {autoRefresh && (
-              <Badge variant="outline" className="text-xs">
-                Every 30s
-              </Badge>
-            )}
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
-          <Badge 
-            variant={analytics?.systemHealth.status === 'healthy' ? 'default' : 'destructive'}
-            className="flex items-center gap-2"
-          >
-            {analytics?.systemHealth.status === 'healthy' ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <AlertTriangle className="h-4 w-4" />
-            )}
-            System {analytics?.systemHealth.status ?? 'unknown'}
-          </Badge>
         </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as typeof selectedTab)}>
+        <TabsList className="grid grid-cols-1 md:grid-cols-5 gap-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="messages">Site Messages</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="system">System Health</TabsTrigger>
+          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalUsers ?? 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{analytics?.engagement.dailyActiveUsers ?? 0} today
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Polls</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalPolls ?? 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {analytics?.activePolls ?? 0} active
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Votes</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalVotes ?? 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {analytics?.engagement.participationRate ?? 0}% participation
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                {analytics?.systemHealth.status === 'healthy' ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold capitalize">
-                  {analytics?.systemHealth.status ?? 'unknown'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {analytics?.systemHealth.uptime ?? 0}% uptime
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
-              <CardDescription>
-                Common administrative tasks and shortcuts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {quickActions.map((action) => {
-                  const Icon = action.icon;
-                  return (
-                    <Button
-                      key={action.id}
-                      variant="outline"
-                      className="h-auto p-4 flex flex-col items-center gap-2"
-                      onClick={action.action ?? (() => window.location.href = action.href!)}
-                    >
-                      <Icon className="h-6 w-6" />
-                      <div className="text-center">
-                        <div className="font-medium">{action.label}</div>
-                        <div className="text-xs text-gray-500">{action.description}</div>
-                      </div>
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>
-                Latest platform activity and events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {analytics?.recentActivity?.slice(0, 5).map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Activity className="h-4 w-4 text-blue-600" />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{activity.description}</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>User Engagement</CardTitle>
-                <CardDescription>User activity and participation metrics</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Total Users
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Daily Active Users</span>
-                    <span className="font-medium">{analytics?.engagement.dailyActiveUsers ?? 0}</span>
-                  </div>
-                  <Progress value={(analytics?.engagement.dailyActiveUsers ?? 0) / 100 * 100} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Weekly Active Users</span>
-                    <span className="font-medium">{analytics?.engagement.weeklyActiveUsers ?? 0}</span>
-                  </div>
-                  <Progress value={(analytics?.engagement.weeklyActiveUsers ?? 0) / 100 * 100} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Participation Rate</span>
-                    <span className="font-medium">{analytics?.engagement.participationRate ?? 0}%</span>
-                  </div>
-                  <Progress value={analytics?.engagement.participationRate ?? 0} />
-                </div>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.totalUsers.toLocaleString()}</div>
+                <p className="text-sm text-gray-600 mt-1">Active platform accounts</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>System Performance</CardTitle>
-                <CardDescription>Platform performance and health metrics</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Poll Activity
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Uptime</span>
-                    <span className="font-medium">{analytics?.systemHealth.uptime ?? 0}%</span>
-                  </div>
-                  <Progress value={analytics?.systemHealth.uptime ?? 0} />
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.totalPolls}</div>
+                <p className="text-sm text-gray-600 mt-1">Polls currently live</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Feedback Volume
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{notifications.length}</div>
+                <p className="text-sm text-gray-600 mt-1">Admin messages and alerts</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Engagement
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Daily active items</span>
+                  <span className="font-medium">{analytics.engagement.dailyActiveUsers}</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Response Time</span>
-                    <span className="font-medium">{analytics?.systemHealth.responseTime ?? 0}ms</span>
-                  </div>
-                  <Progress value={100 - (analytics?.systemHealth.responseTime ?? 0) / 10} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Error Rate</span>
-                    <span className="font-medium">{analytics?.systemHealth.errorRate ?? 0}%</span>
-                  </div>
-                  <Progress value={100 - (analytics?.systemHealth.errorRate ?? 0)} />
-                </div>
+                <Progress value={analytics.engagement.participationRate} />
+                <p className="text-xs text-gray-500">
+                  Participation rate {analytics.engagement.participationRate.toFixed(1)}%
+                </p>
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+                Trending Topics
+              </CardTitle>
+              <CardDescription>Signals from the hashtag ecosystem</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {hashtagError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{hashtagError}</AlertDescription>
+                </Alert>
+              )}
+              {hashtagLoading && trendingHashtags.length === 0 ? (
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, idx) => (
+                    <Skeleton key={idx} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : trendingHashtags.length > 0 ? (
+                <TrendingHashtagDisplay
+                  trendingHashtags={trendingHashtags}
+                  showGrowth
+                  maxDisplay={4}
+                  onHashtagClick={(hashtag) =>
+                    window.open(`/hashtags/${hashtag.name}`, '_blank', 'noopener,noreferrer')
+                  }
+                />
+              ) : (
+                <p className="text-sm text-gray-600">No trending topics detected yet.</p>
+              )}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => window.open('/feed', '_blank')}>
+                  View Community Feed
+                </Button>
+                <Button variant="ghost" onClick={() => getTrendingHashtags(undefined, 6)} disabled={hashtagLoading}>
+                  Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                System Health Snapshot
+              </CardTitle>
+              <CardDescription>Combined from dashboard metrics and system telemetry</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Status</span>
+                  <Badge variant={analytics.systemHealth.status === 'healthy' ? 'default' : 'secondary'}>
+                    {analytics.systemHealth.status.toUpperCase()}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span>Uptime</span>
+                  <span className="font-medium">{analytics.systemHealth.uptime.toFixed(1)}%</span>
+                </div>
+                <Progress value={analytics.systemHealth.uptime} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Response Time</span>
+                  <span className="font-medium">{analytics.systemHealth.responseTime.toFixed(0)}ms</span>
+                </div>
+                <Progress value={Math.max(0, 100 - analytics.systemHealth.responseTime / 10)} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Error Rate</span>
+                  <span className="font-medium">{analytics.systemHealth.errorRate.toFixed(1)}%</span>
+                </div>
+                <Progress value={analytics.systemHealth.errorRate} />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Site Messages Tab */}
         <TabsContent value="messages" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Site Messages</h3>
-              <p className="text-sm text-gray-600">Manage site-wide messages and announcements</p>
+              <p className="text-sm text-gray-600">Manage announcements and broadcast notices</p>
             </div>
-            <Button onClick={() => setShowMessageForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Message
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => clearAdminNotifications()} disabled={!notifications.length}>
+                Clear All
+              </Button>
+              <Button onClick={() => setShowMessageForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Message
+              </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {siteMessages.map((message) => (
-              <Card key={message.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium">{message.title}</h4>
-                        <Badge variant={message.is_active ? 'default' : 'secondary'}>
-                          {message.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                        <Badge variant="outline">{message.type}</Badge>
-                        <Badge variant="outline">{message.priority}</Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{message.message}</p>
-                      <div className="text-xs text-gray-500">
-                        Created: {new Date(message.created_at).toLocaleString()}
-                        {message.updated_at !== message.created_at && (
-                          <span> • Updated: {new Date(message.updated_at).toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+          {showMessageForm && (
+            <Card>
+              <CardHeader>
+                <CardTitle>New Site Message</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="message-title">Title</Label>
+                    <Input
+                      id="message-title"
+                      value={newMessage.title}
+                      onChange={(event) => setNewMessage((prev) => ({ ...prev, title: event.target.value }))}
+                    />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div>
+                    <Label htmlFor="message-type">Type</Label>
+                    <Select
+                      value={newMessage.type}
+                      onValueChange={(value) => setNewMessage((prev) => ({ ...prev, type: value as NewSiteMessage['type'] }))}
+                    >
+                      <SelectTrigger id="message-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(['info', 'warning', 'error', 'success'] as const).map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option.toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="message-priority">Priority</Label>
+                    <Select
+                      value={newMessage.priority}
+                      onValueChange={(value) =>
+                        setNewMessage((prev) => ({ ...prev, priority: value as NewSiteMessage['priority'] }))
+                      }
+                    >
+                      <SelectTrigger id="message-priority">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(['low', 'medium', 'high', 'critical'] as const).map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option.toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="message-active"
+                      type="checkbox"
+                      checked={newMessage.is_active}
+                      onChange={(event) =>
+                        setNewMessage((prev) => ({ ...prev, is_active: event.target.checked }))
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="message-active">Set active immediately</Label>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="message-body">Message</Label>
+                  <Textarea
+                    id="message-body"
+                    value={newMessage.message}
+                    onChange={(event) => setNewMessage((prev) => ({ ...prev, message: event.target.value }))}
+                    rows={4}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleCreateMessage} disabled={!newMessage.title || !newMessage.message}>
+                    Save Message
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowMessageForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 gap-4">
+            {siteMessages.length === 0 ? (
+              <p className="text-sm text-gray-600">No site messages yet.</p>
+            ) : (
+              siteMessages.map((message) => (
+                <Card key={message.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{message.title}</h4>
+                          <Badge variant={message.is_active ? 'default' : 'secondary'}>
+                            {message.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                          <Badge variant="outline">{message.type}</Badge>
+                          <Badge variant="outline">{message.priority}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{message.message}</p>
+                        <div className="text-xs text-gray-500">
+                          Created:{' '}
+                          {message.created_at ? new Date(message.created_at).toLocaleString() : '—'}
+                          {message.updated_at &&
+                            message.updated_at !== message.created_at && (
+                              <span>
+                                {' '}
+                                • Updated: {new Date(message.updated_at).toLocaleString()}
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => markNotificationAsRead(message.id)}
+                          title="Archive message"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => markNotificationAsRead(message.id)}
+                          title="Mark as read"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => markNotificationAsRead(message.id)}
+                          title="Dismiss message"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </TabsContent>
 
-        {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-6">
           <Card>
             <CardHeader>
@@ -764,20 +571,19 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 Performance Monitoring
               </CardTitle>
               <CardDescription>
-                Detailed performance metrics, alerts, and optimization recommendations
+                Detailed performance metrics, alerts, and optimisation recommendations
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Access the full performance monitoring dashboard for:
+                  Access the dedicated performance dashboard for real-time monitoring.
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-sm text-gray-700 ml-2">
-                  <li>Real-time system health metrics</li>
-                  <li>Performance alerts and resolution</li>
+                  <li>Live system metrics and alerts</li>
                   <li>Slowest operations tracking</li>
-                  <li>Optimization recommendations</li>
-                  <li>Historical performance data (1h, 6h, 24h views)</li>
+                  <li>Optimisation recommendations</li>
+                  <li>Historical performance windows (1h / 6h / 24h)</li>
                 </ul>
                 <div className="pt-4">
                   <a
@@ -795,37 +601,31 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           </Card>
         </TabsContent>
 
-        {/* System Tab */}
         <TabsContent value="system" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
-                  Database Performance
+                  Platform Totals
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Active Connections</span>
-                    <span className="font-medium">{systemMetrics?.database.connections ?? 0}</span>
-                  </div>
-                  <Progress value={(systemMetrics?.database.connections ?? 0) / 100 * 100} />
+              <CardContent className="space-y-2 text-sm text-gray-700">
+                <div className="flex justify-between">
+                  <span>Total topics</span>
+                  <span className="font-medium">{systemMetrics?.total_topics ?? 0}</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Query Time</span>
-                    <span className="font-medium">{systemMetrics?.database.queryTime ?? 0}ms</span>
-                  </div>
-                  <Progress value={100 - (systemMetrics?.database.queryTime ?? 0) / 10} />
+                <div className="flex justify-between">
+                  <span>Total polls</span>
+                  <span className="font-medium">{systemMetrics?.total_polls ?? 0}</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Cache Hit Rate</span>
-                    <span className="font-medium">{systemMetrics?.database.cacheHitRate ?? 0}%</span>
-                  </div>
-                  <Progress value={systemMetrics?.database.cacheHitRate ?? 0} />
+                <div className="flex justify-between">
+                  <span>Total votes</span>
+                  <span className="font-medium">{systemMetrics?.total_votes ?? 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Active sessions</span>
+                  <span className="font-medium">{systemMetrics?.active_sessions ?? 0}</span>
                 </div>
               </CardContent>
             </Card>
@@ -834,185 +634,112 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Server className="h-5 w-5" />
-                  Server Resources
+                  Resource Usage
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>CPU Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.cpu ?? 0}%</span>
+                    <span>CPU</span>
+                    <span className="font-medium">{systemMetrics?.cpu_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.cpu ?? 0} />
+                  <Progress value={systemMetrics?.cpu_usage ?? 0} />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>Memory Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.memory ?? 0}%</span>
+                    <span>Memory</span>
+                    <span className="font-medium">{systemMetrics?.memory_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.memory ?? 0} />
+                  <Progress value={systemMetrics?.memory_usage ?? 0} />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>Disk Usage</span>
-                    <span className="font-medium">{systemMetrics?.server.disk ?? 0}%</span>
+                    <span>Disk</span>
+                    <span className="font-medium">{systemMetrics?.disk_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.server.disk ?? 0} />
+                  <Progress value={systemMetrics?.disk_usage ?? 0} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Performance Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-gray-700">
+                <div className="flex justify-between">
+                  <span>Status</span>
+                  <span className="font-medium">{systemMetrics?.system_health ?? 'unknown'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Response time (avg)</span>
+                  <span className="font-medium">
+                    {systemMetrics?.performance_metrics?.response_time_avg?.toFixed(0) ?? '0'}ms
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Error rate</span>
+                  <span className="font-medium">
+                    {systemMetrics?.performance_metrics?.error_rate?.toFixed(1) ?? '0'}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Throughput</span>
+                  <span className="font-medium">
+                    {systemMetrics?.performance_metrics?.throughput?.toFixed(1) ?? '0'} rps
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Last updated</span>
+                  <span className="font-medium">
+                    {systemMetrics?.last_updated
+                      ? new Date(systemMetrics.last_updated).toLocaleString()
+                      : '—'}
+                  </span>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
 
-      {/* Message Creation Form Modal */}
-      {showMessageForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMessageForm(false)}>
-          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <TabsContent value="activity" className="space-y-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Create Site Message</CardTitle>
-              <CardDescription>
-                Create a new site-wide message or announcement
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Platform Activity
+              </CardTitle>
+              <CardDescription>Latest actions captured by the admin event feed</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Message Title</Label>
-                <Input
-                  id="title"
-                  value={newMessage.title}
-                  onChange={(e) => setNewMessage({ ...newMessage, title: e.target.value })}
-                  placeholder="Enter message title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Message Content</Label>
-                <Textarea
-                  id="message"
-                  value={newMessage.message}
-                  onChange={(e) => setNewMessage({ ...newMessage, message: e.target.value })}
-                  placeholder="Enter message content"
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Message Type</Label>
-                  <Select
-                    value={newMessage.type}
-                    onValueChange={(value) =>
-                      setNewMessage({ ...newMessage, type: value as 'info' | 'warning' | 'error' | 'success' })
-                    }
-                  >
-                    <SelectTrigger id="type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="info">Info</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="error">Error</SelectItem>
-                      <SelectItem value="success">Success</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select
-                    value={newMessage.priority}
-                    onValueChange={(value) =>
-                      setNewMessage({ ...newMessage, priority: value as 'low' | 'medium' | 'high' | 'critical' })
-                    }
-                  >
-                    <SelectTrigger id="priority">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={newMessage.is_active}
-                  onChange={(e) => setNewMessage({ ...newMessage, is_active: e.target.checked })}
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="is_active" className="cursor-pointer">
-                  Activate message immediately
-                </Label>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowMessageForm(false);
-                    setNewMessage({
-                      title: '',
-                      message: '',
-                      type: 'info',
-                      priority: 'medium',
-                      status: 'active',
-                      is_active: true
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/admin/site-messages', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          title: newMessage.title,
-                          message: newMessage.message,
-                          priority: newMessage.priority,
-                          status: newMessage.status,
-                          type: newMessage.type,
-                        }),
-                      });
-
-                      if (response.ok) {
-                        await loadSiteMessages();
-                        setShowMessageForm(false);
-                        setNewMessage({
-                          title: '',
-                          message: '',
-                          type: 'info',
-                          priority: 'medium',
-                          status: 'active',
-                          is_active: true
-                        });
-                      } else {
-                        const errorData = await response.json();
-                        setError(errorData.error ?? 'Failed to create message');
-                      }
-                    } catch (err) {
-                      logger.error('Error creating message:', err instanceof Error ? err : new Error(String(err)));
-                      setError('Failed to create message');
-                    }
-                  }}
-                  disabled={!newMessage.title || !newMessage.message}
-                >
-                  Create Message
-                </Button>
-              </div>
+              {recentActivity.length ? (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="border border-gray-100 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                        <span className="h-2 w-2 rounded-full bg-blue-500" />
+                        {activity.title ?? activity.type}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : ''}
+                      </span>
+                    </div>
+                    {activity.description && (
+                      <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-600">No recent activity recorded.</p>
+              )}
             </CardContent>
           </Card>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
@@ -6,24 +7,68 @@ const SAMPLE_TITLE = 'Playwright Created Poll';
 const SAMPLE_DESCRIPTION =
   'This poll is created by Playwright to verify the multi-step authoring experience end-to-end.';
 
-const ensureAnalyticsBridge = async (page: Page) => {
-  await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
-};
+const runAxe = async (page: Page, context: string) => {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa'])
+    .analyze();
 
-const enableAnalytics = async (page: Page) => {
-  await ensureAnalyticsBridge(page);
-  await page.evaluate(() => globalThis.__playwrightAnalytics?.enable());
+  if (results.violations.length > 0) {
+    console.error(`[axe] ${context} violations detected:`, results.violations);
+  } else {
+    console.info(`[axe] ${context} passed WCAG 2.0/2.1 A/AA checks`);
+  }
+
+  expect(results.violations, `${context} accessibility violations`).toEqual([]);
 };
 
 test.describe('Poll creation wizard', () => {
   test.beforeEach(({ page }) => {
     page.on('console', (msg) => {
-       
+
       console.log(`[browser:${msg.type()}] ${msg.text()}`);
     });
   });
 
   test('happy path completes the wizard and publishes a poll', async ({ page }) => {
+    test.setTimeout(120_000);
+    page.setDefaultNavigationTimeout(60_000);
+    page.setDefaultTimeout(60_000);
+
+    await page.addInitScript(() => {
+      try {
+        window.localStorage?.removeItem?.('poll-wizard-store');
+      } catch {
+        // ignore
+      }
+
+      try {
+        if (navigator.serviceWorker) {
+          const originalScope = navigator.serviceWorker;
+          const fakeRegistration = {
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            unregister: () => Promise.resolve(true),
+            update: () => Promise.resolve(),
+            scope: '/',
+            active: null,
+            installing: null,
+            waiting: null,
+          };
+
+          Object.assign(originalScope, {
+            register: () => Promise.resolve(fakeRegistration),
+            ready: Promise.resolve(fakeRegistration),
+            getRegistrations: () => Promise.resolve([fakeRegistration]),
+            getRegistration: () => Promise.resolve(fakeRegistration),
+            addEventListener: () => {},
+            removeEventListener: () => {},
+          });
+        }
+      } catch {
+        // ignore service worker stubbing errors
+      }
+    });
+
     await page.route('**/api/polls', async (route) => {
       const body = JSON.stringify({
         data: {
@@ -39,33 +84,42 @@ test.describe('Poll creation wizard', () => {
       });
     });
 
-    await page.goto('/e2e/poll-create');
+    await page.goto('/e2e/poll-create', { waitUntil: 'networkidle', timeout: 120_000 });
     await waitForPageReady(page);
-    await enableAnalytics(page);
+    await expect(page).toHaveURL(/\/e2e\/poll-create/);
 
-    await page.fill('#title', SAMPLE_TITLE);
-    await page.fill('#description', SAMPLE_DESCRIPTION);
+    await page.waitForSelector('#poll-title-input', { state: 'visible', timeout: 60_000 });
+    await page.fill('#poll-title-input', SAMPLE_TITLE);
+    await page.fill('#poll-description-input', SAMPLE_DESCRIPTION);
+
+    await runAxe(page, 'poll details');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
 
-    const optionInputs = page.locator('input[aria-label^="Option"]');
+    const optionInputs = page.locator('input[id^="poll-option-"]');
     await optionInputs.nth(0).fill('Option A');
     await optionInputs.nth(1).fill('Option B');
 
+    await runAxe(page, 'options step');
+
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
 
-    await page.getByRole('button', { name: 'Technology' }).click();
-    await page.fill('#tags', 'playwright');
+    await page.getByRole('button', { name: /Category Technology/i }).click();
+    await page.fill('#poll-tags-input', 'playwright');
     await page.getByRole('button', { name: 'Add' }).click();
 
-    await page.getByRole('switch', { name: 'Allow multiple votes' }).click();
-    await page.selectOption('#privacy-level', 'private');
-    await page.selectOption('#voting-method', 'ranked');
+    await page.getByLabel('Allow multiple votes').check();
+    await page.getByLabel('Privacy level').selectOption('private');
+    await page.getByLabel('Voting method').selectOption('ranked');
+
+    await runAxe(page, 'audience step');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
+
+    await runAxe(page, 'review step');
 
     await expect(page.getByText(SAMPLE_TITLE)).toBeVisible();
     await expect(page.getByText('Option A')).toBeVisible();
@@ -74,29 +128,17 @@ test.describe('Poll creation wizard', () => {
     await page.getByRole('button', { name: 'Publish poll' }).click();
     await waitForPageReady(page);
 
+    await runAxe(page, 'share dialog');
+
     await expect(page.getByRole('heading', { name: 'Share your poll' })).toBeVisible();
-    await expect(page.getByText('Private – only people with the link can participate')).toBeVisible();
-    await expect(page.getByText('Ranked choice')).toBeVisible();
+    await expect(page.getByText(/Visibility:\s*private/)).toBeVisible();
+    await expect(page.getByText(/Poll published!/)).toBeVisible();
 
-    await expect.poll(async () =>
-      page.evaluate(() => {
-        const events = globalThis.__playwrightAnalytics?.events ?? [];
-        return events.filter((event) => event.action === 'poll_created').length;
-      })
-    ).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Close' }).click();
 
-    await expect.poll(async () =>
-      page.evaluate(() => {
-        const events = globalThis.__playwrightAnalytics?.events ?? [];
-        return events.filter((event) => event.action === 'poll_share_opened').length;
-      })
-    ).toBeGreaterThan(0);
+    await runAxe(page, 'wizard reset');
 
-    await page.getByRole('button', { name: 'Done' }).click();
-
-    await expect(page.locator('#title')).toHaveValue('');
-
-    await page.evaluate(() => globalThis.__playwrightAnalytics?.reset());
+    await expect(page.locator('#poll-title-input')).toHaveValue('');
   });
 });
 

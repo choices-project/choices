@@ -11,12 +11,7 @@ export const PATCH = withErrorHandling(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
-  const supabase = getSupabaseServerClient();
-  const supabaseClient = await supabase;
-  
-  if (!supabaseClient) {
-    return errorResponse('Supabase client not available', 500);
-  }
+  const supabaseClient = await getSupabaseServerClient();
 
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
   if (userError || !user) {

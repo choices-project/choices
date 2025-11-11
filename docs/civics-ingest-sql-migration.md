@@ -1,4 +1,6 @@
-# Civics Ingest — SQL Migration Plan
+# Civics Ingest — SQL Migration Plan _(archived planning notes)_
+
+> **Reference only:** This historical plan documents the migration from REST writers to the SQL-first merge. For current operating instructions see [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md) and [`docs/civics-backend-operations.md`](./civics-backend-operations.md).
 
 This document outlines how we graduate the current per-representative REST ingest into a Supabase-native, set-based workflow. It will serve as the working blueprint while we refactor the pipeline.
 
@@ -145,6 +147,7 @@ This file will be updated as each step lands.
 ### Committees (`representative_committees`)
 - Derived from `openstates_people_roles` entries whose `role_type` is not legislative/executive (treated as committee/task force membership).
 - `committee_name` defaults to role `title`/`member_role`; `is_current` based on end date.
+- `npm run sync:committees` performs the legacy delete+insert flow until SQL merge covers this table.
 
 ### Data sources (`representative_data_sources`)
 - Derived from `openstates_people_sources_v` plus Supabase-specific tokens (`supabase:representatives_core`, `crosswalk:*`).
@@ -159,8 +162,8 @@ This file will be updated as each step lands.
 - `source_confidence` varies by scheme; attrs store start/end metadata.
 
 ### Committees & activity
-- Roles view already provides `jurisdiction` + `member_role`; use to populate `representative_committees`.
-- Activity table to be populated when we ingest OpenStates bills/votes (future).
+- Roles view already provides `jurisdiction` + `member_role`; use to populate `representative_committees` (currently via `sync:committees`).
+- Activity table populated via OpenStates bills (`sync:activity`); migrate to SQL-first ingest alongside future Congress.gov vote feeds.
 
 ---
 

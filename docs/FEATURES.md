@@ -1,211 +1,41 @@
-# Feature Status - Choices Platform
+# Feature Inventory — November 2025
 
-**Last Updated**: November 6, 2025  
-**Database**: 70 tables, 19 RPC functions  
-**Status**: ✅ **100% Complete, Production-Ready**
+_Last updated: November 9, 2025_
 
----
+The table below reflects the current maturity of the major product surfaces. Rows are intentionally concise—see the linked files or code locations for deeper implementation notes.
 
-## ✅ COMPLETE & PRODUCTION-READY
-
-### Privacy System - ✅ COMPLETE (Nov 5, 2025)
-- **16 Privacy Controls** - All default to FALSE (opt-in required)
-- **My Data Dashboard** - View all collected data
-- **GDPR/CCPA Export** - Download all user data
-- **Granular Deletion** - Delete specific data types or everything
-- **Privacy Guard Utilities** - `hasPrivacyConsent()`, `collectWithConsent()`
-- **Zero Violations** - All 4 critical privacy issues fixed
-- **Status**: ✅ Production-ready
-- **Location**: `/app/(app)/my-data`, `/app/(app)/account/privacy`
-
-### Location Features - ✅ COMPLETE (Nov 5, 2025)
-- **Address Lookup** - Convert address → congressional district
-- **District-Only Storage** - NEVER stores full addresses (privacy-first)
-- **Onboarding Integration** - Optional district lookup during signup
-- **Profile Page Integration** - Update district anytime from profile
-- **Feed Filtering Backend** - Filter civic actions by district
-- **Feed Filtering UI** - Toggle button with district badges on items
-- **Privacy Compliant** - Address used once, immediately discarded
-- **Status**: ✅ Complete (backend + UI fully integrated)
-- **Components**: `AddressLookup`, `DistrictBadge`, `useUserDistrict`
-- **API**: `/api/v1/civics/address-lookup`, `/api/feeds?district=CA-12`
-- **Location**: `/feed` (main feed with filtering), `/profile` (district management)
-
-### Polling System - ✅ COMPLETE
-- Poll creation with wizard UI
-- Multiple voting methods (single, approval, ranked, quadratic, range)
-- **Equal voting** - All votes count equally (no weighting)
-- Poll participation analytics
-- Hashtag integration
-- **Status**: ✅ Fully operational
-- **Tables**: `polls`, `poll_options`, `votes`, `poll_participation_analytics`
-
-### Trust Tier System - ✅ COMPLETE
-- Tiered verification (T0-T3)
-- WebAuthn biometric authentication
-- **Analytics only** - Trust tiers used for insights, NOT vote weighting
-- Tier progression tracking
-- Bot detection
-- **Status**: ✅ Fully operational
-- **Tables**: `user_profiles`, `trust_tier_progression`, `biometric_trust_scores`
-
-### Civic Engagement - ✅ COMPLETE
-- Representative database (25 fields per representative)
-- Civic action creation and tracking
-- District-level targeting (`target_district` field)
-- Petition signatures
-- Contact representatives
-- **Status**: ✅ Fully operational
-- **Tables**: `civic_actions`, `representatives_core`, `contact_messages`
-
-### PWA (Progressive Web App) - ✅ COMPLETE (Nov 4, 2025)
-- Service worker with intelligent caching
-- Offline-first architecture (browse, vote, create polls offline)
-- Push notifications (Web Push + VAPID)
-- Background sync for offline actions
-- Install as native app (iOS, Android, Desktop)
-- Automatic update detection
-- **Status**: ✅ Fully operational
-- **Tables**: `push_subscriptions`, `notification_log`, `sync_log`
-
-### Authentication & Security - ✅ COMPLETE
-- WebAuthn passwordless auth
-- Session management
-- Rate limiting (Upstash)
-- CSRF protection
-- RLS policies
-- **Status**: ✅ Production-ready
-
-### Feed System - ✅ COMPLETE (Nov 8, 2025)
-- Unified feed (polls + civic actions)
-- Personalization scoring
-- Content filtering (category, type, **district**)
-- Privacy-aware interactions (likes, bookmarks, reads)
-- Persistent user preferences + exact optional handling
-- Infinite scroll with typed pagination helpers (`useFeedsPagination`)
-- Hashtag trending
-- **Status**: ✅ Production ready (store audit + UI integration complete)
-- **Tables**: `feeds`, `feed_items`, `feed_interactions`
-
-### Admin Dashboard - ✅ COMPLETE
-- Site message management
-- System health monitoring
-- User management
-- Performance monitoring
-- **Enhanced Feedback Tracker**
-  - Session-aware telemetry (performance, actions, network requests)
-  - Automatic console capture with max-history guard (`maxTrackedConsoleLogs`)
-  - Screenshot hook and Supabase realtime fan-out
-  - Single-instance lifecycle with teardown via `resetFeedbackTracker`
-- **Status**: ✅ Fully operational
-
-### Candidate Platform - ✅ COMPLETE
-- Filing assistance wizard
-- Platform builder UI
-- FEC verification integration
-- Platform positions, campaign info
-- Journey progress tracking
-- **Status**: ✅ Fully operational
-- **Tables**: `candidate_platforms`
+| Feature | Status | Notes & Follow-up |
+| --- | --- | --- |
+| Poll creation & voting | ✅ Stable | Wizard, sharing, and vote recording operate against live Supabase tables. Modernization work is focused on the surrounding stores (polls, poll wizard, voting) and regression coverage. |
+| Notification system | ✅ Stable | Store refactor complete; React integration updated to the shared hooks; Playwright harness ensures auto-dismiss/admin flows keep working. Continue migrating remaining consumers away from legacy selectors. |
+| Onboarding & profile | 🔄 In progress | Profile store modernization underway; onboarding flows consume refactored selectors but still rely on older Supabase mocks in tests. Additional RTL and Playwright coverage is planned. |
+| Admin dashboard | 🚧 Needs attention | Feature flag UI uses modern hooks, but analytics widgets still reference mocked data and legacy store patterns. Admin store refactor and Supabase-backed analytics endpoints are on the roadmap. |
+| Analytics & reporting | 🚧 Needs attention | UI components exist (charts, heatmaps), yet the backing APIs remain partially mocked and Redis caching is experimental. Privacy filter enforcement and end-to-end validation are outstanding. |
+| Civic data (representatives, actions) | ✅ Stable foundation | Core queries and UI flows function, but we lack modern integration tests. Future iterations should align these modules with the refreshed store standards. |
+| PWA & offline features | ⚠️ Lightly exercised | Service worker, push notifications, and background sync are present but not covered by current regression suites. Re-validate before promising offline guarantees. |
 
 ---
 
-## ✅ RECENTLY COMPLETED (Nov 5, 2025)
+## Recent Changes
 
-### Analytics Dashboard - ✅ COMPLETE (100%) - Nov 6, 2025
-- **Dual-Mode Dashboard**: Classic (tabbed) + Widget (customizable)
-- **Widget System**: Drag-and-drop customizable layouts
-- **5 Layout Presets**: Default, Executive, Detailed, Mobile, Engagement
-- **Charts**: TrendsChart, DemographicsChart, TemporalAnalysisChart, TrustTierComparisonChart, PollHeatmap, DistrictHeatmap
-- **Heatmaps**: DistrictHeatmap (geographic), PollHeatmap (poll performance)
-- **Features**: Admin access control, privacy filters, CSV export, tabbed interface
-- **Location**: `/admin/analytics`
-- **Status**: ✅ Consolidated, production-ready (mocks in place, real APIs pending)
-- **Access**: Admin-only with audit logging
-- **Privacy**: K-anonymity enforcement, opt-out respect
-
-### Feed Filtering UI - ✅ COMPLETE
-- **Features**: District toggle button, badges on matching items
-- **Integration**: Seamless with existing feed system
-- **Location**: `/feed`
-- **Status**: ✅ Complete and working
+- Notification store refactor landed with jest + RTL + Playwright coverage.
+- Admin notification widget now consumes shared hooks reducing bespoke logic.
+- Documentation and roadmap are being refreshed to remove outdated “perfect completion” claims.
 
 ---
 
-## ⏳ PLANNED (Not Started)
+## Open Threads
 
-### Privacy & Access Control (3 hours)
-- Privacy filtering in analytics (exclude opted-out users)
-- Access control (admin vs T3 users)
-- K-anonymity enforcement across all views
-
-### Export & Sharing (3 hours)
-- CSV/JSON/PNG export for analytics
-- Share functionality (admin only)
-- Access logging
-
-### Testing & Documentation (3 hours)
-- E2E tests for location features
-- E2E tests for analytics
-- User guides
-- Admin documentation
+1. **Store modernization rollout** — Track progress in `scratch/gpt5-codex/store-roadmaps/` and update this file as additional stores reach "stable" status.
+2. **Analytics data pipeline** — Replace mock responses with Supabase queries and document the privacy model before advertising analytics as complete.
+3. **Testing coverage** — Ensure each feature row above maps to at least one unit suite and, where practical, a harness-driven E2E scenario.
 
 ---
 
-## 🚫 OUT OF SCOPE (Future Versions)
+## References
 
-### External Services
-- Email service integration (SendGrid/Resend) - 6-8 hours
-- Government service history APIs - 8-12 hours
-- Filing system integration - 6-8 hours
-
-### Advanced Features
-- Social discovery
-- Advanced narrative analysis
-- Real-time collaboration
-- Mobile app
-
----
-
-## 📊 Overall Progress
-
-| Category | Status | % Complete |
-|----------|--------|-----------|
-| Privacy | ✅ Complete | 100% |
-| Code Quality | ✅ Complete | 100% |
-| Location | ✅ Complete | 100% |
-| Analytics Dashboard | ✅ Complete | 85% |
-| Heatmaps | ✅ Complete | 100% |
-| Testing & Docs | ✅ Complete | 100% |
-| Real APIs | 🔄 Pending | 0% |
-| Widget System | 🔄 Foundation | 20% |
-| **OVERALL** | **85%** | **85%** |
-
----
-
-## 🎯 Next Steps
-
-1. **Immediate** (3-4 hours): Real API endpoints (replace mocks)
-2. **Short-term** (2-3 hours): Redis caching layer
-3. **Medium-term** (6-8 hours): Widget system implementation
-4. **Polish** (2-3 hours): Mobile optimization
-
-**Total Remaining**: 13-18 hours
-
----
-
-## 📚 Documentation
-
-- **Database**: `/docs/DATABASE_SCHEMA.md` (all 70 tables)
-- **Environment**: `/docs/ENVIRONMENT_VARIABLES.md` (all keys)
-- **Privacy**: `/docs/PRIVACY_POLICY.md` (user-facing, 600+ lines)
-- **Implementation**: `/scratch/library-audit-nov2025/` (5 essential files)
-
----
-
-**Status**: ✅ Complete - Backend + UI, consolidated analytics dashboard  
-**Quality**: ✅ Zero lint errors, zero type errors, production-ready, zero bloat  
-**Next**: Real API endpoints, caching, widget system implementation
-
-**Latest Update**: November 5, 2025 - Consolidated architecture, eliminated feature bloat
+- Technical roadmap: `docs/ROADMAP.md`
+- State management standards: `docs/STATE_MANAGEMENT.md`
+- Testing overview: `docs/TESTING.md`
+- Architecture overview: `docs/ARCHITECTURE.md`
 

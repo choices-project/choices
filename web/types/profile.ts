@@ -54,6 +54,13 @@ export type ProfileUpdateData = {
 }
 
 // Profile preferences
+export type DashboardPreferences = {
+  showElectedOfficials: boolean;
+  showQuickActions: boolean;
+  showRecentActivity: boolean;
+  showEngagementScore: boolean;
+};
+
 export type ProfilePreferences = {
   theme: 'light' | 'dark' | 'system';
   language: string;
@@ -62,6 +69,7 @@ export type ProfilePreferences = {
   privacy: PrivacySettings;
   feed: FeedPreferences;
   voting: VotingPreferences;
+  dashboard?: DashboardPreferences;
 }
 
 export type NotificationPreferences = {
@@ -302,6 +310,7 @@ export type UseProfileUpdateReturn = {
 
 export type UseProfileAvatarReturn = {
   uploadAvatar: (file: File) => Promise<AvatarUploadResult>;
+  removeAvatar: () => Promise<boolean>;
   isUploading: boolean;
   error: string | null;
 }

@@ -24,7 +24,10 @@ import {
   useRepresentativeSearchResults,
   useRepresentativeLoading,
   useRepresentativeError,
-  representativeStore
+  useSearchRepresentatives,
+  useFindByLocation,
+  useLocationRepresentatives,
+  useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
 import type { RepresentativeSearchQuery } from '@/types/representative';
@@ -34,19 +37,29 @@ export default function RepresentativesPage() {
   const searchResults = useRepresentativeSearchResults();
   const loading = useRepresentativeLoading();
   const error = useRepresentativeError();
+  const allLoading = useRepresentativeGlobalLoading();
+  const locationRepresentatives = useLocationRepresentatives();
+  const searchRepresentatives = useSearchRepresentatives();
+  const findByLocation = useFindByLocation();
 
   // Load initial data
   useEffect(() => {
-    representativeStore.getState().searchRepresentatives({ limit: 50 });
-  }, []);
+    void searchRepresentatives({ limit: 50 });
+  }, [searchRepresentatives]);
 
-  const handleSearch = (query: RepresentativeSearchQuery) => {
-    representativeStore.getState().searchRepresentatives(query);
-  };
+  const handleSearch = React.useCallback(
+    (query: RepresentativeSearchQuery) => {
+      void searchRepresentatives(query);
+    },
+    [searchRepresentatives]
+  );
 
-  const handleLocationSearch = (address: string) => {
-    representativeStore.getState().findByLocation({ address });
-  };
+  const handleLocationSearch = React.useCallback(
+    (address: string) => {
+      void findByLocation({ address });
+    },
+    [findByLocation]
+  );
 
   const handleRepresentativeClick = (representative: any) => {
     logger.debug('Navigating to representative:', representative.name);
@@ -81,7 +94,7 @@ export default function RepresentativesPage() {
           <RepresentativeSearch
             onSearch={handleSearch}
             onLocationSearch={handleLocationSearch}
-            loading={loading}
+            loading={loading || allLoading}
           />
         </div>
 
@@ -102,7 +115,7 @@ export default function RepresentativesPage() {
                 <MapPin className="w-4 h-4" />
                 <span>My Representatives</span>
                 <Badge variant="secondary" className="ml-1">
-                  0
+                  {locationRepresentatives.length}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -143,14 +156,25 @@ export default function RepresentativesPage() {
                   <CardTitle className="flex items-center justify-between">
                     <span>Your Local Representatives</span>
                     <Badge variant="outline">
-                      0 found
+                      {locationRepresentatives.length} found
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-gray-500">
-                    Location-based representatives not available
-                  </div>
+                  {locationRepresentatives.length > 0 ? (
+                    <RepresentativeList
+                      representatives={locationRepresentatives}
+                      loading={allLoading}
+                      {...(error && { error })}
+                      onRepresentativeClick={handleRepresentativeClick}
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      {allLoading
+                        ? 'Looking up representatives for your location...'
+                        : 'Location-based representatives not available'}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

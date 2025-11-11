@@ -1,15 +1,20 @@
 'use client';
 
-import { 
-  TrendingUp, 
-  Users, 
-  CheckCircle, 
+import {
+  TrendingUp,
+  Users,
+  CheckCircle,
   Heart,
   Award,
-  Zap
+  Zap,
 } from 'lucide-react';
-import React, { useState } from 'react';
-// FEATURE_FLAGS removed - not used in this component
+import React, { useEffect, useMemo, useState } from 'react';
+
+import {
+  usePolls,
+  usePollsActions,
+  usePollsAnalytics,
+} from '@/lib/stores';
 
 type PollSuggestion = {
   id: string;
@@ -23,112 +28,164 @@ type PollSuggestion = {
   trendingScore: number;
   estimatedCost: 'low' | 'medium' | 'high';
   expectedEngagement: 'low' | 'medium' | 'high';
-}
+};
 
 type WeeklySelection = {
   week: string;
   selectedPolls: PollSuggestion[];
   totalVotes: number;
   selectionCriteria: string[];
-}
+};
+
+const SUGGESTION_FALLBACK: PollSuggestion[] = [
+  {
+    id: 'fallback-1',
+    title: 'Community Budget Priorities',
+    description: 'Help prioritize the budget focus areas for the next quarter.',
+    category: 'civics',
+    suggestedBy: 'community-team',
+    votes: 0,
+    status: 'trending',
+    createdAt: new Date().toISOString(),
+    trendingScore: 45,
+    estimatedCost: 'medium',
+    expectedEngagement: 'medium',
+  },
+];
+
+const estimateCost = (optionsCount: number, totalVotes: number) => {
+  if (totalVotes > 1000 || optionsCount > 8) return 'high';
+  if (totalVotes > 300 || optionsCount > 5) return 'medium';
+  return 'low';
+};
+
+const estimateEngagement = (totalVotes: number) => {
+  if (totalVotes > 1000) return 'high';
+  if (totalVotes > 300) return 'medium';
+  return 'low';
+};
+
+const formatWeek = (dateString: string) => {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    return 'This Week';
+  }
+  const weekStart = new Date(date);
+  weekStart.setDate(date.getDate() - date.getDay());
+  return weekStart.toISOString().split('T')[0];
+};
 
 export default function CommunityPollSelection() {
-  // All React Hooks must be called at the top level, before any conditional returns
   const [selectedWeek, setSelectedWeek] = useState('current');
   const [viewMode, setViewMode] = useState<'trending' | 'selected' | 'analytics'>('trending');
 
-  // This component is ready for use - no experimental dependency needed
+  const polls = usePolls();
+  const analytics = usePollsAnalytics();
+  const { loadPolls } = usePollsActions();
 
-  // Mock data - in real app this would come from API
-  const pollSuggestions: PollSuggestion[] = [
-    {
-      id: 'suggestion-1',
-      title: 'RuPaul\'s Drag Race All Stars 9 - Who Should Win?',
-      description: 'The queens are back! Who do you think deserves the crown this season?',
-      category: 'drag-race',
-      suggestedBy: 'DragRaceFan2024',
-      votes: 1247,
-      status: 'trending',
-      createdAt: '2024-01-15',
-      trendingScore: 95,
-      estimatedCost: 'low',
-      expectedEngagement: 'high'
-    },
-    {
-      id: 'suggestion-2',
-      title: 'Oscars 2024 - Best Picture Predictions',
-      description: 'Who do you think will take home the big prize at the Academy Awards?',
-      category: 'awards',
-      suggestedBy: 'MovieBuff',
-      votes: 892,
-      status: 'trending',
-      createdAt: '2024-01-14',
-      trendingScore: 87,
-      estimatedCost: 'low',
-      expectedEngagement: 'high'
-    },
-    {
-      id: 'suggestion-3',
-      title: 'Super Bowl LVIII MVP Predictions',
-      description: 'The big game is coming up! Who will be the MVP?',
-      category: 'sports',
-      suggestedBy: 'SportsGuru',
-      votes: 1567,
-      status: 'trending',
-      createdAt: '2024-01-13',
-      trendingScore: 92,
-      estimatedCost: 'medium',
-      expectedEngagement: 'high'
-    },
-    {
-      id: 'suggestion-4',
-      title: 'Best Reality TV Show of 2024',
-      description: 'What\'s your favorite reality show airing right now?',
-      category: 'reality-tv',
-      suggestedBy: 'RealityLover',
-      votes: 456,
-      status: 'trending',
-      createdAt: '2024-01-12',
-      trendingScore: 73,
-      estimatedCost: 'low',
-      expectedEngagement: 'medium'
-    },
-    {
-      id: 'suggestion-5',
-      title: 'Local Election Predictions - Your City',
-      description: 'Who do you think will win the upcoming local elections?',
-      category: 'politics',
-      suggestedBy: 'CivicEngaged',
-      votes: 234,
-      status: 'trending',
-      createdAt: '2024-01-11',
-      trendingScore: 68,
-      estimatedCost: 'high',
-      expectedEngagement: 'medium'
+  useEffect(() => {
+    void loadPolls();
+  }, [loadPolls]);
+
+  const pollSuggestions: PollSuggestion[] = useMemo(() => {
+    if (!polls.length) {
+      return SUGGESTION_FALLBACK;
     }
-  ];
 
-  const weeklySelections: WeeklySelection[] = [
-    {
-      week: '2024-01-15',
-      selectedPolls: pollSuggestions.slice(0, 3),
-      totalVotes: 3706,
-      selectionCriteria: [
-        'High community engagement (1000+ votes)',
-        'Low to medium cost estimation',
-        'Broad appeal across demographics',
-        'Timely and relevant content'
-      ]
+    return polls.map((poll) => {
+      const options = Array.isArray((poll as Record<string, unknown>).options)
+        ? ((poll as Record<string, unknown>).options as string[])
+        : [];
+      const totalVotes = typeof poll.total_votes === 'number' ? poll.total_votes : 0;
+      const participation = typeof poll.participation === 'number' ? poll.participation : 0;
+      const trendingScore = Math.min(100, Math.round(totalVotes * 0.08 + participation * 0.12 + options.length * 3));
+
+      return {
+        id: poll.id,
+        title: poll.title ?? (poll as Record<string, unknown>).question ?? 'Untitled Poll',
+        description: poll.description ?? '',
+        category: poll.category ?? 'general',
+        suggestedBy:
+          (poll as Record<string, unknown>).created_by ??
+          (poll as Record<string, unknown>).owner ??
+          'community',
+        votes: totalVotes,
+        status: 'trending' as const,
+        createdAt: poll.created_at ?? new Date().toISOString(),
+        trendingScore,
+        estimatedCost: estimateCost(options.length, totalVotes),
+        expectedEngagement: estimateEngagement(totalVotes),
+      };
+    });
+  }, [polls]);
+
+  const weeklySelections: WeeklySelection[] = useMemo(() => {
+    if (!pollSuggestions.length) {
+      return [];
     }
-  ];
 
-  const categories = [
-    { id: 'drag-race', name: 'Drag Race', icon: '👑', color: 'bg-pink-100 text-pink-700' },
-    { id: 'reality-tv', name: 'Reality TV', icon: '📺', color: 'bg-blue-100 text-blue-700' },
-    { id: 'sports', name: 'Sports', icon: '🏈', color: 'bg-green-100 text-green-700' },
-    { id: 'awards', name: 'Awards', icon: '🏆', color: 'bg-yellow-100 text-yellow-700' },
-    { id: 'politics', name: 'Politics', icon: '🗳️', color: 'bg-purple-100 text-purple-700' }
-  ];
+    const groups = pollSuggestions.reduce<Record<string, PollSuggestion[]>>((acc, suggestion) => {
+      const key = formatWeek(suggestion.createdAt);
+      acc[key] = acc[key] ? [...acc[key], suggestion] : [suggestion];
+      return acc;
+    }, {});
+
+    return Object.entries(groups)
+      .map(([week, suggestions]) => {
+        const topPolls = [...suggestions]
+          .sort((a, b) => b.trendingScore - a.trendingScore)
+          .slice(0, 3);
+        const totalVotes = topPolls.reduce((sum, poll) => sum + poll.votes, 0);
+
+        return {
+          week,
+          selectedPolls: topPolls,
+          totalVotes,
+          selectionCriteria: [
+            'High community engagement',
+            'Strong trending score',
+            'Diverse category coverage',
+            'Active participation growth',
+          ],
+        };
+      })
+      .sort((a, b) => (a.week < b.week ? 1 : -1));
+  }, [pollSuggestions]);
+
+  const categories = useMemo(() => {
+    const derived = pollSuggestions.reduce<Record<string, { id: string; name: string; icon: string; color: string }>>(
+      (acc, suggestion) => {
+        if (acc[suggestion.category]) {
+          return acc;
+        }
+        const palette = [
+          'bg-blue-100 text-blue-700',
+          'bg-green-100 text-green-700',
+          'bg-yellow-100 text-yellow-700',
+          'bg-purple-100 text-purple-700',
+          'bg-pink-100 text-pink-700',
+        ];
+        const icons = ['🗳️', '📊', '📺', '🌐', '🏆', '🏛️'];
+        const index = Object.keys(acc).length % palette.length;
+        acc[suggestion.category] = {
+          id: suggestion.category,
+          name: suggestion.category.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+          icon: icons[index % icons.length],
+          color: palette[index],
+        };
+        return acc;
+      },
+      {},
+    );
+
+    if (!Object.keys(derived).length) {
+      return [
+        { id: 'general', name: 'General', icon: '🗳️', color: 'bg-blue-100 text-blue-700' },
+      ];
+    }
+
+    return Object.values(derived);
+  }, [pollSuggestions]);
 
   const getCostColor = (cost: string) => {
     switch (cost) {
@@ -177,6 +234,7 @@ export default function CommunityPollSelection() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Trending Poll Suggestions</h3>
         {pollSuggestions
+          .slice()
           .sort((a, b) => b.trendingScore - a.trendingScore)
           .map((suggestion) => (
             <div key={suggestion.id} className="bg-white rounded-lg border border-gray-200 p-4">
@@ -200,10 +258,13 @@ export default function CommunityPollSelection() {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      categories.find(c => c.id === suggestion.category)?.color
-                    }`}>
-                      {categories.find(c => c.id === suggestion.category)?.icon} {categories.find(c => c.id === suggestion.category)?.name}
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        categories.find((c) => c.id === suggestion.category)?.color ?? 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {categories.find((c) => c.id === suggestion.category)?.icon ?? '🗳️'}{' '}
+                      {categories.find((c) => c.id === suggestion.category)?.name ?? suggestion.category}
                     </span>
                     
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getCostColor(suggestion.estimatedCost)}`}>
@@ -239,7 +300,7 @@ export default function CommunityPollSelection() {
         <div key={selection.week} className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              Week of {selection.week}
+                Week of {selection.week}
             </h3>
             <div className="flex items-center space-x-1 text-sm text-gray-500">
               <Users className="w-4 h-4" />
@@ -259,7 +320,10 @@ export default function CommunityPollSelection() {
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">Selected Polls</h4>
             {selection.selectedPolls.map((poll) => (
-              <div key={poll.id} className="flex items-center space-x-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div
+                key={poll.id}
+                className="flex items-center space-x-4 p-3 bg-green-50 border border-green-200 rounded-lg"
+              >
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
@@ -287,8 +351,8 @@ export default function CommunityPollSelection() {
             <TrendingUp className="w-5 h-5 text-blue-600" />
             <span className="font-semibold text-gray-900">Total Suggestions</span>
           </div>
-          <div className="text-2xl font-bold text-blue-600">47</div>
-          <div className="text-sm text-gray-500">This month</div>
+          <div className="text-2xl font-bold text-blue-600">{analytics.total ?? pollSuggestions.length}</div>
+          <div className="text-sm text-gray-500">Currently published</div>
         </div>
         
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -296,8 +360,10 @@ export default function CommunityPollSelection() {
             <Users className="w-5 h-5 text-green-600" />
             <span className="font-semibold text-gray-900">Community Votes</span>
           </div>
-          <div className="text-2xl font-bold text-green-600">3,706</div>
-          <div className="text-sm text-gray-500">This week</div>
+          <div className="text-2xl font-bold text-green-600">
+            {(analytics.totalVotes ?? pollSuggestions.reduce((sum, poll) => sum + poll.votes, 0)).toLocaleString()}
+          </div>
+          <div className="text-sm text-gray-500">Across featured polls</div>
         </div>
         
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -305,7 +371,11 @@ export default function CommunityPollSelection() {
             <Award className="w-5 h-5 text-purple-600" />
             <span className="font-semibold text-gray-900">Featured Polls</span>
           </div>
-          <div className="text-2xl font-bold text-purple-600">3</div>
+          <div className="text-2xl font-bold text-purple-600">
+            {weeklySelections.length
+              ? weeklySelections[0].selectedPolls.length
+              : Math.min(3, pollSuggestions.length)}
+          </div>
           <div className="text-sm text-gray-500">This week</div>
         </div>
       </div>
@@ -314,8 +384,8 @@ export default function CommunityPollSelection() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
         <div className="space-y-3">
           {categories.map((category) => {
-            const count = pollSuggestions.filter(p => p.category === category.id).length;
-            const percentage = (count / pollSuggestions.length) * 100;
+            const count = pollSuggestions.filter((poll) => poll.category === category.id).length;
+            const percentage = pollSuggestions.length ? (count / pollSuggestions.length) * 100 : 0;
             
             return (
               <div key={category.id} className="flex items-center justify-between">

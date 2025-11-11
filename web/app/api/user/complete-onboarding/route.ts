@@ -8,16 +8,10 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 export const dynamic = 'force-dynamic'
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const supabase = getSupabaseServerClient();
-  
-  if (!supabase) {
-    return errorResponse('Supabase client not available', 500);
-  }
-
-  const supabaseClient = await supabase;
+  const supabaseClient = await getSupabaseServerClient();
 
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-  
+
   if (userError || !user) {
     logger.warn('User not authenticated for onboarding completion')
     return authError('Authentication required');
@@ -26,7 +20,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Handle both form data and JSON requests
     const contentType = req.headers.get('content-type')
     let preferences = {}
-    
+
     if (contentType?.includes('application/json')) {
       const body = await req.json()
       preferences = body.preferences ?? {}
@@ -58,12 +52,12 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     // Create response with explicit redirect
     const dest = new URL('/dashboard', req.url).toString() // absolute
-    
+
     // Use 302 for WebKit/Safari, 303 for others (WebKit redirect quirk workaround)
     const userAgent = req.headers.get('user-agent') ?? ''
     const isWebKit = userAgent.includes('WebKit') && !userAgent.includes('Chrome')
     const status = isWebKit ? 302 : 303
-    
+
     const response = NextResponse.redirect(dest, { status })
 
     // Add explicit headers for WebKit compatibility

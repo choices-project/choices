@@ -15,32 +15,33 @@
 
 'use client';
 
-import { 
-  ChatBubbleLeftRightIcon, 
-  EnvelopeIcon, 
+import {
+  ChatBubbleLeftRightIcon,
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  UserIcon
+  UserIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { RepresentativeList } from '@/components/representative/RepresentativeList';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser, useContactActions } from '@/lib/stores';
+import {
+  useLocationRepresentatives,
+  useRepresentativeGlobalLoading,
+  useRepresentativeError,
+  useUserRepresentativeEntries,
+  useGetUserRepresentatives,
+} from '@/lib/stores/representativeStore';
+import type { Representative } from '@/types/representative';
 
 import { useContactThreads } from '../hooks/useContactMessages';
 
 import ContactModal from './ContactModal';
-
-
-type Representative = {
-  id: number;
-  name: string;
-  office: string;
-  party?: string;
-  photo?: string;
-  district?: string;
-}
+import BulkContactModal from './BulkContactModal';
 
 type ContactRepresentativesSectionProps = {
   representatives: Representative[];
@@ -53,24 +54,22 @@ export default function ContactRepresentativesSection({
 }: ContactRepresentativesSectionProps) {
   const [showContactModal, setShowContactModal] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] = useState<Representative | null>(null);
-  const [recentMessages, setRecentMessages] = useState<any[]>([]);
 
   // Feature flag check
   const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
   
   // Auth and contact hooks
-  const { user } = useAuth();
-  const { threads, loading: _threadsLoading } = useContactThreads();
+  const user = useUser();
+  const { threads, loading: threadsLoading } = useContactThreads();
+  const { resetContactState } = useContactActions();
 
-  // Get recent messages from threads
   useEffect(() => {
-    if (threads.length > 0) {
-      const recent = threads
-        .sort((a, b) => new Date(b.last_message_at ?? b.created_at).getTime() - new Date(a.last_message_at ?? a.created_at).getTime())
-        .slice(0, 3);
-      setRecentMessages(recent);
+    if (!user) {
+      resetContactState();
     }
-  }, [threads]);
+  }, [resetContactState, user]);
+
+  const recentThreads = useMemo(() => threads.slice(0, 3), [threads]);
 
   const handleContactRepresentative = (representative: Representative) => {
     setSelectedRepresentative(representative);
@@ -172,28 +171,33 @@ export default function ContactRepresentativesSection({
       </div>
 
       {/* Recent Messages */}
-      {recentMessages.length > 0 && (
+      {threadsLoading && recentThreads.length === 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-500">
+          Loading recent conversations...
+        </div>
+      )}
+      {recentThreads.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h3 className="font-medium text-gray-900 mb-3 flex items-center">
             <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
             Recent Messages
           </h3>
           <div className="space-y-2">
-            {recentMessages.map((thread) => (
+            {recentThreads.map((thread) => (
               <div key={thread.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {thread.subject}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {thread.message_count} message{thread.message_count !== 1 ? 's' : ''}
+                    {thread.messageCount} message{thread.messageCount !== 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 text-xs text-gray-500">
                   <CheckCircleIcon className="h-4 w-4 text-green-500" />
                   <span>
-                    {thread.last_message_at 
-                      ? new Date(thread.last_message_at).toLocaleDateString()
+                    {thread.lastMessageAt 
+                      ? new Date(thread.lastMessageAt).toLocaleDateString()
                       : 'No messages yet'
                     }
                   </span>

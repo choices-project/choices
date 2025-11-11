@@ -43,7 +43,7 @@ describe('PWA client utilities', () => {
   });
 
   describe('queueAction', () => {
-    const registerSpy = jest.fn().mockResolvedValue(undefined);
+    const registerSpy = jest.fn(async (_tag: string) => {});
     let originalServiceWorkerRegistration: unknown;
 
     beforeEach(() => {

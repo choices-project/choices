@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { register as serverRegister } from '@/app/actions/register'
-import { PasskeyButton } from '@/components/PasskeyButton'
+import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 
 
 export default function RegisterPage() {

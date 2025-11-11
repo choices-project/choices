@@ -15,14 +15,14 @@ import React from 'react';
 
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/features/admin/lib/hooks';
 import { mockChartData } from '@/features/admin/lib/mock-data';
-import { useAdminStore } from '@/features/admin/lib/store';
 import type { ActivityItem } from '@/features/admin/types';
 import { devLog } from '@/lib/utils/logger';
+import { useActivityFeed } from '@/lib/stores';
 
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 
 export const DashboardOverview: React.FC = () => {
-  const { activityFeed } = useAdminStore();
+  const activityFeed = useActivityFeed();
 
   // Initialize real-time subscriptions
   useRealTimeSubscriptions();

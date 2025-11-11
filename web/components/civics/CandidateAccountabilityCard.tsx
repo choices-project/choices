@@ -23,7 +23,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { useUserStore } from '@/lib/stores/userStore';
+import { useIsAuthenticated } from '@/lib/stores';
 
 type Promise = {
   id: string;
@@ -140,7 +140,7 @@ export function CandidateAccountabilityCard({
   className = ''
 }: CandidateAccountabilityCardProps) {
   const router = useRouter();
-  const { isAuthenticated } = useUserStore();
+  const isAuthenticated = useIsAuthenticated();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [loadingAlternatives, setLoadingAlternatives] = useState(false);

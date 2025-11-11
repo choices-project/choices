@@ -141,12 +141,70 @@ export const GET = withErrorHandling(async (
         p_trust_tier: trustTier,
       });
 
+    let rows: Array<Record<string, unknown>> = [];
+
     if (resultsError) {
-      logger.error('Results query error:', resultsError);
-      return errorResponse('Failed to get results', 500);
+      const isMissingRpc =
+        resultsError.code === 'PGRST202' ||
+        resultsError.code === '42883' ||
+        resultsError.message?.includes('get_poll_results_by_trust_tier');
+
+      if (isMissingRpc) {
+        const { data: voteRows, error: votesError } = await supabase
+          .from('votes')
+          .select('id, option_id')
+          .eq('poll_id', id);
+
+        if (votesError) {
+          logger.error('Results fallback vote query error:', votesError);
+          return errorResponse('Failed to get results', 500);
+        }
+
+        let filteredVotes = voteRows ?? [];
+
+        if (trustTier !== null && filteredVotes.length > 0) {
+          const voteIds = filteredVotes.map((vote) => vote.id).filter(Boolean) as string[];
+
+          if (voteIds.length > 0) {
+            const { data: trustRows, error: trustError } = await supabase
+              .from('vote_trust_tiers')
+              .select('vote_id, trust_tier')
+              .eq('trust_tier', trustTier)
+              .in('vote_id', voteIds);
+
+            if (trustError) {
+              logger.warn('Results fallback trust tier lookup failed, continuing without tier filter', trustError);
+            } else {
+              const allowedIds = new Set(
+                (trustRows ?? []).map((row) => row.vote_id).filter(Boolean) as string[],
+              );
+              filteredVotes = filteredVotes.filter((vote) => allowedIds.has(vote.id));
+            }
+          } else {
+            filteredVotes = [];
+          }
+        }
+
+        const counts = filteredVotes.reduce<Record<string, number>>((acc, vote) => {
+          const optionId = vote.option_id;
+          if (optionId) {
+            acc[optionId] = (acc[optionId] ?? 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        rows = Object.entries(counts).map(([option_id, vote_count]) => ({
+          option_id,
+          vote_count,
+        }));
+      } else {
+        logger.error('Results query error:', resultsError);
+        return errorResponse('Failed to get results', 500);
+      }
+    } else {
+      rows = Array.isArray(results) ? (results as Array<Record<string, unknown>>) : [];
     }
 
-    const rows = Array.isArray(results) ? results : [];
     const totalVotes = rows.reduce((sum: number, row: any) => sum + (row?.vote_count ?? 0), 0);
 
     const optionTextMap = new Map(normalizedOptions.map((option) => [option.id, option.text]));

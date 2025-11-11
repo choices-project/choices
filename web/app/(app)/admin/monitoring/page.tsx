@@ -20,9 +20,7 @@ type MonitoringData = {
 };
 
 async function fetchMonitoring(): Promise<MonitoringData> {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/security/monitoring`, {
-    headers: { 'x-admin-key': adminKey },
     cache: 'no-store'
   });
   if (!res.ok) {
@@ -47,12 +45,10 @@ async function fetchExtendedHealth() {
 
 async function clearLimit(ip: string, endpoint: string) {
   'use server';
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
   await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/security/monitoring/clear`, {
     method: 'POST',
     headers: {
-      'content-type': 'application/json',
-      'x-admin-key': adminKey
+      'content-type': 'application/json'
     },
     body: JSON.stringify({ ip, endpoint })
   });

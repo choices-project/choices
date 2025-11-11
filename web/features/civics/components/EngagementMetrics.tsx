@@ -12,22 +12,23 @@
 
 'use client';
 
-import { 
-  HeartIcon, 
-  ChatBubbleLeftIcon, 
-  ShareIcon, 
+import {
+  HeartIcon,
+  ChatBubbleLeftIcon,
+  ShareIcon,
   BookmarkIcon,
   ChartBarIcon,
   EyeIcon,
   ClockIcon,
   ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
-import { 
+import {
   HeartIcon as HeartSolidIcon,
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
+import { useAnalyticsActions, useFeedsActions, useFeedsStore } from '@/lib/stores';
 
 import type { EngagementData } from '../lib/types/civics-types';
 
@@ -39,7 +40,9 @@ type EngagementMetricsProps = {
   showTrending?: boolean;
   enableHaptics?: boolean;
   className?: string;
-}
+};
+
+const HISTORY_LENGTH = 7;
 
 export default function EngagementMetrics({
   itemId,
@@ -51,76 +54,231 @@ export default function EngagementMetrics({
   className = ''
 }: EngagementMetricsProps) {
   const [metrics, setMetrics] = useState<EngagementData>(initialMetrics);
-  const [isLoading, setIsLoading] = useState(false);
-  const [engagementHistory, setEngagementHistory] = useState<number[]>([]);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [engagementHistory, setEngagementHistory] = useState<number[]>(() => {
+    const totalEngagement = initialMetrics.likes + initialMetrics.comments + initialMetrics.shares;
+    return Array.from({ length: HISTORY_LENGTH }, () => totalEngagement);
+  });
+  const [localLiked, setLocalLiked] = useState(false);
+  const [localBookmarked, setLocalBookmarked] = useState(false);
+  const [mutationPending, setMutationPending] = useState(false);
 
-  // Load engagement history
+  const storeFeed = useFeedsStore((state) => {
+    const fromFeeds = state.feeds.find((feed) => feed.id === itemId);
+    if (fromFeeds) return fromFeeds;
+    return state.filteredFeeds.find((feed) => feed.id === itemId) ?? null;
+  });
+  const { likeFeed, unlikeFeed, shareFeed, bookmarkFeed, unbookmarkFeed } = useFeedsActions();
+  const { trackUserAction } = useAnalyticsActions();
+
+  const isLiked = storeFeed ? storeFeed.userInteraction.liked : localLiked;
+  const isBookmarked = storeFeed ? storeFeed.userInteraction.bookmarked : localBookmarked;
+
   useEffect(() => {
-    // Simulate loading engagement history
-    const history = Array.from({ length: 7 }, () => 
-      Math.floor(Math.random() * 100) + metrics.likes
-    );
-    setEngagementHistory(history);
-  }, [metrics.likes]);
+    if (!storeFeed) {
+      return;
+    }
 
-  // Handle engagement actions
-  const handleEngagement = useCallback(async (
-    action: string, 
-    currentValue: number, 
-    isActive: boolean
-  ) => {
-    if (isLoading) return;
+    setMetrics((previous) => ({
+      ...previous,
+      likes: storeFeed.engagement.likes,
+      shares: storeFeed.engagement.shares,
+      comments: storeFeed.engagement.comments,
+      views: storeFeed.engagement.views,
+      lastUpdated: new Date(storeFeed.updatedAt ?? storeFeed.publishedAt ?? previous.lastUpdated)
+    }));
 
-    setIsLoading(true);
-    
+    const totalEngagement =
+      storeFeed.engagement.likes + storeFeed.engagement.comments + storeFeed.engagement.shares;
+    setEngagementHistory((previous) => [...previous.slice(-(HISTORY_LENGTH - 1)), totalEngagement]);
+    setLocalLiked(storeFeed.userInteraction.liked);
+    setLocalBookmarked(storeFeed.userInteraction.bookmarked);
+  }, [storeFeed]);
+
+  const vibrate = useCallback(() => {
     if (enableHaptics && 'vibrate' in navigator) {
       navigator.vibrate(25);
     }
+  }, [enableHaptics]);
+
+  const pushHistory = useCallback((nextTotal: number) => {
+    setEngagementHistory((previous) => [...previous.slice(-(HISTORY_LENGTH - 1)), nextTotal]);
+  }, []);
+
+  const handleLike = useCallback(async () => {
+    if (mutationPending) return;
+    setMutationPending(true);
+    vibrate();
+
+    const currentlyLiked = isLiked;
+    const nextLikes = Math.max(0, metrics.likes + (currentlyLiked ? -1 : 1));
+    const nextTotal = nextLikes + metrics.comments + metrics.shares;
 
     try {
-      const newValue = isActive ? currentValue - 1 : currentValue + 1;
-      
-      setMetrics(prev => ({
-        ...prev,
-        [action]: newValue,
-        lastUpdated: new Date()
-      }));
+      if (storeFeed) {
+        if (currentlyLiked) {
+          await unlikeFeed(itemId);
+        } else {
+          await likeFeed(itemId);
+        }
+      } else {
+        setLocalLiked((previous) => !previous);
+      }
 
-      // Update engagement history
-      setEngagementHistory(prev => {
-        const newHistory = [...prev];
-        newHistory[newHistory.length - 1] = newValue;
-        return newHistory;
+      setMetrics((previous) => {
+        const updated = {
+          ...previous,
+          likes: nextLikes,
+          lastUpdated: new Date()
+        };
+        onEngagement?.('likes', itemId, nextLikes);
+        return updated;
       });
-
-      onEngagement?.(action, itemId, newValue);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 200));
+      pushHistory(nextTotal);
+      trackUserAction?.(
+        currentlyLiked ? 'unlike_feed_item' : 'like_feed_item',
+        'civics',
+        itemId,
+        1
+      );
     } finally {
-      setIsLoading(false);
+      setMutationPending(false);
     }
-  }, [itemId, onEngagement, enableHaptics, isLoading]);
+  }, [
+    mutationPending,
+    vibrate,
+    isLiked,
+    metrics.likes,
+    metrics.comments,
+    metrics.shares,
+    storeFeed,
+    unlikeFeed,
+    likeFeed,
+    itemId,
+    onEngagement,
+    pushHistory,
+    trackUserAction
+  ]);
 
-  const handleLike = useCallback(() => {
-    handleEngagement('likes', metrics.likes, isLiked);
-    setIsLiked(!isLiked);
-  }, [handleEngagement, metrics.likes, isLiked]);
+  const handleBookmark = useCallback(async () => {
+    if (mutationPending) return;
+    setMutationPending(true);
+    vibrate();
 
-  const handleBookmark = useCallback(() => {
-    handleEngagement('bookmarks', metrics.bookmarks, isBookmarked);
-    setIsBookmarked(!isBookmarked);
-  }, [handleEngagement, metrics.bookmarks, isBookmarked]);
+    const currentlyBookmarked = isBookmarked;
+    const nextBookmarks = Math.max(0, metrics.bookmarks + (currentlyBookmarked ? -1 : 1));
 
-  const handleShare = useCallback(() => {
-    handleEngagement('shares', metrics.shares, false);
-  }, [handleEngagement, metrics.shares]);
+    try {
+      if (storeFeed) {
+        if (currentlyBookmarked) {
+          await unbookmarkFeed(itemId);
+        } else {
+          await bookmarkFeed(itemId);
+        }
+      } else {
+        setLocalBookmarked((previous) => !previous);
+      }
+
+      setMetrics((previous) => {
+        const updated = {
+          ...previous,
+          bookmarks: nextBookmarks,
+          lastUpdated: new Date()
+        };
+        onEngagement?.('bookmarks', itemId, nextBookmarks);
+        return updated;
+      });
+      trackUserAction?.(
+        currentlyBookmarked ? 'unbookmark_feed_item' : 'bookmark_feed_item',
+        'civics',
+        itemId,
+        1
+      );
+    } finally {
+      setMutationPending(false);
+    }
+  }, [
+    mutationPending,
+    vibrate,
+    isBookmarked,
+    metrics.bookmarks,
+    storeFeed,
+    unbookmarkFeed,
+    bookmarkFeed,
+    itemId,
+    onEngagement,
+    trackUserAction
+  ]);
+
+  const handleShare = useCallback(async () => {
+    if (mutationPending) return;
+    setMutationPending(true);
+    vibrate();
+
+    const nextShares = metrics.shares + 1;
+    const nextTotal = metrics.likes + metrics.comments + nextShares;
+
+    try {
+      if (storeFeed) {
+        shareFeed(itemId);
+      }
+
+      setMetrics((previous) => {
+        const updated = {
+          ...previous,
+          shares: nextShares,
+          lastUpdated: new Date()
+        };
+        onEngagement?.('shares', itemId, nextShares);
+        return updated;
+      });
+      pushHistory(nextTotal);
+      trackUserAction?.('share_feed_item', 'civics', itemId, 1);
+    } finally {
+      setMutationPending(false);
+    }
+  }, [
+    mutationPending,
+    vibrate,
+    metrics.shares,
+    metrics.likes,
+    metrics.comments,
+    storeFeed,
+    shareFeed,
+    itemId,
+    onEngagement,
+    pushHistory,
+    trackUserAction
+  ]);
 
   const handleComment = useCallback(() => {
-    handleEngagement('comments', metrics.comments, false);
-  }, [handleEngagement, metrics.comments]);
+    if (mutationPending) return;
+    vibrate();
+
+    const nextComments = metrics.comments + 1;
+    const nextTotal = metrics.likes + nextComments + metrics.shares;
+
+    setMetrics((previous) => {
+      const updated = {
+        ...previous,
+        comments: nextComments,
+        lastUpdated: new Date()
+      };
+      onEngagement?.('comments', itemId, nextComments);
+      return updated;
+    });
+    pushHistory(nextTotal);
+    trackUserAction?.('comment_feed_item', 'civics', itemId, 1);
+  }, [
+    mutationPending,
+    vibrate,
+    metrics.comments,
+    metrics.likes,
+    metrics.shares,
+    onEngagement,
+    itemId,
+    pushHistory,
+    trackUserAction
+  ]);
 
   // Format numbers
   const formatNumber = (num: number) => {
@@ -159,12 +317,12 @@ export default function EngagementMetrics({
         <div className="flex items-center space-x-6">
           <button
             onClick={handleLike}
-            disabled={isLoading}
+            disabled={mutationPending}
             className={`flex items-center space-x-2 transition-colors ${
               isLiked 
                 ? 'text-red-500' 
                 : 'text-gray-500 hover:text-red-500'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
           >
             {isLiked ? (
@@ -179,9 +337,9 @@ export default function EngagementMetrics({
           
           <button
             onClick={handleComment}
-            disabled={isLoading}
+            disabled={mutationPending}
             className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             aria-label="Comment on this post"
           >
@@ -193,9 +351,9 @@ export default function EngagementMetrics({
           
           <button
             onClick={handleShare}
-            disabled={isLoading}
+            disabled={mutationPending}
             className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             aria-label="Share this post"
           >
@@ -209,12 +367,12 @@ export default function EngagementMetrics({
         <div className="flex items-center space-x-2">
           <button
             onClick={handleBookmark}
-            disabled={isLoading}
+            disabled={mutationPending}
             className={`transition-colors ${
               isBookmarked 
                 ? 'text-blue-500' 
                 : 'text-gray-500 hover:text-blue-500'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={`${isBookmarked ? 'Remove from' : 'Add to'} bookmarks`}
           >
             {isBookmarked ? (

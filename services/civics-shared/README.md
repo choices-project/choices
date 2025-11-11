@@ -15,7 +15,7 @@ Bundling the logic here keeps behaviour identical across the stack and makes it 
 
 - Division + election metadata (`extractDivisionMetadata`, `determineRaceImportance`, `estimateDeadline`, `buildLookupAddress`)
 - Issue signals derived from OpenStates bills (`deriveKeyIssuesFromBills`)
-- Campaign finance utilities shared by the FEC/OpenSecrets integrations (`determineOfficeCode`, `normalizeDistrict`, `calculateCashOnHand`, `resolveLastFilingDate`, `buildCampaignActivity`, …)
+- Campaign finance utilities shared by the FEC enrichment (`determineOfficeCode`, `normalizeDistrict`, `calculateCashOnHand`, `resolveLastFilingDate`, `buildCampaignActivity`, …)
 
 See [`index.d.ts`](./index.d.ts) for full type signatures.
 

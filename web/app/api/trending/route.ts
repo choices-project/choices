@@ -1,11 +1,11 @@
 /**
  * Consolidated Trending API Endpoint
- * 
+ *
  * This endpoint consolidates all trending functionality:
  * - Trending polls
  * - Trending hashtags
  * - Trending topics
- * 
+ *
  * Usage:
  * GET /api/trending?type=polls&limit={limit} - Trending polls
  * GET /api/trending?type=hashtags&limit={limit} - Trending hashtags
@@ -67,16 +67,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   switch (type) {
     case 'polls':
       return await getTrendingPolls(limit);
-    
+
     case 'hashtags':
       return await getTrendingHashtags(request, limit);
-    
+
     case 'topics':
       return await getTrendingTopics(limit);
-    
+
     default:
-      return validationError({ 
-        type: 'Invalid type. Use "polls", "hashtags", or "topics"' 
+      return validationError({
+        type: 'Invalid type. Use "polls", "hashtags", or "topics"'
       });
     }
 });
@@ -95,7 +95,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 async function getTrendingPolls(limit: number) {
   try {
     const supabase = await getSupabaseServerClient();
-    
+
     // Get trending polls (most votes in last 7 days)
     const { data: polls, error } = await (supabase as any)
       .from('polls')
@@ -114,23 +114,23 @@ async function getTrendingPolls(limit: number) {
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('total_votes', { ascending: false })
       .limit(limit);
-    
+
     if (error) {
       logger.error('Error fetching trending polls:', error);
       return NextResponse.json({ polls: [] }, { status: 500 });
     }
-    
+
     if (!polls) {
       return NextResponse.json({ polls: [] }, { status: 500 });
     }
-    
+
     // Transform data for frontend
     const transformedPolls = (polls as any[]).map((poll: any) => {
       // Type guard to ensure poll has required properties
       if (!poll || typeof poll !== 'object') {
         return null;
       }
-      
+
       return {
         id: poll.id ?? '',
         title: poll.title ?? '',
@@ -147,7 +147,7 @@ async function getTrendingPolls(limit: number) {
         })) : []
       };
     }).filter(poll => poll !== null);
-    
+
     return NextResponse.json({
       success: true,
       data: transformedPolls,
@@ -155,7 +155,7 @@ async function getTrendingPolls(limit: number) {
       limit,
       generatedAt: new Date().toISOString()
     });
-    
+
   } catch (error) {
     logger.error('Error in trending polls API', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ polls: [] }, { status: 500 });
@@ -203,17 +203,7 @@ async function getTrendingHashtags(request: NextRequest, limit: number) {
 
 async function getTrendingTopics(limit: number) {
   try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
-
-    // Fetch trending topics from the proper table
-    const supabaseClient = await supabase;
+    const supabaseClient = await getSupabaseServerClient();
     const { data: trendingTopics, error: trendingError } = await supabaseClient
       .from('trending_topics')
       .select('id, topic, score, created_at, updated_at, title, description, source_name, category, trending_score, velocity, momentum, sentiment_score, metadata')
@@ -345,17 +335,17 @@ async function trackHashtags(request: NextRequest) {
 
 function getTimeRemaining(endDate: string | null): string {
   if (!endDate) return 'No end date';
-  
+
   const now = new Date();
   const end = new Date(endDate);
   const diff = end.getTime() - now.getTime();
-  
+
   if (diff <= 0) return 'Ended';
-  
+
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (days > 0) return `${days}d ${hours}h ${minutes}m`;
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;

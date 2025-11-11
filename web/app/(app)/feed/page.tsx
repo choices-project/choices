@@ -20,14 +20,14 @@ import React from 'react';
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
-import { useUserStore } from '@/lib/stores';
+import { useUser } from '@/lib/stores';
 import { withOptional } from '@/lib/util/objects';
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
 
 export default function FeedPage() {
-  const user = useUserStore(state => state.user);
+  const user = useUser();
   const userDistrict = useFormattedDistrict();
 
   return (

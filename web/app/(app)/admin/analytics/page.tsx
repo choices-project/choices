@@ -21,57 +21,52 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { EnhancedAnalyticsDashboard } from '@/features/analytics';
 import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetDashboard';
+import { useUser, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 type DashboardMode = 'classic' | 'widget';
 
 export default function AnalyticsPage() {
+  const user = useUser();
+  const isUserLoading = useUserLoading();
   const [mode, setMode] = useState<DashboardMode>('classic');
-  const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get current user
   useEffect(() => {
-    const getUser = async () => {
+    const loadPreferences = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const supabase = await getSupabaseBrowserClient();
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
-          logger.error('Failed to get user for analytics', { error });
-          setIsLoading(false);
-          return;
-        }
-
-        setUserId(user.id);
-
-        // Load user's preferred mode
-        const { data: profile } = await (supabase as any)
+        const { data: profile, error } = await (supabase as any)
           .from('user_profiles')
           .select('analytics_dashboard_mode')
           .eq('user_id', user.id)
           .single();
 
-        if (profile?.analytics_dashboard_mode) {
+        if (!error && profile?.analytics_dashboard_mode) {
           setMode(profile.analytics_dashboard_mode as DashboardMode);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         logger.error('Error loading user preferences', { error });
+      } finally {
         setIsLoading(false);
       }
     };
 
-    getUser();
-  }, []);
+    if (!isUserLoading) {
+      void loadPreferences();
+    }
+  }, [isUserLoading, user]);
 
-  // Save mode preference
   const handleModeChange = async (newMode: DashboardMode) => {
     setMode(newMode);
 
-    if (!userId) return;
+    if (!user?.id) return;
 
     try {
       const supabase = await getSupabaseBrowserClient();
@@ -80,15 +75,15 @@ export default function AnalyticsPage() {
         .update({
           analytics_dashboard_mode: newMode,
         })
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
       
-      logger.info('Dashboard mode preference saved', { mode: newMode, userId });
+      logger.info('Dashboard mode preference saved', { mode: newMode, userId: user.id });
     } catch (error) {
-      logger.error('Failed to save mode preference', { error, userId });
+      logger.error('Failed to save mode preference', { error, userId: user.id });
     }
   };
 
-  if (isLoading) {
+  if (isUserLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
@@ -131,7 +126,7 @@ export default function AnalyticsPage() {
       {mode === 'classic' ? (
         <EnhancedAnalyticsDashboard enableRealTime enableNewSchema />
       ) : (
-        userId && <WidgetDashboard userId={userId} isAdmin />
+        user?.id && <WidgetDashboard userId={user.id} isAdmin />
       )}
     </div>
   );

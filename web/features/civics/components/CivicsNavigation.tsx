@@ -1,41 +1,84 @@
 'use client';
 
-import { 
-MapPinIcon, 
-  UserGroupIcon, 
+import {
+  MapPinIcon,
+  UserGroupIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
-import logger from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger';
+import {
+  useUserActions,
+  useUserCurrentAddress,
+  useUserShowAddressForm,
+  useUserNewAddress,
+  useUserAddressLoading
+} from '@/lib/stores';
+import {
+  useFindByLocation,
+  useRepresentativeGlobalLoading
+} from '@/lib/stores/representativeStore';
 
 type CivicsNavigationProps = {
   onRepresentativesClick: () => void;
-  onAddressUpdate: (address: string) => void;
+  onAddressUpdate?: (address: string) => void;
   currentAddress?: string;
-}
+};
 
-export default function CivicsNavigation({ 
-  onRepresentativesClick, 
-  onAddressUpdate, 
-  currentAddress 
+export default function CivicsNavigation({
+  onRepresentativesClick,
+  onAddressUpdate,
+  currentAddress
 }: CivicsNavigationProps) {
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState('');
-  const [addressLoading, setAddressLoading] = useState(false);
+  const { setShowAddressForm, setNewAddress, handleAddressUpdate } = useUserActions();
+  const storeCurrentAddress = useUserCurrentAddress();
+  const showAddressForm = useUserShowAddressForm();
+  const newAddress = useUserNewAddress();
+  const addressLoading = useUserAddressLoading();
+  const representativeLoading = useRepresentativeGlobalLoading();
+  const findByLocation = useFindByLocation();
 
-  const handleAddressUpdate = async () => {
+  const displayAddress = currentAddress ?? storeCurrentAddress;
+  const isUpdatingAddress = addressLoading || representativeLoading;
+
+  const openAddressForm = useCallback(() => {
+    setShowAddressForm(true);
+  }, [setShowAddressForm]);
+
+  const closeAddressForm = useCallback(() => {
+    setShowAddressForm(false);
+  }, [setShowAddressForm]);
+
+  const handleAddressSubmit = useCallback(async () => {
+    const trimmedAddress = newAddress.trim();
+    if (!trimmedAddress) {
+      return;
+    }
+
     try {
-      setAddressLoading(true);
-      onAddressUpdate(newAddress);
-      setShowAddressForm(false);
+      const results = await Promise.allSettled([
+        handleAddressUpdate(trimmedAddress),
+        (async () => {
+          const response = await findByLocation({ address: trimmedAddress });
+          if (!response?.success) {
+            throw new Error(response?.error ?? 'Unable to fetch representatives for address');
+          }
+        })()
+      ]);
+
+      const rejection = results.find((result) => result.status === 'rejected');
+      if (rejection && rejection.status === 'rejected') {
+        throw rejection.reason;
+      }
+
+      onAddressUpdate?.(trimmedAddress);
       setNewAddress('');
+      setShowAddressForm(false);
     } catch (error) {
       logger.error('Address update failed:', error);
-    } finally {
-      setAddressLoading(false);
     }
-  };
+  }, [findByLocation, handleAddressUpdate, newAddress, onAddressUpdate, setNewAddress, setShowAddressForm]);
 
   return (
     <>
@@ -68,7 +111,7 @@ export default function CivicsNavigation({
                 </button>
                 
                 <button
-                  onClick={() => setShowAddressForm(true)}
+                  onClick={openAddressForm}
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   <MapPinIcon className="w-5 h-5" />
@@ -80,10 +123,10 @@ export default function CivicsNavigation({
             {/* Right side - User info and actions */}
             <div className="flex items-center space-x-4">
               {/* Current Location Display */}
-              {currentAddress && (
+              {displayAddress && (
                 <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
                   <MapPinIcon className="w-4 h-4" />
-                  <span className="truncate max-w-32">{currentAddress}</span>
+                  <span className="truncate max-w-32">{displayAddress}</span>
                 </div>
               )}
 
@@ -107,7 +150,7 @@ export default function CivicsNavigation({
             
             <form onSubmit={(e) => {
               e.preventDefault();
-              handleAddressUpdate();
+              void handleAddressSubmit();
             }} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -126,15 +169,15 @@ export default function CivicsNavigation({
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  disabled={addressLoading}
+                  disabled={isUpdatingAddress || newAddress.trim().length === 0}
                   className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {addressLoading ? 'Updating...' : 'Update Location'}
+                  {isUpdatingAddress ? 'Updating...' : 'Update Location'}
                 </button>
                 
                 <button
                   type="button"
-                  onClick={() => setShowAddressForm(false)}
+                  onClick={closeAddressForm}
                   className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   Cancel

@@ -9,14 +9,15 @@
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
+import { createBaseStoreActions } from './baseStoreActions';
 
 // Hashtag moderation types
 export type HashtagFlagType = 'inappropriate' | 'spam' | 'misleading' | 'harassment' | 'other';
@@ -44,8 +45,7 @@ export type HashtagModeration = {
   updatedAt: string;
 }
 
-// Store state interface
-type HashtagModerationStore = {
+type HashtagModerationState = {
   // Modal state
   isOpen: boolean;
   
@@ -60,312 +60,321 @@ type HashtagModerationStore = {
   // Moderation queue
   moderationQueue: HashtagModeration[];
   selectedModeration: HashtagModeration | null;
-  
+  isLoading: boolean;
+};
+
+type HashtagModerationActions = Pick<
+  BaseStore,
+  'setLoading' | 'setError' | 'clearError'
+> & {
   // Actions - Modal
   setIsOpen: (open: boolean) => void;
-  
+
   // Actions - Form
   setFlagType: (type: HashtagFlagType) => void;
   setReason: (reason: string) => void;
   resetForm: () => void;
-  
+
   // Actions - Submission
   setIsSubmitting: (submitting: boolean) => void;
-  setError: (error: string | null) => void;
-  
+
   // Actions - Moderation
   setModerationQueue: (queue: HashtagModeration[]) => void;
   setSelectedModeration: (moderation: HashtagModeration | null) => void;
   addModeration: (moderation: HashtagModeration) => void;
   updateModeration: (id: string, updates: Partial<HashtagModeration>) => void;
   removeModeration: (id: string) => void;
-  
+
   // Actions - Flags
   submitFlag: (hashtagId: string) => Promise<void>;
   approveFlag: (flagId: string) => Promise<void>;
   rejectFlag: (flagId: string) => Promise<void>;
-  
+
   // Actions - Queue management
   loadModerationQueue: () => Promise<void>;
   refreshQueue: () => Promise<void>;
-} & BaseStore;
 
-// Create hashtag moderation store with middleware
+  // Reset
+  resetHashtagModerationState: () => void;
+};
+
+type HashtagModerationStore = HashtagModerationState & HashtagModerationActions;
+
+type HashtagModerationStoreCreator = StateCreator<
+  HashtagModerationStore,
+  [['zustand/immer', never], ['zustand/persist', unknown], ['zustand/devtools', never]]
+>;
+
+const createInitialHashtagModerationState = (): HashtagModerationState => ({
+  isOpen: false,
+  flagType: 'inappropriate',
+  reason: '',
+  isSubmitting: false,
+  error: null,
+  moderationQueue: [],
+  selectedModeration: null,
+  isLoading: false,
+});
+
+const createHashtagModerationActions = (
+  set: Parameters<HashtagModerationStoreCreator>[0],
+  get: Parameters<HashtagModerationStoreCreator>[1],
+): HashtagModerationActions => {
+  const setState = set as unknown as (recipe: (draft: HashtagModerationStore) => void) => void;
+  const baseActions = createBaseStoreActions<HashtagModerationStore>(setState);
+
+  return {
+    ...baseActions,
+    setIsOpen: (open) =>
+      setState((state) => {
+        state.isOpen = open;
+
+        if (open) {
+          state.flagType = 'inappropriate';
+          state.reason = '';
+          state.error = null;
+        }
+      }),
+    setFlagType: (type) =>
+      setState((state) => {
+        state.flagType = type;
+      }),
+    setReason: (reason) =>
+      setState((state) => {
+        state.reason = reason;
+      }),
+    resetForm: () =>
+      setState((state) => {
+        state.flagType = 'inappropriate';
+        state.reason = '';
+        state.isSubmitting = false;
+        state.error = null;
+      }),
+    setIsSubmitting: (submitting) =>
+      setState((state) => {
+        state.isSubmitting = submitting;
+      }),
+    setModerationQueue: (queue) =>
+      setState((state) => {
+        state.moderationQueue = queue;
+      }),
+    setSelectedModeration: (moderation) =>
+      setState((state) => {
+        state.selectedModeration = moderation;
+      }),
+    addModeration: (moderation) =>
+      setState((state) => {
+        state.moderationQueue.unshift(moderation);
+      }),
+    updateModeration: (id, updates) =>
+      setState((state) => {
+        const index = state.moderationQueue.findIndex((m) => m.id === id);
+        if (index === -1) {
+          return;
+        }
+
+        const existing = state.moderationQueue[index];
+        if (!existing) {
+          return;
+        }
+
+        const nextModeration = {
+          ...existing,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+
+        state.moderationQueue[index] = nextModeration;
+
+        if (state.selectedModeration?.id === id) {
+          state.selectedModeration = nextModeration;
+        }
+      }),
+    removeModeration: (id) =>
+      setState((state) => {
+        state.moderationQueue = state.moderationQueue.filter((m) => m.id !== id);
+        if (state.selectedModeration?.id === id) {
+          state.selectedModeration = null;
+        }
+      }),
+    submitFlag: async (hashtagId) => {
+      const { flagType, reason } = get();
+
+      if (!reason.trim()) {
+        baseActions.setError('Please provide a reason for flagging');
+        return;
+      }
+
+      baseActions.clearError();
+      setState((state) => {
+        state.isSubmitting = true;
+      });
+
+      try {
+        const { useUserStore } = await import('@/lib/stores/userStore');
+        const userStore = useUserStore.getState();
+        const userId = userStore.user?.id ?? 'anonymous';
+
+        const flag: HashtagFlag = {
+          id: crypto.randomUUID(),
+          hashtagId,
+          flagType,
+          reason,
+          userId,
+          timestamp: new Date().toISOString(),
+          status: 'pending',
+        };
+
+        const response = await fetch('/api/hashtags?action=flag', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(flag),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to submit flag: ${response.statusText}`);
+        }
+
+        setState((state) => {
+          state.isSubmitting = false;
+          state.isOpen = false;
+          state.flagType = 'inappropriate';
+          state.reason = '';
+        });
+
+        logger.info('Flag submitted', { flag });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to submit flag';
+        baseActions.setError(errorMessage);
+        setState((state) => {
+          state.isSubmitting = false;
+        });
+      }
+    },
+    approveFlag: async (flagId) => {
+      baseActions.clearError();
+      baseActions.setLoading(true);
+
+      try {
+        const response = await fetch(`/api/hashtags?action=approve&flagId=${flagId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to approve flag: ${response.statusText}`);
+        }
+
+        setState((state) => {
+          state.moderationQueue.forEach((moderation) => {
+            const flag = moderation.flags?.find((f) => f.id === flagId);
+            if (flag) {
+              flag.status = 'approved';
+              moderation.updatedAt = new Date().toISOString();
+            }
+          });
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to approve flag';
+        baseActions.setError(errorMessage);
+      } finally {
+        baseActions.setLoading(false);
+      }
+    },
+    rejectFlag: async (flagId) => {
+      baseActions.clearError();
+      baseActions.setLoading(true);
+
+      try {
+        const response = await fetch(`/api/hashtags?action=reject&flagId=${flagId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to reject flag: ${response.statusText}`);
+        }
+
+        setState((state) => {
+          state.moderationQueue.forEach((moderation) => {
+            const flag = moderation.flags?.find((f) => f.id === flagId);
+            if (flag) {
+              flag.status = 'rejected';
+              moderation.updatedAt = new Date().toISOString();
+            }
+          });
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to reject flag';
+        baseActions.setError(errorMessage);
+      } finally {
+        baseActions.setLoading(false);
+      }
+    },
+    loadModerationQueue: async () => {
+      baseActions.clearError();
+      baseActions.setLoading(true);
+
+      try {
+        const response = await fetch('/api/hashtags?action=moderation-queue', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load moderation queue: ${response.statusText}`);
+        }
+
+        const moderationQueue = await response.json();
+
+        setState((state) => {
+          state.moderationQueue = Array.isArray(moderationQueue)
+            ? (moderationQueue as HashtagModeration[])
+            : [];
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to load moderation queue';
+        baseActions.setError(errorMessage);
+      } finally {
+        baseActions.setLoading(false);
+      }
+    },
+    refreshQueue: async () => {
+      await get().loadModerationQueue();
+    },
+    resetHashtagModerationState: () =>
+      setState((state) => {
+        Object.assign(state, createInitialHashtagModerationState());
+      }),
+  };
+};
+
+const hashtagModerationStoreCreator: HashtagModerationStoreCreator = (set, get) => ({
+  ...createInitialHashtagModerationState(),
+  ...createHashtagModerationActions(set, get),
+});
+
+type PersistedHashtagModerationState = Pick<
+  HashtagModerationState,
+  'flagType' | 'reason'
+>;
+
 export const useHashtagModerationStore = create<HashtagModerationStore>()(
   devtools(
     persist(
-      immer((set, _get) => ({
-        // Initial state
-        isOpen: false,
-        flagType: 'inappropriate',
-        reason: '',
-        isSubmitting: false,
-        error: null,
-        moderationQueue: [],
-        selectedModeration: null,
-        isLoading: false,
-        
-        // Base store actions
-        setLoading: (loading) => set((state) => {
-          state.isLoading = loading;
-        }),
-        
-        setError: (error) => set((state) => {
-          state.error = error;
-        }),
-        
-        clearError: () => set((state) => {
-          state.error = null;
-        }),
-        
-        // Modal actions
-        setIsOpen: (open) => set((state) => {
-          state.isOpen = open;
-          
-          // Reset form when opening
-          if (open) {
-            state.flagType = 'inappropriate';
-            state.reason = '';
-            state.error = null;
-          }
-        }),
-        
-        // Form actions
-        setFlagType: (type) => set((state) => {
-          state.flagType = type;
-        }),
-        
-        setReason: (reason) => set((state) => {
-          state.reason = reason;
-        }),
-        
-        resetForm: () => set((state) => {
-          state.flagType = 'inappropriate';
-          state.reason = '';
-          state.isSubmitting = false;
-          state.error = null;
-        }),
-        
-        // Submission actions
-        setIsSubmitting: (submitting) => set((state) => {
-          state.isSubmitting = submitting;
-        }),
-        
-        // Moderation actions
-        setModerationQueue: (queue) => set((state) => {
-          state.moderationQueue = queue;
-        }),
-        
-        setSelectedModeration: (moderation) => set((state) => {
-          state.selectedModeration = moderation;
-        }),
-        
-        addModeration: (moderation) => set((state) => {
-          state.moderationQueue.unshift(moderation);
-        }),
-        
-        updateModeration: (id, updates) => set((state) => {
-          const index = state.moderationQueue.findIndex(m => m.id === id);
-          if (index !== -1) {
-            const existing = state.moderationQueue[index];
-            if (existing) {
-              const mergedModeration = withOptional(existing, updates as Record<string, unknown>);
-              state.moderationQueue[index] = withOptional(mergedModeration, {
-                updatedAt: new Date().toISOString(),
-              });
-            }
-          }
-        }),
-        
-        removeModeration: (id) => set((state) => {
-          state.moderationQueue = state.moderationQueue.filter(m => m.id !== id);
-        }),
-        
-        // Flag actions
-        submitFlag: async (hashtagId) => {
-          const state = _get();
-          if (!state.reason.trim()) {
-            set((state) => {
-              state.error = 'Please provide a reason for flagging';
-            });
-            return;
-          }
-          
-          set((state) => {
-            state.isSubmitting = true;
-            state.error = null;
-          });
-          
-          try {
-            // Get user ID from user store
-            const { useUserStore } = await import('@/lib/stores/userStore');
-            const userStore = useUserStore.getState();
-            const userId = userStore.user?.id ?? 'anonymous';
-            
-            const flag: HashtagFlag = {
-              id: crypto.randomUUID(),
-              hashtagId,
-              flagType: state.flagType,
-              reason: state.reason,
-              userId,
-              timestamp: new Date().toISOString(),
-              status: 'pending',
-            };
-            
-            // Submit flag to API
-            const response = await fetch('/api/hashtags?action=flag', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(flag),
-            });
-            
-            if (!response.ok) {
-              throw new Error(`Failed to submit flag: ${response.statusText}`);
-            }
-            
-            // Reset form after successful submission
-            set((state) => {
-              state.isSubmitting = false;
-              state.isOpen = false;
-              state.flagType = 'inappropriate';
-              state.reason = '';
-            });
-            
-            logger.info('Flag submitted', { flag });
-          } catch (error) {
-            set((state) => {
-              state.isSubmitting = false;
-              state.error = error instanceof Error ? error.message : 'Failed to submit flag';
-            });
-          }
-        },
-        
-        approveFlag: async (flagId) => {
-          set((state) => {
-            state.isLoading = true;
-          });
-          
-          try {
-            // Approve flag via API
-            const response = await fetch(`/api/hashtags?action=approve&flagId=${flagId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (!response.ok) {
-              throw new Error(`Failed to approve flag: ${response.statusText}`);
-            }
-            
-            set((state) => {
-              const flagIndex = state.moderationQueue.findIndex(m => 
-                m.flags?.some(f => f.id === flagId)
-              );
-              if (flagIndex !== -1) {
-                const moderation = state.moderationQueue[flagIndex];
-                if (moderation) {
-                  const flag = moderation.flags?.find(f => f.id === flagId);
-                  if (flag) {
-                    flag.status = 'approved';
-                  }
-                }
-              }
-              state.isLoading = false;
-            });
-            
-            // Flag approved successfully
-          } catch (error) {
-            set((state) => {
-              state.isLoading = false;
-              state.error = error instanceof Error ? error.message : 'Failed to approve flag';
-            });
-          }
-        },
-        
-        rejectFlag: async (flagId) => {
-          set((state) => {
-            state.isLoading = true;
-          });
-          
-          try {
-            // Reject flag via API
-            const response = await fetch(`/api/hashtags?action=reject&flagId=${flagId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (!response.ok) {
-              throw new Error(`Failed to reject flag: ${response.statusText}`);
-            }
-            
-            set((state) => {
-              const flagIndex = state.moderationQueue.findIndex(m => 
-                m.flags?.some(f => f.id === flagId)
-              );
-              if (flagIndex !== -1) {
-                const moderation = state.moderationQueue[flagIndex];
-                if (moderation) {
-                  const flag = moderation.flags?.find(f => f.id === flagId);
-                  if (flag) {
-                    flag.status = 'rejected';
-                  }
-                }
-              }
-              state.isLoading = false;
-            });
-            
-            // Flag rejected successfully
-          } catch (error) {
-            set((state) => {
-              state.isLoading = false;
-              state.error = error instanceof Error ? error.message : 'Failed to reject flag';
-            });
-          }
-        },
-        
-        // Queue management actions
-        loadModerationQueue: async () => {
-          set((state) => {
-            state.isLoading = true;
-          });
-          
-          try {
-            // Load moderation queue from API
-            const response = await fetch('/api/hashtags?action=moderation-queue', {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (!response.ok) {
-              throw new Error(`Failed to load moderation queue: ${response.statusText}`);
-            }
-            
-            const moderationQueue = await response.json();
-            
-            set((state) => {
-              state.moderationQueue = moderationQueue;
-              state.isLoading = false;
-            });
-          } catch (error) {
-            set((state) => {
-              state.isLoading = false;
-              state.error = error instanceof Error ? error.message : 'Failed to load moderation queue';
-            });
-          }
-        },
-        
-        refreshQueue: async () => {
-          const { loadModerationQueue } = _get();
-          await loadModerationQueue();
-        },
-      })),
+      immer(hashtagModerationStoreCreator),
       {
         name: 'hashtag-moderation-store',
         storage: createSafeStorage(),
@@ -373,65 +382,78 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
           flagType: state.flagType,
           reason: state.reason,
         }),
+        merge: (persistedState, currentState) => ({
+          ...currentState,
+          ...(persistedState as PersistedHashtagModerationState),
+        }),
       }
     ),
     { name: 'hashtag-moderation-store' }
   )
 );
 
-// Store selectors for optimized re-renders
-export const useModerationModal = () => useHashtagModerationStore(state => state.isOpen);
-export const useModerationForm = () => useHashtagModerationStore(
-  state => ({
+export const useModerationModal = () =>
+  useHashtagModerationStore((state) => state.isOpen);
+
+export const useModerationForm = () =>
+  useHashtagModerationStore((state) => ({
     flagType: state.flagType,
     reason: state.reason,
     isSubmitting: state.isSubmitting,
     error: state.error,
-  })
-);
+  }));
 
-export const useModerationQueue = () => useHashtagModerationStore(state => state.moderationQueue);
-export const useSelectedModeration = () => useHashtagModerationStore(state => state.selectedModeration);
-export const useModerationLoading = () => useHashtagModerationStore(state => state.isLoading);
-export const useModerationError = () => useHashtagModerationStore(state => state.error);
+export const useModerationQueue = () =>
+  useHashtagModerationStore((state) => state.moderationQueue);
+export const useSelectedModeration = () =>
+  useHashtagModerationStore((state) => state.selectedModeration);
+export const useModerationLoading = () =>
+  useHashtagModerationStore((state) => state.isLoading);
+export const useModerationError = () =>
+  useHashtagModerationStore((state) => state.error);
 
-// Action selectors
-export const useModerationActions = () => useHashtagModerationStore(state => ({
-  setIsOpen: state.setIsOpen,
-  setFlagType: state.setFlagType,
-  setReason: state.setReason,
-  resetForm: state.resetForm,
-  setIsSubmitting: state.setIsSubmitting,
-  setError: state.setError,
-  setModerationQueue: state.setModerationQueue,
-  setSelectedModeration: state.setSelectedModeration,
-  addModeration: state.addModeration,
-  updateModeration: state.updateModeration,
-  removeModeration: state.removeModeration,
-  submitFlag: state.submitFlag,
-  approveFlag: state.approveFlag,
-  rejectFlag: state.rejectFlag,
-  loadModerationQueue: state.loadModerationQueue,
-  refreshQueue: state.refreshQueue,
-}));
+export const useModerationActions = () =>
+  useHashtagModerationStore((state) => ({
+    setIsOpen: state.setIsOpen,
+    setFlagType: state.setFlagType,
+    setReason: state.setReason,
+    resetForm: state.resetForm,
+    setIsSubmitting: state.setIsSubmitting,
+    setError: state.setError,
+    clearError: state.clearError,
+    setLoading: state.setLoading,
+    setModerationQueue: state.setModerationQueue,
+    setSelectedModeration: state.setSelectedModeration,
+    addModeration: state.addModeration,
+    updateModeration: state.updateModeration,
+    removeModeration: state.removeModeration,
+    submitFlag: state.submitFlag,
+    approveFlag: state.approveFlag,
+    rejectFlag: state.rejectFlag,
+    loadModerationQueue: state.loadModerationQueue,
+    refreshQueue: state.refreshQueue,
+    resetHashtagModerationState: state.resetHashtagModerationState,
+  }));
 
-// Computed selectors
-export const useModerationStats = () => useHashtagModerationStore(state => {
-  const queue = state.moderationQueue;
-  return {
-    total: queue.length,
-    pending: queue.filter(m => m.status === 'pending').length,
-    approved: queue.filter(m => m.status === 'approved').length,
-    rejected: queue.filter(m => m.status === 'rejected').length,
-    underReview: queue.filter(m => m.status === 'under_review').length,
-  };
-});
+export const useModerationStats = () =>
+  useHashtagModerationStore((state) => {
+    const queue = state.moderationQueue;
+    return {
+      total: queue.length,
+      pending: queue.filter((m) => m.status === 'pending').length,
+      approved: queue.filter((m) => m.status === 'approved').length,
+      rejected: queue.filter((m) => m.status === 'rejected').length,
+      underReview: queue.filter((m) => m.status === 'under_review').length,
+    };
+  });
 
-export const usePendingFlags = () => useHashtagModerationStore(state => 
-  state.moderationQueue.flatMap(m => m.flags.filter(f => f.status === 'pending'))
-);
+export const usePendingFlags = () =>
+  useHashtagModerationStore((state) =>
+    state.moderationQueue.flatMap((m) =>
+      m.flags.filter((f) => f.status === 'pending')
+    )
+  );
 
-// Store utilities
 export const moderationStoreUtils = {
   getFlagTypeLabel: (type: HashtagFlagType): string => {
     const labels = {
@@ -443,7 +465,7 @@ export const moderationStoreUtils = {
     };
     return labels[type];
   },
-  
+
   getStatusColor: (status: HashtagModerationStatus): string => {
     const colors = {
       pending: 'yellow',
@@ -453,28 +475,23 @@ export const moderationStoreUtils = {
     };
     return colors[status];
   },
-  
-  canSubmitFlag: (reason: string): boolean => {
-    return reason.trim().length > 0;
-  },
+
+  canSubmitFlag: (reason: string): boolean => reason.trim().length > 0,
 };
 
-// Store subscriptions
 export const useModerationSubscription = () => {
   const store = useHashtagModerationStore();
-  
+
   return {
-    subscribe: (callback: (state: HashtagModerationStore) => void) => {
-      return useHashtagModerationStore.subscribe(callback);
-    },
+    subscribe: (callback: (state: HashtagModerationStore) => void) =>
+      useHashtagModerationStore.subscribe(callback),
     getState: () => store,
   };
 };
 
-// Store debugging
 export const useModerationDebug = () => {
   const state = useHashtagModerationStore();
-  
+
   return {
     state,
     actions: useModerationActions(),

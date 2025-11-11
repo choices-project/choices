@@ -19,93 +19,61 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
+import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
+import { useUser } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 import type { PrivacySettings } from '@/types/profile';
 
 export default function PrivacyPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { profile, isLoading: profileLoading } = useProfile();
+  const user = useUser();
+  const { updateProfile } = useProfileUpdate();
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load user and privacy settings
-  useEffect(() => {
-    loadUserData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const storedPrivacySettings = profile?.privacy_settings as PrivacySettings | null | undefined;
+  const privacySettings: PrivacySettings | null = storedPrivacySettings ?? getDefaultPrivacySettings();
+  const userId = profile?.id ?? profile?.user_id ?? user?.id ?? null;
 
-  const loadUserData = async () => {
-    try {
-      // Get current user profile
-      const response = await fetch('/api/profile', {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        logger.warn('Failed to load profile, redirecting to auth');
-        router.push('/auth');
+  const handlePrivacyUpdate = useCallback(
+    async (updates: Partial<PrivacySettings>) => {
+      if (!privacySettings) {
         return;
       }
 
-      const data = await response.json();
-      
-      if (!data.profile) {
-        router.push('/auth');
-        return;
+      try {
+        setIsSaving(true);
+        const updatedSettings = {
+          ...privacySettings,
+          ...updates,
+        };
+
+        const result = await updateProfile({ privacy_settings: updatedSettings });
+
+        if (!result.success) {
+          throw new Error(result.error ?? 'Failed to update privacy settings');
+        }
+
+        logger.info('Privacy settings updated', { updates });
+      } catch (error) {
+        logger.error(
+          'Failed to update privacy settings',
+          error instanceof Error ? error : new Error(String(error))
+        );
+        throw error;
+      } finally {
+        setIsSaving(false);
       }
+    },
+    [privacySettings, updateProfile]
+  );
 
-      setUserId(data.profile.id || data.profile.user_id);
-      
-      // Get privacy settings or use defaults
-      const settings = data.profile.privacy_settings || getDefaultPrivacySettings();
-      setPrivacySettings(settings);
-      
-      logger.info('Privacy page loaded', { userId: data.profile.id });
-
-    } catch (error) {
-      logger.error('Failed to load user data', error instanceof Error ? error : new Error(String(error)));
-      router.push('/auth');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle privacy settings update
-  const handlePrivacyUpdate = async (updates: Partial<PrivacySettings>) => {
-    try {
-      const updatedSettings = {
-        ...privacySettings,
-        ...updates
-      };
-
-      const response = await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          privacy_settings: updatedSettings
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update privacy settings');
-      }
-
-      setPrivacySettings(updatedSettings as PrivacySettings);
-      logger.info('Privacy settings updated', { updates });
-
-    } catch (error) {
-      logger.error('Failed to update privacy settings', error instanceof Error ? error : new Error(String(error)));
-      throw error;
-    }
-  };
-
-  if (isLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -116,7 +84,7 @@ export default function PrivacyPage() {
     );
   }
 
-  if (!userId || !privacySettings) {
+  if (!privacySettings || !userId) {
     return null; // Redirecting
   }
 
@@ -132,6 +100,7 @@ export default function PrivacyPage() {
             userId={userId}
             privacySettings={privacySettings}
             onPrivacyUpdate={handlePrivacyUpdate}
+            isSaving={isSaving}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useNotificationStore } from '@/lib/stores';
+import { useNotificationActions } from '@/lib/stores';
 
 const STORAGE_KEY = 'choices.poll.milestones';
 const DEFAULT_MILESTONES = [10, 25, 50, 100, 250, 500] as const;
@@ -188,7 +188,7 @@ export const usePollMilestoneNotifications = ({
     acknowledgeMilestone,
     updatePreference,
   } = usePollMilestoneState(pollId);
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const { addNotification } = useNotificationActions();
 
   useEffect(() => {
     if (!activePollId || !isReady) return;

@@ -1,34 +1,26 @@
-import { 
-Camera, 
-  Upload, 
-  X, 
-  Loader2, 
-  AlertTriangle,
-  CheckCircle
-} from 'lucide-react';
-import React, { useState, useRef } from 'react';
+'use client';
 
+import { AlertTriangle, Camera, CheckCircle, Loader2, Upload, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import logger from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger';
 
 import { useProfileAvatar } from '../hooks/use-profile';
 import type { ProfileAvatarProps } from '../index';
 
 /**
  * Profile Avatar Component
- * 
+ *
  * Avatar management component
  * Handles avatar upload, preview, and removal
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
-
-'use client';
 
 export default function ProfileAvatar({
   avatar_url,
@@ -39,7 +31,7 @@ export default function ProfileAvatar({
   maxSize = 5 * 1024 * 1024, // 5MB
   allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
 }: ProfileAvatarProps) {
-  const { uploadAvatar, isUploading, error: avatarError } = useProfileAvatar();
+  const { uploadAvatar, removeAvatar, isUploading, error: avatarError } = useProfileAvatar();
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,13 +128,19 @@ export default function ProfileAvatar({
   // Handle remove avatar
   const handleRemove = async () => {
     try {
-      // Note: removeAvatar not available in hook, implementing basic removal
-      logger.info('Remove avatar requested');
-      setSuccess('Avatar removed successfully');
-      setPreview(null);
-      onRemove?.();
-    } catch {
-      setError('Failed to remove avatar');
+      const success = await removeAvatar();
+      if (success) {
+        logger.info('Avatar removed successfully');
+        setSuccess('Avatar removed successfully');
+        setPreview(null);
+        onRemove?.();
+      } else {
+        throw new Error('Failed to remove avatar');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to remove avatar';
+      setError(message);
+      logger.error('Failed to remove avatar', err instanceof Error ? err : new Error(message));
     }
   };
 
@@ -157,9 +155,9 @@ export default function ProfileAvatar({
       <div className="flex items-center space-x-4">
         <div className="relative">
           <Avatar className="h-24 w-24">
-            <AvatarImage 
-              src={preview ?? avatar_url ?? ''} 
-              alt={display_name ?? 'User'} 
+            <AvatarImage
+              src={preview ?? avatar_url ?? ''}
+              alt={display_name ?? 'User'}
             />
             <AvatarFallback className="text-lg">
               {getInitials(display_name ?? 'User')}
@@ -183,8 +181,8 @@ export default function ProfileAvatar({
       <div
         className={cn(
           "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-          dragActive 
-            ? "border-blue-500 bg-blue-50" 
+          dragActive
+            ? "border-blue-500 bg-blue-50"
             : "border-gray-300 hover:border-gray-400",
           finalLoading && "opacity-50 cursor-not-allowed"
         )}
@@ -210,7 +208,7 @@ export default function ProfileAvatar({
           className="hidden"
           disabled={finalLoading}
         />
-        
+
         <div className="space-y-2">
           <Camera className="h-8 w-8 mx-auto text-gray-400" />
           <div>

@@ -58,6 +58,7 @@ export type ActivityItem = {
 
 export type FeatureFlag = CoreFeatureFlag;
 export type FeatureFlagConfig = CoreFeatureFlagConfig;
+export type DisplayFeatureFlag = FeatureFlag & { locked?: boolean };
 
 export type TrackedErrorType = 'javascript' | 'promise' | 'network';
 
@@ -105,12 +106,14 @@ export type AdminFeatureFlagCategories = {
   civics: string[];
   future: string[];
   performance: string[];
+  system: string[];
 };
 
 export type AdminFeatureFlagsState = {
   flags: Record<string, boolean>;
   enabledFlags: string[];
   disabledFlags: string[];
+  lockedFlags: string[];
   categories: AdminFeatureFlagCategories;
   isLoading: boolean;
   error: string | null;
@@ -307,7 +310,7 @@ export type AdminStoreActions = {
   toggleFeatureFlag: (flagId: string) => boolean;
   isFeatureFlagEnabled: (flagId: string) => boolean;
   getFeatureFlag: (flagId: string) => FeatureFlag | null;
-  getAllFeatureFlags: () => FeatureFlag[];
+  getAllFeatureFlags: () => DisplayFeatureFlag[];
   exportFeatureFlagConfig: () => FeatureFlagConfig;
   importFeatureFlagConfig: (config: unknown) => boolean;
   resetFeatureFlags: () => void;

@@ -1,9 +1,9 @@
 /**
  * Polls Feature Exports
- * 
+ *
  * Centralized exports for the polls feature including components,
  * hooks, services, types, and utilities
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ ACTIVE
  */
@@ -74,27 +74,27 @@ export type {
   PollStatus,
   PollTemplate,
   TemplateCategory,
-  
+
   // Voting types
   VotingMethod,
-  
+
   // Poll creation types
   PollCreationData,
   PollUpdateData,
   PollWizardData,
   PollWizardState,
-  
+
   // Poll results types
   PollResults,
   PollOptionResult,
   PollDemographics,
-  
+
   // Integration types
   PollHashtagIntegration,
-  
+
   // Vote types
   Vote,
-  
+
   // Template types
   TemplateSettings
 } from './types';
@@ -195,22 +195,35 @@ export const pollsFeatureStatus = {
 
 /**
  * Quick start guide for using the polls feature
- * 
+ *
  * @example
  * ```tsx
- * import { PollCard, PollHashtagIntegration, usePollWizard } from '@/features/polls';
- * 
- * function MyPollComponent() {
- *   const { createPoll, updatePoll } = usePollWizard();
- *   
+ * import { PollCard } from '@/features/polls';
+ * import {
+ *   useFilteredPolls,
+ *   usePollFilters,
+ *   usePollsActions,
+ * } from '@/lib/stores';
+ *
+ * function PollsOverview() {
+ *   const polls = useFilteredPolls();
+ *   const filters = usePollFilters();
+ *   const { loadPolls, setFilters } = usePollsActions();
+ *
+ *   useEffect(() => {
+ *     void loadPolls();
+ *   }, [loadPolls]);
+ *
  *   return (
  *     <div>
- *       <PollCard poll={poll} />
- *       <PollHashtagIntegration 
- *         poll={poll} 
- *         onUpdate={updatePoll}
- *         isEditing={true}
- *       />
+ *       <button onClick={() => setFilters({ status: ['active'] })}>
+ *         View Active Polls ({filters.status.join(',') || 'all'})
+ *       </button>
+ *       <div className="grid">
+ *         {polls.map((poll) => (
+ *           <PollCard key={poll.id} poll={poll} />
+ *         ))}
+ *       </div>
  *     </div>
  *   );
  * }
@@ -223,11 +236,11 @@ export const pollsFeatureStatus = {
 
 /**
  * Migration guide for integrating polls feature
- * 
+ *
  * 1. **Hashtag Integration**: Add hashtag support to polls
  * 2. **Feed Integration**: Enable poll discovery through feeds
  * 3. **Analytics Integration**: Add poll analytics and insights
  * 4. **Component Integration**: Add poll components to existing features
- * 
+ *
  * @see /docs/features/POLLS.md for detailed integration guide
  */

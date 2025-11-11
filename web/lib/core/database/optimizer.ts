@@ -1,6 +1,6 @@
 /**
  * Database Optimizer
- * 
+ *
  * Implements database optimization strategies to ensure we're being good database citizens.
  * This includes query optimization, connection management, and performance monitoring.
  */
@@ -20,16 +20,19 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import type {
   UserProfile,
-  PollsResponse,
-  PollWithVotes,
   Vote,
-  VoteWithUserInfo,
-  VoteGroupedByChoice,
-  VoteInsert,
+  VoteInsert
+} from '@/types/database'
+import type {
   AnalyticsData,
+  CacheDatabaseEntry,
   DatabaseHealthStatus,
-  CacheDatabaseEntry
-} from '../../types/database'
+  PollsResponse,
+  VoteGroupedByChoice,
+  VoteWithUserInfo
+} from '@/lib/validation/schemas'
+
+type PollWithVotes = PollsResponse['polls'][number]
 
 // Create optimized Supabase client with connection pooling
 export const createOptimizedClient = async () => {
@@ -115,7 +118,7 @@ class QueryMonitor {
 
     const { smartCache } = await import('@/lib/database/smart-cache')
     const { queryAnalyzer } = await import('@/lib/database/query-analyzer')
-    
+
     const cacheStats = smartCache.getStats()
     const queryAnalysis = queryAnalyzer.generateOptimizationReport()
     const indexRecommendations = queryAnalyzer.getIndexRecommendations()
@@ -152,7 +155,7 @@ class QueryMonitor {
     const cacheScore = cacheStats.efficiencyScore * 0.4 // 40% weight for cache
     const queryScore = Math.max(0, 100 - queryAnalysis.summary.averageExecutionTime / 10) * 0.3 // 30% weight for query performance
     const optimizationScore = Math.max(0, 100 - queryAnalysis.summary.optimizableQueries * 2) * 0.3 // 30% weight for optimization opportunities
-    
+
     return Math.round(cacheScore + queryScore + optimizationScore)
   }
 
@@ -161,23 +164,23 @@ class QueryMonitor {
    */
   private identifyImprovementOpportunities(cacheStats: any, queryAnalysis: any): string[] {
     const opportunities: string[] = []
-    
+
     if (cacheStats.hitRate < 0.7) {
       opportunities.push('Improve cache hit rate - consider adjusting TTL or cache strategies')
     }
-    
+
     if (queryAnalysis.summary.averageExecutionTime > 500) {
       opportunities.push('Optimize slow queries - average execution time is high')
     }
-    
+
     if (queryAnalysis.summary.optimizableQueries > 10) {
       opportunities.push('Many queries have optimization opportunities - review index recommendations')
     }
-    
+
     if (cacheStats.efficiencyScore < 70) {
       opportunities.push('Cache efficiency is low - consider cache size and eviction policies')
     }
-    
+
     return opportunities
   }
 
@@ -210,7 +213,7 @@ export class QueryOptimizer {
   async getUserProfile(userId: string, useCache = true): Promise<UserProfile | null> {
     const cacheKey = `profile_${userId}`
     const queryPattern = 'SELECT user_profiles WHERE user_id = ?'
-    
+
           if (useCache) {
             // Use optimization suite if enabled
             if (isFeatureEnabled('FEATURE_DB_OPTIMIZATION_SUITE')) {
@@ -252,10 +255,10 @@ export class QueryOptimizer {
 
     const duration = Date.now() - startTime
     queryMonitor.recordQuery('SELECT user_profiles', duration)
-    
+
     // Record minimal telemetry
     minimalTelemetry.recordQuery('user_profiles', duration, !error)
-    
+
           // Analyze query performance if optimization suite is enabled
           if (isFeatureEnabled('FEATURE_DB_OPTIMIZATION_SUITE')) {
             const { queryAnalyzer } = await import('@/lib/database/query-analyzer')
@@ -288,8 +291,8 @@ export class QueryOptimizer {
     // Validate the database response
     const validationResult = validateDatabaseResponse(DatabaseSchemas.UserProfile, { data, error })
     if (!validationResult.success) {
-      logger.error('Invalid user profile data from database', new Error(validationResult.error), { 
-        userId, 
+      logger.error('Invalid user profile data from database', new Error(validationResult.error), {
+        userId,
         validationError: validationResult.error,
         data: JSON.stringify(data, null, 2)
       })
@@ -339,7 +342,7 @@ export class QueryOptimizer {
     // Create cache key and query pattern
     const cacheKey = `polls_${page}_${limit}_${privacyLevel ?? 'all'}_${userId ?? 'all'}_${includeVotes ? 'with_votes' : 'no_votes'}`
     const queryPattern = 'SELECT polls WITH pagination and filters'
-    
+
     // Try smart cache first
     const cached = await smartCache.get<PollsResponse>(cacheKey, queryPattern, DatabaseSchemas.PollsResponse as any)
     if (cached) {
@@ -376,7 +379,7 @@ export class QueryOptimizer {
     // Validate the database response
     const validationResult = validateDatabaseResponse(DatabaseSchemas.Poll.array(), { data: result.data, error: result.error })
     if (!validationResult.success) {
-      logger.error('Invalid polls data from database', new Error(validationResult.error), { 
+      logger.error('Invalid polls data from database', new Error(validationResult.error), {
         validationError: validationResult.error,
         data: JSON.stringify(result.data, null, 2)
       })
@@ -419,13 +422,13 @@ export class QueryOptimizer {
     const { includeUserInfo = false, groupByChoice = false } = options
 
     const startTime = Date.now()
-    
+
     // Build select query based on options
     let selectFields = 'id, poll_id, user_id, choice, rank, created_at, updated_at'
     if (includeUserInfo) {
       selectFields += ', user_profiles!inner(display_name, email)'
     }
-    
+
     const query = this.supabase
       .from('votes')
       .select(selectFields)
@@ -438,25 +441,27 @@ export class QueryOptimizer {
     if (result.error) throw result.error
 
     // Process results based on options
-    if (groupByChoice && result.data && Array.isArray(result.data) && !result.error) {
-      // Group votes by choice for analytics
-      const grouped = (result.data as unknown as Vote[]).reduce((acc, vote) => {
-        const choice = vote.choice
-        if (!acc[choice]) {
-          acc[choice] = []
+    if (groupByChoice && Array.isArray(result.data)) {
+      const typedVotes = result.data as unknown as Vote[]
+      const grouped = typedVotes.reduce<Record<string, Vote[]>>((acc, vote) => {
+        const choiceKey = (vote as Partial<Vote> & { choice?: string }).choice ?? vote.option_id
+        if (!acc[choiceKey]) {
+          acc[choiceKey] = []
         }
-        acc[choice].push(vote)
+        acc[choiceKey].push(vote)
         return acc
-      }, {} as Record<string, Vote[]>)
-      
-      return Object.entries(grouped).map(([choice, votes]) => ({
-        choice,
-        votes,
-        count: votes.length
+      }, {})
+
+      const totalVotes = typedVotes.length || 1
+
+      return Object.entries(grouped).map(([choiceKey, votes]) => ({
+        choice: choiceKey,
+        count: votes.length,
+        percentage: (votes.length / totalVotes) * 100
       })) as VoteGroupedByChoice[]
     }
-    
-    return (result.data && Array.isArray(result.data) ? result.data : []) as unknown as Vote[]
+
+    return Array.isArray(result.data) ? (result.data as unknown as Vote[]) : []
   }
 
   // Batch insert votes for better performance
@@ -480,11 +485,11 @@ export class QueryOptimizer {
   // Optimized analytics queries
   async getAnalytics(period: string = '7d'): Promise<AnalyticsData> {
     const startTime = Date.now()
-    
+
     // Calculate date range
     const now = new Date()
     const startDate = new Date()
-    
+
     switch (period) {
       case '7d':
         startDate.setDate(now.getDate() - 7)
@@ -596,7 +601,7 @@ export class QueryOptimizer {
   private async setCache(key: string, value: unknown, ttlSeconds: number): Promise<void> {
     try {
       const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString()
-      
+
       await this.supabase
         .from('cache')
         .upsert({
@@ -612,7 +617,7 @@ export class QueryOptimizer {
   // Database health check with performance metrics
   async getDatabaseHealth(): Promise<DatabaseHealthStatus> {
     const startTime = Date.now()
-    
+
     const healthChecks = await Promise.allSettled([
       this.supabase.from('user_profiles').select('user_id', { count: 'exact', head: true }),
       this.supabase.from('polls').select('id').limit(1),
@@ -629,7 +634,7 @@ export class QueryOptimizer {
     const results = healthChecks.map((result, index) => {
       const testNames = ['Connectivity', 'Table Access', 'Performance', 'Complex Query']
       const testName = testNames[index] ?? `Test ${index + 1}`
-      
+
       return {
         test: testName,
         status: result.status === 'fulfilled' ? 'healthy' as const : 'unhealthy' as const,
@@ -640,12 +645,25 @@ export class QueryOptimizer {
     const healthyTests = results.filter(r => r.status === 'healthy').length
     const healthPercentage = (healthyTests / results.length) * 100
 
+    const status = healthPercentage >= 80 ? 'healthy' as const : healthPercentage >= 50 ? 'degraded' as const : 'unhealthy' as const
+    const errorRate = results.length === 0 ? 0 : (results.length - healthyTests) / results.length
+    const firstError = results.find(r => r.status === 'unhealthy' && r.error)?.error ?? undefined
+
     return {
-      status: healthPercentage >= 80 ? 'healthy' as const : healthPercentage >= 50 ? 'degraded' as const : 'unhealthy' as const,
-      healthPercentage: Math.round(healthPercentage),
-      responseTime: `${duration}ms`,
-      tests: results,
-      queryStats: queryMonitor.getStats()
+      status,
+      timestamp: new Date().toISOString(),
+      responseTime: duration,
+      errorRate,
+      lastError: firstError,
+      details: {
+        healthyTests,
+        totalTests: results.length,
+        failingTests: results.length - healthyTests,
+        status,
+        errorRate,
+        testsSnapshot: JSON.stringify(results),
+        queryStats: JSON.stringify(queryMonitor.getStats())
+      }
     }
   }
 }
@@ -657,25 +675,25 @@ export function withPerformanceMonitoring<T extends unknown[], R>(
 ) {
   return async (...args: T): Promise<R> => {
     const startTime = Date.now()
-    
+
     try {
       // Log operation start with args context
       logger.debug(`Performance: Starting ${operationName}`, {
         argsCount: args.length,
         argsTypes: args.map(arg => typeof arg)
       });
-      
+
       const result = await fn(...args)
       const duration = Date.now() - startTime
-      
+
       // Log performance metrics
       logger.info(`Performance: ${operationName} completed in ${duration}ms`)
-      
+
       // Record slow operations
       if (duration > 1000) {
         logger.warn(`Slow operation detected: ${operationName} took ${duration}ms`)
       }
-      
+
       return result
     } catch (error) {
       const duration = Date.now() - startTime
@@ -702,7 +720,7 @@ export class ConnectionPoolManager {
   private initializePool() {
     // Initialize connection pool with monitoring
     this.updateMetrics()
-    
+
     // Monitor pool health every 30 seconds
     setInterval(() => {
       this.updateMetrics()

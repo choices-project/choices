@@ -11,6 +11,10 @@ function isOfficeType(value: string | null): value is OfficeType {
   return value === 'federal' || value === 'state' || value === 'local'
 }
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams
   const levelParam = searchParams.get('level')

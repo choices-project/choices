@@ -8,14 +8,17 @@
  * Status: ✅ ACTIVE
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+import type { BaseStore } from './types';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -91,8 +94,7 @@ export type PerformanceReport = {
   generated_at: Date;
 }
 
-export type PerformanceStore = {
-  // State
+export type PerformanceState = {
   metrics: PerformanceMetric[];
   alerts: PerformanceAlert[];
   reports: PerformanceReport[];
@@ -100,39 +102,30 @@ export type PerformanceStore = {
   isMonitoring: boolean;
   isLoading: boolean;
   error: string | null;
-
-  // Database performance state
   databaseMetrics: DatabasePerformanceMetric[];
   cacheStats: CacheStats | null;
   lastRefresh: Date | null;
   autoRefresh: boolean;
   refreshInterval: number;
+};
 
-  // Actions - Metrics
+export type PerformanceActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => void;
   recordNavigationMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
   recordResourceMetric: (name: string, value: number, metadata?: Record<string, unknown>) => void;
   recordCustomMetric: (name: string, value: number, unit?: 'ms' | 'bytes' | 'count' | 'score', metadata?: Record<string, unknown>) => void;
   clearMetrics: () => void;
-
-  // Actions - Alerts
   createAlert: (alert: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>) => void;
   resolveAlert: (id: string) => void;
   clearAlerts: () => void;
   clearResolvedAlerts: () => void;
-
-  // Actions - Monitoring
   startMonitoring: () => void;
   stopMonitoring: () => void;
   setThreshold: (type: string, metric: string, threshold: number) => void;
   checkThresholds: () => void;
-
-  // Actions - Reports
   generateReport: () => PerformanceReport;
   exportMetrics: (format?: 'json' | 'csv') => string;
   exportReport: (reportId: string, format?: 'json' | 'csv') => string;
-
-  // Actions - Database Performance
   setDatabaseMetrics: (metrics: DatabasePerformanceMetric[]) => void;
   setCacheStats: (stats: CacheStats) => void;
   setLastRefresh: (date: Date) => void;
@@ -141,15 +134,50 @@ export type PerformanceStore = {
   loadDatabasePerformance: () => Promise<void>;
   refreshMaterializedViews: () => Promise<void>;
   performDatabaseMaintenance: () => Promise<void>;
-
-  // Actions - Loading & Error
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-
-  // Initialization
   initialize: () => void;
-}
+  resetPerformanceState: () => void;
+};
+
+export type PerformanceStore = PerformanceState & PerformanceActions;
+
+const defaultPerformanceThresholds: PerformanceThresholds = {
+  navigation: {
+    fcp: 1800,
+    lcp: 2500,
+    fid: 100,
+    cls: 0.1,
+    ttfb: 600,
+  },
+  resource: {
+    loadTime: 2000,
+    size: 1024 * 1024,
+    count: 50,
+  },
+  custom: {},
+};
+
+const createDefaultPerformanceThresholds = (): PerformanceThresholds => ({
+  navigation: { ...defaultPerformanceThresholds.navigation },
+  resource: { ...defaultPerformanceThresholds.resource },
+  custom: { ...defaultPerformanceThresholds.custom },
+});
+
+export const createInitialPerformanceState = (): PerformanceState => ({
+  metrics: [],
+  alerts: [],
+  reports: [],
+  thresholds: createDefaultPerformanceThresholds(),
+  isMonitoring: false,
+  isLoading: false,
+  error: null,
+  databaseMetrics: [],
+  cacheStats: null,
+  lastRefresh: null,
+  autoRefresh: true,
+  refreshInterval: 30000,
+});
+
+export const initialPerformanceState: PerformanceState = createInitialPerformanceState();
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -214,48 +242,27 @@ const generateRecommendations = (metrics: PerformanceMetric[]): string[] => {
 // STORE IMPLEMENTATION
 // ============================================================================
 
-export const usePerformanceStore = create<PerformanceStore>()(
-  devtools(
-    persist(
-      immer((set, get) => ({
-        // Initial State
-        metrics: [],
-        alerts: [],
-        reports: [],
-        thresholds: {
-          navigation: {
-            fcp: 1800,
-            lcp: 2500,
-            fid: 100,
-            cls: 0.1,
-            ttfb: 600
-          },
-          resource: {
-            loadTime: 2000,
-            size: 1024 * 1024, // 1MB
-            count: 50
-          },
-          custom: {}
-        },
-        isMonitoring: false,
-        isLoading: false,
-        error: null,
+type PerformanceStoreCreator = StateCreator<
+  PerformanceStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
 
-        // Database performance state
-        databaseMetrics: [],
-        cacheStats: null,
-        lastRefresh: null,
-        autoRefresh: true,
-        refreshInterval: 30000,
+export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
+  const immerSet = set as unknown as (recipe: (draft: PerformanceStore) => void) => void;
+  const baseActions = createBaseStoreActions<PerformanceStore>(immerSet);
+
+  return {
+    ...createInitialPerformanceState(),
+    ...baseActions,
 
         // Actions - Metrics
         recordMetric: (metric) => {
           const id = `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedMetric = withOptional(metric as Record<string, unknown>);
-          const newMetric = withOptional(sanitizedMetric, {
+    const newMetric: PerformanceMetric = {
+      ...metric,
             id,
             timestamp: new Date(),
-          }) as PerformanceMetric;
+    };
 
           set((state) => {
             state.metrics.push(newMetric);
@@ -280,7 +287,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit: 'ms',
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata: metadata ?? {}
+      metadata: metadata ?? {},
           });
         },
 
@@ -291,7 +298,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit: 'ms',
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata: metadata ?? {}
+      metadata: metadata ?? {},
           });
         },
 
@@ -302,7 +309,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             value,
             unit,
             url: typeof window !== 'undefined' ? window.location.href : '',
-            metadata: metadata ?? {}
+      metadata: metadata ?? {},
           });
         },
 
@@ -315,12 +322,12 @@ export const usePerformanceStore = create<PerformanceStore>()(
         // Actions - Alerts
         createAlert: (alert) => {
           const id = `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedAlert = withOptional(alert as Record<string, unknown>);
-          const newAlert = withOptional(sanitizedAlert, {
+    const newAlert: PerformanceAlert = {
+      ...alert,
             id,
             timestamp: new Date(),
             resolved: false,
-          }) as PerformanceAlert;
+    };
 
           set((state) => {
             state.alerts.push(newAlert);
@@ -334,7 +341,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         resolveAlert: (id) => {
           set((state) => {
-            const alert = state.alerts.find(a => a.id === id);
+      const alert = state.alerts.find((a) => a.id === id);
             if (alert) {
               alert.resolved = true;
             }
@@ -349,7 +356,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         clearResolvedAlerts: () => {
           set((state) => {
-            state.alerts = state.alerts.filter(alert => !alert.resolved);
+      state.alerts = state.alerts.filter((alert) => !alert.resolved);
           });
         },
 
@@ -360,7 +367,6 @@ export const usePerformanceStore = create<PerformanceStore>()(
           });
 
           if (typeof window !== 'undefined' && 'performance' in window) {
-            // Set up Performance Observer
             try {
               const observer = new PerformanceObserver((list) => {
                 const entries = list.getEntries();
@@ -403,7 +409,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         checkThresholds: () => {
           const { metrics, thresholds } = get();
-          const recentMetrics = metrics.slice(-100); // Check last 100 metrics
+    const recentMetrics = metrics.slice(-100);
 
           recentMetrics.forEach((metric) => {
             let threshold = 0;
@@ -417,7 +423,8 @@ export const usePerformanceStore = create<PerformanceStore>()(
             }
 
             if (threshold > 0 && metric.value > threshold) {
-              const severity = metric.value > threshold * 2 ? 'high' : metric.value > threshold * 1.5 ? 'medium' : 'low';
+        const severity =
+          metric.value > threshold * 2 ? 'high' : metric.value > threshold * 1.5 ? 'medium' : 'low';
 
               get().createAlert({
                 type: 'threshold',
@@ -425,7 +432,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
                 metric: metric.name,
                 value: metric.value,
                 threshold,
-                message: `${metric.name} exceeded threshold: ${metric.value}${metric.unit} > ${threshold}${metric.unit}`
+          message: `${metric.name} exceeded threshold: ${metric.value}${metric.unit} > ${threshold}${metric.unit}`,
               });
             }
           });
@@ -443,19 +450,18 @@ export const usePerformanceStore = create<PerformanceStore>()(
             timestamp: new Date(),
             url: typeof window !== 'undefined' ? window.location.href : '',
             metrics: [...metrics],
-            alerts: alerts.filter(alert => !alert.resolved),
+      alerts: alerts.filter((alert) => !alert.resolved),
             summary: {
               score,
               grade,
-              recommendations
+        recommendations,
             },
-            generated_at: new Date()
+      generated_at: new Date(),
           };
 
           set((state) => {
             state.reports.push(report);
 
-            // Keep only last 50 reports
             if (state.reports.length > 50) {
               state.reports = state.reports.slice(-50);
             }
@@ -469,17 +475,17 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
           if (format === 'csv') {
             const headers = ['id', 'type', 'name', 'value', 'unit', 'timestamp', 'url'];
-            const rows = metrics.map(metric => [
+      const rows = metrics.map((metric) => [
               metric.id,
               metric.type,
               metric.name,
               metric.value,
               metric.unit,
               metric.timestamp.toISOString(),
-              metric.url
+        metric.url,
             ]);
 
-            return [headers, ...rows].map(row => row.join(',')).join('\n');
+      return [headers, ...rows].map((row) => row.join(',')).join('\n');
           }
 
           return JSON.stringify(metrics, null, 2);
@@ -487,7 +493,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
         exportReport: (reportId, format = 'json') => {
           const { reports } = get();
-          const report = reports.find(r => r.id === reportId);
+    const report = reports.find((r) => r.id === reportId);
 
           if (!report) {
             throw new Error(`Report ${reportId} not found`);
@@ -495,14 +501,14 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
           if (format === 'csv') {
             const headers = ['metric', 'value', 'unit', 'timestamp'];
-            const rows = report.metrics.map(metric => [
+      const rows = report.metrics.map((metric) => [
               metric.name,
               metric.value,
               metric.unit,
-              metric.timestamp.toISOString()
+        metric.timestamp.toISOString(),
             ]);
 
-            return [headers, ...rows].map(row => row.join(',')).join('\n');
+      return [headers, ...rows].map((row) => row.join(',')).join('\n');
           }
 
           return JSON.stringify(report, null, 2);
@@ -546,14 +552,11 @@ export const usePerformanceStore = create<PerformanceStore>()(
             setLoading(true);
             setError(null);
 
-            // Fetch performance metrics directly from database
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseBrowserClient());
+      const supabase = await import('@/utils/supabase/client').then((m) => m.getSupabaseBrowserClient());
             if (!supabase) {
               throw new Error('Database connection not available');
             }
 
-            // Get database performance metrics from the last 24 hours
-            // FUNCTIONALITY MERGED INTO analytics_events - use analytics table
             const { data: metricsData, error: metricsError } = await supabase
               .from('analytics_events')
               .select('*')
@@ -564,18 +567,16 @@ export const usePerformanceStore = create<PerformanceStore>()(
               throw new Error(`Failed to fetch database metrics: ${metricsError.message}`);
             }
 
-            // Transform metrics data to match DatabasePerformanceMetric interface
-            const databaseMetrics: DatabasePerformanceMetric[] = metricsData?.map(metric => ({
+      const databaseMetrics: DatabasePerformanceMetric[] =
+        metricsData?.map((metric) => ({
               metricName: metric.event_type ?? 'unknown',
-              avgValue: 0, // Default value since analytics_events doesn't have these fields
+          avgValue: 0,
               minValue: 0,
               maxValue: 0,
               countMeasurements: 1,
-              timestamp: new Date(metric.created_at ?? new Date())
+          timestamp: new Date(metric.created_at ?? new Date()),
             })) ?? [];
 
-            // Get cache statistics
-            // FUNCTIONALITY MERGED INTO analytics_events - use analytics table for cache stats
             const { error: cacheError } = await supabase
               .from('analytics_events')
               .select('*')
@@ -587,20 +588,19 @@ export const usePerformanceStore = create<PerformanceStore>()(
               throw new Error(`Failed to fetch cache stats: ${cacheError.message}`);
             }
 
-            // Transform cache data to match CacheStats interface
             const cacheStats: CacheStats = {
               size: 0,
               keys: [],
               memoryUsage: 0,
-              hitRate: 0
+        hitRate: 0,
             };
 
             setDatabaseMetrics(databaseMetrics);
             setCacheStats(cacheStats);
             setLastRefresh(new Date());
-
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to load database performance';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to load database performance';
             setError(errorMessage);
           } finally {
             setLoading(false);
@@ -614,7 +614,6 @@ export const usePerformanceStore = create<PerformanceStore>()(
             setLoading(true);
             setError(null);
 
-            // Call optimized poll service to refresh materialized views
             const response = await fetch('/api/admin/refresh-materialized-views', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -624,11 +623,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
               throw new Error(`Failed to refresh materialized views: ${response.statusText}`);
             }
 
-            // Reload performance data after refresh
             await loadDatabasePerformance();
-
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to refresh materialized views';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to refresh materialized views';
             setError(errorMessage);
           } finally {
             setLoading(false);
@@ -642,7 +640,6 @@ export const usePerformanceStore = create<PerformanceStore>()(
             setLoading(true);
             setError(null);
 
-            // Call optimized poll service to perform database maintenance
             const response = await fetch('/api/admin/perform-database-maintenance', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -652,11 +649,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
               throw new Error(`Failed to perform database maintenance: ${response.statusText}`);
             }
 
-            // Reload performance data after maintenance
             await loadDatabasePerformance();
-
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to perform database maintenance';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to perform database maintenance';
             setError(errorMessage);
           } finally {
             setLoading(false);
@@ -664,24 +660,6 @@ export const usePerformanceStore = create<PerformanceStore>()(
         },
 
         // Actions - Loading & Error
-        setLoading: (loading: boolean) => {
-          set((state) => {
-            state.isLoading = loading;
-          });
-        },
-
-        setError: (error: string | null) => {
-          set((state) => {
-            state.error = error;
-          });
-        },
-
-        clearError: () => {
-          set((state) => {
-            state.error = null;
-          });
-        },
-
         // Initialization
         initialize: () => {
           set((state) => {
@@ -690,7 +668,6 @@ export const usePerformanceStore = create<PerformanceStore>()(
           });
 
           try {
-            // Start monitoring if in browser
             if (typeof window !== 'undefined') {
               get().startMonitoring();
             }
@@ -698,26 +675,38 @@ export const usePerformanceStore = create<PerformanceStore>()(
             set((state) => {
               state.isLoading = false;
             });
-
           } catch (error) {
             set((state) => {
-              state.error = error instanceof Error ? error.message : 'Failed to initialize performance monitoring';
+        state.error =
+          error instanceof Error ? error.message : 'Failed to initialize performance monitoring';
               state.isLoading = false;
             });
           }
-        }
-      })),
+        },
+
+        resetPerformanceState: () => {
+          set((state) => {
+            Object.assign(state, createInitialPerformanceState());
+          });
+        },
+  };
+};
+
+export const usePerformanceStore = create<PerformanceStore>()(
+  devtools(
+    persist(
+      immer(performanceStoreCreator),
       {
         name: 'performance-storage',
         storage: createSafeStorage(),
         partialize: (state) => ({
           thresholds: state.thresholds,
-          isMonitoring: state.isMonitoring
-        })
-      }
+          isMonitoring: state.isMonitoring,
+        }),
+      },
     ),
-    { name: 'performance-store' }
-  )
+    { name: 'performance-store' },
+  ),
 );
 
 // ============================================================================
@@ -776,37 +765,102 @@ export const useRefreshInterval = () => usePerformanceStore(state => state.refre
 // ACTIONS
 // ============================================================================
 
-export const usePerformanceActions = () => usePerformanceStore(state => ({
-  recordMetric: state.recordMetric,
-  recordNavigationMetric: state.recordNavigationMetric,
-  recordResourceMetric: state.recordResourceMetric,
-  recordCustomMetric: state.recordCustomMetric,
-  clearMetrics: state.clearMetrics,
-  createAlert: state.createAlert,
-  resolveAlert: state.resolveAlert,
-  clearAlerts: state.clearAlerts,
-  clearResolvedAlerts: state.clearResolvedAlerts,
-  startMonitoring: state.startMonitoring,
-  stopMonitoring: state.stopMonitoring,
-  setThreshold: state.setThreshold,
-  checkThresholds: state.checkThresholds,
-  generateReport: state.generateReport,
-  exportMetrics: state.exportMetrics,
-  exportReport: state.exportReport,
-  setLoading: state.setLoading,
-  setError: state.setError,
-  clearError: state.clearError,
-  initialize: state.initialize,
-  // Database performance actions
-  setDatabaseMetrics: state.setDatabaseMetrics,
-  setCacheStats: state.setCacheStats,
-  setLastRefresh: state.setLastRefresh,
-  setAutoRefresh: state.setAutoRefresh,
-  setRefreshInterval: state.setRefreshInterval,
-  loadDatabasePerformance: state.loadDatabasePerformance,
-  refreshMaterializedViews: state.refreshMaterializedViews,
-  performDatabaseMaintenance: state.performDatabaseMaintenance
-}));
+export const usePerformanceActions = () => {
+  const recordMetric = usePerformanceStore((state) => state.recordMetric);
+  const recordNavigationMetric = usePerformanceStore((state) => state.recordNavigationMetric);
+  const recordResourceMetric = usePerformanceStore((state) => state.recordResourceMetric);
+  const recordCustomMetric = usePerformanceStore((state) => state.recordCustomMetric);
+  const clearMetrics = usePerformanceStore((state) => state.clearMetrics);
+  const createAlert = usePerformanceStore((state) => state.createAlert);
+  const resolveAlert = usePerformanceStore((state) => state.resolveAlert);
+  const clearAlerts = usePerformanceStore((state) => state.clearAlerts);
+  const clearResolvedAlerts = usePerformanceStore((state) => state.clearResolvedAlerts);
+  const startMonitoring = usePerformanceStore((state) => state.startMonitoring);
+  const stopMonitoring = usePerformanceStore((state) => state.stopMonitoring);
+  const setThreshold = usePerformanceStore((state) => state.setThreshold);
+  const checkThresholds = usePerformanceStore((state) => state.checkThresholds);
+  const generateReport = usePerformanceStore((state) => state.generateReport);
+  const exportMetrics = usePerformanceStore((state) => state.exportMetrics);
+  const exportReport = usePerformanceStore((state) => state.exportReport);
+  const setLoading = usePerformanceStore((state) => state.setLoading);
+  const setError = usePerformanceStore((state) => state.setError);
+  const clearError = usePerformanceStore((state) => state.clearError);
+  const initialize = usePerformanceStore((state) => state.initialize);
+  const setDatabaseMetrics = usePerformanceStore((state) => state.setDatabaseMetrics);
+  const setCacheStats = usePerformanceStore((state) => state.setCacheStats);
+  const setLastRefresh = usePerformanceStore((state) => state.setLastRefresh);
+  const setAutoRefresh = usePerformanceStore((state) => state.setAutoRefresh);
+  const setRefreshInterval = usePerformanceStore((state) => state.setRefreshInterval);
+  const loadDatabasePerformance = usePerformanceStore((state) => state.loadDatabasePerformance);
+  const refreshMaterializedViews = usePerformanceStore((state) => state.refreshMaterializedViews);
+  const performDatabaseMaintenance = usePerformanceStore((state) => state.performDatabaseMaintenance);
+  const resetPerformanceState = usePerformanceStore((state) => state.resetPerformanceState);
+
+  return useMemo(
+    () => ({
+      recordMetric,
+      recordNavigationMetric,
+      recordResourceMetric,
+      recordCustomMetric,
+      clearMetrics,
+      createAlert,
+      resolveAlert,
+      clearAlerts,
+      clearResolvedAlerts,
+      startMonitoring,
+      stopMonitoring,
+      setThreshold,
+      checkThresholds,
+      generateReport,
+      exportMetrics,
+      exportReport,
+      setLoading,
+      setError,
+      clearError,
+      initialize,
+      setDatabaseMetrics,
+      setCacheStats,
+      setLastRefresh,
+      setAutoRefresh,
+      setRefreshInterval,
+      loadDatabasePerformance,
+      refreshMaterializedViews,
+      performDatabaseMaintenance,
+      resetPerformanceState,
+    }),
+    [
+      recordMetric,
+      recordNavigationMetric,
+      recordResourceMetric,
+      recordCustomMetric,
+      clearMetrics,
+      createAlert,
+      resolveAlert,
+      clearAlerts,
+      clearResolvedAlerts,
+      startMonitoring,
+      stopMonitoring,
+      setThreshold,
+      checkThresholds,
+      generateReport,
+      exportMetrics,
+      exportReport,
+      setLoading,
+      setError,
+      clearError,
+      initialize,
+      setDatabaseMetrics,
+      setCacheStats,
+      setLastRefresh,
+      setAutoRefresh,
+      setRefreshInterval,
+      loadDatabasePerformance,
+      refreshMaterializedViews,
+      performDatabaseMaintenance,
+    resetPerformanceState,
+    ],
+  );
+};
 
 // ============================================================================
 // UTILITIES

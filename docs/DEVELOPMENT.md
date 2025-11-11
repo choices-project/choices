@@ -97,6 +97,15 @@ See `guides/testing/` for details.
 
 ---
 
+## Zustand Store Modernization Guidelines
+
+- **Shared helpers**: when writing to a store, import selector hooks or `use<Store>Actions` (e.g. `useNotificationActions`) from the store module instead of calling `use<Store>Store(getState)` directly. This keeps consumers aligned with the modernization playbook.
+- **Integration coverage**: add React Testing Library suites that instantiate the creator in isolation. See `tests/unit/stores/notification.integration.test.tsx` for the reference pattern (fake timers + helper stubs).
+- **Playwright harnesses**: expose harness pages under `/app/(app)/e2e/<store>` that register a `window.__<store>Harness` facade. The notification store example lives at `/app/(app)/e2e/notification-store/page.tsx` with its spec in `tests/e2e/specs/notification-store.spec.ts`.
+- **Documentation**: track store-specific progress in `scratch/gpt5-codex/store-roadmaps/`, updating action items (consumer audits, harness coverage) as work ships.
+
+---
+
 ## Common Tasks
 
 ### Create a Poll

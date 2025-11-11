@@ -1,640 +1,750 @@
 /**
- * Notification Store - Zustand Implementation
- * 
- * Global notification state management including toast notifications,
- * system alerts, and user feedback. Consolidates multiple notification
- * systems into a unified store.
- * 
+ * Notification Store - Modernized Zustand Implementation
+ *
+ * Manages toast notifications, in-app alerts, and admin/system messages.
+ * Provides standardized state/action exports, middleware composition,
+ * and selector utilities aligned with the store modernization guidelines.
+ *
  * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ * Updated: November 9, 2025
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import type { StateCreator } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import type { AdminNotification, NewAdminNotification } from '@/features/admin/types';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
-import type { Notification, BaseStore } from './types';
+import { createSafeStorage } from './storage';
+import type { BaseStore, Notification } from './types';
 
+export type NotificationSettings = {
+  position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  duration: number;
+  maxNotifications: number;
+  enableSound: boolean;
+  enableHaptics: boolean;
+  enableAutoDismiss: boolean;
+  enableStacking: boolean;
+};
 
-// Notification store state interface
-type NotificationStore = {
-  // Notifications
+export type NotificationState = {
   notifications: Notification[];
   unreadCount: number;
-  
-  // Admin notifications
   adminNotifications: AdminNotification[];
   adminUnreadCount: number;
-  
-  // Settings
-  settings: {
-    position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
-    duration: number;
-    maxNotifications: number;
-    enableSound: boolean;
-    enableHaptics: boolean;
-    enableAutoDismiss: boolean;
-    enableStacking: boolean;
-  };
-  
-  // Loading states
+  settings: NotificationSettings;
+  isLoading: boolean;
   isAdding: boolean;
   isRemoving: boolean;
-  
-  // Actions - Notifications
+  error: string | null;
+};
+
+export type NotificationActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   removeNotification: (id: string) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearAll: () => void;
   clearByType: (type: Notification['type']) => void;
-  
-  // Actions - Admin Notifications
+
   addAdminNotification: (notification: NewAdminNotification) => void;
   removeAdminNotification: (id: string) => void;
   markAdminNotificationAsRead: (id: string) => void;
   markAllAdminNotificationsAsRead: () => void;
   clearAllAdminNotifications: () => void;
   clearAdminNotificationsByType: (type: AdminNotification['type']) => void;
-  
-  // Actions - Settings
-  updateSettings: (settings: Partial<NotificationStore['settings']>) => void;
+
+  updateSettings: (settings: Partial<NotificationSettings>) => void;
   resetSettings: () => void;
-  
-  // Actions - Loading states
+
   setAdding: (adding: boolean) => void;
   setRemoving: (removing: boolean) => void;
-  
-  // Actions - Utility
+
   getNotification: (id: string) => Notification | undefined;
   getNotificationsByType: (type: Notification['type']) => Notification[];
   getUnreadNotifications: () => Notification[];
-} & BaseStore
+};
 
-// Default notification settings
-const defaultSettings = {
-  position: 'top-right' as const,
+export type NotificationStore = NotificationState & NotificationActions;
+
+type NotificationStoreCreator = StateCreator<
+  NotificationStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+
+const ADMIN_AUTO_DISMISS_MS = 3000;
+
+export const defaultNotificationSettings: NotificationSettings = {
+  position: 'top-right',
   duration: 5000,
   maxNotifications: 5,
   enableSound: true,
   enableHaptics: true,
   enableAutoDismiss: true,
-  enableStacking: true,
+  enableStacking: true
 };
 
-const generateAdminNotificationId = () =>
+const createNotificationId = () =>
+  `notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+const createAdminNotificationId = () =>
   `admin_notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+const buildNotification = (
+  payload: Omit<Notification, 'id' | 'timestamp' | 'read'>
+): Notification => {
+  const base: Notification = {
+    id: createNotificationId(),
+    timestamp: new Date().toISOString(),
+    read: false,
+    type: payload.type,
+    title: payload.title,
+    message: payload.message
+  };
+
+  const overrides: Partial<Notification> = {};
+  if (payload.duration !== undefined) {
+    overrides.duration = payload.duration;
+  }
+  if (payload.actions) {
+    overrides.actions = payload.actions;
+  }
+  if (payload.persistent !== undefined) {
+    overrides.persistent = payload.persistent;
+  }
+
+  return { ...base, ...overrides };
+};
 
 const buildAdminNotification = (
   payload: NewAdminNotification,
-  customId?: string
+  id: string = createAdminNotificationId()
 ): AdminNotification => {
   const issuedAt = payload.timestamp ?? new Date().toISOString();
   const createdAt = payload.created_at ?? issuedAt;
 
   const base: AdminNotification = {
-    id: customId ?? generateAdminNotificationId(),
+    id,
     timestamp: issuedAt,
     type: payload.type,
     title: payload.title,
     message: payload.message,
     read: payload.read ?? false,
-    created_at: createdAt,
+    created_at: createdAt
   };
 
-  return withOptional(base, {
-    action: payload.action,
-    metadata: payload.metadata,
-  });
+  const overrides: Partial<AdminNotification> = {};
+  if (payload.action) {
+    overrides.action = payload.action;
+  }
+  if (payload.metadata) {
+    overrides.metadata = payload.metadata;
+  }
+
+  return { ...base, ...overrides };
 };
 
-// Create notification store with middleware
-export const useNotificationStore = create<NotificationStore>()(
-  devtools(
-    immer((set, get) => ({
-      // Initial state
-      notifications: [],
-      unreadCount: 0,
-      adminNotifications: [],
-      adminUnreadCount: 0,
-      settings: defaultSettings,
-      isLoading: false,
-      isAdding: false,
-      isRemoving: false,
-      error: null,
-      
-      // Base store actions
-      setLoading: (loading) => set((state) => {
+const calculateUnread = (notifications: Notification[]) =>
+  notifications.reduce((count, notification) => (notification.read ? count : count + 1), 0);
+
+const calculateAdminUnread = (notifications: AdminNotification[]) =>
+  notifications.reduce((count, notification) => (notification.read ? count : count + 1), 0);
+
+const scheduleNotificationEffects = (
+  notification: Notification,
+  get: () => NotificationStore,
+  removeNotification: (id: string) => void
+) => {
+  const state = get();
+  const { settings } = state;
+
+  if (settings.enableAutoDismiss) {
+    const duration = notification.duration ?? settings.duration;
+    if (duration !== 0) {
+      setTimeout(() => {
+        const { notifications } = get();
+        if (notifications.some((item) => item.id === notification.id)) {
+          removeNotification(notification.id);
+        }
+      }, duration);
+    }
+  }
+
+  if (settings.enableSound && typeof window !== 'undefined') {
+    setTimeout(() => {
+      try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.volume = 0.3;
+        void audio.play();
+      } catch {
+        // Ignore audio errors
+      }
+    }, 0);
+  }
+
+  if (
+    settings.enableHaptics &&
+    typeof window !== 'undefined' &&
+    typeof navigator !== 'undefined' &&
+    'vibrate' in navigator
+  ) {
+    setTimeout(() => {
+      try {
+        navigator.vibrate(50);
+      } catch {
+        // Ignore vibration errors
+      }
+    }, 0);
+  }
+};
+
+const scheduleAdminNotificationEffects = (
+  notification: AdminNotification,
+  get: () => NotificationStore,
+  removeAdminNotification: (id: string) => void
+) => {
+  const state = get();
+  const { settings } = state;
+
+  if (settings.enableAutoDismiss && notification.type !== 'error') {
+    setTimeout(() => {
+      const { adminNotifications } = get();
+      if (adminNotifications.some((item) => item.id === notification.id)) {
+        removeAdminNotification(notification.id);
+      }
+    }, ADMIN_AUTO_DISMISS_MS);
+  }
+};
+
+export const initialNotificationState: NotificationState = {
+  notifications: [],
+  unreadCount: 0,
+  adminNotifications: [],
+  adminUnreadCount: 0,
+  settings: { ...defaultNotificationSettings },
+  isLoading: false,
+  isAdding: false,
+  isRemoving: false,
+  error: null
+};
+
+export const createInitialNotificationState = (): NotificationState => ({
+  notifications: [],
+  unreadCount: 0,
+  adminNotifications: [],
+  adminUnreadCount: 0,
+  settings: { ...defaultNotificationSettings },
+  isLoading: false,
+  isAdding: false,
+  isRemoving: false,
+  error: null
+});
+
+export const createNotificationActions = (
+  set: Parameters<NotificationStoreCreator>[0],
+  get: Parameters<NotificationStoreCreator>[1]
+): NotificationActions => {
+  const setState = set as unknown as (recipe: (draft: NotificationState) => void) => void;
+
+  return {
+    setLoading: (loading) => {
+      setState((state) => {
         state.isLoading = loading;
-      }),
-      
-      setError: (error) => set((state) => {
+      });
+    },
+
+    setError: (error) => {
+      setState((state) => {
         state.error = error;
-      }),
-      
-      clearError: () => set((state) => {
+      });
+    },
+
+    clearError: () => {
+      setState((state) => {
         state.error = null;
-      }),
-      
-      // Notification actions
-      addNotification: (notification) => set((state) => {
-        const sanitized = withOptional(notification as Record<string, unknown>);
-        const newNotification = withOptional(sanitized, {
-          id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date().toISOString(),
-          read: false,
-        }) as Notification;
-        
-        // Add to notifications array
-        if (state.settings.enableStacking) {
-          state.notifications.unshift(newNotification);
-        } else {
-          state.notifications = [newNotification];
+      });
+    },
+
+    addNotification: (payload) => {
+      const notification = buildNotification(payload);
+
+      setState((state) => {
+        const nextQueue = state.settings.enableStacking
+          ? [notification, ...state.notifications]
+          : [notification];
+
+        state.notifications = nextQueue.slice(0, state.settings.maxNotifications);
+        state.unreadCount = calculateUnread(state.notifications);
+      });
+
+      scheduleNotificationEffects(notification, get, (id) => get().removeNotification(id));
+    },
+
+    removeNotification: (id) => {
+      setState((state) => {
+        const nextNotifications = state.notifications.filter((notification) => notification.id !== id);
+        if (nextNotifications.length !== state.notifications.length) {
+          state.notifications = nextNotifications;
+          state.unreadCount = calculateUnread(state.notifications);
         }
-        
-        // Limit notifications
-        if (state.notifications.length > state.settings.maxNotifications) {
-          state.notifications = state.notifications.slice(0, state.settings.maxNotifications);
+      });
+    },
+
+    markAsRead: (id) => {
+      setState((state) => {
+        const target = state.notifications.find((notification) => notification.id === id);
+        if (target && !target.read) {
+          target.read = true;
+          state.unreadCount = calculateUnread(state.notifications);
         }
-        
-        // Update unread count
-        state.unreadCount = state.notifications.filter(n => !n.read).length;
-        
-        // Auto-dismiss if enabled
-        if (state.settings.enableAutoDismiss && newNotification.duration !== 0) {
-          setTimeout(() => {
-            const currentState = get();
-            if (currentState.notifications.find(n => n.id === newNotification.id)) {
-              currentState.removeNotification(newNotification.id);
-            }
-          }, newNotification.duration ?? state.settings.duration);
-        }
-        
-        // Play sound if enabled (defer to avoid act() warnings)
-        if (state.settings.enableSound && typeof window !== 'undefined') {
-          setTimeout(() => {
-            try {
-              const audio = new Audio('/sounds/notification.mp3');
-              audio.volume = 0.3;
-              audio.play().catch(() => {
-                // Ignore audio play errors
-              });
-            } catch {
-              // Ignore audio errors
-            }
-          }, 0);
-        }
-        
-        // Haptic feedback if enabled (defer to avoid act() warnings)
-        if (state.settings.enableHaptics && typeof window !== 'undefined' && 'vibrate' in navigator) {
-          setTimeout(() => {
-            try {
-              navigator.vibrate(50);
-            } catch {
-              // Ignore vibration errors
-            }
-          }, 0);
-        }
-        
-      }),
-      
-      removeNotification: (id) => set((state) => {
-        const notification = state.notifications.find(n => n.id === id);
-        if (notification) {
-          state.notifications = state.notifications.filter(n => n.id !== id);
-          state.unreadCount = state.notifications.filter(n => !n.read).length;
-        }
-      }),
-      
-      markAsRead: (id) => set((state) => {
-        const notification = state.notifications.find(n => n.id === id);
-        if (notification && !notification.read) {
+      });
+    },
+
+    markAllAsRead: () => {
+      setState((state) => {
+        state.notifications.forEach((notification) => {
           notification.read = true;
-          state.unreadCount = state.notifications.filter(n => !n.read).length;
-        }
-      }),
-      
-      markAllAsRead: () => set((state) => {
-        state.notifications.forEach(n => n.read = true);
+        });
         state.unreadCount = 0;
-      }),
-      
-      clearAll: () => set((state) => {
+      });
+    },
+
+    clearAll: () => {
+      setState((state) => {
         state.notifications = [];
         state.unreadCount = 0;
-      }),
-      
-      clearByType: (type) => set((state) => {
+      });
+    },
+
+    clearByType: (type) => {
+      setState((state) => {
         const beforeCount = state.notifications.length;
-        state.notifications = state.notifications.filter(n => n.type !== type);
-        state.unreadCount = state.notifications.filter(n => !n.read).length;
-        logger.debug(`Cleared ${beforeCount - state.notifications.length} notifications of type ${type}`);
-      }),
-      
-      // Admin notification actions
-      addAdminNotification: (notification) => set((state) => {
-        const newAdminNotification = buildAdminNotification(
-          notification,
-          generateAdminNotificationId()
+        state.notifications = state.notifications.filter((notification) => notification.type !== type);
+        state.unreadCount = calculateUnread(state.notifications);
+
+        const removed = beforeCount - state.notifications.length;
+        if (removed > 0) {
+          logger.debug(`Cleared ${removed} notifications of type ${type}`);
+        }
+      });
+    },
+
+    addAdminNotification: (payload) => {
+      const notification = buildAdminNotification(payload);
+
+      setState((state) => {
+        const nextQueue = state.settings.enableStacking
+          ? [notification, ...state.adminNotifications]
+          : [notification];
+
+        state.adminNotifications = nextQueue.slice(0, state.settings.maxNotifications);
+        state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
+      });
+
+      scheduleAdminNotificationEffects(notification, get, (id) =>
+        get().removeAdminNotification(id)
+      );
+    },
+
+    removeAdminNotification: (id) => {
+      setState((state) => {
+        const nextNotifications = state.adminNotifications.filter(
+          (notification) => notification.id !== id
         );
-        
-        // Add to admin notifications array
-        if (state.settings.enableStacking) {
-          state.adminNotifications.unshift(newAdminNotification);
-        } else {
-          state.adminNotifications = [newAdminNotification];
+        if (nextNotifications.length !== state.adminNotifications.length) {
+          state.adminNotifications = nextNotifications;
+          state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
         }
-        
-        // Limit admin notifications
-        if (state.adminNotifications.length > state.settings.maxNotifications) {
-          state.adminNotifications = state.adminNotifications.slice(0, state.settings.maxNotifications);
+      });
+    },
+
+    markAdminNotificationAsRead: (id) => {
+      setState((state) => {
+        const target = state.adminNotifications.find((notification) => notification.id === id);
+        if (target && !target.read) {
+          target.read = true;
+          state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
         }
-        
-        // Update admin unread count
-        state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
-        
-        // Auto-dismiss if enabled (admin notifications have shorter default duration)
-        if (state.settings.enableAutoDismiss && notification.type !== 'error') {
-          setTimeout(() => {
-            const currentState = get();
-            if (currentState.adminNotifications.find(n => n.id === newAdminNotification.id)) {
-              currentState.removeAdminNotification(newAdminNotification.id);
-            }
-          }, 3000); // 3 seconds for admin notifications
-        }
-        
-      }),
-      
-      removeAdminNotification: (id) => set((state) => {
-        const notification = state.adminNotifications.find(n => n.id === id);
-        if (notification) {
-          state.adminNotifications = state.adminNotifications.filter(n => n.id !== id);
-          state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
-        }
-      }),
-      
-      markAdminNotificationAsRead: (id) => set((state) => {
-        const notification = state.adminNotifications.find(n => n.id === id);
-        if (notification && !notification.read) {
+      });
+    },
+
+    markAllAdminNotificationsAsRead: () => {
+      setState((state) => {
+        state.adminNotifications.forEach((notification) => {
           notification.read = true;
-          state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
-        }
-      }),
-      
-      markAllAdminNotificationsAsRead: () => set((state) => {
-        state.adminNotifications.forEach(n => n.read = true);
+        });
         state.adminUnreadCount = 0;
-      }),
-      
-      clearAllAdminNotifications: () => set((state) => {
+      });
+    },
+
+    clearAllAdminNotifications: () => {
+      setState((state) => {
         state.adminNotifications = [];
         state.adminUnreadCount = 0;
-      }),
-      
-      clearAdminNotificationsByType: (type) => set((state) => {
+      });
+    },
+
+    clearAdminNotificationsByType: (type) => {
+      setState((state) => {
         const beforeCount = state.adminNotifications.length;
-        state.adminNotifications = state.adminNotifications.filter(n => n.type !== type);
-        state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
-        logger.debug(`Cleared ${beforeCount - state.adminNotifications.length} admin notifications of type ${type}`);
-      }),
-      
-      // Settings actions
-      updateSettings: (settings) => set((state) => {
-        state.settings = withOptional(state.settings, settings);
-      }),
-      
-      resetSettings: () => set((state) => {
-        state.settings = withOptional(defaultSettings);
-        logger.info('Notification settings reset to defaults');
-      }),
-      
-      // Loading state actions
-      setAdding: (adding) => set((state) => {
+        state.adminNotifications = state.adminNotifications.filter(
+          (notification) => notification.type !== type
+        );
+        state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
+
+        const removed = beforeCount - state.adminNotifications.length;
+        if (removed > 0) {
+          logger.debug(`Cleared ${removed} admin notifications of type ${type}`);
+        }
+      });
+    },
+
+    updateSettings: (settings) => {
+      setState((state) => {
+        state.settings = { ...state.settings, ...settings };
+      });
+    },
+
+    resetSettings: () => {
+      setState((state) => {
+        state.settings = { ...defaultNotificationSettings };
+      });
+
+      logger.info('Notification settings reset to defaults');
+    },
+
+    setAdding: (adding) => {
+      setState((state) => {
         state.isAdding = adding;
-      }),
-      
-      setRemoving: (removing) => set((state) => {
+      });
+    },
+
+    setRemoving: (removing) => {
+      setState((state) => {
         state.isRemoving = removing;
-      }),
-      
-      // Utility actions
-      getNotification: (id) => {
-        const state = get();
-        return state.notifications.find(n => n.id === id);
-      },
-      
-      getNotificationsByType: (type) => {
-        const state = get();
-        return state.notifications.filter(n => n.type === type);
-      },
-      
-      getUnreadNotifications: () => {
-        const state = get();
-        return state.notifications.filter(n => !n.read);
-      },
-    })),
+      });
+    },
+
+    getNotification: (id) => get().notifications.find((notification) => notification.id === id),
+
+    getNotificationsByType: (type) =>
+      get().notifications.filter((notification) => notification.type === type),
+
+    getUnreadNotifications: () =>
+      get().notifications.filter((notification) => !notification.read)
+  } satisfies NotificationActions;
+};
+
+export const notificationStoreCreator: NotificationStoreCreator = (set, get) =>
+  Object.assign(createInitialNotificationState(), createNotificationActions(set, get));
+
+export const useNotificationStore = create<NotificationStore>()(
+  devtools(
+    persist(
+      immer(notificationStoreCreator),
+      {
+        name: 'notification-store',
+        storage: createSafeStorage(),
+        partialize: (state) => ({
+          settings: state.settings
+        })
+      }
+    ),
     { name: 'notification-store' }
-));
+  )
+);
 
-// Store selectors for optimized re-renders
-export const useNotifications = () => useNotificationStore(state => state.notifications);
-export const useUnreadCount = () => useNotificationStore(state => state.unreadCount);
-export const useNotificationSettings = () => useNotificationStore(state => state.settings);
-export const useNotificationLoading = () => useNotificationStore(state => state.isLoading);
-export const useNotificationError = () => useNotificationStore(state => state.error);
+export const notificationSelectors = {
+  notifications: (state: NotificationStore) => state.notifications,
+  unreadCount: (state: NotificationStore) => state.unreadCount,
+  adminNotifications: (state: NotificationStore) => state.adminNotifications,
+  adminUnreadCount: (state: NotificationStore) => state.adminUnreadCount,
+  settings: (state: NotificationStore) => state.settings,
+  isLoading: (state: NotificationStore) => state.isLoading,
+  isAdding: (state: NotificationStore) => state.isAdding,
+  isRemoving: (state: NotificationStore) => state.isRemoving,
+  error: (state: NotificationStore) => state.error
+} as const;
 
-// Admin notification selectors
-export const useAdminNotifications = () => useNotificationStore(state => state.adminNotifications);
-export const useAdminUnreadCount = () => useNotificationStore(state => state.adminUnreadCount);
+export const useNotifications = () => useNotificationStore(notificationSelectors.notifications);
+export const useUnreadCount = () => useNotificationStore(notificationSelectors.unreadCount);
+export const useNotificationSettings = () => useNotificationStore(notificationSelectors.settings);
+export const useNotificationLoading = () => useNotificationStore(notificationSelectors.isLoading);
+export const useNotificationError = () => useNotificationStore(notificationSelectors.error);
+export const useNotificationFlags = () =>
+  useNotificationStore((state) => ({
+    isAdding: state.isAdding,
+    isRemoving: state.isRemoving
+  }));
 
-// Action selectors
-export const useNotificationActions = () => useNotificationStore(state => ({
-  addNotification: state.addNotification,
-  removeNotification: state.removeNotification,
-  markAsRead: state.markAsRead,
-  markAllAsRead: state.markAllAsRead,
-  clearAll: state.clearAll,
-  clearByType: state.clearByType,
-  addAdminNotification: state.addAdminNotification,
-  removeAdminNotification: state.removeAdminNotification,
-  markAdminNotificationAsRead: state.markAdminNotificationAsRead,
-  markAllAdminNotificationsAsRead: state.markAllAdminNotificationsAsRead,
-  clearAllAdminNotifications: state.clearAllAdminNotifications,
-  clearAdminNotificationsByType: state.clearAdminNotificationsByType,
-  updateSettings: state.updateSettings,
-  resetSettings: state.resetSettings,
-  setAdding: state.setAdding,
-  setRemoving: state.setRemoving,
-  getNotification: state.getNotification,
-  getNotificationsByType: state.getNotificationsByType,
-  getUnreadNotifications: state.getUnreadNotifications,
-}));
+export const useAdminNotifications = () =>
+  useNotificationStore(notificationSelectors.adminNotifications);
+export const useAdminUnreadCount = () =>
+  useNotificationStore(notificationSelectors.adminUnreadCount);
 
-// Computed selectors
-export const useNotificationsByType = (type: Notification['type']) => useNotificationStore(state => {
-  return state.notifications.filter(n => n.type === type);
-});
+export const useNotificationActions = () => {
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  const removeNotification = useNotificationStore((state) => state.removeNotification);
+  const markAsRead = useNotificationStore((state) => state.markAsRead);
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const clearAll = useNotificationStore((state) => state.clearAll);
+  const clearByType = useNotificationStore((state) => state.clearByType);
+  const addAdminNotification = useNotificationStore((state) => state.addAdminNotification);
+  const removeAdminNotification = useNotificationStore((state) => state.removeAdminNotification);
+  const markAdminNotificationAsRead = useNotificationStore((state) => state.markAdminNotificationAsRead);
+  const markAllAdminNotificationsAsRead = useNotificationStore((state) => state.markAllAdminNotificationsAsRead);
+  const clearAllAdminNotifications = useNotificationStore((state) => state.clearAllAdminNotifications);
+  const clearAdminNotificationsByType = useNotificationStore((state) => state.clearAdminNotificationsByType);
+  const updateSettings = useNotificationStore((state) => state.updateSettings);
+  const resetSettings = useNotificationStore((state) => state.resetSettings);
+  const setAdding = useNotificationStore((state) => state.setAdding);
+  const setRemoving = useNotificationStore((state) => state.setRemoving);
+  const getNotification = useNotificationStore((state) => state.getNotification);
+  const getNotificationsByType = useNotificationStore((state) => state.getNotificationsByType);
+  const getUnreadNotifications = useNotificationStore((state) => state.getUnreadNotifications);
 
-export const useUnreadNotifications = () => useNotificationStore(state => {
-  return state.notifications.filter(n => !n.read);
-});
+  return useMemo(
+    () => ({
+      addNotification,
+      removeNotification,
+      markAsRead,
+      markAllAsRead,
+      clearAll,
+      clearByType,
+      addAdminNotification,
+      removeAdminNotification,
+      markAdminNotificationAsRead,
+      markAllAdminNotificationsAsRead,
+      clearAllAdminNotifications,
+      clearAdminNotificationsByType,
+      updateSettings,
+      resetSettings,
+      setAdding,
+      setRemoving,
+      getNotification,
+      getNotificationsByType,
+      getUnreadNotifications
+    }),
+    [
+      addNotification,
+      removeNotification,
+      markAsRead,
+      markAllAsRead,
+      clearAll,
+      clearByType,
+      addAdminNotification,
+      removeAdminNotification,
+      markAdminNotificationAsRead,
+      markAllAdminNotificationsAsRead,
+      clearAllAdminNotifications,
+      clearAdminNotificationsByType,
+      updateSettings,
+      resetSettings,
+      setAdding,
+      setRemoving,
+      getNotification,
+      getNotificationsByType,
+      getUnreadNotifications
+    ]
+  );
+};
 
-export const useNotificationPosition = () => useNotificationStore(state => state.settings.position);
-export const useNotificationDuration = () => useNotificationStore(state => state.settings.duration);
-export const useNotificationMaxCount = () => useNotificationStore(state => state.settings.maxNotifications);
+export const useNotificationsByType = (type: Notification['type']) =>
+  useNotificationStore((state) => state.getNotificationsByType(type));
 
-// Admin notification computed selectors
-export const useAdminNotificationsByType = (type: AdminNotification['type']) => useNotificationStore(state => {
-  return state.adminNotifications.filter(n => n.type === type);
-});
+export const useUnreadNotifications = () =>
+  useNotificationStore((state) => state.getUnreadNotifications());
 
-export const useUnreadAdminNotifications = () => useNotificationStore(state => {
-  return state.adminNotifications.filter(n => !n.read);
-});
+export const useNotificationPosition = () =>
+  useNotificationStore((state) => state.settings.position);
+export const useNotificationDuration = () =>
+  useNotificationStore((state) => state.settings.duration);
+export const useNotificationMaxCount = () =>
+  useNotificationStore((state) => state.settings.maxNotifications);
 
-// Store utilities
+export const useAdminNotificationsByType = (type: AdminNotification['type']) =>
+  useNotificationStore((state) =>
+    state.adminNotifications.filter((notification) => notification.type === type)
+  );
+
+export const useUnreadAdminNotifications = () =>
+  useNotificationStore((state) =>
+    state.adminNotifications.filter((notification) => !notification.read)
+  );
+
 export const notificationStoreUtils = {
-  /**
-   * Create a success notification
-   */
   createSuccess: (title: string, message: string, duration?: number) => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type: 'success',
       title,
       message,
-      duration: duration ?? 5000,
+      duration: duration ?? defaultNotificationSettings.duration
     });
   },
-  
-  /**
-   * Create an error notification
-   */
+
   createError: (title: string, message: string, duration?: number) => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type: 'error',
       title,
       message,
-      duration: duration ?? 0, // Error notifications don't auto-dismiss by default
+      duration: duration ?? 0
     });
   },
-  
-  /**
-   * Create a warning notification
-   */
+
   createWarning: (title: string, message: string, duration?: number) => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type: 'warning',
       title,
       message,
-      duration: duration ?? 5000,
+      duration: duration ?? defaultNotificationSettings.duration
     });
   },
-  
-  /**
-   * Create an info notification
-   */
+
   createInfo: (title: string, message: string, duration?: number) => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type: 'info',
       title,
       message,
-      duration: duration ?? 5000,
+      duration: duration ?? defaultNotificationSettings.duration
     });
   },
-  
-  /**
-   * Create a persistent notification
-   */
+
   createPersistent: (title: string, message: string, type: Notification['type'] = 'info') => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type,
       title,
       message,
-      duration: 0, // Never auto-dismiss
-      persistent: true,
+      duration: 0,
+      persistent: true
     });
   },
-  
-  /**
-   * Create a notification with actions
-   */
+
   createWithActions: (
-    title: string, 
-    message: string, 
+    title: string,
+    message: string,
     type: Notification['type'],
     actions: Array<{ label: string; action: () => void }>,
     duration?: number
   ) => {
-    const { addNotification } = useNotificationStore.getState();
-    addNotification({
+    useNotificationStore.getState().addNotification({
       type,
       title,
       message,
-      duration: duration ?? 0,
       actions,
+      duration: duration ?? 0
     });
   },
-  
-  /**
-   * Get notification statistics
-   */
+
   getStats: () => {
     const state = useNotificationStore.getState();
     const notifications = state.notifications;
-    
+
     return {
       total: notifications.length,
-      unread: notifications.filter(n => !n.read).length,
+      unread: notifications.filter((notification) => !notification.read).length,
       byType: {
-        success: notifications.filter(n => n.type === 'success').length,
-        error: notifications.filter(n => n.type === 'error').length,
-        warning: notifications.filter(n => n.type === 'warning').length,
-        info: notifications.filter(n => n.type === 'info').length,
+        success: notifications.filter((notification) => notification.type === 'success').length,
+        error: notifications.filter((notification) => notification.type === 'error').length,
+        warning: notifications.filter((notification) => notification.type === 'warning').length,
+        info: notifications.filter((notification) => notification.type === 'info').length
       },
-      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.timestamp : null,
-      newest: notifications.length > 0 ? notifications[0]?.timestamp : null,
+      oldest: notifications.length ? notifications[notifications.length - 1]?.timestamp : null,
+      newest: notifications.length ? notifications[0]?.timestamp : null
     };
   },
-  
-  /**
-   * Clean up old notifications
-   */
-  cleanup: (maxAge: number = 24 * 60 * 60 * 1000) => { // 24 hours default
+
+  cleanup: (maxAge: number = 24 * 60 * 60 * 1000) => {
     const state = useNotificationStore.getState();
-    const now = Date.now();
-    const cutoff = now - maxAge;
-    
-    const oldNotifications = state.notifications.filter(n => {
-      const notificationTime = new Date(n.timestamp).getTime();
-      return notificationTime < cutoff;
+    const cutoff = Date.now() - maxAge;
+
+    const oldNotifications = state.notifications.filter((notification) => {
+      const timestamp = new Date(notification.timestamp).getTime();
+      return Number.isFinite(timestamp) && timestamp < cutoff;
     });
-    
-    if (oldNotifications.length > 0) {
-      oldNotifications.forEach(n => state.removeNotification(n.id));
+
+    if (oldNotifications.length) {
+      const { removeNotification } = state;
+      oldNotifications.forEach((notification) => removeNotification(notification.id));
       logger.debug('Cleaned up old notifications', { count: oldNotifications.length });
     }
   },
-  
-  /**
-   * Create an admin success notification
-   */
+
   createAdminSuccess: (title: string, message: string) => {
-    const { addAdminNotification } = useNotificationStore.getState();
-    addAdminNotification({
+    useNotificationStore.getState().addAdminNotification({
       type: 'success',
       title,
-      message,
+      message
     });
   },
-  
-  /**
-   * Create an admin error notification
-   */
+
   createAdminError: (title: string, message: string) => {
-    const { addAdminNotification } = useNotificationStore.getState();
-    addAdminNotification({
+    useNotificationStore.getState().addAdminNotification({
       type: 'error',
       title,
-      message,
+      message
     });
   },
-  
-  /**
-   * Create an admin warning notification
-   */
+
   createAdminWarning: (title: string, message: string) => {
-    const { addAdminNotification } = useNotificationStore.getState();
-    addAdminNotification({
+    useNotificationStore.getState().addAdminNotification({
       type: 'warning',
       title,
-      message,
+      message
     });
   },
-  
-  /**
-   * Create an admin info notification
-   */
+
   createAdminInfo: (title: string, message: string) => {
-    const { addAdminNotification } = useNotificationStore.getState();
-    addAdminNotification({
+    useNotificationStore.getState().addAdminNotification({
       type: 'info',
       title,
-      message,
+      message
     });
   },
-  
-  /**
-   * Get admin notification statistics
-   */
+
   getAdminStats: () => {
     const state = useNotificationStore.getState();
     const notifications = state.adminNotifications;
-    
+
     return {
       total: notifications.length,
-      unread: notifications.filter(n => !n.read).length,
+      unread: notifications.filter((notification) => !notification.read).length,
       byType: {
-        success: notifications.filter(n => n.type === 'success').length,
-        error: notifications.filter(n => n.type === 'error').length,
-        warning: notifications.filter(n => n.type === 'warning').length,
-        info: notifications.filter(n => n.type === 'info').length,
+        success: notifications.filter((notification) => notification.type === 'success').length,
+        error: notifications.filter((notification) => notification.type === 'error').length,
+        warning: notifications.filter((notification) => notification.type === 'warning').length,
+        info: notifications.filter((notification) => notification.type === 'info').length
       },
-      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.created_at : null,
-      newest: notifications.length > 0 ? notifications[0]?.created_at : null,
+      oldest: notifications.length ? notifications[notifications.length - 1]?.created_at ?? null : null,
+      newest: notifications.length ? notifications[0]?.created_at ?? null : null
     };
   }
 };
 
-// Store subscriptions for external integrations
 export const notificationStoreSubscriptions = {
-  /**
-   * Subscribe to notification changes
-   */
-  onNotificationChange: (callback: (notifications: Notification[]) => void) => {
-    return useNotificationStore.subscribe(
-      (state) => {
-        callback(state.notifications);
-      }
-    );
-  },
-  
-  /**
-   * Subscribe to unread count changes
-   */
-  onUnreadCountChange: (callback: (count: number) => void) => {
-    return useNotificationStore.subscribe(
-      (state) => {
-        callback(state.unreadCount);
-      }
-    );
-  },
-  
-  /**
-   * Subscribe to specific notification type changes
-   */
-  onNotificationTypeChange: (type: Notification['type'], callback: (notifications: Notification[]) => void) => {
-    return useNotificationStore.subscribe(
-      (state) => {
-        callback(state.notifications.filter(n => n.type === type));
-      }
-    );
-  }
+  onNotificationChange: (callback: (notifications: Notification[]) => void) =>
+    useNotificationStore.subscribe((state) => {
+      callback(state.notifications);
+    }),
+
+  onUnreadCountChange: (callback: (count: number) => void) =>
+    useNotificationStore.subscribe((state) => {
+      callback(state.unreadCount);
+    }),
+
+  onNotificationTypeChange: (
+    type: Notification['type'],
+    callback: (notifications: Notification[]) => void
+  ) =>
+    useNotificationStore.subscribe((state) => {
+      callback(state.notifications.filter((notification) => notification.type === type));
+    })
 };
 
-// Store debugging utilities
 export const notificationStoreDebug = {
-  /**
-   * Log current notification state
-   */
   logState: () => {
     const state = useNotificationStore.getState();
     logger.debug('Notification Store State', {
@@ -642,29 +752,21 @@ export const notificationStoreDebug = {
       unread: state.unreadCount,
       settings: state.settings,
       isLoading: state.isLoading,
+      isAdding: state.isAdding,
+      isRemoving: state.isRemoving,
       error: state.error
     });
   },
-  
-  /**
-   * Log all notifications
-   */
+
   logNotifications: () => {
     const state = useNotificationStore.getState();
     logger.debug('All Notifications', { notifications: state.notifications });
   },
-  
-  /**
-   * Log notification statistics
-   */
+
   logStats: () => {
-    const stats = notificationStoreUtils.getStats();
-    logger.debug('Notification Statistics', stats);
+    logger.debug('Notification Statistics', notificationStoreUtils.getStats());
   },
-  
-  /**
-   * Clear all notifications
-   */
+
   clearAll: () => {
     useNotificationStore.getState().clearAll();
     logger.info('All notifications cleared');

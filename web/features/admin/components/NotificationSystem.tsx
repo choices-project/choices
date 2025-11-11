@@ -1,9 +1,11 @@
+'use client';
+
 /**
  * Notification System for Admin Feature
- * 
+ *
  * Provides toast notifications and alerts for admin actions
  * with different types and auto-dismiss functionality.
- * 
+ *
  * Created: December 19, 2024
  * Updated: December 19, 2024
  */
@@ -11,38 +13,34 @@
 import React from 'react';
 
 import type { AdminNotification } from '@/features/admin/types';
-import { 
-  useAdminNotifications, 
-  useAdminUnreadCount, 
-  useNotificationActions 
-} from '@/lib/stores/notificationStore';
+import {
+  useNotificationAdminNotifications,
+  useNotificationAdminUnreadCount,
+  useNotificationActions,
+} from '@/lib/stores';
 
 /**
  * Hook to use admin notification system
  */
-export function useNotifications() {
-  const notifications = useAdminNotifications();
-  const unreadCount = useAdminUnreadCount();
-  const notificationActions = useNotificationActions();
-  const { 
-    addAdminNotification, 
-    removeAdminNotification, 
-    clearAllAdminNotifications, 
-    markAdminNotificationAsRead 
-  } = notificationActions as {
-    addAdminNotification: (notification: any) => void;
-    removeAdminNotification: (id: string) => void;
-    clearAllAdminNotifications: () => void;
-    markAdminNotificationAsRead: (id: string) => void;
-  };
-  
+export function useAdminNotificationSystem() {
+  const notifications = useNotificationAdminNotifications();
+  const unreadCount = useNotificationAdminUnreadCount();
+  const {
+    addAdminNotification,
+    removeAdminNotification,
+    clearAllAdminNotifications,
+    markAdminNotificationAsRead
+  } = useNotificationActions();
+
   return {
     notifications,
     unreadCount,
-    addNotification: addAdminNotification,
-    removeNotification: removeAdminNotification,
-    clearAllNotifications: clearAllAdminNotifications,
-    markAsRead: markAdminNotificationAsRead,
+    actions: {
+      addNotification: addAdminNotification,
+      removeNotification: removeAdminNotification,
+      clearAllNotifications: clearAllAdminNotifications,
+      markAsRead: markAdminNotificationAsRead
+    }
   };
 }
 
@@ -51,16 +49,20 @@ export function useNotifications() {
 /**
  * Individual notification component
  */
-function NotificationItem({ notification }: { notification: AdminNotification }) {
-  const { removeNotification, markAsRead } = useNotifications();
+type NotificationItemProps = {
+  notification: AdminNotification;
+  onRemove: (id: string) => void;
+  onMarkAsRead: (id: string) => void;
+};
 
+function NotificationItem({ notification, onRemove, onMarkAsRead }: NotificationItemProps) {
   const handleDismiss = () => {
-    removeNotification(notification.id);
+    onRemove(notification.id);
   };
 
   const handleClick = () => {
     if (!notification.read) {
-      markAsRead(notification.id);
+      onMarkAsRead(notification.id);
     }
   };
 
@@ -150,7 +152,10 @@ function NotificationItem({ notification }: { notification: AdminNotification })
  * Notification container component
  */
 export function NotificationContainer() {
-  const { notifications, clearAllNotifications } = useNotifications();
+  const {
+    notifications,
+    actions: { clearAllNotifications, removeNotification, markAsRead }
+  } = useAdminNotificationSystem();
 
   if (notifications.length === 0) {
     return null;
@@ -173,7 +178,12 @@ export function NotificationContainer() {
           </div>
         )}
         {notifications.map(notification => (
-          <NotificationItem key={notification.id} notification={notification} />
+          <NotificationItem
+            key={notification.id}
+            notification={notification}
+            onRemove={removeNotification}
+            onMarkAsRead={markAsRead}
+          />
         ))}
       </div>
     </div>

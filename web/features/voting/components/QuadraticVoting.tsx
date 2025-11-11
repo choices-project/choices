@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption } from '../types'
 
@@ -29,10 +30,13 @@ export default function QuadraticVoting({
   userVote,
   totalCredits = 100
 }: QuadraticVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [allocations, setAllocations] = useState<{ [optionId: string]: number }>({})
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize allocations from user's previous vote or empty
   useEffect(() => {
@@ -58,7 +62,7 @@ export default function QuadraticVoting({
   }
 
   const handleAllocationChange = (optionId: string, credits: number) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     const currentSpent = getTotalSpent()
     const currentOptionSpent = (allocations[optionId] || 0) ** 2
@@ -78,7 +82,7 @@ export default function QuadraticVoting({
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     // Validate that at least some credits are allocated
     const totalAllocated = Object.values(allocations).reduce((sum: number, credits: number) => sum + credits, 0)
@@ -119,6 +123,9 @@ export default function QuadraticVoting({
         })
       }
       
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(pollId, validAllocations)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -127,7 +134,7 @@ export default function QuadraticVoting({
     }
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

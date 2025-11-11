@@ -15,6 +15,10 @@ import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
   const isAdmin = request.headers.get('x-admin-key') === adminKey;

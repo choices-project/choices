@@ -7,6 +7,7 @@
  * Status: ✅ ACTIVE
  */
 
+import type { PollWizardData, PollWizardSettings } from '@/lib/polls/types';
 import type { Database } from '@/types/database';
 import type { PollHashtagIntegration as CorePollHashtagIntegration } from '@/features/hashtags/types';
 
@@ -154,32 +155,19 @@ export type PollUpdateData = {
 
 export type PollHashtagIntegration = CorePollHashtagIntegration;
 
-export type PollWizardData = {
-  title: string
-  description: string
-  category: string
-  options: string[]
-  tags: string[]
-  settings: {
-    votingMethod: string
-    allowMultipleVotes: boolean
-    showResults: boolean
-    allowComments: boolean
-  }
-  privacyLevel: string
-}
+export type { PollWizardData, PollWizardSettings } from '@/lib/polls/types';
 
 export type PollWizardState = {
-  currentStep: number
-  totalSteps: number
-  data: PollWizardData
-  errors: Record<string, string>
-  isLoading: boolean
-  progress: number
-  canProceed: boolean
-  canGoBack: boolean
-  isComplete: boolean
-}
+  currentStep: number;
+  totalSteps: number;
+  data: PollWizardData;
+  errors: Record<string, string>;
+  isLoading: boolean;
+  progress: number;
+  canProceed: boolean;
+  canGoBack: boolean;
+  isComplete: boolean;
+};
 
 export type PollTemplate = {
   id: string

@@ -27,7 +27,8 @@ describe('Electoral schemas', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toContain('name');
+      const issue = result.error.issues[0];
+      expect(issue?.path ?? []).toContain('name');
     }
   });
 

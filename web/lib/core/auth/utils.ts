@@ -55,12 +55,12 @@ export function getCurrentUser(request: NextRequest): JWTPayload | null {
 
 export function requireAuth(request: NextRequest): { user: JWTPayload } | { error: Response } {
   const user = getCurrentUser(request)
-  
+
   if (!user) {
     return {
       error: new Response(
         JSON.stringify({ error: 'Authentication required' }),
-        { 
+        {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
         }

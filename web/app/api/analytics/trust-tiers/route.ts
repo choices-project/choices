@@ -26,6 +26,10 @@ import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cach
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
+
 export const GET = withErrorHandling(async (_request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();

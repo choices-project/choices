@@ -1,84 +1,123 @@
 'use client';
 
-import { Settings, Heart, Shield, Save } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { Settings, Heart, Shield, Save, Loader2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
+import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
+type StatusMessage = {
+  type: 'success' | 'error';
+  text: string;
+};
+
+const arraysAreEqual = (a: string[], b: string[]) => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
 export default function ProfilePreferencesPage() {
   const user = useUser();
-  const [userInterests, setUserInterests] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
+  const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
 
-  // Load user interests
+  const initialInterests = useMemo<string[]>(() => {
+    return profile?.primary_concerns ?? [];
+  }, [profile?.primary_concerns]);
+
+  const [userInterests, setUserInterests] = useState<string[]>(initialInterests);
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+
   useEffect(() => {
-    const loadUserInterests = async () => {
-      if (!user) return;
-      
-      try {
-        const response = await fetch('/api/profile');
-        if (response.ok) {
-          const data = await response.json();
-          // Extract interests from the profile data
-          const interests = data.interests?.categories || data.profile?.primary_concerns || [];
-          setUserInterests(interests);
-        }
-      } catch (error) {
-        logger.error('Failed to load user interests:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!arraysAreEqual(userInterests, initialInterests)) {
+      setUserInterests(initialInterests);
+    }
+  }, [initialInterests, userInterests]);
 
-    loadUserInterests();
-  }, [user]);
+  useEffect(() => {
+    if (statusMessage?.type === 'success') {
+      const timer = window.setTimeout(() => setStatusMessage(null), 3000);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [statusMessage]);
 
   const handleSaveInterests = async (interests: string[]) => {
-    setSaving(true);
-    setMessage(null);
+    if (arraysAreEqual(interests, initialInterests)) {
+      return;
+    }
+
+    if (isUpdating) {
+      return;
+    }
+
+    setStatusMessage(null);
 
     try {
-      const response = await fetch('/api/profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          interests: {
-            categories: interests,
-            keywords: [],
-            topics: []
-          }
-        }),
-      });
+      const result = await updateProfile({ primary_concerns: interests });
 
-      if (response.ok) {
+      if (result.success) {
         setUserInterests(interests);
-        setMessage('Your interests have been saved successfully!');
-        setTimeout(() => setMessage(null), 3000);
+        setStatusMessage({
+          type: 'success',
+          text: 'Your interests have been saved successfully!',
+        });
       } else {
-        throw new Error('Failed to save interests');
+        throw new Error(result.error ?? 'Failed to save interests');
       }
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to save interests. Please try again.';
       logger.error('Failed to save interests:', error);
-      setMessage('Failed to save interests. Please try again.');
-    } finally {
-      setSaving(false);
+      setStatusMessage({
+        type: 'error',
+        text: message,
+      });
     }
   };
 
-  if (loading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Sign in to manage your preferences</h1>
+          <p className="text-gray-600">You need to be logged in to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">We couldn&apos;t load your profile</h1>
+          <p className="text-gray-600">Please refresh the page or try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const activeMessage = statusMessage ?? (updateError
+    ? { type: 'error' as const, text: updateError }
+    : null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,15 +136,17 @@ export default function ProfilePreferencesPage() {
         </div>
 
         {/* Message */}
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.includes('successfully') 
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
+        {activeMessage && (
+          <div
+            className={`mb-6 p-4 rounded-lg ${
+              activeMessage.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}
+          >
             <div className="flex items-center space-x-2">
               <Save className="h-5 w-5" />
-              <span>{message}</span>
+              <span>{activeMessage.text}</span>
             </div>
           </div>
         )}
@@ -117,10 +158,13 @@ export default function ProfilePreferencesPage() {
               <Heart className="h-5 w-5 text-purple-600" />
               <h2 className="text-xl font-semibold text-gray-900">Content Preferences</h2>
             </div>
-            <InterestSelection
-              initialInterests={userInterests}
-              onSave={handleSaveInterests}
-            />
+            <InterestSelection initialInterests={userInterests} onSave={handleSaveInterests} />
+            {isUpdating && (
+              <p className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving your interests...
+              </p>
+            )}
           </div>
 
           {/* Data Usage Explanation */}

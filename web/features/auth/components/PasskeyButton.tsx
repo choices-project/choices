@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-
-
-// Dynamic imports to avoid build-time decorator issues
-// import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
 import { logger } from '@/lib/utils/logger';
 import { T } from '@/tests/registry/testIds';
 
+import {
+  useBiometricError,
+  useBiometricRegistering,
+  useBiometricSupported,
+  useInitializeBiometricState,
+  useUserActions,
+} from '../lib/store';
 import WebAuthnPrompt from './WebAuthnPrompt';
 
 type PasskeyButtonProps = {
@@ -18,123 +21,131 @@ type PasskeyButtonProps = {
   onSuccess?: () => void;
   onError?: (error: string) => void;
   className?: string;
-}
+};
 
-export function PasskeyButton({ 
-  mode, 
-  primary = false, 
+export function PasskeyButton({
+  mode,
+  primary = false,
   disabled = false,
   onSuccess,
   onError,
-  className = ''
+  className = '',
 }: PasskeyButtonProps) {
-  // ALL HOOKS MUST BE CALLED IN THE SAME ORDER EVERY TIME
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [webAuthnSupported, setWebAuthnSupported] = useState<boolean | null>(null);
+  const [localLoading, setLocalLoading] = React.useState(false);
+  const [showPrompt, setShowPrompt] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
+  useInitializeBiometricState({ fetchCredentials: mode === 'register' });
+
+  const isSupported = useBiometricSupported();
+  const storeRegistering = useBiometricRegistering();
+  const storeError = useBiometricError();
+
+  const {
+    setBiometricRegistering,
+    setBiometricError,
+    setBiometricSuccess,
+    setBiometricCredentials,
+  } = useUserActions();
+
+  React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    const checkSupport = async () => {
-      try {
-        const { isWebAuthnSupported } = await import('@/features/auth/lib/webauthn/client');
-        setWebAuthnSupported(isWebAuthnSupported());
-      } catch (error) {
-        logger.error('Error checking WebAuthn support', error instanceof Error ? error : new Error(String(error)));
-        setWebAuthnSupported(false);
-      }
-    };
-    checkSupport();
-  }, []);
+  const loading = mode === 'register' ? storeRegistering || localLoading : localLoading;
+  const error = storeError;
 
-  // Don't render during SSR
-  if (!mounted) {
-    return null;
-  }
-
-  // Don't render until we know WebAuthn support status
-  if (webAuthnSupported === null) {
-    return null;
-  }
-
-  // Don't show button if not supported
-  if (!webAuthnSupported) {
-    return null;
-  }
-
-  const handleClick = async () => {
+  const handleClick = React.useCallback(() => {
     if (loading || disabled) return;
     setShowPrompt(true);
-  };
+  }, [disabled, loading]);
 
-  const handlePromptComplete = async () => {
-    setLoading(true);
-    setError(null);
+  const handlePromptComplete = React.useCallback(async () => {
+    setLocalLoading(true);
+    if (mode === 'register') {
+      setBiometricRegistering(true);
+      setBiometricError(null);
+      setBiometricSuccess(false);
+    }
 
     try {
-      // Dynamic import to avoid build-time decorator issues
       const { beginRegister, beginAuthenticate } = await import('@/features/auth/lib/webauthn/client');
-      
-      let result;
-      if (mode === 'register') {
-        result = await beginRegister();
-      } else {
-        result = await beginAuthenticate();
-      }
+
+      const result = mode === 'register' ? await beginRegister() : await beginAuthenticate();
 
       if (result.success) {
+        if (mode === 'register') {
+          setBiometricSuccess(true);
+          setBiometricCredentials(true);
+        }
         onSuccess?.();
       } else {
         const errorMsg = result.error ?? 'Operation failed';
-        setError(errorMsg);
+        if (mode === 'register') {
+          setBiometricError(errorMsg);
+        }
         onError?.(errorMsg);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Something went wrong';
-      setError(errorMsg);
+      if (mode === 'register') {
+        setBiometricError(errorMsg);
+      }
       onError?.(errorMsg);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
+      if (mode === 'register') {
+        setBiometricRegistering(false);
+      }
       setShowPrompt(false);
     }
-  };
+  }, [
+    mode,
+    onError,
+    onSuccess,
+    setBiometricCredentials,
+    setBiometricError,
+    setBiometricRegistering,
+    setBiometricSuccess,
+  ]);
 
-  const handlePromptCancel = () => {
+  const handlePromptCancel = React.useCallback(() => {
     setShowPrompt(false);
-  };
+  }, []);
 
-  const getButtonText = () => {
+  const getButtonText = React.useCallback(() => {
     if (loading) {
       return mode === 'register' ? 'Creating...' : 'Signing in...';
     }
-    
-    if (mode === 'register') {
-      return 'Create Passkey';
-    } else {
-      return 'Use Passkey (fast, no password)';
-    }
-  };
 
-  const getIcon = () => {
+    return mode === 'register' ? 'Create Passkey' : 'Use Passkey (fast, no password)';
+  }, [loading, mode]);
+
+  const getIcon = React.useCallback(() => {
     if (loading) {
       return '⏳';
     }
     return '🔐';
-  };
+  }, [loading]);
 
-  const baseClasses = primary 
-    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+  const baseClasses = primary
+    ? 'bg-blue-600 text-white hover:bg-blue-700'
     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+
+  if (!mounted || isSupported === null) {
+    return null;
+  }
+
+  if (!isSupported) {
+    return null;
+  }
 
   return (
     <div className={className}>
       <button
-        data-testid={mode === 'register' ? T.WEBAUTHN.WEBAUTHN_REGISTER : T.WEBAUTHN.WEBAUTHN_AUTHENTICATE}
+        data-testid={
+          mode === 'register' ? T.WEBAUTHN.WEBAUTHN_REGISTER : T.WEBAUTHN.WEBAUTHN_AUTHENTICATE
+        }
         onClick={handleClick}
         disabled={loading || disabled}
         className={`
@@ -146,16 +157,17 @@ export function PasskeyButton({
         <span>{getIcon()}</span>
         <span>{getButtonText()}</span>
       </button>
-      
-      {error && (
-        <div className="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+
+      {error && mode === 'register' && (
+        <div className="mt-2 rounded border border-red-400 bg-red-100 p-2 text-sm text-red-700">
           {error}
         </div>
       )}
-      
+
       {mode === 'register' && (
         <p className="mt-2 text-xs text-gray-600">
-          Passkeys live on your device. We never see your fingerprint, face, or a reusable secret—only a public key.
+          Passkeys live on your device. We never see your fingerprint, face, or a reusable secret—only
+          a public key.
         </p>
       )}
 
@@ -165,9 +177,12 @@ export function PasskeyButton({
             mode={mode}
             onComplete={handlePromptComplete}
             onCancel={handlePromptCancel}
-            onError={(error) => {
-              const errorMessage = error instanceof Error ? error.message : String(error);
-              setError(errorMessage);
+            onError={(promptError) => {
+              const errorMessage =
+                promptError instanceof Error ? promptError.message : String(promptError);
+              if (mode === 'register') {
+                setBiometricError(errorMessage);
+              }
               onError?.(errorMessage);
             }}
           >
@@ -181,21 +196,20 @@ export function PasskeyButton({
   );
 }
 
-export function EmailLinkButton({ 
-  primary = false, 
+export function EmailLinkButton({
+  primary = false,
   disabled = false,
   onSuccess,
   onError,
-  className = ''
+  className = '',
 }: Omit<PasskeyButtonProps, 'mode'>) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = React.useState(false);
 
-  const handleClick = async () => {
+  const handleClick = React.useCallback(async () => {
     if (loading || disabled) return;
 
     setLoading(true);
     try {
-      // Implement email link functionality
       logger.info('Email link clicked');
       onSuccess?.();
     } catch (err) {
@@ -203,10 +217,10 @@ export function EmailLinkButton({
     } finally {
       setLoading(false);
     }
-  };
+  }, [disabled, loading, onError, onSuccess]);
 
-  const baseClasses = primary 
-    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+  const baseClasses = primary
+    ? 'bg-blue-600 text-white hover:bg-blue-700'
     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
 
   return (

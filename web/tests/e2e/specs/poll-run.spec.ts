@@ -5,6 +5,7 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 const POLL_ID = 'harness-poll';
 const RESULTS_ROUTE = new RegExp(`/api/polls/${POLL_ID}/results$`);
 const VOTE_ROUTE = new RegExp(`/api/polls/${POLL_ID}/vote$`);
+const CANCEL_ROUTE = new RegExp(`/api/voting/records/vote-harness$`);
 
 const getEventCount = async (page: Page, action: string) => {
   return page.evaluate((target) => {
@@ -24,7 +25,7 @@ test.describe('Poll viewer harness', () => {
       });
 
       window.addEventListener('playwright:analytics-ready', () => {
-        globalThis.__playwrightAnalytics?.enable();
+        globalThis.__playwrightAnalytics?.enable?.();
       });
     });
 
@@ -61,6 +62,14 @@ test.describe('Poll viewer harness', () => {
         body: JSON.stringify({ voteId: 'vote-harness' }),
       });
     });
+
+    await page.route(CANCEL_ROUTE, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
   });
 
   test('emits analytics for viewing, sharing, and voting', async ({ page }) => {
@@ -78,7 +87,10 @@ test.describe('Poll viewer harness', () => {
     await page.getByTestId('submit-vote-button').click();
     await expect.poll(() => getEventCount(page, 'vote_cast')).toBeGreaterThan(0);
 
-    await page.evaluate(() => globalThis.__playwrightAnalytics?.reset());
+    await page.getByTestId('undo-vote-button').click();
+    await expect.poll(() => getEventCount(page, 'vote_undo')).toBeGreaterThan(0);
+
+    await page.evaluate(() => globalThis.__playwrightAnalytics?.reset?.());
   });
 });
 

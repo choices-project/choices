@@ -1,4 +1,4 @@
-import type { Ballot, BallotCandidate, BallotContest, VotingRecord } from '@/lib/stores/votingStore';
+import type { Ballot, BallotCandidate, BallotContest, VotingRecord } from '@/features/voting/lib/store';
 
 import type { VoteSubmission } from '../components/VotingInterface';
 

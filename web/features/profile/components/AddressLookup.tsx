@@ -16,9 +16,11 @@
 'use client';
 
 import { MapPin, Search, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
+import { useProfileUpdate } from '@/features/profile/hooks/use-profile';
 import { logger } from '@/lib/utils/logger';
+import type { ProfileDemographics } from '@/types/profile';
 
 type District = {
   state: string;
@@ -44,6 +46,7 @@ export function AddressLookup({
   const [district, setDistrict] = useState<District | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const { updateProfile } = useProfileUpdate();
 
   const handleLookup = async () => {
     if (!address.trim()) {
@@ -109,44 +112,49 @@ export function AddressLookup({
     }
   };
 
-  const saveDistrictToProfile = async (districtData: District) => {
-    try {
-      const response = await fetch('/api/profile/update', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          demographics: {
-            district: districtData.district,
-            state: districtData.state,
-            county: districtData.county,
-          },
-        }),
-      });
+  const saveDistrictToProfile = useCallback(
+    async (districtData: District) => {
+      try {
+        const location: ProfileDemographics['location'] = {
+          state: districtData.state,
+        };
 
-      if (!response.ok) {
-        throw new Error('Failed to save district to profile');
+        if (districtData.district) {
+          location.district = districtData.district;
+        }
+
+        if (districtData.county) {
+          location.county = districtData.county;
+        }
+
+        const demographics: ProfileDemographics = {
+          location,
+        };
+
+        const result = await updateProfile({ demographics });
+
+        if (!result.success) {
+          throw new Error(result.error ?? 'Failed to save district to profile');
+        }
+
+        setIsSaved(true);
+        
+        if (onDistrictSaved) {
+          onDistrictSaved(districtData);
+        }
+
+        logger.info('District saved to profile', {
+          district: districtData.district,
+          state: districtData.state,
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to save district';
+        setError(errorMessage);
+        logger.error('Failed to save district to profile', err instanceof Error ? err : new Error(errorMessage));
       }
-
-      const data = await response.json();
-      setIsSaved(true);
-      
-      if (onDistrictSaved) {
-        onDistrictSaved(districtData);
-      }
-
-      logger.info('District saved to profile', {
-        district: districtData.district,
-        state: districtData.state,
-        success: data.success,
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save district';
-      setError(errorMessage);
-      logger.error('Failed to save district to profile', err instanceof Error ? err : new Error(errorMessage));
-    }
-  };
+    },
+    [onDistrictSaved, updateProfile]
+  );
 
   const handleManualSave = async () => {
     if (district) {

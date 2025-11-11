@@ -12,22 +12,35 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
 
-const mockGetSupabaseServerClient = jest.fn();
+type CacheResolver = () => Promise<unknown>;
+type CacheEntry = { data: unknown; fromCache: boolean };
+
+type SupabaseSelectFn = jest.MockedFunction<() => Promise<{ data: unknown; error: unknown }>>;
+type SupabaseClientStub = {
+  auth: {
+    getUser: jest.MockedFunction<() => Promise<{ data: { user: { id: string; role: string } }; error: null }>>;
+  };
+  from: jest.MockedFunction<(table: string) => { select: SupabaseSelectFn }>;
+};
+
+const mockGetSupabaseServerClient = jest.fn<() => Promise<SupabaseClientStub>>();
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: mockGetSupabaseServerClient,
 }));
 
-const mockCanAccessAnalytics = jest.fn();
-const mockLogAnalyticsAccess = jest.fn();
+const mockCanAccessAnalytics = jest.fn<(request: NextRequest, skipAudit?: boolean) => boolean>();
+const mockLogAnalyticsAccess = jest.fn<(request: NextRequest, resource: string, granted: boolean) => Promise<void>>();
 jest.mock('@/lib/auth/adminGuard', () => ({
   canAccessAnalytics: mockCanAccessAnalytics,
   logAnalyticsAccess: mockLogAnalyticsAccess,
 }));
 
-const mockGetCached = jest.fn();
-const mockGenerateCacheKey = jest.fn((_prefix: string, params: Record<string, unknown>) => JSON.stringify(params));
+const mockGetCached = jest.fn<(key: string, ttl: number, resolver: CacheResolver) => Promise<CacheEntry>>();
+const mockGenerateCacheKey = jest.fn((prefix: string, params: Record<string, unknown>) =>
+  `${prefix}-${JSON.stringify(params)}`
+);
 jest.mock('@/lib/cache/analytics-cache', () => ({
   getCached: mockGetCached,
   CACHE_TTL: { DISTRICT_HEATMAP: 900 },
@@ -35,7 +48,14 @@ jest.mock('@/lib/cache/analytics-cache', () => ({
   generateCacheKey: mockGenerateCacheKey,
 }));
 
-const mockDemographics = jest.fn();
+const mockDemographics = jest.fn<
+  () => Promise<{
+    users: Array<{
+      id: string;
+      demographics: { location: { state: string; district: string } };
+    }>;
+  }>
+>();
 jest.mock('@/features/analytics/lib/privacyFilters', () => ({
   PrivacyAwareQueryBuilder: jest.fn().mockImplementation(() => ({
     getDemographics: mockDemographics,
@@ -46,29 +66,31 @@ jest.mock('@/features/analytics/lib/privacyFilters', () => ({
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
 jest.mock('@/lib/utils/logger', () => ({ logger: mockLogger }));
 
-let GET: (request: Request) => Promise<Response>;
+let GET: (request: NextRequest) => Promise<NextResponse>;
 
-const buildSupabaseStub = () => {
-  const selectMocks = {
-    civic_actions: jest.fn().mockResolvedValue({
+const buildSupabaseStub = (): SupabaseClientStub => {
+  const selectMocks: Record<string, SupabaseSelectFn> = {
+    civic_actions: jest.fn(async () => ({
       data: [{ id: '1', target_district: 'CA-12' }],
       error: null,
-    }),
-    representatives_core: jest.fn().mockResolvedValue({
+    })),
+    representatives_core: jest.fn(async () => ({
       data: [{ id: '1', district: 'CA-12' }],
       error: null,
-    }),
-  } as Record<string, jest.Mock>;
+    })),
+  };
 
   return {
     auth: {
-      getUser: jest.fn().mockResolvedValue({
+      getUser: jest.fn(async () => ({
         data: { user: { id: 'admin-user', role: 'admin' } },
         error: null,
-      }),
+      })),
     },
     from: jest.fn((table: string) => ({
-      select: selectMocks[table] ?? jest.fn().mockResolvedValue({ data: [], error: null }),
+      select:
+        selectMocks[table] ??
+        jest.fn(async () => ({ data: [], error: null })) as SupabaseSelectFn,
     })),
   };
 };
@@ -137,8 +159,8 @@ beforeEach(() => {
       },
     ],
   });
-  mockGetCached.mockImplementation(async (_key: string, _ttl: number, _resolver: () => Promise<unknown>) => ({
-    data: await _resolver(),
+  mockGetCached.mockImplementation(async (_key, _ttl, resolver) => ({
+    data: await resolver(),
     fromCache: false,
   }));
   mockGetSupabaseServerClient.mockResolvedValue(buildSupabaseStub());
@@ -183,11 +205,12 @@ describe('GET /api/v1/civics/heatmap', () => {
 
   it('returns empty dataset when Supabase RPC reports an error', async () => {
     const supabaseWithError = buildSupabaseStub();
-    supabaseWithError.from = jest.fn(() => ({
-      select: jest.fn().mockResolvedValue({ data: [], error: null }),
-    }));
+    supabaseWithError.from = jest
+      .fn<(table: string) => { select: SupabaseSelectFn }>(() => ({
+        select: jest.fn(async () => ({ data: [], error: null })) as SupabaseSelectFn,
+      }));
     mockGetSupabaseServerClient.mockResolvedValueOnce(supabaseWithError);
-    mockGetCached.mockImplementationOnce(async (_key: string, _ttl: number, _resolver: () => Promise<unknown>) => ({
+    mockGetCached.mockImplementationOnce(async (_key, _ttl, _resolver) => ({
       data: {
         ok: true,
         heatmap: [],

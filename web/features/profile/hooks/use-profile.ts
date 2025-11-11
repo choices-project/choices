@@ -1,38 +1,30 @@
 /**
  * Profile Feature Hooks
  *
- * React Query hooks for profile management
- * Consolidates profile hooks from across the codebase
- *
- * Created: December 19, 2024
- * Status: ✅ CONSOLIDATED
+ * Zustand-powered hooks for profile management. Provides a thin wrapper
+ * around the profile store so feature components can consume a consistent API.
  */
 
 'use client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withOptional } from '@/lib/util/objects';
+import { useCallback, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+
+import { useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 
-
-
-import type { UserProfile, ProfileUpdateData, ExportOptions, ProfileActionResult ,
-UseProfileReturn,
-  UseProfileUpdateReturn,
+import type {
+  AvatarUploadResult,
+  ExportOptions,
+  ProfileActionResult,
+  ProfileExportData,
+  ProfileUpdateData,
   UseProfileAvatarReturn,
-  UseProfileExportReturn
+  UseProfileExportReturn,
+  UseProfileReturn,
+  UseProfileUpdateReturn,
+  UserProfile,
 } from '../index';
-import {
-  getCurrentProfile,
-  updateProfile,
-  updateProfileAvatar,
-  exportUserData,
-  deleteProfile
-} from '../lib/profile-service';
-
-// ============================================================================
-// QUERY KEYS
-// ============================================================================
 
 export const profileQueryKeys = {
   all: ['profile'] as const,
@@ -41,230 +33,175 @@ export const profileQueryKeys = {
   export: () => [...profileQueryKeys.all, 'export'] as const,
 } as const;
 
-// ============================================================================
-// PROFILE QUERY HOOKS
-// ============================================================================
-
-/**
- * Hook to get current user profile
- * Superior implementation with proper caching and error handling
- */
 export function useProfile(): UseProfileReturn {
-  const query = useQuery({
-    queryKey: profileQueryKeys.current(),
-    queryFn: getCurrentProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
+  const {
+    profile,
+    userProfile,
+    isProfileLoaded,
+    isProfileLoading,
+    error,
+    loadProfile,
+    refreshProfile,
+  } = useProfileStore(
+    useShallow((state) => ({
+      profile: state.profile,
+      userProfile: state.userProfile,
+      isProfileLoaded: state.isProfileLoaded,
+      isProfileLoading: state.isProfileLoading,
+      error: state.error,
+      loadProfile: state.loadProfile,
+      refreshProfile: state.refreshProfile,
+    })),
+  );
+
+  useEffect(() => {
+    if (!isProfileLoaded && !isProfileLoading) {
+      void loadProfile();
+    }
+  }, [isProfileLoaded, isProfileLoading, loadProfile]);
+
+  const refetch = useCallback(async () => {
+    await refreshProfile();
+  }, [refreshProfile]);
 
   return {
-    profile: query.data?.data ?? null,
-    isLoading: query.isLoading,
-    error: query.error?.message ?? null,
-    refetch: async () => {
-      await query.refetch();
-    },
+    profile: (profile ?? userProfile) as UserProfile | null,
+    isLoading: isProfileLoading,
+    error,
+    refetch,
   };
 }
 
-// ============================================================================
-// PROFILE MUTATION HOOKS
-// ============================================================================
-
-/**
- * Hook to update current user profile
- * Superior implementation with optimistic updates
- */
 export function useProfileUpdate(): UseProfileUpdateReturn {
-  const queryClient = useQueryClient();
+  const { updateProfile: updateProfileAction, isUpdating, error } = useProfileStore(
+    useShallow((state) => ({
+      updateProfile: state.updateProfile,
+      isUpdating: state.isUpdating,
+      error: state.error,
+    })),
+  );
 
-  const mutation = useMutation({
-    mutationFn: updateProfile,
-    onMutate: async (newData) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: profileQueryKeys.current() });
-
-      // Snapshot previous value
-      const previousProfile = queryClient.getQueryData(profileQueryKeys.current());
-
-      // Optimistically update
-      queryClient.setQueryData(profileQueryKeys.current(), (old: unknown) => {
-        if (!old || typeof old !== 'object' || !('data' in old)) return old;
-        const oldData = old as { data: UserProfile };
-        const currentProfile = (oldData.data ?? {}) as Record<string, unknown>;
-        const mergedProfile = withOptional(
-          currentProfile,
-          (newData ?? {}) as Record<string, unknown>
-        ) as UserProfile;
-        return withOptional(oldData as Record<string, unknown>, { data: mergedProfile }) as {
-          data: UserProfile;
-        };
-      });
-
-      return { previousProfile };
+  const updateProfile = useCallback(
+    async (data: ProfileUpdateData): Promise<ProfileActionResult> => {
+      return await updateProfileAction(data);
     },
-    onError: (err, newData, context) => {
-      // Rollback on error
-      if (context?.previousProfile) {
-        queryClient.setQueryData(profileQueryKeys.current(), context.previousProfile);
-      }
-    },
-    onSettled: () => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: profileQueryKeys.current() });
-    },
-  });
+    [updateProfileAction],
+  );
 
   return {
-    updateProfile: async (updates: ProfileUpdateData): Promise<ProfileActionResult> => {
-      const result = await mutation.mutateAsync(updates);
-      return result;
-    },
-    isUpdating: mutation.isPending,
-    error: mutation.error?.message ?? null,
+    updateProfile,
+    isUpdating,
+    error,
   };
 }
 
-/**
- * Hook to update profile avatar
- * Superior implementation with file handling
- */
 export function useProfileAvatar(): UseProfileAvatarReturn {
-  const queryClient = useQueryClient();
+  const { updateAvatar, removeAvatar, isUploadingAvatar, error } = useProfileStore(
+    useShallow((state) => ({
+      updateAvatar: state.updateAvatar,
+      removeAvatar: state.removeAvatar,
+      isUploadingAvatar: state.isUploadingAvatar,
+      error: state.error,
+    })),
+  );
 
-  const mutation = useMutation({
-    mutationFn: updateProfileAvatar,
-    onSuccess: () => {
-      // Invalidate profile queries to refetch with new avatar
-      queryClient.invalidateQueries({ queryKey: profileQueryKeys.current() });
+  const uploadAvatar = useCallback(
+    async (file: File): Promise<AvatarUploadResult> => {
+      return await updateAvatar(file);
     },
-  });
+    [updateAvatar],
+  );
 
   return {
-    uploadAvatar: async (file: File) => {
-      return await mutation.mutateAsync(file);
-    },
-    isUploading: mutation.isPending,
-    error: mutation.error?.message ?? null,
+    uploadAvatar,
+    removeAvatar,
+    isUploading: isUploadingAvatar,
+    error,
   };
 }
 
-/**
- * Hook to export user data
- * Superior implementation with proper data handling
- */
 export function useProfileExport(): UseProfileExportReturn {
-  const mutation = useMutation({
-    mutationFn: exportUserData,
-    onSuccess: async (data) => {
-      // Create and download file
-      if (data) {
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-          type: 'application/json'
-        });
+  const { exportProfile: exportProfileAction, isExporting, error } = useProfileStore(
+    useShallow((state) => ({
+      exportProfile: state.exportProfile,
+      isExporting: state.isExporting,
+      error: state.error,
+    })),
+  );
 
-        // Use SSR-safe browser API access
-        try {
-          const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
-          const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
-          if (url) {
-            const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
-            if (a) {
-              a.href = url;
-              a.download = `profile-export-${new Date().toISOString().split('T')[0]}.json`;
-              safeDocument(d => d.body?.appendChild?.(a));
-              a.click();
-              safeDocument(d => d.body?.removeChild?.(a));
-              safeWindow(w => w.URL?.revokeObjectURL?.(url));
-            }
-          }
-        } catch (error) {
-          logger.error('Error downloading export file:', error);
-        }
+  const exportProfile = useCallback(
+    async (options?: ExportOptions): Promise<ProfileExportData> => {
+      const data = await exportProfileAction(options);
+
+      if (!data) {
+        const message = 'Failed to export profile data';
+        logger.error(message);
+        throw new Error(message);
       }
+
+      return data;
     },
-  });
+    [exportProfileAction],
+  );
 
   return {
-    exportProfile: async (options?: ExportOptions) => {
-      return await mutation.mutateAsync(options);
-    },
-    isExporting: mutation.isPending,
-    error: mutation.error?.message ?? null,
+    exportProfile,
+    isExporting,
+    error,
   };
 }
 
-/**
- * Hook to delete user profile
- * Handles profile deletion with confirmation
- */
 export function useProfileDelete() {
-  const queryClient = useQueryClient();
+  const { deleteProfile: deleteProfileAction, isUpdating, error } = useProfileStore(
+    useShallow((state) => ({
+      deleteProfile: state.deleteProfile,
+      isUpdating: state.isUpdating,
+      error: state.error,
+    })),
+  );
 
-  return useMutation({
-    mutationFn: deleteProfile,
-    onSuccess: () => {
-      // Clear all profile-related queries
-      queryClient.removeQueries({ queryKey: profileQueryKeys.all });
-      // Redirect to home page or show success message
-      window.location.href = '/';
-    },
-  });
+  const deleteProfile = useCallback(async (): Promise<ProfileActionResult> => {
+    return await deleteProfileAction();
+  }, [deleteProfileAction]);
+
+  return {
+    deleteProfile,
+    isDeleting: isUpdating,
+    error,
+  };
 }
 
-// ============================================================================
-// COMPOSITE HOOKS
-// ============================================================================
-
-/**
- * Hook to get profile loading states
- * Superior implementation for better UX
- */
 export function useProfileLoadingStates() {
-  const profileQuery = useProfile();
-  const updateMutation = useProfileUpdate();
-  const avatarMutation = useProfileAvatar();
-  const exportMutation = useProfileExport();
+  const { isProfileLoading, isUpdating, isUploadingAvatar, isExporting } = useProfileStore(
+    useShallow((state) => ({
+      isProfileLoading: state.isProfileLoading,
+      isUpdating: state.isUpdating,
+      isUploadingAvatar: state.isUploadingAvatar,
+      isExporting: state.isExporting,
+    })),
+  );
 
   return {
-    isLoading: profileQuery.isLoading,
-    isUpdating: updateMutation.isUpdating,
-    isUpdatingAvatar: avatarMutation.isUploading,
-    isExporting: exportMutation.isExporting,
-    isAnyUpdating: updateMutation.isUpdating || avatarMutation.isUploading || exportMutation.isExporting,
+    isLoading: isProfileLoading,
+    isUpdating,
+    isUpdatingAvatar: isUploadingAvatar,
+    isExporting,
+    isAnyUpdating: isUpdating || isUploadingAvatar || isExporting,
   };
 }
 
-/**
- * Hook to get profile error states
- * Superior implementation for better error handling
- */
 export function useProfileErrorStates() {
-  const profileQuery = useProfile();
-  const updateMutation = useProfileUpdate();
-  const avatarMutation = useProfileAvatar();
-  const exportMutation = useProfileExport();
+  const error = useProfileStore((state) => state.error);
 
   return {
-    profileError: profileQuery.error,
-    updateError: updateMutation.error,
-    avatarError: avatarMutation.error,
-    exportError: exportMutation.error,
-    hasAnyError: !!(
-      profileQuery.error ??
-      updateMutation.error ??
-      avatarMutation.error ??
-      exportMutation.error
-    ),
+    profileError: error,
+    updateError: error,
+    avatarError: error,
+    exportError: error,
+    hasAnyError: !!error,
   };
 }
 
-/**
- * Hook to get profile data with loading and error states
- * Comprehensive profile state management
- */
 export function useProfileData() {
   const profile = useProfile();
   const loadingStates = useProfileLoadingStates();
@@ -273,73 +210,34 @@ export function useProfileData() {
   return Object.assign({}, profile, loadingStates, errorStates);
 }
 
-// ============================================================================
-// UTILITY HOOKS
-// ============================================================================
-
-/**
- * Hook to check if profile is complete
- * Determines if profile has all required fields
- */
 export function useProfileCompleteness() {
-  const { profile } = useProfile();
-
-  const isComplete = profile ? (
-    !!(profile.display_name && profile.username && profile.email)
-  ) : false;
-
-  const missingFields = profile ? [
-    !profile.display_name && 'Display Name',
-    !profile.username && 'Username',
-    !profile.email && 'Email',
-  ].filter(Boolean) : [];
+  const isComplete = useProfileStore((state) => state.isProfileComplete);
+  const missingFields = useProfileStore((state) => state.missingFields);
+  const completionPercentage = useProfileStore((state) => state.profileCompleteness);
 
   return {
     isComplete,
     missingFields,
-    completionPercentage: profile ?
-      Math.round((3 - missingFields.length) / 3 * 100) : 0,
+    completionPercentage,
   };
 }
 
-/**
- * Hook to get profile display information
- * Provides formatted display data
- */
 export function useProfileDisplay() {
-  const { profile } = useProfile();
-
-  if (!profile) {
-    return {
-      displayName: 'User',
-      initials: 'U',
-      trustTier: 'T0',
-      trustTierDisplay: 'New User',
-      isAdmin: false,
-    };
-  }
-
-  const displayName = profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
-  const initials = displayName
-    .split(' ')
-    .map((word: string) => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-  const trustTierKey = (profile.trust_tier ?? 'T0') as 'T0' | 'T1' | 'T2' | 'T3'
-  const trustTierDisplay = {
-    'T0': 'New User',
-    'T1': 'Verified User',
-    'T2': 'Trusted User',
-    'T3': 'VIP User',
-  }[trustTierKey] ?? 'Unknown';
+  const displayName = useProfileStore((state) => state.getDisplayName());
+  const initials = useProfileStore((state) => state.getInitials());
+  const trustTier = useProfileStore(
+    (state) => (state.profile ?? state.userProfile)?.trust_tier ?? 'T0',
+  );
+  const trustTierDisplay = useProfileStore((state) => state.getTrustTierDisplay());
+  const isAdmin = useProfileStore((state) => state.isAdmin());
 
   return {
     displayName,
     initials,
-    trustTier: profile.trust_tier,
+    trustTier,
     trustTierDisplay,
-    isAdmin: profile.is_admin ?? false,
+    isAdmin,
   };
 }
+
+

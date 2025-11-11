@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-
-// Dynamic imports to avoid build-time decorator issues
-// import { beginRegister } from '@/features/auth/lib/webauthn/client';
 import { logger } from '@/lib/utils/logger';
 
-
+import { useInitializeBiometricState, useUserActions } from '../lib/store';
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
 type Passkey = {
@@ -16,78 +13,93 @@ type Passkey = {
   last_used_at: string | null;
   device_info: any;
   created_at: string;
-}
+};
 
 export function PasskeyManagement() {
-  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [passkeys, setPasskeys] = React.useState<Passkey[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    loadPasskeys();
-  }, []);
+  useInitializeBiometricState();
 
-  const loadPasskeys = async () => {
+  const { setBiometricCredentials, setBiometricError } = useUserActions();
+
+  const loadPasskeys = React.useCallback(async () => {
     try {
-      // Load passkeys via API endpoint
       const response = await fetch('/api/v1/auth/webauthn/credentials');
       if (response.ok) {
         const data = await response.json();
-        setPasskeys(data.credentials ?? []);
+        const credentials: Passkey[] = data.credentials ?? [];
+        setPasskeys(credentials);
+        setBiometricCredentials(credentials.length > 0);
       } else {
-        setError('Failed to load passkeys');
+        const message = 'Failed to load passkeys';
+        setError(message);
+        setBiometricError(message);
       }
-    } catch {
-      setError('Failed to load passkeys');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load passkeys';
+      setError(message);
+      setBiometricError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [setBiometricCredentials, setBiometricError]);
 
-  const handleAddPasskey = async () => {
+  React.useEffect(() => {
+    void loadPasskeys();
+  }, [loadPasskeys]);
+
+  const handleAddPasskey = React.useCallback(async () => {
     try {
       setError(null);
-      // Dynamic import to avoid build-time decorator issues
+      setBiometricError(null);
       const { beginRegister } = await import('@/features/auth/lib/webauthn/client');
       const result = await beginRegister();
       if (result.success) {
         await loadPasskeys();
       } else {
-        setError('Failed to add passkey');
+        const message = result.error ?? 'Failed to add passkey';
+        setError(message);
+        setBiometricError(message);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add passkey');
+      const message = err instanceof Error ? err.message : 'Failed to add passkey';
+      setError(message);
+      setBiometricError(message);
     }
-  };
+  }, [loadPasskeys, setBiometricError]);
 
-  const handleRenamePasskey = async (id: string, newLabel: string) => {
+  const handleRenamePasskey = React.useCallback(async (id: string, newLabel: string) => {
     try {
-      // Implement rename functionality
       logger.info('Rename passkey', { id, newLabel });
-    } catch {
-      setError('Failed to rename passkey');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to rename passkey';
+      setError(message);
+      setBiometricError(message);
     }
-  };
+  }, [setBiometricError]);
 
-  const handleRevokePasskey = async (id: string) => {
+  const handleRevokePasskey = React.useCallback(async (id: string) => {
     try {
-      // Implement revoke functionality
       logger.info('Revoke passkey', { id });
       await loadPasskeys();
-    } catch {
-      setError('Failed to revoke passkey');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to revoke passkey';
+      setError(message);
+      setBiometricError(message);
     }
-  };
+  }, [loadPasskeys, setBiometricError]);
 
   if (loading) {
     return (
       <div className="passkey-management">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <h3 className="text-lg font-semibold">Your Passkeys</h3>
           <WebAuthnPrivacyBadge />
         </div>
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+        <div className="py-8 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
           <p className="mt-2 text-gray-600">Loading passkeys...</p>
         </div>
       </div>
@@ -96,26 +108,26 @@ export function PasskeyManagement() {
 
   return (
     <div className="passkey-management">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Your Passkeys</h3>
         <WebAuthnPrivacyBadge />
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 rounded border border-red-400 bg-red-100 p-3 text-red-700">
           {error}
         </div>
       )}
 
       {passkeys.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-4xl mb-4">🔐</div>
-          <p className="text-gray-600 mb-4">
+        <div className="py-8 text-center">
+          <div className="mb-4 text-4xl text-gray-400">🔐</div>
+          <p className="mb-4 text-gray-600">
             No passkeys yet. Add one from this device—biometrics stay on your device.
           </p>
           <button
             onClick={handleAddPasskey}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
             Add Passkey
           </button>
@@ -132,7 +144,7 @@ export function PasskeyManagement() {
           ))}
           <button
             onClick={handleAddPasskey}
-            className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-600 hover:border-gray-400 transition-colors"
+            className="w-full rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-600 transition-colors hover:border-gray-400"
           >
             + Add Another Passkey
           </button>
@@ -142,12 +154,12 @@ export function PasskeyManagement() {
   );
 }
 
-function PasskeyCard({ 
-  passkey, 
-  onRename, 
-  onRevoke 
-}: { 
-  passkey: Passkey; 
+function PasskeyCard({
+  passkey,
+  onRename,
+  onRevoke
+}: {
+  passkey: Passkey;
   onRename: (label: string) => void;
   onRevoke: () => void;
 }) {
@@ -202,7 +214,7 @@ function PasskeyCard({
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           {!isEditing && (
             <button

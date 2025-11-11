@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption } from '../types'
 
@@ -29,10 +30,13 @@ export default function MultipleChoiceVoting({
   userVote,
   maxSelections
 }: MultipleChoiceVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [selectedOptions, setSelectedOptions] = useState<number[]>(userVote ?? [])
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize from user's previous vote
   useEffect(() => {
@@ -42,7 +46,7 @@ export default function MultipleChoiceVoting({
   }, [userVote])
 
   const handleOptionToggle = (optionIndex: number) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
     
     setError(null)
     
@@ -63,7 +67,7 @@ export default function MultipleChoiceVoting({
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     if (selectedOptions.length === 0) {
       setError('Please select at least one option to vote')
@@ -86,6 +90,9 @@ export default function MultipleChoiceVoting({
       }
       
       // Use the selections parameter properly
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(selectedOptions)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -94,7 +101,7 @@ export default function MultipleChoiceVoting({
     }
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

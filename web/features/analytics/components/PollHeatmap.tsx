@@ -19,14 +19,14 @@
 
 'use client';
 
-import { 
-Download, 
+import {
+  Download,
   AlertCircle,
   RefreshCw,
   Filter,
   Flame
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -42,7 +42,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import logger from '@/lib/utils/logger'
+import { useAnalyticsActions, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
+import type { PollHeatmapFilters } from '@/features/analytics/types/analytics';
 
 type PollHeatmapEntry = {
   poll_id: string;
@@ -53,12 +54,6 @@ type PollHeatmapEntry = {
   engagement_score: number; // Calculated metric
   created_at: string;
   is_active: boolean;
-};
-
-type PollHeatmapData = {
-  ok: boolean;
-  polls: PollHeatmapEntry[];
-  categories: string[];
 };
 
 type PollHeatmapProps = {
@@ -121,51 +116,28 @@ export default function PollHeatmap({
   defaultCategory = 'All Categories',
   defaultLimit = 20
 }: PollHeatmapProps) {
-  const [data, setData] = useState<PollHeatmapEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
-  const [limit, setLimit] = useState(defaultLimit);
+  const { fetchPollHeatmap } = useAnalyticsActions();
+  const pollHeatmap = useAnalyticsPollHeatmap();
+  const data = pollHeatmap.data;
+  const isLoading = pollHeatmap.loading;
+  const error = pollHeatmap.error;
+  const selectedCategory = pollHeatmap.meta.category ?? defaultCategory;
+  const limit = pollHeatmap.meta.limit ?? defaultLimit;
 
-  const fetchPollHeatmapData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      if (selectedCategory !== 'All Categories') {
-        params.append('category', selectedCategory);
-      }
-      params.append('limit', String(limit));
-
-      const response = await fetch(`/api/analytics/poll-heatmap?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch poll heatmap: ${response.statusText}`);
-      }
-
-      const result: PollHeatmapData = await response.json();
-      
-      if (!result.ok) {
-        throw new Error('Invalid API response');
-      }
-
-      setData(result.polls);
-    } catch (err) {
-      logger.error('Failed to fetch poll heatmap:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load poll heatmap');
-      
-      // Use mock data for development
-      const mockData = generateMockData(limit, selectedCategory);
-      setData(mockData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedCategory, limit]);
+  const loadPollHeatmap = useCallback(async (filters?: Partial<PollHeatmapFilters>) => {
+    await fetchPollHeatmap(filters, {
+      fallback: (resolvedFilters) => generateMockData(resolvedFilters.limit, resolvedFilters.category),
+    });
+  }, [fetchPollHeatmap]);
 
   useEffect(() => {
-    fetchPollHeatmapData();
-  }, [fetchPollHeatmapData]);
+    void fetchPollHeatmap(
+      { category: defaultCategory, limit: defaultLimit },
+      {
+        fallback: (resolvedFilters) => generateMockData(resolvedFilters.limit, resolvedFilters.category),
+      }
+    );
+  }, [defaultCategory, defaultLimit, fetchPollHeatmap]);
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -271,7 +243,10 @@ export default function PollHeatmap({
             <Filter className="h-4 w-4 text-gray-500" />
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                const category = e.target.value;
+                void loadPollHeatmap({ category });
+              }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {CATEGORIES.map(category => (
@@ -284,7 +259,10 @@ export default function PollHeatmap({
             <label className="text-sm text-gray-600">Show:</label>
             <select
               value={limit}
-              onChange={(e) => setLimit(parseInt(e.target.value))}
+              onChange={(e) => {
+                const newLimit = parseInt(e.target.value, 10);
+                void loadPollHeatmap({ limit: newLimit });
+              }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="10">Top 10</option>
@@ -294,7 +272,9 @@ export default function PollHeatmap({
           </div>
 
           <Button
-            onClick={fetchPollHeatmapData}
+            onClick={() => {
+              void loadPollHeatmap();
+            }}
             size="sm"
             variant="outline"
           >

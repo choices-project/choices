@@ -8,7 +8,7 @@ const ensureAnalyticsBridge = async (page: Page) => {
 
 const enableAnalytics = async (page: Page) => {
   await ensureAnalyticsBridge(page);
-  await page.evaluate(() => globalThis.__playwrightAnalytics?.enable());
+  await page.evaluate(() => globalThis.__playwrightAnalytics?.enable?.());
 };
 
 test.describe('PWA offline queue widget', () => {

@@ -23,12 +23,13 @@ describe('performanceStore', () => {
       });
     });
 
-    const [metric] = usePerformanceStore.getState().metrics;
+    const metric = usePerformanceStore.getState().metrics[0];
     expect(metric).toBeDefined();
-    expect(metric.id).toMatch(/^metric-/);
-    expect(metric.timestamp).toBeInstanceOf(Date);
-    expect(metric.type).toBe('custom');
-    expect(metric.metadata).toEqual({ phase: 'warm-up' });
+    const definedMetric = metric!;
+    expect(definedMetric.id).toMatch(/^metric-/);
+    expect(definedMetric.timestamp).toBeInstanceOf(Date);
+    expect(definedMetric.type).toBe('custom');
+    expect(definedMetric.metadata).toEqual({ phase: 'warm-up' });
   });
 
   it('creates alerts with defaults for timestamp and resolved state', () => {
@@ -43,12 +44,13 @@ describe('performanceStore', () => {
       });
     });
 
-    const [alert] = usePerformanceStore.getState().alerts;
+    const alert = usePerformanceStore.getState().alerts[0];
     expect(alert).toBeDefined();
-    expect(alert.id).toMatch(/^alert-/);
-    expect(alert.timestamp).toBeInstanceOf(Date);
-    expect(alert.resolved).toBe(false);
-    expect(alert.metric).toBe('cls');
+    const definedAlert = alert!;
+    expect(definedAlert.id).toMatch(/^alert-/);
+    expect(definedAlert.timestamp).toBeInstanceOf(Date);
+    expect(definedAlert.resolved).toBe(false);
+    expect(definedAlert.metric).toBe('cls');
   });
 });
 

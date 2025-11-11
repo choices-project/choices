@@ -1,55 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useContext } from 'react';
+import React from 'react';
 
-import { AuthContext } from '@/contexts/AuthContext';
-
-import { PasskeyControls } from '../../../components/auth/PasskeyControls';
+import { PasskeyControls } from '@/features/auth/components/PasskeyControls';
+import {
+  useInitializeBiometricState,
+  useIsAuthenticated,
+  useUser,
+  useUserLoading,
+} from '@/features/auth/lib/store';
 
 export default function AuthPage() {
-  const authContext = useContext(AuthContext);
-  
-  // Handle case where auth context is not available during pre-rendering
-  if (!authContext) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication</h1>
-          <p className="text-gray-600 mb-6">Please log in to continue.</p>
-          <div className="mb-6">
-            <a 
-              href="/login"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Login
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  const { user, isLoading } = authContext;
+  useInitializeBiometricState({ fetchCredentials: false });
+
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
+  const isLoading = useUserLoading();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
       </div>
     );
   }
 
-  if (user) {
+  if (isAuthenticated && user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome back!</h1>
-          <p className="text-gray-600 mb-6">You are already logged in.</p>
-          <Link 
-            href="/"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">Welcome back!</h1>
+          <p className="mb-6 text-gray-600">You are already logged in.</p>
+          <Link href="/" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
             Go to Dashboard
           </Link>
         </div>
@@ -58,26 +41,24 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication</h1>
-        <p className="text-gray-600 mb-6">Please log in to continue.</p>
-        
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="max-w-2xl text-center">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">Authentication</h1>
+        <p className="mb-6 text-gray-600">Please log in to continue.</p>
+
         <div className="mb-6">
-          <Link 
-            href="/login"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
+          <Link href="/login" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
             Login
           </Link>
         </div>
 
         <div className="border-t pt-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">WebAuthn / Passkey Authentication</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            WebAuthn / Passkey Authentication
+          </h2>
           <PasskeyControls />
         </div>
       </div>
     </div>
   );
 }
-

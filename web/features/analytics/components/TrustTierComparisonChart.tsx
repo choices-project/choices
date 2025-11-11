@@ -18,8 +18,8 @@
 
 'use client';
 
-import { 
-  Download, 
+import {
+  Download,
   Shield, 
   AlertCircle,
   RefreshCw,
@@ -46,7 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { logger } from '@/lib/utils/logger';
+import { useAnalyticsActions, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
 
 type TierMetrics = {
   tier: string;
@@ -83,44 +83,24 @@ export default function TrustTierComparisonChart({
   className = '',
   defaultTab = 'participation'
 }: TrustTierComparisonChartProps) {
-  const [data, setData] = useState<TierComparisonData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const { fetchTrustTierComparison } = useAnalyticsActions();
+  const trustTiers = useAnalyticsTrustTiers();
+  const data = trustTiers.data;
+  const isLoading = trustTiers.loading;
+  const error = trustTiers.error;
 
-  const fetchTierData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/analytics/trust-tiers');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tier data: ${response.statusText}`);
-      }
-
-      const result: TierComparisonData = await response.json();
-      
-      if (!result.ok) {
-        throw new Error('Invalid API response');
-      }
-
-      setData(result);
-    } catch (err) {
-      logger.error('Failed to fetch tier data', err);
-      setError(err instanceof Error ? err.message : 'Failed to load tier data');
-      
-      // Use mock data for development
-      const mockData = generateMockData();
-      setData(mockData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const loadTrustTiers = useCallback(async () => {
+    await fetchTrustTierComparison({
+      fallback: generateMockData,
+    });
+  }, [fetchTrustTierComparison]);
 
   useEffect(() => {
-    fetchTierData();
-  }, [fetchTierData]);
+    void fetchTrustTierComparison({
+      fallback: generateMockData,
+    });
+  }, [fetchTrustTierComparison]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -521,7 +501,9 @@ export default function TrustTierComparisonChart({
         {/* Refresh Button */}
         <div className="mt-6 flex justify-center">
           <Button
-            onClick={fetchTierData}
+            onClick={() => {
+              void loadTrustTiers();
+            }}
             size="sm"
             variant="outline"
           >

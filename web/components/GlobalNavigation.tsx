@@ -12,17 +12,21 @@ import {
   Home
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button'
-import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { useIsAuthenticated, useUser, useUserActions } from '@/lib/stores'
 import logger from '@/lib/utils/logger'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { user, signOut } = useSupabaseAuth()
+  const router = useRouter()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
+  const { signOut: resetUserState } = useUserActions()
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -34,10 +38,14 @@ export default function GlobalNavigation() {
 
   const handleLogout = async () => {
     try {
-      await signOut()
-      closeMobileMenu()
+      const supabase = await getSupabaseBrowserClient()
+      await supabase.auth.signOut()
     } catch (error) {
-      logger.error('Logout failed:', error)
+      logger.error('Logout failed:', error instanceof Error ? error : new Error(String(error)))
+    } finally {
+      resetUserState()
+      closeMobileMenu()
+      router.push('/login')
     }
   }
 
@@ -87,7 +95,7 @@ export default function GlobalNavigation() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {user ? (
+            {isAuthenticated && user ? (
               <div className="flex items-center space-x-4">
                 <Link
                   href="/profile"
@@ -167,7 +175,7 @@ export default function GlobalNavigation() {
 
               {/* Mobile Auth Section */}
               <div className="pt-4 border-t border-gray-200">
-                {user ? (
+                {isAuthenticated && user ? (
                   <div className="space-y-2">
                     <Link
                       href="/profile"

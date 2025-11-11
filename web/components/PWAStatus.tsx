@@ -1,30 +1,37 @@
 /**
  * @fileoverview PWA Status Display Component
- * 
+ *
  * Displays comprehensive PWA status information.
  * Shows installation, connection, notifications, and service worker status.
- * 
+ *
  * @author Choices Platform Team
  * @migrated Zustand migration complete - November 4, 2025
  */
 
 'use client'
 
-import { 
-  Smartphone, 
-  Wifi, 
-  WifiOff, 
-  Download, 
-  Bell, 
-  BellOff, 
-  CheckCircle, 
+import {
+  Smartphone,
+  Wifi,
+  WifiOff,
+  Download,
+  Bell,
+  BellOff,
+  CheckCircle,
   XCircle,
   RefreshCw,
   Settings
 } from 'lucide-react';
 import React from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import {
+  usePWAInstallation,
+  usePWAOffline,
+  usePWAPreferences,
+  usePWALoading,
+  usePWAError,
+  usePWAActions,
+} from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type PWAStatusProps = {
@@ -36,34 +43,39 @@ type PWAStatusProps = {
 
 /**
  * PWA Status Component
- * 
+ *
  * Displays current PWA state with two display modes:
  * - Compact: Icons only with status badges
  * - Detailed: Full status card with action buttons
- * 
+ *
  * Shows:
  * - Installation status (installed/installable/not available)
  * - Connection status (online/offline)
  * - Notification status (enabled/disabled)
  * - Offline data count
  * - Service worker status
- * 
+ *
  * Provides action buttons for install, enable notifications, and sync.
- * 
+ *
  * @param props - Component props
  * @returns Status UI or null if PWA not enabled/supported
  */
 export default function PWAStatus({ showDetails = false, className = '' }: PWAStatusProps) {
-  const { installation, offline, preferences, isLoading, error: pwaError, installPWA, syncData, updateServiceWorker: _updateServiceWorker } = usePWAStore();
-  
+  const installation = usePWAInstallation();
+  const offline = usePWAOffline();
+  const preferences = usePWAPreferences();
+  const isLoading = usePWALoading();
+  const pwaError = usePWAError();
+  const { installPWA, syncData, updateServiceWorker: _updateServiceWorker } = usePWAActions();
+
   const isSupported = 'serviceWorker' in navigator;
   const isEnabled = preferences.installPrompt;
   const notificationsEnabled = preferences.pushNotifications && Notification.permission === 'granted';
   const hasOfflineData = offline.offlineData.queuedActions.length > 0;
-  
+
   // Service worker status - check if registered
   const [serviceWorkerActive, setServiceWorkerActive] = React.useState(false);
-  
+
   React.useEffect(() => {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       setServiceWorkerActive(true);
@@ -106,14 +118,14 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   };
 
   const getConnectionIcon = () => {
-    return offline.isOnline ? 
-      <Wifi className="w-4 h-4 text-green-500" /> : 
+    return offline.isOnline ?
+      <Wifi className="w-4 h-4 text-green-500" /> :
       <WifiOff className="w-4 h-4 text-red-500" />;
   };
 
   const getNotificationIcon = () => {
-    return notificationsEnabled ? 
-      <Bell className="w-4 h-4 text-green-500" /> : 
+    return notificationsEnabled ?
+      <Bell className="w-4 h-4 text-green-500" /> :
       <BellOff className="w-4 h-4 text-gray-400" />;
   };
 
@@ -189,8 +201,8 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {/* Service Worker Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {serviceWorkerActive ? 
-              <CheckCircle className="w-4 h-4 text-green-500" /> : 
+            {serviceWorkerActive ?
+              <CheckCircle className="w-4 h-4 text-green-500" /> :
               <XCircle className="w-4 h-4 text-red-500" />
             }
             <span className="text-sm font-medium text-gray-700">Service Worker</span>

@@ -8,10 +8,11 @@
 import { useState, useEffect } from 'react';
 
 import { featureFlagManager } from '@/lib/core/feature-flags';
-import { useAppStore } from '@/lib/stores/appStore';
+import { useAppActions, useAppFeatureFlags } from '@/lib/stores/appStore';
 
 export function useFeatureFlags() {
-  const { features, setFeatureFlag, toggleFeatureFlag } = useAppStore();
+  const features = useAppFeatureFlags();
+  const { setFeatureFlag, toggleFeatureFlag, setFeatureFlags } = useAppActions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +36,7 @@ export function useFeatureFlags() {
           flagUpdates[key] = value as boolean;
         });
         
-        useAppStore.getState().setFeatureFlags(flagUpdates);
+        setFeatureFlags(flagUpdates);
       } else {
         throw new Error(data.error || 'Failed to fetch feature flags');
       }

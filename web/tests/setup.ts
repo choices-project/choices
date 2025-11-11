@@ -11,6 +11,64 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
+jest.mock('lucide-react', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+  const icons: Record<string, unknown> = {};
+
+  const createIcon = (name: string) =>
+    React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
+      React.createElement('svg', { ref, 'data-icon': name, ...props }),
+    );
+
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop: string | symbol) => {
+        if (prop === '__esModule') {
+          return true;
+        }
+        if (prop === 'default') {
+          return {};
+        }
+        const key = String(prop);
+        if (!icons[key]) {
+          icons[key] = createIcon(key);
+        }
+        return icons[key];
+      },
+    },
+  );
+});
+
+jest.mock('@/lib/stores/storage', () => {
+  const { createJSONStorage } = jest.requireActual('zustand/middleware');
+  const memoryStorage = () => {
+    const store = new Map<string, string>();
+    return {
+      getItem: (name: string) => store.get(name) ?? null,
+      setItem: (name: string, value: string) => {
+        store.set(name, value);
+      },
+      removeItem: (name: string) => {
+        store.delete(name);
+      },
+    };
+  };
+
+  return {
+    createSafeStorage: () => createJSONStorage(memoryStorage),
+  };
+});
+
+(globalThis as any).Notification =
+  (typeof Notification !== 'undefined' && Notification) ||
+  class MockNotification {
+    static permission = 'granted';
+    static requestPermission = jest.fn(async () => 'granted');
+  };
+
+jest.spyOn(globalThis.Notification, 'requestPermission').mockResolvedValue('granted');
+
 // Use Node.js built-in Web Crypto API for testing
 Object.defineProperty(global, 'crypto', {
   value: webcrypto,
@@ -35,7 +93,7 @@ beforeAll(() => {
     if (typeof args[0] === 'string' && args[0].includes('Warning: ReactDOM.render is deprecated')) {
       return;
     }
-     
+
     originalConsoleError.apply(console, args as []);
   };
 
@@ -46,7 +104,7 @@ beforeAll(() => {
     ) {
       return;
     }
-     
+
     originalConsoleWarn.apply(console, args as []);
   };
 });

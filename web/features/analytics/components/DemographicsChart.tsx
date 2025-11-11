@@ -16,8 +16,8 @@
 
 'use client';
 
-import { 
-Download, 
+import {
+  Download,
   Users, 
   AlertCircle,
   RefreshCw,
@@ -43,7 +43,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
-import logger from '@/lib/utils/logger'
+import { useAnalyticsActions, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
 
 type TrustTierData = {
   tier: string;
@@ -97,44 +97,22 @@ export default function DemographicsChart({
   defaultTab = 'trust'
 }: DemographicsChartProps) {
   const isMobile = useIsMobile();
-  const [data, setData] = useState<DemographicsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const { fetchDemographics } = useAnalyticsActions();
+  const demographics = useAnalyticsDemographics();
+  const data = demographics.data;
+  const isLoading = demographics.loading;
+  const error = demographics.error;
 
-  const fetchDemographicsData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/analytics/demographics');
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch demographics data: ${response.statusText}`);
-      }
-
-      const result: DemographicsData = await response.json();
-      
-      if (!result.ok) {
-        throw new Error('Invalid API response');
-      }
-
-      setData(result);
-    } catch (err) {
-      logger.error('Failed to fetch demographics data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load demographics data');
-      
-      // Use mock data for development
-      const mockData = generateMockData();
-      setData(mockData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const refreshDemographics = useCallback(async () => {
+    await fetchDemographics({
+      fallback: generateMockData,
+    });
+  }, [fetchDemographics]);
 
   useEffect(() => {
-    fetchDemographicsData();
-  }, [fetchDemographicsData]);
+    void refreshDemographics();
+  }, [refreshDemographics]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -493,7 +471,9 @@ export default function DemographicsChart({
         {/* Refresh Button - Mobile Optimized */}
         <div className="mt-4 md:mt-6 flex justify-center">
           <Button
-            onClick={fetchDemographicsData}
+            onClick={() => {
+              void refreshDemographics();
+            }}
             size={isMobile ? "default" : "sm"}
             variant="outline"
             className="min-h-[44px] w-full sm:w-auto"

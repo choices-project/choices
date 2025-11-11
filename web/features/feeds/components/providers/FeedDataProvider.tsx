@@ -19,11 +19,16 @@
 import type React from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-import { useUserStore } from '@/lib/stores';
-import { useFeedsStore, useFeedsPagination } from '@/lib/stores/feedsStore';
-import { useHashtagStore } from '@/lib/stores/hashtagStore';
+import {
+  useUser,
+  useFeedsStore,
+  useFeedsPagination,
+  useFeedsActions,
+  useHashtagActions,
+  useTrendingHashtags,
+} from '@/lib/stores';
 import logger from '@/lib/utils/logger';
-import type { FeedItem } from '@/lib/stores/types/feeds';
+import type { FeedItem } from '@/lib/stores/feedsStore';
 
 type FeedDataProviderProps = {
   userId?: string;
@@ -63,124 +68,95 @@ export default function FeedDataProvider({
   children 
 }: FeedDataProviderProps) {
   // Get ONLY data from stores (not functions)
-  const feeds = useFeedsStore(state => state.filteredFeeds);
-  const isLoading = useFeedsStore(state => state.isLoading);
-  const storeError = useFeedsStore(state => state.error);
-  const { totalAvailable, loaded, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
-  const trendingHashtags = useHashtagStore(state => 
-    state.trendingHashtags.map(h => {
+  const feeds = useFeedsStore((state) => state.filteredFeeds);
+  const isLoading = useFeedsStore((state) => state.isLoading);
+  const storeError = useFeedsStore((state) => state.error);
+  const { totalAvailable, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
+  const trendingHashtags = useTrendingHashtags()
+    .map((h) => {
       if (typeof h === 'string') return h;
-      // TrendingHashtag has hashtag_name property
-      return (h as any).hashtag_name || (h as any).name || '';
-    }).filter(Boolean)
-  );
-  const user = useUserStore(state => state.user);
-  
-  // Get functions ONCE using getState() - no re-subscription
-  const feedsStoreRef = useRef(useFeedsStore.getState());
-  const hashtagStoreRef = useRef(useHashtagStore.getState());
-  useEffect(() => {
-    feedsStoreRef.current = useFeedsStore.getState();
-    const unsubscribe = useFeedsStore.subscribe((state) => {
-      feedsStoreRef.current = state;
-    });
-    return unsubscribe;
-  }, []);
-  useEffect(() => {
-    hashtagStoreRef.current = useHashtagStore.getState();
-    const unsubscribe = useHashtagStore.subscribe((state) => {
-      hashtagStoreRef.current = state;
-    });
-    return unsubscribe;
-  }, []);
-  useEffect(() => {
-    feedsStoreRef.current = useFeedsStore.getState();
-    const unsubscribe = useFeedsStore.subscribe((state) => {
-      feedsStoreRef.current = state;
-    });
-    return unsubscribe;
-  }, []);
-  useEffect(() => {
-    hashtagStoreRef.current = useHashtagStore.getState();
-    const unsubscribe = useHashtagStore.subscribe((state) => {
-      hashtagStoreRef.current = state;
-    });
-    return unsubscribe;
-  }, []);
+      return (
+        (h as { hashtag_name?: string }).hashtag_name ??
+        (h as { name?: string }).name ??
+        ''
+      );
+    })
+    .filter((name) => name.length > 0);
+  const { getTrendingHashtags } = useHashtagActions();
+  const {
+    loadFeeds,
+    refreshFeeds,
+    likeFeed: likeFeedAction,
+    bookmarkFeed: bookmarkFeedAction,
+    setFilters: setFiltersAction,
+    setError: setErrorAction,
+    clearError: clearErrorAction,
+  } = useFeedsActions();
+  const user = useUser();
   
   // Local state for hashtag filtering and district filtering
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const initialLoadRef = useRef(false);
 
   // Load feeds on mount - ONCE
   useEffect(() => {
     if (!userId && !user?.id) return;
-    
-    let mounted = true;
-    
-    const loadInitialFeeds = async () => {
+    if (initialLoadRef.current && !userId) return;
+
+    let active = true;
+
+    clearErrorAction();
+
+    void (async () => {
       try {
-        await feedsStoreRef.current.loadFeeds();
-        if (mounted) {
-          setError(null);
-        }
+        await loadFeeds();
       } catch (err) {
+        if (!active) return;
         logger.error('Failed to load feeds:', err);
-        if (mounted) {
-          setError('Failed to load feeds');
-        }
+        setErrorAction('Failed to load feeds');
+      } finally {
+        initialLoadRef.current = true;
       }
-    };
-    
-    loadInitialFeeds();
-    
+    })();
+
     return () => {
-      mounted = false;
+      active = false;
     };
-    // Only run on mount or when userId changes
-     
-  }, [userId, user?.id]);
+  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction]);
 
   // Load trending hashtags on mount - ONCE
   useEffect(() => {
-    let mounted = true;
-    
-    const loadTrending = async () => {
+    void (async () => {
       try {
-        await hashtagStoreRef.current.getTrendingHashtags();
+        await getTrendingHashtags();
       } catch (err) {
         logger.error('Failed to load trending hashtags:', err);
       }
-    };
-    
-    if (mounted) {
-      loadTrending();
-    }
-    
-    return () => {
-      mounted = false;
-    };
-  }, []); // Only on mount
+    })();
+  }, [getTrendingHashtags]); // Only on mount
 
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
+    clearErrorAction();
     try {
-      await feedsStoreRef.current.likeFeed(itemId);
+      await likeFeedAction(itemId);
     } catch (err) {
       logger.error('Failed to like feed:', err);
-      setError('Failed to like feed');
+      setErrorAction('Failed to like feed');
     }
-  }, []);
+  }, [likeFeedAction, clearErrorAction, setErrorAction]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
+    clearErrorAction();
     try {
-      await feedsStoreRef.current.bookmarkFeed(itemId);
+      await bookmarkFeedAction(itemId);
     } catch (err) {
       logger.error('Failed to bookmark feed:', err);
-      setError('Failed to bookmark feed');
+      setErrorAction('Failed to bookmark feed');
     }
-  }, []);
+  }, [bookmarkFeedAction, clearErrorAction, setErrorAction]);
 
   const handleShare = useCallback((itemId: string) => {
     // Social sharing logic here
@@ -188,14 +164,14 @@ export default function FeedDataProvider({
   }, []);
 
   const handleRefresh = useCallback(async () => {
+    clearErrorAction();
     try {
-      await feedsStoreRef.current.refreshFeeds();
-      setError(null);
+      await refreshFeeds();
     } catch (err) {
       logger.error('Failed to refresh feeds:', err);
-      setError('Failed to refresh feeds');
+      setErrorAction('Failed to refresh feeds');
     }
-  }, []);
+  }, [refreshFeeds, clearErrorAction, setErrorAction]);
 
   const handleHashtagAdd = useCallback((tag: string) => {
     if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
@@ -210,46 +186,54 @@ export default function FeedDataProvider({
   const handleDistrictFilterToggle = useCallback(() => {
     const newValue = !districtFilterEnabled;
     setDistrictFilterEnabled(newValue);
-    
+
     // Apply district filter to feeds store
     if (newValue && userDistrict) {
-      feedsStoreRef.current.setFilters({ district: userDistrict });
+      setFiltersAction({ district: userDistrict });
     } else {
-      feedsStoreRef.current.setFilters({ district: null });
+      setFiltersAction({ district: null });
     }
-    
+
     // Refresh feeds with new filter
-    feedsStoreRef.current.refreshFeeds().catch(err => {
+    refreshFeeds().catch((err) => {
       logger.error('Failed to refresh feeds with district filter:', err);
+      setErrorAction('Failed to refresh feeds');
     });
-  }, [districtFilterEnabled, userDistrict]);
+  }, [districtFilterEnabled, userDistrict, setFiltersAction, refreshFeeds, setErrorAction]);
 
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
     if (!storeHasMore) return;
     if (feeds.length >= maxItems) return;
 
-    const previousCount = feedsStoreRef.current.feeds.length;
+    clearErrorAction();
+    const previousCount = useFeedsStore.getState().feeds.length;
 
     try {
       await loadMoreFeeds();
       const nextState = useFeedsStore.getState();
 
       if (nextState.error) {
-        setError(nextState.error);
+        setErrorAction(nextState.error);
         return;
       }
 
       if (nextState.feeds.length === previousCount) {
         return;
       }
-
-      setError(null);
     } catch (err) {
       logger.error('Failed to load more feeds:', err);
-      setError('Failed to load more feeds');
+      setErrorAction('Failed to load more feeds');
     }
-  }, [enableInfiniteScroll, storeHasMore, feeds.length, maxItems, loadMoreFeeds]);
+  }, [
+    enableInfiniteScroll,
+    storeHasMore,
+    feeds.length,
+    maxItems,
+    loadMoreFeeds,
+    clearErrorAction,
+    setErrorAction,
+  ]);
 
   // Filter feeds by selected hashtags
   const filteredFeeds = selectedHashtags.length > 0
@@ -264,7 +248,7 @@ export default function FeedDataProvider({
   return children({
     feeds: filteredFeeds,
     isLoading,
-    error: error ?? storeError,
+    error: storeError,
     onLike: handleLike,
     onBookmark: handleBookmark,
     onShare: handleShare,

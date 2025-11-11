@@ -187,3 +187,134 @@ export type AnalyticsDashboard = {
     }>
   }
 }
+
+// ---------------------------------------------------------------------------
+// Enhanced Analytics Feature Types
+// ---------------------------------------------------------------------------
+
+export type AnalyticsDateRange = '7d' | '30d' | '90d'
+
+export type DemographicsCategory = 'trust' | 'age' | 'district' | 'education'
+
+export type TrustTierBreakdown = {
+  tier: string
+  count: number
+  percentage: number
+}
+
+export type AgeGroupBreakdown = {
+  ageGroup: string
+  count: number
+  percentage: number
+}
+
+export type DistrictBreakdown = {
+  district: string
+  count: number
+  percentage: number
+}
+
+export type EducationBreakdown = {
+  level: string
+  count: number
+  percentage: number
+}
+
+export type DemographicsData = {
+  ok: boolean
+  trustTiers: TrustTierBreakdown[]
+  ageGroups: AgeGroupBreakdown[]
+  districts: DistrictBreakdown[]
+  education: EducationBreakdown[]
+  totalUsers: number
+  privacyOptOuts: number
+  k_anonymity: number
+}
+
+export type TrendDataPoint = {
+  date: string
+  votes: number
+  participation: number
+  velocity: number
+}
+
+export type TrendsDataset = {
+  range: AnalyticsDateRange
+  points: TrendDataPoint[]
+}
+
+export type TemporalHourlyData = {
+  hour: number
+  activity: number
+  label: string
+}
+
+export type TemporalDailyData = {
+  day: string
+  activity: number
+  dayIndex: number
+}
+
+export type TemporalVelocityPoint = {
+  timestamp: string
+  velocity: number
+}
+
+export type TemporalAnalyticsData = {
+  ok: boolean
+  hourly: TemporalHourlyData[]
+  daily: TemporalDailyData[]
+  velocity: TemporalVelocityPoint[]
+  peakHour: number
+  peakDay: string
+  avgActivity: number
+}
+
+export type PollHeatmapEntry = {
+  poll_id: string
+  title: string
+  category: string
+  total_votes: number
+  unique_voters: number
+  engagement_score: number
+  created_at: string
+  is_active: boolean
+}
+
+export type PollHeatmapFilters = {
+  category: string
+  limit: number
+}
+
+export type PollHeatmapData = {
+  ok: boolean
+  polls: PollHeatmapEntry[]
+  categories: string[]
+}
+
+export type TrustTierMetrics = {
+  tier: string
+  tierName: string
+  userCount: number
+  participationRate: number
+  completionRate: number
+  avgEngagement: number
+  botLikelihood: number
+  avgPollsVoted: number
+  avgTimeOnSite: number
+}
+
+export type TrustTierComparisonData = {
+  ok: boolean
+  tiers: TrustTierMetrics[]
+  totalUsers: number
+  insights: string[]
+}
+
+export type AnalyticsAsyncState<TData, TMeta extends Record<string, unknown> = Record<string, unknown>> = {
+  data: TData
+  loading: boolean
+  error: string | null
+  lastUpdated: string | null
+  meta: TMeta
+}

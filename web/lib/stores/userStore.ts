@@ -10,6 +10,7 @@
 
 import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -22,44 +23,27 @@ import type {
 import type { Representative } from '@/types/representative';
 
 import { createSafeStorage } from './storage';
+import { createBaseStoreActions } from './baseStoreActions';
 import type { BaseStore } from './types';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
-type ProfileEditDraft = Record<string, unknown>;
+type ProfileEditDraft = Record<string, unknown> & {
+  privacy_settings?: Partial<PrivacySettings>;
+};
 type PrivacySettingKey = keyof NonNullable<ProfileUpdateData['privacy_settings']>;
 type PrivacySettingValue<K extends PrivacySettingKey> =
   NonNullable<ProfileUpdateData['privacy_settings']>[K];
 
-const mergeProfileUpdateData = (
-  current: ProfileEditDraft,
-  updates: Record<string, unknown>
-): ProfileEditDraft => {
-  const entries = Object.entries(updates);
-  if (entries.length === 0) {
-    return current;
-  }
-
-  const next = { ...current };
-  entries.forEach(([key, value]) => {
-    if (value === undefined) {
-      delete next[key];
-    } else {
-      next[key] = value;
-    }
-  });
-  return next;
-};
-
- User store state interface
-type UserStore = {
+// User store state interface
+export type UserState = {
   // Authentication state
-user: User | null;
+  user: User | null;
   session: Session | null;
   isAuthenticated: boolean;
 
   // User profile data
-profile: UserProfile | null;
+  profile: UserProfile | null;
 
   // Profile editing state
   profileEditData: ProfileEditDraft | null;
@@ -68,12 +52,12 @@ profile: UserProfile | null;
 
   // Address and representatives
   currentAddress: string;
-currentState: string;
+  currentState: string;
   representatives: Representative[];
   showAddressForm: boolean;
   newAddress: string;
   addressLoading: boolean;
-savedSuccessfully: boolean;
+  savedSuccessfully: boolean;
 
   // Avatar editing
   avatarFile: File | null;
@@ -83,21 +67,27 @@ savedSuccessfully: boolean;
   // Biometric state
   biometric: {
     isSupported: boolean | null;
-  isAvailable: boolean | null;
+    isAvailable: boolean | null;
     hasCredentials: boolean | null;
     isRegistering: boolean;
     error: string | null;
-  success: boolean;
+    success: boolean;
   };
 
   // Loading states
   isProfileLoading: boolean;
   isUpdating: boolean;
 
+  // Base state
+  isLoading: boolean;
+  error: string | null;
+};
+
+export type UserActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   // Actions - Authentication
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
-setAuthenticated: (authenticated: boolean) => void;
+  setAuthenticated: (authenticated: boolean) => void;
   setUserAndAuth: (user: User | null, authenticated: boolean) => void;
   setSessionAndDerived: (session: Session | null) => void;
   initializeAuth: (user: User | null, session: Session | null, authenticated: boolean) => void;
@@ -105,13 +95,13 @@ setAuthenticated: (authenticated: boolean) => void;
   clearUser: () => void;
 
   // Actions - Profile Editing
-  setProfileEditData: (data: ProfileUpdateData | null) => void;
+  setProfileEditData: (data: ProfileEditDraft | null) => void;
   updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
-  updateProfileField: (field: keyof ProfileUpdateData, value: unknown) => void;
+  updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => void;
   updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => void;
   updatePrivacySetting: <K extends PrivacySettingKey>(
     setting: K,
-  value: PrivacySettingValue<K>
+    value: PrivacySettingValue<K>
   ) => void;
   setProfileEditing: (editing: boolean) => void;
   setProfileEditError: (field: string, error: string) => void;
@@ -124,7 +114,7 @@ setAuthenticated: (authenticated: boolean) => void;
   setRepresentatives: (representatives: Representative[]) => void;
   addRepresentative: (representative: Representative) => void;
   removeRepresentative: (id: string) => void;
-setShowAddressForm: (show: boolean) => void;
+  setShowAddressForm: (show: boolean) => void;
   setNewAddress: (address: string) => void;
   setAddressLoading: (loading: boolean) => void;
   setSavedSuccessfully: (saved: boolean) => void;
@@ -134,7 +124,7 @@ setShowAddressForm: (show: boolean) => void;
   // Actions - Avatar
   setAvatarFile: (file: File | null) => void;
   setAvatarPreview: (preview: string | null) => void;
-setUploadingAvatar: (uploading: boolean) => void;
+  setUploadingAvatar: (uploading: boolean) => void;
   clearAvatar: () => void;
 
   // Actions - Profile
@@ -143,11 +133,11 @@ setUploadingAvatar: (uploading: boolean) => void;
 
   // Actions - Biometric
   setBiometricSupported: (supported: boolean) => void;
-setBiometricAvailable: (available: boolean) => void;
+  setBiometricAvailable: (available: boolean) => void;
   setBiometricCredentials: (hasCredentials: boolean) => void;
   setBiometricRegistering: (registering: boolean) => void;
   setBiometricError: (error: string | null) => void;
-setBiometricSuccess: (success: boolean) => void;
+  setBiometricSuccess: (success: boolean) => void;
   resetBiometric: () => void;
 
   // Actions - Loading states
@@ -157,472 +147,407 @@ setBiometricSuccess: (success: boolean) => void;
   // Actions - Error handling
   setUserError: (error: string | null) => void;
   clearUserError: () => void;
-} & BaseStore
+};
+
+export type UserStore = UserState & UserActions;
 
 // Create user store with middleware
-export const useUserStore = create<UserStore>()(
-  devtools(
-    persist(
-immer((set, _get) => ({
-      // Initial state
-      user: null,
-      session: null,
-      isAuthenticated: false,
-profile: null,
+type UserStoreCreator = StateCreator<
+  UserStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
 
-      // Profile editing state
-      profileEditData: null,
-      isProfileEditing: false,
-      profileEditErrors: {},
+const createBiometricState = (): UserState['biometric'] => ({
+  isSupported: null,
+  isAvailable: null,
+  hasCredentials: null,
+  isRegistering: false,
+  error: null,
+  success: false,
+});
 
-      // Address and representatives
-      currentAddress: '',
-currentState: '',
-      representatives: [],
-      showAddressForm: false,
-      newAddress: '',
-      addressLoading: false,
-savedSuccessfully: false,
+export const createInitialUserState = (): UserState => ({
+  // Initial state
+  user: null,
+  session: null,
+  isAuthenticated: false,
+  profile: null,
 
-      // Avatar editing
-      avatarFile: null,
-      avatarPreview: null,
-      isUploadingAvatar: false,
+  // Profile editing state
+  profileEditData: null,
+  isProfileEditing: false,
+  profileEditErrors: {},
 
-      biometric: {
+  // Address and representatives
+  currentAddress: '',
+  currentState: '',
+  representatives: [],
+  showAddressForm: false,
+  newAddress: '',
+  addressLoading: false,
+  savedSuccessfully: false,
+
+  // Avatar editing
+  avatarFile: null,
+  avatarPreview: null,
+  isUploadingAvatar: false,
+
+  biometric: createBiometricState(),
+  isLoading: false,
+  isProfileLoading: false,
+  isUpdating: false,
+  error: null,
+});
+
+export const initialUserState: UserState = createInitialUserState();
+
+export const createUserActions = (
+  set: Parameters<UserStoreCreator>[0],
+  get: Parameters<UserStoreCreator>[1]
+): UserActions => {
+  const setUserState = set as unknown as (fn: (draft: UserState) => void) => void;
+  const setState = (recipe: (draft: UserState) => void) => {
+    setUserState(recipe);
+  };
+
+  const resetUserState = (state: UserState) => {
+    Object.assign(state, createInitialUserState());
+  };
+
+  const baseActions = createBaseStoreActions<UserState>(setState);
+
+  const actions: UserActions = {
+    ...baseActions,
+
+    setUser: (user: User | null) => setState((state) => {
+      if (state.user !== user) {
+        state.user = user;
+      }
+    }),
+
+    setSession: (session: Session | null) => setState((state) => {
+      if (state.session !== session) {
+        state.session = session;
+      }
+    }),
+
+    setAuthenticated: (authenticated: boolean) => setState((state) => {
+      if (state.isAuthenticated === authenticated) {
+        return;
+      }
+      if (!authenticated) {
+        resetUserState(state);
+        return;
+      }
+      state.isAuthenticated = true;
+    }),
+
+    setUserAndAuth: (user: User | null, authenticated: boolean) => setState((state) => {
+      if (!authenticated) {
+        resetUserState(state);
+        return;
+      }
+      state.user = user;
+      state.isAuthenticated = true;
+    }),
+
+    setSessionAndDerived: (session: Session | null) => setState((state) => {
+      if (state.session !== session) {
+        state.session = session;
+
+        const newUser = session?.user ?? null;
+        const newAuthenticated = Boolean(newUser);
+
+        if (state.user !== newUser) {
+          state.user = newUser;
+        }
+        if (newAuthenticated) {
+          state.isAuthenticated = true;
+        } else {
+          resetUserState(state);
+        }
+      }
+    }),
+
+    initializeAuth: (user: User | null, session: Session | null, authenticated: boolean) => setState((state) => {
+      if (!authenticated) {
+        resetUserState(state);
+        return;
+      }
+      state.user = user;
+      state.session = session;
+      state.isAuthenticated = true;
+    }),
+
+    signOut: () => setState((state) => {
+      resetUserState(state);
+    }),
+
+    clearUser: () => setState((state) => {
+      resetUserState(state);
+    }),
+
+    setProfile: (profile: UserProfile | null) => setState((state) => {
+      state.profile = profile ?? null;
+    }),
+
+    updateProfile: (updates: Record<string, unknown>) => {
+      const current = get().profile;
+      if (!current) {
+        return;
+      }
+      const next = {
+        ...(current as Record<string, unknown>),
+        ...updates,
+        updated_at: new Date().toISOString(),
+      } as UserProfile & Record<string, unknown>;
+      setState((state) => {
+        state.profile = next;
+      });
+    },
+
+    setProfileLoading: (loading: boolean) => setState((state) => {
+      state.isProfileLoading = loading;
+    }),
+
+    setUpdating: (updating: boolean) => setState((state) => {
+      state.isUpdating = updating;
+    }),
+
+    setBiometricSupported: (supported: boolean) => setState((state) => {
+      state.biometric.isSupported = supported;
+    }),
+
+    setBiometricAvailable: (available: boolean) => setState((state) => {
+      state.biometric.isAvailable = available;
+    }),
+
+    setBiometricCredentials: (hasCredentials: boolean) => setState((state) => {
+      state.biometric.hasCredentials = hasCredentials;
+    }),
+
+    setBiometricRegistering: (registering: boolean) => setState((state) => {
+      state.biometric.isRegistering = registering;
+    }),
+
+    setBiometricError: (error: string | null) => setState((state) => {
+      state.biometric.error = error;
+    }),
+
+    setBiometricSuccess: (success: boolean) => setState((state) => {
+      state.biometric.success = success;
+    }),
+
+    resetBiometric: () => setState((state) => {
+      state.biometric = {
         isSupported: null,
         isAvailable: null,
         hasCredentials: null,
         isRegistering: false,
         error: null,
-  success: false,
-      },
-      isLoading: false,
-      isProfileLoading: false,
-      isUpdating: false,
-error: null,
+        success: false
+      };
+    }),
 
-      // Base store actions
-      setLoading: (loading) => set((state) => {
-  state.isLoading = loading;
-      }),
+    setProfileEditData: (data: ProfileEditDraft | null) => setState((state) => {
+      state.profileEditData = data ?? null;
+    }),
 
-      setError: (error) => set((state) => {
-  state.error = error;
-      }),
-
-      clearError: () => set((state) => {
-        state.error = null;
-      }),
-
-      // Authentication actions - Fixed architecture to prevent infinite loops
-      setUser: (user) => set((state) => {
-        // Only update if the user is actually different
-  if (state.user !== user) {
-          state.user = user;
-          // Don't automatically set isAuthenticated here to prevent cascading updates
-          // Let the calling code explicitly set authentication state
+    updateProfileEditData: (updates: Partial<ProfileUpdateData>) => setState((state) => {
+      if (Object.keys(updates).length === 0) {
+        return;
+      }
+      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          (target as Record<string, unknown>)[key] = value;
         }
-      }),
+      });
+    }),
 
-      setSession: (session) => set((state) => {
-        // Only update session if it's actually different
-  if (state.session !== session) {
-          state.session = session;
-          // Don't automatically update user/authentication to prevent cascading updates
-          // Let the calling code explicitly manage these relationships
-        }
+    updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => setState((state) => {
+      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+      (target as Record<string, unknown>)[field] = value;
+    }),
 
+    updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => setState((state) => {
+      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+      const currentArray = Array.isArray(target[field])
+        ? (target[field] as string[]).slice()
+        : [];
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter((item: string) => item !== value)
+        : [...currentArray, value];
+      target[field] = newArray;
+    }),
 
-      setAuthenticated: (authenticated) => set((state) => {
-        // Only update if the authentication state is actually different
-        if (state.isAuthenticated !== authenticated) {
-          state.isAuthenticated = authenticated;
+    updatePrivacySetting: <K extends PrivacySettingKey>(setting: K, value: PrivacySettingValue<K>) => setState((state) => {
+      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+      const settings = target.privacy_settings ?? (target.privacy_settings = {} as Partial<PrivacySettings>);
+      settings[setting] = value;
+    }),
 
-          if (!authenticated) {
-      state.user = null;
-            state.session = null;
-            state.profile = null;
-          }
-        }
-,
+    setProfileEditing: (editing: boolean) => setState((state) => {
+      state.isProfileEditing = editing;
+    }),
 
-      // New method to safely set user and authentication together
-      setUserAndAuth: (user, authenticated) => set((state) => {
-nst userChanged = state.user !== user;
-        const authChanged = state.isAuthenticated !== authenticated;
+    setProfileEditError: (field: string, error: string) => setState((state) => {
+      state.profileEditErrors[field] = error;
+    }),
 
-        if (userChanged || authChanged) {
-          state.user = user;
-          state.isAuthenticated = authenticated;
+    clearProfileEditError: (field: string) => setState((state) => {
+      delete state.profileEditErrors[field];
+    }),
 
-          // Clear related state if not authenticated
-    if (!authenticated) {
-            state.session = null;
-            state.profile = null;
-          }
-        }
+    clearAllProfileEditErrors: () => setState((state) => {
+      state.profileEditErrors = {};
+    }),
 
+    setCurrentAddress: (address: string) => setState((state) => {
+      state.currentAddress = address;
+    }),
 
-      // New method to safely set session and derived state together
-      setSessionAndDerived: (session) => set((state) => {
- (state.session !== session) {
-          state.session = session;
+    setCurrentState: (stateValue: string) => setState((state) => {
+      state.currentState = stateValue;
+    }),
 
-          // Only update derived state if session actually changed
-          const newUser = session?.user ?? null;
-          const newAuthenticated = !!newUser;
+    setRepresentatives: (representatives: Representative[]) => setState((state) => {
+      state.representatives = representatives;
+    }),
 
-          if (state.user !== newUser) {
-            state.user = newUser;
-    }
-          if (state.isAuthenticated !== newAuthenticated) {
-            state.isAuthenticated = newAuthenticated;
-          }
-        }
-      }),
+    addRepresentative: (representative: Representative) => setState((state) => {
+      const existingIndex = state.representatives.findIndex((rep) => String(rep.id) === String(representative.id));
+      if (existingIndex === -1) {
+        state.representatives.push(representative);
+      }
+    }),
 
- New method to safely initialize authentication state
-      initializeAuth: (user, session, authenticated) => set((state) => {
-        // Only update if any of the values are actually different
-        const userChanged = state.user !== user;
-        const sessionChanged = state.session !== session;
-nst authChanged = state.isAuthenticated !== authenticated;
+    removeRepresentative: (id: string) => setState((state) => {
+      state.representatives = state.representatives.filter((rep) => String(rep.id) !== String(id));
+    }),
 
-        if (userChanged || sessionChanged || authChanged) {
-          state.user = user;
-          state.session = session;
-          state.isAuthenticated = authenticated;
+    setShowAddressForm: (show: boolean) => setState((state) => {
+      state.showAddressForm = show;
+    }),
 
-    // Clear related state if not authenticated
-          if (!authenticated) {
-            state.profile = null;
-          }
-        }
-      }),
+    setNewAddress: (address: string) => setState((state) => {
+      state.newAddress = address;
+    }),
 
-gnOut: () => set((state) => {
-        state.user = null;
-  state.session = null;
-        state.profile = null;
-        state.isAuthenticated = false;
-        state.error = null;
+    setAddressLoading: (loading: boolean) => setState((state) => {
+      state.addressLoading = loading;
+    }),
 
-      }),
+    setSavedSuccessfully: (saved: boolean) => setState((state) => {
+      state.savedSuccessfully = saved;
+    }),
 
-      clearUser: () => set((state) => {
-        state.user = null;
-        state.session = null;
-        state.profile = null;
-  state.isAuthenticated = false;
-        state.error = null;
-        state.isLoading = false;
-        state.isProfileLoading = false;
-        state.isUpdating = false;
-}),
-
-      // Profile actions
-      setProfile: (profile) => set(() => ({
-        profile,
-      })),
-
-      updateProfile: (updates) => set((state) => {
-        if (!state.profile) {
-          return {};
-        }
-
-        const nextProfile = Object.assign(
-          {},
-          state.profile as Record<string, unknown>,
-          updates as Record<string, unknown>,
-    { updated_at: new Date().toISOString() },
-        ) as UserProfile;
-
-        // @ts-expect-error Supabase profile type is deeply nested; treat as sanitized record merge.
-  return { profile: nextProfile };
-      }),
-
-      // Loading state actions
-      setProfileLoading: (loading) => set((state) => {
-  state.isProfileLoading = loading;
-      }),
-
-      setUpdating: (updating) => set((state) => {
-  state.isUpdating = updating;
-      }),
-
-      // Biometric actions
-setBiometricSupported: (supported) => set((state) => {
-        state.biometric.isSupported = supported;
-      }),
-
-setBiometricAvailable: (available) => set((state) => {
-        state.biometric.isAvailable = available;
-      }),
-
-setBiometricCredentials: (hasCredentials) => set((state) => {
-        state.biometric.hasCredentials = hasCredentials;
-      }),
-
-setBiometricRegistering: (registering) => set((state) => {
-        state.biometric.isRegistering = registering;
-      }),
-
-      setBiometricError: (error) => set((state) => {
-        state.biometric.error = error;
-      }),
-
-      setBiometricSuccess: (success) => set((state) => {
-        state.biometric.success = success;
-      }),
-
-      resetBiometric: () => set((state) => {
-        state.biometric = {
-          isSupported: null,
-          isAvailable: null,
-    hasCredentials: null,
-          isRegistering: false,
-          error: null,
-          success: false,
-        };
-      }),
-
-      // Profile editing actions
-      setProfileEditData: (data) => set(() => ({
-        profileEditData: data ? { ...(data as Record<string, unknown>) } : null,
-      })),
-
-      updateProfileEditData: (updates) => set((state) => {
-        const current = state.profileEditData;
-        if (!current) {
-          if (Object.keys(updates).length === 0) {
-            return {};
-          }
-          return { profileEditData: { ...(updates as Record<string, unknown>) } };
-        }
-
-        return {
-          profileEditData: mergeProfileUpdateData(current, updates as Record<string, unknown>),
-        };
-      }),
-
-      updateProfileField: (field, value) => set((state) => {
-        if (!state.profileEditData) {
-          return {};
-        }
-
-        return {
-          profileEditData: {
-      ...state.profileEditData,
-            [field as string]: value,
-          },
-        };
-      }),
-
-      updateArrayField: (field, value) => set((state) => {
-        const current = state.profileEditData as Record<string, unknown> | null;
-        if (!current) {
-          return {};
-        }
-
-        const sourceArray = current[field as string];
-  const currentArray = Array.isArray(sourceArray) ? (sourceArray as string[]) : [];
-        const newArray = currentArray.includes(value)
-          ? currentArray.filter((item: string) => item !== value)
-          : [...currentArray, value];
-
-        const nextProfileEditData = {
-          ...current,
-          [field]: newArray,
-  } as Record<string, unknown>;
-
-        return {
-          profileEditData: nextProfileEditData,
-  };
-      }),
-
-      updatePrivacySetting: (setting, value) => set((state) => {
-  if (!state.profileEditData) {
-          return {};
-        }
-
-        const currentSettings =
-    (state.profileEditData.privacy_settings as Record<string, unknown> | undefined) ?? {};
-        return {
-          profileEditData: {
-            ...state.profileEditData,
-      privacy_settings: {
-              ...currentSettings,
-              [setting]: value,
-            } as Partial<PrivacySettings>,
+    lookupAddress: async (address: string) => {
+      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
+      if (!response.ok) {
+        throw new Error('Address lookup failed');
+      }
+      const result = await response.json();
+      return result.data ?? [];
     },
-        };
-      }),
 
-      setProfileEditing: (editing) => set((state) => {
-        state.isProfileEditing = editing;
-      }),
+    handleAddressUpdate: async (address: string, temporary = false) => {
+      const currentState = get();
+      setState((state) => {
+        state.addressLoading = true;
+      });
 
-      setProfileEditError: (field, error) => set((state) => {
-        state.profileEditErrors[field] = error;
-      }),
+      try {
+        const representatives = await currentState.lookupAddress(address);
 
-      clearProfileEditError: (field) => set((state) => {
-        delete state.profileEditErrors[field];
-      }),
+        const canStoreLocation = Boolean(
+          (currentState.profile?.privacy_settings as Partial<PrivacySettings> | undefined)?.collectLocationData
+        );
 
-      clearAllProfileEditErrors: () => set((state) => {
-        state.profileEditErrors = {};
-      }),
+        setState((state) => {
+          state.representatives = representatives;
 
-      // Address and representatives actions
-      setCurrentAddress: (address) => set((state) => {
-        state.currentAddress = address;
-}),
+          if (canStoreLocation && !temporary) {
+            state.currentAddress = address;
+            logger.info('Location stored (user consented)', { address });
+          } else {
+            state.currentAddress = '';
+            if (temporary) {
+              logger.debug('Location used temporarily (not stored)', { address });
+            } else {
+              logger.debug('Location not stored (no consent)', { address });
+            }
+          }
 
-      setCurrentState: (stateValue) => set((state) => {
-        state.currentState = stateValue;
-}),
-
-      setRepresentatives: (representatives) => set((state) => {
-        state.representatives = representatives;
-      }),
-
-      addRepresentative: (representative) => set((state) => {
-        const existingIndex = state.representatives.findIndex(rep => String(rep.id) === String(representative.id));
-        if (existingIndex === -1) {
-    state.representatives.push(representative);
-        }
-      }),
-
-      removeRepresentative: (id) => set((state) => {
-        state.representatives = state.representatives.filter(rep => String(rep.id) !== String(id));
-,
-
-      setShowAddressForm: (show) => set((state) => {
-ate.showAddressForm = show;
-      }),
-
-      setNewAddress: (address) => set((state) => {
-        state.newAddress = address;
-      }),
-
-      setAddressLoading: (loading) => set((state) => {
-e.addressLoading = loading;
-      }),
-
-edSuccessfully: (saved) => set((state) => {
-        state.savedSuccessfully = saved;
-      }),
-
-      lookupAddress: async (address) => {
-        const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
-        if (!response.ok) {
-          throw new Error('Address lookup failed');
-        }
-        const result = await response.json();
-        return result.data ?? [];
-      },
-
-      handleAddressUpdate: async (address, temporary = false) => {
-t currentState = _get();
-        set((state) => {
-          state.addressLoading = true;
+          state.showAddressForm = false;
+          state.newAddress = '';
+          state.savedSuccessfully = true;
+          state.addressLoading = false;
         });
 
-        try {
-const representatives = await currentState.lookupAddress(address);
-
-          set((state) => {
-            // 🔒 PRIVACY: Only store address if:
-            // 1. User has opted in to location collection, OR
-            // 2. Temporary flag is false and we have consent
-            const canStoreLocation: boolean = Boolean(
-    state.profile?.privacy_settings?.collectLocationData
-            );
-
-            // Always update representatives (they requested them)
-            state.representatives = representatives;
-
-            // Only store address if user has consented or it's temporary
-            if (canStoreLocation && !temporary) {
-              state.currentAddress = address;
-              logger.info('Location stored (user consented)', { address });
-      } else {
-              // Don't store address, just show representatives
-              state.currentAddress = ''; // Clear stored address
-              if (temporary) {
-                logger.debug('Location used temporarily (not stored)', { address });
-        } else {
-                logger.debug('Location not stored (no consent)', { address });
-              }
-            }
-
-            state.showAddressForm = false;
-            state.newAddress = '';
-            state.savedSuccessfully = true;
-      state.addressLoading = false;
+        setTimeout(() => {
+          setState((state) => {
+            state.savedSuccessfully = false;
           });
+        }, 3000);
+      } catch (error) {
+        setState((state) => {
+          state.addressLoading = false;
+          state.savedSuccessfully = false;
+        });
+        throw error;
+      }
+    },
 
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-      set((state) => {
-              state.savedSuccessfully = false;
-            });
-          }, 3000);
+    setAvatarFile: (file: File | null) => setState((state) => {
+      state.avatarFile = file;
+    }),
 
-        } catch (error) {
-          // Address update failed - error will be handled by calling code
-          set((state) => {
-            state.addressLoading = false;
-      state.savedSuccessfully = false;
-          });
-          throw error;
-        }
-      },
+    setAvatarPreview: (preview: string | null) => setState((state) => {
+      state.avatarPreview = preview;
+    }),
 
-      // Avatar actions
-      setAvatarFile: (file) => set((state) => {
-        state.avatarFile = file;
-      }),
+    setUploadingAvatar: (uploading: boolean) => setState((state) => {
+      state.isUploadingAvatar = uploading;
+    }),
 
-      setAvatarPreview: (preview) => set((state) => {
-        state.avatarPreview = preview;
-      }),
+    clearAvatar: () => setState((state) => {
+      state.avatarFile = null;
+      state.avatarPreview = null;
+    }),
 
-      setUploadingAvatar: (uploading) => set((state) => {
-        state.isUploadingAvatar = uploading;
-      }),
+    setUserError: (error: string | null) => setState((state) => {
+      state.error = error;
+    }),
 
-      clearAvatar: () => set((state) => {
-        state.avatarFile = null;
-        state.avatarPreview = null;
-      }),
+    clearUserError: () => setState((state) => {
+      state.error = null;
+    })
+  } satisfies UserActions;
 
-      // Error handling actions
-      setUserError: (error) => set((state) => {
-        state.error = error;
+  return actions;
+};
 
-        if (error) {
-          // User store error - error will be handled by calling code
-        }
-      }),
+export const userStoreCreator: UserStoreCreator = (set, get) =>
+  Object.assign(createInitialUserState(), createUserActions(set, get));
 
-      clearUserError: () => set((state) => {
-        state.error = null;
-      }),
-    })),
-    {
-      name: 'user-store',
-      storage: createSafeStorage(),
-      partialize: (state) => ({
-        profile: state.profile,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    }
-  ),
-  { name: 'user-store' }
-));
+export const useUserStore = create<UserStore>()(
+  devtools(
+    persist(
+      immer(userStoreCreator),
+      {
+        name: 'user-store',
+        storage: createSafeStorage(),
+        partialize: (state) => ({
+          profile: state.profile,
+          isAuthenticated: state.isAuthenticated,
+        }),
+      }
+    ),
+    { name: 'user-store' }
+  )
+);
+
 
 // Store selectors for optimized re-renders
 export const useUser = () => useUserStore(state => state.user);
@@ -656,7 +581,7 @@ export const useUserActions = () => {
   const clearUserError = useUserStore(state => state.clearUserError);
   const setBiometricSupported = useUserStore(state => state.setBiometricSupported);
   const setBiometricAvailable = useUserStore(state => state.setBiometricAvailable);
-const setBiometricCredentials = useUserStore(state => state.setBiometricCredentials);
+  const setBiometricCredentials = useUserStore(state => state.setBiometricCredentials);
   const setBiometricRegistering = useUserStore(state => state.setBiometricRegistering);
   const setBiometricError = useUserStore(state => state.setBiometricError);
   const setBiometricSuccess = useUserStore(state => state.setBiometricSuccess);
@@ -743,20 +668,19 @@ export const useUserDisplayName = () => useUserStore(state => {
   return 'User';
 });
 
-port const useUserAvatar = () => useUserStore(state => {
+export const useUserAvatar = () => useUserStore(state => {
   if (state.profile?.avatar_url) return state.profile.avatar_url;
   if (state.user?.user_metadata?.avatar_url) return state.user?.user_metadata.avatar_url;
   return null;
 });
 
 // Theme and notifications can be derived from privacy_settings or user metadata
-rt const useUserTheme = () => useUserStore(state => {
+export const useUserTheme = () => useUserStore(state => {
   return state.user?.user_metadata?.theme ?? 'system';
 });
 
 // Profile editing selectors
-export const useUserProfileEditData = () =>
-  useUserStore((state) => state.profileEditData as ProfileUpdateData | null);
+export const useUserProfileEditData = () => useUserStore(state => state.profileEditData);
 export const useUserIsProfileEditing = () => useUserStore(state => state.isProfileEditing);
 export const useUserProfileEditErrors = () => useUserStore(state => state.profileEditErrors);
 
@@ -767,7 +691,7 @@ export const useUserRepresentatives = () => useUserStore(state => state.represen
 export const useUserShowAddressForm = () => useUserStore(state => state.showAddressForm);
 export const useUserNewAddress = () => useUserStore(state => state.newAddress);
 export const useUserAddressLoading = () => useUserStore(state => state.addressLoading);
-port const useUserSavedSuccessfully = () => useUserStore(state => state.savedSuccessfully);
+export const useUserSavedSuccessfully = () => useUserStore(state => state.savedSuccessfully);
 
 // Avatar selectors
 export const useUserAvatarFile = () => useUserStore(state => state.avatarFile);
@@ -798,7 +722,7 @@ export const userStoreUtils = {
    */
   isAdmin: () => {
     const state = useUserStore.getState();
-  return state.user?.user_metadata?.role === 'admin';
+    return state.user?.user_metadata?.role === 'admin';
   },
 
   /**
@@ -813,7 +737,7 @@ export const userStoreUtils = {
       theme: state.user?.user_metadata?.theme ?? 'system',
     };
   }
-
+};
 
 // Store subscriptions for external integrations
 export const userStoreSubscriptions = {
@@ -825,7 +749,7 @@ export const userStoreSubscriptions = {
       (state, prevState) => {
         const { isAuthenticated, user } = state;
         const { isAuthenticated: prevIsAuthenticated, user: prevUser } = prevState;
-      if (isAuthenticated !== prevIsAuthenticated || user !== prevUser) {
+        if (isAuthenticated !== prevIsAuthenticated || user !== prevUser) {
           callback(isAuthenticated, user);
         }
       }
@@ -835,7 +759,7 @@ export const userStoreSubscriptions = {
   /**
    * Subscribe to profile changes
    */
-onProfileChange: (callback: (profile: UserProfile | null) => void) => {
+  onProfileChange: (callback: (profile: UserProfile | null) => void) => {
     return useUserStore.subscribe(
       (state, prevState) => {
         const { profile } = state;

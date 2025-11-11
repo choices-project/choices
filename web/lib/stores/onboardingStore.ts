@@ -1,21 +1,20 @@
 /**
  * Onboarding Store - Zustand Implementation
- * 
+ *
  * Comprehensive onboarding state management including step navigation,
  * form data persistence, and progress tracking. Integrates with UserStore
  * for profile data and AppStore for user preferences.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
 
 import { create } from 'zustand';
+import type { StateCreator, StoreApi } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import { withOptional } from '@/lib/util/objects';
-import { logger } from '@/lib/utils/logger';
-
 import type { AuthSetupStepData } from '@/features/onboarding/types';
+import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
 
@@ -80,39 +79,30 @@ type OnboardingStep = {
   completed: boolean;
   skipped: boolean;
   data?: unknown;
-}
+};
 
-// Onboarding store state interface
-type OnboardingStore = {
-  // Onboarding state
+export type OnboardingState = {
   currentStep: number;
   totalSteps: number;
   isCompleted: boolean;
   isSkipped: boolean;
   isActive: boolean;
-  
-  // Form data
   authData: AuthData;
   profileData: ProfileData;
   valuesData: ValuesData;
   preferencesData: PreferencesData;
-  
-  // Progress tracking
   progress: number;
   completedSteps: number[];
   skippedSteps: number[];
   stepData: Record<number, unknown>;
-  
-  // Steps configuration
   steps: OnboardingStep[];
-  
-  // Loading states
   isLoading: boolean;
   isSaving: boolean;
   isSubmitting: boolean;
   error: string | null;
-  
-  // Actions - Navigation
+};
+
+export type OnboardingActions = {
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -120,8 +110,6 @@ type OnboardingStore = {
   completeOnboarding: () => void;
   skipOnboarding: () => void;
   restartOnboarding: () => void;
-  
-  // Actions - Data management
   updateFormData: (step: number, data: Record<string, unknown>) => void;
   updateAuthData: (data: Partial<AuthData>) => void;
   updateProfileData: (data: Partial<ProfileData>) => void;
@@ -129,28 +117,32 @@ type OnboardingStore = {
   updatePreferencesData: (data: Partial<PreferencesData>) => void;
   clearStepData: (step: number) => void;
   clearAllData: () => void;
-  
-  // Actions - Step management
   markStepCompleted: (step: number) => void;
   markStepSkipped: (step: number) => void;
   markStepIncomplete: (step: number) => void;
   canProceedToNextStep: (step: number) => boolean;
   getStepValidationErrors: (step: number) => string[];
-  
-  // Actions - Loading states
   setLoading: (loading: boolean) => void;
   setSaving: (saving: boolean) => void;
   setSubmitting: (submitting: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  
-  // Actions - Data operations
   saveProgress: () => Promise<void>;
   loadProgress: () => Promise<void>;
   submitOnboarding: () => Promise<void>;
   validateStep: (step: number) => boolean;
   validateAllSteps: () => boolean;
-}
+};
+
+export type OnboardingStore = OnboardingState & OnboardingActions;
+
+type OnboardingStoreCreator = StateCreator<
+  OnboardingStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown]]
+>;
+
+type OnboardingStoreSetState = StoreApi<OnboardingStore>['setState'];
+type OnboardingStoreGetState = StoreApi<OnboardingStore>['getState'];
 
 // Default onboarding steps
 const defaultSteps: OnboardingStep[] = [
@@ -210,14 +202,19 @@ const defaultSteps: OnboardingStep[] = [
   },
 ];
 
-const mergeState = <T extends object>(state: T, updates: Partial<T>) =>
-  withOptional(state, updates as Record<string, unknown>) as T;
+const mergeState = <T extends object>(state: T, updates: Partial<T>): T => ({
+  ...state,
+  ...updates,
+});
 
 const mergeStepData = (
   stepData: Record<number, unknown>,
   step: number,
   data: unknown,
-) => withOptional(stepData, { [step]: data } as Record<number, unknown>);
+): Record<number, unknown> => ({
+  ...stepData,
+  [step]: data,
+});
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -244,390 +241,271 @@ const getAuthMethod = (value: unknown): AuthSetupStepData['authMethod'] | undefi
   return (authMethods as string[]).includes(value) ? (value as AuthSetupStepData['authMethod']) : undefined;
 };
 
-// Create onboarding store with middleware
-export const useOnboardingStore = create<OnboardingStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        // Initial state
-        currentStep: 0,
-        totalSteps: 6,
-        isCompleted: false,
-        isSkipped: false,
+const cloneSteps = () => defaultSteps.map((step) => ({ ...step }));
+
+export const createInitialOnboardingState = (): OnboardingState => ({
+  currentStep: 0,
+  totalSteps: defaultSteps.length,
+  isCompleted: false,
+  isSkipped: false,
+  isActive: false,
+  authData: {} as AuthData,
+  profileData: {} as ProfileData,
+  valuesData: {} as ValuesData,
+  preferencesData: {} as PreferencesData,
+  progress: 0,
+  completedSteps: [],
+  skippedSteps: [],
+  stepData: {},
+  steps: cloneSteps(),
+  isLoading: false,
+  isSaving: false,
+  isSubmitting: false,
+  error: null,
+});
+
+export const createOnboardingActions = (
+  set: OnboardingStoreSetState,
+  get: OnboardingStoreGetState
+): OnboardingActions => ({
+  setCurrentStep: (step) =>
+    set((state: OnboardingStore) => {
+      const newStep = Math.max(0, Math.min(step, state.totalSteps - 1));
+      const progress = (newStep / state.totalSteps) * 100;
+
+      logger.info('Onboarding step changed', {
+        from: state.currentStep,
+        to: newStep,
+        progress: Math.round(progress),
+      });
+
+      return mergeState(state, {
+        currentStep: newStep,
+        progress,
+      });
+    }),
+
+  nextStep: () =>
+    set((state: OnboardingStore) => {
+      const nextStep = Math.min(state.currentStep + 1, state.totalSteps - 1);
+      const progress = (nextStep / state.totalSteps) * 100;
+
+      logger.info('Onboarding next step', {
+        currentStep: nextStep,
+        progress: Math.round(progress),
+      });
+
+      return mergeState(state, {
+        currentStep: nextStep,
+        progress,
+      });
+    }),
+
+  previousStep: () =>
+    set((state: OnboardingStore) => {
+      const prevStep = Math.max(state.currentStep - 1, 0);
+      const progress = (prevStep / state.totalSteps) * 100;
+
+      logger.info('Onboarding previous step', {
+        currentStep: prevStep,
+        progress: Math.round(progress),
+      });
+
+      return mergeState(state, {
+        currentStep: prevStep,
+        progress,
+      });
+    }),
+
+  goToStep: (step) => {
+    const { setCurrentStep } = get();
+    setCurrentStep(step);
+  },
+
+  completeOnboarding: () =>
+    set((state: OnboardingStore) => {
+      logger.info('Onboarding completed', {
+        totalSteps: state.totalSteps,
+        completedSteps: state.completedSteps.length + 1,
+      });
+
+      return mergeState(state, {
+        isCompleted: true,
         isActive: false,
-        authData: {} as AuthData,
-        profileData: {} as ProfileData,
-        valuesData: {} as ValuesData,
-        preferencesData: {} as PreferencesData,
-        progress: 0,
-        completedSteps: [],
-        skippedSteps: [],
-        stepData: {},
-        steps: defaultSteps,
-        isLoading: false,
-        isSaving: false,
-        isSubmitting: false,
-        error: null,
-        
-        // Navigation actions
-        setCurrentStep: (step) => set((state) => {
-          const newStep = Math.max(0, Math.min(step, state.totalSteps - 1));
-          const progress = (newStep / state.totalSteps) * 100;
-          
-          logger.info('Onboarding step changed', {
-            from: state.currentStep,
-            to: newStep,
-            progress: Math.round(progress)
-          });
-          
-          return mergeState(state, {
-            currentStep: newStep,
-            progress,
-          });
-        }),
-        
-        nextStep: () => set((state) => {
-          const nextStep = Math.min(state.currentStep + 1, state.totalSteps - 1);
-          const progress = (nextStep / state.totalSteps) * 100;
-          
-          logger.info('Onboarding next step', {
-            currentStep: nextStep,
-            progress: Math.round(progress)
-          });
-          
-          return mergeState(state, {
-            currentStep: nextStep,
-            progress,
-          });
-        }),
-        
-        previousStep: () => set((state) => {
-          const prevStep = Math.max(state.currentStep - 1, 0);
-          const progress = (prevStep / state.totalSteps) * 100;
-          
-          logger.info('Onboarding previous step', {
-            currentStep: prevStep,
-            progress: Math.round(progress)
-          });
-          
-          return mergeState(state, {
-            currentStep: prevStep,
-            progress,
-          });
-        }),
-        
-        goToStep: (step) => {
-          const { setCurrentStep } = get();
-          setCurrentStep(step);
-        },
-        
-        completeOnboarding: () => set((state) => {
-          logger.info('Onboarding completed', {
-            totalSteps: state.totalSteps,
-            completedSteps: state.completedSteps.length + 1
-          });
-          
-          return mergeState(state, {
-            isCompleted: true,
-            isActive: false,
-            progress: 100,
-            completedSteps: [...state.completedSteps, state.currentStep],
-          });
-        }),
-        
-        skipOnboarding: () => set({
-          isSkipped: true,
-          isActive: false,
-          progress: 100
-        }),
-        
-        restartOnboarding: () => set({
-          currentStep: 0,
-          isCompleted: false,
-          isSkipped: false,
-          isActive: true,
-          progress: 0,
-          completedSteps: [],
-          skippedSteps: [],
-          stepData: {},
-          authData: {} as AuthData,
-          profileData: {} as ProfileData,
-          valuesData: {} as ValuesData,
-          preferencesData: {} as PreferencesData,
-          error: null
-        }),
-        
-        // Data management actions
-        updateFormData: (step, data) => set((state) => {
-          const existing = asRecord(state.stepData[step]);
-          return {
-            stepData: mergeStepData(state.stepData, step, {
-              ...existing,
-              ...data,
-            }),
-          };
-        }),
-        
-        updateAuthData: (data) => set((state) => ({
-          authData: mergeState(state.authData, data),
-        })),
-        
-        updateProfileData: (data) => set((state) => ({
-          profileData: mergeState(state.profileData, data),
-        })),
-        
-        updateValuesData: (data) => set((state) => ({
-          valuesData: mergeState(state.valuesData, data),
-        })),
-        
-        updatePreferencesData: (data) => set((state) => ({
-          preferencesData: mergeState(state.preferencesData, data),
-        })),
-        
-        clearStepData: (step) => set((state) => ({
-          stepData: mergeStepData(state.stepData, step, {}),
-        })),
-        
-        clearAllData: () => set({
-          stepData: {},
-          authData: {} as AuthData,
-          profileData: {} as ProfileData,
-          valuesData: {} as ValuesData,
-          preferencesData: {} as PreferencesData
-        }),
-        
-        // Step management actions
-        markStepCompleted: (step) => set((state) => ({
-          completedSteps: [...state.completedSteps, step],
-          steps: state.steps.map((s) =>
-            s.id === step ? mergeState(s, { completed: true }) : s
-          ),
-        })),
-        
-        markStepSkipped: (step) => set((state) => ({
-          skippedSteps: [...state.skippedSteps, step],
-          steps: state.steps.map((s) =>
-            s.id === step ? mergeState(s, { skipped: true }) : s
-          ),
-        })),
-        
-        markStepIncomplete: (step) => set((state) => ({
-          completedSteps: state.completedSteps.filter((s) => s !== step),
-          steps: state.steps.map((s) =>
-            s.id === step ? mergeState(s, { completed: false }) : s
-          ),
-        })),
-        
-        canProceedToNextStep: (step) => {
-          const state = get();
-          const currentStepData = asRecord(state.stepData[step]);
-          const stepConfig = state.steps.find(s => s.id === step);
-          
-          if (!stepConfig?.required) return true;
-          
-          switch (step) {
-            case 0: // Welcome step
-              return true;
-            case 1: { // Auth step
-              const method = getAuthMethod(currentStepData.authMethod);
-              const completed = getBoolean(currentStepData.authSetupCompleted);
-              const email = getString(currentStepData.email);
-              return method === 'skip' || Boolean(completed) || !!email;
-            }
-            case 2: { // Profile step
-              const completed = getBoolean(currentStepData.profileSetupCompleted);
-              const displayName = getString(currentStepData.displayName);
-              const visibility = getString(currentStepData.profileVisibility);
-              return Boolean(completed) || !!displayName || !!visibility;
-            }
-            case 3: { // Values step
-              const primaryConcerns = getStringArray(currentStepData.primaryConcerns);
-              const communityFocus = getStringArray(currentStepData.communityFocus);
-              return primaryConcerns.length > 0 && communityFocus.length > 0;
-            }
-            case 4: // Privacy step (currently informational)
-              return true;
-            case 5: // Complete step
-              return true;
-            default:
-              return true;
-          }
-        },
-        
-        getStepValidationErrors: (step) => {
-          const state = get();
-          const currentStepData = asRecord(state.stepData[step]);
-          const errors: string[] = [];
-          
-          switch (step) {
-            case 1: { // Auth step
-              const method = getAuthMethod(currentStepData.authMethod);
-              if (!method) {
-                errors.push('Select an authentication method.');
-              }
-              if (method === 'email' && !getString(currentStepData.email)) {
-                errors.push('Provide a valid email address for the email login option.');
-              }
-              break;
-            }
-            case 2: { // Profile step
-              if (!getString(currentStepData.profileVisibility)) {
-                errors.push('Choose a profile visibility setting.');
-              }
-              break;
-            }
-            case 3: { // Values step
-              if (getStringArray(currentStepData.primaryConcerns).length === 0) {
-                errors.push('Select at least one primary concern.');
-              }
-              if (getStringArray(currentStepData.communityFocus).length === 0) {
-                errors.push('Select at least one community focus.');
-              }
-              break;
-            }
-            default:
-              break;
-          }
-          
-          return errors;
-        },
-        
-        // Loading state actions
-        setLoading: (loading) => set({ isLoading: loading }),
-        setSaving: (saving) => set({ isSaving: saving }),
-        setSubmitting: (submitting) => set({ isSubmitting: submitting }),
-        setError: (error) => set({ error }),
-        clearError: () => set({ error: null }),
-        
-        // Data operations
-        saveProgress: async () => {
-          const { setSaving, setError } = get();
-          
-          try {
-            setSaving(true);
-            setError(null);
-            
-            const state = get();
-            const response = await fetch('/api/profile?action=onboarding-progress', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                currentStep: state.currentStep,
-                progress: state.progress,
-                stepData: state.stepData,
-                authData: state.authData,
-                profileData: state.profileData,
-                valuesData: state.valuesData,
-                preferencesData: state.preferencesData,
-              }),
-            });
-            
-            if (!response.ok) {
-              throw new Error('Failed to save onboarding progress');
-            }
-            
-            logger.info('Onboarding progress saved', {
-              currentStep: state.currentStep,
-              progress: state.progress
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to save onboarding progress', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setSaving(false);
-          }
-        },
-        
-        loadProgress: async () => {
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            const response = await fetch('/api/profile?action=onboarding-progress');
-            
-            if (!response.ok) {
-              throw new Error('Failed to load onboarding progress');
-            }
-            
-            const data = await response.json();
-            
-            set({
-              currentStep: data.currentStep ?? 0,
-              progress: data.progress ?? 0,
-              stepData: data.stepData ?? {},
-              authData: data.authData ?? {},
-              profileData: data.profileData ?? {},
-              valuesData: data.valuesData ?? {},
-              preferencesData: data.preferencesData ?? {},
-            });
-            
-            logger.info('Onboarding progress loaded', {
-              currentStep: data.currentStep,
-              progress: data.progress
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load onboarding progress', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        submitOnboarding: async () => {
-          const { setSubmitting, setError, completeOnboarding } = get();
-          
-          try {
-            setSubmitting(true);
-            setError(null);
-            
-            const state = get();
-            const response = await fetch('/api/profile?action=complete-onboarding', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                authData: state.authData,
-                profileData: state.profileData,
-                valuesData: state.valuesData,
-                preferencesData: state.preferencesData,
-              }),
-            });
-            
-            if (!response.ok) {
-              throw new Error('Failed to complete onboarding');
-            }
-            
-            completeOnboarding();
-            
-            logger.info('Onboarding submitted successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to submit onboarding', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setSubmitting(false);
-          }
-        },
-        
-        validateStep: (step) => {
-          const { getStepValidationErrors } = get();
-          const errors = getStepValidationErrors(step);
-          return errors.length === 0;
-        },
-        
-        validateAllSteps: () => {
-          const { validateStep, totalSteps } = get();
-          return Array.from({ length: totalSteps }, (_, i) => i)
-            .every(step => validateStep(step));
-        },
-      }),
-      {
-        name: 'onboarding-store',
-        storage: createSafeStorage(),
-        partialize: (state) => ({
+        progress: 100,
+        completedSteps: [...state.completedSteps, state.currentStep],
+      });
+    }),
+
+  skipOnboarding: () =>
+    set({
+      isSkipped: true,
+      isActive: false,
+      progress: 100,
+    }),
+
+  restartOnboarding: () =>
+    set(() => ({
+      ...createInitialOnboardingState(),
+      isActive: true,
+    })),
+
+  updateFormData: (step, data) =>
+    set((state: OnboardingStore) => {
+      const existing = asRecord(state.stepData[step]);
+      const merged = {
+        ...existing,
+        ...(data as Record<string, unknown>),
+      };
+      return {
+        stepData: mergeStepData(state.stepData, step, merged),
+      };
+    }),
+
+  updateAuthData: (data) =>
+    set((state: OnboardingStore) => ({
+      authData: mergeState(state.authData, data),
+    })),
+
+  updateProfileData: (data) =>
+    set((state: OnboardingStore) => ({
+      profileData: mergeState(state.profileData, data),
+    })),
+
+  updateValuesData: (data) =>
+    set((state: OnboardingStore) => ({
+      valuesData: mergeState(state.valuesData, data),
+    })),
+
+  updatePreferencesData: (data) =>
+    set((state: OnboardingStore) => ({
+      preferencesData: mergeState(state.preferencesData, data),
+    })),
+
+  clearStepData: (step) =>
+    set((state: OnboardingStore) => ({
+      stepData: mergeStepData(state.stepData, step, {}),
+    })),
+
+  clearAllData: () =>
+    set(() => ({
+      stepData: {},
+      authData: {} as AuthData,
+      profileData: {} as ProfileData,
+      valuesData: {} as ValuesData,
+      preferencesData: {} as PreferencesData,
+    })),
+
+  markStepCompleted: (step) =>
+    set((state: OnboardingStore) => ({
+      completedSteps: [...state.completedSteps, step],
+      steps: state.steps.map((s: OnboardingStep) => (s.id === step ? mergeState(s, { completed: true }) : s)),
+    })),
+
+  markStepSkipped: (step) =>
+    set((state: OnboardingStore) => ({
+      skippedSteps: [...state.skippedSteps, step],
+      steps: state.steps.map((s: OnboardingStep) => (s.id === step ? mergeState(s, { skipped: true }) : s)),
+    })),
+
+  markStepIncomplete: (step) =>
+    set((state: OnboardingStore) => ({
+      completedSteps: state.completedSteps.filter((s) => s !== step),
+      steps: state.steps.map((s: OnboardingStep) => (s.id === step ? mergeState(s, { completed: false }) : s)),
+    })),
+
+  canProceedToNextStep: (step) => {
+    const state = get();
+    const currentStepData = asRecord(state.stepData[step]);
+    const stepConfig = state.steps.find((s) => s.id === step);
+
+    if (!stepConfig?.required) return true;
+
+    switch (step) {
+      case 0:
+        return true;
+      case 1: {
+        const method = getAuthMethod(currentStepData.authMethod);
+        const completed = getBoolean(currentStepData.authSetupCompleted);
+        const email = getString(currentStepData.email);
+        return method === 'skip' || Boolean(completed) || !!email;
+      }
+      case 2: {
+        const completed = getBoolean(currentStepData.profileSetupCompleted);
+        const displayName = getString(currentStepData.displayName);
+        const visibility = getString(currentStepData.profileVisibility);
+        return Boolean(completed) || !!displayName || !!visibility;
+      }
+      case 3: {
+        const primaryConcerns = getStringArray(currentStepData.primaryConcerns);
+        const communityFocus = getStringArray(currentStepData.communityFocus);
+        return primaryConcerns.length > 0 && communityFocus.length > 0;
+      }
+      case 4:
+        return true;
+      case 5:
+        return true;
+      default:
+        return true;
+    }
+  },
+
+  getStepValidationErrors: (step) => {
+    const state = get();
+    const currentStepData = asRecord(state.stepData[step]);
+    const errors: string[] = [];
+
+    switch (step) {
+      case 1: {
+        const method = getAuthMethod(currentStepData.authMethod);
+        if (!method) {
+          errors.push('Select an authentication method.');
+        }
+        if (method === 'email' && !getString(currentStepData.email)) {
+          errors.push('Provide a valid email address for the email login option.');
+        }
+        break;
+      }
+      case 2: {
+        if (!getString(currentStepData.profileVisibility)) {
+          errors.push('Choose a profile visibility setting.');
+        }
+        break;
+      }
+      case 3: {
+        if (getStringArray(currentStepData.primaryConcerns).length === 0) {
+          errors.push('Select at least one primary concern.');
+        }
+        if (getStringArray(currentStepData.communityFocus).length === 0) {
+          errors.push('Select at least one community focus.');
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    return errors;
+  },
+
+  setLoading: (loading) => set({ isLoading: loading }),
+  setSaving: (saving) => set({ isSaving: saving }),
+  setSubmitting: (submitting) => set({ isSubmitting: submitting }),
+  setError: (error) => set({ error }),
+  clearError: () => set({ error: null }),
+
+  saveProgress: async () => {
+    const { setSaving, setError } = get();
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const state = get();
+      const response = await fetch('/api/profile?action=onboarding-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           currentStep: state.currentStep,
           progress: state.progress,
           stepData: state.stepData,
@@ -635,11 +513,131 @@ export const useOnboardingStore = create<OnboardingStore>()(
           profileData: state.profileData,
           valuesData: state.valuesData,
           preferencesData: state.preferencesData,
-          completedSteps: state.completedSteps,
-          skippedSteps: state.skippedSteps,
         }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save onboarding progress');
       }
-    ),
+
+      logger.info('Onboarding progress saved', {
+        currentStep: state.currentStep,
+        progress: state.progress,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      logger.error('Failed to save onboarding progress', error instanceof Error ? error : new Error(errorMessage));
+    } finally {
+      setSaving(false);
+    }
+  },
+
+  loadProgress: async () => {
+    const { setLoading, setError } = get();
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/profile?action=onboarding-progress');
+
+      if (!response.ok) {
+        throw new Error('Failed to load onboarding progress');
+      }
+
+      const data = await response.json();
+
+      set({
+        currentStep: data.currentStep ?? 0,
+        progress: data.progress ?? 0,
+        stepData: data.stepData ?? {},
+        authData: data.authData ?? {},
+        profileData: data.profileData ?? {},
+        valuesData: data.valuesData ?? {},
+        preferencesData: data.preferencesData ?? {},
+      });
+
+      logger.info('Onboarding progress loaded', {
+        currentStep: data.currentStep,
+        progress: data.progress,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      logger.error('Failed to load onboarding progress', error instanceof Error ? error : new Error(errorMessage));
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  submitOnboarding: async () => {
+    const { setSubmitting, setError, completeOnboarding } = get();
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const state = get();
+      const response = await fetch('/api/profile?action=complete-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authData: state.authData,
+          profileData: state.profileData,
+          valuesData: state.valuesData,
+          preferencesData: state.preferencesData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to complete onboarding');
+      }
+
+      completeOnboarding();
+
+      logger.info('Onboarding submitted successfully');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      logger.error('Failed to submit onboarding', error instanceof Error ? error : new Error(errorMessage));
+    } finally {
+      setSubmitting(false);
+    }
+  },
+
+  validateStep: (step) => {
+    const { getStepValidationErrors } = get();
+    const errors = getStepValidationErrors(step);
+    return errors.length === 0;
+  },
+
+  validateAllSteps: () => {
+    const { validateStep, totalSteps } = get();
+    return Array.from({ length: totalSteps }, (_, i) => i).every((step) => validateStep(step));
+  },
+});
+
+export const onboardingStoreCreator: OnboardingStoreCreator = (set, get) =>
+  Object.assign(createInitialOnboardingState(), createOnboardingActions(set, get));
+
+export const useOnboardingStore = create<OnboardingStore>()(
+  devtools(
+    persist(onboardingStoreCreator, {
+      name: 'onboarding-store',
+      storage: createSafeStorage(),
+      partialize: (state) => ({
+        currentStep: state.currentStep,
+        progress: state.progress,
+        stepData: state.stepData,
+        authData: state.authData,
+        profileData: state.profileData,
+        valuesData: state.valuesData,
+        preferencesData: state.preferencesData,
+        completedSteps: state.completedSteps,
+        skippedSteps: state.skippedSteps,
+      }),
+    }),
     { name: 'onboarding-store' }
   )
 );
@@ -659,7 +657,7 @@ export const useOnboardingData = () => {
   const profileData = useOnboardingStore(state => state.profileData);
   const valuesData = useOnboardingStore(state => state.valuesData);
   const preferencesData = useOnboardingStore(state => state.preferencesData);
-  
+
   return {
     currentStep,
     progress,
@@ -704,7 +702,7 @@ export const useOnboardingActions = () => {
   const submitOnboarding = useOnboardingStore(state => state.submitOnboarding);
   const validateStep = useOnboardingStore(state => state.validateStep);
   const validateAllSteps = useOnboardingStore(state => state.validateAllSteps);
-  
+
   return {
     setCurrentStep,
     nextStep,
@@ -747,7 +745,7 @@ export const useOnboardingStats = () => {
   const progress = useOnboardingStore(state => state.progress);
   const isCompleted = useOnboardingStore(state => state.isCompleted);
   const isSkipped = useOnboardingStore(state => state.isSkipped);
-  
+
   return {
     totalSteps,
     currentStep,
@@ -759,7 +757,7 @@ export const useOnboardingStats = () => {
   };
 };
 
-export const useCurrentStepData = () => useOnboardingStore(state => 
+export const useCurrentStepData = () => useOnboardingStore(state =>
   state.stepData[state.currentStep] ?? {}
 );
 
@@ -786,7 +784,7 @@ export const onboardingStoreUtils = {
       skippedSteps: state.skippedSteps,
     };
   },
-  
+
   /**
    * Get step data for specific step
    */
@@ -794,7 +792,7 @@ export const onboardingStoreUtils = {
     const state = useOnboardingStore.getState();
     return state.stepData[step] ?? {};
   },
-  
+
   /**
    * Check if onboarding can be completed
    */
@@ -802,7 +800,7 @@ export const onboardingStoreUtils = {
     const state = useOnboardingStore.getState();
     return state.validateAllSteps() && state.currentStep === state.totalSteps - 1;
   },
-  
+
   /**
    * Get onboarding progress percentage
    */
@@ -810,7 +808,7 @@ export const onboardingStoreUtils = {
     const state = useOnboardingStore.getState();
     return Math.round(state.progress);
   },
-  
+
   /**
    * Get next incomplete step
    */
@@ -833,7 +831,7 @@ export const onboardingStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to step changes
    */
@@ -844,7 +842,7 @@ export const onboardingStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to completion status
    */
@@ -876,7 +874,7 @@ export const onboardingStoreDebug = {
       error: state.error
     });
   },
-  
+
   /**
    * Log onboarding summary
    */
@@ -884,7 +882,7 @@ export const onboardingStoreDebug = {
     const summary = onboardingStoreUtils.getOnboardingSummary();
     logger.debug('Onboarding Summary', summary);
   },
-  
+
   /**
    * Log step data
    */
@@ -892,7 +890,7 @@ export const onboardingStoreDebug = {
     const stepData = onboardingStoreUtils.getStepData(step);
     logger.debug('Step Data', { step, stepData });
   },
-  
+
   /**
    * Reset onboarding store
    */

@@ -10,13 +10,16 @@
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { BeforeInstallPromptEvent, OfflineVotePayload, OfflineVoteRecord, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
 
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+import type { BaseStore } from './types';
 
 export type PWAQueuedActionData = Record<string, unknown>;
 
@@ -128,19 +131,13 @@ type PWAStorePersistedState = {
   performance: PWAPerformance | null;
 };
 
-// PWA store state interface
-type PWAStore = {
-  // PWA state
+export type PWAState = {
   installation: PWAInstallation;
   offline: PWAOffline;
   update: PWAUpdate;
   notifications: PWANotification[];
   performance: PWAPerformance | null;
-  
-  // Preferences
   preferences: PWAPreferences;
-  
-  // Loading states
   isLoading: boolean;
   isInstalling: boolean;
   isUpdating: boolean;
@@ -148,15 +145,14 @@ type PWAStore = {
   error: string | null;
   offlineQueueSize: number;
   offlineQueueUpdatedAt: string | null;
-  
-  // Actions - Installation
+};
+
+export type PWAActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   setInstallation: (installation: Partial<PWAInstallation>) => void;
   setInstallPrompt: (prompt: BeforeInstallPromptEvent | null) => void;
   setCanInstall: (canInstall: boolean) => void;
   installPWA: () => Promise<void>;
   uninstallPWA: () => Promise<void>;
-  
-  // Actions - Offline management
   setOnlineStatus: (isOnline: boolean) => void;
   setOfflineData: (data: Partial<PWAOffline['offlineData']>) => void;
   addCachedPage: (page: string) => void;
@@ -166,50 +162,46 @@ type PWAStore = {
   queueOfflineAction: (action: PWAQueuedAction) => void;
   processOfflineActions: () => Promise<void>;
   setOfflineQueueSize: (size: number, updatedAt?: string) => void;
-  
-  // Actions - Updates
   setUpdateAvailable: (update: Partial<PWAUpdate>) => void;
   downloadUpdate: () => Promise<void>;
   installUpdate: () => Promise<void>;
   skipUpdate: () => void;
   setAutoUpdate: (enabled: boolean) => void;
-  
-  // Actions - Notifications
   addNotification: (notification: Omit<PWANotification, 'id' | 'createdAt'>) => void;
   removeNotification: (id: string) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
-  
-  // Actions - Performance
   setPerformance: (performance: PWAPerformance) => void;
   updatePerformanceMetrics: (metrics: Partial<PWAPerformance>) => void;
-  
-  // Actions - Preferences
   updatePreferences: (preferences: Partial<PWAPreferences>) => void;
   resetPreferences: () => void;
-  
-  // Actions - Service Worker
   registerServiceWorker: () => Promise<void>;
   unregisterServiceWorker: () => Promise<void>;
   updateServiceWorker: () => Promise<void>;
-  
-  // Actions - Data operations
   syncData: () => Promise<void>;
   clearCache: () => Promise<void>;
   exportData: () => Promise<void>;
   importData: (data: Partial<PWAStorePersistedState>) => Promise<void>;
-  
-  // Actions - Loading states
-  setLoading: (loading: boolean) => void;
   setInstalling: (installing: boolean) => void;
   setUpdating: (updating: boolean) => void;
   setSyncing: (syncing: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-}
+};
+
+export type PWAStore = PWAState & PWAActions;
+
+export type PWAStoreCreator = StateCreator<PWAStore, [['zustand/immer', never]], [], PWAStore>;
+
+export type PWAEnvironment = {
+  getWindow: () => (Window & typeof globalThis) | undefined;
+  getDocument: () => Document | undefined;
+  getNavigator: () => Navigator | undefined;
+  getFetch: () => (typeof fetch) | undefined;
+  getCaches: () => CacheStorage | undefined;
+  getServiceWorkerContainer: () => ServiceWorkerContainer | undefined;
+};
 
 // Default PWA preferences
-const defaultPreferences: PWAPreferences = {
+const createDefaultPreferences = (): PWAPreferences => ({
   autoUpdate: true,
   offlineMode: true,
   backgroundSync: true,
@@ -218,583 +210,660 @@ const defaultPreferences: PWAPreferences = {
   updateChannel: 'stable',
   cacheStrategy: 'balanced',
   dataUsage: {
-    maxCacheSize: 100, // 100MB
-    maxOfflineStorage: 50, // 50MB
-    syncFrequency: 15, // 15 minutes
+    maxCacheSize: 100,
+    maxOfflineStorage: 50,
+    syncFrequency: 15,
   },
   privacy: {
     shareUsageData: false,
     shareCrashReports: true,
     sharePerformanceData: false,
   },
+});
+
+export const createPWAEnvironment = (): PWAEnvironment => ({
+  getWindow: () => (typeof window === 'undefined' ? undefined : window),
+  getDocument: () => (typeof document === 'undefined' ? undefined : document),
+  getNavigator: () => (typeof navigator === 'undefined' ? undefined : navigator),
+  getFetch: () => (typeof fetch === 'undefined' ? undefined : fetch),
+  getCaches: () => {
+    const win = typeof window === 'undefined' ? undefined : window;
+    if (!win || !('caches' in win)) {
+      return undefined;
+    }
+    return win.caches;
+  },
+  getServiceWorkerContainer: () => {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+      return undefined;
+    }
+    return navigator.serviceWorker;
+  },
+});
+
+export const createInitialPWAState = (
+  environment: PWAEnvironment = createPWAEnvironment(),
+): PWAState => {
+  const navigatorRef = environment.getNavigator();
+  const isOnline = navigatorRef?.onLine ?? true;
+  const timestamp = new Date().toISOString();
+
+  return {
+    installation: {
+      isInstalled: false,
+      installPrompt: null,
+      canInstall: false,
+      installSource: 'manual',
+      version: '1.0.0',
+    },
+    offline: {
+      isOnline,
+      isOffline: !isOnline,
+      lastOnline: timestamp,
+      offlineData: {
+        cachedPages: [],
+        cachedResources: [],
+        queuedActions: [],
+      },
+    },
+    update: {
+      isAvailable: false,
+      isDownloading: false,
+      isInstalling: false,
+      version: '',
+      releaseNotes: '',
+      downloadProgress: 0,
+      installPrompt: null,
+      autoUpdate: true,
+      updateChannel: 'stable',
+    },
+    notifications: [],
+    performance: null,
+    preferences: createDefaultPreferences(),
+    isLoading: false,
+    isInstalling: false,
+    isUpdating: false,
+    isSyncing: false,
+    error: null,
+    offlineQueueSize: 0,
+    offlineQueueUpdatedAt: null,
+  };
 };
 
-// Create PWA store with middleware
+export const createPWAActions = (
+  set: (recipe: (draft: PWAStore) => void) => void,
+  get: () => PWAStore,
+  environment: PWAEnvironment,
+): PWAActions => {
+  const baseActions = createBaseStoreActions<PWAStore>(set);
+  const now = () => new Date().toISOString();
+
+  return {
+    ...baseActions,
+    setInstalling: (installing) =>
+      set((state) => {
+        state.isInstalling = installing;
+      }),
+    setUpdating: (updating) =>
+      set((state) => {
+        state.isUpdating = updating;
+      }),
+    setSyncing: (syncing) =>
+      set((state) => {
+        state.isSyncing = syncing;
+      }),
+    setInstallation: (installation) =>
+      set((state) => {
+        state.installation = mergeInstallationState(state.installation, installation);
+      }),
+    setInstallPrompt: (prompt) =>
+      set((state) => {
+        state.installation = mergeInstallationState(state.installation, { installPrompt: prompt });
+      }),
+    setCanInstall: (canInstall) =>
+      set((state) => {
+        state.installation = mergeInstallationState(state.installation, { canInstall });
+      }),
+    installPWA: async () => {
+      const { setInstalling, setError } = get();
+
+      try {
+        setInstalling(true);
+        setError(null);
+
+        const { installation } = get();
+        if (installation.installPrompt) {
+          installation.installPrompt.prompt();
+          const { outcome } = await installation.installPrompt.userChoice;
+
+          if (outcome === 'accepted') {
+            set((state) => {
+              state.installation = mergeInstallationState(state.installation, {
+                isInstalled: true,
+                installedAt: now(),
+                installPrompt: null,
+              });
+            });
+
+            logger.info('PWA installed successfully');
+          }
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to install PWA:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setInstalling(false);
+      }
+    },
+    uninstallPWA: async () => {
+      await Promise.resolve();
+      const { setInstalling, setError } = get();
+
+      try {
+        setInstalling(true);
+        setError(null);
+
+        set((state) => {
+          const nextInstallation = mergeInstallationState(state.installation, {
+            isInstalled: false,
+            installPrompt: null,
+          });
+
+          Reflect.deleteProperty(nextInstallation, 'installedAt');
+          state.installation = nextInstallation;
+        });
+
+        logger.info('PWA uninstalled');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to uninstall PWA:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setInstalling(false);
+      }
+    },
+    setOnlineStatus: (isOnline) =>
+      set((state) => {
+        const offline = mergeOfflineState(state.offline, {
+          isOnline,
+          isOffline: !isOnline,
+          lastOnline: isOnline ? now() : state.offline.lastOnline,
+          ...(isOnline ? {} : { offlineSince: now() }),
+        });
+
+        if (isOnline) {
+          Reflect.deleteProperty(offline, 'offlineSince');
+        }
+
+        state.offline = offline;
+      }),
+    setOfflineData: (data) =>
+      set((state) => {
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, data),
+        });
+      }),
+    addCachedPage: (page) =>
+      set((state) => {
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, {
+            cachedPages: [...state.offline.offlineData.cachedPages, page],
+          }),
+        });
+      }),
+    removeCachedPage: (page) =>
+      set((state) => {
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, {
+            cachedPages: state.offline.offlineData.cachedPages.filter((p) => p !== page),
+          }),
+        });
+      }),
+    addCachedResource: (resource) =>
+      set((state) => {
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, {
+            cachedResources: [...state.offline.offlineData.cachedResources, resource],
+          }),
+        });
+      }),
+    removeCachedResource: (resource) =>
+      set((state) => {
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, {
+            cachedResources: state.offline.offlineData.cachedResources.filter(
+              (item) => item !== resource,
+            ),
+          }),
+        });
+      }),
+    queueOfflineAction: (action) =>
+      set((state) => {
+        const nextQueuedActions = [...state.offline.offlineData.queuedActions, action];
+        state.offline = mergeOfflineState(state.offline, {
+          offlineData: mergeOfflineData(state.offline.offlineData, {
+            queuedActions: nextQueuedActions,
+          }),
+        });
+        state.offlineQueueSize = nextQueuedActions.length;
+        state.offlineQueueUpdatedAt = now();
+      }),
+    processOfflineActions: async () => {
+      const { setSyncing, setError } = get();
+      const fetchFn = environment.getFetch();
+      const { offline } = get();
+
+      if (!fetchFn) {
+        logger.warn('Fetch API unavailable; skipping offline action processing.');
+        return;
+      }
+
+      try {
+        setSyncing(true);
+        setError(null);
+
+        for (const action of offline.offlineData.queuedActions) {
+          try {
+            await fetchFn('/api/offline/process', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(action),
+            });
+          } catch (error) {
+            logger.error('Failed to process offline action:', error as Error);
+          }
+        }
+
+        set((state) => {
+          state.offline = mergeOfflineState(state.offline, {
+            offlineData: mergeOfflineData(state.offline.offlineData, {
+              queuedActions: [],
+            }),
+          });
+          state.offlineQueueSize = 0;
+          state.offlineQueueUpdatedAt = now();
+        });
+
+        logger.info('Offline actions processed', {
+          count: offline.offlineData.queuedActions.length,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to process offline actions:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setSyncing(false);
+      }
+    },
+    setOfflineQueueSize: (size, updatedAt) =>
+      set((state) => {
+        state.offlineQueueSize = size;
+        state.offlineQueueUpdatedAt = updatedAt ?? now();
+      }),
+    setUpdateAvailable: (update) =>
+      set((state) => {
+        state.update = mergeUpdateState(state.update, update);
+      }),
+    downloadUpdate: async () => {
+      const { setUpdating, setError } = get();
+
+      try {
+        setUpdating(true);
+        setError(null);
+
+        set((state) => {
+          state.update = mergeUpdateState(state.update, { isDownloading: true });
+        });
+
+        for (let progress = 0; progress <= 100; progress += 10) {
+          set((state) => {
+            state.update = mergeUpdateState(state.update, { downloadProgress: progress });
+          });
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        set((state) => {
+          state.update = mergeUpdateState(state.update, { isDownloading: false });
+        });
+
+        logger.info('Update downloaded successfully');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to download update:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setUpdating(false);
+      }
+    },
+    installUpdate: async () => {
+      await Promise.resolve();
+      const { setUpdating, setError } = get();
+
+      try {
+        setUpdating(true);
+        setError(null);
+
+        set((state) => {
+          state.update = mergeUpdateState(state.update, { isInstalling: true });
+        });
+
+        const win = environment.getWindow();
+        win?.location.reload();
+
+        logger.info('Update installed successfully');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to install update:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setUpdating(false);
+      }
+    },
+    skipUpdate: () =>
+      set((state) => {
+        state.update = mergeUpdateState(state.update, { isAvailable: false });
+      }),
+    setAutoUpdate: (enabled) =>
+      set((state) => {
+        state.update = mergeUpdateState(state.update, { autoUpdate: enabled });
+      }),
+    addNotification: (notification) =>
+      set((state) => {
+        const enrichedNotification: PWANotification = {
+          ...notification,
+          id: `notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+          createdAt: now(),
+          read: notification.read ?? false,
+        };
+        state.notifications = [...state.notifications, enrichedNotification];
+      }),
+    removeNotification: (id) =>
+      set((state) => {
+        state.notifications = state.notifications.filter((notification) => notification.id !== id);
+      }),
+    markNotificationRead: (id) =>
+      set((state) => {
+        state.notifications = state.notifications.map((notification) =>
+          notification.id === id ? { ...notification, read: true } : notification,
+        );
+      }),
+    clearNotifications: () =>
+      set((state) => {
+        state.notifications = [];
+      }),
+    setPerformance: (performance) =>
+      set((state) => {
+        state.performance = performance;
+      }),
+    updatePerformanceMetrics: (metrics) =>
+      set((state) => {
+        state.performance = mergePerformanceState(state.performance, metrics);
+      }),
+    updatePreferences: (preferences) =>
+      set((state) => {
+        state.preferences = mergePreferencesState(state.preferences, preferences);
+      }),
+    resetPreferences: () =>
+      set((state) => {
+        state.preferences = createDefaultPreferences();
+      }),
+    registerServiceWorker: async () => {
+      const { setLoading, setError } = get();
+      const serviceWorker = environment.getServiceWorkerContainer();
+
+      if (!serviceWorker) {
+        logger.warn('Service worker registration skipped; navigator.serviceWorker unavailable.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const registration = await serviceWorker.register('/service-worker.js');
+        logger.info('Service worker registered', { scope: registration.scope });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to register service worker';
+        setError(errorMessage);
+        logger.error(
+          'Service worker registration failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    unregisterServiceWorker: async () => {
+      const { setLoading, setError } = get();
+      const serviceWorker = environment.getServiceWorkerContainer();
+
+      if (!serviceWorker) {
+        logger.warn('Service worker unregistration skipped; navigator.serviceWorker unavailable.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const registrations = await serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+        logger.info('Service worker unregistered');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to unregister service worker';
+        setError(errorMessage);
+        logger.error(
+          'Service worker unregistration failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    updateServiceWorker: async () => {
+      const { setLoading, setError } = get();
+      const serviceWorker = environment.getServiceWorkerContainer();
+
+      if (!serviceWorker) {
+        logger.warn('Service worker update skipped; navigator.serviceWorker unavailable.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const registration = await serviceWorker.getRegistration();
+        await registration?.update();
+        logger.info('Service worker update triggered');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update service worker';
+        setError(errorMessage);
+        logger.error(
+          'Service worker update failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    syncData: async () => {
+      const { setSyncing, setError } = get();
+      const fetchFn = environment.getFetch();
+
+      if (!fetchFn) {
+        logger.warn('Sync skipped; fetch unavailable.');
+        return;
+      }
+
+      try {
+        setSyncing(true);
+        setError(null);
+
+        const response = await fetchFn('/api/pwa/sync', { method: 'POST' });
+        if (!response.ok) {
+          throw new Error(`Sync failed with status ${response.status}`);
+        }
+
+        logger.info('PWA data synced successfully');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setError(errorMessage);
+        logger.error(
+          'Failed to sync PWA data:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setSyncing(false);
+      }
+    },
+    clearCache: async () => {
+      const { setLoading, setError } = get();
+      const caches = environment.getCaches();
+
+      if (!caches) {
+        logger.warn('Cache clearing skipped; CacheStorage unavailable.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        logger.info('PWA cache cleared');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to clear cache';
+        setError(errorMessage);
+        logger.error(
+          'PWA cache clearing failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    exportData: async () => {
+      const { setLoading, setError } = get();
+      const documentRef = environment.getDocument();
+      const windowRef = environment.getWindow();
+
+      if (!documentRef || !windowRef) {
+        logger.warn('Export skipped; document/window unavailable.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { installation, offline, update, preferences, performance } = get();
+        const data: PWAStorePersistedState = {
+          installation,
+          offline,
+          preferences,
+          performance,
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = windowRef.URL.createObjectURL(blob);
+        const a = documentRef.createElement('a');
+        a.href = url;
+        a.download = `pwa-export-${Date.now()}.json`;
+        a.click();
+        windowRef.URL.revokeObjectURL(url);
+
+        logger.info('PWA data exported');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to export data';
+        setError(errorMessage);
+        logger.error(
+          'PWA export failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    importData: async (data) => {
+      const { setLoading, setError } = get();
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        set((state) => {
+          if (data.installation) {
+            state.installation = mergeInstallationState(state.installation, data.installation);
+          }
+          if (data.offline) {
+            state.offline = mergeOfflineState(state.offline, data.offline);
+          }
+          if (data.preferences) {
+            state.preferences = mergePreferencesState(state.preferences, data.preferences);
+          }
+          if (data.performance) {
+            state.performance = mergePerformanceState(state.performance, data.performance);
+          }
+        });
+
+        logger.info('PWA data imported');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to import data';
+        setError(errorMessage);
+        logger.error(
+          'PWA import failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+  };
+};
+
+export const pwaStoreCreator: PWAStoreCreator = (set, get) => {
+  const environment = createPWAEnvironment();
+  return Object.assign(
+    createInitialPWAState(environment),
+    createPWAActions(set, get, environment),
+  );
+};
+
 export const usePWAStore = create<PWAStore>()(
   devtools(
     persist(
-      (set, get) => ({
-        // Initial state
-        installation: {
-          isInstalled: false,
-          installPrompt: null,
-          canInstall: false,
-          installSource: 'manual',
-          version: '1.0.0',
-        },
-        offline: {
-          isOnline: (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? navigator.onLine : true,
-          isOffline: (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? !navigator.onLine : false,
-          lastOnline: new Date().toISOString(),
-          offlineData: {
-            cachedPages: [],
-            cachedResources: [],
-            queuedActions: [],
-          },
-        },
-        update: {
-          isAvailable: false,
-          isDownloading: false,
-          isInstalling: false,
-          version: '',
-          releaseNotes: '',
-          downloadProgress: 0,
-          installPrompt: null,
-          autoUpdate: true,
-          updateChannel: 'stable',
-        },
-        notifications: [],
-        performance: null,
-        preferences: defaultPreferences,
-        isLoading: false,
-        isInstalling: false,
-        isUpdating: false,
-        isSyncing: false,
-        error: null,
-        offlineQueueSize: 0,
-        offlineQueueUpdatedAt: null,
-        
-        // Installation actions
-        setInstallation: (installation) => set((state) => ({
-          installation: mergeInstallationState(state.installation, installation)
-        })),
-        
-        setInstallPrompt: (prompt) => set((state) => ({
-          installation: mergeInstallationState(state.installation, { installPrompt: prompt })
-        })),
-        
-        setCanInstall: (canInstall) => set((state) => ({
-          installation: mergeInstallationState(state.installation, { canInstall })
-        })),
-        
-        installPWA: async () => {
-          const { setInstalling, setError, installation } = get();
-          
-          try {
-            setInstalling(true);
-            setError(null);
-            
-            if (installation.installPrompt) {
-              installation.installPrompt.prompt();
-              const { outcome } = await installation.installPrompt.userChoice;
-              
-              if (outcome === 'accepted') {
-                set((state) => ({
-                  installation: mergeInstallationState(state.installation, {
-                    isInstalled: true,
-                    installedAt: new Date().toISOString(),
-                    installPrompt: null,
-                  })
-                }));
-                
-                logger.info('PWA installed successfully');
-              }
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to install PWA:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setInstalling(false);
-          }
-        },
-        
-        uninstallPWA: async () => {
-          await Promise.resolve(); // Satisfy require-await rule
-          const { setInstalling, setError } = get();
-          
-          try {
-            setInstalling(true);
-            setError(null);
-            
-            // PWA uninstallation is handled by the browser
-            set((state) => {
-              const nextInstallation = mergeInstallationState(state.installation, {
-                isInstalled: false,
-                installPrompt: null,
-              });
-
-              Reflect.deleteProperty(nextInstallation, 'installedAt');
-
-              return {
-                installation: nextInstallation,
-              };
-            });
-            
-            logger.info('PWA uninstalled');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to uninstall PWA:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setInstalling(false);
-          }
-        },
-        
-        // Offline management actions
-        setOnlineStatus: (isOnline) => set((state) => {
-          const offline = mergeOfflineState(state.offline, {
-            isOnline,
-            isOffline: !isOnline,
-            lastOnline: isOnline ? new Date().toISOString() : state.offline.lastOnline,
-            ...(isOnline ? {} : { offlineSince: new Date().toISOString() }),
-          });
-
-          if (isOnline) {
-            Reflect.deleteProperty(offline, 'offlineSince');
-          }
-
-          return { offline };
-        }),
-        
-        setOfflineData: (data) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, data)
-          })
-        })),
-        
-        addCachedPage: (page) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, {
-              cachedPages: [...state.offline.offlineData.cachedPages, page]
-            })
-          })
-        })),
-        
-        removeCachedPage: (page) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, {
-              cachedPages: state.offline.offlineData.cachedPages.filter((p) => p !== page)
-            })
-          })
-        })),
-        
-        addCachedResource: (resource) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, {
-              cachedResources: [...state.offline.offlineData.cachedResources, resource]
-            })
-          })
-        })),
-        
-        removeCachedResource: (resource) => set((state) => ({
-          offline: mergeOfflineState(state.offline, {
-            offlineData: mergeOfflineData(state.offline.offlineData, {
-              cachedResources: state.offline.offlineData.cachedResources.filter((r) => r !== resource)
-            })
-          })
-        })),
-        
-        queueOfflineAction: (action) => set((state) => {
-          const nextQueuedActions = [...state.offline.offlineData.queuedActions, action];
-          const nextUpdatedAt = new Date().toISOString();
-          return {
-            offline: mergeOfflineState(state.offline, {
-              offlineData: mergeOfflineData(state.offline.offlineData, {
-                queuedActions: nextQueuedActions
-              })
-            }),
-            offlineQueueSize: nextQueuedActions.length,
-            offlineQueueUpdatedAt: nextUpdatedAt,
-          };
-        }),
-        
-        processOfflineActions: async () => {
-          const { setSyncing, setError, offline } = get();
-          
-          try {
-            setSyncing(true);
-            setError(null);
-            
-            // Process queued actions when online
-            for (const action of offline.offlineData.queuedActions) {
-              try {
-                await fetch('/api/offline/process', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(action),
-                });
-              } catch (error) {
-                logger.error('Failed to process offline action:', error as Error);
-              }
-            }
-            
-            // Clear processed actions
-            set((state) => ({
-              offline: mergeOfflineState(state.offline, {
-                offlineData: mergeOfflineData(state.offline.offlineData, {
-                  queuedActions: []
-                })
-              }),
-              offlineQueueSize: 0,
-              offlineQueueUpdatedAt: new Date().toISOString(),
-            }));
-            
-            logger.info('Offline actions processed', {
-              count: offline.offlineData.queuedActions.length
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to process offline actions:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setSyncing(false);
-          }
-        },
-
-        setOfflineQueueSize: (size, updatedAt) => set({
-          offlineQueueSize: size,
-          offlineQueueUpdatedAt: updatedAt ?? new Date().toISOString(),
-        }),
-        
-        // Update actions
-        setUpdateAvailable: (update) => set((state) => ({
-          update: mergeUpdateState(state.update, update)
-        })),
-        
-        downloadUpdate: async () => {
-          const { setUpdating, setError } = get();
-          
-          try {
-            setUpdating(true);
-            setError(null);
-            
-            set((state) => ({
-              update: mergeUpdateState(state.update, { isDownloading: true })
-            }));
-            
-            // Simulate download progress
-            for (let progress = 0; progress <= 100; progress += 10) {
-              set((state) => ({
-                update: mergeUpdateState(state.update, { downloadProgress: progress })
-              }));
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-            
-            set((state) => ({
-              update: mergeUpdateState(state.update, { isDownloading: false })
-            }));
-            
-            logger.info('Update downloaded successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to download update:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setUpdating(false);
-          }
-        },
-        
-        installUpdate: async () => {
-          await Promise.resolve(); // Satisfy require-await rule
-          const { setUpdating, setError } = get();
-          
-          try {
-            setUpdating(true);
-            setError(null);
-            
-            set((state) => ({
-              update: mergeUpdateState(state.update, { isInstalling: true })
-            }));
-            
-            // Reload the page to apply update
-            if (typeof window !== 'undefined') {
-              window.location.reload();
-            }
-            
-            logger.info('Update installed successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to install update:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setUpdating(false);
-          }
-        },
-        
-        skipUpdate: () => set((state) => ({
-          update: mergeUpdateState(state.update, { isAvailable: false })
-        })),
-        
-        setAutoUpdate: (enabled) => set((state) => ({
-          update: mergeUpdateState(state.update, { autoUpdate: enabled })
-        })),
-        
-        // Notification actions
-        addNotification: (notification) => set((state) => {
-          const enrichedNotification = withOptional(notification, {
-            id: `notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
-            createdAt: new Date().toISOString(),
-          }) as PWANotification;
-
-          return {
-            notifications: [...state.notifications, enrichedNotification]
-          };
-        }),
-        
-        removeNotification: (id) => set((state) => ({
-          notifications: state.notifications.filter(notification => notification.id !== id)
-        })),
-        
-        markNotificationRead: (id) => set((state) => ({
-          notifications: state.notifications.map((notification) =>
-            notification.id === id
-              ? withOptional(notification, { read: true })
-              : notification
-          )
-        })),
-        
-        clearNotifications: () => set({ notifications: [] }),
-        
-        // Performance actions
-        setPerformance: (performance) => set({ performance }),
-        
-        updatePerformanceMetrics: (metrics) => set((state) => ({
-          performance: mergePerformanceState(state.performance, metrics)
-        })),
-        
-        // Preferences actions
-        updatePreferences: (preferences) => set((state) => ({
-          preferences: mergePreferencesState(state.preferences, preferences)
-        })),
-        
-        resetPreferences: () => set({ preferences: defaultPreferences }),
-        
-        // Service Worker actions
-        registerServiceWorker: async () => {
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-              const registration = await navigator.serviceWorker.register('/service-worker.js');
-              logger.info('Service Worker registered:', { scope: registration.scope, active: !!registration.active });
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to register Service Worker:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        unregisterServiceWorker: async () => {
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-              const registrations = await navigator.serviceWorker.getRegistrations();
-              for (const registration of registrations) {
-                await registration.unregister();
-              }
-              logger.info('Service Worker unregistered');
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to unregister Service Worker:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        updateServiceWorker: async () => {
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-              const registration = await navigator.serviceWorker.getRegistration();
-              if (registration) {
-                await registration.update();
-                logger.info('Service Worker updated');
-              }
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to update Service Worker:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        // Data operations
-        syncData: async () => {
-          const { setSyncing, setError } = get();
-          
-          try {
-            setSyncing(true);
-            setError(null);
-            
-            // Sync offline data with server
-            const response = await fetch('/api/pwa/sync', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            });
-            
-            if (!response.ok) {
-              throw new Error('Failed to sync data');
-            }
-            
-            logger.info('Data synced successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to sync data:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setSyncing(false);
-          }
-        },
-        
-        clearCache: async () => {
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            if (typeof window !== 'undefined' && 'caches' in window) {
-              const cacheNames = await caches.keys();
-              await Promise.all(
-                cacheNames.map(cacheName => caches.delete(cacheName))
-              );
-            }
-            
-            set((state) => ({
-              offline: {
-                ...state.offline,
-                offlineData: {
-                  cachedPages: [],
-                  cachedResources: [],
-                  queuedActions: state.offline.offlineData.queuedActions,
-                }
-              }
-            }));
-            
-            logger.info('Cache cleared successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to clear cache:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        exportData: async () => {
-          await Promise.resolve(); // Satisfy require-await rule
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-
-            if (typeof window === 'undefined' || typeof document === 'undefined') {
-              logger.warn('PWA data export skipped: no browser environment detected');
-              return;
-            }
-            
-            const state = get();
-            const data = {
-              installation: state.installation,
-              offline: state.offline,
-              preferences: state.preferences,
-              performance: state.performance,
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'pwa-data.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            logger.info('PWA data exported successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to export data:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        importData: async (data) => {
-          await Promise.resolve(); // Satisfy require-await rule
-          const { setLoading, setError } = get();
-          
-          try {
-            setLoading(true);
-            setError(null);
-            
-            set({
-              installation: data.installation ?? get().installation,
-              offline: data.offline ?? get().offline,
-              preferences: data.preferences ?? get().preferences,
-              performance: data.performance ?? get().performance,
-            });
-            
-            logger.info('PWA data imported successfully');
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to import data:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
-          }
-        },
-        
-        // Loading state actions
-        setLoading: (loading) => set({ isLoading: loading }),
-        setInstalling: (installing) => set({ isInstalling: installing }),
-        setUpdating: (updating) => set({ isUpdating: updating }),
-        setSyncing: (syncing) => set({ isSyncing: syncing }),
-        setError: (error) => set({ error }),
-        clearError: () => set({ error: null }),
-      }),
+      immer(pwaStoreCreator),
       {
         name: 'pwa-store',
         storage: createSafeStorage(),
-        partialize: (state): PWAStorePersistedState => ({
+        partialize: (state) => ({
           installation: state.installation,
           offline: state.offline,
           preferences: state.preferences,
           performance: state.performance,
         }),
-      }
+      },
     ),
-    { name: 'pwa-store' }
-  )
+    { name: 'pwa-store' },
+  ),
 );
 
 // Store selectors for optimized re-renders
@@ -850,6 +919,22 @@ export const usePWAActions = () => usePWAStore(state => ({
   setError: state.setError,
   clearError: state.clearError,
 }));
+
+export const pwaSelectors = {
+  installation: (state: PWAStore) => state.installation,
+  offline: (state: PWAStore) => state.offline,
+  update: (state: PWAStore) => state.update,
+  notifications: (state: PWAStore) => state.notifications,
+  performance: (state: PWAStore) => state.performance,
+  preferences: (state: PWAStore) => state.preferences,
+  isLoading: (state: PWAStore) => state.isLoading,
+  isInstalling: (state: PWAStore) => state.isInstalling,
+  isUpdating: (state: PWAStore) => state.isUpdating,
+  isSyncing: (state: PWAStore) => state.isSyncing,
+  error: (state: PWAStore) => state.error,
+  offlineQueueSize: (state: PWAStore) => state.offlineQueueSize,
+  offlineQueueUpdatedAt: (state: PWAStore) => state.offlineQueueUpdatedAt,
+};
 
 // Computed selectors
 export const usePWAStats = () => usePWAStore(state => ({
@@ -946,11 +1031,13 @@ const defaultPerformance: PWAPerformance = {
 };
 
 const mergeStateStrict = <T extends Record<string, unknown>>(current: T, updates: Partial<T>): T => {
-  const merged = withOptional(current, updates as Record<string, unknown>);
+  const merged: Record<string, unknown> = { ...current };
 
   for (const [key, value] of Object.entries(updates)) {
     if (value === undefined) {
-      delete (merged as Record<string, unknown>)[key];
+      delete merged[key];
+    } else {
+      merged[key] = value;
     }
   }
 

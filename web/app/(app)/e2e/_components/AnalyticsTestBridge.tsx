@@ -7,26 +7,15 @@ import {
   useAnalyticsActions,
   useAnalyticsEvents,
 } from '@/lib/stores/analyticsStore';
-import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
-
-type AnalyticsBridgeApi = {
-  events: AnalyticsEvent[];
-  enable: () => void;
-  reset: () => void;
-};
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __playwrightAnalytics: AnalyticsBridgeApi | undefined;
-}
+import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
 
 export function AnalyticsTestBridge() {
   const events = useAnalyticsEvents();
   const { setTrackingEnabled, updatePreferences, clearEvents } = useAnalyticsActions();
-  const bridgeRef = useRef<AnalyticsBridgeApi | null>(null);
+  const bridgeRef = useRef<PlaywrightAnalyticsBridge | null>(null);
 
   useEffect(() => {
-    const api: AnalyticsBridgeApi = {
+    const api: PlaywrightAnalyticsBridge = {
       events: [],
       enable: () => {
         setTrackingEnabled(true);

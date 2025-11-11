@@ -13,7 +13,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/utils/logger'
 
 import { getSupabaseServerClient } from '../../utils/supabase/server'
-import type { QueryPlan } from '../types/database'
+import type { QueryPlan } from './query-analyzer'
 
 // Query optimization options
 export type QueryOptions = {

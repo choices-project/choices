@@ -11,92 +11,51 @@
 
 import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
 import ContactModal from '@/features/contact/components/ContactModal';
+import {
+  useUserRepresentativeEntries,
+  useGetUserRepresentatives,
+  useRepresentativeGlobalLoading,
+  useRepresentativeError
+} from '@/lib/stores/representativeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { withOptional } from '@/lib/util/objects';
-import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 // Prevent static generation since this requires authentication
 export const dynamic = 'force-dynamic';
 
-type FollowedRepresentative = {
-  follow: {
-    id: string;
-    notify_on_votes: boolean;
-    notify_on_committee_activity: boolean;
-    notify_on_public_statements: boolean;
-    notify_on_events: boolean;
-    notes?: string;
-    tags?: string[];
-    created_at: string;
-    updated_at: string;
-  };
-  representative: Representative;
-};
-
 export default function MyRepresentativesPage() {
-  const [representatives, setRepresentatives] = useState<FollowedRepresentative[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showBulkContactModal, setShowBulkContactModal] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] = useState<Representative | null>(null);
   
   const { user } = useAuth();
+  const representativeEntries = useUserRepresentativeEntries();
+  const getUserRepresentatives = useGetUserRepresentatives();
+  const loading = useRepresentativeGlobalLoading();
+  const error = useRepresentativeError();
+
+  const followedRepresentatives = useMemo(
+    () => representativeEntries.map((entry) => entry.representative),
+    [representativeEntries]
+  );
+
+  const representativeCount = representativeEntries.length;
 
   useEffect(() => {
-    const fetchFollowedRepresentatives = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    void getUserRepresentatives();
+  }, [getUserRepresentatives]);
 
-        const response = await fetch('/api/representatives/my');
-        
-        if (!response.ok) {
-          if (response.status === 401) {
-            setError('Please sign in to view your followed representatives');
-            return;
-          }
-          throw new Error('Failed to fetch followed representatives');
-        }
-
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-          setRepresentatives(data.data.representatives ?? []);
-        } else {
-          throw new Error(data.error ?? 'Failed to fetch followed representatives');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        logger.error('Error fetching followed representatives:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchFollowedRepresentatives();
-  }, []);
-
-  const handleUnfollow = async () => {
-    // Refresh the list after unfollow
-    try {
-      const response = await fetch('/api/representatives/my');
-      const data = await response.json();
-      if (data.success && data.data) {
-        setRepresentatives(data.data.representatives ?? []);
-      }
-    } catch (err) {
-      logger.error('Error refreshing followed representatives:', err);
-    }
-  };
+  const handleUnfollow = useCallback(() => {
+    void getUserRepresentatives();
+  }, [getUserRepresentatives]);
 
   if (loading) {
     return (
@@ -152,7 +111,7 @@ export default function MyRepresentativesPage() {
         </div>
       </div>
 
-      {representatives.length === 0 ? (
+      {representativeCount === 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -173,10 +132,10 @@ export default function MyRepresentativesPage() {
         <>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              {representatives.length} {representatives.length === 1 ? 'representative' : 'representatives'}
+              {representativeCount} {representativeCount === 1 ? 'representative' : 'representatives'}
             </p>
             <div className="flex space-x-2">
-              {representatives.length > 1 && user && (
+              {representativeCount > 1 && user && (
                 <Button
                   variant="default"
                   onClick={() => setShowBulkContactModal(true)}
@@ -195,7 +154,7 @@ export default function MyRepresentativesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {representatives.map(({ representative }) => (
+            {representativeEntries.map(({ representative }) => (
               <RepresentativeCard
                 key={representative.id}
                 representative={representative}
@@ -235,7 +194,7 @@ export default function MyRepresentativesPage() {
         <BulkContactModal
           isOpen={showBulkContactModal}
           onClose={() => setShowBulkContactModal(false)}
-          representatives={representatives.map(({ representative }) => representative)}
+          representatives={followedRepresentatives}
           userId={user.id}
         />
       )}

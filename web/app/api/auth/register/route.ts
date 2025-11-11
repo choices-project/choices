@@ -65,8 +65,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Use Supabase Auth for registration
-    const supabase = getSupabaseServerClient()
-    const supabaseClient = await supabase
+    const supabaseClient = await getSupabaseServerClient()
 
     // Always use real Supabase authentication - no E2E bypasses
 

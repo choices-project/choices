@@ -68,7 +68,7 @@ describe('pollWizardStore', () => {
     const store = usePollWizardStore.getState();
 
     act(() => {
-      store.updateSettings({ allowAnonymousVotes: false, allowComments: undefined });
+      store.updateSettings({ allowAnonymousVotes: false });
     });
 
     const { settings } = usePollWizardStore.getState().data;

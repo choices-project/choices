@@ -37,7 +37,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
-import { useUserStore } from '@/lib/stores';
+import { useUser } from '@/lib/stores';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
@@ -77,7 +77,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const isTablet = useIsTablet();
   
   // Access Control - Admin Only
-  const currentUser = useUserStore(state => state.user);
+  const currentUser = useUser();
   const hasAccess = canAccessAnalytics(currentUser, false);
   
   // Log access attempt

@@ -2,7 +2,7 @@
 
 import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,59 +10,62 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileExport } from '@/features/profile/hooks/use-profile';
+import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
 export default function ProfilePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
+  const isUserLoading = useUserLoading();
+  const { profile, isLoading: profileLoading, error: profileError, refetch } = useProfile();
+  const { exportProfile, isExporting } = useProfileExport();
+  const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
 
-  // Direct server-side authentication check (same as dashboard)
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/profile', {
-          credentials: 'include',
-        });
-        
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        logger.error('Profile auth check failed:', error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // SECURITY: Redirect unauthenticated users to login
-  useEffect(() => {
-    if (!isLoading && isAuthenticated === false) {
+    if (!isUserLoading && !isAuthenticated) {
       logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
-      router.push('/auth');
+      router.replace('/auth?redirectTo=/profile');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isUserLoading, router]);
 
-  // All hooks must be called at the top level before any early returns
-  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
-  const exportMutation = useProfileExport();
+  const handleExportData = useCallback(async () => {
+    setExportStatus(null);
+    try {
+      const data = await exportProfile({
+        includeActivity: true,
+        includeVotes: true,
+        includeComments: true,
+        format: 'json',
+      });
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `profile-export-${user?.id ?? profile?.id ?? 'user'}-${new Date()
+        .toISOString()
+        .split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setExportStatus('success');
+      setTimeout(() => setExportStatus(null), 4000);
+    } catch (error) {
+      logger.error('Failed to export profile data', error instanceof Error ? error : new Error(String(error)));
+      setExportStatus('error');
+      setTimeout(() => setExportStatus(null), 4000);
+    }
+  }, [exportProfile, profile?.id, user?.id]);
+
+  if (isUserLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
-
-  // Show login prompt if not authenticated
 
   if (!isAuthenticated) {
     return (
@@ -74,7 +77,11 @@ export default function ProfilePage() {
       </div>
     );
   }
-  
+
+  if (!profile && !profileError) {
+    return null;
+  }
+
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
@@ -90,14 +97,6 @@ export default function ProfilePage() {
   const handleEditProfileFromActions = () => {
     router.push('/profile/edit');
   };
-
-  if (profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
 
   if (profileError) {
     return (
@@ -214,8 +213,7 @@ export default function ProfilePage() {
             <AddressLookup 
               autoSave={true}
               onDistrictSaved={() => {
-                // Refresh profile after district is saved
-                window.location.reload();
+                void refetch();
               }}
             />
           </CardContent>
@@ -240,19 +238,24 @@ export default function ProfilePage() {
                 Edit Profile
               </Button>
               <Button 
-                onClick={() => exportMutation.exportProfile({
-                  includeActivity: true,
-                  includeVotes: true,
-                  includeComments: true,
-                  format: 'json'
-                })} 
+                onClick={handleExportData} 
                 variant="outline" 
                 className="justify-start"
-                disabled={exportMutation.isExporting}
+                disabled={isExporting}
               >
                 <Download className="h-4 w-4 mr-2" />
-                {exportMutation.isExporting ? 'Exporting...' : 'Export Data'}
+                {isExporting ? 'Exporting...' : 'Export Data'}
               </Button>
+              {exportStatus === 'success' && (
+                <p className="text-sm text-green-600">
+                  Your profile data export has started downloading.
+                </p>
+              )}
+              {exportStatus === 'error' && (
+                <p className="text-sm text-red-600">
+                  We could not export your data. Please try again.
+                </p>
+              )}
               <Button variant="outline" className="justify-start">
                 <Settings className="h-4 w-4 mr-2" />
                 Advanced Settings

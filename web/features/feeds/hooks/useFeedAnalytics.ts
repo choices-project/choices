@@ -16,7 +16,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 
-import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import logger from '@/lib/utils/logger';
 
 type FeedAnalyticsConfig = {
@@ -42,7 +42,12 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const startTimeRef = useRef<number>(0);
   const maxScrollDepthRef = useRef<number>(0);
-  const trackEventRef = useRef(useAnalyticsStore.getState().trackEvent);
+  const { trackEvent } = useAnalyticsActions();
+  const trackEventRef = useRef(trackEvent);
+
+  useEffect(() => {
+    trackEventRef.current = trackEvent;
+  }, [trackEvent]);
 
   // Track feed view on mount
   useEffect(() => {

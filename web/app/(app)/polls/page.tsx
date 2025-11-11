@@ -1,15 +1,25 @@
 'use client';
 
-import { Plus, TrendingUp, Clock, Users, BarChart3, Search, Hash, Flame, Star, Eye } from 'lucide-react';
+import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import Link from 'next/link';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
 import type { HashtagSearchQuery, PollHashtagIntegration } from '@/features/hashtags/types';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
-import { cn } from '@/lib/utils';
-import { logger } from '@/lib/utils/logger';
+import {
+  useFilteredPolls,
+  usePollFilters,
+  usePollPagination,
+  usePollSearch,
+  usePollsActions,
+  usePollsError,
+  usePollsLoading,
+} from '@/lib/stores/pollsStore';
 
-// Import hashtag functionality
+import {
+  getPollCategoryColor,
+  getPollCategoryIcon,
+} from '@/features/polls/constants/categories';
+import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 
 // Enhanced poll interface with hashtag integration
 type EnhancedPoll = {
@@ -32,19 +42,6 @@ type EnhancedPoll = {
     verified: boolean;
   };
 };
-
-// Removed unused type definitions
-
-const CATEGORIES = [
-  { id: 'general', name: 'General', icon: '📊', color: 'bg-gray-100 text-gray-700' },
-  { id: 'business', name: 'Business', icon: '💼', color: 'bg-blue-100 text-blue-700' },
-  { id: 'education', name: 'Education', icon: '🎓', color: 'bg-green-100 text-green-700' },
-  { id: 'technology', name: 'Technology', icon: '💻', color: 'bg-purple-100 text-purple-700' },
-  { id: 'health', name: 'Health', icon: '🏥', color: 'bg-red-100 text-red-700' },
-  { id: 'finance', name: 'Finance', icon: '💰', color: 'bg-emerald-100 text-emerald-700' },
-  { id: 'environment', name: 'Environment', icon: '🌱', color: 'bg-lime-100 text-lime-700' },
-  { id: 'social', name: 'Social', icon: '👥', color: 'bg-teal-100 text-teal-700' }
-];
 
 const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
   const hashtags = Array.isArray(rawPoll.hashtags)
@@ -103,130 +100,135 @@ const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
 };
 
 export default function PollsPage() {
-  const [polls, setPolls] = useState<EnhancedPoll[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'active' | 'closed' | 'trending'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
-  const [sortBy, _setSortBy] = useState<'newest' | 'popular' | 'trending' | 'engagement'>('trending');
-  const [viewMode, _setViewMode] = useState<'grid' | 'list' | 'trending'>('trending');
+  const polls = useFilteredPolls();
+  const isLoading = usePollsLoading();
+  const error = usePollsError();
+  const filters = usePollFilters();
+  const search = usePollSearch();
+  const pagination = usePollPagination();
+  const {
+    loadPolls,
+    setFilters,
+    setTrendingOnly,
+    setCurrentPage,
+    setSearchQuery,
+    searchPolls,
+    clearSearch,
+  } = usePollsActions();
 
-  // Hashtag store integration
-  const hashtagStore = useHashtagStore();
-  const hashtagStats = useHashtagStats();
-  const hashtagActions = useHashtagActions();
+  const initializedRef = useRef(false);
 
-  // Get hashtag data from store
-  const _hashtags = hashtagStore?.hashtags ?? [];
-  const _trendingHashtags = hashtagStore?.trendingHashtags ?? [];
-  const _trendingCount = hashtagStats?.trendingCount ?? 0;
-
-  // Use useCallback to prevent infinite loops
-  const getTrendingHashtags = useCallback(async () => {
-    try {
-      if (hashtagActions?.getTrendingHashtags) {
-        await hashtagActions.getTrendingHashtags();
-      }
-    } catch (error) {
-      logger.warn('Failed to load trending hashtags:', error);
-    }
-  }, [hashtagActions]);
-
-  const _searchHashtags = useCallback(async (query: string) => {
-    try {
-      if (hashtagActions?.searchHashtags) {
-        const searchQuery: HashtagSearchQuery = { query };
-        await hashtagActions.searchHashtags(searchQuery);
-      }
-    } catch (error) {
-      logger.warn('Failed to search hashtags:', error);
-    }
-    return [];
-  }, [hashtagActions]);
-
-  // Load trending hashtags on mount with error handling
-  useEffect(() => {
-    const loadTrending = async () => {
-      try {
-        await getTrendingHashtags();
-      } catch (error) {
-        logger.warn('Failed to load trending hashtags:', error);
-      }
-    };
-    loadTrending();
-  }, [getTrendingHashtags]);
+  const selectedCategory = filters.category[0] ?? 'all';
 
   useEffect(() => {
-    const loadPolls = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (filter !== 'all') params.append('status', filter);
-        if (selectedCategory !== 'all') params.append('category', selectedCategory);
-        if (searchQuery) params.append('search', searchQuery);
-        params.append('sort', sortBy);
-        params.append('view_mode', viewMode);
+    if (initializedRef.current) {
+      return;
+    }
+    initializedRef.current = true;
+    setCurrentPage(1);
+    setTrendingOnly(false);
+    setFilters({ status: [] });
+    void loadPolls();
+  }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
 
-        const response = await fetch(`/api/polls?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          const apiPolls = Array.isArray(data.polls) ? data.polls : [];
-          const mappedPolls = apiPolls.map(mapApiPollToEnhanced);
-          setPolls(mappedPolls);
-        } else {
-          logger.error('Failed to load polls:', response.statusText);
-          setPolls([]);
-        }
-      } catch (err) {
-        logger.error('Failed to load polls:', err);
-        setPolls([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const enhancedPolls = useMemo(() => polls.map(mapApiPollToEnhanced), [polls]);
 
-    loadPolls();
-  }, [filter, selectedCategory, searchQuery, sortBy, viewMode]);
+  const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
+    if (filters.trendingOnly) {
+      return 'trending';
+    }
+    if (filters.status.includes('closed')) {
+      return 'closed';
+    }
+    if (filters.status.includes('active')) {
+      return 'active';
+    }
+    return 'all';
+  }, [filters.status, filters.trendingOnly]);
 
-  // Enhanced filtering with hashtag support
-  const filteredPolls = polls.filter(poll => {
-    if (filter === 'all') return true;
-    if (filter === 'trending') return poll.trending_position && poll.trending_position > 0;
-    return poll.status === filter;
-  });
+  const handleFilterChange = useCallback((nextFilter: 'all' | 'active' | 'closed' | 'trending') => {
+    let status: string[] = [];
+    let nextTrending = false;
 
-  const getCategoryIcon = (category: string) => {
-    return CATEGORIES.find(c => c.id === category)?.icon ?? '📊';
+    switch (nextFilter) {
+      case 'active':
+        status = ['active'];
+        break;
+      case 'closed':
+        status = ['closed'];
+        break;
+      case 'trending':
+        nextTrending = true;
+        break;
+      case 'all':
+      default:
+        status = [];
+        break;
+    }
+
+    setCurrentPage(1);
+    setTrendingOnly(nextTrending);
+    setFilters({ status });
+    void loadPolls();
+  }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
+
+  const handleCategoryChange = useCallback((categoryId: string) => {
+    const category = categoryId === 'all' ? [] : [categoryId];
+    setCurrentPage(1);
+    setFilters({ category });
+    void loadPolls();
+  }, [loadPolls, setCurrentPage, setFilters]);
+
+  const handleHashtagSelect = useCallback((hashtag: string) => {
+    const normalized = hashtag.replace(/^#/, '');
+    if (filters.tags.includes(normalized)) {
+      return;
+    }
+    const tags = [...filters.tags, normalized];
+    setCurrentPage(1);
+    setFilters({ tags });
+    void loadPolls();
+  }, [loadPolls, filters.tags, setCurrentPage, setFilters]);
+
+  const handleHashtagRemove = useCallback((hashtag: string) => {
+    const tags = filters.tags.filter((tag) => tag !== hashtag);
+    setCurrentPage(1);
+    setFilters({ tags });
+    void loadPolls();
+  }, [loadPolls, filters.tags, setCurrentPage, setFilters]);
+
+  const handleSearchSubmit = useCallback((value: string) => {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      void clearSearch();
+      return;
+    }
+    setSearchQuery(trimmed);
+    setCurrentPage(1);
+    void searchPolls(trimmed);
+  }, [clearSearch, searchPolls, setCurrentPage, setSearchQuery]);
+
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
   };
 
-  const getCategoryColor = (category: string) => {
-    return CATEGORIES.find(c => c.id === category)?.color ?? 'bg-gray-100 text-gray-700';
-  };
-
-  // Hashtag management functions
-  const handleHashtagSelect = (hashtag: string) => {
-    if (!selectedHashtags.includes(hashtag)) {
-      setSelectedHashtags([...selectedHashtags, hashtag]);
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSearchSubmit((event.target as HTMLInputElement).value);
     }
   };
 
-  const handleHashtagRemove = (hashtag: string) => {
-    setSelectedHashtags(selectedHashtags.filter(h => h !== hashtag));
-  };
+  const handlePageChange = useCallback(
+    (page: number) => {
+      const nextPage = Math.max(1, Math.min(page, pagination.totalPages));
+      setCurrentPage(nextPage);
+      void loadPolls({ page: nextPage });
+    },
+    [loadPolls, pagination.totalPages, setCurrentPage],
+  );
 
-  const _handleHashtagSearch = async (query: string) => {
-    if (query.trim()) {
-      try {
-        // await searchHashtags({ query: query.trim(), limit: 10 });
-        logger.debug('Hashtag search:', query.trim());
-      } catch (error) {
-        logger.warn('Hashtag search failed:', error);
-      }
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -238,150 +240,28 @@ export default function PollsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Polls</h1>
         <p className="text-gray-600">Discover and participate in community polls</p>
       </div>
 
-      {/* Enhanced Search and Filters */}
-      <div className="mb-8 space-y-6">
-        {/* Search Bar with Hashtag Integration */}
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search polls, hashtags, or topics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Hashtag Input - Re-enabled with fixed infinite loop */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Filter by Hashtags:</label>
-            <div className="flex flex-wrap gap-2">
-              {selectedHashtags.map((hashtag, index) => (
-                <span key={`hashtag-${index}-${hashtag}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                  #{hashtag}
-                  <button
-                    onClick={() => handleHashtagRemove(hashtag)}
-                    className="ml-1 text-blue-500 hover:text-blue-700"
-                    aria-label={`Remove ${hashtag} filter`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-              <input
-                type="text"
-                placeholder="Add hashtags to filter polls..."
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    const newHashtag = e.currentTarget.value.trim().replace(/^#/, ''); // Remove # if user types it
-                    if (!selectedHashtags.includes(newHashtag) && selectedHashtags.length < 5) {
-                      setSelectedHashtags([...selectedHashtags, newHashtag]);
-                    }
-                    e.currentTarget.value = '';
-                  }
-                }}
-                className="px-2 py-1 border border-gray-300 rounded text-sm"
-                aria-label="Add hashtag filter"
-              />
-            </div>
-          </div>
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
+      )}
 
-        {/* Filter Tabs */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          {[
-            { id: 'all', label: 'All', icon: BarChart3 },
-            { id: 'active', label: 'Active', icon: TrendingUp },
-            { id: 'trending', label: 'Trending', icon: Flame },
-            { id: 'closed', label: 'Closed', icon: Clock }
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setFilter(id as 'all' | 'active' | 'closed' | 'trending')}
-              className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                filter === id
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon className="h-4 w-4 mr-2" />
-              {label}
-            </button>
-          ))}
-        </div>
+      <PollFiltersPanel />
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All Categories
-          </button>
-          {CATEGORIES.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category.id
-                  ? category.color
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.icon} {category.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-        {/* Trending Hashtags Display - Re-enabled with fixed infinite loop */}
-        {_trendingHashtags.length > 0 && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-            <div className="flex items-center gap-2 mb-3">
-              <Flame className="h-5 w-5 text-orange-500" />
-              <h3 className="text-sm font-semibold text-gray-900">Trending Hashtags</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {_trendingHashtags.slice(0, 10).map((hashtag: any, index: number) => (
-                <button
-                  key={`trending-${index}-${typeof hashtag === 'string' ? hashtag : hashtag.name}`}
-                  onClick={() => handleHashtagSelect(typeof hashtag === 'string' ? hashtag : hashtag.name)}
-                  className={cn(
-                    "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-                    selectedHashtags.includes(typeof hashtag === 'string' ? hashtag : hashtag.name)
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
-                  )}
-                >
-                  <Hash className="h-3 w-3 mr-1" />
-                  {typeof hashtag === 'string' ? hashtag : hashtag.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-      {/* Polls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPolls.length === 0 ? (
+        {enhancedPolls.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <div className="text-gray-400 mb-4">
               <BarChart3 className="h-12 w-12 mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No polls found</h3>
             <p className="text-gray-600 mb-4">
-              {(searchQuery || selectedCategory !== 'all' || filter !== 'all')
+              {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                 ? 'Try adjusting your filters or search terms'
                 : 'Be the first to create a poll!'}
             </p>
@@ -394,131 +274,94 @@ export default function PollsPage() {
             </Link>
           </div>
         ) : (
-          filteredPolls.map((poll) => (
+          enhancedPolls.map((poll) => (
             <div key={poll.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                   {poll.title}
                 </h3>
-                {poll.totalVotes > 10 && (
-                  <div className="flex items-center text-orange-600 ml-2">
-                    <Flame className="h-4 w-4" />
-                  </div>
+                {poll.trending_position && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                    <Flame className="h-3 w-3 mr-1" />
+                    Trending #{poll.trending_position}
+                  </span>
                 )}
               </div>
 
-              <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                {poll.description}
+              <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                {poll.description || 'No description provided'}
               </p>
 
-              {/* Enhanced Poll Stats with Hashtag Analytics */}
               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
-                    {poll.totalVotes} votes
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {new Date(poll.createdAt).toLocaleDateString()}
-                  </div>
-                  {poll.hashtagIntegration?.hashtag_engagement && (
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {poll.hashtagIntegration.hashtag_engagement.total_views} views
-                    </div>
-                  )}
-                </div>
-                {poll.trending_position && poll.trending_position > 0 && (
-                  <div className="flex items-center text-orange-600">
-                    <Flame className="h-4 w-4 mr-1" />
-                    #{poll.trending_position} trending
-                  </div>
-                )}
-              </div>
-
-              {/* Category Badge */}
-              <div className="mb-4">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(poll.category)}`}>
-                  {getCategoryIcon(poll.category)} {CATEGORIES.find(c => c.id === poll.category)?.name ?? poll.category}
+                <span className="inline-flex items-center">
+                  <Users className="h-4 w-4 mr-1" />
+                  {poll.totalVotes} votes
                 </span>
+                <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
               </div>
 
-              {/* Enhanced Tags with Hashtag Integration */}
-              <div className="mb-4 space-y-2">
-                {/* Regular Tags */}
-                {poll.tags && poll.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {poll.tags.slice(0, 3).map((tag, index) => (
-                      <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                        #{tag}
-                      </span>
-                    ))}
-                    {poll.tags.length > 3 && (
-                      <span className="text-xs text-gray-500">+{poll.tags.length - 3} more</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Hashtags with Engagement */}
-                {poll.hashtags && poll.hashtags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {poll.hashtags.slice(0, 3).map((hashtag, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleHashtagSelect(hashtag)}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                      >
-                        <Hash className="h-3 w-3 mr-1" />
-                        {hashtag}
-                      </button>
-                    ))}
-                    {poll.hashtags.length > 3 && (
-                      <span className="text-xs text-gray-500">+{poll.hashtags.length - 3} more</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Primary Hashtag Highlight */}
-                {poll.primary_hashtag && (
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-500" />
-                    <span className="text-xs text-yellow-700 font-medium">
-                      Primary: #{poll.primary_hashtag}
-                    </span>
-                  </div>
-                )}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getPollCategoryColor(poll.category)}`}>
+                  {getPollCategoryIcon(poll.category)} {poll.category}
+                </span>
+                {poll.tags?.slice(0, 3).map((tag, index) => (
+                  <span key={`${poll.id}-tag-${index}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                    #{tag}
+                  </span>
+                ))}
               </div>
 
-              {/* Author */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-600">
-                      {poll.author.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">{poll.author.name}</p>
-                    {poll.author.verified && (
-                      <div className="flex items-center text-xs text-blue-600">
-                        <Star className="h-3 w-3 mr-1" />
-                        Verified
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div className="space-y-2">
                 <Link
                   href={`/polls/${poll.id}`}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  View Poll →
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Poll
+                </Link>
+                <Link
+                  href={`/polls/${poll.id}/results`}
+                  className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  View Results
                 </Link>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {pagination.totalPages > 1 && (
+        <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
+          <span>
+            Showing {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}–
+            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalResults)} of{' '}
+            {pagination.totalResults} polls
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1 || isLoading}
+              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-xs text-gray-500">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={pagination.currentPage === pagination.totalPages || isLoading}
+              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

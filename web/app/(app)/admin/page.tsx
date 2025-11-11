@@ -19,9 +19,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
 
-import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { NotificationContainer } from '@/features/admin/components/NotificationSystem'
+import { useIsAuthenticated, useUser, useUserActions, useUserLoading } from '@/lib/stores'
 import { T } from '@/lib/testing/testIds'
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 
 type AdminStats = {
@@ -34,51 +36,19 @@ type AdminStats = {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoading, signOut } = useSupabaseAuth()
+  const user = useUser()
+  const isUserLoading = useUserLoading()
+  const isAuthenticated = useIsAuthenticated()
+  const { signOut: resetUserState } = useUserActions()
   const router = useRouter()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
 
-  const checkAdminStatus = useCallback(async () => {
-    try {
-      // Check if user is admin by calling admin API
-      const response = await fetch('/api/admin/health?type=status', {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        setIsAdmin(true)
-        loadAdminStats()
-      } else if (response.status === 401 || response.status === 403) {
-        setIsAdmin(false)
-      } else {
-        // API error - assume not admin for security
-        setIsAdmin(false)
-      }
-    } catch {
-      // Network error - assume not admin for security
-      setIsAdmin(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Server-side admin guard handles authentication and authorization
-    // This is just for UX - show loading while server checks admin status
-    if (!isLoading && user) {
-      checkAdminStatus()
-    } else if (!isLoading && !user) {
-      setIsAdmin(false)
-    }
-  }, [user, isLoading, checkAdminStatus])
-
-  const loadAdminStats = async () => {
+  const loadAdminStats = useCallback(async () => {
     try {
       setLoading(true)
 
-      // Fetch real stats from API - no auth headers needed, server handles auth
       const response = await fetch('/api/admin/health?type=all', {
         headers: {
           'Content-Type': 'application/json'
@@ -87,9 +57,6 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const systemData = await response.json()
-
-        // Parse consolidated admin/health response (type=all)
-        // Response structure: { metrics: {...}, status: {...} }
         const metrics = systemData.metrics || {}
         const status = systemData.status || {}
 
@@ -98,12 +65,11 @@ export default function AdminDashboard() {
           totalPolls: metrics.total_polls || 0,
           totalVotes: metrics.total_votes || 0,
           activePolls: metrics.active_polls || 0,
-          adminUsers: 0, // Not provided in new structure
+          adminUsers: 0,
           systemHealth: status.ok ? 'excellent' : 'warning'
         })
       } else {
         logger.error('Failed to fetch admin stats:', new Error(`HTTP ${response.status}`))
-        // Fall back to mock data if API fails
         setStats({
           totalUsers: 0,
           totalPolls: 0,
@@ -114,10 +80,8 @@ export default function AdminDashboard() {
         })
       }
     } catch (error) {
-      // narrow 'unknown' → Error
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Error loading admin stats:', err)
-      // Fall back to mock data if API fails
       setStats({
         totalUsers: 0,
         totalPolls: 0,
@@ -129,14 +93,61 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  const checkAdminStatus = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      setIsAdmin(false)
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/health?type=status', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        setIsAdmin(true)
+        await loadAdminStats()
+      } else if (response.status === 401 || response.status === 403) {
+        setIsAdmin(false)
+        setLoading(false)
+      } else {
+        setIsAdmin(false)
+        setLoading(false)
+      }
+    } catch (error) {
+      logger.error('Admin status check failed:', error instanceof Error ? error : new Error(String(error)))
+      setIsAdmin(false)
+      setLoading(false)
+    }
+  }, [isAuthenticated, user, loadAdminStats])
+
+  useEffect(() => {
+    if (!isUserLoading && isAuthenticated && user) {
+      void checkAdminStatus()
+    } else if (!isUserLoading && !isAuthenticated) {
+      setIsAdmin(false)
+      setLoading(false)
+    }
+  }, [isUserLoading, isAuthenticated, user, checkAdminStatus])
 
   const handleLogout = async () => {
-    await signOut()
-    router.push('/login')
+    try {
+      const supabase = await getSupabaseBrowserClient()
+      await supabase.auth.signOut()
+    } catch (error) {
+      logger.error('Failed to sign out:', error instanceof Error ? error : new Error(String(error)))
+    } finally {
+      resetUserState()
+      router.push('/login')
+    }
   }
 
-  if (isLoading || loading || isAdmin === null) {
+  if (isUserLoading || loading || isAdmin === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -147,7 +158,7 @@ export default function AdminDashboard() {
     )
   }
 
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return null
   }
 
@@ -182,6 +193,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <NotificationContainer />
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -195,7 +207,7 @@ export default function AdminDashboard() {
 
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                Welcome, {user.email}
+                Welcome, {user.email ?? 'Admin'}
               </span>
               <button
                 onClick={handleLogout}

@@ -2,22 +2,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { useNotificationStore } from '@/lib/stores';
 
-import {
-  DESCRIPTION_CHAR_LIMIT,
-  MAX_OPTIONS,
-  MAX_TAGS,
-  POLL_CREATION_STEPS,
-  TITLE_CHAR_LIMIT,
-} from '../constants';
+import { POLL_CREATION_STEPS } from '../constants';
 import CreatePollPage from '../page';
 
 const submitMock = jest.fn();
 const pushMock = jest.fn();
+const resetWizardMock = jest.fn();
+const clearFieldErrorMock = jest.fn();
+const goToNextStepMock = jest.fn();
+const goToPreviousStepMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
   }),
+  usePathname: () => '/polls/create',
 }));
 
 jest.mock('../hooks', () => ({
@@ -28,32 +27,39 @@ jest.mock('../hooks', () => ({
       category: 'civic',
       options: ['Option A', 'Option B'],
       tags: ['civics'],
+      privacyLevel: 'public' as const,
       settings: {
         allowMultipleVotes: false,
         allowAnonymousVotes: false,
         requireAuthentication: true,
+        requireEmail: false,
         showResults: true,
+        allowWriteIns: false,
         allowComments: true,
-        privacyLevel: 'public' as const,
+        enableNotifications: true,
+        maxSelections: 1,
         votingMethod: 'single' as const,
+        privacyLevel: 'public' as const,
+        moderationEnabled: false,
+        autoClose: false,
       },
     };
 
-    const steps = POLL_CREATION_STEPS.map((step, index) =>
-      Object.assign({}, step, {
-        index,
-        isCurrent: index === POLL_CREATION_STEPS.length - 1,
-        isCompleted: index < POLL_CREATION_STEPS.length - 1,
-        hasError: false,
-      })
-    );
+    const steps = POLL_CREATION_STEPS.map((step, index) => ({
+      ...step,
+      index,
+      isCurrent: index === POLL_CREATION_STEPS.length - 1,
+      isCompleted: index < POLL_CREATION_STEPS.length - 1,
+      hasError: false,
+    }));
 
     return {
       data,
       errors: {},
       currentStep: POLL_CREATION_STEPS.length - 1,
       steps,
-      activeTip: null,
+      progressPercent: 90,
+      activeTip: { heading: 'Test tip', body: 'Complete your poll.' },
       canProceed: true,
       canGoBack: true,
       isLoading: false,
@@ -67,21 +73,18 @@ jest.mock('../hooks', () => ({
       ],
       actions: {
         updateData: jest.fn(),
+        updateSettings: jest.fn(),
         addOption: jest.fn(),
         removeOption: jest.fn(),
         updateOption: jest.fn(),
         addTag: jest.fn(),
         removeTag: jest.fn(),
-        updateSettings: jest.fn(),
-        clearError: jest.fn(),
+        clearFieldError: clearFieldErrorMock,
+        resetWizard: resetWizardMock,
       },
-      goToNextStep: jest.fn(),
-      goToPreviousStep: jest.fn(),
+      goToNextStep: goToNextStepMock,
+      goToPreviousStep: goToPreviousStepMock,
       submit: submitMock,
-      descriptionLimit: DESCRIPTION_CHAR_LIMIT,
-      titleLimit: TITLE_CHAR_LIMIT,
-      maxOptions: MAX_OPTIONS,
-      maxTags: MAX_TAGS,
     };
   },
 }));
@@ -90,6 +93,11 @@ describe('CreatePollPage submit flow', () => {
   beforeEach(() => {
     submitMock.mockReset();
     pushMock.mockReset();
+    resetWizardMock.mockReset();
+    clearFieldErrorMock.mockReset();
+    goToNextStepMock.mockReset();
+    goToPreviousStepMock.mockReset();
+
     const { clearAll } = useNotificationStore.getState();
     clearAll();
   });
@@ -113,15 +121,19 @@ describe('CreatePollPage submit flow', () => {
     await waitFor(() => expect(screen.getByText(/Share your poll/i)).toBeInTheDocument());
 
     expect(submitMock).toHaveBeenCalledTimes(1);
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'choices:poll-created' }),
-    );
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'choices:poll-created' }));
+    expect(resetWizardMock).toHaveBeenCalled();
+
+    const shareInput = screen.getByDisplayValue(/poll-123/);
+    expect(shareInput).toBeInTheDocument();
 
     const notifications = useNotificationStore.getState().notifications;
     expect(notifications[0]).toMatchObject({
       title: 'Poll created',
       type: 'success',
     });
+
+    dispatchSpy.mockRestore();
   });
 
   it('redirects to auth and shows warning when submission is unauthorized', async () => {
@@ -136,7 +148,7 @@ describe('CreatePollPage submit flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /publish poll/i }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalled());
-    expect(pushMock).toHaveBeenCalledWith(expect.stringContaining('/auth?redirect='));
+    expect(pushMock).toHaveBeenCalledWith(expect.stringContaining('/auth?redirect=%2Fpolls%2Fcreate'));
 
     const notifications = useNotificationStore.getState().notifications;
     expect(notifications[0]).toMatchObject({
@@ -145,5 +157,6 @@ describe('CreatePollPage submit flow', () => {
     });
 
     expect(screen.queryByText(/Share your poll/i)).not.toBeInTheDocument();
+    expect(resetWizardMock).not.toHaveBeenCalled();
   });
 });

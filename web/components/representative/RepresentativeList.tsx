@@ -1,9 +1,9 @@
 /**
  * Representative List Component
- * 
+ *
  * Displays a list of representatives with loading states and error handling
  * Supports different display modes and interactions
- * 
+ *
  * Created: October 28, 2025
  * Status: ✅ FOUNDATION
  */
@@ -14,7 +14,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import logger from '@/lib/utils/logger';
-import type { RepresentativeListProps } from '@/types/representative';
+import type { Representative, RepresentativeListProps } from '@/types/representative';
 
 import { RepresentativeCard } from './RepresentativeCard';
 
@@ -22,10 +22,21 @@ export function RepresentativeList({
   representatives,
   loading = false,
   error,
+  showActions = true,
+  showDetails = true,
+  onRepresentativeContact,
+  onRepresentativeFollow,
   onRepresentativeClick,
   className = ''
 }: RepresentativeListProps) {
-  
+  const handleContact = onRepresentativeContact ?? ((rep: Representative) => {
+    logger.info('Contact:', rep.name);
+  });
+
+  const handleFollow = onRepresentativeFollow ?? ((rep: Representative) => {
+    logger.info('Followed:', rep.name);
+  });
+
   if (loading) {
     return (
       <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
@@ -69,12 +80,10 @@ export function RepresentativeList({
           <RepresentativeCard
             key={representative.id}
             representative={representative}
-            onFollow={(rep) => {
-              logger.info('Followed:', rep.name);
-            }}
-            onContact={(rep) => {
-              logger.info('Contact:', rep.name);
-            }}
+            showActions={showActions}
+            showDetails={showDetails}
+            onFollow={handleFollow}
+            onContact={handleContact}
             onClick={() => {
               if (onRepresentativeClick) {
                 onRepresentativeClick(representative);
@@ -89,17 +98,28 @@ export function RepresentativeList({
 
 /**
  * Representative Grid Component
- * 
+ *
  * Alternative grid layout for representatives
  */
 export function RepresentativeGrid({
   representatives,
   loading = false,
   error,
+  showActions = false,
+  showDetails = false,
+  onRepresentativeContact,
+  onRepresentativeFollow,
   onRepresentativeClick,
   className = ''
 }: RepresentativeListProps) {
-  
+  const handleContact = onRepresentativeContact ?? ((rep: Representative) => {
+    logger.info('Contact:', rep.name);
+  });
+
+  const handleFollow = onRepresentativeFollow ?? ((rep: Representative) => {
+    logger.info('Followed:', rep.name);
+  });
+
   if (loading) {
     return (
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
@@ -143,13 +163,10 @@ export function RepresentativeGrid({
         <RepresentativeCard
           key={representative.id}
           representative={representative}
-          showDetails={false}
-          onFollow={(rep) => {
-            logger.info('Followed:', rep.name);
-          }}
-          onContact={(rep) => {
-            logger.info('Contact:', rep.name);
-          }}
+          showDetails={showDetails}
+          showActions={showActions}
+          onFollow={handleFollow}
+          onContact={handleContact}
           {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
         />
       ))}

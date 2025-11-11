@@ -1,22 +1,29 @@
 /**
  * Civics Address Lookup Form Component
- * 
+ *
  * Provides a user-friendly interface for finding representatives by address.
  * Includes privacy protection, validation, and error handling.
- * 
+ *
  * @fileoverview Address-based representative lookup form
  * @version 2.0.0
  * @since 2024-10-09
- * @updated 2025-10-25 - Updated to use correct API endpoint
+ * @updated 2025-11-09 - Integrated representative + user Zustand stores
  * @feature CIVICS_ADDRESS_LOOKUP
  */
 
-import React, { useState } from 'react';
+'use client';
 
+import React, { useCallback, useState } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-
-'use client';
+import logger from '@/lib/utils/logger';
+import { useUserActions, useUserAddressLoading } from '@/lib/stores';
+import {
+  useFindByLocation,
+  useRepresentativeGlobalLoading,
+  useRepresentativeError,
+  useClearError
+} from '@/lib/stores/representativeStore';
 
 /**
  * Props for the AddressLookupForm component
@@ -36,51 +43,58 @@ type AddressLookupFormProps = {
  */
 export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFormProps) {
   const [address, setAddress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { handleAddressUpdate } = useUserActions();
+  const addressLoading = useUserAddressLoading();
+  const repLoading = useRepresentativeGlobalLoading();
+  const representativeError = useRepresentativeError();
+  const findByLocation = useFindByLocation();
+  const clearRepresentativeError = useClearError();
+
+  const isLoading = addressLoading || repLoading;
 
   // Feature flag check - don't render if disabled
   if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!address.trim()) {
+  const handleSubmit = useCallback(async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
       setError('Please enter an address');
       return;
     }
 
-    setIsLoading(true);
     setError(null);
+    clearRepresentativeError();
 
     try {
-      // Call the address lookup API
-      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Address lookup failed: ${response.status}`);
+      const results = await Promise.allSettled([
+        handleAddressUpdate(trimmedAddress),
+        (async () => {
+          const response = await findByLocation({ address: trimmedAddress });
+          if (!response?.success) {
+            throw new Error(response?.error ?? 'Unable to find representatives for that address');
+          }
+        })()
+      ]);
+
+      const rejection = results.find((result) => result.status === 'rejected');
+      if (rejection && rejection.status === 'rejected') {
+        throw rejection.reason;
       }
-      
-      const _data = await response.json();
-      
-      // Call the callback with the results
-      onLookup?.(address);
-      
-      // Clear the form on success
+
+      onLookup?.(trimmedAddress);
       setAddress('');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-    } catch {
-      setError('Failed to lookup address');
-    } finally {
-      setIsLoading(false);
+    } catch (lookupError) {
+      const message =
+        lookupError instanceof Error ? lookupError.message : 'Failed to lookup address';
+      setError(message);
+      logger.error('Address lookup failed', lookupError);
     }
-  };
+  }, [address, clearRepresentativeError, findByLocation, handleAddressUpdate, onLookup]);
 
   return (
     <div className={`civics-address-lookup ${className}`}>
@@ -133,9 +147,9 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           <span className="ml-1">Use &quot;different address&quot; for this search. Same privacy rules—nothing is stored.</span>
         </div>
 
-        {error && (
+        {(error ?? representativeError) && (
           <div className="text-red-600 text-sm">
-            {error}
+            {error ?? representativeError}
           </div>
         )}
 

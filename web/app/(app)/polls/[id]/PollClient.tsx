@@ -11,8 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
-import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
-import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
+import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
+import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import {
   createBallotFromPoll,
   createVotingRecordFromPollSubmission,
@@ -21,8 +22,7 @@ import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {
-type VoteSubmission,
-  type VoteAnalyticsPayload,
+  type VoteSubmission,
 } from '../../../../features/voting/components/VotingInterface';
 
 
@@ -90,9 +90,6 @@ export default function PollClient({ poll }: PollClientProps) {
   const params = useParams();
   const pollId = params.id as string;
 
-  const trackEvent = useAnalyticsStore((state) => state.trackEvent);
-  const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
-
   const {
     setBallots,
     setSelectedBallot,
@@ -102,45 +99,24 @@ export default function PollClient({ poll }: PollClientProps) {
     setError: setVotingError,
     clearError: clearVotingError,
     addVotingRecord,
+    cancelVote,
   } = useVotingActions();
   const votingStoreError = useVotingError();
   const storeIsVoting = useVotingIsVoting();
 
-  const recordPollEvent = useCallback(
-    (action: string, payload: VoteAnalyticsPayload = {}) => {
-      if (typeof trackEvent !== 'function') {
-        return;
-      }
-
-      const baseMetadata: Record<string, unknown> = {
-        pollId: poll.id,
-        pollTitle: poll.title,
-        votingMethod: poll.votingMethod,
-        privacyLevel: poll.privacyLevel,
-        status: poll.status,
-        category: poll.category,
-        ...(payload.metadata ?? {}),
-      };
-
-      trackEvent({
-        event_type: 'poll_event',
-        type: 'poll_event',
-        category: payload.category ?? 'poll_interaction',
-        action,
-        event_data: {
-          action,
-          category: payload.category ?? 'poll_interaction',
-          metadata: baseMetadata,
-        },
-        created_at: new Date().toISOString(),
-        session_id: analyticsSessionId ?? 'anonymous',
-        ...(payload.label !== undefined ? { label: payload.label } : {}),
-        ...(payload.value !== undefined ? { value: payload.value } : {}),
-        metadata: baseMetadata,
-      });
-    },
-    [analyticsSessionId, poll.category, poll.id, poll.privacyLevel, poll.status, poll.title, poll.votingMethod, trackEvent]
+  const pollMetadataFactory = useCallback(
+    () => ({
+      pollId: poll.id,
+      pollTitle: poll.title,
+      votingMethod: poll.votingMethod,
+      privacyLevel: poll.privacyLevel,
+      status: poll.status,
+      category: poll.category,
+    }),
+    [poll],
   );
+
+  const recordPollEvent = useRecordPollEvent(pollMetadataFactory);
 
   const [results, setResults] = useState<PollResultsState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -149,6 +125,10 @@ export default function PollClient({ poll }: PollClientProps) {
   const [showVotingInterface, setShowVotingInterface] = useState(false);
   const [resultsMode, setResultsMode] = useState<ResultsMode>('live');
   const [copied, setCopied] = useState(false);
+  const [lastVoteId, setLastVoteId] = useState<string | null>(null);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const notificationSettings = useNotificationSettings();
+  const { addNotification } = useNotificationActions();
 
   const pollDetailsForBallot = useMemo(
     () => ({
@@ -167,6 +147,30 @@ export default function PollClient({ poll }: PollClientProps) {
   );
 
   const combinedError = error ?? votingStoreError ?? null;
+
+  const notifyUndoSuccess = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'success',
+        title: 'Vote undone',
+        message,
+        duration: notificationSettings.duration,
+      });
+    },
+    [addNotification, notificationSettings.duration],
+  );
+
+  const notifyUndoError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: 'Unable to undo vote',
+        message,
+        duration: notificationSettings.duration,
+      });
+    },
+    [addNotification, notificationSettings.duration],
+  );
 
   // Client-side vote status check
   useEffect(() => {
@@ -337,6 +341,59 @@ export default function PollClient({ poll }: PollClientProps) {
     setSelectedBallot,
   ]);
 
+  const handleUndoLastVote = useCallback(async () => {
+    if (!lastVoteId) {
+      return;
+    }
+    setIsUndoing(true);
+    setVoting(true);
+    setError(null);
+    clearVotingError();
+
+    try {
+      await cancelVote(lastVoteId);
+      notifyUndoSuccess('You can vote again.');
+      recordPollEvent('vote_undo', {
+        metadata: {
+          context: 'poll_detail',
+          voteId: lastVoteId,
+        },
+      });
+      setHasVoted(false);
+      setLastVoteId(null);
+      setShowVotingInterface(true);
+      await fetchPollData();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to undo vote';
+      setError(message);
+      setVotingError(message);
+      notifyUndoError(message);
+      recordPollEvent('vote_undo_failed', {
+        metadata: {
+          context: 'poll_detail',
+          voteId: lastVoteId,
+          error: message,
+        },
+      });
+    } finally {
+      setVoting(false);
+      setIsUndoing(false);
+    }
+  }, [
+    cancelVote,
+    clearVotingError,
+    fetchPollData,
+    lastVoteId,
+    notifyUndoError,
+    notifyUndoSuccess,
+    recordPollEvent,
+    setError,
+    setHasVoted,
+    setShowVotingInterface,
+    setVoting,
+    setVotingError,
+  ]);
+
   const hasRecordedViewRef = useRef(false);
 
   useEffect(() => {
@@ -456,6 +513,7 @@ export default function PollClient({ poll }: PollClientProps) {
           voteId,
         })
       );
+      setLastVoteId(voteId);
 
       return {
         ok: true,
@@ -465,6 +523,7 @@ export default function PollClient({ poll }: PollClientProps) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit vote';
       setError(errorMessage);
       setVotingError(errorMessage);
+      setLastVoteId(null);
       return {
         ok: false,
         error: errorMessage,
@@ -565,6 +624,7 @@ export default function PollClient({ poll }: PollClientProps) {
     recordPollEvent('detail_results_mode_changed', {
       label: mode,
       metadata: {
+        context: 'poll_detail',
         mode,
       },
     });
@@ -638,6 +698,28 @@ export default function PollClient({ poll }: PollClientProps) {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{combinedError}</AlertDescription>
           </Alert>
+        )}
+
+        {hasVoted && lastVoteId && (
+          <Card className="mt-6 mb-8 border-blue-200 bg-blue-50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-blue-900 text-lg">
+                Vote recorded
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUndoLastVote}
+                disabled={isUndoing || storeIsVoting}
+                data-testid="undo-vote-button"
+              >
+                {isUndoing ? 'Undoing…' : 'Undo vote'}
+              </Button>
+            </CardHeader>
+            <CardContent className="text-sm text-blue-800">
+              You can undo your vote and submit a new response if needed.
+            </CardContent>
+          </Card>
         )}
 
         {/* Voting Interface */}

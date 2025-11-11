@@ -10,12 +10,15 @@ import React, { useEffect } from 'react';
 import type { AdminUser } from '@/features/admin/types';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import {
-  useAdminUsers,
   useAdminUserFilters,
   useAdminUserActions,
   useAdminLoading,
   useAdminError,
   useAdminActions,
+  useFilteredAdminUsers,
+  useAdminSelectedUsers,
+  useAdminShowBulkActions,
+  useAdminUserCount,
 } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
@@ -26,8 +29,11 @@ type UserManagementProps = {
 
 export default function UserManagement({ onUserUpdate, onUserDelete }: UserManagementProps) {
   // Get state from adminStore
-  const users = useAdminUsers();
-  const { searchTerm, roleFilter, statusFilter, selectedUsers, showBulkActions } = useAdminUserFilters();
+  const { searchTerm, roleFilter, statusFilter } = useAdminUserFilters();
+  const filteredUsers = useFilteredAdminUsers();
+  const selectedUsers = useAdminSelectedUsers();
+  const showBulkActions = useAdminShowBulkActions();
+  const totalUsers = useAdminUserCount();
   const loading = useAdminLoading();
   const error = useAdminError();
 
@@ -36,7 +42,11 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     setUserFilters,
     updateUserRole,
     updateUserStatus,
-    deleteUser
+    deleteUser,
+    selectUser,
+    deselectUser,
+    selectAllUsers,
+    deselectAllUsers,
   } = useAdminUserActions();
 
   const { loadUsers, setError } = useAdminActions();
@@ -61,30 +71,25 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     loadUsersData();
   }, [loadUsers, setError]);
 
-  const filteredUsers = users.filter((user: AdminUser) => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
   const handleUserSelect = (userId: string) => {
     const alreadySelected = selectedUsers.includes(userId);
-    const updated = alreadySelected
-      ? selectedUsers.filter((id) => id !== userId)
-      : [...selectedUsers, userId];
-
-    setUserFilters({ selectedUsers: updated, showBulkActions: updated.length > 0 });
+    if (alreadySelected) {
+      deselectUser(userId);
+    } else {
+      selectUser(userId);
+    }
   };
 
   const handleSelectAll = () => {
     if (selectedUsers.length === filteredUsers.length) {
-      setUserFilters({ selectedUsers: [], showBulkActions: false });
+      deselectAllUsers();
     } else {
       const allUserIds = filteredUsers.map((user: AdminUser) => user.id);
-      setUserFilters({ selectedUsers: allUserIds, showBulkActions: allUserIds.length > 0 });
+      if (allUserIds.length === totalUsers) {
+        selectAllUsers();
+      } else {
+        setUserFilters({ selectedUsers: allUserIds, showBulkActions: allUserIds.length > 0 });
+      }
     }
   };
 
@@ -109,7 +114,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         break;
     }
 
-    setUserFilters({ selectedUsers: [], showBulkActions: false });
+    deselectAllUsers();
     performanceMetrics.addMetric('user-bulk-action', 1);
   };
 
@@ -191,7 +196,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600">
-            {filteredUsers.length} of {users.length} users
+            {filteredUsers.length} of {totalUsers} users
           </span>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
             Add User

@@ -138,7 +138,8 @@ describe('RankedStrategy', () => {
     expect(results.totalVotes).toBe(3);
     expect(results.results.winner).toBe('1');
     expect(results.results.instantRunoffRounds?.length).toBeGreaterThan(0);
-    expect(results.results.optionVotes['1']).toBeGreaterThan(results.results.optionVotes['0']);
+    const optionVotes = results.results.optionVotes ?? {};
+    expect((optionVotes['1'] ?? 0)).toBeGreaterThan(optionVotes['0'] ?? 0);
     expect(results.results.bordaScores?.['1']).toBeGreaterThan(0);
   });
 

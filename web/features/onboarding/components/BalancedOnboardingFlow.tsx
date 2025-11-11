@@ -20,6 +20,7 @@ import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
 import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
+import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
 import {
   useUser,
   useUserLoading,
@@ -29,8 +30,8 @@ import {
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
+import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 
 // Step 1: Welcome & Value Proposition (30 seconds)
@@ -161,10 +162,13 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.location_sharing === 'quantized'}
-                onChange={(e) => setPrivacy({
-                  ...privacy,
-                  location_sharing: e.target.checked ? 'quantized' : 'disabled'
-                })}
+                onChange={(e) =>
+                  setPrivacy(
+                    withOptional(privacy, {
+                      location_sharing: e.target.checked ? 'quantized' : 'disabled',
+                    })
+                  )
+                }
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -175,10 +179,13 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.demographic_sharing === 'enabled'}
-                onChange={(e) => setPrivacy({
-                  ...privacy,
-                  demographic_sharing: e.target.checked ? 'enabled' : 'disabled'
-                })}
+                onChange={(e) =>
+                  setPrivacy(
+                    withOptional(privacy, {
+                      demographic_sharing: e.target.checked ? 'enabled' : 'disabled',
+                    })
+                  )
+                }
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -189,10 +196,13 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.analytics_sharing === 'enabled'}
-                onChange={(e) => setPrivacy({
-                  ...privacy,
-                  analytics_sharing: e.target.checked ? 'enabled' : 'limited'
-                })}
+                onChange={(e) =>
+                  setPrivacy(
+                    withOptional(privacy, {
+                      analytics_sharing: e.target.checked ? 'enabled' : 'limited',
+                    })
+                  )
+                }
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -260,14 +270,15 @@ const DemographicsStep: React.FC<{
               autoSave={true}
               onDistrictSaved={(district) => {
                 // Update demographics with district info
-                setDemographics({
-                  ...demographics,
-                  location: {
-                    state: district.state,
-                    ...(district.district ? { district: district.district } : {}),
-                    quantized: true
-                  }
-                });
+                setDemographics(
+                  withOptional(demographics, {
+                    location: withOptional(demographics?.location ?? {}, {
+                      state: district.state,
+                      ...(district.district ? { district: district.district } : {}),
+                      quantized: true,
+                    }),
+                  })
+                );
               }}
             />
 
@@ -300,10 +311,13 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.age_range ?? ''}
-                  onChange={(e) => setDemographics({
-                    ...demographics,
-                    age_range: e.target.value as UserDemographics['age_range']
-                  })}
+                  onChange={(e) =>
+                    setDemographics(
+                      withOptional(demographics, {
+                        age_range: e.target.value as UserDemographics['age_range'],
+                      })
+                    )
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select age range</option>
@@ -322,10 +336,13 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.education ?? ''}
-                  onChange={(e) => setDemographics({
-                    ...demographics,
-                    education: e.target.value as UserDemographics['education']
-                  })}
+                  onChange={(e) =>
+                    setDemographics(
+                      withOptional(demographics, {
+                        education: e.target.value as UserDemographics['education'],
+                      })
+                    )
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select education</option>
@@ -342,10 +359,13 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.political_engagement ?? ''}
-                  onChange={(e) => setDemographics({
-                    ...demographics,
-                    political_engagement: e.target.value as UserDemographics['political_engagement']
-                  })}
+                  onChange={(e) =>
+                    setDemographics(
+                      withOptional(demographics, {
+                        political_engagement: e.target.value as UserDemographics['political_engagement'],
+                      })
+                    )
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select engagement</option>
@@ -853,47 +873,71 @@ const CompleteStep: React.FC<{
 const BalancedOnboardingFlow: React.FC = () => {
   const currentStep = useOnboardingStep();
   const onboardingData = useOnboardingData();
-  const { nextStep, previousStep, updateFormData, completeOnboarding, setCurrentStep } = useOnboardingActions();
+  const {
+    nextStep,
+    previousStep,
+    updateFormData,
+    completeOnboarding,
+    skipOnboarding,
+    goToStep,
+    restartOnboarding,
+    clearAllData,
+  } = useOnboardingActions();
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
   const user = useUser();
   const isLoading = useUserLoading();
+  const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
+  const { updateProfile } = useProfileUpdate();
+
+  useEffect(() => {
+    restartOnboarding();
+    return () => {
+      clearAllData();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    document.documentElement.dataset.onboardingFlowReady = 'true';
+    document.documentElement.dataset.onboardingFlowStep = String(currentStep);
+    return () => {
+      if (document.documentElement.dataset.onboardingFlowStep) {
+        delete document.documentElement.dataset.onboardingFlowStep;
+      }
+      if (document.documentElement.dataset.onboardingFlowReady) {
+        delete document.documentElement.dataset.onboardingFlowReady;
+      }
+    };
+  }, [currentStep]);
 
   // Check if user has already completed onboarding
   useEffect(() => {
-    const checkOnboardingStatus = async () => {
-    if (!isLoading && user) {
+    const redirectIfCompleted = async () => {
+      if (!isLoading && !profileLoading && user) {
         try {
-          const supabase = await getSupabaseBrowserClient();
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('demographics, primary_concerns, community_focus, participation_style')
-            .eq('user_id', user.id)
-            .single();
+          const hasCompleted =
+            !!profile?.demographics &&
+            !!profile?.primary_concerns &&
+            !!profile?.community_focus &&
+            !!profile?.participation_style;
 
-          // Check onboarding completion based on presence of key fields
-          const isOnboardingCompleted = !!(
-            profile?.demographics &&
-            profile?.primary_concerns &&
-            profile?.community_focus &&
-            profile?.participation_style
-          );
-
-          if (isOnboardingCompleted) {
-            // User has already completed onboarding, redirect to dashboard
+          if (hasCompleted) {
             const { safeNavigate } = await import('@/lib/utils/ssr-safe');
             safeNavigate('/dashboard');
           }
-        } catch (error) {
-          logger.error('Error checking onboarding status:', error);
-          // Continue with onboarding if we can't check status
+        } catch (err) {
+          logger.error('Error during onboarding completion check:', err);
         }
       }
     };
 
-    checkOnboardingStatus();
-  }, [user, isLoading]);
+    void redirectIfCompleted();
+  }, [user, isLoading, profile, profileLoading]);
 
   const handleNext = () => {
     nextStep();
@@ -905,8 +949,8 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleSkip = () => {
-    // Skip to complete step
-    setCurrentStep(5); // Complete step
+    skipOnboarding();
+    goToStep(5);
   };
 
   const handleFinish = async () => {
@@ -932,38 +976,40 @@ const BalancedOnboardingFlow: React.FC = () => {
         ? valuesData?.priorities
         : [];
 
+    const rawParticipationStyle = valuesData?.participationStyle;
+    const normalizedParticipationStyle =
+      rawParticipationStyle === 'contributor' ? 'participant' : rawParticipationStyle;
+
     const participationStyle =
-      valuesData?.participationStyle === 'observer' ||
-      valuesData?.participationStyle === 'contributor' ||
-      valuesData?.participationStyle === 'leader'
-        ? valuesData.participationStyle
+      normalizedParticipationStyle === 'observer' ||
+      normalizedParticipationStyle === 'participant' ||
+      normalizedParticipationStyle === 'leader' ||
+      normalizedParticipationStyle === 'organizer'
+        ? normalizedParticipationStyle
         : 'observer';
 
     try {
       // Update user profile to mark onboarding as completed
       if (user) {
-        const supabase = await getSupabaseBrowserClient();
-        const { error } = await supabase
-          .from('user_profiles')
-          .update({
-            demographics: {},
-            primary_concerns: primaryConcerns,
-            community_focus: communityFocusSelections,
-            participation_style: participationStyle,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
+        const result = await updateProfile({
+          primary_concerns: primaryConcerns,
+          community_focus: communityFocusSelections,
+          participation_style: participationStyle,
+        });
 
-        if (error) {
-          logger.error('Failed to update onboarding status:', error);
+        if (!result.success) {
+          logger.error('Failed to update onboarding status:', result.error);
+        } else {
+          await refetchProfile();
         }
       }
 
-    // Complete onboarding
-    completeOnboarding();
+      // Complete onboarding
+      completeOnboarding();
+      clearAllData();
 
-    // Redirect to main app
-    window.location.href = '/civics';
+      // Redirect to main app
+      window.location.href = '/civics';
     } catch (error) {
       logger.error('Error completing onboarding:', error);
       // Still redirect even if database update fails
@@ -971,7 +1017,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">

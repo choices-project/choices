@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import React, { useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,13 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  useUserAvatarFile,
-  useUserAvatarPreview,
-  useUserIsUploadingAvatar,
-  useUserActions
-} from '@/lib/stores';
+import { useProfileStore } from '@/lib/stores/profileStore';
 import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
 import type { ProfileEditProps } from '../index';
 import type { ProfileUpdateData, ProfileDemographics, PrivacySettings } from '@/types/profile';
@@ -180,45 +175,37 @@ export default function ProfileEdit({
   isLoading: externalLoading, 
   error: externalError 
 }: ProfileEditProps) {
-  const { user: _authUser } = useAuth();
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
-  const { uploadAvatar, isUploading: _isUploadingAvatar } = useProfileAvatar();
+  const { uploadAvatar, isUploading: isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
+  const storeProfile = useProfileStore((state) => state.profile ?? state.userProfile);
+  const setUserProfileInStore = useProfileStore((state) => state.setUserProfile);
+  const storeProfileId = storeProfile?.id;
   
   // Local form data state
   const [formData, setFormData] = useState<ProfileUpdateData>(() => buildInitialFormData(profile));
-  const avatarFile = useUserAvatarFile();
-  const avatarPreview = useUserAvatarPreview();
-  const isUploadingAvatar = useUserIsUploadingAvatar();
-  
-  // Get actions from userStore
-  const {
-    setProfileEditData,
-    updateProfileEditData,
-    setAvatarFile,
-    setAvatarPreview,
-    setUploadingAvatar
-  } = useUserActions();
-  
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   // Local UI state (not in store)
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // Initialize form data (local and store)
-  React.useEffect(() => {
+  useEffect(() => {
     const initialData = buildInitialFormData(profile);
     setFormData(initialData);
-    setProfileEditData(initialData);
-  }, [profile, setProfileEditData]);
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile && storeProfileId !== profile.id) {
+      setUserProfileInStore(profile);
+    }
+  }, [profile, setUserProfileInStore, storeProfileId]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
-  const _finalError = externalError ?? updateError;
-  
-  // Guard clause for null formData
-  if (!formData) {
-    return <div>Loading...</div>;
-  }
+  const combinedError = formError ?? externalError ?? updateError ?? null;
 
   // Handle form field changes
   const handleFieldChange = <K extends keyof ProfileUpdateData>(field: K, value: ProfileUpdateData[K]) => {
@@ -226,8 +213,7 @@ export default function ProfileEdit({
       ...prev,
       [field]: value,
     }));
-    updateProfileEditData({ [field]: value } as Partial<ProfileUpdateData>);
-    setError(null);
+    setFormError(null);
     setSuccess(null);
   };
 
@@ -242,13 +228,12 @@ export default function ProfileEdit({
       ...prev,
       [field]: updatedValues,
     }));
-    updateProfileEditData({ [field]: updatedValues } as Partial<ProfileUpdateData>);
-    
-    // Note: Store sync handled by save action, not individual field updates
+    setFormError(null);
+    setSuccess(null);
   };
 
   // Handle avatar file selection
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setAvatarFile(file);
@@ -264,7 +249,6 @@ export default function ProfileEdit({
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;
 
-      setUploadingAvatar(true);
     try {
       const result = await uploadAvatar(avatarFile);
       if (result.success) {
@@ -272,19 +256,17 @@ export default function ProfileEdit({
         setAvatarFile(null);
         setAvatarPreview(null);
       } else {
-        setError(result.error ?? 'Failed to update avatar');
+        setFormError(result.error ?? 'Failed to update avatar');
       }
     } catch {
-      setError('Failed to update avatar');
-    } finally {
-      setUploadingAvatar(false);
+      setFormError('Failed to update avatar');
     }
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
     setSuccess(null);
 
     try {
@@ -299,18 +281,28 @@ export default function ProfileEdit({
         ...(formData.privacy_settings !== undefined ? { privacy_settings: formData.privacy_settings } : {})
       };
       
-      await updateProfile(profileUpdateData);
-      setSuccess('Profile updated successfully');
-      onSave?.(formData);
-    } catch {
-      setError('Failed to update profile');
+      const result = await updateProfile(profileUpdateData);
+      if (result.success) {
+        setSuccess('Profile updated successfully');
+        if (result.data) {
+          setFormData(buildInitialFormData(result.data));
+        }
+        await onSave?.(profileUpdateData);
+      } else {
+        setFormError(result.error ?? 'Failed to update profile');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update profile';
+      setFormError(message);
     }
   };
 
   // Handle cancel
   const handleCancel = () => {
     setFormData(buildInitialFormData(profile));
-    setError(null);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setFormError(null);
     setSuccess(null);
     onCancel?.();
   };
@@ -341,10 +333,10 @@ export default function ProfileEdit({
         </Alert>
       )}
 
-      {error && (
+      {combinedError && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{combinedError}</AlertDescription>
         </Alert>
       )}
 

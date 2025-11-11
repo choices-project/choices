@@ -4,7 +4,7 @@ import { DifferentialPrivacyManager } from '@/lib/privacy/dp';
 
 describe('DifferentialPrivacyManager', () => {
   let manager: DifferentialPrivacyManager;
-  let randomSpy: jest.SpyInstance<number, []> | undefined;
+  let randomSpy: jest.SpiedFunction<typeof Math.random> | undefined;
 
   const setDeterministicRandom = (value: number) => {
     randomSpy?.mockRestore();

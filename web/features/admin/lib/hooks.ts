@@ -16,7 +16,7 @@ import type {
 } from '../types';
 
 import { realTimeService } from './real-time-service';
-import { useAdminStore } from './store';
+import { useAdminActions } from '@/lib/stores';
 
 /**
  * Fallback values returned when admin APIs are unavailable.
@@ -188,7 +188,7 @@ const generatePollContext = async (storyId: string): Promise<PollContext> => {
 // Custom hooks
 export const useTrendingTopics = () => {
   const queryClient = useQueryClient();
-  const { updateTrendingTopics, setLoading, updateActivityFeed } = useAdminStore();
+  const { setTrendingTopics } = useAdminActions();
 
   const query = useQuery({
     queryKey: ['trending-topics'],
@@ -198,28 +198,22 @@ export const useTrendingTopics = () => {
 
   React.useEffect(() => {
     if (query.data) {
-      updateTrendingTopics(query.data);
-      setLoading('topics', false);
+      setTrendingTopics(query.data);
 
-      // Warn if we got empty data (API likely failed)
       if (query.data === emptyTrendingTopics || query.data.length === 0) {
         logger.warn('⚠️ Admin Dashboard: No trending topics data available. Check API endpoints.');
       }
 
-      // Invalidate related queries when trending topics update
       queryClient.invalidateQueries({ queryKey: ['activity-feed'] });
     }
-    if (query.error) {
-      setLoading('topics', false);
-    }
-  }, [query.data, query.error, updateTrendingTopics, setLoading, updateActivityFeed, queryClient]);
+  }, [query.data, setTrendingTopics, queryClient]);
 
   return query;
 };
 
 export const useGeneratedPolls = () => {
   const queryClient = useQueryClient();
-  const { updateGeneratedPolls, setLoading } = useAdminStore();
+  const { setGeneratedPolls } = useAdminActions();
 
   const query = useQuery({
     queryKey: ['generated-polls'],
@@ -229,22 +223,18 @@ export const useGeneratedPolls = () => {
 
   React.useEffect(() => {
     if (query.data) {
-      updateGeneratedPolls(query.data);
-      setLoading('polls', false);
+      setGeneratedPolls(query.data);
 
       // Invalidate related queries when generated polls update
       queryClient.invalidateQueries({ queryKey: ['system-metrics'] });
     }
-    if (query.error) {
-      setLoading('polls', false);
-    }
-  }, [query.data, query.error, updateGeneratedPolls, setLoading, queryClient]);
+  }, [query.data, setGeneratedPolls, queryClient]);
 
   return query;
 };
 
 export const useSystemMetrics = () => {
-  const { updateSystemMetrics, setLoading } = useAdminStore();
+  const { setSystemMetrics } = useAdminActions();
 
   const query = useQuery({
     queryKey: ['system-metrics'],
@@ -254,20 +244,16 @@ export const useSystemMetrics = () => {
 
   React.useEffect(() => {
     if (query.data) {
-      updateSystemMetrics(query.data);
-      setLoading('metrics', false);
+      setSystemMetrics(query.data);
     }
-    if (query.error) {
-      setLoading('metrics', false);
-    }
-  }, [query.data, query.error, updateSystemMetrics, setLoading]);
+  }, [query.data, setSystemMetrics]);
 
   return query;
 };
 
 // Mutation hooks
 export const useApproveTopic = () => {
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: approveTopic,
@@ -292,7 +278,7 @@ export const useApproveTopic = () => {
 };
 
 export const useRejectTopic = () => {
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: rejectTopic,
@@ -317,7 +303,7 @@ export const useRejectTopic = () => {
 };
 
 export const useApprovePoll = () => {
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: approvePoll,
@@ -342,7 +328,7 @@ export const useApprovePoll = () => {
 };
 
 export const useRejectPoll = () => {
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: rejectPoll,
@@ -368,7 +354,7 @@ export const useRejectPoll = () => {
 
 export const useAnalyzeTrendingTopics = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: analyzeTrendingTopics,
@@ -416,7 +402,7 @@ export const useBreakingNews = () => {
 
 export const useCreateBreakingNews = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: createBreakingNews,
@@ -443,7 +429,7 @@ export const useCreateBreakingNews = () => {
 
 export const useGeneratePollContext = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminStore();
+  const { addNotification } = useAdminActions();
 
   return useMutation({
     mutationFn: generatePollContext,
@@ -474,9 +460,7 @@ export const useRealTimeSubscriptions = () => {
   const [lastAdminEvent, setLastAdminEvent] = React.useState<AdminRealtimeEvent | null>(null);
   const [latestFeedbackEvent, setLatestFeedbackEvent] = React.useState<FeedbackRealtimeEvent | null>(null);
 
-  const setSystemMetrics = useAdminStore((state) => state.setSystemMetrics);
-  const addNotification = useAdminStore((state) => state.addNotification);
-  const addActivityItem = useAdminStore((state) => state.addActivityItem);
+  const { setSystemMetrics, addNotification, addActivityItem } = useAdminActions();
 
   const handleAdminEvent = React.useCallback((event: AdminRealtimeEvent) => {
     setLastAdminEvent(event);

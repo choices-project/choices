@@ -40,12 +40,14 @@ export const usePollCreateController = () => {
     updateOption,
     addTag,
     removeTag,
+    updateTags,
     setLoading,
-    setError,
+    setFieldError,
+    clearFieldError,
     clearAllErrors,
-    clearError,
     validateCurrentStep,
     canProceedToNextStep,
+    resetWizard,
   } = usePollWizardActions();
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -100,7 +102,7 @@ export const usePollCreateController = () => {
       clearAllErrors();
       const fieldErrors = mapValidationErrors(validation.error);
       Object.entries(fieldErrors).forEach(([field, message]) => {
-        setError(field, message);
+        setFieldError(field, message);
       });
 
       return {
@@ -133,10 +135,10 @@ export const usePollCreateController = () => {
 
         if (result.fieldErrors) {
           Object.entries(result.fieldErrors).forEach(([field, message]) => {
-            setError(field, message);
+            setFieldError(field, message);
           });
         } else {
-          setError('_form', result.message);
+          setFieldError('_form', result.message);
         }
 
         return result;
@@ -148,7 +150,7 @@ export const usePollCreateController = () => {
       setLoading(false);
       abortControllerRef.current = null;
     }
-  }, [clearAllErrors, data, setError, setLoading]);
+  }, [clearAllErrors, data, setFieldError, setLoading]);
 
   return {
     data,
@@ -170,7 +172,11 @@ export const usePollCreateController = () => {
       updateOption,
       addTag,
       removeTag,
-      clearError,
+      updateTags,
+      setFieldError,
+      clearFieldError,
+      clearAllErrors,
+      resetWizard,
     },
     goToNextStep,
     goToPreviousStep,

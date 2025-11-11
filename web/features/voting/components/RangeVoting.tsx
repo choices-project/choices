@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption } from '../types'
 
@@ -31,10 +32,13 @@ export default function RangeVoting({
   minRating = 0,
   maxRating = 10
 }: RangeVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [ratings, setRatings] = useState<{ [optionId: string]: number }>({})
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize ratings from user's previous vote or default values
   useEffect(() => {
@@ -50,7 +54,7 @@ export default function RangeVoting({
   }, [userVote, options, minRating])
 
   const handleRatingChange = (optionId: string, rating: number) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     setError(null)
     setRatings(prev => ({
@@ -60,7 +64,7 @@ export default function RangeVoting({
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     // Validate that all options have ratings
     const ratedOptions = Object.keys(ratings)
@@ -103,6 +107,9 @@ export default function RangeVoting({
         })
       }
       
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(pollId, validRatings)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -117,7 +124,7 @@ export default function RangeVoting({
     return Math.round((values.reduce((sum: number, rating: number) => sum + rating, 0) / values.length) * 10) / 10
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

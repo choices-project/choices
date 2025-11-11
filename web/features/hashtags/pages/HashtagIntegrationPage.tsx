@@ -20,7 +20,8 @@ export default function HashtagIntegrationPage() {
     trendingHashtags,
     userHashtags,
     isLoading,
-    error,
+    error: hashtagError,
+    hasError,
     followHashtagAction,
     unfollowHashtagAction,
     isFollowingHashtag: _isFollowingHashtag,
@@ -33,8 +34,12 @@ export default function HashtagIntegrationPage() {
     results,
     suggestions,
     isLoading: isSearchLoading,
-    error: searchError
+    error: searchError,
+    clearError: clearSearchError,
   } = useHashtagSearch({ debounceMs: 300, minQueryLength: 2 });
+
+  const errorMessage = hashtagError ?? searchError ?? null;
+  const showErrorBanner = (hasError || Boolean(searchError)) && errorMessage;
 
   const handleHashtagClick = (hashtag: Hashtag) => {
     logger.info('Hashtag clicked:', hashtag);
@@ -117,14 +122,26 @@ export default function HashtagIntegrationPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Display */}
-        {(error ?? searchError) && (
+        {showErrorBanner && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">Error</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  {error ?? searchError}
+                  {errorMessage}
                 </div>
+                <button
+                  type="button"
+                  className="mt-3 inline-flex items-center rounded-md bg-red-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  onClick={() => {
+                    if (searchError) {
+                      clearSearchError();
+                    }
+                    refresh();
+                  }}
+                >
+                  Retry
+                </button>
               </div>
             </div>
           </div>

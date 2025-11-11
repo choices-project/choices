@@ -15,8 +15,8 @@
 
 'use client';
 
-import { 
-Download, 
+import {
+  Download,
   Calendar, 
   TrendingUp,
   AlertCircle,
@@ -40,7 +40,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
-import logger from '@/lib/utils/logger'
+import { useAnalyticsActions, useAnalyticsTrends } from '@/lib/stores/analyticsStore';
 
 type TrendDataPoint = {
   date: string;
@@ -64,45 +64,26 @@ export default function TrendsChart({
   defaultChartType = 'area'
 }: TrendsChartProps) {
   const isMobile = useIsMobile();
-  const [data, setData] = useState<TrendDataPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
+  const { fetchTrends } = useAnalyticsActions();
+  const trends = useAnalyticsTrends();
+  const data = trends.data;
+  const isLoading = trends.loading;
+  const error = trends.error;
+  const dateRange = (trends.meta.range as DateRange) ?? defaultRange;
 
-  const fetchTrendsData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/analytics/trends?range=${dateRange}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch trends data: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      if (!result.ok || !result.trends) {
-        throw new Error('Invalid API response');
-      }
-
-      setData(result.trends);
-    } catch (err) {
-      logger.error('Failed to fetch trends data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load trends data');
-      
-      // Use mock data for development
-      const mockData = generateMockData(dateRange);
-      setData(mockData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dateRange]);
+  const loadTrends = useCallback(async (range?: DateRange) => {
+    const targetRange = range ?? dateRange ?? defaultRange;
+    await fetchTrends(targetRange, {
+      fallback: (r) => generateMockData(r as DateRange),
+    });
+  }, [dateRange, defaultRange, fetchTrends]);
 
   useEffect(() => {
-    fetchTrendsData();
-  }, [fetchTrendsData]);
+    void fetchTrends(defaultRange, {
+      fallback: (r) => generateMockData(r as DateRange),
+    });
+  }, [defaultRange, fetchTrends]);
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -209,7 +190,10 @@ export default function TrendsChart({
             <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
+              onChange={(e) => {
+                const range = e.target.value as DateRange;
+                void loadTrends(range);
+              }}
               className="flex-1 sm:flex-none px-3 py-2 md:py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             >
               <option value="7d">Last 7 Days</option>
@@ -231,7 +215,9 @@ export default function TrendsChart({
           </div>
 
           <Button
-            onClick={fetchTrendsData}
+            onClick={() => {
+              void loadTrends();
+            }}
             size={isMobile ? "default" : "sm"}
             variant="outline"
             className="min-h-[44px] flex-1 sm:flex-none"

@@ -16,7 +16,7 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 
 import { useSystemMetrics } from '@/features/admin/lib/hooks';
-import { useAdminStore } from '@/features/admin/lib/store';
+import { useAdminSidebarCollapsed, useAdminActions } from '@/lib/stores';
 
 const navigationItems = [
   {
@@ -63,7 +63,8 @@ const navigationItems = [
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { sidebarCollapsed, toggleSidebar } = useAdminStore();
+  const sidebarCollapsed = useAdminSidebarCollapsed();
+  const { toggleSidebar } = useAdminActions();
   const { data: metrics } = useSystemMetrics();
 
   return (

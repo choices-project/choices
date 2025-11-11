@@ -1,0 +1,245 @@
+'use client';
+
+import { useEffect, useMemo } from 'react';
+
+import {
+  useAppStore,
+  useAppActions,
+  useTheme,
+  useResolvedTheme,
+  useSidebarCollapsed,
+  useAppFeatureFlags,
+  useAppSettings,
+  useCurrentRoute,
+  useBreadcrumbs,
+  useActiveModal,
+  useModalStack,
+  useAppLanguage,
+  useAppTimezone,
+} from '@/lib/stores/appStore';
+import type { AppStore, AppPreferences } from '@/lib/stores/appStore';
+
+/**
+ * Shape of the harness interface exposed via `window.__appStoreHarness`.
+ * Allows Playwright and QA tooling to drive key app store transitions.
+ */
+export type AppStoreHarness = {
+  toggleTheme: () => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  updateSystemTheme: (theme: 'light' | 'dark') => void;
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  setFeatureFlags: (flags: Record<string, boolean>) => void;
+  updateSettings: (settings: Partial<AppPreferences>) => void;
+  openModal: (id: string, data?: Record<string, unknown>) => void;
+  closeModal: () => void;
+  pushModal: (id: string, data?: Record<string, unknown>) => void;
+  popModal: () => void;
+  setCurrentRoute: (route: string) => void;
+  setBreadcrumbs: (breadcrumbs: AppStore['breadcrumbs']) => void;
+  resetAppState: () => void;
+  getSnapshot: () => AppStore;
+};
+
+declare global {
+  interface Window {
+    __appStoreHarness?: AppStoreHarness;
+  }
+}
+
+/**
+ * Helper to render arrays as comma-separated lists while tolerating empty values.
+ */
+const formatList = (values: string[]) => (values.length ? values.join(', ') : 'none');
+
+/**
+ * E2E harness page for the app store. Exposes critical store actions on
+ * `window.__appStoreHarness` and renders current state for visual validation.
+ */
+export default function AppStoreHarnessPage() {
+  const theme = useTheme();
+  const resolvedTheme = useResolvedTheme();
+  const sidebarCollapsed = useSidebarCollapsed();
+  const featureFlags = useAppFeatureFlags();
+  const settings = useAppSettings();
+  const currentRoute = useCurrentRoute();
+  const breadcrumbs = useBreadcrumbs();
+  const activeModal = useActiveModal();
+  const modalStack = useModalStack();
+  const language = useAppLanguage();
+  const timezone = useAppTimezone();
+
+  const {
+    toggleTheme,
+    setTheme,
+    updateSystemTheme,
+    toggleSidebar,
+    setSidebarCollapsed,
+    setFeatureFlags,
+    updateSettings,
+    openModal,
+    closeModal,
+    pushModal,
+    popModal,
+    setCurrentRoute,
+    setBreadcrumbs,
+    resetAppState,
+  } = useAppActions();
+
+  const enabledFeatures = useMemo(
+    () => Object.entries(featureFlags).filter(([, enabled]) => enabled).map(([flag]) => flag),
+    [featureFlags]
+  );
+
+  useEffect(() => {
+    const harness: AppStoreHarness = {
+      toggleTheme,
+      setTheme,
+      updateSystemTheme,
+      toggleSidebar,
+      setSidebarCollapsed,
+      setFeatureFlags,
+      updateSettings,
+      openModal,
+      closeModal,
+      pushModal,
+      popModal,
+      setCurrentRoute,
+      setBreadcrumbs,
+      resetAppState,
+      getSnapshot: () => useAppStore.getState(),
+    };
+
+    window.__appStoreHarness = harness;
+    return () => {
+      if (window.__appStoreHarness === harness) {
+        delete window.__appStoreHarness;
+      }
+    };
+  }, [
+    toggleTheme,
+    setTheme,
+    updateSystemTheme,
+    toggleSidebar,
+    setSidebarCollapsed,
+    setFeatureFlags,
+    updateSettings,
+    openModal,
+    closeModal,
+    pushModal,
+    popModal,
+    setCurrentRoute,
+    setBreadcrumbs,
+    resetAppState,
+  ]);
+
+  return (
+    <main data-testid="app-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h1 className="text-xl font-semibold">App Store Harness</h1>
+        <p className="text-sm text-slate-600">
+          Interact with the app store via <code>window.__appStoreHarness</code>.
+        </p>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2">
+        <div>
+          <h2 className="text-lg font-medium">Theme & Layout</h2>
+          <dl className="mt-2 space-y-1 text-sm">
+            <div className="flex justify-between gap-2">
+              <dt>Theme preference</dt>
+              <dd data-testid="app-theme">{theme}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Resolved theme</dt>
+              <dd data-testid="app-resolved-theme">{resolvedTheme}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Sidebar collapsed</dt>
+              <dd data-testid="app-sidebar-collapsed">{String(sidebarCollapsed)}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Active modal</dt>
+              <dd data-testid="app-active-modal">{activeModal ?? 'none'}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-medium">Routing & Localization</h2>
+          <dl className="mt-2 space-y-1 text-sm">
+            <div className="flex justify-between gap-2">
+              <dt>Current route</dt>
+              <dd data-testid="app-current-route">{currentRoute}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Language</dt>
+              <dd data-testid="app-language">{language}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt>Timezone</dt>
+              <dd data-testid="app-timezone">{timezone}</dd>
+            </div>
+          </dl>
+          <ul className="mt-2 space-y-1 text-xs" data-testid="app-breadcrumbs">
+            {breadcrumbs.length === 0 ? (
+              <li className="text-slate-500">No breadcrumbs.</li>
+            ) : (
+              breadcrumbs.map((breadcrumb) => (
+                <li key={breadcrumb.href} className="rounded border border-slate-200 p-2">
+                  {breadcrumb.label} — {breadcrumb.href}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-medium">Feature Flags</h2>
+        <p className="text-sm text-slate-600" data-testid="app-feature-flags">
+          {enabledFeatures.length > 0 ? formatList(enabledFeatures) : 'No feature flags enabled.'}
+        </p>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-medium">Preferences</h2>
+        <dl className="mt-2 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+          <div className="flex justify-between gap-2">
+            <dt>Animations</dt>
+            <dd data-testid="app-setting-animations">{String(settings.animations)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Haptics</dt>
+            <dd data-testid="app-setting-haptics">{String(settings.haptics)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Sound</dt>
+            <dd data-testid="app-setting-sound">{String(settings.sound)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Compact mode</dt>
+            <dd data-testid="app-setting-compact">{String(settings.compactMode)}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-medium">Modal Stack</h2>
+        <ul className="mt-2 space-y-1 text-xs" data-testid="app-modal-stack">
+          {modalStack.length === 0 ? (
+            <li className="text-slate-500">No modals on stack.</li>
+          ) : (
+            modalStack.map((entry) => (
+              <li key={entry.id} className="rounded border border-slate-200 p-2">
+                {entry.id}
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
+    </main>
+  );
+}
+
+

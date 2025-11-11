@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 
-import { useNotificationStore } from '@/lib/stores';
+import { useNotificationActions } from '@/lib/stores';
 
 type PollCreatedDetail = {
   id: string;
@@ -14,7 +14,7 @@ const isPollCreatedEvent = (event: Event): event is CustomEvent<PollCreatedDetai
 
 export const usePollCreatedListener = () => {
   const router = useRouter();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const { addNotification } = useNotificationActions();
 
   const handlePollCreated = useCallback(
     (event: Event) => {

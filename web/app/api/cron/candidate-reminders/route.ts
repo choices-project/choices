@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
-import { 
+import {
   shouldSendReminder,
   type JourneyStage,
   type JourneyMilestone
@@ -10,6 +10,10 @@ import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journe
 import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization')
@@ -96,7 +100,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const createdDate = new Date(platform.created_at ?? Date.now())
         const now = new Date()
         const daysSinceDeclaration = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
-        
+
         let daysUntilDeadline: number | undefined
         if (platform.filing_deadline) {
           const deadlineDate = new Date(platform.filing_deadline)
@@ -183,7 +187,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           // Update last reminder sent
           await supabase
             .from('candidate_platforms')
-            .update({ 
+            .update({
               last_active_at: new Date().toISOString()
             })
             .eq('id', platform.id)

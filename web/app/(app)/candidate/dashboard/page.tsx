@@ -8,13 +8,13 @@ import { JourneyProgress } from '@/components/candidate/JourneyProgress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useUserStore } from '@/lib/stores/userStore'
+import { useIsAuthenticated } from '@/lib/stores'
 import logger from '@/lib/utils/logger'
 import type { CandidatePlatformRow } from '@/types/candidate'
 
 export default function CandidateDashboardPage() {
   const router = useRouter()
-  const { isAuthenticated } = useUserStore()
+  const isAuthenticated = useIsAuthenticated()
   const [platforms, setPlatforms] = useState<CandidatePlatformRow[]>([])
   const [loading, setLoading] = useState(true)
   const [verifying, setVerifying] = useState<string | null>(null) // Platform ID being verified

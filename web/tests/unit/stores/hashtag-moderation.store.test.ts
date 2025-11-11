@@ -29,16 +29,19 @@ describe('hashtagModerationStore', () => {
       useHashtagModerationStore.getState().setModerationQueue([original]);
     });
 
-    const previousUpdatedAt = useHashtagModerationStore.getState().moderationQueue[0].updatedAt;
+    const queueBefore = useHashtagModerationStore.getState().moderationQueue;
+    expect(queueBefore[0]).toBeDefined();
+    const previousUpdatedAt = queueBefore[0]!.updatedAt;
 
     act(() => {
       useHashtagModerationStore.getState().updateModeration(original.id, {
         status: 'approved',
-        moderatorNotes: undefined,
       });
     });
 
-    const [updated] = useHashtagModerationStore.getState().moderationQueue;
+    const queueAfter = useHashtagModerationStore.getState().moderationQueue;
+    expect(queueAfter[0]).toBeDefined();
+    const updated = queueAfter[0]!;
 
     expect(updated.status).toBe('approved');
     expect(updated.updatedAt).not.toBe(previousUpdatedAt);

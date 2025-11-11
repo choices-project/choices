@@ -214,6 +214,12 @@ export type FeedsState = {
   error: string | null;
 };
 
+export type ResetFeedsStateOptions = {
+  preservePreferences?: boolean;
+  preserveFilters?: boolean;
+  preserveRecentSearches?: boolean;
+};
+
 export type FeedsActions = {
   // Feed management
   setFeeds: (feeds: FeedItem[]) => void;
@@ -274,6 +280,9 @@ export type FeedsActions = {
   // Pagination state
   setTotalAvailableFeeds: (count: number) => void;
   setHasMoreFeeds: (hasMore: boolean) => void;
+
+  // Resets
+  resetFeedsState: (options?: ResetFeedsStateOptions) => void;
 };
 
 export type FeedsStore = FeedsState & FeedsActions;

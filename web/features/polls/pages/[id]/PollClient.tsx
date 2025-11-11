@@ -11,15 +11,21 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotificationStore, useAnalyticsStore } from '@/lib/stores';
+import {
+  useNotificationActions,
+  useAnalyticsStore,
+  useVotingActions,
+  useVotingError,
+  useVotingIsVoting,
+} from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
-import { useVotingActions, useVotingError, useVotingIsVoting } from '@/lib/stores/votingStore';
 import {
   createBallotFromPoll,
   createVotingRecordFromPollSubmission,
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 
 const PRIVACY_LABELS: Record<string, string> = {
   public: 'Public',
@@ -90,7 +96,7 @@ type NormalizedOption = {
 export default function PollClient({ poll }: PollClientProps) {
   const { user } = useAuth();
   const router = useRouter();
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const { addNotification } = useNotificationActions();
   const trackEvent = useAnalyticsStore((state) => state.trackEvent);
   const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
   const {
@@ -106,60 +112,19 @@ export default function PollClient({ poll }: PollClientProps) {
   const votingStoreError = useVotingError();
   const storeIsVoting = useVotingIsVoting();
 
-  const recordPollEvent = useCallback(
-    (
-      action: string,
-      {
-        category = 'poll_interaction',
-        label,
-        value,
-        metadata,
-      }: {
-        category?: string;
-        label?: string;
-        value?: number;
-        metadata?: Record<string, unknown>;
-      } = {},
-    ) => {
-      const payload: {
-        event_type: string;
-        type: string;
-        category: string;
-        action: string;
-        event_data: Record<string, unknown>;
-        created_at: string;
-        session_id: string;
-        label?: string;
-        value?: number;
-        metadata?: Record<string, unknown>;
-      } = {
-        event_type: 'poll_event',
-        type: 'poll_event',
-        category,
-        action,
-        event_data: {
-          action,
-          category,
-          ...(metadata ? { metadata } : {}),
-        },
-        created_at: new Date().toISOString(),
-        session_id: analyticsSessionId ?? 'anonymous',
-      };
+  const pollMetadataFactory = useCallback(
+    () => ({
+      pollId: poll.id,
+      pollTitle: poll.title,
+      votingMethod: poll.votingMethod,
+      privacyLevel: poll.privacyLevel,
+      status: poll.status,
+      category: poll.category
+    }),
+    [poll]
+  )
 
-      if (label !== undefined) {
-        payload.label = label;
-      }
-      if (value !== undefined) {
-        payload.value = value;
-      }
-      if (metadata !== undefined) {
-        payload.metadata = metadata;
-      }
-
-      trackEvent(payload);
-    },
-    [analyticsSessionId, trackEvent],
-  );
+  const recordPollEvent = useRecordPollEvent(pollMetadataFactory)
 
   const [results, setResults] = useState<PollResultsResponse | null>(null);
   const [loading, setLoading] = useState(true);

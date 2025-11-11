@@ -18,7 +18,7 @@
 'use client';
 
 import {
-Download,
+  Download,
   Clock,
   AlertCircle,
   RefreshCw
@@ -41,7 +41,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import logger from '@/lib/utils/logger'
+import { useAnalyticsActions, useAnalyticsTemporal } from '@/lib/stores/analyticsStore';
 
 type HourlyData = {
   hour: number;
@@ -108,45 +108,26 @@ export default function TemporalAnalysisChart({
   defaultTab = 'hourly',
   defaultDateRange = '30d'
 }: TemporalAnalysisChartProps) {
-  const [data, setData] = useState<TemporalData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [dateRange, setDateRange] = useState(defaultDateRange);
+  const { fetchTemporal } = useAnalyticsActions();
+  const temporal = useAnalyticsTemporal();
+  const data = temporal.data;
+  const isLoading = temporal.loading;
+  const error = temporal.error;
+  const dateRange = (temporal.meta.range as typeof defaultDateRange) ?? defaultDateRange;
 
-  const fetchTemporalData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/analytics/temporal?range=${dateRange}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch temporal data: ${response.statusText}`);
-      }
-
-      const result: TemporalData = await response.json();
-
-      if (!result.ok) {
-        throw new Error('Invalid API response');
-      }
-
-      setData(result);
-    } catch (err) {
-      logger.error('Failed to fetch temporal data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load temporal data');
-
-      // Use mock data for development
-      const mockData = generateMockData(dateRange);
-      setData(mockData);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dateRange]);
+  const loadTemporal = useCallback(async (range?: typeof defaultDateRange) => {
+    const targetRange = range ?? dateRange ?? defaultDateRange;
+    await fetchTemporal(targetRange, {
+      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+    });
+  }, [dateRange, defaultDateRange, fetchTemporal]);
 
   useEffect(() => {
-    fetchTemporalData();
-  }, [fetchTemporalData]);
+    void fetchTemporal(defaultDateRange, {
+      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+    });
+  }, [defaultDateRange, fetchTemporal]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -230,7 +211,7 @@ export default function TemporalAnalysisChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -243,7 +224,10 @@ export default function TemporalAnalysisChart({
           <div className="flex items-center gap-2">
             <select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
+              onChange={(e) => {
+                const range = e.target.value as typeof dateRange;
+                void loadTemporal(range);
+              }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="7d">Last 7 Days</option>
@@ -508,7 +492,9 @@ export default function TemporalAnalysisChart({
         {/* Refresh Button */}
         <div className="mt-6 flex justify-center">
           <Button
-            onClick={fetchTemporalData}
+            onClick={() => {
+              void loadTemporal();
+            }}
             size="sm"
             variant="outline"
           >

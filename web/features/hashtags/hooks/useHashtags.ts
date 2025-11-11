@@ -1,278 +1,213 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
 
-import logger from '@/lib/utils/logger';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import {
+  useHashtagActions,
+  useHashtagError,
+  useHashtagList,
+  useHashtagLoading,
+  useHashtagSearchResults,
+  useHashtagSuggestions,
+  useTrendingHashtags,
+  useUserHashtags,
+} from '@/lib/stores';
+import { useHashtagStore } from '@/lib/stores/hashtagStore';
 
-import { 
-searchHashtags, 
-  getTrendingHashtags, 
-  followHashtag, 
-  unfollowHashtag,
-  getUserHashtags,
-  getHashtagSuggestions
-} from '../lib/hashtag-service';
-import type { 
-  Hashtag, 
-  HashtagSearchResponse, 
-  TrendingHashtag, 
-  UserHashtag, 
+import type {
+  HashtagSearchQuery,
   HashtagSuggestion,
-  HashtagSearchQuery 
 } from '../types';
 
 type UseHashtagsOptions = {
   autoLoad?: boolean;
   refreshInterval?: number;
-}
+};
 
 export function useHashtags(options: UseHashtagsOptions = {}) {
   const { autoLoad = true, refreshInterval = 0 } = options;
-  
-  const [hashtags, setHashtags] = useState<Hashtag[]>([]);
-  const [trendingHashtags, setTrendingHashtags] = useState<TrendingHashtag[]>([]);
-  const [userHashtags, setUserHashtags] = useState<UserHashtag[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load trending hashtags
-  const loadTrendingHashtags = useCallback(async (limit = 10) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-        const result = await getTrendingHashtags('politics', limit);
-      if (result.success && result.data) {
-        setTrendingHashtags(result.data);
-      } else {
-        setError(result.error ?? 'Failed to load trending hashtags');
-      }
-    } catch (err) {
-      setError('Failed to load trending hashtags');
-      logger.error('Trending hashtags error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const hashtagList = useHashtagList();
+  const trendingHashtags = useTrendingHashtags();
+  const userHashtags = useUserHashtags();
+  const {
+    isLoading: storeLoading,
+    isSearching,
+    isFollowing,
+    isUnfollowing,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useHashtagLoading();
+  const {
+    error,
+    searchError,
+    followError,
+    createError,
+    hasError,
+  } = useHashtagError();
+  const searchResults = useHashtagSearchResults();
+  const {
+    getTrendingHashtags,
+    getUserHashtags,
+    followHashtag,
+    unfollowHashtag,
+    getSuggestions,
+    searchHashtags,
+    clearErrors,
+  } = useHashtagActions();
 
-  // Load user's followed hashtags
+  const loadTrendingHashtags = useCallback(
+    async (category: Parameters<typeof getTrendingHashtags>[0] = 'politics', limit = 10) => {
+      await getTrendingHashtags(category === 'all' ? undefined : category, limit);
+    },
+    [getTrendingHashtags],
+  );
+
   const loadUserHashtags = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const result = await getUserHashtags();
-      if (result.success && result.data) {
-        setUserHashtags(result.data);
-      } else {
-        setError(result.error ?? 'Failed to load user hashtags');
-      }
-    } catch (err) {
-      setError('Failed to load user hashtags');
-      logger.error('User hashtags error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    await getUserHashtags();
+  }, [getUserHashtags]);
 
-  // Search hashtags
-  const searchHashtagsQuery = useCallback(async (query: HashtagSearchQuery) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const result = await searchHashtags(query);
-      if (result.success && result.data) {
-        setHashtags(result.data.hashtags);
-        return result.data;
-      } else {
-        setError(result.error ?? 'Failed to search hashtags');
-        return null;
-      }
-    } catch (err) {
-      setError('Failed to search hashtags');
-      logger.error('Search hashtags error:', err);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Follow hashtag
-  const followHashtagAction = useCallback(async (hashtagId: string) => {
-    try {
-      setError(null);
-      
-      const result = await followHashtag(hashtagId);
-      if (result.success && result.data) {
-        const { data } = result;
-        setUserHashtags(prev => [...prev, data]);
-        return true;
-      } else {
-        setError(result.error ?? 'Failed to follow hashtag');
-        return false;
-      }
-    } catch (err) {
-      setError('Failed to follow hashtag');
-      logger.error('Follow hashtag error:', err);
-      return false;
-    }
-  }, []);
-
-  // Unfollow hashtag
-  const unfollowHashtagAction = useCallback(async (hashtagId: string) => {
-    try {
-      setError(null);
-      
-      const result = await unfollowHashtag(hashtagId);
-      if (result.success) {
-        // Remove from user hashtags
-        setUserHashtags(prev => prev.filter(uh => uh.hashtag_id !== hashtagId));
-        return true;
-      } else {
-        setError(result.error ?? 'Failed to unfollow hashtag');
-        return false;
-      }
-    } catch (err) {
-      setError('Failed to unfollow hashtag');
-      logger.error('Unfollow hashtag error:', err);
-      return false;
-    }
-  }, []);
-
-  // Get hashtag suggestions
-  const getSuggestions = useCallback(async (input: string, limit = 5) => {
-    try {
-      setError(null);
-      
-      const result = await getHashtagSuggestions(input, undefined, limit);
-      if (result.success && result.data) {
-        return result.data;
-      } else {
-        setError(result.error ?? 'Failed to get suggestions');
-        return [];
-      }
-    } catch (err) {
-      setError('Failed to get suggestions');
-      logger.error('Suggestions error:', err);
-      return [];
-    }
-  }, []);
-
-  // Check if user is following a hashtag
-  const isFollowingHashtag = useCallback((hashtagId: string) => {
-    return userHashtags.some(uh => uh.hashtag_id === hashtagId);
-  }, [userHashtags]);
-
-  // Auto-load on mount
   useEffect(() => {
-    if (autoLoad) {
-      loadTrendingHashtags();
-      loadUserHashtags();
+    if (!autoLoad) {
+      return;
     }
+
+    void loadTrendingHashtags('politics', 10);
+    void loadUserHashtags();
   }, [autoLoad, loadTrendingHashtags, loadUserHashtags]);
 
-  // Auto-refresh
   useEffect(() => {
-    if (refreshInterval > 0) {
-      const interval = setInterval(() => {
-        loadTrendingHashtags();
-        loadUserHashtags();
-      }, refreshInterval);
-      
-      return () => clearInterval(interval);
+    if (refreshInterval <= 0) {
+      return;
     }
+
+    const intervalId = setInterval(() => {
+      void loadTrendingHashtags('politics', 10);
+      void loadUserHashtags();
+    }, refreshInterval);
+
+    return () => clearInterval(intervalId);
   }, [refreshInterval, loadTrendingHashtags, loadUserHashtags]);
 
+  const followHashtagAction = useCallback(
+    async (hashtagId: string) => followHashtag(hashtagId),
+    [followHashtag],
+  );
+
+  const unfollowHashtagAction = useCallback(
+    async (hashtagId: string) => unfollowHashtag(hashtagId),
+    [unfollowHashtag],
+  );
+
+  const getSuggestionsAction = useCallback(
+    async (input: string, limit = 5) => {
+      await getSuggestions(input);
+      const currentSuggestions = useHashtagStore.getState().suggestions;
+      return currentSuggestions.slice(0, limit);
+    },
+    [getSuggestions],
+  );
+
+  const searchHashtagsQuery = useCallback(
+    async (query: HashtagSearchQuery) => {
+      await searchHashtags(query);
+      return useHashtagStore.getState().searchResults ?? null;
+    },
+    [searchHashtags],
+  );
+
+  const isFollowingHashtag = useCallback(
+    (hashtagId: string) => useHashtagStore.getState().isFollowingHashtag(hashtagId),
+    [],
+  );
+
+  const refresh = useCallback(() => {
+    void loadTrendingHashtags('politics', 10);
+    void loadUserHashtags();
+  }, [loadTrendingHashtags, loadUserHashtags]);
+
+  const clearError = useCallback(() => {
+    clearErrors();
+  }, [clearErrors]);
+
+  const combinedError = useMemo(
+    () => error ?? searchError ?? followError ?? createError ?? null,
+    [error, searchError, followError, createError],
+  );
+
+  const isLoading =
+    storeLoading || isSearching || isFollowing || isUnfollowing || isCreating || isUpdating || isDeleting;
+
+  const combinedHashtags = useMemo(
+    () => searchResults?.hashtags ?? hashtagList,
+    [searchResults, hashtagList],
+  );
+
   return {
-    // State
-    hashtags,
+    hashtags: combinedHashtags,
     trendingHashtags,
     userHashtags,
     isLoading,
-    error,
-    
-    // Actions
+    error: combinedError,
     loadTrendingHashtags,
     loadUserHashtags,
     searchHashtagsQuery,
     followHashtagAction,
     unfollowHashtagAction,
-    getSuggestions,
+    getSuggestions: getSuggestionsAction,
     isFollowingHashtag,
-    
-    // Utilities
-    clearError: () => setError(null),
-    refresh: () => {
-      loadTrendingHashtags();
-      loadUserHashtags();
-    }
+    clearError,
+    refresh,
+    hasError,
   };
 }
 
 type UseHashtagSearchOptions = {
   debounceMs?: number;
   minQueryLength?: number;
-}
+};
 
 export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
   const { debounceMs = 300, minQueryLength = 2 } = options;
-  
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<HashtagSearchResponse | null>(null);
-  const [suggestions, setSuggestions] = useState<HashtagSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Debounced search
+  const [query, setQuery] = useState('');
+
+  const searchResults = useHashtagSearchResults();
+  const suggestions = useHashtagSuggestions();
+  const { isSearching } = useHashtagLoading();
+  const { searchError } = useHashtagError();
+  const { searchHashtags, getSuggestions, clearErrors, clearSearch } = useHashtagActions();
+
   useEffect(() => {
     if (query.length < minQueryLength) {
-      setResults(null);
-      setSuggestions([]);
+      clearSearch();
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const searchQuery: HashtagSearchQuery = {
-          query,
-          limit: 20,
-          offset: 0
-        };
-
-        const searchResult = await searchHashtags(searchQuery);
-        if (searchResult.success && searchResult.data) {
-          setResults(searchResult.data);
-        } else {
-          setError(searchResult.error ?? 'Search failed');
-        }
-
-        // Also get suggestions
-        const suggestionsResult = await getHashtagSuggestions(query, undefined, 5);
-        if (suggestionsResult.success && suggestionsResult.data) {
-          setSuggestions(suggestionsResult.data);
-        }
-      } catch (err) {
-        setError('Search failed');
-        logger.error('Search error:', err);
-      } finally {
-        setIsLoading(false);
-      }
+    const timeoutId = setTimeout(() => {
+      void searchHashtags({
+        query,
+        limit: 20,
+        offset: 0,
+      });
+      void getSuggestions(query);
     }, debounceMs);
 
     return () => clearTimeout(timeoutId);
-  }, [query, debounceMs, minQueryLength]);
+  }, [query, debounceMs, minQueryLength, searchHashtags, getSuggestions, clearSearch]);
+
+  const clearError = useCallback(() => {
+    clearErrors();
+  }, [clearErrors]);
 
   return {
     query,
     setQuery,
-    results,
+    results: searchResults,
     suggestions,
-    isLoading,
-    error,
-    clearError: () => setError(null)
+    isLoading: isSearching,
+    error: searchError,
+    clearError,
   };
 }

@@ -3,8 +3,10 @@
 
 import { Fingerprint, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
+import { useProfile } from '@/features/profile/hooks/use-profile';
+import { useIsAuthenticated, useUser, useUserLoading } from '@/lib/stores';
 import { devLog } from '@/lib/utils/logger'
 
 export default function BiometricSetupPage() {
@@ -15,7 +17,18 @@ export default function BiometricSetupPage() {
   
   const router = useRouter()
 
-  const handleSetupBiometric = async () => {
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
+  const isUserLoading = useUserLoading()
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile()
+
+  useEffect(() => {
+    if (!isUserLoading && !isAuthenticated) {
+      router.replace('/auth?redirectTo=/profile/biometric-setup')
+    }
+  }, [isAuthenticated, isUserLoading, router])
+
+  const handleSetupBiometric = useCallback(async () => {
     setIsLoading(true)
     setError('')
     setMessage('')
@@ -24,15 +37,25 @@ export default function BiometricSetupPage() {
       setStep('registering')
       setMessage('Setting up biometric authentication...')
 
-      // Get current user info using existing profile API
-      const userResponse = await fetch('/api/profile')
-      const userData = await userResponse.json()
-
-      if (!userResponse.ok || !userData.profile) {
+      if (!isAuthenticated || profileError) {
         throw new Error('Please log in to set up biometric authentication')
       }
 
-      const user = userData.profile
+      const currentProfile = profile
+      const userId =
+        currentProfile?.id ??
+        currentProfile?.user_id ??
+        user?.id ??
+        null
+
+      const userEmail =
+        currentProfile?.email ??
+        user?.email ??
+        userId
+
+      if (!userId || !userEmail) {
+        throw new Error('Missing user details for biometric setup')
+      }
 
       // Get registration options
       const optionsResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/options', {
@@ -41,8 +64,8 @@ export default function BiometricSetupPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
-          username: user.email || user.id
+          userId,
+          username: userEmail
         })
       })
 
@@ -56,7 +79,7 @@ export default function BiometricSetupPage() {
       const challenge = Uint8Array.from(atob(optionsData.challenge), c => c.charCodeAt(0))
       
       // Convert user ID to ArrayBuffer
-      const userId = Uint8Array.from(atob(optionsData.user.id), c => c.charCodeAt(0))
+      const userIdBuffer = Uint8Array.from(atob(optionsData.user.id), (c) => c.charCodeAt(0))
 
       // Create credential
       const credential = await navigator.credentials.create({
@@ -64,7 +87,7 @@ export default function BiometricSetupPage() {
           challenge,
           rp: optionsData.rp,
           user: {
-            id: userId,
+            id: userIdBuffer,
             name: optionsData.user.name,
             displayName: optionsData.user.displayName
           },
@@ -102,7 +125,7 @@ export default function BiometricSetupPage() {
         body: JSON.stringify({
           credential: credentialData,
           challenge: optionsData.challenge,
-          userId: user.id
+          userId
         })
       })
 
@@ -128,7 +151,7 @@ export default function BiometricSetupPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [isAuthenticated, profile, profileError, router, user])
 
   const checkBiometricSupport = () => {
     return window.PublicKeyCredential && 
@@ -241,7 +264,7 @@ export default function BiometricSetupPage() {
 
             <button
               onClick={handleSetupBiometric}
-              disabled={isLoading}
+              disabled={isLoading || profileLoading || isUserLoading}
               className="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (

@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackTrackerOptions } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackContext, UserJourney } from '@/features/admin/types'
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import {
   useAnalyticsActions,
   useAnalyticsLoading,
@@ -181,15 +181,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
     })
   }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
 
-  // Safety check - prevent crash if FEATURE_FLAGS fails to load
-  // This can happen in test environments or if there's a bundling issue
-  if (typeof FEATURE_FLAGS === 'undefined' || !FEATURE_FLAGS) {
-    logger.warn('FEATURE_FLAGS not loaded in EnhancedFeedbackWidget, widget disabled');
-    return null;
-  }
-
-  // Check feature flag after hooks
-  if (!FEATURE_FLAGS?.FEEDBACK_WIDGET) {
+  if (!isFeatureEnabled('FEEDBACK_WIDGET')) {
     return null
   }
 

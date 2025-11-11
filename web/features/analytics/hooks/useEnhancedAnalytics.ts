@@ -11,7 +11,7 @@ import { logger } from '@/lib/utils/logger';
 import type { Database, Json } from '@/types/database';
 
 import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics-service';
-import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 
 
 type _SupabaseClient = ReturnType<typeof createClient<Database>>;
@@ -494,10 +494,12 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
 
   const enhancedAnalytics = new EnhancedAnalyticsService(supabase);
 
-  const setAnalyticsDashboard = useAnalyticsStore((state) => state.setDashboard);
-  const updateUserBehavior = useAnalyticsStore((state) => state.updateUserBehavior);
-  const setAnalyticsLoading = useAnalyticsStore((state) => state.setLoading);
-  const setAnalyticsError = useAnalyticsStore((state) => state.setError);
+  const {
+    setDashboard: setAnalyticsDashboard,
+    updateUserBehavior,
+    setLoading: setAnalyticsLoading,
+    setError: setAnalyticsError,
+  } = useAnalyticsActions();
 
   // Fetch enhanced analytics data
   const fetchAnalytics = useCallback(async () => {

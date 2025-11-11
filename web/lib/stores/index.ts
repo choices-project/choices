@@ -1,4 +1,4 @@
-export { 
+export {
   useUserStore,
   useUserCurrentAddress,
   useUserCurrentState,
@@ -9,17 +9,57 @@ export {
   useUserSavedSuccessfully,
   useUserActions,
   useUser,
+  useSession,
   useUserLoading,
   useIsAuthenticated,
   useUserProfileEditData,
   useUserAvatarFile,
   useUserAvatarPreview,
-  useUserIsUploadingAvatar
+  useUserIsUploadingAvatar,
+  useBiometric,
+  useBiometricSupported,
+  useBiometricAvailable,
+  useBiometricCredentials,
+  useBiometricRegistering,
+  useBiometricError,
+  useBiometricSuccess
 } from './userStore';
-export { usePollsStore, usePollsActions } from './pollsStore';
-export { useHashtagStore, useHashtagActions, useHashtagStats } from './hashtagStore';
+export {
+  usePollsStore,
+  usePolls,
+  usePollsLoading,
+  usePollsError,
+  usePollPreferences,
+  usePollFilters,
+  usePollPagination,
+  usePollLastFetchedAt,
+  useFilteredPolls,
+  useActivePollsCount,
+  usePollById,
+  useSelectedPoll,
+  usePollSearch,
+  usePollsActions,
+  usePollsStats,
+  usePollsAnalytics,
+} from './pollsStore';
+export {
+  useHashtagStore,
+  useHashtagActions,
+  useHashtagStats,
+  useHashtagSearch,
+  useHashtagLoading,
+  useHashtagError,
+  useTrendingHashtags,
+  useHashtagList,
+  useFollowedHashtags,
+  usePrimaryHashtags,
+  useHashtagAnalyticsSummary,
+  useUserHashtags,
+  useHashtagSuggestions,
+  useHashtagSearchResults,
+} from './hashtagStore';
 export { useProfileStore } from './profileStore';
-export { 
+export {
   useAdminStore,
   useAdminActiveTab,
   useAdminDashboardStats,
@@ -27,8 +67,12 @@ export {
   useAdminLoading,
   useAdminError,
   useAdminUsers,
+  useAdminUserCount,
   useAdminUserFilters,
   useAdminUserActions,
+  useFilteredAdminUsers,
+  useAdminSelectedUsers,
+  useAdminShowBulkActions,
   useAdminActions,
   useAdminSystemSettings,
   useAdminSettingsTab,
@@ -37,8 +81,20 @@ export {
   useAdminReimportProgress,
   useAdminReimportLogs,
   useAdminIsReimportRunning,
-  useAdminReimportActions
+  useAdminReimportActions,
+  useAdminNotifications,
+  useAdminFeatureFlags,
+  useAdminFeatureFlagActions,
+  useAdminSidebarCollapsed,
+  useAdminStats,
+  useTrendingTopics,
+  useGeneratedPolls,
+  useSystemMetrics,
+  useActivityItems,
+  useActivityFeed,
+  useRecentActivity,
 } from './adminStore';
+export type { AdminStore, AdminReimportProgress } from './adminStore';
 export {
   useFeedsStore,
   useFeeds,
@@ -59,7 +115,7 @@ export {
   useUnreadFeeds,
   useLikedFeeds,
 } from './feedsStore';
-export { 
+export {
   useOnboardingStore,
   useOnboardingStep,
   useOnboardingData,
@@ -68,7 +124,7 @@ export {
   useOnboardingError
 } from './onboardingStore';
 export { useDeviceStore } from './deviceStore';
-export { 
+export {
   usePerformanceStore,
   useDatabaseMetrics,
   useCacheStats,
@@ -78,9 +134,32 @@ export {
   usePerformanceError,
   usePerformanceActions
 } from './performanceStore';
-export { useAppStore } from './appStore';
-export { useNotificationStore } from './notificationStore';
-export { 
+export {
+  useAppStore,
+  useAppActions,
+  useAppFeatureFlags,
+  useAppSettings,
+  useIsMobile,
+  useTheme,
+  useAppTheme,
+} from './appStore';
+export {
+  useNotificationStore,
+  useNotifications,
+  useUnreadCount,
+  useNotificationSettings,
+  useNotificationLoading,
+  useNotificationError,
+  useNotificationFlags,
+  useAdminNotifications as useNotificationAdminNotifications,
+  useAdminUnreadCount as useNotificationAdminUnreadCount,
+  useNotificationActions,
+  useNotificationsByType,
+  useUnreadNotifications,
+  useAdminNotificationsByType,
+  useUnreadAdminNotifications,
+} from './notificationStore';
+export {
   usePollWizardStore,
   usePollWizardData,
   usePollWizardStep,
@@ -96,7 +175,7 @@ export {
   usePollWizardStepErrors,
   usePollWizardStepValidation
 } from './pollWizardStore';
-export { 
+export {
   useAnalyticsStore,
   useAnalyticsEvents,
   useAnalyticsMetrics,
@@ -111,10 +190,32 @@ export {
   useAnalyticsChartMaxValue,
   useAnalyticsChartShowTrends,
   useAnalyticsChartShowConfidence,
+  useAnalyticsDemographics,
+  useAnalyticsTrends,
+  useAnalyticsTemporal,
+  useAnalyticsPollHeatmap,
+  useAnalyticsTrustTiers,
   useAnalyticsActions,
   useAnalyticsStats,
   useAnalyticsSession,
-  useAnalyticsChartContext
+  useAnalyticsChartContext,
+  analyticsSelectors,
+  analyticsChartSelectors,
+  analyticsStatusSelectors
 } from './analyticsStore';
 export { usePWAStore } from './pwaStore';
 export { useHashtagModerationStore } from './hashtagModerationStore';
+export {
+  useContactStore,
+  useContactThreadsState,
+  useContactThreadsLoading,
+  useContactThreadsError,
+  useContactIsCreatingThread,
+  useContactIsSendingMessage,
+  useContactThreadById,
+  useContactThreadByRepresentativeId,
+  useContactMessagesByThreadId,
+  useContactMessagesLoading,
+  useContactMessagesError,
+  useContactActions,
+} from './contactStore';

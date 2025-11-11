@@ -7,6 +7,8 @@ import { devLog } from '@/lib/utils/logger';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authGate = await requireAdminOr401()

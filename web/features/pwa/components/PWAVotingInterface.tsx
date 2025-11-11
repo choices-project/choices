@@ -14,10 +14,10 @@ import {
   Smartphone,
   Download
 } from 'lucide-react'
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { useFeatureFlags } from "@/features/pwa/hooks/useFeatureFlags"
-import { useVotingActions, useVotingIsVoting } from '@/lib/stores/votingStore';
+import { useVotingActions, useVotingIsVoting } from '@/features/voting/lib/store';
 import {
   createBallotFromPoll,
   createVotingRecordFromPollSubmission,
@@ -26,6 +26,9 @@ import {
 import { devLog } from '@/lib/utils/logger';
 
 import { usePWAUtils } from '../hooks/usePWAUtils'
+import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown';
+import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 
 type Poll = {
   id: string
@@ -68,6 +71,13 @@ export function PWAVotingInterface({
     addVotingRecord,
   } = useVotingActions();
   const storeIsVoting = useVotingIsVoting();
+  const timeRemaining = useVotingCountdown(poll.expiresAt);
+  const notificationSettings = useNotificationSettings();
+  const { addNotification } = useNotificationActions();
+  const recordPollEvent = useRecordPollEvent(() => ({
+    pollId: poll.id,
+    category: poll.category,
+  }));
   
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [hasVoted, setHasVoted] = useState(false)
@@ -132,6 +142,30 @@ export function PWAVotingInterface({
     setSelectedBallot,
   ])
 
+  const notifySuccess = useCallback(
+    (message: string, title = 'Vote submitted') => {
+      addNotification({
+        type: 'success',
+        title,
+        message,
+        duration: notificationSettings.duration,
+      });
+    },
+    [addNotification, notificationSettings.duration],
+  );
+
+  const notifyError = useCallback(
+    (message: string, title = 'Vote failed') => {
+      addNotification({
+        type: 'error',
+        title,
+        message,
+        duration: notificationSettings.duration,
+      });
+    },
+    [addNotification, notificationSettings.duration],
+  );
+
   const handleVote = async (choice: number) => {
     if (hasVoted || storeIsVoting) return
 
@@ -139,6 +173,10 @@ export function PWAVotingInterface({
       const message = 'Invalid choice selected.'
       devLog(message, { choice })
       setVotingError(message)
+      notifyError(message, 'Invalid choice')
+      recordPollEvent('vote_failed', {
+        metadata: { reason: 'invalid_choice', choice },
+      });
       return
     }
 
@@ -154,6 +192,9 @@ export function PWAVotingInterface({
         })
 
         devLog('PWA: Vote stored offline')
+        recordPollEvent('vote_stored_offline', {
+          metadata: { choice },
+        });
       }
 
       await onVote(choice)
@@ -166,11 +207,28 @@ export function PWAVotingInterface({
           voteId: `${poll.id}-pwa-${Date.now().toString(36)}`,
         })
       )
+
+      recordPollEvent('vote_cast', {
+        metadata: {
+          choice,
+          mode: isOnline ? 'online' : 'offline',
+        },
+      });
+      notifySuccess(
+        isOnline
+          ? 'Your vote has been recorded.'
+          : 'Your vote has been stored offline and will sync when you\'re back online.',
+        isOnline ? 'Vote recorded' : 'Vote stored offline',
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to record vote'
       devLog('Vote failed:', { error: message })
       setVotingError(message)
+      notifyError(message)
+      recordPollEvent('vote_failed', {
+        metadata: { choice, error: message },
+      });
     } finally {
       setVoting(false)
     }
@@ -178,21 +236,6 @@ export function PWAVotingInterface({
 
   const calculatePercentage = (votes: number) => {
     return poll.totalVotes > 0 ? Math.round((votes / poll.totalVotes) * 100) : 0
-  }
-
-  const getTimeRemaining = () => {
-    const now = new Date()
-    const expires = new Date(poll.expiresAt)
-    const diff = expires.getTime() - now.getTime()
-    
-    if (diff <= 0) return 'Expired'
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    
-    if (days > 0) return `${days}d ${hours}h`
-    if (hours > 0) return `${hours}h`
-    return 'Less than 1h'
   }
 
   const isExpired = () => {
@@ -215,7 +258,7 @@ export function PWAVotingInterface({
               </div>
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>{getTimeRemaining()}</span>
+                <span>{timeRemaining || 'Expired'}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <TrendingUp className="w-4 h-4" />

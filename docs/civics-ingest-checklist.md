@@ -1,6 +1,7 @@
 # Civics Ingest Checklist
 
-Print or duplicate this checklist when running the civics ingest service. Tick every box before marking a data load complete.
+Print or duplicate this checklist when running the civics ingest service. Tick every box before marking a data load complete.  
+Need more context? Start with [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md).
 
 ## Pre-ingest
 - [ ] Update `services/civics-backend/.env.local` (or copy `env.example`) with the correct Supabase URL/service-role key and API tokens.
@@ -16,6 +17,8 @@ Print or duplicate this checklist when running the civics ingest service. Tick e
 ## Optional enrichments (run as required)
 - [ ] `npm run enrich:finance -- --dry-run` (review output) then rerun without `--dry-run`.
 - [ ] `npm run sync:contacts/social/photos/data-sources -- --dry-run` (if legacy REST writers are still in use) before running live.
+- [ ] `npm run sync:committees -- --dry-run` (if committee assignments need refreshing) before running live.
+- [ ] `npm run sync:activity -- --dry-run` (if OpenStates bill activity needs refreshing) before running live.
 - [ ] `npm run audit:crosswalk` passes after any manual adjustments.
 
 ## Post-ingest

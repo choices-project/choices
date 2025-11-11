@@ -1,8 +1,12 @@
 'use client';
 
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useCallback, useMemo } from 'react'
 
+import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
+import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
+import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
+import { useRecordPollEvent } from '@/lib/stores/analyticsStore'
 
 import ApprovalVoting from './ApprovalVoting'
 import MultipleChoiceVoting from './MultipleChoiceVoting'
@@ -73,15 +77,39 @@ export default function VotingInterface({
   verificationTier = 'T1',
   onAnalyticsEvent,
 }: VotingInterfaceProps) {
+  const storeIsVoting = useVotingIsVoting()
+  const votingRecords = useVotingRecords()
+  const timeRemaining = useVotingCountdown(poll.endtime)
 
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const notificationSettings = useNotificationSettings()
+  const { addNotification } = useNotificationActions()
+  const recordPollEvent = useRecordPollEvent()
+
+  const storeHasVoted = useMemo(
+    () => votingRecords.some((record) => record.ballotId === poll.id),
+    [poll.id, votingRecords]
+  )
+
+  const effectiveIsVoting = storeIsVoting || Boolean(isVoting)
+  const effectiveHasVoted = storeHasVoted || Boolean(hasVoted)
 
   const emitAnalytics = useCallback(
     (action: string, payload?: VoteAnalyticsPayload) => {
-      if (!onAnalyticsEvent) return
-      onAnalyticsEvent(action, payload)
+      const metadata = payload?.metadata ?? {}
+      recordPollEvent(action, {
+        pollId: poll.id,
+        ...payload,
+        metadata: {
+          ...metadata,
+          source: metadata.source ?? 'voting-interface',
+        },
+      })
+
+      if (onAnalyticsEvent) {
+        onAnalyticsEvent(action, payload)
+      }
     },
-    [onAnalyticsEvent]
+    [onAnalyticsEvent, poll.id, recordPollEvent]
   )
 
   const handleVoteResult = useCallback(
@@ -122,10 +150,12 @@ export default function VotingInterface({
         metadata: { approvals }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
 
   const onQuadratic = useCallback(
@@ -137,10 +167,12 @@ export default function VotingInterface({
         metadata: { allocations }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
 
   const onRange = useCallback(
@@ -152,10 +184,12 @@ export default function VotingInterface({
         metadata: { ratings }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
 
   const onRanked = useCallback(
@@ -167,11 +201,37 @@ export default function VotingInterface({
         metadata: { rankings }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
+
+  const notifySuccess = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'success',
+        title: 'Vote submitted',
+        message,
+        duration: notificationSettings.duration,
+      })
+    },
+    [addNotification, notificationSettings.duration]
+  )
+
+  const notifyError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: 'Vote failed',
+        message,
+        duration: notificationSettings.duration,
+      })
+    },
+    [addNotification, notificationSettings.duration]
+  )
 
   const onSingle = useCallback(
     async (choice: number) => {
@@ -182,10 +242,12 @@ export default function VotingInterface({
         metadata: { choice }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
 
   const onMultiple = useCallback(
@@ -197,43 +259,15 @@ export default function VotingInterface({
         metadata: { selections }
       })
       if (!result.ok) {
+        notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
+      notifySuccess('Your vote has been recorded.')
     },
-    [handleVoteResult, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote]
   );
 
   // Calculate time remaining with useCallback for optimization
-  const updateTimeRemaining = useCallback(() => {
-    const now = new Date();
-    const end = new Date(poll.endtime);
-    const diff = end.getTime() - now.getTime();
-
-    if (diff <= 0) {
-      setTimeRemaining('Poll ended');
-      return;
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (days > 0) {
-      setTimeRemaining(`${days}d ${hours}h ${minutes}m left`);
-    } else if (hours > 0) {
-      setTimeRemaining(`${hours}h ${minutes}m left`);
-    } else {
-      setTimeRemaining(`${minutes}m left`);
-    }
-  }, [poll.endtime]);
-
-  // Use useEffect to call the memoized function
-  useEffect(() => {
-    updateTimeRemaining();
-    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, [updateTimeRemaining]);
-
   const getVerificationTierColor = (tier: string) => {
     switch (tier) {
       case 'T3':
@@ -284,8 +318,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onApproval}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userApprovalVote && { userVote: userApprovalVote })}
           />
@@ -306,8 +340,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onQuadratic}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userQuadraticVote && { userVote: userQuadraticVote })}
           />
@@ -328,8 +362,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onRange}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userRangeVote && { userVote: userRangeVote })}
           />
@@ -350,8 +384,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onRanked}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userRankedVote && { userVote: userRankedVote })}
           />
@@ -372,8 +406,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onMultiple}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userMultipleVote && { userVote: userMultipleVote })}
           />
@@ -394,8 +428,8 @@ export default function VotingInterface({
               vote_count: null
             }))}
             onVote={onSingle}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
+            isVoting={effectiveIsVoting}
+            hasVoted={effectiveHasVoted}
             {...(poll.description && { description: poll.description })}
             {...(userVote && { userVote: userVote })}
           />

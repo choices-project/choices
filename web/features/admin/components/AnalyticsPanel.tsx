@@ -1,16 +1,22 @@
 /**
  * Analytics Panel Component - Store-Integrated Version
- * 
+ *
  * This component uses the analytics store for better state management
  * and integration with the enhanced analytics system.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
+import {
+  useAnalyticsActions,
+  useAnalyticsDashboard,
+  useAnalyticsError,
+  useAnalyticsLoading,
+  useAnalyticsMetrics,
+} from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
 // Placeholder type for future analytics data (currently unused but reserved for upcoming features)
@@ -29,58 +35,67 @@ type AnalyticsPanelProps = {
   refreshInterval?: number;
 }
 
-export default function AnalyticsPanel({ 
-  refreshInterval = 30000 
+export default function AnalyticsPanel({
+  refreshInterval = 30000
 }: AnalyticsPanelProps) {
   const [selectedMetric, setSelectedMetric] = useState<'users' | 'polls' | 'votes' | 'performance'>('users');
 
-  // Use analytics store instead of local state
+  const dashboard = useAnalyticsDashboard();
+  const performanceMetrics = useAnalyticsMetrics();
+  const storeLoading = useAnalyticsLoading();
+  const storeError = useAnalyticsError();
   const {
-    dashboard,
-    performanceMetrics,
-    userBehavior: _userBehavior,
-    isLoading: storeLoading,
-    error: storeError,
     setDashboard,
     setPerformanceMetrics,
-    updateUserBehavior
-  } = useAnalyticsStore();
+    updateUserBehavior,
+    setLoading,
+    setError,
+    clearError,
+  } = useAnalyticsActions();
 
   // Fetch data when component mounts or metric changes
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch analytics data and update store
-        const response = await fetch('/api/analytics?type=general');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Update store with fetched data
-        if (data.dashboard) {
-          setDashboard(data.dashboard);
-        }
-        if (data.performanceMetrics) {
-          setPerformanceMetrics(data.performanceMetrics);
-        }
-        if (data.userBehavior) {
-          updateUserBehavior(data.userBehavior);
-        }
-        
-        logger.info('Analytics data loaded and stored successfully');
-      } catch (err) {
-        logger.error('Analytics fetch error:', err);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    clearError();
+
+    try {
+      const response = await fetch('/api/analytics?type=general');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    fetchData();
+      const data = await response.json();
 
-    // Set up refresh interval
-    const interval = setInterval(fetchData, refreshInterval);
+      if (data.dashboard) {
+        setDashboard(data.dashboard);
+      }
+      if (data.performanceMetrics) {
+        setPerformanceMetrics(data.performanceMetrics);
+      }
+      if (data.userBehavior) {
+        updateUserBehavior(data.userBehavior);
+      }
+
+      logger.info('Analytics data loaded and stored successfully');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load analytics data';
+      setError(errorMessage);
+      logger.error('Analytics fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [setDashboard, setPerformanceMetrics, updateUserBehavior]);
+
+  useEffect(() => {
+    void fetchData();
+
+    const interval = setInterval(() => {
+      void fetchData();
+    }, refreshInterval);
+
     return () => clearInterval(interval);
-  }, [selectedMetric, refreshInterval, setDashboard, setPerformanceMetrics, updateUserBehavior]);
+  }, [selectedMetric, refreshInterval, fetchData]);
 
   if (storeLoading) {
     return (
@@ -106,19 +121,13 @@ export default function AnalyticsPanel({
             </div>
             <h3 className="text-lg font-semibold mb-2">Error Loading Analytics</h3>
             <p className="text-gray-600 mb-4">{storeError}</p>
-            <Button onClick={async () => {
-              try {
-                const response = await fetch('/api/analytics?type=general');
-                if (response.ok) {
-                  const data = await response.json();
-                  if (data.dashboard) setDashboard(data.dashboard);
-                  if (data.performanceMetrics) setPerformanceMetrics(data.performanceMetrics);
-                  if (data.userBehavior) updateUserBehavior(data.userBehavior);
-                }
-              } catch (err) {
-                logger.error('Retry fetch error:', err);
-              }
-            }}>Try Again</Button>
+            <Button
+              onClick={() => {
+                void fetchData();
+              }}
+            >
+              Try Again
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -221,19 +230,12 @@ export default function AnalyticsPanel({
 
       {/* Refresh Button */}
       <div className="flex justify-end">
-        <Button onClick={async () => {
-          try {
-            const response = await fetch('/api/analytics?type=general');
-            if (response.ok) {
-              const data = await response.json();
-              if (data.dashboard) setDashboard(data.dashboard);
-              if (data.performanceMetrics) setPerformanceMetrics(data.performanceMetrics);
-              if (data.userBehavior) updateUserBehavior(data.userBehavior);
-            }
-          } catch (err) {
-            logger.error('Refresh fetch error:', err);
-          }
-        }} variant="outline">
+        <Button
+          onClick={() => {
+            void fetchData();
+          }}
+          variant="outline"
+        >
           Refresh Data
         </Button>
       </div>

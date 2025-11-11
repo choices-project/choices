@@ -1,16 +1,16 @@
 'use client';
 
 import {
-  Fingerprint,
-  Loader2,
-  CheckCircle,
   AlertCircle,
+  CheckCircle,
+  Fingerprint,
+  Key,
+  Laptop,
+  Loader2,
   Shield,
   Smartphone,
-  Laptop,
-  Key,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -18,42 +18,51 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
+import { useBiometricSupported, useInitializeBiometricState } from '../lib/store';
+
 type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
   onError?: (error: string) => void;
   className?: string;
-}
+};
 
 export function PasskeyLogin({
   onSuccess,
   onError,
-  className
+  className,
 }: PasskeyLoginProps) {
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
 
-  const isWebAuthnSupported = () => {
-    return typeof window !== 'undefined' && 
-           window.PublicKeyCredential && 
-           typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
-  };
+  useInitializeBiometricState({ fetchCredentials: false });
 
-  const checkPlatformAuthenticator = async () => {
+  const isSupported = useBiometricSupported();
+
+  const isWebAuthnSupported = React.useCallback(() => {
+    return (
+      typeof window !== 'undefined' &&
+      'PublicKeyCredential' in window &&
+      typeof window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+    );
+  }, []);
+
+  const checkPlatformAuthenticator = React.useCallback(async () => {
     if (!isWebAuthnSupported()) return false;
-    
+
     try {
       return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     } catch (err) {
       logger.error('Error checking platform authenticator:', err);
       return false;
     }
-  };
+  }, [isWebAuthnSupported]);
 
-  const handleLogin = async () => {
+  const handleLogin = React.useCallback(async () => {
     if (!isWebAuthnSupported()) {
-      setError('WebAuthn is not supported in this browser');
-      onError?.('WebAuthn is not supported in this browser');
+      const message = 'WebAuthn is not supported in this browser';
+      setError(message);
+      onError?.(message);
       return;
     }
 
@@ -62,10 +71,8 @@ export function PasskeyLogin({
     setSuccess(false);
 
     try {
-      // Check if platform authenticator is available
       const hasPlatformAuth = await checkPlatformAuthenticator();
-      
-      // Start WebAuthn authentication (native implementation)
+
       const response = await fetch('/api/v1/auth/webauthn/native/authenticate/options', {
         method: 'POST',
         headers: {
@@ -73,7 +80,7 @@ export function PasskeyLogin({
         },
         body: JSON.stringify({
           userVerification: 'required',
-          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform'
+          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
         }),
       });
 
@@ -84,27 +91,22 @@ export function PasskeyLogin({
 
       const credentialOptions = await response.json();
 
-      // Get credential
-      const publicKeyOptions = withOptional(
-        credentialOptions ?? {},
-        {
+      const publicKeyOptions = withOptional(credentialOptions ?? {}, {
+        userVerification: 'required',
+        authenticatorSelection: {
           userVerification: 'required',
-          authenticatorSelection: {
-            userVerification: 'required',
-            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-          },
-        }
-      );
+          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+        },
+      });
 
-      const credential = await navigator.credentials.get({
+      const credential = (await navigator.credentials.get({
         publicKey: publicKeyOptions,
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential | null;
 
       if (!credential) {
         throw new Error('Authentication was cancelled or failed');
       }
 
-      // Complete authentication (native implementation)
       const completeResponse = await fetch('/api/v1/auth/webauthn/native/authenticate/verify', {
         method: 'POST',
         headers: {
@@ -115,15 +117,27 @@ export function PasskeyLogin({
             id: credential.id,
             rawId: Array.from(new Uint8Array(credential.rawId)),
             response: {
-              authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
+              authenticatorData: Array.from(
+                new Uint8Array(
+                  (credential.response as AuthenticatorAssertionResponse).authenticatorData
+                )
+              ),
               clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-              signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
-              userHandle: (credential.response as AuthenticatorAssertionResponse).userHandle 
-                ? Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).userHandle!))
-                : null
+              signature: Array.from(
+                new Uint8Array(
+                  (credential.response as AuthenticatorAssertionResponse).signature
+                )
+              ),
+              userHandle: (credential.response as AuthenticatorAssertionResponse).userHandle
+                ? Array.from(
+                    new Uint8Array(
+                      (credential.response as AuthenticatorAssertionResponse).userHandle!
+                    )
+                  )
+                : null,
             },
-            type: credential.type
-          }
+            type: credential.type,
+          },
         }),
       });
 
@@ -135,7 +149,6 @@ export function PasskeyLogin({
       const result = await completeResponse.json();
       setSuccess(true);
       onSuccess?.(result);
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage);
@@ -143,18 +156,19 @@ export function PasskeyLogin({
     } finally {
       setIsAuthenticating(false);
     }
-  };
+  }, [checkPlatformAuthenticator, isWebAuthnSupported, onError, onSuccess]);
 
-  const getAuthenticatorIcon = () => {
+  const getAuthenticatorIcon = React.useCallback(() => {
     if (typeof window === 'undefined') return <Shield className="h-6 w-6" />;
-    
-    // Check if we're on a mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    return isMobile ? <Smartphone className="h-6 w-6" /> : <Laptop className="h-6 w-6" />;
-  };
 
-  if (!isWebAuthnSupported()) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+    return isMobile ? <Smartphone className="h-6 w-6" /> : <Laptop className="h-6 w-6" />;
+  }, []);
+
+  if (isSupported === false) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -163,7 +177,8 @@ export function PasskeyLogin({
             <span>WebAuthn Not Supported</span>
           </CardTitle>
           <CardDescription>
-            Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
+            Your browser does not support WebAuthn. Please use a modern browser or try a different
+            authentication method.
           </CardDescription>
         </CardHeader>
       </Card>

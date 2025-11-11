@@ -1,9 +1,9 @@
 /**
  * Hashtag Trending Component
- * 
+ *
  * Real-time trending hashtags display with advanced filtering,
  * category-based trends, and performance metrics.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -19,11 +19,12 @@ TrendingUp,
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { 
-  useHashtagStore,
-  useHashtagActions
+import {
+  useHashtagActions,
+  useHashtagError,
+  useHashtagLoading,
+  useTrendingHashtags,
 } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger'
 
 import type {
@@ -64,10 +65,13 @@ export default function HashtagTrending({
     timeRange: '24h'
   });
 
-  // Zustand store integration
-  const { trendingHashtags, isLoading, error } = useHashtagStore();
+// Zustand store integration
+const trendingHashtags = useTrendingHashtags();
+const { isLoading } = useHashtagLoading();
+const { error, searchError, hasError } = useHashtagError();
   const { getTrendingHashtags, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
-  
+const errorMessage = error ?? searchError ?? null;
+
   const loadTrendingHashtags = useCallback(async () => {
     try {
       await getTrendingHashtags();
@@ -85,7 +89,7 @@ export default function HashtagTrending({
 
   useEffect(() => {
     loadTrendingHashtags();
-    
+
     if (autoRefresh) {
       const interval = setInterval(loadTrendingHashtags, refreshInterval);
       return () => clearInterval(interval);
@@ -94,15 +98,15 @@ export default function HashtagTrending({
 
   const getSortedHashtags = () => {
     let sorted = [...trendingHashtags];
-    
+
     // Apply search filter
     if (filters.searchQuery) {
-      sorted = sorted.filter(hashtag => 
+      sorted = sorted.filter(hashtag =>
         hashtag.hashtag.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
         hashtag.hashtag.description?.toLowerCase().includes(filters.searchQuery.toLowerCase())
       );
     }
-    
+
     // Apply sorting
     switch (filters.sortBy) {
       case 'trend_score':
@@ -118,13 +122,13 @@ export default function HashtagTrending({
         sorted.sort((a, b) => a.hashtag.name.localeCompare(b.hashtag.name));
         break;
     }
-    
+
     return sorted.slice(0, limit);
   };
 
   const getTrendIcon = (position: number, previousPosition?: number) => {
     if (previousPosition === undefined) return <Minus className="h-4 w-4 text-gray-400" />;
-    
+
     if (position < previousPosition) {
       return <ArrowUp className="h-4 w-4 text-green-500" />;
     } else if (position > previousPosition) {
@@ -156,7 +160,7 @@ export default function HashtagTrending({
             <p className="text-sm text-gray-600">Real-time trending topics and hashtags</p>
           </div>
         </div>
-        
+
         {autoRefresh && (
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <Clock className="h-4 w-4" />
@@ -178,19 +182,25 @@ export default function HashtagTrending({
                 value={filters.searchQuery}
                 onChange={(e) => {
                   const query = e.target.value;
-                  setFilters(prev => withOptional(prev, { searchQuery: query }));
+                  setFilters(prev => ({
+                    ...prev,
+                    searchQuery: query,
+                  }));
                   setSearchQuery(query);
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            
+
             {/* Category Filter */}
             <select
               value={filters.selectedCategory}
               onChange={(e) => {
                 const category = e.target.value as HashtagCategory | 'all';
-                setFilters(prev => withOptional(prev, { selectedCategory: category }));
+                setFilters(prev => ({
+                  ...prev,
+                  selectedCategory: category,
+                }));
                 setCategory(category);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
@@ -205,13 +215,16 @@ export default function HashtagTrending({
               <option value="technology">Technology</option>
               <option value="other">Other</option>
             </select>
-            
+
             {/* Sort By */}
             <select
               value={filters.sortBy}
               onChange={(e) => {
                 const sort = e.target.value as 'trend_score' | 'usage' | 'growth' | 'alphabetical';
-                setFilters(prev => withOptional(prev, { sortBy: sort }));
+                setFilters(prev => ({
+                  ...prev,
+                  sortBy: sort,
+                }));
                 setSortBy(sort);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
@@ -221,14 +234,17 @@ export default function HashtagTrending({
               <option value="growth">Growth Rate</option>
               <option value="alphabetical">Alphabetical</option>
             </select>
-            
+
             {/* Time Range */}
             <select
               value={filters.timeRange}
               onChange={(e) => {
                 const value = e.target.value as '24h' | '7d' | '30d' | 'all';
                 const timeRange = value === 'all' ? '30d' : value;
-                setFilters(prev => withOptional(prev, { timeRange }));
+                setFilters(prev => ({
+                  ...prev,
+                  timeRange,
+                }));
                 setTimeRange(timeRange);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
@@ -242,9 +258,9 @@ export default function HashtagTrending({
       )}
 
       {/* Error State */}
-      {error && (
+      {hasError && errorMessage && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">{error}</p>
+          <p className="text-red-800">{errorMessage}</p>
         </div>
       )}
 
@@ -274,7 +290,7 @@ export default function HashtagTrending({
                     <span className="text-lg font-bold text-gray-900">#{index + 1}</span>
                     {getTrendIcon(index + 1, index + 1)}
                   </div>
-                  
+
                   {/* Hashtag Info */}
                   <div className="flex items-center space-x-3">
                     {getHashtagCategoryIcon(trending.hashtag.category ?? 'other')}
@@ -298,7 +314,7 @@ export default function HashtagTrending({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Metrics */}
                 {showMetrics && (
                   <div className="flex items-center space-x-6 text-sm">
@@ -308,21 +324,21 @@ export default function HashtagTrending({
                         {formatUsageCount(trending.trend_score ?? 0)}
                       </div>
                     </div>
-                    
+
                     <div className="text-center">
                       <div className="text-gray-500">Growth</div>
                       <div className={`font-semibold ${getTrendColor(trending.growth_rate ?? 0)}`}>
                         {formatGrowthRate(trending.growth_rate ?? 0)}
                       </div>
                     </div>
-                    
+
                     <div className="text-center">
                       <div className="text-gray-500">Trend Score</div>
                       <div className="font-semibold text-blue-600">
                         {formatTrendingScore(trending.trend_score ?? 0)}
                       </div>
                     </div>
-                    
+
                     <div className="text-center">
                       <div className="text-gray-500">Peak Position</div>
                       <div className="font-semibold text-gray-900">
@@ -332,7 +348,7 @@ export default function HashtagTrending({
                   </div>
                 )}
               </div>
-              
+
               {/* Related Hashtags - Not available in MinimalHashtag type */}
             </div>
           ))}
@@ -345,7 +361,7 @@ export default function HashtagTrending({
           <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No trending hashtags</h3>
           <p className="text-gray-600">
-            {filters.searchQuery 
+            {filters.searchQuery
               ? `No hashtags match "${filters.searchQuery}"`
               : 'No hashtags are trending right now'
             }

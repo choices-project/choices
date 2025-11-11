@@ -1,143 +1,147 @@
+
 /**
  * App Store - Zustand Implementation
- * 
- * Global application state management including theme, sidebar, feature flags,
- * and app-wide settings. Consolidates scattered local state and Context API usage.
- * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ *
+ * Global application state for UI chrome, feature flags, device hints, and layout helpers.
+ * Modernized to align with the 2025 Zustand store standards (typed creator, helpers, tests).
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
-import logger from '@/lib/utils/logger';
+import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
 import type { BaseStore, FeatureFlag } from './types';
 
-// App store state interface
-type AppStore = {
-  // UI State
-  theme: 'light' | 'dark' | 'system';
-  systemTheme: 'light' | 'dark';
-  resolvedTheme: 'light' | 'dark';
+export type ThemePreference = 'light' | 'dark' | 'system';
+export type SystemTheme = 'light' | 'dark';
+export type ScreenSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+export type Orientation = 'portrait' | 'landscape';
+
+export type AppModalEntry = {
+  id: string;
+  data: Record<string, unknown>;
+};
+
+export type AppPreferences = {
+  animations: boolean;
+  haptics: boolean;
+  sound: boolean;
+  autoSave: boolean;
+  language: string;
+  timezone: string;
+  compactMode: boolean;
+  showTooltips: boolean;
+  enableAnalytics: boolean;
+  enableCrashReporting: boolean;
+};
+
+export type AppI18nState = {
+  currentLanguage: string;
+  isLoading: boolean;
+  error: string | null;
+};
+
+export type AppBreadcrumb = {
+  label: string;
+  href: string;
+  icon?: string;
+};
+
+export type AppState = {
+  theme: ThemePreference;
+  systemTheme: SystemTheme;
+  resolvedTheme: SystemTheme;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   sidebarPinned: boolean;
   sidebarActiveSection: string | null;
-  
-  // Modal State
+
   activeModal: string | null;
   modalData: Record<string, unknown> | null;
-  modalStack: Array<{
-    id: string;
-    data: Record<string, unknown>;
-  }>;
-  
-  // Mobile UI State
+  modalStack: AppModalEntry[];
+
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
-  screenSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  orientation: 'portrait' | 'landscape';
-  
-  // Feature Flags
+  screenSize: ScreenSize;
+  orientation: Orientation;
+
   features: Record<string, boolean>;
   featureFlags: FeatureFlag[];
-  
-  // App Settings
-  settings: {
-    animations: boolean;
-    haptics: boolean;
-    sound: boolean;
-    autoSave: boolean;
-    language: string;
-    timezone: string;
-    compactMode: boolean;
-    showTooltips: boolean;
-    enableAnalytics: boolean;
-    enableCrashReporting: boolean;
-  };
-  
-  // I18n State
-  i18n: {
-    currentLanguage: string;
-    isLoading: boolean;
-    error: string | null;
-  };
-  
-  // Navigation State
+
+  settings: AppPreferences;
+  i18n: AppI18nState;
+
   currentRoute: string;
   previousRoute: string;
-  breadcrumbs: Array<{
-    label: string;
-    href: string;
-    icon?: string;
-  }>;
-  
-  // Loading States
+  breadcrumbs: AppBreadcrumb[];
+
+  isLoading: boolean;
   isInitializing: boolean;
   isUpdating: boolean;
-  
-  // Actions - Theme
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  error: string | null;
+};
+
+export type AppActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
+  setTheme: (theme: ThemePreference) => void;
   toggleTheme: () => void;
-  updateSystemTheme: (systemTheme: 'light' | 'dark') => void;
-  
-  // Actions - Sidebar
+  updateSystemTheme: (systemTheme: SystemTheme) => void;
+
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setSidebarWidth: (width: number) => void;
   setSidebarPinned: (pinned: boolean) => void;
   setSidebarActiveSection: (section: string | null) => void;
-  
-  // Actions - Modal
+
   openModal: (id: string, data?: Record<string, unknown>) => void;
   closeModal: () => void;
   closeAllModals: () => void;
   pushModal: (id: string, data?: Record<string, unknown>) => void;
   popModal: () => void;
-  
-  // Actions - Mobile UI
+
   setDeviceInfo: (info: {
     isMobile: boolean;
     isTablet: boolean;
     isDesktop: boolean;
-    screenSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-    orientation: 'portrait' | 'landscape';
+    screenSize: ScreenSize;
+    orientation: Orientation;
   }) => void;
-  
-  // Actions - Feature Flags
+
   setFeatureFlag: (flag: string, enabled: boolean) => void;
   toggleFeatureFlag: (flag: string) => void;
   setFeatureFlags: (flags: Record<string, boolean>) => void;
   loadFeatureFlags: (flags: FeatureFlag[]) => void;
-  
-  // Actions - Settings
-  updateSettings: (settings: Partial<AppStore['settings']>) => void;
+
+  updateSettings: (settings: Partial<AppPreferences>) => void;
   resetSettings: () => void;
-  
-  // Actions - I18n
+
   setLanguage: (language: string) => void;
   setI18nLoading: (loading: boolean) => void;
   setI18nError: (error: string | null) => void;
-  
-  // Actions - Navigation
+
   setCurrentRoute: (route: string) => void;
-  setBreadcrumbs: (breadcrumbs: Array<{ label: string; href: string; icon?: string }>) => void;
-  addBreadcrumb: (breadcrumb: { label: string; href: string; icon?: string }) => void;
+  setBreadcrumbs: (breadcrumbs: AppBreadcrumb[]) => void;
+  addBreadcrumb: (breadcrumb: AppBreadcrumb) => void;
   removeBreadcrumb: (index: number) => void;
-  
-  // Actions - Loading States
+
   setInitializing: (initializing: boolean) => void;
   setUpdating: (updating: boolean) => void;
-} & BaseStore
 
-// Default settings
-const defaultSettings = {
+  resetAppState: () => void;
+};
+
+export type AppStore = AppState & AppActions;
+
+type AppStoreCreator = StateCreator<
+  AppStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+
+const defaultPreferences: AppPreferences = {
   animations: true,
   haptics: true,
   sound: true,
@@ -150,310 +154,357 @@ const defaultSettings = {
   enableCrashReporting: true,
 };
 
-// Create app store with middleware
+const createDefaultPreferences = (): AppPreferences => ({ ...defaultPreferences });
+
+export const createInitialAppState = (): AppState => ({
+  theme: 'system',
+  systemTheme: 'light',
+  resolvedTheme: 'light',
+  sidebarCollapsed: false,
+  sidebarWidth: 280,
+  sidebarPinned: false,
+  sidebarActiveSection: null,
+
+  activeModal: null,
+  modalData: null,
+  modalStack: [],
+
+  isMobile: false,
+  isTablet: false,
+  isDesktop: true,
+  screenSize: 'lg',
+  orientation: 'landscape',
+
+  features: {},
+  featureFlags: [],
+
+  settings: createDefaultPreferences(),
+  i18n: {
+    currentLanguage: 'en',
+    isLoading: false,
+    error: null,
+  },
+
+  currentRoute: '/',
+  previousRoute: '',
+  breadcrumbs: [],
+
+  isLoading: false,
+  isInitializing: false,
+  isUpdating: false,
+  error: null,
+});
+
+export const initialAppState: AppState = createInitialAppState();
+
+const clampSidebarWidth = (width: number) => Math.max(200, Math.min(400, width));
+const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemTheme =>
+  theme === 'system' ? systemTheme : theme;
+
+const applyThemeToDocument = (theme: SystemTheme) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.documentElement.setAttribute('data-theme', theme);
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
+
+export const createAppActions = (
+  set: Parameters<AppStoreCreator>[0],
+  get: Parameters<AppStoreCreator>[1],
+): AppActions => {
+  const setDraft = set as unknown as (fn: (draft: AppState) => void) => void;
+  const setState = (recipe: (draft: AppState) => void) => {
+    setDraft(recipe);
+  };
+
+  return {
+    setLoading: (loading) => setState((state) => {
+      state.isLoading = loading;
+    }),
+
+    setError: (error) => setState((state) => {
+      state.error = error;
+    }),
+
+    clearError: () => setState((state) => {
+      state.error = null;
+    }),
+
+    setTheme: (theme) => {
+      setState((state) => {
+        state.theme = theme;
+        state.resolvedTheme = resolveTheme(theme, state.systemTheme);
+      });
+
+      applyThemeToDocument(get().resolvedTheme);
+      logger.info('Theme changed', { theme });
+    },
+
+    toggleTheme: () => {
+      let nextTheme: ThemePreference = 'light';
+      setState((state) => {
+        nextTheme = state.theme === 'light' ? 'dark' : 'light';
+        state.theme = nextTheme;
+        state.resolvedTheme = resolveTheme(nextTheme, state.systemTheme);
+      });
+
+      applyThemeToDocument(get().resolvedTheme);
+      logger.info('Theme toggled', { theme: get().theme });
+    },
+
+    updateSystemTheme: (systemTheme) => {
+      setState((state) => {
+        state.systemTheme = systemTheme;
+        state.resolvedTheme = resolveTheme(state.theme, systemTheme);
+      });
+
+      if (get().theme === 'system') {
+        applyThemeToDocument(get().resolvedTheme);
+      }
+    },
+
+    toggleSidebar: () => {
+      setState((state) => {
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+      });
+      logger.debug('Sidebar toggled', { collapsed: get().sidebarCollapsed });
+    },
+
+    setSidebarCollapsed: (collapsed) => setState((state) => {
+      state.sidebarCollapsed = collapsed;
+    }),
+
+    setSidebarWidth: (width) => setState((state) => {
+      state.sidebarWidth = clampSidebarWidth(width);
+    }),
+
+    setSidebarPinned: (pinned) => setState((state) => {
+      state.sidebarPinned = pinned;
+      if (pinned) {
+        state.sidebarCollapsed = false;
+      }
+    }),
+
+    setSidebarActiveSection: (section) => setState((state) => {
+      state.sidebarActiveSection = section;
+    }),
+
+    openModal: (id, data) => setState((state) => {
+      state.activeModal = id;
+      state.modalData = data ?? null;
+      state.modalStack.push({ id, data: data ?? {} });
+    }),
+
+    closeModal: () => setState((state) => {
+      state.modalStack.pop();
+      const previous = state.modalStack[state.modalStack.length - 1];
+      if (previous) {
+        state.activeModal = previous.id;
+        state.modalData = previous.data;
+        return;
+      }
+      state.activeModal = null;
+      state.modalData = null;
+    }),
+
+    closeAllModals: () => setState((state) => {
+      state.activeModal = null;
+      state.modalData = null;
+      state.modalStack = [];
+    }),
+
+    pushModal: (id, data) => setState((state) => {
+      state.modalStack.push({ id, data: data ?? {} });
+      state.activeModal = id;
+      state.modalData = data ?? null;
+    }),
+
+    popModal: () => setState((state) => {
+      if (state.modalStack.length === 0) {
+        return;
+      }
+      state.modalStack.pop();
+      const previous = state.modalStack[state.modalStack.length - 1];
+      if (previous) {
+        state.activeModal = previous.id;
+        state.modalData = previous.data;
+      } else {
+        state.activeModal = null;
+        state.modalData = null;
+      }
+    }),
+
+    setDeviceInfo: (info) => setState((state) => {
+      state.isMobile = info.isMobile;
+      state.isTablet = info.isTablet;
+      state.isDesktop = info.isDesktop;
+      state.screenSize = info.screenSize;
+      state.orientation = info.orientation;
+    }),
+
+    setFeatureFlag: (flag, enabled) => {
+      setState((state) => {
+        state.features[flag] = enabled;
+      });
+      logger.info('Feature flag set', { flag, enabled });
+    },
+
+    toggleFeatureFlag: (flag) => {
+      let next: boolean;
+      setState((state) => {
+        const current = state.features[flag] ?? false;
+        next = !current;
+        state.features[flag] = next;
+      });
+      logger.info('Feature flag toggled', { flag, enabled: get().features[flag] });
+    },
+
+    setFeatureFlags: (flags) => {
+      setState((state) => {
+        state.features = { ...state.features, ...flags };
+      });
+      logger.info('Feature flags updated', { count: Object.keys(flags).length });
+    },
+
+    loadFeatureFlags: (flags) => {
+      setState((state) => {
+        state.featureFlags = flags;
+        flags.forEach((flag) => {
+          state.features[flag.id] = flag.enabled;
+        });
+      });
+      logger.info('Feature flags loaded', { count: flags.length });
+    },
+
+    updateSettings: (settings) => {
+      setState((state) => {
+        state.settings = { ...state.settings, ...settings };
+      });
+      logger.info('App settings updated', { keys: Object.keys(settings) });
+    },
+
+    resetSettings: () => {
+      setState((state) => {
+        state.settings = createDefaultPreferences();
+      });
+      logger.info('App settings reset to defaults');
+    },
+
+    setLanguage: (language) => {
+      setState((state) => {
+        state.i18n.currentLanguage = language;
+        state.settings.language = language;
+      });
+      logger.info('Language changed', { language });
+    },
+
+    setI18nLoading: (loading) => setState((state) => {
+      state.i18n.isLoading = loading;
+    }),
+
+    setI18nError: (error) => setState((state) => {
+      state.i18n.error = error;
+    }),
+
+    setCurrentRoute: (route) => {
+      let previousRoute = '';
+      setState((state) => {
+        previousRoute = state.currentRoute;
+        state.previousRoute = state.currentRoute;
+        state.currentRoute = route;
+      });
+      logger.debug('Route changed', { from: previousRoute, to: route });
+    },
+
+    setBreadcrumbs: (breadcrumbs) => setState((state) => {
+      state.breadcrumbs = breadcrumbs;
+    }),
+
+    addBreadcrumb: (breadcrumb) => setState((state) => {
+      state.breadcrumbs.push(breadcrumb);
+    }),
+
+    removeBreadcrumb: (index) => setState((state) => {
+      if (index < 0 || index >= state.breadcrumbs.length) {
+        return;
+      }
+      state.breadcrumbs.splice(index, 1);
+    }),
+
+    setInitializing: (initializing) => setState((state) => {
+      state.isInitializing = initializing;
+    }),
+
+    setUpdating: (updating) => setState((state) => {
+      state.isUpdating = updating;
+    }),
+
+    resetAppState: () => setState((state) => {
+      Object.assign(state, createInitialAppState());
+    }),
+  };
+};
+
+export const appStoreCreator: AppStoreCreator = (set, get) =>
+  Object.assign(createInitialAppState(), createAppActions(set, get));
+
 export const useAppStore = create<AppStore>()(
   devtools(
     persist(
-      immer((set, _get) => ({
-        // Initial state
-        theme: 'system',
-        systemTheme: 'light',
-        resolvedTheme: 'light',
-        sidebarCollapsed: false,
-        sidebarWidth: 280,
-        sidebarPinned: false,
-        sidebarActiveSection: null,
-        
-        // Modal state
-        activeModal: null,
-        modalData: null,
-        modalStack: [],
-        
-        // Mobile UI state
-        isMobile: false,
-        isTablet: false,
-        isDesktop: true,
-        screenSize: 'lg',
-        orientation: 'landscape',
-        
-        features: {},
-        featureFlags: [],
-        settings: defaultSettings,
-        i18n: {
-          currentLanguage: 'en',
-          isLoading: false,
-          error: null
-        },
-        currentRoute: '/',
-        previousRoute: '',
-        breadcrumbs: [],
-        isLoading: false,
-        isInitializing: false,
-        isUpdating: false,
-        error: null,
-      
-      // Base store actions
-      setLoading: (loading) => set((state) => {
-        state.isLoading = loading;
-      }),
-      
-      setError: (error) => set((state) => {
-        state.error = error;
-      }),
-      
-      clearError: () => set((state) => {
-        state.error = null;
-      }),
-      
-      // Theme actions
-      setTheme: (theme) => set((state) => {
-        state.theme = theme;
-        
-        // Apply theme to document
-        if (typeof window !== 'undefined') {
-          document.documentElement.setAttribute('data-theme', theme);
-          if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
-        
-        logger.info('Theme changed', { theme });
-      }),
-      
-      toggleTheme: () => set((state) => {
-        const newTheme = state.theme === 'light' ? 'dark' : 'light';
-        state.theme = newTheme;
-        
-        // Apply theme to document
-        if (typeof window !== 'undefined') {
-          document.documentElement.setAttribute('data-theme', newTheme);
-          if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
-        
-        logger.info('Theme toggled', { newTheme });
-      }),
-      
-      updateSystemTheme: (systemTheme) => set((state) => {
-        state.systemTheme = systemTheme;
-        if (state.theme === 'system') {
-          state.resolvedTheme = systemTheme;
-        }
-      }),
-      
-      // Sidebar actions
-      toggleSidebar: () => set((state) => {
-        state.sidebarCollapsed = !state.sidebarCollapsed;
-        logger.debug('Sidebar toggled', { collapsed: state.sidebarCollapsed });
-      }),
-      
-      setSidebarCollapsed: (collapsed) => set((state) => {
-        state.sidebarCollapsed = collapsed;
-      }),
-      
-      setSidebarWidth: (width) => set((state) => {
-        state.sidebarWidth = Math.max(200, Math.min(400, width)); // Clamp between 200-400px
-      }),
-      
-      setSidebarPinned: (pinned) => set((state) => {
-        state.sidebarPinned = pinned;
-        if (pinned) {
-          state.sidebarCollapsed = false;
-        }
-      }),
-      
-      setSidebarActiveSection: (section) => set((state) => {
-        state.sidebarActiveSection = section;
-      }),
-      
-      // Modal actions
-      openModal: (id, data) => set((state) => {
-        state.activeModal = id;
-        state.modalData = data ?? null;
-        state.modalStack.push({ id, data: data ?? {} });
-      }),
-      
-      closeModal: () => set((state) => {
-        state.modalStack.pop();
-        if (state.modalStack.length > 0) {
-          const previous = state.modalStack[state.modalStack.length - 1];
-          if (previous) {
-            state.activeModal = previous.id;
-            state.modalData = previous.data;
-          }
-        } else {
-          state.activeModal = null;
-          state.modalData = null;
-        }
-      }),
-      
-      closeAllModals: () => set((state) => {
-        state.activeModal = null;
-        state.modalData = null;
-        state.modalStack = [];
-      }),
-      
-      pushModal: (id, data) => set((state) => {
-        state.modalStack.push({ id, data: data ?? {} });
-        state.activeModal = id;
-        state.modalData = data ?? null;
-      }),
-      
-      popModal: () => set((state) => {
-        if (state.modalStack.length > 0) {
-          state.modalStack.pop();
-          if (state.modalStack.length > 0) {
-            const previous = state.modalStack[state.modalStack.length - 1];
-            if (previous) {
-              state.activeModal = previous.id;
-              state.modalData = previous.data;
-            }
-          } else {
-            state.activeModal = null;
-            state.modalData = null;
-          }
-        }
-      }),
-      
-      // Mobile UI actions
-      setDeviceInfo: (info) => set((state) => {
-        state.isMobile = info.isMobile;
-        state.isTablet = info.isTablet;
-        state.isDesktop = info.isDesktop;
-        state.screenSize = info.screenSize;
-        state.orientation = info.orientation;
-      }),
-      
-      // Feature flag actions
-      setFeatureFlag: (flag, enabled) => set((state) => {
-        state.features[flag] = enabled;
-        logger.info('Feature flag set', { flag, enabled });
-      }),
-      
-      toggleFeatureFlag: (flag) => set((state) => {
-        state.features[flag] = !state.features[flag];
-        logger.info('Feature flag toggled', { flag, enabled: state.features[flag] });
-      }),
-      
-      setFeatureFlags: (flags) => set((state) => {
-        state.features = withOptional(state.features, flags);
-        logger.info('Feature flags updated', { flags });
-      }),
-      
-      loadFeatureFlags: (flags) => set((state) => {
-        state.featureFlags = flags;
-        // Initialize features from loaded flags
-        flags.forEach(flag => {
-          state.features[flag.id] = flag.enabled;
-        });
-        logger.info('Feature flags loaded', { count: flags.length });
-      }),
-      
-      // Settings actions
-      updateSettings: (settings) => set((state) => {
-        state.settings = withOptional(state.settings, settings);
-        logger.info('App settings updated', { settings });
-      }),
-      
-      resetSettings: () => set((state) => {
-        state.settings = withOptional(defaultSettings);
-        logger.info('App settings reset to defaults');
-      }),
-      
-      // I18n actions
-      setLanguage: (language) => set((state) => {
-        state.i18n.currentLanguage = language;
-        state.settings.language = language;
-        logger.info('Language changed', { language });
-      }),
-      
-      setI18nLoading: (loading) => set((state) => {
-        state.i18n.isLoading = loading;
-      }),
-      
-      setI18nError: (error) => set((state) => {
-        state.i18n.error = error;
-      }),
-      
-      // Navigation actions
-      setCurrentRoute: (route) => set((state) => {
-        state.previousRoute = state.currentRoute;
-        state.currentRoute = route;
-        logger.debug('Route changed', { from: state.previousRoute, to: route });
-      }),
-      
-      setBreadcrumbs: (breadcrumbs) => set((state) => {
-        state.breadcrumbs = breadcrumbs;
-      }),
-      
-      addBreadcrumb: (breadcrumb) => set((state) => {
-        state.breadcrumbs.push(breadcrumb);
-      }),
-      
-      removeBreadcrumb: (index) => set((state) => {
-        state.breadcrumbs.splice(index, 1);
-      }),
-      
-      // Loading state actions
-      setInitializing: (initializing) => set((state) => {
-        state.isInitializing = initializing;
-      }),
-      
-      setUpdating: (updating) => set((state) => {
-        state.isUpdating = updating;
-      }),
-    })),
-    {
-      name: 'app-store',
-    storage: createSafeStorage(),
-      partialize: (state) => ({
-        theme: state.theme,
-        sidebarCollapsed: state.sidebarCollapsed,
-        sidebarWidth: state.sidebarWidth,
-        sidebarPinned: state.sidebarPinned,
-        features: state.features,
-        settings: state.settings,
-      }),
-    }
+      immer(appStoreCreator),
+      {
+        name: 'app-store',
+        storage: createSafeStorage(),
+        partialize: (state) => ({
+          theme: state.theme,
+          sidebarCollapsed: state.sidebarCollapsed,
+          sidebarWidth: state.sidebarWidth,
+          sidebarPinned: state.sidebarPinned,
+          features: state.features,
+          settings: state.settings,
+        }),
+      },
+    ),
+    { name: 'app-store' },
   ),
-  { name: 'app-store' }
-));
+);
 
-// Store selectors for optimized re-renders
-export const useTheme = () => useAppStore(state => state.theme);
-export const useSystemTheme = () => useAppStore(state => state.systemTheme);
-export const useResolvedTheme = () => useAppStore(state => state.resolvedTheme);
-export const useSidebarCollapsed = () => useAppStore(state => state.sidebarCollapsed);
-export const useSidebarWidth = () => useAppStore(state => state.sidebarWidth);
-export const useSidebarPinned = () => useAppStore(state => state.sidebarPinned);
-export const useSidebarActiveSection = () => useAppStore(state => state.sidebarActiveSection);
+// Memoized selectors
+export const useTheme = () => useAppStore((state) => state.theme);
+export const useSystemTheme = () => useAppStore((state) => state.systemTheme);
+export const useResolvedTheme = () => useAppStore((state) => state.resolvedTheme);
+export const useSidebarCollapsed = () => useAppStore((state) => state.sidebarCollapsed);
+export const useSidebarWidth = () => useAppStore((state) => state.sidebarWidth);
+export const useSidebarPinned = () => useAppStore((state) => state.sidebarPinned);
+export const useSidebarActiveSection = () => useAppStore((state) => state.sidebarActiveSection);
 
-// Modal selectors
-export const useActiveModal = () => useAppStore(state => state.activeModal);
-export const useModalData = () => useAppStore(state => state.modalData);
-export const useModalStack = () => useAppStore(state => state.modalStack);
+export const useActiveModal = () => useAppStore((state) => state.activeModal);
+export const useModalData = () => useAppStore((state) => state.modalData);
+export const useModalStack = () => useAppStore((state) => state.modalStack);
 
-// Mobile UI selectors
-export const useIsMobile = () => useAppStore(state => state.isMobile);
-export const useIsTablet = () => useAppStore(state => state.isTablet);
-export const useIsDesktop = () => useAppStore(state => state.isDesktop);
-export const useScreenSize = () => useAppStore(state => state.screenSize);
-export const useOrientation = () => useAppStore(state => state.orientation);
+export const useIsMobile = () => useAppStore((state) => state.isMobile);
+export const useIsTablet = () => useAppStore((state) => state.isTablet);
+export const useIsDesktop = () => useAppStore((state) => state.isDesktop);
+export const useScreenSize = () => useAppStore((state) => state.screenSize);
+export const useOrientation = () => useAppStore((state) => state.orientation);
 
-export const useFeatureFlags = () => useAppStore(state => state.features);
-export const useAppSettings = () => useAppStore(state => state.settings);
-export const useCurrentRoute = () => useAppStore(state => state.currentRoute);
-export const useBreadcrumbs = () => useAppStore(state => state.breadcrumbs);
-export const useAppLoading = () => useAppStore(state => state.isLoading);
-export const useAppError = () => useAppStore(state => state.error);
+export const useAppFeatureFlags = () => useAppStore((state) => state.features);
+export const useAppSettings = () => useAppStore((state) => state.settings);
+export const useCurrentRoute = () => useAppStore((state) => state.currentRoute);
+export const useBreadcrumbs = () => useAppStore((state) => state.breadcrumbs);
+export const useAppLoading = () => useAppStore((state) => state.isLoading);
+export const useAppError = () => useAppStore((state) => state.error);
 
-// Action selectors
-export const useAppActions = () => useAppStore(state => ({
+export const useAppActions = () => useAppStore((state) => ({
+  setLoading: state.setLoading,
+  setError: state.setError,
+  clearError: state.clearError,
   setTheme: state.setTheme,
   toggleTheme: state.toggleTheme,
   updateSystemTheme: state.updateSystemTheme,
@@ -474,79 +525,74 @@ export const useAppActions = () => useAppStore(state => ({
   loadFeatureFlags: state.loadFeatureFlags,
   updateSettings: state.updateSettings,
   resetSettings: state.resetSettings,
+  setLanguage: state.setLanguage,
+  setI18nLoading: state.setI18nLoading,
+  setI18nError: state.setI18nError,
   setCurrentRoute: state.setCurrentRoute,
   setBreadcrumbs: state.setBreadcrumbs,
   addBreadcrumb: state.addBreadcrumb,
   removeBreadcrumb: state.removeBreadcrumb,
   setInitializing: state.setInitializing,
   setUpdating: state.setUpdating,
+  resetAppState: state.resetAppState,
 }));
 
-// Computed selectors
-export const useIsFeatureEnabled = (flag: string) => useAppStore(state => {
-  return state.features[flag] ?? false;
-});
+export const appSelectors = {
+  theme: (state: AppStore) => state.theme,
+  resolvedTheme: (state: AppStore) => state.resolvedTheme,
+  sidebarCollapsed: (state: AppStore) => state.sidebarCollapsed,
+  activeModal: (state: AppStore) => state.activeModal,
+  features: (state: AppStore) => state.features,
+  settings: (state: AppStore) => state.settings,
+  currentRoute: (state: AppStore) => state.currentRoute,
+  breadcrumbs: (state: AppStore) => state.breadcrumbs,
+  isLoading: (state: AppStore) => state.isLoading,
+  error: (state: AppStore) => state.error,
+  isInitializing: (state: AppStore) => state.isInitializing,
+  isUpdating: (state: AppStore) => state.isUpdating,
+};
 
-export const useAppTheme = () => useAppStore(state => {
-  if (state.theme === 'system') {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  return state.theme;
-});
+export const useIsFeatureEnabled = (flag: string) =>
+  useAppStore((state) => state.features[flag] ?? false);
 
-export const useAppLanguage = () => useAppStore(state => state.settings.language);
-export const useAppTimezone = () => useAppStore(state => state.settings.timezone);
-export const useAppAnimations = () => useAppStore(state => state.settings.animations);
-export const useAppHaptics = () => useAppStore(state => state.settings.haptics);
+export const useAppTheme = () =>
+  useAppStore((state) => resolveTheme(state.theme, state.systemTheme));
 
-// Store utilities
+export const useAppLanguage = () => useAppStore((state) => state.settings.language);
+export const useAppTimezone = () => useAppStore((state) => state.settings.timezone);
+export const useAppAnimations = () => useAppStore((state) => state.settings.animations);
+export const useAppHaptics = () => useAppStore((state) => state.settings.haptics);
+
 export const appStoreUtils = {
-  /**
-   * Check if a feature is enabled
-   */
   isFeatureEnabled: (flag: string) => {
     const state = useAppStore.getState();
     return state.features[flag] ?? false;
   },
-  
-  /**
-   * Get all enabled features
-   */
+
   getEnabledFeatures: () => {
     const state = useAppStore.getState();
     return Object.entries(state.features)
-      .filter(([_, enabled]) => enabled)
-      .map(([flag, _]) => flag);
+      .filter(([, enabled]) => enabled)
+      .map(([flag]) => flag);
   },
-  
-  /**
-   * Get all disabled features
-   */
+
   getDisabledFeatures: () => {
     const state = useAppStore.getState();
     return Object.entries(state.features)
-      .filter(([_, enabled]) => !enabled)
-      .map(([flag, _]) => flag);
+      .filter(([, enabled]) => !enabled)
+      .map(([flag]) => flag);
   },
-  
-  /**
-   * Get current theme with system preference
-   */
+
   getCurrentTheme: () => {
     const state = useAppStore.getState();
-    if (state.theme === 'system') {
-      return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return state.theme;
+    return resolveTheme(state.theme, state.systemTheme);
   },
-  
-  /**
-   * Get app configuration
-   */
+
   getAppConfig: () => {
     const state = useAppStore.getState();
     return {
       theme: state.theme,
+      resolvedTheme: state.resolvedTheme,
       sidebar: {
         collapsed: state.sidebarCollapsed,
         width: state.sidebarWidth,
@@ -558,138 +604,88 @@ export const appStoreUtils = {
         currentRoute: state.currentRoute,
         previousRoute: state.previousRoute,
         breadcrumbs: state.breadcrumbs,
-      }
+      },
     };
   },
-  
-  /**
-   * Initialize app store with default values
-   */
+
   initialize: () => {
     const state = useAppStore.getState();
-    
-    // Set initial theme
-    if (typeof window !== 'undefined') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      const theme = state.theme === 'system' ? systemTheme : state.theme;
-      document.documentElement.setAttribute('data-theme', theme);
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-    
+    applyThemeToDocument(resolveTheme(state.theme, state.systemTheme));
     logger.info('App store initialized');
-  }
+  },
 };
 
-// Store subscriptions for external integrations
 export const appStoreSubscriptions = {
-  /**
-   * Subscribe to theme changes
-   */
-  onThemeChange: (callback: (theme: string) => void) => {
-    return useAppStore.subscribe(
+  onThemeChange: (callback: (theme: ThemePreference) => void) =>
+    useAppStore.subscribe(
       (state, prevState) => {
-        const { theme } = state;
-        const { theme: prevTheme } = prevState;
-        if (theme !== prevTheme) {
-          callback(theme);
+        if (state.theme !== prevState.theme || state.systemTheme !== prevState.systemTheme) {
+          callback(resolveTheme(state.theme, state.systemTheme));
         }
-      }
-    );
-  },
-  
-  /**
-   * Subscribe to sidebar changes
-   */
-  onSidebarChange: (callback: (collapsed: boolean) => void) => {
-    return useAppStore.subscribe(
+      },
+    ),
+
+  onSidebarChange: (callback: (collapsed: boolean) => void) =>
+    useAppStore.subscribe(
       (state, prevState) => {
-        const { sidebarCollapsed } = state;
-        const { sidebarCollapsed: prevCollapsed } = prevState;
-        if (sidebarCollapsed !== prevCollapsed) {
-          callback(sidebarCollapsed);
+        if (state.sidebarCollapsed !== prevState.sidebarCollapsed) {
+          callback(state.sidebarCollapsed);
         }
-      }
-    );
-  },
-  
-  /**
-   * Subscribe to feature flag changes
-   */
-  onFeatureFlagChange: (flag: string, callback: (enabled: boolean) => void) => {
-    return useAppStore.subscribe(
+      },
+    ),
+
+  onFeatureFlagChange: (flag: string, callback: (enabled: boolean) => void) =>
+    useAppStore.subscribe(
       (state, prevState) => {
         const enabled = state.features[flag];
         const prevEnabled = prevState.features[flag];
         if (enabled !== prevEnabled) {
           callback(enabled ?? false);
         }
-      }
-    );
-  },
-  
-  /**
-   * Subscribe to settings changes
-   */
-  onSettingsChange: (callback: (settings: AppStore['settings']) => void) => {
-    return useAppStore.subscribe(
+      },
+    ),
+
+  onSettingsChange: (callback: (settings: AppPreferences) => void) =>
+    useAppStore.subscribe(
       (state, prevState) => {
-        const { settings } = state;
-        const { settings: prevSettings } = prevState;
-        if (settings !== prevSettings) {
-          callback(settings);
+        if (state.settings !== prevState.settings) {
+          callback(state.settings);
         }
-      }
-    );
-  }
+      },
+    ),
 };
 
-// Store debugging utilities
 export const appStoreDebug = {
-  /**
-   * Log current app state
-   */
   logState: () => {
     const state = useAppStore.getState();
     logger.debug('App Store State', {
       theme: state.theme,
+      resolvedTheme: state.resolvedTheme,
       sidebarCollapsed: state.sidebarCollapsed,
       features: state.features,
       settings: state.settings,
       currentRoute: state.currentRoute,
       isLoading: state.isLoading,
-      error: state.error
+      error: state.error,
     });
   },
-  
-  /**
-   * Log feature flags
-   */
+
   logFeatureFlags: () => {
     const state = useAppStore.getState();
     logger.debug('Feature Flags', {
-      enabled: Object.entries(state.features).filter(([_, enabled]) => enabled),
-      disabled: Object.entries(state.features).filter(([_, enabled]) => !enabled),
-      total: Object.keys(state.features).length
+      enabled: Object.entries(state.features).filter(([, enabled]) => enabled),
+      disabled: Object.entries(state.features).filter(([, enabled]) => !enabled),
+      total: Object.keys(state.features).length,
     });
   },
-  
-  /**
-   * Log app settings
-   */
+
   logSettings: () => {
     const state = useAppStore.getState();
     logger.debug('App Settings', state.settings);
   },
-  
-  /**
-   * Reset store to initial state
-   */
+
   reset: () => {
-    useAppStore.getState().resetSettings();
+    useAppStore.getState().resetAppState();
     logger.info('App store reset to initial state');
-  }
+  },
 };

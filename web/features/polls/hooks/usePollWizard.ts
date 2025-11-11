@@ -7,39 +7,31 @@
 
 import { useState, useCallback } from 'react';
 
+import {
+  createInitialPollWizardData,
+  POLL_WIZARD_TOTAL_STEPS,
+} from '@/lib/polls/defaults';
+import { validatePollWizardStep } from '@/lib/polls/validation';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import type {
   PollWizardData,
-  PollWizardState
+  PollWizardState,
 } from '../types';
 
-const INITIAL_WIZARD_DATA: PollWizardData = {
-  title: '',
-  description: '',
-  category: 'general',
-  options: ['', ''],
-  tags: [],
-  privacyLevel: 'public',
-  settings: {
-    votingMethod: 'single',
-    allowMultipleVotes: false,
-    showResults: true,
-    allowComments: true
-  }
-};
+const INITIAL_WIZARD_DATA = createInitialPollWizardData();
 
 const INITIAL_WIZARD_STATE: PollWizardState = {
   currentStep: 0,
-  totalSteps: 4,
+  totalSteps: POLL_WIZARD_TOTAL_STEPS,
   data: INITIAL_WIZARD_DATA,
   errors: {},
-  progress: 0,
   isLoading: false,
+  progress: 0,
   canProceed: false,
   canGoBack: false,
-  isComplete: false
+  isComplete: false,
 };
 
 const mergeWizardState = (state: PollWizardState, updates: Partial<PollWizardState>): PollWizardState => {
@@ -61,65 +53,10 @@ export function usePollWizard() {
   const [wizardState, setWizardState] = useState<PollWizardState>(INITIAL_WIZARD_STATE);
 
   // Validation function
-  const validateStep = useCallback((step: number, data: PollWizardData): Record<string, string> => {
-    const errors: Record<string, string> = {};
-
-    switch (step) {
-      case 0: // Basic info
-        if (!data.title.trim()) {
-          errors.title = 'Title is required';
-        }
-        if (!data.description.trim()) {
-          errors.description = 'Description is required';
-        }
-        break;
-
-      case 1: { // Options
-        const step1ValidOptions = data.options.filter((option: string) => option.trim().length > 0);
-        if (step1ValidOptions.length < 2) {
-          errors.options = 'At least 2 options are required';
-        }
-        break;
-      }
-
-      case 2: // Settings
-        if (data.category === 'general' && !data.tags.length) {
-          errors.tags = 'At least one tag is required for general polls';
-        }
-        break;
-
-      case 3: { // Review
-        // Final validation - comprehensive check
-        const validOptions = data.options.filter((option: string) => option.trim().length > 0);
-        if (validOptions.length < 2) {
-          errors.options = 'At least 2 valid options are required';
-        }
-
-        // Check for duplicate options
-        const uniqueOptions = new Set(validOptions.map((opt: string) => opt.toLowerCase().trim()));
-        if (uniqueOptions.size !== validOptions.length) {
-          errors.options = 'Duplicate options are not allowed';
-        }
-
-        // Validate title length
-        if (data.title.trim().length < 3) {
-          errors.title = 'Title must be at least 3 characters';
-        }
-        if (data.title.trim().length > 200) {
-          errors.title = 'Title must be less than 200 characters';
-        }
-
-        // Validate description length
-        if (data.description.trim().length > 1000) {
-          errors.description = 'Description must be less than 1000 characters';
-        }
-
-        break;
-      }
-    }
-
-    return errors;
-  }, []);
+  const validateStep = useCallback(
+    (step: number, data: PollWizardData) => validatePollWizardStep(step, data),
+    [],
+  );
 
   // Helper function to check if current step is valid
   const isCurrentStepValid = useCallback((step: number, data: PollWizardData): boolean => {

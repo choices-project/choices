@@ -1,6 +1,7 @@
 # Civics Backend Operations Guide
 
-This guide explains how the rebuilt ingest service is structured, how data flows from civic sources into Supabase, and the exact commands to operate or extend the pipeline. Use it as the runbook when onboarding new contributors or running ingest jobs in production.
+This guide explains how the rebuilt ingest service is structured, how data flows from civic sources into Supabase, and the exact commands to operate or extend the pipeline. Use it as the runbook when onboarding new contributors or running ingest jobs in production.  
+If you need a concise checklist, start with [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md) and come back here for deeper context.
 
 ## 1. Architecture overview
 
@@ -39,7 +40,8 @@ npm run ingest:qa                  # schema check, duplicate audit, 5-record pre
 1. `npm run ingest:openstates` — Stage YAML + execute `sync_representatives_from_openstates()`.
 2. `npm run ingest:qa` — Schema inspection, duplicate audit, and a 5-record preview snapshot.
 3. `npm run preview -- --states=CA --limit=10` — Optional: inspect a state slice before shipping.
-4. Legacy writers (`sync:contacts`, `sync:social`, `sync:photos`, `sync:data-sources`) remain available with `--dry-run` until the SQL-first flow covers every table.
+4. The merge automatically refreshes OpenStates bill activity (set `SKIP_ACTIVITY_SYNC=1` to skip).
+5. Legacy writers (`sync:contacts`, `sync:social`, `sync:photos`, `sync:committees`, `sync:activity`, `sync:data-sources`) remain available with `--dry-run` until the SQL-first flow covers every table.
 5. `npm run enrich:finance -- --dry-run` — Validate FEC enrichment, then rerun without `--dry-run`.
 6. `npm run audit:crosswalk` — Ensure canonical IDs remain healthy; apply `npm run fix:crosswalk` if required.
 
@@ -51,8 +53,11 @@ npm run ingest:qa                  # schema check, duplicate audit, 5-record pre
 | `sync:contacts` | Emails, phones, faxes, postal addresses | `representative_contacts` | (Legacy) Delete `source = 'openstates_yaml'` then insert |
 | `sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | (Legacy) Delete by representative, dedupe per platform |
 | `sync:photos` | Primary portrait URL | `representative_photos` | (Legacy) Delete `source = 'openstates_yaml'`, insert canonical portrait |
+| `sync:committees` | Committee and caucus memberships derived from OpenStates roles | `representative_committees` | Deletes existing rows per rep, then inserts normalized assignments |
+| `sync:activity` | Latest bill activity derived from OpenStates | `representative_activity` | Deletes existing OpenStates-sourced rows per rep, then inserts bill summaries (also runs automatically after the merge) |
 | `sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
 | `enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Writes missing rows by default; supports stale refresh + explicit cycle overrides |
+| `enrich:congress` | Congress.gov/GovInfo identifiers | `representatives_core` (`congress_gov_id`, `govinfo_id`) + provenance entries | Populates official IDs from Congress.gov export (uses GOVINFO API when available) |
 
 All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid Cloudflare 414 responses.
 
@@ -151,6 +156,7 @@ Output lists each representative-facing table along with exact types, lengths an
 - `docs/civics-ingest-supabase-plan.md` — Status per Supabase table.
 - `docs/product-quality-roadmap.md` — Platform-wide remediation priorities.
 - `services/civics-backend/src/ingest/openstates/people.ts` — Canonical type definitions for civic data.
+- `services/archive/README.md` — Inventory of legacy assets (old JS `dist/` bundle, historical logs) kept only for reference.
 
 Keep this runbook current as new data sources, scripts, or operational procedures are introduced.
 

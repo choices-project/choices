@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 import { useUser, useUserLoading, useUserActions } from '@/lib/stores/userStore';
 import { devLog } from '@/lib/utils/logger';
 
@@ -53,14 +54,15 @@ export default function AccountDeletionPage() {
   const user = useUser()
   const isUserLoading = useUserLoading()
   const { signOut } = useUserActions()
+  const { exportProfile, isExporting: profileExporting, error: exportError } = useProfileExport()
+  const { deleteProfile, isDeleting: profileDeleting, error: deleteError } = useProfileDelete()
   
   // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [deletionSteps, setDeletionSteps] = useState<DeletionStep[]>([
     {
       id: 'data-export',
@@ -123,47 +125,46 @@ export default function AccountDeletionPage() {
     if (!user) return
 
     try {
-      setIsExporting(true)
       setError(null)
 
-      const response = await fetch('/api/user/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      const data = await exportProfile({
+        includeActivity: true,
+        includeVotes: true,
+        includeComments: true,
+        format: 'json',
       })
 
-      if (response.ok) {
-        const blob = await response.blob()
-        // Use SSR-safe browser API access
-        const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
-        const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
-        if (url) {
-          const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
-          if (a) {
-            a.href = url;
-            a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.json`;
-            safeDocument(d => d.body?.appendChild?.(a));
-            a.click();
-            safeWindow(w => w.URL?.revokeObjectURL?.(url));
-            safeDocument(d => d.body?.removeChild?.(a));
-          }
-        }
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      })
 
-        // Mark data export as completed
-        setDeletionSteps(prev => 
-          prev.map(step => 
-            step.id === 'data-export' ? { ...step, completed: true } : step
-          )
-        )
-      } else {
-        throw new Error('Failed to export user data')
+      const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
+      const url = safeWindow((w) => w.URL?.createObjectURL?.(blob));
+
+      if (url) {
+        const link = safeDocument((d) => d.createElement?.('a')) as HTMLAnchorElement | null;
+        if (link) {
+          link.href = url;
+          link.download = `user-data-${user.email}-${new Date()
+            .toISOString()
+            .split('T')[0]}.json`;
+          safeDocument((d) => d.body?.appendChild?.(link));
+          link.click();
+          safeWindow((w) => w.URL?.revokeObjectURL?.(url));
+          safeDocument((d) => d.body?.removeChild?.(link));
+        }
       }
+
+      setDeletionSteps((prev) =>
+        prev.map((step) =>
+          step.id === 'data-export' ? { ...step, completed: true } : step,
+        ),
+      )
     } catch (error) {
       devLog('Error exporting user data:', { error })
-      setError('Failed to export user data')
-    } finally {
-      setIsExporting(false)
+      setError(error instanceof Error ? error.message : 'Failed to export user data')
     }
-  }, [user])
+  }, [exportProfile, user])
 
   const confirmDeletion = useCallback(() => {
     setDeletionSteps(prev => 
@@ -188,37 +189,31 @@ export default function AccountDeletionPage() {
     if (!user) return
 
     try {
-      setIsDeleting(true)
       setError(null)
 
-      const response = await fetch('/api/user/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      if (response.ok) {
-        // Mark final confirmation as completed
-        setDeletionSteps(prev => 
-          prev.map(step => 
-            step.id === 'final-confirmation' ? { ...step, completed: true } : step
-          )
-        )
-
-        // Logout and redirect
-        if (signOut) {
-          await signOut()
-        }
-        router.push('/')
-      } else {
-        throw new Error('Failed to delete account')
+      const result = await deleteProfile()
+      if (!result.success) {
+        throw new Error(result.error ?? 'Failed to delete account')
       }
+
+      setDeletionSteps((prev) =>
+        prev.map((step) =>
+          step.id === 'final-confirmation' ? { ...step, completed: true } : step,
+        ),
+      )
+
+      setIsRedirecting(true)
+      if (signOut) {
+        await signOut()
+      }
+      router.push('/')
     } catch (error) {
       devLog('Error deleting account:', { error })
-      setError('Failed to delete account')
+      setError(error instanceof Error ? error.message : 'Failed to delete account')
     } finally {
-      setIsDeleting(false)
+      setIsRedirecting(false)
     }
-  }, [user, signOut, router])
+  }, [deleteProfile, router, signOut, user])
 
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
@@ -251,13 +246,15 @@ export default function AccountDeletionPage() {
     )
   }
 
-  if (error) {
+  const blockingError = error ?? deleteError ?? exportError;
+
+  if (blockingError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{blockingError}</AlertDescription>
           </Alert>
         </div>
       </div>
@@ -377,17 +374,17 @@ export default function AccountDeletionPage() {
                         {step.id === 'data-export' && !step.completed && (
                           <Button
                             onClick={exportUserData}
-                            disabled={isExporting}
+                            disabled={profileExporting}
                             variant="outline"
                             size="sm"
                             className="mt-3"
                           >
-                            {isExporting ? (
+                            {profileExporting ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2" />
                             ) : (
                               <Download className="h-4 w-4 mr-2" />
                             )}
-                            {isExporting ? 'Exporting...' : 'Export Data'}
+                            {profileExporting ? 'Exporting...' : 'Export Data'}
                           </Button>
                         )}
 
@@ -437,15 +434,17 @@ export default function AccountDeletionPage() {
                 <CardContent>
                   <Button
                     onClick={deleteAccount}
-                    disabled={isDeleting}
+                    disabled={profileDeleting || isRedirecting}
                     className="w-full bg-red-600 hover:bg-red-700 text-white"
                   >
-                    {isDeleting ? (
+                    {profileDeleting || isRedirecting ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                     ) : (
                       <Trash2 className="h-4 w-4 mr-2" />
                     )}
-                    {isDeleting ? 'Deleting Account...' : 'Permanently Delete Account'}
+                    {profileDeleting || isRedirecting
+                      ? 'Deleting Account...'
+                      : 'Permanently Delete Account'}
                   </Button>
                 </CardContent>
               </Card>

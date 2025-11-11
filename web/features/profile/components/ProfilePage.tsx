@@ -1,80 +1,141 @@
-import { 
-User, 
-  Shield, 
-  Download, 
-  Edit, 
-  Settings, 
-  CheckCircle,
+'use client';
+
+import {
+  Activity,
   AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Download,
+  Edit,
   Loader2,
   Mail,
-  Calendar,
-  Activity
+  Settings,
+  Shield,
+  User,
 } from 'lucide-react';
-import React, { useState } from 'react';
-
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
-import logger from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger';
+import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 
-import { useProfileData, useProfileDisplay, useProfileCompleteness, useProfileLoadingStates } from '../hooks/use-profile';
+import {
+  useProfileCompleteness,
+  useProfileData,
+  useProfileDisplay,
+  useProfileExport,
+  useProfileLoadingStates,
+} from '../hooks/use-profile';
 import type { ProfilePageProps } from '../index';
 
 /**
  * Profile Page Component
- * 
+ *
  * Main profile display component
  * Consolidates profile display functionality
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
 
-'use client';
-
-export default function ProfilePage({ 
-  user, 
-  isOwnProfile: _isOwnProfile = false, 
-  canEdit: _canEdit = false 
+export default function ProfilePage({
+  user,
+  isOwnProfile: _isOwnProfile = false,
+  canEdit: _canEdit = false
 }: ProfilePageProps) {
-  const { user: _authUser, isLoading: authLoading } = useAuth();
-  const { 
-    profile, 
-    isLoading, 
+  const router = useRouter();
+  const isAuthenticated = useIsAuthenticated();
+  const isUserLoading = useUserLoading();
+  const {
+    profile,
+    isLoading,
     error
   } = useProfileData();
-  
+
   // Get loading states separately
   const loadingStates = useProfileLoadingStates();
-  const { 
-    displayName, 
-    initials, 
-    trustTier, 
-    trustTierDisplay, 
-    isAdmin 
+  const {
+    displayName,
+    initials,
+    trustTier,
+    trustTierDisplay,
+    isAdmin
   } = useProfileDisplay();
   const { isComplete, missingFields, completionPercentage } = useProfileCompleteness();
-  
+  const { exportProfile, isExporting, error: exportError } = useProfileExport();
+
   const [showExportConfirm, setShowExportConfirm] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+  const [exportErrorMessage, setExportErrorMessage] = useState<string | null>(null);
+  const exportFailureMessage = exportErrorMessage ?? exportError ?? null;
 
-  // Use available data
-  const finalUser = user ?? profile;
-  const finalLoading = isLoading;
+  const finalUser = useMemo(() => user ?? profile, [user, profile]);
+  const finalLoading = isLoading || isUserLoading;
   const finalError = error;
+  const canEditProfile = _canEdit || _isOwnProfile;
 
-  // Handle export data
-  const handleExportData = () => {
-    // Note: Export functionality would be implemented here
-    logger.info('Export data requested');
-    setShowExportConfirm(false);
-  };
+  const handleNavigate = useCallback(
+    (path: string) => {
+      try {
+        router.push(path);
+      } catch (err) {
+        logger.error('Failed to navigate', err instanceof Error ? err : new Error(String(err)));
+      }
+    },
+    [router],
+  );
 
-  if (authLoading || finalLoading) {
+  const handleExportData = useCallback(async () => {
+    setExportErrorMessage(null);
+
+    try {
+      const data = await exportProfile({
+        includeActivity: true,
+        includeVotes: true,
+        includeComments: true,
+        format: 'json',
+      });
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `profile-export-${data.profile?.id ?? 'user'}-${new Date()
+        .toISOString()
+        .split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setExportSuccess(true);
+      setShowExportConfirm(false);
+      setTimeout(() => setExportSuccess(false), 4000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to export profile data';
+      setExportErrorMessage(message);
+      logger.error('Profile export failed', err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [exportProfile]);
+
+  if (!isAuthenticated && _isOwnProfile && !isUserLoading) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <Alert>
+          <AlertDescription>
+            Please sign in to view your profile.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (finalLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center space-x-2">
@@ -133,28 +194,26 @@ export default function ProfilePage({
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  // Note: Edit functionality would be implemented here
-                  logger.info('Edit profile requested');
-                }}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  // Note: Settings functionality would be implemented here
-                  logger.info('Settings requested');
-                }}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
+              {canEditProfile && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleNavigate('/profile/edit')}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              )}
+              {canEditProfile && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleNavigate('/account/privacy')}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -165,15 +224,12 @@ export default function ProfilePage({
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Your profile is {completionPercentage}% complete. 
-            Missing: {missingFields.join(', ')}. 
-            <Button 
-              variant="link" 
+            Your profile is {completionPercentage}% complete.
+            Missing: {missingFields.join(', ')}.
+            <Button
+              variant="link"
               className="p-0 h-auto ml-1"
-              onClick={() => {
-                // Note: Edit functionality would be implemented here
-                logger.info('Complete profile requested');
-              }}
+              onClick={() => handleNavigate('/profile/edit')}
             >
               Complete your profile
             </Button>
@@ -267,30 +323,28 @@ export default function ProfilePage({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                // Note: Edit functionality would be implemented here
-                logger.info('Edit profile requested');
-              }}
-              disabled={loadingStates.isAnyUpdating}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                // Note: Settings functionality would be implemented here
-                logger.info('Privacy settings requested');
-              }}
-              disabled={loadingStates.isAnyUpdating}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Privacy Settings
-            </Button>
-            <Button 
-              variant="outline" 
+            {canEditProfile && (
+              <Button
+                variant="outline"
+                onClick={() => handleNavigate('/profile/edit')}
+                disabled={loadingStates.isAnyUpdating}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+            )}
+            {canEditProfile && (
+              <Button
+                variant="outline"
+                onClick={() => handleNavigate('/account/privacy')}
+                disabled={loadingStates.isAnyUpdating}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Privacy Settings
+              </Button>
+            )}
+            <Button
+              variant="outline"
               onClick={() => setShowExportConfirm(true)}
               disabled={loadingStates.isAnyUpdating || loadingStates.isExporting}
             >
@@ -298,6 +352,18 @@ export default function ProfilePage({
               {loadingStates.isExporting ? 'Exporting...' : 'Export Data'}
             </Button>
           </div>
+          {exportSuccess && (
+            <Alert className="mt-4 bg-green-50 border-green-200">
+              <AlertDescription className="text-green-700">
+                Your profile export has started downloading.
+              </AlertDescription>
+            </Alert>
+          )}
+          {exportFailureMessage && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>{exportFailureMessage}</AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -307,16 +373,16 @@ export default function ProfilePage({
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Export Your Data</h3>
             <p className="text-sm text-gray-600 mb-6">
-              This will download a JSON file containing all your profile data, 
+              This will download a JSON file containing all your profile data,
               preferences, and activity history.
             </p>
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 onClick={handleExportData}
-                disabled={loadingStates.isExporting}
+                disabled={isExporting}
                 className="flex-1"
               >
-                {loadingStates.isExporting ? (
+                {isExporting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Exporting...
@@ -328,10 +394,10 @@ export default function ProfilePage({
                   </>
                 )}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowExportConfirm(false)}
-                disabled={loadingStates.isExporting}
+                disabled={isExporting}
                 className="flex-1"
               >
                 Cancel

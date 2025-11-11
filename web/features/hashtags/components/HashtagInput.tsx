@@ -1,12 +1,15 @@
 'use client';
 
 import { Hash, TrendingUp, X } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import logger from '@/lib/utils/logger';
+import {
+  useHashtagActions,
+  useHashtagError,
+  useHashtagLoading,
+  useHashtagSuggestions,
+} from '@/lib/stores';
 
-
-import { getHashtagSuggestions, validateHashtagName } from '../lib/hashtag-service';
 import type { HashtagSuggestion } from '../types';
 
 type HashtagInputProps = {
@@ -31,18 +34,25 @@ export function HashtagInput({
   allowCustom: _allowCustom = true
 }: HashtagInputProps) {
   const [inputValue, setInputValue] = useState('');
-  const [suggestions, setSuggestions] = useState<HashtagSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const suggestions = useHashtagSuggestions();
+  const { searchError } = useHashtagError();
+  const { isLoading: storeLoading } = useHashtagLoading();
+  const { getSuggestions, validateHashtagName } = useHashtagActions();
+
+  const errorMessage = useMemo(
+    () => validationError ?? searchError ?? null,
+    [validationError, searchError],
+  );
 
   // Debounced search for suggestions
   useEffect(() => {
     if (!showSuggestions || inputValue.length < 2) {
-      setSuggestions([]);
       setShowSuggestionsList(false);
       return;
     }
@@ -50,45 +60,43 @@ export function HashtagInput({
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const result = await getHashtagSuggestions(inputValue, undefined, 5);
-        if (result.success && result.data) {
-          setSuggestions(result.data);
-          setShowSuggestionsList(true);
-        }
+        await getSuggestions(inputValue);
+        setShowSuggestionsList(true);
       } catch (error) {
-        logger.error('Failed to fetch hashtag suggestions:', error);
+        // errors surface via store
       } finally {
         setIsLoading(false);
       }
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [inputValue, showSuggestions]);
+  }, [getSuggestions, inputValue, showSuggestions]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
+    const rawValue = e.target.value;
+    const formatted =
+      rawValue.length === 0
+        ? ''
+        : rawValue.startsWith('#')
+        ? rawValue
+        : `#${rawValue}`;
+    setInputValue(formatted);
     setValidationError(null);
-    
-    // Auto-format hashtag input
-    if (newValue && !newValue.startsWith('#')) {
-      setInputValue(`#${  newValue}`);
-    }
   };
 
   // Handle hashtag validation and addition
   const handleAddHashtag = async (hashtagText: string) => {
-    const normalizedHashtag = hashtagText.startsWith('#') 
-      ? hashtagText.slice(1) 
+    const normalizedHashtag = hashtagText.startsWith('#')
+      ? hashtagText.slice(1)
       : hashtagText;
 
     if (!normalizedHashtag.trim()) return;
 
     // Validate hashtag
     const validation = await validateHashtagName(normalizedHashtag);
-    if (!validation.success || !validation.data?.is_valid) {
-      setValidationError(validation.data?.errors?.[0] || 'Invalid hashtag');
+    if (!validation || !validation.is_valid) {
+      setValidationError(validation?.errors?.[0] ?? 'Invalid hashtag');
       return;
     }
 
@@ -113,16 +121,24 @@ export function HashtagInput({
   };
 
   // Handle suggestion selection
-  const handleSuggestionClick = (suggestion: HashtagSuggestion) => {
-    handleAddHashtag(suggestion.hashtag.name);
-  };
+  const handleSuggestionClick = useCallback(
+    (suggestion: HashtagSuggestion) => {
+      handleAddHashtag(suggestion.hashtag.name);
+    },
+    [handleAddHashtag],
+  );
+
+  const filteredSuggestions = useMemo(
+    () => (showSuggestionsList ? suggestions ?? [] : []),
+    [showSuggestionsList, suggestions],
+  );
 
   // Handle key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (suggestions.length > 0 && suggestions[0]) {
-        handleSuggestionClick(suggestions[0]);
+      if (filteredSuggestions.length > 0 && filteredSuggestions[0]) {
+        handleSuggestionClick(filteredSuggestions[0]);
       } else {
         handleAddHashtag(inputValue);
       }
@@ -141,7 +157,7 @@ export function HashtagInput({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        suggestionsRef.current && 
+        suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target as Node) &&
         inputRef.current &&
         !inputRef.current.contains(event.target as Node)
@@ -172,7 +188,7 @@ export function HashtagInput({
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           disabled={value.length >= maxHashtags}
         />
-        {isLoading && (
+        {(isLoading || storeLoading) && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
           </div>
@@ -180,8 +196,8 @@ export function HashtagInput({
       </div>
 
       {/* Validation Error */}
-      {validationError && (
-        <p className="mt-1 text-sm text-red-600">{validationError}</p>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
       )}
 
       {/* Hashtag Tags */}
@@ -205,12 +221,12 @@ export function HashtagInput({
       )}
 
       {/* Suggestions Dropdown */}
-      {showSuggestionsList && suggestions.length > 0 && (
+      {showSuggestionsList && filteredSuggestions.length > 0 && (
         <div
           ref={suggestionsRef}
           className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
         >
-          {suggestions.map((suggestion, _index) => (
+          {filteredSuggestions.map((suggestion, _index) => (
             <button
               key={suggestion.hashtag.id}
               type="button"

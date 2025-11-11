@@ -36,12 +36,15 @@ import {
   Loader2,
   Info
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+import { useUserActions } from '@/lib/stores';
+import { useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import type { PrivacySettings } from '@/types/profile';
 
@@ -60,20 +63,28 @@ type MyDataDashboardProps = {
   userId: string;
   privacySettings: PrivacySettings | null;
   onPrivacyUpdate?: (settings: Partial<PrivacySettings>) => Promise<void>;
+  isSaving?: boolean;
 };
 
 export default function MyDataDashboard({
   userId,
   privacySettings,
-  onPrivacyUpdate
+  onPrivacyUpdate,
+  isSaving = false
 }: MyDataDashboardProps) {
-  const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { exportProfile, isExporting } = useProfileExport();
+  const { deleteProfile } = useProfileDelete();
+  const { signOut: resetUserStore } = useUserActions();
+  const storePrivacySettings = useProfileStore((state) => state.privacySettings);
+  const updatePrivacySettingsAction = useProfileStore((state) => state.updatePrivacySettings);
+  const resetProfileState = useProfileStore((state) => state.resetProfile);
+  const effectivePrivacySettings = privacySettings ?? storePrivacySettings;
 
   // Data categories that can be collected
   const dataCategories: DataCategory[] = [
@@ -136,29 +147,19 @@ export default function MyDataDashboard({
   ];
 
   // Handle export all data
-  const handleExportData = async () => {
-    setIsExporting(true);
+  const handleExportData = useCallback(async () => {
     setError(null);
     setExportSuccess(false);
 
     try {
-      const response = await fetch('/api/profile/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      const data = await exportProfile({
+        includeActivity: true,
+        includeVotes: true,
+        includeComments: true,
+        format: 'json',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to export data');
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Export failed');
-      }
-
-      // Download as JSON file
-      const dataStr = JSON.stringify(result.data, null, 2);
+      const dataStr = JSON.stringify(data, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
@@ -172,17 +173,13 @@ export default function MyDataDashboard({
       setExportSuccess(true);
       logger.info('Data exported successfully', { userId });
 
-      // Clear success message after 5 seconds
       setTimeout(() => setExportSuccess(false), 5000);
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to export data';
       setError(errorMessage);
       logger.error('Data export failed', err instanceof Error ? err : new Error(errorMessage));
-    } finally {
-      setIsExporting(false);
     }
-  };
+  }, [exportProfile, userId]);
 
   // Handle delete specific data category
   const handleDeleteSpecificData = async (dataType: string) => {
@@ -228,25 +225,16 @@ export default function MyDataDashboard({
     setError(null);
 
     try {
-      const response = await fetch('/api/profile/delete', {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
-      }
-
-      const result = await response.json();
+      const result = await deleteProfile();
 
       if (!result.success) {
         throw new Error(result.error || 'Deletion failed');
       }
 
       logger.info('Account deleted successfully', { userId });
-
-      // Redirect to home page after deletion
+      resetUserStore();
+      resetProfileState();
       window.location.href = '/';
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete account';
       setError(errorMessage);
@@ -361,8 +349,8 @@ export default function MyDataDashboard({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {dataCategories.map((category) => {
-            const isEnabled = privacySettings?.[category.privacyKey] === true;
+            {dataCategories.map((category) => {
+            const isEnabled = effectivePrivacySettings?.[category.privacyKey] === true;
 
             return (
               <div
@@ -428,7 +416,7 @@ export default function MyDataDashboard({
           })}
 
           {/* Show message if no data collection enabled */}
-          {!dataCategories.some(cat => privacySettings?.[cat.privacyKey] === true) && (
+          {!dataCategories.some(cat => effectivePrivacySettings?.[cat.privacyKey] === true) && (
             <div className="text-center py-8">
               <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 font-medium mb-2">
@@ -456,7 +444,7 @@ export default function MyDataDashboard({
         <CardContent>
           <div className="space-y-4">
             {dataCategories.map((category) => {
-              const isEnabled = privacySettings?.[category.privacyKey] === true;
+              const isEnabled = effectivePrivacySettings?.[category.privacyKey] === true;
 
               return (
                 <div key={category.id} className="flex items-center justify-between py-2">
@@ -472,8 +460,20 @@ export default function MyDataDashboard({
                   
                           <Switch
                             checked={isEnabled}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                              onPrivacyUpdate?.({ [category.privacyKey]: e.target.checked });
+                            disabled={isSaving}
+                            onCheckedChange={async (checked) => {
+                              try {
+                                if (onPrivacyUpdate) {
+                                  await onPrivacyUpdate({ [category.privacyKey]: checked });
+                                } else {
+                                  await updatePrivacySettingsAction({ [category.privacyKey]: checked });
+                                }
+                                setError(null);
+                              } catch (err) {
+                                const message = err instanceof Error ? err.message : 'Failed to update privacy setting';
+                                setError(message);
+                                logger.error('Privacy toggle failed', err instanceof Error ? err : new Error(message));
+                              }
                             }}
                           />
                 </div>

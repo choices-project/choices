@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import PollRunHarnessClient from './PollRunHarnessClient';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 type PollClientProps = Parameters<typeof PollRunHarnessClient>[0]['poll'];
 
@@ -21,7 +22,7 @@ const BASE_POLL: PollClientProps = {
 };
 
 export default function PollRunHarnessPage({ params }: { params: { id: string } }) {
-  if (isProduction) {
+  if (isProduction && !allowHarness) {
     notFound();
   }
 

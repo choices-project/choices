@@ -2,24 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 
 import CacheInvalidationManager from '@/lib/cache/cache-invalidation';
 
+type RedisMocks = {
+  invalidateByPattern: jest.MockedFunction<(pattern: string) => Promise<number>>;
+  invalidateByTags: jest.MockedFunction<(tags: string[]) => Promise<number>>;
+  del: jest.MockedFunction<(key: string) => Promise<boolean>>;
+};
+
 type Mocks = {
   manager: CacheInvalidationManager;
-  redis: {
-    invalidateByPattern: jest.Mock<Promise<number>, [string]>;
-    invalidateByTags: jest.Mock<Promise<number>, [string[]]>;
-    del: jest.Mock<Promise<boolean>, [string]>;
-  };
-  strategy: Record<string, jest.Mock>;
+  redis: RedisMocks;
+  strategy: Record<string, jest.MockedFunction<() => void>>;
 };
 
 const createManager = (): Mocks => {
-  const redis = {
-    invalidateByPattern: jest.fn<Promise<number>, [string]>().mockResolvedValue(0),
-    invalidateByTags: jest.fn<Promise<number>, [string[]]>().mockResolvedValue(0),
-    del: jest.fn<Promise<boolean>, [string]>().mockResolvedValue(true),
+  const redis: RedisMocks = {
+    invalidateByPattern: jest.fn<(pattern: string) => Promise<number>>().mockResolvedValue(0),
+    invalidateByTags: jest.fn<(tags: string[]) => Promise<number>>().mockResolvedValue(0),
+    del: jest.fn<(key: string) => Promise<boolean>>().mockResolvedValue(true),
   };
 
-  const strategy = {
+  const strategy: Record<string, jest.MockedFunction<() => void>> = {
     clearQueues: jest.fn(),
     destroy: jest.fn(),
   };

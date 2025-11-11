@@ -20,7 +20,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import {
+  useHashtagActions,
+  useHashtagStats,
+  useTrendingHashtags,
+  useHashtagList,
+} from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
 
@@ -95,9 +100,10 @@ export default function PollHashtagIntegration({
   );
 
   // Hashtag store hooks
-  const { hashtags, trendingHashtags } = useHashtagStore();
-  const { getTrendingHashtags } = useHashtagActions();
+  const trendingHashtags = useTrendingHashtags();
+  const hashtags = useHashtagList();
   const { trendingCount } = useHashtagStats();
+  const { getTrendingHashtags } = useHashtagActions();
 
   // Load trending hashtags on mount
   useEffect(() => {

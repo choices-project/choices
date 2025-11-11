@@ -1,235 +1,299 @@
-'use client'
+'use client';
 
-import { 
-  AlertCircle, 
-  Info, 
-  CheckCircle, 
-  MessageSquare, 
-  X,
+import {
+  AlertCircle,
+  CheckCircle,
   ChevronDown,
-  ChevronUp
-} from 'lucide-react'
-import React, { useState, useEffect, useCallback } from 'react'
+  ChevronUp,
+  Info,
+  MessageSquare,
+  X,
+} from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
 
 type SiteMessage = {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'warning' | 'success' | 'error' | 'feedback'
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  created_at: string
-  updated_at: string
-  expires_at?: string
-}
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'error' | 'feedback';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  created_at: string;
+  updated_at: string;
+  expires_at?: string;
+};
 
 type SiteMessagesProps = {
-  className?: string
-  maxMessages?: number
-  showDismiss?: boolean
-  autoRefresh?: boolean
-  refreshInterval?: number
-}
+  className?: string;
+  maxMessages?: number;
+  showDismiss?: boolean;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+};
+
+const MAX_PREVIEW_LENGTH = 150;
+
+const typeToIcon: Record<SiteMessage['type'], React.ReactNode> = {
+  info: <Info className="h-4 w-4" aria-hidden="true" />,
+  warning: <AlertCircle className="h-4 w-4" aria-hidden="true" />,
+  success: <CheckCircle className="h-4 w-4" aria-hidden="true" />,
+  error: <AlertCircle className="h-4 w-4" aria-hidden="true" />,
+  feedback: <MessageSquare className="h-4 w-4" aria-hidden="true" />,
+};
+
+const typeToColor: Record<SiteMessage['type'], string> = {
+  info: 'bg-blue-50 border-blue-200 text-blue-800',
+  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  success: 'bg-green-50 border-green-200 text-green-800',
+  error: 'bg-red-50 border-red-200 text-red-800',
+  feedback: 'bg-purple-50 border-purple-200 text-purple-800',
+};
+
+const priorityToBadge: Record<SiteMessage['priority'], string> = {
+  critical: 'bg-red-100 text-red-800',
+  high: 'bg-orange-100 text-orange-800',
+  medium: 'bg-yellow-100 text-yellow-800',
+  low: 'bg-green-100 text-green-800',
+};
+
+const liveRegionForMessage = (message: SiteMessage) => {
+  if (message.priority === 'critical' || message.type === 'error' || message.type === 'warning') {
+    return { role: 'alert' as const, 'aria-live': 'assertive' as const };
+  }
+  return { role: 'status' as const, 'aria-live': 'polite' as const };
+};
+
+const loadDismissedFromStorage = (): Set<string> => {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+  try {
+    const stored = window.localStorage.getItem('dismissedSiteMessages');
+    if (!stored) {
+      return new Set();
+    }
+    const parsed: string[] = JSON.parse(stored);
+    return new Set(parsed);
+  } catch (error) {
+    logger.warn('Unable to read dismissed site messages from storage', error);
+    return new Set();
+  }
+};
+
+const persistDismissedToStorage = (dismissed: Set<string>) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem('dismissedSiteMessages', JSON.stringify(Array.from(dismissed)));
+  } catch (error) {
+    logger.warn('Unable to persist dismissed site messages', error);
+  }
+};
 
 export default function SiteMessages({
   className = '',
   maxMessages = 3,
   showDismiss = true,
   autoRefresh = true,
-  refreshInterval = 30000 // 30 seconds
+  refreshInterval = 30_000,
 }: SiteMessagesProps) {
-  const [messages, setMessages] = useState<SiteMessage[]>([])
-  const [loading, setLoading] = useState(true)
-  const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set())
-  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<string | null>(null)
+  const [messages, setMessages] = useState<SiteMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set());
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+  const announcedMessagesRef = useRef<Set<string>>(new Set());
+
+  // Load dismissed IDs from storage once on mount
+  useEffect(() => {
+    setDismissedMessages(loadDismissedFromStorage());
+  }, []);
 
   const fetchMessages = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/site-messages')
-      
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/site-messages');
+
       if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages ?? [])
+        const data = await response.json();
+        setMessages(data.messages ?? []);
       } else {
-        setError('Failed to load messages')
+        setError('We could not load site messages right now.');
       }
     } catch (err) {
-      setError('Failed to load messages')
-      logger.error('Error fetching site messages:', err instanceof Error ? err : new Error(String(err)))
+      setError('We could not load site messages right now.');
+      logger.error('Error fetching site messages:', err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchMessages()
-    
-    if (autoRefresh) {
-      const interval = setInterval(fetchMessages, refreshInterval)
-      return () => clearInterval(interval)
+    fetchMessages();
+
+    if (!autoRefresh) {
+      return;
     }
-  }, [autoRefresh, refreshInterval, fetchMessages])
 
-  const handleDismiss = (messageId: string) => {
-    setDismissedMessages(prev => new Set([...prev, messageId]))
-    
-    // Store dismissal in localStorage for persistence
-    const stored = JSON.parse(localStorage.getItem('dismissedSiteMessages') ?? '[]')
-    stored.push(messageId)
-    localStorage.setItem('dismissedSiteMessages', JSON.stringify(stored))
-  }
+    const interval = window.setInterval(fetchMessages, refreshInterval);
+    return () => window.clearInterval(interval);
+  }, [autoRefresh, fetchMessages, refreshInterval]);
 
-  const handleToggleExpand = (messageId: string) => {
-    setExpandedMessages(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(messageId)) {
-        newSet.delete(messageId)
+  const handleDismiss = (messageId: string, title: string) => {
+    setDismissedMessages((prev) => {
+      const next = new Set(prev);
+      next.add(messageId);
+      persistDismissedToStorage(next);
+      return next;
+    });
+    ScreenReaderSupport.announce(`Message "${title}" dismissed.`, 'polite');
+  };
+
+  const handleToggleExpand = (messageId: string, expand: boolean) => {
+    setExpandedMessages((prev) => {
+      const next = new Set(prev);
+      if (expand) {
+        next.add(messageId);
       } else {
-        newSet.add(messageId)
+        next.delete(messageId);
       }
-      return newSet
-    })
-  }
+      return next;
+    });
+  };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'info': return <Info className="h-4 w-4" />
-      case 'warning': return <AlertCircle className="h-4 w-4" />
-      case 'success': return <CheckCircle className="h-4 w-4" />
-      case 'error': return <AlertCircle className="h-4 w-4" />
-      case 'feedback': return <MessageSquare className="h-4 w-4" />
-      default: return <Info className="h-4 w-4" />
-    }
-  }
+  const activeMessages = useMemo(() => {
+    const now = new Date();
+    return messages
+      .filter((message) => !dismissedMessages.has(message.id))
+      .filter((message) => {
+        if (!message.expires_at) {
+          return true;
+        }
+        return new Date(message.expires_at) > now;
+      })
+      .slice(0, maxMessages);
+  }, [dismissedMessages, maxMessages, messages]);
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'info': return 'bg-blue-50 border-blue-200 text-blue-800'
-      case 'warning': return 'bg-yellow-50 border-yellow-200 text-yellow-800'
-      case 'success': return 'bg-green-50 border-green-200 text-green-800'
-      case 'error': return 'bg-red-50 border-red-200 text-red-800'
-      case 'feedback': return 'bg-purple-50 border-purple-200 text-purple-800'
-      default: return 'bg-gray-50 border-gray-200 text-gray-800'
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  // Filter out dismissed messages and expired messages
-  const activeMessages = messages
-    .filter(message => !dismissedMessages.has(message.id))
-    .filter(message => {
-      if (!message.expires_at) return true
-      return new Date(message.expires_at) > new Date()
-    })
-    .slice(0, maxMessages)
+  useEffect(() => {
+    // Announce any new active messages once
+    activeMessages.forEach((message) => {
+      if (!announcedMessagesRef.current.has(message.id)) {
+        const announcement =
+          message.priority === 'critical' || message.type === 'error'
+            ? `Important alert: ${message.title}. ${message.message}`
+            : `${message.title}: ${message.message}`;
+        ScreenReaderSupport.announce(announcement, message.priority === 'critical' || message.type === 'error' ? 'assertive' : 'polite');
+        announcedMessagesRef.current.add(message.id);
+      }
+    });
+  }, [activeMessages]);
 
   if (loading && messages.length === 0) {
-    return null
+    return (
+      <div className={`space-y-3 ${className}`} role="status" aria-live="polite">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          Loading site messages…
+        </div>
+      </div>
+    );
   }
 
   if (error && messages.length === 0) {
-    return null
+    return (
+      <div className={`space-y-3 ${className}`} role="status" aria-live="assertive">
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (activeMessages.length === 0) {
-    return null
+    return null;
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3 ${className}`} role="region" aria-label="Site messages and alerts">
       {activeMessages.map((message) => {
-        const isExpanded = expandedMessages.has(message.id)
-        const isLongMessage = message.message.length > 150
-        
+        const isExpanded = expandedMessages.has(message.id);
+        const liveRegion = liveRegionForMessage(message);
+        const showToggle = message.message.length > MAX_PREVIEW_LENGTH;
+
         return (
-          <div
+          <article
             key={message.id}
-            className={`relative p-4 rounded-lg border ${getTypeColor(message.type)} transition-all duration-200`}
+            className={`relative rounded-lg border p-4 transition-all duration-200 ${typeToColor[message.type]}`}
+            {...liveRegion}
+            aria-atomic="true"
           >
             <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-0.5">
-                {getTypeIcon(message.type)}
-              </div>
-              
-              <div className="flex-1 min-w-0">
+              <div className="mt-0.5 flex-shrink-0">{typeToIcon[message.type]}</div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between">
-                  <h3 className="text-sm font-medium leading-5">
-                    {message.title}
-                  </h3>
-                  
-                  <div className="flex items-center space-x-2 ml-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(message.priority)}`}>
+                  <h3 className="text-sm font-semibold leading-5">{message.title}</h3>
+                  <div className="ml-2 flex items-center space-x-2">
+                    <span className={`px-2 py-1 text-xs font-medium uppercase tracking-wide ${priorityToBadge[message.priority]}`}>
                       {message.priority}
                     </span>
-                    
                     {showDismiss && (
                       <button
-                        onClick={() => handleDismiss(message.id)}
-                        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="Dismiss message"
+                        onClick={() => handleDismiss(message.id, message.title)}
+                        className="flex-shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        aria-label={`Dismiss message titled ${message.title}`}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="mt-2">
-                  <p className={`text-sm leading-5 ${isLongMessage && !isExpanded ? 'line-clamp-2' : ''}`}>
-                    {message.message}
+                  <p className="text-sm leading-5" id={`site-message-${message.id}-body`}>
+                    {isExpanded ? message.message : message.message.slice(0, MAX_PREVIEW_LENGTH)}
+                    {showToggle && !isExpanded && message.message.length > MAX_PREVIEW_LENGTH && '…'}
                   </p>
-                  
-                  {isLongMessage && (
+
+                  {showToggle && (
                     <button
-                      onClick={() => handleToggleExpand(message.id)}
-                      className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center space-x-1"
+                      onClick={() => handleToggleExpand(message.id, !isExpanded)}
+                      className="mt-2 flex items-center space-x-1 text-xs font-medium text-blue-700 transition hover:text-blue-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      aria-expanded={isExpanded}
+                      aria-controls={`site-message-${message.id}-body`}
                     >
                       {isExpanded ? (
                         <>
-                          <ChevronUp className="h-3 w-3" />
+                          <ChevronUp className="h-3 w-3" aria-hidden="true" />
                           <span>Show less</span>
                         </>
                       ) : (
                         <>
-                          <ChevronDown className="h-3 w-3" />
+                          <ChevronDown className="h-3 w-3" aria-hidden="true" />
                           <span>Show more</span>
                         </>
                       )}
                     </button>
                   )}
                 </div>
-                
-                <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-                  <span>
-                    {new Date(message.created_at).toLocaleDateString()}
-                  </span>
-                  
+
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
+                  <time dateTime={message.created_at}>
+                    Posted {new Date(message.created_at).toLocaleString()}
+                  </time>
+
                   {message.expires_at && (
-                    <span>
-                      Expires: {new Date(message.expires_at).toLocaleDateString()}
-                    </span>
+                    <span>Expires {new Date(message.expires_at).toLocaleString()}</span>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        )
+          </article>
+        );
       })}
     </div>
-  )
+  );
 }
-

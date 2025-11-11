@@ -13,8 +13,9 @@ import {
   Sparkles,
   Target,
   Award,
+  Flame,
 } from 'lucide-react';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 
 import { createLazyComponent } from '@/lib/performance/lazy-loading';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
@@ -23,14 +24,22 @@ import {
   useAdminDashboardStats,
   useAdminDashboardActions,
   useAdminLoading,
-  useAdminError
-} from '@/lib/stores';
-import {
+  useAdminError,
   useAdminStats,
   useAdminNotifications,
   useTrendingTopics,
   useRecentActivity,
-} from '@/lib/stores/adminStore';
+} from '@/lib/stores';
+import {
+  useHashtagActions,
+  useHashtagError,
+  useHashtagLoading,
+  useTrendingHashtags,
+} from '@/lib/stores';
+import { useFeedsActions, useFeeds, useFeedsLoading, useFeedsError } from '@/lib/stores/feedsStore';
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 // Lazy load heavy admin components
@@ -86,6 +95,11 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const trendingTopics = useTrendingTopics();
   const recentActivity = useRecentActivity();
   const { setActiveTab, loadDashboardStats } = useAdminDashboardActions();
+  const trendingHashtags = useTrendingHashtags();
+  const { isLoading: hashtagLoading } = useHashtagLoading();
+  const { error: hashtagError } = useHashtagError();
+  const { getTrendingHashtags } = useHashtagActions();
+  const [hasLoadedTrendingHashtags, setHasLoadedTrendingHashtags] = useState(false);
 
   const unreadNotifications = adminStats.unreadNotifications ?? 0;
   const firstUnreadNotification = notifications.find((notification) => !notification.read);
@@ -139,6 +153,14 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
           : 'milestone reached'
       }`
     : null;
+
+  useEffect(() => {
+    if (hasLoadedTrendingHashtags) {
+      return;
+    }
+    setHasLoadedTrendingHashtags(true);
+    void getTrendingHashtags(undefined, 6);
+  }, [getTrendingHashtags, hasLoadedTrendingHashtags]);
 
   useEffect(() => {
     // Track admin dashboard load time
@@ -276,28 +298,79 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 </div>
               </div>
 
-              <div className="bg-white border border-purple-100 rounded-lg p-5 flex items-start gap-3 shadow-sm">
-                <span className="p-2 bg-purple-50 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-purple-600" />
-                </span>
-                <div className="text-sm text-purple-900">
-                  <p className="font-semibold">Engagement Focus</p>
-                  <p className="mt-1">
-                    {topTrendingTopic
-                      ? `${topTrendingTopic.title} · Score ${Math.round(topTrendingTopic.trending_score)}`
-                      : 'No topics are trending right now. Keep an eye on analytics for fresh activity.'}
-                  </p>
-                  <p className="mt-3 text-xs text-purple-700">{shareSummary}</p>
-                  <button
+              <div className="bg-white border border-purple-100 rounded-lg p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 bg-purple-50 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-purple-600" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-purple-900">Engagement Focus</p>
+                      <p className="text-xs text-purple-600">
+                        Cross-store trending signals to monitor in analytics
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => getTrendingHashtags(undefined, 6)}
+                    disabled={hashtagLoading}
+                    className="text-xs"
+                  >
+                    Refresh
+                  </Button>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {hashtagLoading && trendingHashtags.length === 0 ? (
+                    <div className="space-y-2">
+                      {[...Array(3)].map((_, idx) => (
+                        <Skeleton key={idx} className="h-14 w-full" />
+                      ))}
+                    </div>
+                  ) : trendingHashtags.length > 0 ? (
+                    <TrendingHashtagDisplay
+                      trendingHashtags={trendingHashtags}
+                      showGrowth
+                      maxDisplay={3}
+                      onHashtagClick={(hashtag) =>
+                        window.open(`/hashtags/${hashtag.name}`, '_blank', 'noopener,noreferrer')
+                      }
+                    />
+                  ) : (
+                    <div className="rounded-md border border-dashed border-purple-200 p-4 text-xs text-purple-700">
+                      {topTrendingTopic
+                        ? `${topTrendingTopic.title} · Score ${Math.round(
+                            topTrendingTopic.trending_score ?? 0,
+                          )}. Monitor analytics for deeper insights.`
+                        : 'No hashtag trends detected yet. Keep an eye on the analytics tab for emerging activity.'}
+                    </div>
+                  )}
+
+                  {hashtagError && (
+                    <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-orange-700">
+                      {hashtagError}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-purple-700">{shareSummary}</p>
+                  {latestMilestoneShort && (
+                    <p className="text-xs text-purple-600">
+                      Latest milestone: {latestMilestoneShort}
+                    </p>
+                  )}
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => handleTabChange('analytics')}
-                    className="mt-3 inline-flex items-center text-xs font-medium text-purple-700 hover:text-purple-800"
+                    className="inline-flex items-center text-xs font-medium text-purple-700 hover:text-purple-800"
                   >
                     View analytics
                     <svg className="ml-1 h-3 w-3" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
 

@@ -1,70 +1,31 @@
-/**
- * @fileoverview Polls Store - Perfect Architecture
- *
- * Industry best-practice poll state management using database types directly.
- *
- * **Architecture**:
- * - Database types flow through entire app (zero transformation)
- * - Computed fields via selectors (no duplication)
- * - Separates DB state from UI state
- * - Type-safe from database to UI
- *
- * **Pattern**:
- * Database → PollRow → Store → Components → UI
- *
- * @author Choices Platform Team
- * @created 2025-11-05
- * @version 3.0.0 - Perfect Architecture
- */
-
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
-import type {
-  PollRow,
-  PollInsert,
-  PollUpdate,
-  PollOptionRow
-} from '@/features/polls/types';
-import { withOptional } from '@/lib/util/objects';
+import type { PollInsert, PollRow, PollUpdate } from '@/features/polls/types';
+import {
+  createDefaultPollFilters,
+  createDefaultPollPreferences,
+} from '@/lib/polls/defaults';
+import type { PollFilters, PollPreferences } from '@/lib/polls/types';
+import {
+  derivePollAnalytics,
+  isValidPollStatus,
+  resolveNextStatus,
+  validatePollFilters,
+  type PollStatusTransition,
+} from '@/lib/polls/validation';
 import { logger } from '@/lib/utils/logger';
 
+import { createBaseStoreActions } from './baseStoreActions';
+import { useNotificationStore } from './notificationStore';
 import { createSafeStorage } from './storage';
+import type { BaseStore } from './types';
 
-// ============================================================================
-// STORE STATE TYPES
-// ============================================================================
+export type { PollFilters, PollPreferences } from '@/lib/polls/types';
 
-/**
- * Poll filters for UI
- */
-type PollFilters = {
-  status: string[];
-  category: string[];
-  tags: string[];
-  dateRange: {
-    start: string;
-    end: string;
-  };
-  votingStatus: 'all' | 'voted' | 'not_voted';
-}
-
-/**
- * Poll preferences for UI
- */
-type PollPreferences = {
-  defaultView: 'list' | 'grid' | 'card';
-  sortBy: 'newest' | 'oldest' | 'popular' | 'trending' | 'closing_soon';
-  itemsPerPage: number;
-  showResults: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number;
-}
-
-/**
- * Search state for polls
- */
-type PollSearch = {
+export type PollSearch = {
   query: string;
   results: PollRow[];
   totalResults: number;
@@ -72,552 +33,758 @@ type PollSearch = {
   totalPages: number;
   suggestions: string[];
   recentSearches: string[];
-}
+};
 
-/**
- * UI state separate from database state
- * This is temporary UI state that doesn't persist to DB
- */
-type PollUIState = {
+export type PollUIState = {
   selectedPollId: string | null;
   expandedPollIds: string[];
   votingInProgress: string[];
-}
+};
 
-/**
- * Polls Store State
- *
- * **Design Philosophy**:
- * - `polls`: Array of PollRow - pure database data
- * - `pollOptions`: Map of poll options by poll ID
- * - `uiState`: Temporary UI state (selection, expansion, etc.)
- * - `filters`, `preferences`: UI configuration
- * - Computed fields via selectors, not stored in state
- */
-type PollsStore = {
-  // ========== DATABASE STATE ==========
-  // Pure database data - matches schema exactly
+export type PollsState = {
   polls: PollRow[];
-  pollOptions: Map<string, PollOptionRow[]>;
-
-  // ========== UI STATE ==========
   uiState: PollUIState;
   filters: PollFilters;
   preferences: PollPreferences;
   search: PollSearch;
-
-  // ========== LOADING STATES ==========
   isLoading: boolean;
   isSearching: boolean;
   isVoting: boolean;
   error: string | null;
+  lastFetchedAt: string | null;
+};
 
+export type PollsActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   setVoting: (voting: boolean) => void;
   setSearching: (searching: boolean) => void;
+  resetPollsState: () => void;
+  setSearchQuery: (query: string) => void;
+  setCurrentPage: (page: number) => void;
+  setSortBy: (sortBy: PollPreferences['sortBy']) => void;
+  setItemsPerPage: (count: number) => void;
+  setTrendingOnly: (trending: boolean) => void;
 
-  // ========== POLL CRUD ACTIONS ==========
   setPolls: (polls: PollRow[]) => void;
   addPoll: (poll: PollRow) => void;
   updatePoll: (id: string, updates: PollUpdate) => void;
   removePoll: (id: string) => void;
 
-  // ========== POLL STATUS ACTIONS ==========
   publishPoll: (id: string) => void;
   closePoll: (id: string) => void;
   archivePoll: (id: string) => void;
 
-  // ========== VOTING ACTIONS ==========
   voteOnPoll: (pollId: string, optionId: string) => Promise<void>;
   undoVote: (pollId: string) => Promise<void>;
 
-  // ========== FILTERING & SEARCH ==========
   setFilters: (filters: Partial<PollFilters>) => void;
   clearFilters: () => void;
   searchPolls: (query: string) => Promise<void>;
-  clearSearch: () => void;
+  clearSearch: () => Promise<void>;
 
-  // ========== UI STATE ACTIONS ==========
   selectPoll: (pollId: string | null) => void;
   togglePollExpanded: (pollId: string) => void;
-  setView: (view: 'list' | 'grid' | 'card') => void;
+  setView: (view: PollPreferences['defaultView']) => void;
 
-  // ========== PREFERENCES ==========
   updatePreferences: (preferences: Partial<PollPreferences>) => void;
   resetPreferences: () => void;
 
-  // ========== DATA LOADING ==========
-  loadPolls: (category?: string) => Promise<void>;
+  loadPolls: (options?: LoadPollsOptions) => Promise<void>;
   loadPoll: (id: string) => Promise<void>;
   createPoll: (data: PollInsert) => Promise<void>;
 
-  // ========== LOADING STATES ==========
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-
-  // ========== SELECTORS (Computed fields) ==========
-  // These return computed data, not stored data
   getPollById: (id: string) => PollRow | undefined;
   getFilteredPolls: () => PollRow[];
   canUserVote: (pollId: string) => boolean;
   hasUserVoted: (pollId: string) => boolean;
   getActivePollsCount: () => number;
-}
-
-// ============================================================================
-// DEFAULTS
-// ============================================================================
-
-const defaultPreferences: PollPreferences = {
-  defaultView: 'list',
-  sortBy: 'newest',
-  itemsPerPage: 20,
-  showResults: true,
-  autoRefresh: true,
-  refreshInterval: 5,
 };
 
-const defaultFilters: PollFilters = {
-  status: ['active'],
-  category: [],
-  tags: [],
-  dateRange: {
-    start: '',
-    end: '',
-  },
-  votingStatus: 'all',
+export type PollsStore = PollsState & PollsActions;
+
+type PollsStoreCreator = StateCreator<
+  PollsStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+
+export type LoadPollsOptions = {
+  status?: string[];
+  category?: string[];
+  tags?: string[];
+  search?: string;
+  sortBy?: PollPreferences['sortBy'];
+  viewMode?: PollPreferences['defaultView'];
+  page?: number;
+  trendingOnly?: boolean;
 };
 
-const defaultUIState: PollUIState = {
+const createDefaultFilters = (): PollFilters => createDefaultPollFilters();
+
+const createDefaultPreferences = (): PollPreferences => createDefaultPollPreferences();
+
+const createDefaultSearch = (): PollSearch => ({
+  query: '',
+  results: [],
+  totalResults: 0,
+  currentPage: 1,
+  totalPages: 1,
+  suggestions: [],
+  recentSearches: [],
+});
+
+const createDefaultUIState = (): PollUIState => ({
   selectedPollId: null,
   expandedPollIds: [],
   votingInProgress: [],
+});
+
+export const initialPollsState: PollsState = {
+  polls: [],
+  uiState: createDefaultUIState(),
+  filters: createDefaultFilters(),
+  preferences: createDefaultPreferences(),
+  search: createDefaultSearch(),
+  isLoading: false,
+  isSearching: false,
+  isVoting: false,
+  error: null,
+  lastFetchedAt: null,
 };
 
-const mergePoll = (poll: PollRow, updates: Partial<PollRow>) =>
-  withOptional(poll, updates as Record<string, unknown>) as PollRow;
+export const createInitialPollsState = (): PollsState => ({
+  polls: [],
+  uiState: createDefaultUIState(),
+  filters: createDefaultFilters(),
+  preferences: createDefaultPreferences(),
+  search: createDefaultSearch(),
+  isLoading: false,
+  isSearching: false,
+  isVoting: false,
+  error: null,
+  lastFetchedAt: null,
+});
 
-const mergeUIState = (state: PollUIState, updates: Partial<PollUIState>) =>
-  withOptional(state, updates as Record<string, unknown>) as PollUIState;
+const transitionPollStatus = (
+  poll: PollRow,
+  transition: PollStatusTransition,
+  extraUpdates?: Partial<PollRow>,
+) => {
+  const currentStatus = typeof poll.status === 'string' ? poll.status : 'draft';
+  const nextStatus = resolveNextStatus(currentStatus, transition);
 
-const mergeFilters = (filters: PollFilters, updates: Partial<PollFilters>) =>
-  withOptional(filters, updates as Record<string, unknown>) as PollFilters;
+  if (!nextStatus) {
+    logger.warn('Invalid poll status transition attempted', {
+      pollId: poll.id,
+      currentStatus,
+      transition,
+    });
+    return;
+  }
 
-const mergePreferences = (preferences: PollPreferences, updates: Partial<PollPreferences>) =>
-  withOptional(preferences, updates as Record<string, unknown>) as PollPreferences;
+  if (extraUpdates) {
+    Object.assign(poll, extraUpdates);
+  }
 
-const mergeSearch = (search: PollSearch, updates: Partial<PollSearch>) =>
-  withOptional(search, updates as Record<string, unknown>) as PollSearch;
+  poll.status = nextStatus;
+  if (transition === 'close') {
+    poll.closed_at = extraUpdates?.closed_at ?? new Date().toISOString();
+  }
+  if (transition === 'publish' || transition === 'reopen') {
+    poll.closed_at = null;
+  }
+  poll.updated_at = new Date().toISOString();
+};
 
-// ============================================================================
-// STORE IMPLEMENTATION
-// ============================================================================
+export const createPollsActions = (
+  set: Parameters<PollsStoreCreator>[0],
+  get: Parameters<PollsStoreCreator>[1]
+): PollsActions => {
+  const setState = set as unknown as (recipe: (draft: PollsState) => void) => void;
+
+  const { setLoading, setError, clearError } = createBaseStoreActions<PollsState>(setState);
+
+  const normalizePollStatus = (poll: PollRow) => {
+    if (!isValidPollStatus(poll.status ?? '')) {
+      poll.status = 'draft';
+    }
+  };
+
+  const setVoting = (voting: boolean) =>
+    setState((state) => {
+      state.isVoting = voting;
+    });
+
+  const setSearching = (searching: boolean) =>
+    setState((state) => {
+      state.isSearching = searching;
+    });
+
+  const resetPollsState = () =>
+    setState((state) => {
+      state.polls = [];
+      state.uiState = createDefaultUIState();
+      state.filters = createDefaultFilters();
+      state.preferences = createDefaultPreferences();
+      state.search = createDefaultSearch();
+      state.isLoading = false;
+      state.isSearching = false;
+      state.isVoting = false;
+      state.error = null;
+      state.lastFetchedAt = null;
+    });
+
+  const getNotificationState = () => useNotificationStore.getState();
+
+  const notifySuccess = (title: string, message: string) => {
+    const { addNotification, settings } = getNotificationState();
+    addNotification({
+      type: 'success',
+      title,
+      message,
+      duration: settings.duration,
+    });
+  };
+
+  const notifyError = (title: string, message: string) => {
+    const { addNotification, settings } = getNotificationState();
+    addNotification({
+      type: 'error',
+      title,
+      message,
+      duration: settings.duration,
+    });
+  };
+
+  const setSearchQuery = (query: string) =>
+    setState((state) => {
+      state.search.query = query;
+      if (query.trim().length > 0) {
+        const existing = state.search.recentSearches.filter(
+          (entry) => entry.toLowerCase() !== query.toLowerCase()
+        );
+        state.search.recentSearches = [query, ...existing].slice(0, 10);
+      }
+    });
+
+  const setCurrentPage = (page: number) =>
+    setState((state) => {
+      const nextPage = Math.max(1, page);
+      state.search.currentPage = nextPage;
+    });
+
+  const setSortBy = (sortBy: PollPreferences['sortBy']) =>
+    setState((state) => {
+      state.preferences.sortBy = sortBy;
+    });
+
+  const setItemsPerPage = (count: number) =>
+    setState((state) => {
+      const next = Math.max(1, count);
+      state.preferences.itemsPerPage = next;
+      if (state.search.totalResults > 0) {
+        state.search.totalPages = Math.max(1, Math.ceil(state.search.totalResults / next));
+      }
+    });
+
+  const setTrendingOnly = (trending: boolean) =>
+    setState((state) => {
+      state.filters.trendingOnly = trending;
+    });
+
+  const setPolls = (polls: PollRow[]) =>
+    setState((state) => {
+      state.polls = polls.map((poll) => {
+        const next = { ...poll };
+        normalizePollStatus(next);
+        return next;
+      });
+      state.lastFetchedAt = new Date().toISOString();
+    });
+
+  const addPoll = (poll: PollRow) =>
+    setState((state) => {
+      const next = { ...poll };
+      normalizePollStatus(next);
+      state.polls.unshift(next);
+    });
+
+  const updatePoll = (id: string, updates: PollUpdate) =>
+    setState((state) => {
+      const target = state.polls.find((poll) => poll.id === id);
+      if (target) {
+        Object.assign(target, updates);
+        normalizePollStatus(target);
+      }
+    });
+
+  const removePoll = (id: string) =>
+    setState((state) => {
+      state.polls = state.polls.filter((poll) => poll.id !== id);
+    });
+
+  const publishPoll = (id: string) =>
+    setState((state) => {
+      const target = state.polls.find((poll) => poll.id === id);
+      if (target) {
+        transitionPollStatus(target, 'publish');
+      }
+    });
+
+  const closePoll = (id: string) =>
+    setState((state) => {
+      const target = state.polls.find((poll) => poll.id === id);
+      if (target) {
+        transitionPollStatus(target, 'close');
+      }
+    });
+
+  const archivePoll = (id: string) =>
+    setState((state) => {
+      const target = state.polls.find((poll) => poll.id === id);
+      if (target) {
+        transitionPollStatus(target, 'archive');
+      }
+    });
+
+  const voteOnPoll = async (pollId: string, optionId: string) => {
+    setVoting(true);
+    clearError();
+
+    setState((state) => {
+      if (!state.uiState.votingInProgress.includes(pollId)) {
+        state.uiState.votingInProgress.push(pollId);
+      }
+    });
+
+    try {
+      const response = await fetch('/api/polls/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId, optionId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to vote on poll');
+      }
+
+      setState((state) => {
+        const poll = state.polls.find((item) => item.id === pollId);
+        if (poll) {
+          poll.total_votes = (poll.total_votes ?? 0) + 1;
+          poll.updated_at = new Date().toISOString();
+        }
+      });
+
+      logger.info('Vote cast successfully', { pollId, optionId });
+      notifySuccess('Vote recorded', 'Thanks for sharing your opinion!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setError(message);
+      logger.error('Failed to vote on poll', { error });
+      notifyError('Unable to record vote', message);
+    } finally {
+      setVoting(false);
+      setState((state) => {
+        state.uiState.votingInProgress = state.uiState.votingInProgress.filter(
+          (id) => id !== pollId
+        );
+      });
+    }
+  };
+
+  const undoVote = async (pollId: string) => {
+    setVoting(true);
+    clearError();
+
+    setState((state) => {
+      if (!state.uiState.votingInProgress.includes(pollId)) {
+        state.uiState.votingInProgress.push(pollId);
+      }
+    });
+
+    try {
+      const response = await fetch('/api/polls/undo-vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to undo vote');
+      }
+
+      setState((state) => {
+        const poll = state.polls.find((item) => item.id === pollId);
+        if (poll) {
+          poll.total_votes = Math.max(0, (poll.total_votes ?? 0) - 1);
+          poll.updated_at = new Date().toISOString();
+        }
+      });
+
+      logger.info('Vote undone successfully', { pollId });
+      notifySuccess('Vote undone', 'You can now submit a new response.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setError(message);
+      logger.error('Failed to undo vote', { error });
+      notifyError('Unable to undo vote', message);
+    } finally {
+      setVoting(false);
+      setState((state) => {
+        state.uiState.votingInProgress = state.uiState.votingInProgress.filter(
+          (id) => id !== pollId
+        );
+      });
+    }
+  };
+
+  const setFilters = (nextFilters: Partial<PollFilters>) => {
+    const currentFilters = get().filters;
+    const { filters: normalized, errors, warnings } = validatePollFilters({
+      ...currentFilters,
+      ...nextFilters,
+    });
+
+    setState((state) => {
+      state.filters = normalized;
+    });
+
+    if (Object.keys(errors).length > 0) {
+      logger.warn('Poll filters normalized with corrections', { errors });
+    }
+
+    if (warnings.length > 0) {
+      logger.info('Poll filters applied with warnings', { warnings });
+    }
+  };
+
+  const clearFilters = () =>
+    setState((state) => {
+      state.filters = createDefaultFilters();
+    });
+
+  const searchPolls = async (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    setSearching(true);
+    await loadPolls({ search: query, page: 1 });
+    setState((state) => {
+      state.search.results = [...state.polls];
+    });
+    setSearching(false);
+  };
+
+  const clearSearch = async () => {
+    setSearchQuery('');
+    setCurrentPage(1);
+    setState((state) => {
+      state.search.results = [];
+      state.search.totalResults = 0;
+      state.search.totalPages = 1;
+    });
+    await loadPolls({ search: '', page: 1 });
+  };
+
+  const selectPoll = (pollId: string | null) =>
+    setState((state) => {
+      state.uiState.selectedPollId = pollId;
+    });
+
+  const togglePollExpanded = (pollId: string) =>
+    setState((state) => {
+      const expanded = state.uiState.expandedPollIds;
+      if (expanded.includes(pollId)) {
+        state.uiState.expandedPollIds = expanded.filter((id) => id !== pollId);
+      } else {
+        state.uiState.expandedPollIds.push(pollId);
+      }
+    });
+
+  const setView = (view: PollPreferences['defaultView']) =>
+    setState((state) => {
+      state.preferences.defaultView = view;
+    });
+
+  const updatePreferences = (preferences: Partial<PollPreferences>) =>
+    setState((state) => {
+      Object.assign(state.preferences, preferences);
+    });
+
+  const resetPreferences = () =>
+    setState((state) => {
+      state.preferences = createDefaultPreferences();
+    });
+
+  const loadPolls = async (options?: LoadPollsOptions) => {
+    setLoading(true);
+    clearError();
+
+    try {
+      const { filters, preferences, search } = get();
+      const { filters: baseFilters } = validatePollFilters(filters);
+      const { filters: effectiveFilters, errors: filterErrors } = validatePollFilters({
+        ...baseFilters,
+        status: options?.status ?? baseFilters.status,
+        category: options?.category ?? baseFilters.category,
+        tags: options?.tags ?? baseFilters.tags,
+        trendingOnly: options?.trendingOnly ?? baseFilters.trendingOnly,
+      });
+
+      if (Object.keys(filterErrors).length > 0) {
+        logger.warn('Load polls: filters normalized with corrections', { errors: filterErrors });
+      }
+
+      const params = new URLSearchParams();
+
+      const status = effectiveFilters.status;
+      const categories = effectiveFilters.category;
+      const tags = effectiveFilters.tags;
+      const searchQuery = options?.search ?? search.query;
+      const sortBy = options?.sortBy ?? preferences.sortBy;
+      const viewMode = options?.viewMode ?? preferences.defaultView;
+      const page = options?.page ?? search.currentPage;
+      const trendingOnly = effectiveFilters.trendingOnly;
+
+      if (status.length > 0) {
+        params.append('status', status.join(','));
+      }
+      if (categories.length > 0) {
+        params.append('category', categories.join(','));
+      }
+      if (tags.length > 0) {
+        params.append('tags', tags.join(','));
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      if (sortBy) {
+        params.append('sort', sortBy);
+      }
+      if (viewMode) {
+        params.append('view_mode', viewMode);
+      }
+      if (page && page > 1) {
+        params.append('page', String(page));
+      }
+      params.append('limit', String(preferences.itemsPerPage));
+      if (trendingOnly) {
+        params.append('trending', 'true');
+      }
+
+      const response = await fetch(`/api/polls?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to load polls');
+      }
+
+      const payload = (await response.json()) as PollRow[];
+      setPolls(payload);
+      setState((state) => {
+        state.search.totalResults = payload.length;
+        state.search.totalPages = Math.max(
+          1,
+          Math.ceil(payload.length / Math.max(1, state.preferences.itemsPerPage)),
+        );
+        state.search.currentPage = page;
+        if (options?.search !== undefined) {
+          state.search.query = searchQuery;
+        }
+        if (
+          options?.status !== undefined ||
+          options?.category !== undefined ||
+          options?.tags !== undefined ||
+          options?.trendingOnly !== undefined
+        ) {
+          state.filters = effectiveFilters;
+        }
+      });
+
+      logger.info('Polls loaded', {
+        status,
+        categories,
+        tags,
+        search: searchQuery,
+        sortBy,
+        trendingOnly,
+        count: payload.length,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setError(message);
+      logger.error('Failed to load polls', { error, options });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPoll = async (id: string) => {
+    setLoading(true);
+    clearError();
+
+    try {
+      const response = await fetch(`/api/polls/${id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to load poll');
+      }
+
+      const poll = (await response.json()) as PollRow;
+
+      setState((state) => {
+        const existing = state.polls.findIndex((item) => item.id === id);
+        if (existing >= 0) {
+          state.polls[existing] = poll;
+        } else {
+          state.polls.unshift(poll);
+        }
+      });
+
+      selectPoll(id);
+
+      logger.info('Poll loaded', { id });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setError(message);
+      logger.error('Failed to load poll', { error, id });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createPoll = async (data: PollInsert) => {
+    setLoading(true);
+    clearError();
+
+    try {
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create poll');
+      }
+
+      const poll = (await response.json()) as PollRow;
+      addPoll(poll);
+
+      logger.info('Poll created', { pollId: poll.id });
+      notifySuccess('Poll created', 'Your poll is now available to voters.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setError(message);
+      logger.error('Failed to create poll', { error });
+      notifyError('Unable to create poll', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPollById = (pollId: string) => get().polls.find((poll) => poll.id === pollId);
+
+  const getFilteredPolls = () => {
+    const { polls, filters } = get();
+    return polls.filter((poll) => {
+      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
+        return false;
+      }
+
+      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
+        return false;
+      }
+
+      if (filters.tags.length > 0 && poll.tags) {
+        const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
+        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
+          return false;
+        }
+      }
+
+      if (filters.trendingOnly) {
+        const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
+        if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const canUserVote = (pollId: string) => {
+    const poll = getPollById(pollId);
+    if (!poll) {
+      return false;
+    }
+
+    return poll.status === 'active' && !poll.closed_at;
+  };
+
+  const hasUserVoted = (_pollId: string) => {
+    // Placeholder until user vote history is wired into the store.
+    return false;
+  };
+
+  const getActivePollsCount = () => get().polls.filter((poll) => poll.status === 'active').length;
+
+  return {
+    setLoading,
+    setError,
+    clearError,
+    setVoting,
+    setSearching,
+    resetPollsState,
+    setSearchQuery,
+    setCurrentPage,
+    setSortBy,
+    setItemsPerPage,
+    setTrendingOnly,
+    setPolls,
+    addPoll,
+    updatePoll,
+    removePoll,
+    publishPoll,
+    closePoll,
+    archivePoll,
+    voteOnPoll,
+    undoVote,
+    setFilters,
+    clearFilters,
+    searchPolls,
+    clearSearch,
+    selectPoll,
+    togglePollExpanded,
+    setView,
+    updatePreferences,
+    resetPreferences,
+    loadPolls,
+    loadPoll,
+    createPoll,
+    getPollById,
+    getFilteredPolls,
+    canUserVote,
+    hasUserVoted,
+    getActivePollsCount,
+  } satisfies PollsActions;
+};
+
+export const pollsStoreCreator: PollsStoreCreator = (set, get) =>
+  Object.assign(createInitialPollsState(), createPollsActions(set, get));
 
 export const usePollsStore = create<PollsStore>()(
   devtools(
     persist(
-      (set, get) => ({
-        // Initial state
-        polls: [],
-        pollOptions: new Map(),
-        uiState: defaultUIState,
-        filters: defaultFilters,
-        preferences: defaultPreferences,
-        search: {
-          query: '',
-          results: [],
-          totalResults: 0,
-          currentPage: 1,
-          totalPages: 1,
-          suggestions: [],
-          recentSearches: [],
-        },
-        isLoading: false,
-        isSearching: false,
-        isVoting: false,
-        error: null,
-
-        // ========== POLL CRUD ACTIONS ==========
-
-        setPolls: (polls) => set({ polls }),
-
-        addPoll: (poll) => set((state) => ({
-          polls: [poll, ...state.polls],
-        })),
-
-        updatePoll: (id, updates) => set((state) => ({
-          polls: state.polls.map((poll) =>
-            poll.id === id ? mergePoll(poll, updates as Partial<PollRow>) : poll
-          ),
-        })),
-
-        removePoll: (id) => set((state) => ({
-          polls: state.polls.filter(poll => poll.id !== id),
-        })),
-
-        // ========== POLL STATUS ACTIONS ==========
-
-        publishPoll: (id) => set((state) => ({
-          polls: state.polls.map((poll) =>
-            poll.id === id
-              ? mergePoll(poll, {
-                  status: 'active',
-                  updated_at: new Date().toISOString(),
-                })
-              : poll
-          ),
-        })),
-
-        closePoll: (id) => set((state) => ({
-          polls: state.polls.map((poll) =>
-            poll.id === id
-              ? mergePoll(poll, {
-                  status: 'closed',
-                  closed_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                })
-              : poll
-          ),
-        })),
-
-        archivePoll: (id) => set((state) => ({
-          polls: state.polls.map((poll) =>
-            poll.id === id
-              ? mergePoll(poll, {
-                  status: 'archived',
-                  updated_at: new Date().toISOString(),
-                })
-              : poll
-          ),
-        })),
-
-        // ========== VOTING ACTIONS ==========
-
-        voteOnPoll: async (pollId, optionId) => {
-          const { setVoting, setError } = get();
-
-          try {
-            setVoting(true);
-            setError(null);
-
-            const response = await fetch('/api/polls/vote', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pollId, optionId }),
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to vote on poll');
-            }
-
-            // Update poll - increment total_votes
-            set((state) => ({
-              polls: state.polls.map((poll) =>
-                poll.id === pollId
-                  ? mergePoll(poll, {
-                      total_votes: (poll.total_votes ?? 0) + 1,
-                      updated_at: new Date().toISOString(),
-                    })
-                  : poll
-              ),
-              uiState: mergeUIState(state.uiState, {
-                votingInProgress: state.uiState.votingInProgress.filter((id) => id !== pollId),
-              }),
-            }));
-
-            logger.info('Vote cast successfully', { pollId, optionId });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to vote on poll:', error);
-          } finally {
-            setVoting(false);
-          }
-        },
-
-        undoVote: async (pollId) => {
-          const { setVoting, setError } = get();
-
-          try {
-            setVoting(true);
-            setError(null);
-
-            const response = await fetch('/api/polls/undo-vote', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pollId }),
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to undo vote');
-            }
-
-            // Update poll - decrement total_votes
-            set((state) => ({
-              polls: state.polls.map((poll) =>
-                poll.id === pollId
-                  ? mergePoll(poll, {
-                      total_votes: Math.max(0, (poll.total_votes ?? 0) - 1),
-                      updated_at: new Date().toISOString(),
-                    })
-                  : poll
-              ),
-            }));
-
-            logger.info('Vote undone successfully', { pollId });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to undo vote:', error);
-          } finally {
-            setVoting(false);
-          }
-        },
-
-        // ========== FILTERING & SEARCH ==========
-
-        setFilters: (filters) => set((state) => ({
-          filters: mergeFilters(state.filters, filters),
-        })),
-
-        clearFilters: () => set({ filters: defaultFilters }),
-
-        searchPolls: async (query) => {
-          const { setSearching, setError } = get();
-
-          try {
-            setSearching(true);
-            setError(null);
-
-            const response = await fetch('/api/polls/search', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query }),
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to search polls');
-            }
-
-            const { polls, total } = await response.json();
-
-            set((state) => ({
-              search: mergeSearch(state.search, {
-                query,
-                results: polls,
-                totalResults: total,
-                currentPage: 1,
-                totalPages: Math.ceil(total / state.preferences.itemsPerPage),
-              }),
-            }));
-
-            logger.info('Polls searched', { query, results: polls.length, total });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to search polls:', error);
-          } finally {
-            setSearching(false);
-          }
-        },
-
-        clearSearch: () => set((state) => ({
-          search: mergeSearch(state.search, {
-            query: '',
-            results: [],
-            totalResults: 0,
-            currentPage: 1,
-            totalPages: 1,
-          }),
-        })),
-
-        // ========== UI STATE ACTIONS ==========
-
-        selectPoll: (pollId) => set((state) => ({
-          uiState: mergeUIState(state.uiState, { selectedPollId: pollId }),
-        })),
-
-        togglePollExpanded: (pollId) => set((state) => {
-          const isExpanded = state.uiState.expandedPollIds.includes(pollId);
-          const expanded = isExpanded
-            ? state.uiState.expandedPollIds.filter((id) => id !== pollId)
-            : [...state.uiState.expandedPollIds, pollId];
-
-          return {
-            uiState: mergeUIState(state.uiState, { expandedPollIds: expanded }),
-          };
-        }),
-
-        setView: (view) => set((state) => ({
-          preferences: mergePreferences(state.preferences, { defaultView: view }),
-        })),
-
-        // ========== PREFERENCES ==========
-
-        updatePreferences: (preferences) => set((state) => ({
-          preferences: mergePreferences(state.preferences, preferences),
-        })),
-
-        resetPreferences: () => set({ preferences: defaultPreferences }),
-
-        // ========== DATA LOADING ==========
-
-        loadPolls: async (category) => {
-          const { setLoading, setError } = get();
-
-          try {
-            setLoading(true);
-            setError(null);
-
-            const url = category
-              ? `/api/polls?category=${encodeURIComponent(category)}`
-              : '/api/polls';
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-              throw new Error('Failed to load polls');
-            }
-
-            const polls = await response.json();
-            set({ polls });
-
-            logger.info('Polls loaded', { category, count: polls.length });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load polls:', error);
-          } finally {
-            setLoading(false);
-          }
-        },
-
-        loadPoll: async (id) => {
-          const { setLoading, setError, selectPoll } = get();
-
-          try {
-            setLoading(true);
-            setError(null);
-
-            const response = await fetch(`/api/polls/${id}`);
-
-            if (!response.ok) {
-              throw new Error('Failed to load poll');
-            }
-
-            const poll = await response.json();
-
-            // Add or update poll in list
-            set((state) => ({
-              polls: state.polls.some(p => p.id === id)
-                ? state.polls.map(p => p.id === id ? poll : p)
-                : [poll, ...state.polls],
-            }));
-
-            selectPoll(id);
-
-            logger.info('Poll loaded', { id });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load poll:', error);
-          } finally {
-            setLoading(false);
-          }
-        },
-
-        createPoll: async (data) => {
-          const { setLoading, setError, addPoll } = get();
-
-          try {
-            setLoading(true);
-            setError(null);
-
-            const response = await fetch('/api/polls', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to create poll');
-            }
-
-            const poll = await response.json();
-            addPoll(poll);
-
-            logger.info('Poll created successfully', { pollId: poll.id, title: poll.title });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to create poll:', error);
-          } finally {
-            setLoading(false);
-          }
-        },
-
-        // ========== LOADING STATES ==========
-
-        setLoading: (loading) => set({ isLoading: loading }),
-        setVoting: (voting) => set({ isVoting: voting }),
-        setSearching: (searching) => set({ isSearching: searching }),
-        setError: (error) => set({ error }),
-        clearError: () => set({ error: null }),
-
-        // ========== SELECTORS (Computed fields) ==========
-
-        getPollById: (id) => {
-          const state = get();
-          return state.polls.find(poll => poll.id === id);
-        },
-
-        getFilteredPolls: () => {
-          const state = get();
-          return state.polls.filter(poll => {
-            // Apply filters
-            if (state.filters.status.length > 0 && poll.status && !state.filters.status.includes(poll.status)) {
-              return false;
-            }
-            if (state.filters.category.length > 0 && poll.category && !state.filters.category.includes(poll.category)) {
-              return false;
-            }
-            if (state.filters.tags.length > 0 && poll.tags) {
-              const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-              if (!state.filters.tags.some(tag => pollTags.includes(tag))) {
-                return false;
-              }
-            }
-            return true;
-          });
-        },
-
-        canUserVote: (pollId) => {
-          const state = get();
-          const poll = state.polls.find(p => p.id === pollId);
-          if (!poll) return false;
-
-          // Check if poll is active and not closed
-          return poll.status === 'active' && !poll.closed_at;
-        },
-
-        hasUserVoted: (_pollId) => {
-          // This would need to check against user's votes from database
-          // For now, return false - actual implementation would query votes table
-          return false;
-        },
-
-        getActivePollsCount: () => {
-          const state = get();
-          return state.polls.filter(poll => poll.status === 'active').length;
-        },
-      }),
+      immer(pollsStoreCreator),
       {
         name: 'polls-store',
         storage: createSafeStorage(),
         partialize: (state) => ({
-          polls: state.polls,
           preferences: state.preferences,
           filters: state.filters,
+          search: {
+            query: state.search.query,
+            recentSearches: state.search.recentSearches,
+          },
         }),
       }
     ),
@@ -625,79 +792,136 @@ export const usePollsStore = create<PollsStore>()(
   )
 );
 
-// ============================================================================
-// OPTIMIZED SELECTORS FOR COMPONENTS
-// ============================================================================
+export const usePolls = () => usePollsStore((state) => state.polls);
+export const usePollsLoading = () => usePollsStore((state) => state.isLoading);
+export const usePollsError = () => usePollsStore((state) => state.error);
+export const usePollPreferences = () => usePollsStore((state) => state.preferences);
+export const usePollFilters = () => usePollsStore((state) => state.filters);
+export const usePollLastFetchedAt = () => usePollsStore((state) => state.lastFetchedAt);
+export const usePollPagination = () =>
+  usePollsStore((state) => ({
+    currentPage: state.search.currentPage,
+    totalPages: state.search.totalPages,
+    totalResults: state.search.totalResults,
+    itemsPerPage: state.preferences.itemsPerPage,
+  }));
 
-// Simple selectors
-export const usePolls = () => usePollsStore(state => state.polls);
-export const usePollsLoading = () => usePollsStore(state => state.isLoading);
-export const usePollsError = () => usePollsStore(state => state.error);
-export const usePollPreferences = () => usePollsStore(state => state.preferences);
-export const usePollFilters = () => usePollsStore(state => state.filters);
-
-// Computed selectors
-export const useFilteredPolls = () => usePollsStore(state => state.getFilteredPolls());
-export const useActivePollsCount = () => usePollsStore(state => state.getActivePollsCount());
-export const usePollById = (id: string) => usePollsStore(state => state.getPollById(id));
+export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
+export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
+export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
 export const useSelectedPoll = () => {
-  const selectedId = usePollsStore(state => state.uiState.selectedPollId);
-  return usePollsStore(state => selectedId ? state.getPollById(selectedId) : null);
+  const selectedId = usePollsStore((state) => state.uiState.selectedPollId);
+  return usePollsStore((state) => (selectedId ? state.getPollById(selectedId) : null));
 };
+export const usePollSearch = () => usePollsStore((state) => state.search);
 
-// Action selectors
-export const usePollsActions = () => usePollsStore(state => ({
-  loadPolls: state.loadPolls,
-  loadPoll: state.loadPoll,
-  createPoll: state.createPoll,
-  updatePoll: state.updatePoll,
-  removePoll: state.removePoll,
-  publishPoll: state.publishPoll,
-  closePoll: state.closePoll,
-  archivePoll: state.archivePoll,
-  voteOnPoll: state.voteOnPoll,
-  undoVote: state.undoVote,
-  selectPoll: state.selectPoll,
-  setFilters: state.setFilters,
-  clearFilters: state.clearFilters,
-  searchPolls: state.searchPolls,
-  clearSearch: state.clearSearch,
-  updatePreferences: state.updatePreferences,
-  resetPreferences: state.resetPreferences,
-}));
+export const usePollsActions = () =>
+  usePollsStore((state) => ({
+    loadPolls: state.loadPolls,
+    loadPoll: state.loadPoll,
+    createPoll: state.createPoll,
+    updatePoll: state.updatePoll,
+    removePoll: state.removePoll,
+    publishPoll: state.publishPoll,
+    closePoll: state.closePoll,
+    archivePoll: state.archivePoll,
+    voteOnPoll: state.voteOnPoll,
+    undoVote: state.undoVote,
+    selectPoll: state.selectPoll,
+    setVoting: state.setVoting,
+    setSearching: state.setSearching,
+    setFilters: state.setFilters,
+    clearFilters: state.clearFilters,
+    searchPolls: state.searchPolls,
+    clearSearch: state.clearSearch,
+    updatePreferences: state.updatePreferences,
+    resetPreferences: state.resetPreferences,
+    resetPollsState: state.resetPollsState,
+    setSearchQuery: state.setSearchQuery,
+    setTrendingOnly: state.setTrendingOnly,
+    setCurrentPage: state.setCurrentPage,
+    setSortBy: state.setSortBy,
+    setItemsPerPage: state.setItemsPerPage,
+  }));
 
-// Stats selector
-export const usePollsStats = () => usePollsStore(state => ({
-  total: state.polls.length,
-  active: state.polls.filter(p => p.status === 'active').length,
-  closed: state.polls.filter(p => p.status === 'closed').length,
-  draft: state.polls.filter(p => p.status === 'draft').length,
-  isLoading: state.isLoading,
-  error: state.error,
-}));
+export const usePollsStats = () =>
+  usePollsStore((state) => {
+    const analytics = derivePollAnalytics(
+      state.polls.map((poll) => {
+        const meta = poll as Record<string, unknown>;
+        const totalVotes =
+          typeof poll.total_votes === 'number'
+            ? poll.total_votes
+            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+        const trendingPosition =
+          typeof meta.trending_position === 'number'
+            ? (meta.trending_position as number)
+            : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
 
-// ============================================================================
-// STORE UTILITIES
-// ============================================================================
+        return {
+          status: poll.status,
+          total_votes: totalVotes,
+          trending_position: trendingPosition,
+        };
+      }),
+    );
+
+    return {
+      total: analytics.total,
+      active: analytics.active,
+      closed: analytics.closed,
+      draft: analytics.draft,
+      archived: analytics.archived,
+      trending: analytics.trending,
+      totalVotes: analytics.totalVotes,
+      isLoading: state.isLoading,
+      error: state.error,
+    };
+  });
+
+export const usePollsAnalytics = () =>
+  usePollsStore((state) => {
+    const analytics = derivePollAnalytics(
+      state.polls.map((poll) => {
+        const meta = poll as Record<string, unknown>;
+        const totalVotes =
+          typeof poll.total_votes === 'number'
+            ? poll.total_votes
+            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+        const trendingPosition =
+          typeof meta.trending_position === 'number'
+            ? (meta.trending_position as number)
+            : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
+
+        return {
+          status: poll.status,
+          total_votes: totalVotes,
+          trending_position: trendingPosition,
+        };
+      }),
+    );
+
+    const averageVotes = analytics.total > 0 ? analytics.totalVotes / analytics.total : 0;
+
+    return {
+      ...analytics,
+      averageVotes,
+      lastFetchedAt: state.lastFetchedAt,
+      isLoading: state.isLoading,
+    };
+  });
 
 export const pollsStoreUtils = {
-  /**
-   * Get trending polls (most votes, active)
-   */
   getTrendingPolls: (limit = 10) => {
     const state = usePollsStore.getState();
-    return state.polls
-      .filter(poll => poll.status === 'active')
+    return [...state.polls]
+      .filter((poll) => poll.status === 'active')
       .sort((a, b) => (b.total_votes ?? 0) - (a.total_votes ?? 0))
       .slice(0, limit);
   },
-
-  /**
-   * Get recent polls
-   */
   getRecentPolls: (limit = 10) => {
     const state = usePollsStore.getState();
-    return state.polls
+    return [...state.polls]
       .sort((a, b) => {
         const dateA = new Date(a.created_at ?? 0).getTime();
         const dateB = new Date(b.created_at ?? 0).getTime();
@@ -705,12 +929,30 @@ export const pollsStoreUtils = {
       })
       .slice(0, limit);
   },
-
-  /**
-   * Get polls by category
-   */
   getPollsByCategory: (category: string) => {
     const state = usePollsStore.getState();
-    return state.polls.filter(poll => poll.category === category);
+    return state.polls.filter((poll) => poll.category === category);
+  },
+  getAnalytics: () => {
+    const state = usePollsStore.getState();
+    return derivePollAnalytics(
+      state.polls.map((poll) => {
+        const meta = poll as Record<string, unknown>;
+        const totalVotes =
+          typeof poll.total_votes === 'number'
+            ? poll.total_votes
+            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+        const trendingPosition =
+          typeof meta.trending_position === 'number'
+            ? (meta.trending_position as number)
+            : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
+
+        return {
+          status: poll.status,
+          total_votes: totalVotes,
+          trending_position: trendingPosition,
+        };
+      }),
+    );
   },
 };

@@ -1,44 +1,58 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 
 import logger from '@/lib/utils/logger';
 
+import { useInitializeBiometricState, useUserActions } from '../lib/store';
 
-
-// Dynamic imports to avoid build-time decorator issues
-// import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
 type PrivacyStatus = {
   status: 'active' | 'partial' | 'inactive';
   badge: {
     color: 'green' | 'yellow' | 'red';
     label: string;
   };
-}
+};
 
 export function WebAuthnPrivacyBadge() {
-  const [status, setStatus] = useState<PrivacyStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = React.useState<PrivacyStatus | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  useInitializeBiometricState({ fetchCredentials: false });
+
+  const { setBiometricError } = useUserActions();
+
+  React.useEffect(() => {
+    let active = true;
+
     const loadPrivacyStatus = async () => {
       try {
-        // Dynamic import to avoid build-time decorator issues
         const { getPrivacyStatus } = await import('@/features/auth/lib/webauthn/client');
-        const status = await getPrivacyStatus();
-        setStatus(status);
+        const privacyStatus = await getPrivacyStatus();
+        if (!active) return;
+        setStatus(privacyStatus);
       } catch (error) {
+        if (!active) return;
         logger.error('Failed to load privacy status:', error);
+        setBiometricError('Failed to verify WebAuthn privacy status');
+        setStatus(null);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
-    
-    loadPrivacyStatus();
-  }, []);
+
+    void loadPrivacyStatus();
+
+    return () => {
+      active = false;
+    };
+  }, [setBiometricError]);
 
   if (loading) {
     return (
-      <span className="text-white text-xs px-2 py-1 rounded bg-gray-500 flex items-center gap-1">
+      <span className="flex items-center gap-1 rounded bg-gray-500 px-2 py-1 text-xs text-white">
         <span>⏳</span>
         <span>Checking...</span>
       </span>
@@ -47,7 +61,7 @@ export function WebAuthnPrivacyBadge() {
 
   if (!status) {
     return (
-      <span className="text-white text-xs px-2 py-1 rounded bg-red-600 flex items-center gap-1">
+      <span className="flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs text-white">
         <span>🚨</span>
         <span>Privacy protections: ERROR</span>
       </span>
@@ -56,10 +70,11 @@ export function WebAuthnPrivacyBadge() {
 
   const { color, label } = status.badge;
   const icon = color === 'green' ? '🛡️' : color === 'yellow' ? '⚠️' : '🚨';
-  const bgColor = color === 'green' ? 'bg-green-600' : color === 'yellow' ? 'bg-amber-500' : 'bg-red-600';
+  const bgColor =
+    color === 'green' ? 'bg-green-600' : color === 'yellow' ? 'bg-amber-500' : 'bg-red-600';
 
   return (
-    <span className={`text-white text-xs px-2 py-1 rounded ${bgColor} flex items-center gap-1`}>
+    <span className={`flex items-center gap-1 rounded px-2 py-1 text-xs text-white ${bgColor}`}>
       <span>{icon}</span>
       <span>{label}</span>
     </span>

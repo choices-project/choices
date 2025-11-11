@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption } from '../types'
 
@@ -27,10 +28,13 @@ export default function RankedChoiceVoting({
   hasVoted = false,
   userVote
 }: RankedChoiceVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [rankings, setRankings] = useState<{ [optionId: string]: number }>({})
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize rankings from user's previous vote or empty
   useEffect(() => {
@@ -51,7 +55,7 @@ export default function RankedChoiceVoting({
   }, [userVote, options])
 
   const handleRankClick = (optionId: string) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     setError(null)
     const currentRank = rankings[optionId] || 0
@@ -75,7 +79,7 @@ export default function RankedChoiceVoting({
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     // Validate that all options are ranked
     const rankedOptions = Object.values(rankings).filter(r => r > 0)
@@ -135,6 +139,9 @@ export default function RankedChoiceVoting({
         .map((optionId) => Number(optionId))
         .filter((value) => Number.isInteger(value))
       
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(pollId, numericRankings)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -165,7 +172,7 @@ export default function RankedChoiceVoting({
     return labels[rank] || `${rank}th`
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

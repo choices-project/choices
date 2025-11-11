@@ -8,7 +8,7 @@ const ensureAnalyticsBridge = async (page: Page) => {
 
 const enableAnalytics = async (page: Page) => {
   await ensureAnalyticsBridge(page);
-  await page.evaluate(() => globalThis.__playwrightAnalytics?.enable());
+  await page.evaluate(() => globalThis.__playwrightAnalytics?.enable?.());
 };
 
 const navigateHome = async (page: Page) => {
@@ -53,7 +53,7 @@ test.describe('Feedback Widget', () => {
       })
     ).toBeGreaterThan(0);
 
-    await page.evaluate(() => globalThis.__playwrightAnalytics?.reset());
+    await page.evaluate(() => globalThis.__playwrightAnalytics?.reset?.());
   });
 
   test('submits a bug report with contextual payload', async ({ page }) => {

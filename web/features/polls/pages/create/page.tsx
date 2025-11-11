@@ -23,7 +23,8 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
-import { useNotificationStore, useAnalyticsStore } from "@/lib/stores"
+import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
+import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
 
 import {
@@ -78,65 +79,10 @@ export default function CreatePollPage() {
   const [newTag, setNewTag] = useState("")
   const [shareInfo, setShareInfo] = useState<ShareModalState | null>(null)
   const [hasCopiedShareLink, setHasCopiedShareLink] = useState(false)
-  const addNotification = useNotificationStore((state) => state.addNotification)
-  const trackEvent = useAnalyticsStore((state) => state.trackEvent);
-  const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
+  const { addNotification } = useNotificationActions()
   const errorSummaryRef = useRef<HTMLDivElement | null>(null)
 
-  const recordPollEvent = useCallback(
-    (
-      action: string,
-      {
-        category = 'poll_share',
-        label,
-        value,
-        metadata,
-      }: {
-        category?: string;
-        label?: string;
-        value?: number;
-        metadata?: Record<string, unknown>;
-      } = {},
-    ) => {
-      const payload: {
-        event_type: string;
-        type: string;
-        category: string;
-        action: string;
-        event_data: Record<string, unknown>;
-        created_at: string;
-        session_id: string;
-        label?: string;
-        value?: number;
-        metadata?: Record<string, unknown>;
-      } = {
-        event_type: 'poll_event',
-        type: 'poll_event',
-        category,
-        action,
-        event_data: {
-          action,
-          category,
-          ...(metadata ? { metadata } : {}),
-        },
-        created_at: new Date().toISOString(),
-        session_id: analyticsSessionId ?? 'anonymous',
-      };
-
-      if (label !== undefined) {
-        payload.label = label;
-      }
-      if (value !== undefined) {
-        payload.value = value;
-      }
-      if (metadata !== undefined) {
-        payload.metadata = metadata;
-      }
-
-      trackEvent(payload);
-    },
-    [analyticsSessionId, trackEvent],
-  );
+  const recordPollEvent = useRecordPollEvent();
 
   const {
     milestones,
@@ -151,7 +97,7 @@ export default function CreatePollPage() {
 
   useEffect(() => {
     if (shareInfo) {
-      const payload: Parameters<typeof recordPollEvent>[1] = {
+      const payload: PollEventOptions = {
         value: 1,
         metadata: {
           pollId: shareInfo.pollId,
@@ -169,7 +115,7 @@ export default function CreatePollPage() {
 
   useEffect(() => {
     if (!shareInfo) return;
-    const payload: Parameters<typeof recordPollEvent>[1] = {
+    const payload: PollEventOptions = {
       metadata: {
         enabledMilestones,
         nextMilestone,
@@ -236,7 +182,7 @@ export default function CreatePollPage() {
 
   const handleMilestoneToggle = (milestone: PollMilestone, enabled: boolean) => {
     updateMilestonePreference(milestone, enabled)
-    const payload: Parameters<typeof recordPollEvent>[1] = {
+    const payload: PollEventOptions = {
       value: enabled ? 1 : 0,
       metadata: {
         pollId: shareInfo?.pollId,
@@ -311,27 +257,27 @@ export default function CreatePollPage() {
 
   const handleDataUpdate = (update: Partial<typeof data>) => {
     actions.updateData(update)
-    Object.keys(update).forEach((field) => actions.clearError(field))
+    Object.keys(update).forEach((field) => actions.clearFieldError(field))
   }
 
   const handleOptionChange = (index: number, value: string) => {
     actions.updateOption(index, value)
-    actions.clearError(`option-${index}`)
-    actions.clearError("options")
+    actions.clearFieldError(`option-${index}`)
+    actions.clearFieldError("options")
   }
 
   const handleAddOption = () => {
     if (data.options.length < MAX_OPTIONS) {
       actions.addOption()
-      actions.clearError('options')
+      actions.clearFieldError('options')
     }
   }
 
   const handleRemoveOption = (index: number) => {
     if (data.options.length > 2) {
       actions.removeOption(index)
-      actions.clearError(`option-${index}`)
-      actions.clearError('options')
+      actions.clearFieldError(`option-${index}`)
+      actions.clearFieldError('options')
     }
   }
 
@@ -357,18 +303,18 @@ export default function CreatePollPage() {
     }
 
     actions.addTag(normalized)
-    actions.clearError("tags")
+    actions.clearFieldError("tags")
     setNewTag('')
   }
 
   const handleRemoveTag = (tag: string) => {
     actions.removeTag(tag)
-    actions.clearError("tags")
+    actions.clearFieldError("tags")
   }
 
   const handleChangePrivacy = (value: string) => {
     actions.updateSettings({ privacyLevel: value as typeof data.settings.privacyLevel })
-    actions.clearError("privacyLevel")
+    actions.clearFieldError("privacyLevel")
   }
 
   const handleSubmit = async () => {
@@ -917,9 +863,7 @@ export default function CreatePollPage() {
         open={Boolean(shareInfo)}
         onOpenChange={(open) => {
           if (!open && shareInfo) {
-            recordPollEvent('share_modal_closed', {
-              label: shareInfo.pollId,
-            });
+            recordPollEvent('share_modal_closed', { metadata: { pollId: shareInfo?.pollId ?? null } });
             setShareInfo(null);
           }
         }}

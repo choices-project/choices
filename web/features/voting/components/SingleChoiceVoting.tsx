@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption, SingleChoiceVotingProps } from '../types'
 
@@ -16,10 +17,13 @@ export default function SingleChoiceVoting({
   hasVoted = false,
   userVote
 }: SingleChoiceVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [selectedOption, setSelectedOption] = useState<number | null>(userVote ?? null)
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize from user's previous vote
   useEffect(() => {
@@ -29,14 +33,14 @@ export default function SingleChoiceVoting({
   }, [userVote])
 
   const handleOptionSelect = (optionIndex: number) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
     
     setError(null)
     setSelectedOption(optionIndex)
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     if (selectedOption === null) {
       setError('Please select an option to vote')
@@ -59,6 +63,9 @@ export default function SingleChoiceVoting({
       }
       
       // Use the choice parameter properly
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(selectedOption)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -67,7 +74,7 @@ export default function SingleChoiceVoting({
     }
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

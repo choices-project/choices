@@ -1,16 +1,16 @@
 /**
  * Consolidated Admin Health & System Status API
- * 
+ *
  * This endpoint consolidates admin health functionality:
  * - System metrics (polls, feedback, health status)
  * - Detailed system checks (database, RLS, performance)
  * - Admin authentication required
- * 
+ *
  * Usage:
  * GET /api/admin/health - System metrics
  * GET /api/admin/health?type=status - Detailed system checks
  * GET /api/admin/health?type=all - Both metrics and status
- * 
+ *
  * Created: October 19, 2025
  * Status: ✅ ACTIVE
  */
@@ -48,6 +48,10 @@ async function timed<T>(name: string, fn: () => Promise<T>): Promise<[T | null, 
     ];
   }
 }
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authGate = await requireAdminOr401();

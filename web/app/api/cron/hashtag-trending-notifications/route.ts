@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  
+
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     logger.warn('Unauthorized cron attempt for hashtag notifications');
     return authError('Unauthorized');
@@ -23,7 +23,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // 1. Find recently trending hashtags (became trending in last day)
     // Since this now runs daily, check for hashtags that became trending since last run
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
+
     const { data: trendingHashtags, error: hashtagError } = await supabase
       .from('hashtags')
       .select('id, name, trending_score, usage_count')
@@ -39,10 +39,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     if (!trendingHashtags || trendingHashtags.length === 0) {
       logger.info('No new trending hashtags found');
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'No new trending hashtags',
-        notificationsSent: 0 
+        notificationsSent: 0
       });
     }
 

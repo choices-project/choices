@@ -1,34 +1,42 @@
 /**
  * Device Store
- * 
+ *
  * Centralized Zustand store for device detection, capabilities,
  * and responsive state management.
- * 
- * Created: October 10, 2025
- * Status: ✅ ACTIVE
+ *
+ * Modernized to align with the 2025 Zustand store standards:
+ * - Typed creator & action split
+ * - SSR-safe environment guards
+ * - Base loading/error actions reuse
+ * - Memoized selector helpers
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
-
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
-
-// ============================================================================
-// TYPES
-// ============================================================================
+import type { BaseStore } from './types';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 export type Orientation = 'portrait' | 'landscape';
-export type ConnectionType = 'slow-2g' | '2g' | '3g' | '4g' | '5g' | 'wifi' | 'ethernet' | 'unknown';
+export type ConnectionType =
+  | 'slow-2g'
+  | '2g'
+  | '3g'
+  | '4g'
+  | '5g'
+  | 'wifi'
+  | 'ethernet'
+  | 'unknown';
 
 export type ScreenSize = {
   width: number;
   height: number;
   aspectRatio: number;
-}
+};
 
 export type DeviceCapabilities = {
   touch: boolean;
@@ -45,7 +53,7 @@ export type DeviceCapabilities = {
   notifications: boolean;
   clipboard: boolean;
   share: boolean;
-}
+};
 
 export type NetworkInfo = {
   type: ConnectionType;
@@ -54,143 +62,164 @@ export type NetworkInfo = {
   rtt: number;
   saveData: boolean;
   online: boolean;
-}
+};
 
-// Network connection API type (may not be available in all browsers)
 type NetworkConnection = {
   readonly effectiveType?: string;
   readonly downlink?: number;
   readonly rtt?: number;
   readonly saveData?: boolean;
-} & EventTarget
+  addEventListener?: (type: string, listener: EventListenerOrEventListenerObject) => void;
+  removeEventListener?: (type: string, listener: EventListenerOrEventListenerObject) => void;
+  onchange?: ((this: NetworkConnection, ev: Event) => unknown) | null;
+} & EventTarget;
 
-export type DeviceStore = {
-  // Device Information
+export type DeviceState = {
   deviceType: DeviceType;
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
-  
-  // Screen Information
   screenSize: ScreenSize;
   orientation: Orientation;
   pixelRatio: number;
-  
-  // Device Capabilities
   capabilities: DeviceCapabilities;
-  
-  // Network Information
   network: NetworkInfo;
-  
-  // User Agent
   userAgent: string;
   browser: string;
   os: string;
-  
-  // Loading States
   isLoading: boolean;
   isInitializing: boolean;
-  
-  // Error State
   error: string | null;
-  
-  // Actions
+  listenersRegistered: boolean;
+  cleanupListeners: (() => void) | null;
+};
+
+export type ResetDeviceStateOptions = {
+  preserveCapabilities?: boolean;
+};
+
+export type DeviceActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   updateDeviceInfo: () => void;
   setOrientation: (orientation: Orientation) => void;
   setScreenSize: (width: number, height: number) => void;
   setNetworkInfo: (network: Partial<NetworkInfo>) => void;
   setCapability: (capability: keyof DeviceCapabilities, value: boolean) => void;
-  setLoading: (loading: boolean) => void;
   setInitializing: (initializing: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  
-  // Initialization
+  resetDeviceState: (options?: ResetDeviceStateOptions) => void;
   initialize: () => void;
   teardown: () => void;
-  listenersRegistered: boolean;
-  cleanupListeners: (() => void) | null;
-}
+};
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
+export type DeviceStore = DeviceState & DeviceActions;
 
-const detectDeviceType = (): DeviceType => {
-  if (typeof window === 'undefined') return 'desktop';
-  
-  const width = window.innerWidth;
+export type DeviceStoreCreator = StateCreator<
+  DeviceStore,
+  [['zustand/immer', never]],
+  [],
+  DeviceStore
+>;
+
+export type DeviceEnvironment = {
+  getWindow: () => (Window & typeof globalThis) | undefined;
+  getNavigator: () => Navigator | undefined;
+  getConnection: () => NetworkConnection | undefined;
+};
+
+const createDefaultCapabilities = (): DeviceCapabilities => ({
+  touch: false,
+  hover: true,
+  reducedMotion: false,
+  darkMode: false,
+  highContrast: false,
+  lowData: false,
+  offline: false,
+  geolocation: false,
+  camera: false,
+  microphone: false,
+  vibration: false,
+  notifications: false,
+  clipboard: false,
+  share: false,
+});
+
+const DEFAULT_SCREEN: ScreenSize = {
+  width: 1920,
+  height: 1080,
+  aspectRatio: 16 / 9,
+};
+
+const DEFAULT_NETWORK: NetworkInfo = {
+  type: 'unknown',
+  effectiveType: '4g',
+  downlink: 10,
+  rtt: 50,
+  saveData: false,
+  online: true,
+};
+
+export const createDeviceEnvironment = (): DeviceEnvironment => ({
+  getWindow: () => (typeof window === 'undefined' ? undefined : window),
+  getNavigator: () => (typeof navigator === 'undefined' ? undefined : navigator),
+  getConnection: () => {
+    if (typeof navigator === 'undefined') {
+      return undefined;
+    }
+    const connection = (navigator as Navigator & { connection?: NetworkConnection }).connection;
+    return connection ?? undefined;
+  },
+});
+
+const deriveDeviceType = (width: number): DeviceType => {
   if (width < 768) return 'mobile';
   if (width < 1024) return 'tablet';
   return 'desktop';
 };
 
-const detectOrientation = (): Orientation => {
-  if (typeof window === 'undefined') return 'landscape';
-  
-  return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
-};
+const deriveOrientation = (width: number, height: number): Orientation =>
+  height > width ? 'portrait' : 'landscape';
 
-const detectCapabilities = (): DeviceCapabilities => {
-  if (typeof window === 'undefined') {
-    return {
-      touch: false,
-      hover: true,
-      reducedMotion: false,
-      darkMode: false,
-      highContrast: false,
-      lowData: false,
-      offline: false,
-      geolocation: false,
-      camera: false,
-      microphone: false,
-      vibration: false,
-      notifications: false,
-      clipboard: false,
-      share: false
-    };
+const deriveScreenSize = (width: number, height: number): ScreenSize => ({
+  width,
+  height,
+  aspectRatio: height === 0 ? 0 : width / height,
+});
+
+const resolveCapabilities = (win?: Window, nav?: Navigator): DeviceCapabilities => {
+  const defaults = createDefaultCapabilities();
+  if (!win || !nav) {
+    return defaults;
   }
 
+  const match = (query: string): boolean =>
+    typeof win.matchMedia === 'function' ? win.matchMedia(query).matches : false;
+  const connection = (nav as Navigator & { connection?: NetworkConnection }).connection;
+
   return {
-    touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-    hover: window.matchMedia('(hover: hover)').matches,
-    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
-    highContrast: window.matchMedia('(prefers-contrast: high)').matches,
-    lowData: (navigator as Navigator & { connection?: NetworkConnection }).connection?.saveData ?? false,
-    offline: !navigator.onLine,
-    geolocation: 'geolocation' in navigator,
-    camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
-    microphone: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
-    vibration: 'vibrate' in navigator,
-    notifications: 'Notification' in window,
-    clipboard: 'clipboard' in navigator,
-    share: 'share' in navigator
+    touch: 'ontouchstart' in win || nav.maxTouchPoints > 0,
+    hover: match('(hover: hover)'),
+    reducedMotion: match('(prefers-reduced-motion: reduce)'),
+    darkMode: match('(prefers-color-scheme: dark)'),
+    highContrast: match('(prefers-contrast: high)'),
+    lowData: connection?.saveData ?? false,
+    offline: nav.onLine ? false : true,
+    geolocation: 'geolocation' in nav,
+    camera: 'mediaDevices' in nav && !!nav.mediaDevices?.getUserMedia,
+    microphone: 'mediaDevices' in nav && !!nav.mediaDevices?.getUserMedia,
+    vibration: 'vibrate' in nav,
+    notifications: typeof win.Notification !== 'undefined',
+    clipboard: 'clipboard' in nav,
+    share: typeof (nav as Navigator & { share?: unknown }).share === 'function',
   };
 };
 
-const detectNetworkInfo = (): NetworkInfo => {
-  if (typeof window === 'undefined' || !('connection' in navigator)) {
-    return {
-      type: 'unknown',
-      effectiveType: '4g',
-      downlink: 10,
-      rtt: 50,
-      saveData: false,
-      online: true
-    };
-  }
-
-  const connection = (navigator as Navigator & { connection?: NetworkConnection }).connection;
-  return {
-    type: (connection?.effectiveType ?? 'unknown') as ConnectionType,
-    effectiveType: connection?.effectiveType ?? '4g',
-    downlink: connection?.downlink ?? 10,
-    rtt: connection?.rtt ?? 50,
-    saveData: connection?.saveData ?? false,
-    online: navigator.onLine
-  };
-};
+const resolveNetworkInfo = (nav?: Navigator, connection?: NetworkConnection): NetworkInfo => ({
+  type: (connection?.effectiveType ?? 'unknown') as ConnectionType,
+  effectiveType: connection?.effectiveType ?? DEFAULT_NETWORK.effectiveType,
+  downlink: connection?.downlink ?? DEFAULT_NETWORK.downlink,
+  rtt: connection?.rtt ?? DEFAULT_NETWORK.rtt,
+  saveData: connection?.saveData ?? DEFAULT_NETWORK.saveData,
+  online: nav?.onLine ?? DEFAULT_NETWORK.online,
+});
 
 const detectBrowser = (userAgent: string): string => {
   if (userAgent.includes('Chrome')) return 'Chrome';
@@ -202,298 +231,326 @@ const detectBrowser = (userAgent: string): string => {
 };
 
 const detectOS = (userAgent: string): string => {
-  if (userAgent.includes('Windows')) return 'Windows';
-  if (userAgent.includes('Mac')) return 'macOS';
-  if (userAgent.includes('Linux')) return 'Linux';
-  if (userAgent.includes('Android')) return 'Android';
-  if (userAgent.includes('iOS')) return 'iOS';
+  const normalized = userAgent.toLowerCase();
+  if (!normalized.length) {
+    return 'Unknown';
+  }
+
+  if (
+    normalized.includes('iphone') ||
+    normalized.includes('ipad') ||
+    normalized.includes('ipod') ||
+    normalized.includes('ios')
+  ) {
+    return 'iOS';
+  }
+
+  if (normalized.includes('android')) {
+    return 'Android';
+  }
+
+  if (normalized.includes('windows')) {
+    return 'Windows';
+  }
+
+  if (normalized.includes('mac os x') || normalized.includes('macintosh') || normalized.includes('mac')) {
+    return 'macOS';
+  }
+
+  if (normalized.includes('linux')) {
+    return 'Linux';
+  }
+
   return 'Unknown';
 };
 
-// ============================================================================
-// STORE IMPLEMENTATION
-// ============================================================================
+export const createInitialDeviceState = (): DeviceState => ({
+  deviceType: 'desktop',
+  isMobile: false,
+  isTablet: false,
+  isDesktop: true,
+  screenSize: DEFAULT_SCREEN,
+  orientation: 'landscape',
+  pixelRatio: 1,
+  capabilities: createDefaultCapabilities(),
+  network: DEFAULT_NETWORK,
+  userAgent: '',
+  browser: 'Unknown',
+  os: 'Unknown',
+  isLoading: false,
+  isInitializing: true,
+  error: null,
+  listenersRegistered: false,
+  cleanupListeners: null,
+});
+
+export const createDeviceActions = (
+  set: (recipe: (draft: DeviceStore) => void) => void,
+  get: () => DeviceStore,
+  environment: DeviceEnvironment,
+): DeviceActions => {
+  const baseActions = createBaseStoreActions<DeviceStore>(set);
+
+  return {
+    ...baseActions,
+
+    updateDeviceInfo: () => {
+      const win = environment.getWindow();
+      const nav = environment.getNavigator();
+
+      set((state) => {
+        const width = win?.innerWidth ?? state.screenSize.width;
+        const height = win?.innerHeight ?? state.screenSize.height;
+        const deviceType = deriveDeviceType(width);
+
+        state.deviceType = deviceType;
+        state.isMobile = deviceType === 'mobile';
+        state.isTablet = deviceType === 'tablet';
+        state.isDesktop = deviceType === 'desktop';
+
+        state.screenSize = deriveScreenSize(width, height);
+        state.orientation = deriveOrientation(width, height);
+        state.pixelRatio = win?.devicePixelRatio ?? state.pixelRatio;
+        state.capabilities = resolveCapabilities(win, nav);
+        state.network = {
+          ...state.network,
+          ...resolveNetworkInfo(nav, environment.getConnection()),
+        };
+
+        const userAgent = nav?.userAgent ?? '';
+        state.userAgent = userAgent;
+        state.browser = detectBrowser(userAgent);
+        state.os = detectOS(userAgent);
+      });
+    },
+
+    setOrientation: (orientation) => {
+      set((state) => {
+        state.orientation = orientation;
+      });
+    },
+
+    setScreenSize: (width, height) => {
+      set((state) => {
+        const deviceType = deriveDeviceType(width);
+        state.screenSize = deriveScreenSize(width, height);
+        state.deviceType = deviceType;
+        state.isMobile = deviceType === 'mobile';
+        state.isTablet = deviceType === 'tablet';
+        state.isDesktop = deviceType === 'desktop';
+        state.orientation = deriveOrientation(width, height);
+      });
+    },
+
+    setNetworkInfo: (network) => {
+      set((state) => {
+        state.network = { ...state.network, ...network };
+      });
+    },
+
+    setCapability: (capability, value) => {
+      set((state) => {
+        state.capabilities[capability] = value;
+      });
+    },
+
+    setInitializing: (initializing) => {
+      set((state) => {
+        state.isInitializing = initializing;
+      });
+    },
+
+    resetDeviceState: (options) => {
+      const preserveCapabilities = options?.preserveCapabilities ?? false;
+      const cleanup = get().cleanupListeners;
+      cleanup?.();
+
+      const initial = createInitialDeviceState();
+      set((state) => {
+        const capabilities = preserveCapabilities ? state.capabilities : initial.capabilities;
+
+        state.deviceType = initial.deviceType;
+        state.isMobile = initial.isMobile;
+        state.isTablet = initial.isTablet;
+        state.isDesktop = initial.isDesktop;
+        state.screenSize = initial.screenSize;
+        state.orientation = initial.orientation;
+        state.pixelRatio = initial.pixelRatio;
+        state.capabilities = { ...capabilities };
+        state.network = initial.network;
+        state.userAgent = initial.userAgent;
+        state.browser = initial.browser;
+        state.os = initial.os;
+        state.isLoading = false;
+        state.isInitializing = initial.isInitializing;
+        state.error = null;
+        state.listenersRegistered = false;
+        state.cleanupListeners = null;
+      });
+    },
+
+    initialize: () => {
+      const { cleanupListeners, listenersRegistered } = get();
+      if (listenersRegistered) {
+        cleanupListeners?.();
+      }
+
+      set((state) => {
+        state.isInitializing = true;
+        state.error = null;
+      });
+
+      const cleanupFns: Array<() => void> = [];
+
+      try {
+        const win = environment.getWindow();
+        if (!win) {
+          set((state) => {
+            state.isInitializing = false;
+            state.listenersRegistered = false;
+            state.cleanupListeners = null;
+          });
+          return;
+        }
+
+        get().updateDeviceInfo();
+
+        const handleResize = () => {
+          const currentWindow = environment.getWindow();
+          if (!currentWindow) {
+            return;
+          }
+          const width = currentWindow.innerWidth;
+          const height = currentWindow.innerHeight;
+          get().setScreenSize(width, height);
+          get().updateDeviceInfo();
+        };
+
+        const handleOrientationChange = () => {
+          const currentWindow = environment.getWindow();
+          if (!currentWindow) {
+            return;
+          }
+          setTimeout(() => {
+            const width = currentWindow.innerWidth;
+            const height = currentWindow.innerHeight;
+            get().setScreenSize(width, height);
+            get().updateDeviceInfo();
+          }, 100);
+        };
+
+        const handleOnline = () => {
+          get().setNetworkInfo({ online: true });
+        };
+
+        const handleOffline = () => {
+          get().setNetworkInfo({ online: false });
+        };
+
+        const handleConnectionChange = () => {
+          get().setNetworkInfo(resolveNetworkInfo(environment.getNavigator(), environment.getConnection()));
+        };
+
+        win.addEventListener('resize', handleResize);
+        cleanupFns.push(() => win.removeEventListener('resize', handleResize));
+
+        win.addEventListener('orientationchange', handleOrientationChange);
+        cleanupFns.push(() => win.removeEventListener('orientationchange', handleOrientationChange));
+
+        win.addEventListener('online', handleOnline);
+        cleanupFns.push(() => win.removeEventListener('online', handleOnline));
+
+        win.addEventListener('offline', handleOffline);
+        cleanupFns.push(() => win.removeEventListener('offline', handleOffline));
+
+        const connection = environment.getConnection();
+        if (connection) {
+          connection.addEventListener?.('change', handleConnectionChange);
+          cleanupFns.push(() => connection.removeEventListener?.('change', handleConnectionChange));
+
+          if (!connection.addEventListener) {
+            const originalOnChange = connection.onchange;
+            connection.onchange = handleConnectionChange;
+            cleanupFns.push(() => {
+              if (connection.onchange === handleConnectionChange) {
+                connection.onchange = originalOnChange ?? null;
+              }
+            });
+          }
+        }
+
+        const hoverQuery = win.matchMedia?.('(hover: hover)');
+        const reducedMotionQuery = win.matchMedia?.('(prefers-reduced-motion: reduce)');
+        const darkModeQuery = win.matchMedia?.('(prefers-color-scheme: dark)');
+        const highContrastQuery = win.matchMedia?.('(prefers-contrast: high)');
+
+        const queryMap: Record<string, MediaQueryList | undefined> = {
+          hover: hoverQuery,
+          reducedMotion: reducedMotionQuery,
+          darkMode: darkModeQuery,
+          highContrast: highContrastQuery,
+        };
+
+        Object.entries(queryMap).forEach(([capability, media]) => {
+          if (!media) {
+            return;
+          }
+
+          const handler = (event: MediaQueryListEvent) => {
+            get().setCapability(capability as keyof DeviceCapabilities, event.matches);
+          };
+
+          if (typeof media.addEventListener === 'function') {
+            media.addEventListener('change', handler);
+            cleanupFns.push(() => media.removeEventListener('change', handler));
+          } else if (typeof media.addListener === 'function') {
+            media.addListener(handler);
+            cleanupFns.push(() => media.removeListener(handler));
+          }
+        });
+
+        const release = () => {
+          cleanupFns.forEach((fn) => fn());
+          set((state) => {
+            state.listenersRegistered = false;
+            state.cleanupListeners = null;
+          });
+        };
+
+        set((state) => {
+          state.isInitializing = false;
+          state.listenersRegistered = true;
+          state.cleanupListeners = release;
+        });
+      } catch (error) {
+        cleanupFns.forEach((fn) => fn());
+        const message =
+          error instanceof Error ? error.message : 'Failed to initialize device detection';
+        set((state) => {
+          state.error = message;
+          state.isInitializing = false;
+          state.listenersRegistered = false;
+          state.cleanupListeners = null;
+        });
+      }
+    },
+
+    teardown: () => {
+      const { cleanupListeners } = get();
+      cleanupListeners?.();
+    },
+  };
+};
+
+export const deviceStoreCreator: DeviceStoreCreator = (set, get) => {
+  const environment = createDeviceEnvironment();
+  return Object.assign(createInitialDeviceState(), createDeviceActions(set, get, environment));
+};
 
 export const useDeviceStore = create<DeviceStore>()(
   devtools(
     persist(
-      immer((set, get) => ({
-        // Initial State
-        deviceType: 'desktop',
-        isMobile: false,
-        isTablet: false,
-        isDesktop: true,
-        
-        screenSize: {
-          width: 1920,
-          height: 1080,
-          aspectRatio: 16/9
-        },
-        orientation: 'landscape',
-        pixelRatio: 1,
-        
-        capabilities: {
-          touch: false,
-          hover: true,
-          reducedMotion: false,
-          darkMode: false,
-          highContrast: false,
-          lowData: false,
-          offline: false,
-          geolocation: false,
-          camera: false,
-          microphone: false,
-          vibration: false,
-          notifications: false,
-          clipboard: false,
-          share: false
-        },
-        
-        network: {
-          type: 'unknown',
-          effectiveType: '4g',
-          downlink: 10,
-          rtt: 50,
-          saveData: false,
-          online: true
-        },
-        
-        userAgent: '',
-        browser: 'Unknown',
-        os: 'Unknown',
-        
-        isLoading: false,
-        isInitializing: true,
-        listenersRegistered: false,
-        cleanupListeners: null,
-        error: null,
-
-        // Actions
-        updateDeviceInfo: () => {
-          if (typeof window === 'undefined') return;
-
-          const deviceType = detectDeviceType();
-          const orientation = detectOrientation();
-          const capabilities = detectCapabilities();
-          const network = detectNetworkInfo();
-          const userAgent = navigator.userAgent;
-          const browser = detectBrowser(userAgent);
-          const os = detectOS(userAgent);
-
-          set((state) => {
-            state.deviceType = deviceType;
-            state.isMobile = deviceType === 'mobile';
-            state.isTablet = deviceType === 'tablet';
-            state.isDesktop = deviceType === 'desktop';
-            
-            state.orientation = orientation;
-            state.capabilities = capabilities;
-            state.network = network;
-            state.userAgent = userAgent;
-            state.browser = browser;
-            state.os = os;
-            
-            // Update screen size
-            state.screenSize = {
-              width: window.innerWidth,
-              height: window.innerHeight,
-              aspectRatio: window.innerWidth / window.innerHeight
-            };
-            
-            state.pixelRatio = window.devicePixelRatio ?? 1;
-          });
-        },
-
-        setOrientation: (orientation: Orientation) => {
-          set((state) => {
-            state.orientation = orientation;
-          });
-        },
-
-        setScreenSize: (width: number, height: number) => {
-          set((state) => {
-            state.screenSize = {
-              width,
-              height,
-              aspectRatio: width / height
-            };
-            
-            // Update device type based on new screen size
-            const deviceType = width < 768 ? 'mobile' : width < 1024 ? 'tablet' : 'desktop';
-            state.deviceType = deviceType;
-            state.isMobile = deviceType === 'mobile';
-            state.isTablet = deviceType === 'tablet';
-            state.isDesktop = deviceType === 'desktop';
-          });
-        },
-
-        setNetworkInfo: (network: Partial<NetworkInfo>) => {
-          set((state) => {
-            state.network = withOptional(state.network, network);
-          });
-        },
-
-        setCapability: (capability: keyof DeviceCapabilities, value: boolean) => {
-          set((state) => {
-            state.capabilities[capability] = value;
-          });
-        },
-
-        setLoading: (loading: boolean) => {
-          set((state) => {
-            state.isLoading = loading;
-          });
-        },
-
-        setInitializing: (initializing: boolean) => {
-          set((state) => {
-            state.isInitializing = initializing;
-          });
-        },
-
-        setError: (error: string | null) => {
-          set((state) => {
-            state.error = error;
-          });
-        },
-
-        clearError: () => {
-          set((state) => {
-            state.error = null;
-          });
-        },
-
-        // Initialization
-        initialize: () => {
-          const { cleanupListeners, listenersRegistered } = get();
-
-          if (listenersRegistered) {
-            cleanupListeners?.();
-          }
-
-          set((state) => {
-            state.isInitializing = true;
-            state.error = null;
-          });
-
-          const cleanupFns: Array<() => void> = [];
-
-          try {
-            if (typeof window !== 'undefined') {
-              // Initial device detection
-              get().updateDeviceInfo();
-
-              // Set up event listeners
-              const handleResize = () => {
-                get().setScreenSize(window.innerWidth, window.innerHeight);
-                get().setOrientation(detectOrientation());
-              };
-
-              const handleOrientationChange = () => {
-                setTimeout(() => {
-                  get().setScreenSize(window.innerWidth, window.innerHeight);
-                  get().setOrientation(detectOrientation());
-                }, 100);
-              };
-
-              const handleOnline = () => {
-                get().setNetworkInfo({ online: true });
-              };
-
-              const handleOffline = () => {
-                get().setNetworkInfo({ online: false });
-              };
-
-              const handleConnectionChange = () => {
-                get().setNetworkInfo(detectNetworkInfo());
-              };
-
-              window.addEventListener('resize', handleResize);
-              cleanupFns.push(() => window.removeEventListener('resize', handleResize));
-
-              window.addEventListener('orientationchange', handleOrientationChange);
-              cleanupFns.push(() => window.removeEventListener('orientationchange', handleOrientationChange));
-
-              window.addEventListener('online', handleOnline);
-              cleanupFns.push(() => window.removeEventListener('online', handleOnline));
-
-              window.addEventListener('offline', handleOffline);
-              cleanupFns.push(() => window.removeEventListener('offline', handleOffline));
-              
-              if ('connection' in navigator) {
-                const connection = (navigator as any).connection;
-                if (connection?.addEventListener) {
-                  connection.addEventListener('change', handleConnectionChange);
-                  cleanupFns.push(() => connection.removeEventListener?.('change', handleConnectionChange));
-                } else if (connection) {
-                  const originalHandler = connection.onchange;
-                  connection.onchange = handleConnectionChange;
-                  cleanupFns.push(() => {
-                    if (connection.onchange === handleConnectionChange) {
-                      connection.onchange = originalHandler ?? null;
-                    }
-                  });
-                }
-              }
-
-              const mediaQueries = {
-                hover: window.matchMedia('(hover: hover)'),
-                reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
-                darkMode: window.matchMedia('(prefers-color-scheme: dark)'),
-                highContrast: window.matchMedia('(prefers-contrast: high)')
-              };
-
-              Object.entries(mediaQueries).forEach(([capability, mediaQuery]) => {
-                const handler = (e: MediaQueryListEvent) => {
-                  get().setCapability(capability as keyof DeviceCapabilities, e.matches);
-                };
-
-                if (mediaQuery.addEventListener) {
-                  mediaQuery.addEventListener('change', handler);
-                  cleanupFns.push(() => mediaQuery.removeEventListener('change', handler));
-                } else {
-                  mediaQuery.addListener(handler);
-                  cleanupFns.push(() => mediaQuery.removeListener(handler));
-                }
-              });
-
-              const release = () => {
-                cleanupFns.forEach((fn) => fn());
-                set((state) => {
-                  state.listenersRegistered = false;
-                  state.cleanupListeners = null;
-                });
-              };
-
-              set((state) => {
-                state.isInitializing = false;
-                state.listenersRegistered = true;
-                state.cleanupListeners = release;
-              });
-            } else {
-              set((state) => {
-                state.isInitializing = false;
-                state.listenersRegistered = false;
-                state.cleanupListeners = null;
-              });
-            }
-
-          } catch (error) {
-            cleanupFns.forEach((fn) => fn());
-            set((state) => {
-              state.error = error instanceof Error ? error.message : 'Failed to initialize device detection';
-              state.isInitializing = false;
-              state.listenersRegistered = false;
-              state.cleanupListeners = null;
-            });
-          }
-        },
-
-        teardown: () => {
-          const { cleanupListeners } = get();
-          cleanupListeners?.();
-        }
-      })),
+      immer(deviceStoreCreator),
       {
         name: 'device-storage',
         storage: createSafeStorage(),
@@ -504,76 +561,77 @@ export const useDeviceStore = create<DeviceStore>()(
           capabilities: state.capabilities,
           network: state.network,
           browser: state.browser,
-          os: state.os
-        })
-      }
+          os: state.os,
+        }),
+      },
     ),
-    { name: 'device-store' }
-  )
+    { name: 'device-store' },
+  ),
 );
-
-// ============================================================================
-// SELECTORS
-// ============================================================================
 
 export const useDevice = () => useDeviceStore();
 
-// Device Type Selectors
-export const useDeviceType = () => useDeviceStore(state => state.deviceType);
-export const useIsMobile = () => useDeviceStore(state => state.isMobile);
-export const useIsTablet = () => useDeviceStore(state => state.isTablet);
-export const useIsDesktop = () => useDeviceStore(state => state.isDesktop);
+export const useDeviceType = () => useDeviceStore((state) => state.deviceType);
+export const useIsMobile = () => useDeviceStore((state) => state.isMobile);
+export const useIsTablet = () => useDeviceStore((state) => state.isTablet);
+export const useIsDesktop = () => useDeviceStore((state) => state.isDesktop);
 
-// Screen Selectors
-export const useScreenSize = () => useDeviceStore(state => state.screenSize);
-export const useOrientation = () => useDeviceStore(state => state.orientation);
-export const usePixelRatio = () => useDeviceStore(state => state.pixelRatio);
+export const useScreenSize = () => useDeviceStore((state) => state.screenSize);
+export const useOrientation = () => useDeviceStore((state) => state.orientation);
+export const usePixelRatio = () => useDeviceStore((state) => state.pixelRatio);
 
-// Capability Selectors
-export const useCapabilities = () => useDeviceStore(state => state.capabilities);
-export const useHasTouch = () => useDeviceStore(state => state.capabilities.touch);
-export const useHasHover = () => useDeviceStore(state => state.capabilities.hover);
-export const useReducedMotion = () => useDeviceStore(state => state.capabilities.reducedMotion);
-export const useDarkMode = () => useDeviceStore(state => state.capabilities.darkMode);
-export const useHighContrast = () => useDeviceStore(state => state.capabilities.highContrast);
-export const useLowData = () => useDeviceStore(state => state.capabilities.lowData);
-export const useIsOffline = () => useDeviceStore(state => state.capabilities.offline);
+export const useCapabilities = () => useDeviceStore((state) => state.capabilities);
+export const useHasTouch = () => useDeviceStore((state) => state.capabilities.touch);
+export const useHasHover = () => useDeviceStore((state) => state.capabilities.hover);
+export const useReducedMotion = () => useDeviceStore((state) => state.capabilities.reducedMotion);
+export const useDarkMode = () => useDeviceStore((state) => state.capabilities.darkMode);
+export const useHighContrast = () => useDeviceStore((state) => state.capabilities.highContrast);
+export const useLowData = () => useDeviceStore((state) => state.capabilities.lowData);
+export const useIsOffline = () => useDeviceStore((state) => state.capabilities.offline);
 
-// Network Selectors
-export const useNetwork = () => useDeviceStore(state => state.network);
-export const useConnectionType = () => useDeviceStore(state => state.network.type);
-export const useIsOnline = () => useDeviceStore(state => state.network.online);
+export const useNetwork = () => useDeviceStore((state) => state.network);
+export const useConnectionType = () => useDeviceStore((state) => state.network.type);
+export const useIsOnline = () => useDeviceStore((state) => state.network.online);
 
-// Browser/OS Selectors
-export const useBrowser = () => useDeviceStore(state => state.browser);
-export const useOS = () => useDeviceStore(state => state.os);
-export const useUserAgent = () => useDeviceStore(state => state.userAgent);
+export const useBrowser = () => useDeviceStore((state) => state.browser);
+export const useOS = () => useDeviceStore((state) => state.os);
+export const useUserAgent = () => useDeviceStore((state) => state.userAgent);
 
-// Loading & Error Selectors
-export const useDeviceLoading = () => useDeviceStore(state => state.isLoading);
-export const useDeviceInitializing = () => useDeviceStore(state => state.isInitializing);
-export const useDeviceError = () => useDeviceStore(state => state.error);
+export const useDeviceLoading = () => useDeviceStore((state) => state.isLoading);
+export const useDeviceInitializing = () => useDeviceStore((state) => state.isInitializing);
+export const useDeviceError = () => useDeviceStore((state) => state.error);
 
-// ============================================================================
-// ACTIONS
-// ============================================================================
+export const useDeviceActions = () =>
+  useDeviceStore((state) => ({
+    updateDeviceInfo: state.updateDeviceInfo,
+    setOrientation: state.setOrientation,
+    setScreenSize: state.setScreenSize,
+    setNetworkInfo: state.setNetworkInfo,
+    setCapability: state.setCapability,
+    setLoading: state.setLoading,
+    setInitializing: state.setInitializing,
+    setError: state.setError,
+    clearError: state.clearError,
+    resetDeviceState: state.resetDeviceState,
+    initialize: state.initialize,
+    teardown: state.teardown,
+  }));
 
-export const useDeviceActions = () => useDeviceStore(state => ({
-  updateDeviceInfo: state.updateDeviceInfo,
-  setOrientation: state.setOrientation,
-  setScreenSize: state.setScreenSize,
-  setNetworkInfo: state.setNetworkInfo,
-  setCapability: state.setCapability,
-  setLoading: state.setLoading,
-  setInitializing: state.setInitializing,
-  setError: state.setError,
-  clearError: state.clearError,
-  initialize: state.initialize
-}));
-
-// ============================================================================
-// UTILITIES
-// ============================================================================
+export const deviceSelectors = {
+  deviceType: (state: DeviceStore) => state.deviceType,
+  isMobile: (state: DeviceStore) => state.isMobile,
+  isTablet: (state: DeviceStore) => state.isTablet,
+  isDesktop: (state: DeviceStore) => state.isDesktop,
+  screenSize: (state: DeviceStore) => state.screenSize,
+  orientation: (state: DeviceStore) => state.orientation,
+  capabilities: (state: DeviceStore) => state.capabilities,
+  network: (state: DeviceStore) => state.network,
+  browser: (state: DeviceStore) => state.browser,
+  os: (state: DeviceStore) => state.os,
+  isLoading: (state: DeviceStore) => state.isLoading,
+  isInitializing: (state: DeviceStore) => state.isInitializing,
+  error: (state: DeviceStore) => state.error,
+};
 
 export const useResponsiveBreakpoint = () => {
   const screenSize = useScreenSize();
@@ -589,7 +647,7 @@ export const useResponsiveBreakpoint = () => {
     breakpoint: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop',
     isSmallScreen: screenSize.width < 768,
     isMediumScreen: screenSize.width >= 768 && screenSize.width < 1024,
-    isLargeScreen: screenSize.width >= 1024
+    isLargeScreen: screenSize.width >= 1024,
   };
 };
 
@@ -598,15 +656,12 @@ export const useDeviceCapabilities = () => {
   const isOnline = useIsOnline();
   const lowData = useLowData();
 
-  return withOptional(capabilities, {
+  return {
+    ...capabilities,
     isOnline,
     isOffline: !isOnline,
     isLowData: lowData,
-    canUseAdvancedFeatures: isOnline && !lowData && capabilities.camera && capabilities.microphone,
-  }) as DeviceCapabilities & {
-    isOnline: boolean;
-    isOffline: boolean;
-    isLowData: boolean;
-    canUseAdvancedFeatures: boolean;
+    canUseAdvancedFeatures:
+      isOnline && !lowData && capabilities.camera && capabilities.microphone,
   };
 };

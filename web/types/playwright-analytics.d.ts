@@ -1,6 +1,6 @@
 import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
 
-type PlaywrightAnalyticsBridge = {
+export type PlaywrightAnalyticsBridge = {
   events: AnalyticsEvent[];
   enable: () => void;
   reset: () => void;
@@ -8,9 +8,8 @@ type PlaywrightAnalyticsBridge = {
 
 declare global {
   namespace globalThis {
+    // eslint-disable-next-line no-var
     var __playwrightAnalytics: PlaywrightAnalyticsBridge | undefined;
   }
 }
-
-export {};
 

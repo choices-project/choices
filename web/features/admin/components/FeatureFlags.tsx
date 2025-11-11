@@ -1,46 +1,67 @@
 /**
  * Feature Flags Management Component
- * 
+ *
  * Admin interface for managing feature flags in production.
  * Provides runtime control over feature availability without code changes.
  */
 
 import React, { useState, useEffect } from 'react';
 
-import { useAdminStore } from '../lib/store';
-import type { FeatureFlag } from '../types';
+import {
+  useAdminFeatureFlagActions,
+  useAdminFeatureFlags,
+} from '@/lib/stores';
+import type { DisplayFeatureFlag } from '../types';
+
+type AdminFeatureFlag = DisplayFeatureFlag & { locked?: boolean };
 
 type FeatureFlagsProps = {
   onFlagChange?: (flagId: string, enabled: boolean) => void;
 }
 
 export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
+  const featureFlags = useAdminFeatureFlags();
   const {
-    featureFlags,
     toggleFeatureFlag,
     getAllFeatureFlags,
     exportFeatureFlagConfig,
     importFeatureFlagConfig,
     resetFeatureFlags,
     setFeatureFlagLoading,
-    setFeatureFlagError
-  } = useAdminStore();
+    setFeatureFlagError,
+  } = useAdminFeatureFlagActions();
 
-  const [flags, setFlags] = useState<FeatureFlag[]>([]);
+  const [flags, setFlags] = useState<AdminFeatureFlag[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     const allFlags = getAllFeatureFlags();
     setFlags(allFlags);
-  }, [featureFlags.flags, getAllFeatureFlags]);
+  }, [featureFlags.flags, featureFlags.lockedFlags, getAllFeatureFlags]);
 
   const handleToggleFlag = async (flagId: string) => {
+    const flagMeta = flags.find((flag) => flag.id === flagId);
+    if (!flagMeta) {
+      setFeatureFlagError(`Unknown feature flag: ${flagId}`);
+      return;
+    }
+
+    if (flagMeta.locked) {
+      setFeatureFlagError(`"${flagMeta.name}" is a core capability and cannot be toggled.`);
+      return;
+    }
+
+    const currentValue = featureFlags.flags[flagId];
+    if (typeof currentValue !== 'boolean') {
+      setFeatureFlagError(`Feature flag "${flagId}" is not mutable.`);
+      return;
+    }
+
     setFeatureFlagLoading(true);
     setFeatureFlagError(null);
 
     try {
-      // Update via API endpoint
       const response = await fetch('/api/feature-flags', {
         method: 'PATCH',
         headers: {
@@ -48,17 +69,16 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
         },
         body: JSON.stringify({
           flagId,
-          enabled: !featureFlags.flags[flagId]
+          enabled: !currentValue,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Update local store
         const success = toggleFeatureFlag(flagId);
         if (success) {
-          onFlagChange?.(flagId, !featureFlags.flags[flagId]);
+          onFlagChange?.(flagId, !currentValue);
         }
       } else {
         setFeatureFlagError(data.error ?? `Failed to toggle flag: ${flagId}`);
@@ -130,13 +150,19 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
     return matchesCategory && matchesSearch;
   });
 
+  const totalFlagCount =
+    featureFlags.enabledFlags.length +
+    featureFlags.disabledFlags.length +
+    featureFlags.lockedFlags.length;
+
   const categories = [
     { value: 'all', label: 'All Flags' },
     { value: 'core', label: 'Core Features' },
     { value: 'enhanced', label: 'Enhanced Features' },
     { value: 'civics', label: 'Civics Features' },
     { value: 'future', label: 'Future Features' },
-    { value: 'performance', label: 'Performance' }
+    { value: 'performance', label: 'Performance' },
+    { value: 'system', label: 'System' },
   ];
 
   return (
@@ -147,12 +173,15 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
           Control feature availability in production without code changes.
           Changes take effect immediately across all users.
         </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Core capabilities are marked as <span className="font-semibold">Locked</span> and cannot be disabled.
+        </p>
       </div>
 
       {featureFlags.error && (
         <div className="alert alert-error mb-4">
           <span>Error: {featureFlags.error}</span>
-          <button 
+          <button
             onClick={() => setFeatureFlagError(null)}
             className="btn btn-sm btn-ghost"
           >
@@ -202,7 +231,7 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
           >
             Export Config
           </button>
-          
+
           <label className="btn btn-outline">
             Import Config
             <input
@@ -212,7 +241,7 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
               className="hidden"
             />
           </label>
-          
+
           <button
             onClick={handleResetFlags}
             className="btn btn-warning"
@@ -227,7 +256,7 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
         <div className="stats shadow">
           <div className="stat">
             <div className="stat-title">Total Flags</div>
-            <div className="stat-value">{flags.length}</div>
+            <div className="stat-value">{totalFlagCount}</div>
           </div>
           <div className="stat">
             <div className="stat-title">Enabled</div>
@@ -236,6 +265,10 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
           <div className="stat">
             <div className="stat-title">Disabled</div>
             <div className="stat-value text-error">{featureFlags.disabledFlags.length}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">Locked</div>
+            <div className="stat-value text-primary">{featureFlags.lockedFlags.length}</div>
           </div>
         </div>
       </div>
@@ -249,29 +282,40 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
                   <h3 className="card-title text-lg">{flag.name}</h3>
                   <p className="text-sm text-gray-600">{flag.description}</p>
                   <div className="flex gap-2 mt-2">
-                    <span className={`badge ${flag.category === 'core' ? 'badge-primary' : 
-                                      flag.category === 'enhanced' ? 'badge-secondary' :
-                                      flag.category === 'civics' ? 'badge-accent' :
-                                      flag.category === 'future' ? 'badge-warning' :
-                                      'badge-neutral'}`}>
+                    <span className={`badge ${flag.category === 'core'
+                      ? 'badge-primary'
+                      : flag.category === 'enhanced'
+                      ? 'badge-secondary'
+                      : flag.category === 'civics'
+                      ? 'badge-accent'
+                      : flag.category === 'future'
+                      ? 'badge-warning'
+                      : flag.category === 'performance'
+                      ? 'badge-info'
+                      : flag.category === 'system'
+                      ? 'badge-neutral'
+                      : 'badge-outline'}`}>
                       {flag.category}
                     </span>
+                    {flag.locked && (
+                      <span className="badge badge-outline badge-primary">Locked</span>
+                    )}
                     <span className="text-xs text-gray-500">{flag.id}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
                   <div className="form-control">
                     <label className="label cursor-pointer">
                       <span className="label-text mr-2">
-                        {flag.enabled ? 'Enabled' : 'Disabled'}
+                        {flag.locked ? 'Always On' : flag.enabled ? 'Enabled' : 'Disabled'}
                       </span>
                       <input
                       type="checkbox"
                       className="toggle toggle-lg"
                       checked={flag.enabled}
                       onChange={() => handleToggleFlag(flag.id)}
-                      disabled={featureFlags.isLoading}
+                      disabled={featureFlags.isLoading || flag.locked}
                     />
                     </label>
                   </div>

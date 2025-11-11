@@ -18,6 +18,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useFeedsActions, useFeedsStore } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
 type FeedRealTimeUpdatesProps = {
@@ -41,6 +42,7 @@ export default function FeedRealTimeUpdates({
   const [isConnected, setIsConnected] = useState(false);
   const [newItemsCount, setNewItemsCount] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const { refreshFeeds } = useFeedsActions();
 
   // Client-side only
   useEffect(() => {
@@ -113,11 +115,21 @@ export default function FeedRealTimeUpdates({
     };
   }, [isClient, enableWebSocket, wsUrl, onNewContent]);
 
-  const handleLoadNewItems = useCallback(() => {
+  const handleLoadNewItems = useCallback(async () => {
     setNewItemsCount(0);
-    // Trigger refresh in parent component
-    window.location.reload();
-  }, []);
+
+    try {
+      await refreshFeeds();
+      const { error } = useFeedsStore.getState();
+      if (error) {
+        logger.warn('Refresh after real-time update surfaced store error:', error);
+        window.location.reload();
+      }
+    } catch (err) {
+      logger.error('Failed to refresh feeds after real-time update:', err);
+      window.location.reload();
+    }
+  }, [refreshFeeds]);
 
   if (!isClient || !enableWebSocket) {
     // SSR or disabled: just render children

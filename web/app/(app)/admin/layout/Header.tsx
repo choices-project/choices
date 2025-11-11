@@ -8,14 +8,46 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
-import React from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
-import { useAdminStore } from '@/features/admin/lib/store';
+import { useUser, useUserActions } from '@/lib/stores';
+import {
+  useAdminActions,
+  useAdminNotifications,
+} from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 export const Header: React.FC = () => {
-  const { notifications, markNotificationRead, toggleSidebar } = useAdminStore();
+  const router = useRouter();
+  const user = useUser();
+  const { signOut: resetUserState } = useUserActions();
+  const notifications = useAdminNotifications();
+  const { toggleSidebar, markNotificationRead } = useAdminActions();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const unreadNotifications = notifications.filter((n: { read: boolean }) => !n.read);
+
+  const handleLogout = async () => {
+    try {
+      const supabase = await getSupabaseBrowserClient();
+      await supabase.auth.signOut();
+    } catch (error) {
+      logger.error('Failed to sign out:', error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      resetUserState();
+      router.push('/login');
+    }
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen((prev) => !prev);
+  };
+
+  const closeUserMenu = () => {
+    setIsUserMenuOpen(false);
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
@@ -105,37 +137,45 @@ export const Header: React.FC = () => {
 
         {/* User menu */}
         <div className="relative">
-          <button className="flex items-center space-x-2 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+          <button
+            onClick={toggleUserMenu}
+            className="flex items-center space-x-2 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            aria-label="User menu"
+          >
             <User className="h-5 w-5" />
             <span className="hidden md:block text-sm font-medium text-gray-700">
-              Admin
+              {user?.email ?? 'Admin'}
             </span>
           </button>
 
-          {/* User dropdown */}
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-            <div className="py-1">
-              <button
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <User className="h-4 w-4 mr-3" />
-                Profile
-              </button>
-              <button
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <Settings className="h-4 w-4 mr-3" />
-                Settings
-              </button>
-              <hr className="my-1" />
-              <button
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <LogOut className="h-4 w-4 mr-3" />
-                Sign out
-              </button>
+          {isUserMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+              <div className="py-1">
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  onClick={closeUserMenu}
+                >
+                  <User className="h-4 w-4 mr-3" />
+                  Profile
+                </button>
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  onClick={closeUserMenu}
+                >
+                  <Settings className="h-4 w-4 mr-3" />
+                  Settings
+                </button>
+                <hr className="my-1" />
+                <button
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-3" />
+                  Sign out
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </header>

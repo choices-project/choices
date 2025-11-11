@@ -8,6 +8,8 @@ import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 type TableShape = { table: string; columns: string[] };
 
@@ -42,14 +44,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     const url = new URL(req.url);
     const refresh = url.searchParams.get('refresh') === 'true';
 
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+    const supabase = await getSupabaseServerClient();
 
     // Optional cache refresh path (e.g., warm schema cache)
     if (refresh) {
@@ -65,7 +60,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     }> = [];
 
     for (const shape of REQUIRED) {
-      const cols = await getColumns(supabase as any, shape.table);
+      const cols = await getColumns(supabase, shape.table);
       const present = shape.columns.filter((c) => cols.includes(c));
       const missing = shape.columns.filter((c) => !cols.includes(c));
       const ok = missing.length === 0;

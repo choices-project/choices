@@ -1,64 +1,51 @@
 /**
- * @fileoverview Admin Store - Zustand Implementation
+ * @fileoverview Admin Store - Modernized Zustand Implementation
  *
- * Admin-specific business logic and data management.
- * UI state (sidebar, notifications, navigation) moved to global stores.
- *
- * @author Choices Platform Team
- * @created 2025-10-24
- * @version 2.0.0
- * @since 1.0.0
+ * Provides admin dashboard state, user management tools, and system configuration controls.
+ * Modernized to align with the 2025 Zustand store standards (typed creator, helper factories, immer).
  */
 
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/util/objects';
+import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import type {
-  AdminNotification,
-  NewAdminNotification,
-  TrendingTopic,
-  GeneratedPoll,
-  SystemMetrics,
   ActivityItem,
+  AdminNotification,
+  AdminFeatureFlagCategories,
+  AdminFeatureFlagsState,
   AdminUser,
-} from '../../features/admin/types';
-import { getSupabaseBrowserClient } from '../../utils/supabase/client';
+  DisplayFeatureFlag,
+  FeatureFlag,
+  FeatureFlagConfig,
+  GeneratedPoll,
+  NewAdminNotification,
+  SystemMetrics,
+  TrendingTopic,
+} from '@/features/admin/types';
 
 import { createSafeStorage } from './storage';
+import type { BaseStore } from './types';
 
-/**
- * Admin store state interface
- * Manages admin dashboard state, user management, system settings, and UI state.
- */
-type AdminStore = {
-  // UI State
-  sidebarCollapsed: boolean;
-  currentPage: string;
-  notifications: AdminNotification[];
+export type AdminActiveTab = 'overview' | 'users' | 'analytics' | 'settings' | 'audit';
+export type AdminSettingsTab = 'general' | 'performance' | 'security' | 'notifications';
+export type AdminRoleFilter = 'all' | 'admin' | 'moderator' | 'user';
+export type AdminStatusFilter = 'all' | 'active' | 'inactive' | 'suspended';
+export type AdminNotificationFrequency = 'immediate' | 'daily' | 'weekly';
 
-  // Admin-specific data
-  trendingTopics: TrendingTopic[];
-  generatedPolls: GeneratedPoll[];
-  systemMetrics: SystemMetrics | null;
-  activityItems: ActivityItem[];
-  activityFeed: ActivityItem[];
-
-  // User management data
-  users: AdminUser[];
-  userFilters: {
+export type AdminUserFilters = {
     searchTerm: string;
-    roleFilter: 'all' | 'admin' | 'moderator' | 'user';
-    statusFilter: 'all' | 'active' | 'inactive' | 'suspended';
+  roleFilter: AdminRoleFilter;
+  statusFilter: AdminStatusFilter;
     selectedUsers: string[];
     showBulkActions: boolean;
   };
 
-  // Dashboard state
-  activeTab: 'overview' | 'users' | 'analytics' | 'settings' | 'audit';
-  dashboardStats: {
+export type AdminDashboardStats = {
     totalUsers: number;
     activePolls: number;
     totalVotes: number;
@@ -69,10 +56,9 @@ type AdminStore = {
     shareActionsLast24h: number;
     topShareChannel: { channel: string; count: number } | null;
     latestMilestone: { pollId?: string; milestone?: number | null; occurredAt: string } | null;
-  } | null;
+};
 
-  // System settings state
-  systemSettings: {
+export type AdminSystemSettings = {
     general: {
       siteName: string;
       siteDescription: string;
@@ -95,14 +81,19 @@ type AdminStore = {
     notifications: {
       enableEmailNotifications: boolean;
       enablePushNotifications: boolean;
-      notificationFrequency: 'immediate' | 'daily' | 'weekly';
-    };
-  } | null;
-  settingsTab: 'general' | 'performance' | 'security' | 'notifications';
-  isSavingSettings: boolean;
+    notificationFrequency: AdminNotificationFrequency;
+  };
+};
 
-  // Reimport state
-  reimportProgress: {
+export type AdminReimportStateResult = {
+  state: string;
+  success: boolean;
+  representatives: number;
+  duration?: string;
+  error?: string;
+};
+
+export type AdminReimportProgress = {
     totalStates: number;
     processedStates: number;
     successfulStates: number;
@@ -111,39 +102,55 @@ type AdminStore = {
     federalRepresentatives: number;
     stateRepresentatives: number;
     errors: string[];
-    stateResults: Array<{
-      state: string;
-      success: boolean;
-      representatives: number;
-      duration?: string;
-      error?: string;
-    }>;
-  };
+  stateResults: AdminReimportStateResult[];
+};
+
+export type AdminState = Pick<BaseStore, 'isLoading' | 'error'> & {
+  sidebarCollapsed: boolean;
+  currentPage: string;
+  notifications: AdminNotification[];
+
+  trendingTopics: TrendingTopic[];
+  generatedPolls: GeneratedPoll[];
+  systemMetrics: SystemMetrics | null;
+  activityItems: ActivityItem[];
+  activityFeed: ActivityItem[];
+  featureFlags: AdminFeatureFlagsState;
+
+  users: AdminUser[];
+  userFilters: AdminUserFilters;
+
+  activeTab: AdminActiveTab;
+  dashboardStats: AdminDashboardStats | null;
+
+  systemSettings: AdminSystemSettings | null;
+  settingsTab: AdminSettingsTab;
+  isSavingSettings: boolean;
+
+  reimportProgress: AdminReimportProgress;
   reimportLogs: string[];
   isReimportRunning: boolean;
 
-  // Loading and error states
-  isLoading: boolean;
-  error: string | null;
-
-  // Admin notifications
   adminNotifications: AdminNotification[];
+};
 
-  // Actions
-  // UI Actions
+export type AdminActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   toggleSidebar: () => void;
   setCurrentPage: (page: string) => void;
   addNotification: (notification: NewAdminNotification) => void;
+  markNotificationAsRead: (id: string) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
+  setTrendingTopics: (topics: TrendingTopic[]) => void;
+  setGeneratedPolls: (polls: GeneratedPoll[]) => void;
+  setSystemMetrics: (metrics: SystemMetrics) => void;
+  updateActivityFeed: (activities: ActivityItem[]) => void;
 
-  // Data loading actions
   loadUsers: () => Promise<void>;
   loadDashboardStats: () => Promise<void>;
   loadSystemSettings: () => Promise<void>;
 
-  // User management actions
-  setUserFilters: (filters: Partial<AdminStore['userFilters']>) => void;
+  setUserFilters: (filters: Partial<AdminUserFilters>) => void;
   selectUser: (userId: string) => void;
   deselectUser: (userId: string) => void;
   selectAllUsers: () => void;
@@ -152,45 +159,308 @@ type AdminStore = {
   updateUserStatus: (userId: string, status: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
 
-  // Dashboard actions
-  setActiveTab: (tab: AdminStore['activeTab']) => void;
+  setActiveTab: (tab: AdminActiveTab) => void;
 
-  // System settings actions
-  setSystemSettings: (settings: AdminStore['systemSettings']) => void;
-  updateSystemSetting: (section: keyof NonNullable<AdminStore['systemSettings']>, key: string, value: unknown) => void;
-  setSettingsTab: (tab: AdminStore['settingsTab']) => void;
+  setSystemSettings: (settings: AdminSystemSettings | null) => void;
+  updateSystemSetting: (
+    section: keyof AdminSystemSettings,
+    key: string,
+    value: unknown
+  ) => void;
+  setSettingsTab: (tab: AdminSettingsTab) => void;
   saveSystemSettings: () => Promise<void>;
 
-  // Reimport actions
-  setReimportProgress: (progress: Partial<AdminStore['reimportProgress']>) => void;
+  setIsSavingSettings: (saving: boolean) => void;
+  setUpdating: (updating: boolean) => void;
+
+  setReimportProgress: (progress: Partial<AdminReimportProgress>) => void;
   addReimportLog: (message: string) => void;
   clearReimportLogs: () => void;
   setIsReimportRunning: (running: boolean) => void;
   startReimport: () => Promise<void>;
 
-  // Activity and notifications
-  addActivityItem: (item: ActivityItem) => void;
+  addActivityItem: (item: ActivityItem | Omit<ActivityItem, 'id' | 'timestamp'>) => void;
   clearActivityItems: () => void;
   addAdminNotification: (notification: AdminNotification) => void;
   clearAdminNotifications: () => void;
-  markNotificationAsRead: (id: string) => void;
+  enableFeatureFlag: (flagId: string) => boolean;
+  disableFeatureFlag: (flagId: string) => boolean;
+  toggleFeatureFlag: (flagId: string) => boolean;
+  isFeatureFlagEnabled: (flagId: string) => boolean;
+  getFeatureFlag: (flagId: string) => FeatureFlag | null;
+  getAllFeatureFlags: () => DisplayFeatureFlag[];
+  exportFeatureFlagConfig: () => FeatureFlagConfig;
+  importFeatureFlagConfig: (config: unknown) => boolean;
+  resetFeatureFlags: () => void;
+  setFeatureFlagLoading: (loading: boolean) => void;
+  setFeatureFlagError: (error: string | null) => void;
 
-  // Utility actions
-  setLoading: (loading: boolean) => void;
-  setUpdating: (updating: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  setIsSavingSettings: (saving: boolean) => void;
   refreshData: () => Promise<void>;
   syncData: () => Promise<void>;
-}
+  resetAdminState: () => void;
+};
+
+export type AdminStore = AdminState & AdminActions;
+
+type AdminStoreCreator = StateCreator<
+  AdminStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+
+const createDefaultUserFilters = (): AdminUserFilters => ({
+  searchTerm: '',
+  roleFilter: 'all',
+  statusFilter: 'all',
+  selectedUsers: [],
+  showBulkActions: false,
+});
+
+const createDefaultReimportProgress = (): AdminReimportProgress => ({
+  totalStates: 0,
+  processedStates: 0,
+  successfulStates: 0,
+  failedStates: 0,
+  totalRepresentatives: 0,
+  federalRepresentatives: 0,
+  stateRepresentatives: 0,
+  errors: [],
+  stateResults: [],
+});
+
+const cloneFlags = (flags: Record<string, boolean>): Record<string, boolean> =>
+  Object.fromEntries(Object.entries(flags)) as Record<string, boolean>;
+
+const calculateFlagLists = (flags: Record<string, boolean>) => ({
+  enabledFlags: Object.keys(flags).filter((key) => flags[key]),
+  disabledFlags: Object.keys(flags).filter((key) => !flags[key]),
+});
+
+const MUTABLE_FLAG_KEYS = Object.keys(FEATURE_FLAGS);
+
+const LOCKED_CORE_FLAGS = [
+  'ENHANCED_ONBOARDING',
+  'ENHANCED_PROFILE',
+  'ENHANCED_AUTH',
+  'ENHANCED_DASHBOARD',
+  'ENHANCED_POLLS',
+  'ENHANCED_VOTING',
+] as const;
+
+const LOCKED_CIVICS_FLAGS = [
+  'CIVICS_ADDRESS_LOOKUP',
+  'CIVICS_REPRESENTATIVE_DATABASE',
+  'CIVICS_CAMPAIGN_FINANCE',
+  'CIVICS_VOTING_RECORDS',
+  'CANDIDATE_ACCOUNTABILITY',
+  'CANDIDATE_CARDS',
+  'ALTERNATIVE_CANDIDATES',
+] as const;
+
+const LOCKED_SYSTEM_FLAGS = ['PWA', 'ADMIN', 'FEEDBACK_WIDGET', 'WEBAUTHN'] as const;
+
+const CATEGORY_PRESETS: AdminFeatureFlagCategories = {
+  core: LOCKED_CORE_FLAGS.slice(),
+  enhanced: [
+    'SOCIAL_SHARING',
+    'SOCIAL_SHARING_POLLS',
+    'SOCIAL_SHARING_CIVICS',
+    'SOCIAL_SHARING_VISUAL',
+    'SOCIAL_SHARING_OG',
+  ],
+  civics: [...LOCKED_CIVICS_FLAGS],
+  future: [
+    'AUTOMATED_POLLS',
+    'ADVANCED_PRIVACY',
+    'SOCIAL_SIGNUP',
+    'CONTACT_INFORMATION_SYSTEM',
+    'CIVICS_TESTING_STRATEGY',
+    'CIVIC_ENGAGEMENT_V2',
+    'DEVICE_FLOW_AUTH',
+  ],
+  performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
+  system: [...LOCKED_SYSTEM_FLAGS, 'PUSH_NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION'],
+};
+
+const computeMutableFlags = () => {
+  const mutableFlags: Record<string, boolean> = {};
+  for (const key of MUTABLE_FLAG_KEYS) {
+    mutableFlags[key] = featureFlagManager.get(key) ?? false;
+  }
+  return cloneFlags(mutableFlags);
+};
+
+const computeLockedFlags = () => {
+  const enabledIds = featureFlagManager.getEnabledFlags().map((flag) => flag.id);
+  return enabledIds.filter((flagId) => !MUTABLE_FLAG_KEYS.includes(flagId)).sort();
+};
+
+const recalcFeatureFlags = (
+  previous: AdminFeatureFlagsState,
+  flags: Record<string, boolean>,
+  overrides?: Partial<Pick<AdminFeatureFlagsState, 'isLoading' | 'error'>>
+): AdminFeatureFlagsState => {
+  const { enabledFlags, disabledFlags } = calculateFlagLists(flags);
+  const next: AdminFeatureFlagsState = {
+    ...previous,
+    flags,
+    enabledFlags,
+    disabledFlags,
+    lockedFlags: previous.lockedFlags.length ? previous.lockedFlags : computeLockedFlags(),
+  };
+
+  if (overrides) {
+    if (overrides.isLoading !== undefined) {
+      next.isLoading = overrides.isLoading;
+    }
+    if (overrides.error !== undefined) {
+      next.error = overrides.error;
+    }
+  }
+
+  return next;
+};
+
+const formatFlagName = (flagId: string): string =>
+  flagId
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const resolveCategory = (categories: AdminFeatureFlagCategories, flagId: string): string => {
+  if (categories.core.includes(flagId)) return 'core';
+  if (categories.enhanced.includes(flagId)) return 'enhanced';
+  if (categories.civics.includes(flagId)) return 'civics';
+  if (categories.future.includes(flagId)) return 'future';
+  if (categories.performance.includes(flagId)) return 'performance';
+  if (categories.system.includes(flagId)) return 'system';
+  return 'general';
+};
+
+const isBooleanRecord = (value: unknown): value is Record<string, boolean> => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return Object.values(value).every((flagValue) => typeof flagValue === 'boolean');
+};
+
+const getInitialFlagState = () => {
+  const mutableFlags = computeMutableFlags();
+  const lockedFlags = computeLockedFlags();
+  const { enabledFlags, disabledFlags } = calculateFlagLists(mutableFlags);
+
+  return {
+    flags: mutableFlags,
+    enabledFlags,
+    disabledFlags,
+    lockedFlags,
+  };
+};
+
+const initialFlagState = getInitialFlagState();
+
+const mergeMetadata = (
+  metadata: unknown,
+  additions: Record<string, unknown | null | undefined>
+): Record<string, unknown> => {
+  const base =
+    metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+      ? { ...(metadata as Record<string, unknown>) }
+      : {};
+
+  for (const [key, value] of Object.entries(additions)) {
+    if (value !== undefined) {
+      base[key] = value as unknown;
+    }
+  }
+
+  return base;
+};
+
+const defaultSystemSettings: AdminSystemSettings = {
+  general: {
+    siteName: 'Choices Platform',
+    siteDescription: 'A modern voting platform for democratic decision making',
+    maintenanceMode: false,
+    allowRegistration: true,
+    requireEmailVerification: true,
+  },
+  performance: {
+    enableCaching: true,
+    cacheTTL: 3600,
+    enableCompression: true,
+    maxFileSize: 10 * 1024 * 1024,
+  },
+  security: {
+    enableRateLimiting: true,
+    maxRequestsPerMinute: 100,
+    enableCSP: true,
+    enableHSTS: true,
+  },
+  notifications: {
+    enableEmailNotifications: true,
+    enablePushNotifications: false,
+    notificationFrequency: 'immediate',
+  },
+};
+
+const cloneSystemSettings = (settings: AdminSystemSettings | null): AdminSystemSettings | null => {
+  if (!settings) {
+    return null;
+  }
+  return {
+    general: { ...settings.general },
+    performance: { ...settings.performance },
+    security: { ...settings.security },
+    notifications: { ...settings.notifications },
+  };
+};
+
+export const createInitialAdminState = (): AdminState => ({
+        sidebarCollapsed: false,
+        currentPage: 'dashboard',
+        notifications: [],
+        trendingTopics: [],
+        generatedPolls: [],
+        systemMetrics: null,
+        activityItems: [],
+        activityFeed: [],
+  featureFlags: {
+    flags: initialFlagState.flags,
+    enabledFlags: initialFlagState.enabledFlags,
+    disabledFlags: initialFlagState.disabledFlags,
+    lockedFlags: initialFlagState.lockedFlags,
+    categories: CATEGORY_PRESETS,
+    isLoading: false,
+    error: null,
+  },
+        users: [],
+  userFilters: createDefaultUserFilters(),
+        activeTab: 'overview',
+        dashboardStats: null,
+        systemSettings: null,
+        settingsTab: 'general',
+        isSavingSettings: false,
+  reimportProgress: createDefaultReimportProgress(),
+        reimportLogs: [],
+        isReimportRunning: false,
+        isLoading: false,
+        error: null,
+        adminNotifications: [],
+});
+
+export const initialAdminState: AdminState = createInitialAdminState();
 
 const buildAdminNotification = (input: NewAdminNotification): AdminNotification => {
   const issuedAt = input.timestamp ?? new Date().toISOString();
   const createdAt = input.created_at ?? issuedAt;
 
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+
   const base: AdminNotification = {
-    id: crypto.randomUUID(),
+    id,
     timestamp: issuedAt,
     type: input.type,
     title: input.title,
@@ -199,170 +469,206 @@ const buildAdminNotification = (input: NewAdminNotification): AdminNotification 
     created_at: createdAt,
   };
 
-  return withOptional(base, {
-    action: input.action,
-    metadata: input.metadata,
-  });
+  const overrides: Partial<AdminNotification> = {};
+
+  if (input.action) {
+    overrides.action = input.action;
+  }
+
+  if (input.metadata) {
+    overrides.metadata = { ...(input.metadata as Record<string, unknown>) };
+  }
+
+  return { ...base, ...overrides };
 };
 
-// Create the admin store
-export const useAdminStore = create<AdminStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        // Initial state
-        sidebarCollapsed: false,
-        currentPage: 'dashboard',
-        notifications: [],
+export const createAdminActions = (
+  set: Parameters<AdminStoreCreator>[0],
+  get: Parameters<AdminStoreCreator>[1]
+): AdminActions => {
+  const setState = (recipe: (draft: AdminState) => void) => {
+    (set as unknown as (fn: (draft: AdminState) => void) => void)(recipe);
+  };
 
-        trendingTopics: [],
-        generatedPolls: [],
-        systemMetrics: null,
-        activityItems: [],
-        activityFeed: [],
-        users: [],
-        userFilters: {
-          searchTerm: '',
-          roleFilter: 'all',
-          statusFilter: 'all',
-          selectedUsers: [],
-          showBulkActions: false,
-        },
-        activeTab: 'overview',
-        dashboardStats: null,
-        systemSettings: null,
-        settingsTab: 'general',
-        isSavingSettings: false,
-        reimportProgress: {
-          totalStates: 0,
-          processedStates: 0,
-          successfulStates: 0,
-          failedStates: 0,
-          totalRepresentatives: 0,
-          federalRepresentatives: 0,
-          stateRepresentatives: 0,
-          errors: [],
-          stateResults: [],
-        },
-        reimportLogs: [],
-        isReimportRunning: false,
-        isLoading: false,
-        error: null,
-        adminNotifications: [],
+  const setLoadingState = (loading: boolean) => {
+    setState((state) => {
+      state.isLoading = loading;
+    });
+  };
 
-        /**
-         * Toggle the admin sidebar collapsed state
-         */
-        toggleSidebar: () => {
+  const setErrorState = (error: string | null) => {
+    setState((state) => {
+      state.error = error;
+    });
+  };
+
+  const clearErrorState = () => setErrorState(null);
+
+  const setIsSavingSettingsState = (saving: boolean) => {
+    setState((state) => {
+      state.isSavingSettings = saving;
+    });
+  };
+
+  const setIsReimportRunningState = (running: boolean) => {
+    setState((state) => {
+      state.isReimportRunning = running;
+    });
+  };
+
+  const setTrendingTopicsState = (topics: TrendingTopic[]) => {
+    setState((state) => {
+      state.trendingTopics = topics;
+    });
+    logger.info('Admin trending topics updated', {
+      action: 'set_trending_topics',
+      count: topics.length,
+    });
+  };
+
+  const setGeneratedPollsState = (polls: GeneratedPoll[]) => {
+    setState((state) => {
+      state.generatedPolls = polls;
+    });
+    logger.info('Admin generated polls updated', {
+      action: 'set_generated_polls',
+      count: polls.length,
+    });
+  };
+
+  const setSystemMetricsState = (metrics: SystemMetrics) => {
+    setState((state) => {
+      state.systemMetrics = metrics;
+    });
+    logger.info('Admin system metrics updated', {
+      action: 'set_system_metrics',
+      metricKeys: Object.keys(metrics ?? {}),
+    });
+  };
+
+  const updateActivityFeedState = (activities: ActivityItem[]) => {
+    setState((state) => {
+      state.activityFeed = activities;
+    });
+    logger.info('Admin activity feed updated', {
+      action: 'update_activity_feed',
+      count: activities.length,
+    });
+  };
+
+  const markNotificationReadInternal = (id: string) => {
           const currentState = get();
-          const newState = !currentState.sidebarCollapsed;
+    const existingNotification =
+      currentState.notifications.find((notification) => notification.id === id) ??
+      currentState.adminNotifications.find((notification) => notification.id === id);
 
-          set(() => ({
-            sidebarCollapsed: newState
-          }));
+    setState((state) => {
+      const generalNotification = state.notifications.find((notification) => notification.id === id);
+      if (generalNotification) {
+        generalNotification.read = true;
+      }
+      const adminNotification = state.adminNotifications.find((notification) => notification.id === id);
+      if (adminNotification) {
+        adminNotification.read = true;
+      }
+    });
+
+    if (existingNotification) {
+      logger.info('Admin notification read', {
+        action: 'mark_notification_read',
+        notificationId: id,
+        notificationType: existingNotification.type,
+        timeToRead: Date.now() - new Date(existingNotification.timestamp).getTime(),
+      });
+    }
+  };
+
+  return {
+    setLoading: setLoadingState,
+    setError: setErrorState,
+    clearError: clearErrorState,
+    setTrendingTopics: setTrendingTopicsState,
+    setGeneratedPolls: setGeneratedPollsState,
+    setSystemMetrics: setSystemMetricsState,
+    updateActivityFeed: updateActivityFeedState,
+
+    toggleSidebar: () => {
+      const current = get();
+      const next = !current.sidebarCollapsed;
+
+      setState((state) => {
+        state.sidebarCollapsed = next;
+      });
 
           logger.info('Admin sidebar toggled', {
             action: 'toggle_sidebar',
-            newState,
-            currentPage: currentState.currentPage
+        newState: next,
+        currentPage: current.currentPage,
           });
         },
 
-        /**
-         * Set the current admin page
-         * @param page The page identifier
-         */
         setCurrentPage: (page: string) => {
-          const currentState = get();
+      const from = get().currentPage;
 
-          set({ currentPage: page });
+      setState((state) => {
+        state.currentPage = page;
+      });
 
           logger.info('Admin page navigation', {
             action: 'navigate_page',
-            from: currentState.currentPage,
-            to: page
+        from,
+        to: page,
           });
         },
 
-        /**
-         * Add a new admin notification
-         * @param notification The notification payload without generated identifiers
-         */
         addNotification: (notification: NewAdminNotification) => {
           const currentState = get();
           const newNotification = buildAdminNotification(notification);
 
-          set((state: AdminStore) => ({
-            notifications: [
-              newNotification,
-              ...state.notifications,
-            ].slice(0, 10), // Keep only last 10 notifications
-          }));
+      setState((state) => {
+        state.notifications.unshift(newNotification);
+        if (state.notifications.length > 10) {
+          state.notifications.length = 10;
+        }
+      });
 
           logger.info('Admin notification created', {
             action: 'add_notification',
             type: notification.type,
             title: notification.title,
-            currentCount: currentState.notifications.length + 1
+        currentCount: currentState.notifications.length + 1,
           });
 
-          // Check for critical notifications
           if (notification.type === 'error' || notification.type === 'warning') {
             logger.warn('Critical admin notification', {
               notification: newNotification,
-              currentPage: currentState.currentPage
+          currentPage: currentState.currentPage,
             });
           }
         },
 
-        /**
-         * Mark notification as read
-         * @param id Notification ID
-         */
-        markNotificationRead: (id: string) => {
-          const currentState = get();
-          const notification = currentState.notifications.find((n: AdminNotification) => n.id === id);
+    markNotificationRead: markNotificationReadInternal,
+    markNotificationAsRead: markNotificationReadInternal,
 
-          set((state: AdminStore) => ({
-            notifications: state.notifications.map((notif: AdminNotification) =>
-              notif.id === id ? (withOptional(notif, { read: true }) as AdminNotification) : notif
-            ),
-          }));
+    clearNotifications: () => {
+      const cleared = get().notifications.length;
 
-          if (notification) {
-            logger.info('Admin notification read', {
-              action: 'mark_notification_read',
-              notificationId: id,
-              notificationType: notification.type,
-              timeToRead: Date.now() - new Date(notification.timestamp).getTime()
-            });
-          }
-        },
-
-        /**
-         * Clear all notifications
-         */
-        clearNotifications: () => {
-          const currentState = get();
-
-          set({ notifications: [] });
+      setState((state) => {
+        state.notifications = [];
+      });
 
           logger.info('Admin notifications cleared', {
             action: 'clear_notifications',
-            clearedCount: currentState.notifications.length,
-            currentPage: currentState.currentPage
+        clearedCount: cleared,
+        currentPage: get().currentPage,
           });
         },
 
-        // Data loading actions
         loadUsers: async () => {
-          const { setLoading, setError } = get();
-
           try {
-            setLoading(true);
-            setError(null);
+        setLoadingState(true);
+        clearErrorState();
 
-            // Fetch users directly from database
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
               throw new Error('Database connection not available');
@@ -370,7 +676,8 @@ export const useAdminStore = create<AdminStore>()(
 
             const { data: users, error } = await supabase
               .from('user_profiles')
-              .select(`
+          .select(
+            `
                 id,
                 user_id,
                 email,
@@ -379,17 +686,18 @@ export const useAdminStore = create<AdminStore>()(
                 is_active,
                 created_at,
                 updated_at
-              `)
+          `
+          )
               .order('created_at', { ascending: false });
 
             if (error) {
               throw new Error(`Failed to fetch users: ${error.message}`);
             }
 
-            // Transform data to match AdminUser interface
-            const adminUsers: AdminUser[] = users?.map((user) => {
+        const adminUsers: AdminUser[] =
+          users?.map((user) => {
               const base: Record<string, unknown> = {
-                id: user.id || user.user_id,
+              id: user.id ?? user.user_id,
                 email: user.email,
                 name: user.display_name ?? 'Unknown User',
                 role: user.is_admin ? 'admin' : 'user',
@@ -398,31 +706,36 @@ export const useAdminStore = create<AdminStore>()(
                 created_at: user.created_at ?? '',
               };
 
-              if (user.updated_at) base.last_login = user.updated_at;
+            if (user.updated_at) {
+              base.last_login = user.updated_at;
+            }
 
               return base as AdminUser;
             }) ?? [];
 
-            set({ users: adminUsers });
+        setState((state) => {
+          state.users = adminUsers;
+        });
 
             logger.info('Users loaded successfully', {
-              userCount: adminUsers.length
+          userCount: adminUsers.length,
             });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load users:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to load users',
+          error instanceof Error ? error : new Error(message)
+        );
           } finally {
-            setLoading(false);
+        setLoadingState(false);
           }
         },
 
         loadDashboardStats: async () => {
-          const { setLoading, setError } = get();
-
           try {
-            setLoading(true);
-            setError(null);
+        setLoadingState(true);
+        clearErrorState();
 
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
@@ -461,13 +774,8 @@ export const useAdminStore = create<AdminStore>()(
               logger.warn('Failed to load poll analytics events', pollEventsError);
             }
 
-            const isRecord = (value: unknown): value is Record<string, any> =>
+        const isRecord = (value: unknown): value is Record<string, unknown> =>
               value !== null && typeof value === 'object' && !Array.isArray(value);
-
-            const createId = () =>
-              typeof crypto !== 'undefined' && 'randomUUID' in crypto
-                ? crypto.randomUUID()
-                : Math.random().toString(36).slice(2);
 
             const shareCounts = new Map<string, number>();
             const newActivityItems: ActivityItem[] = [];
@@ -478,36 +786,33 @@ export const useAdminStore = create<AdminStore>()(
             let pollsCreatedToday = 0;
             let milestoneAlertsLast7Days = 0;
             let shareActionsLast24h = 0;
-            let latestMilestone: { pollId?: string; milestone?: number | null; occurredAt: string } | null = null;
+        let latestMilestone: AdminDashboardStats['latestMilestone'] = null;
 
             const pushActivityItem = (item: ActivityItem) => {
-              if (!item.id) {
-                return;
-              }
-              if (newActivityItems.length >= 15) {
+          if (!item.id || newActivityItems.length >= 15) {
                 return;
               }
               newActivityItems.push(item);
             };
 
+        const ensureId = () =>
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : Math.random().toString(36).slice(2);
+
             (pollEvents ?? []).forEach((event) => {
                const createdAt = event.created_at ?? new Date().toISOString();
                const createdMs = Date.parse(createdAt);
-              if (!isRecord(event.event_data)) {
-                return;
-              }
-
-              const eventData = event.event_data as Record<string, unknown>;
+          const eventData = isRecord(event.event_data) ? event.event_data : {};
               const action = typeof eventData.action === 'string' ? eventData.action : '';
+
                if (!action) {
                  return;
                }
 
-              const metadata = isRecord(eventData.metadata)
-                ? (eventData.metadata as Record<string, unknown>)
-                : {};
-
-              const pollId = typeof metadata.pollId === 'string'
+          const metadata = isRecord(eventData.metadata) ? eventData.metadata : {};
+          const pollId =
+            typeof metadata.pollId === 'string'
                 ? metadata.pollId
                 : typeof metadata.poll_id === 'string'
                 ? metadata.poll_id
@@ -519,7 +824,8 @@ export const useAdminStore = create<AdminStore>()(
                   pollsCreatedToday += 1;
                 }
 
-                const title = typeof metadata.title === 'string' && metadata.title.trim().length > 0
+            const title =
+              typeof metadata.title === 'string' && metadata.title.trim().length > 0
                   ? metadata.title
                   : 'Poll published';
 
@@ -527,9 +833,11 @@ export const useAdminStore = create<AdminStore>()(
                   id: event.id,
                   type: action,
                   title,
-                  description: pollId ? `Poll ${pollId} is now live.` : 'A new poll is live on the platform.',
+              description: pollId
+                ? `Poll ${pollId} is now live on the platform.`
+                : 'A new poll is live on the platform.',
                   timestamp: createdAt,
-                  metadata: withOptional(metadata, { pollId }),
+                  metadata: mergeMetadata(metadata, { pollId }),
                 });
                 return;
               }
@@ -537,11 +845,12 @@ export const useAdminStore = create<AdminStore>()(
               if (action === 'milestone_reached') {
                 milestoneAlertsLast7Days += 1;
 
-                const milestoneValueRaw = metadata.milestone;
-                const milestoneValue = typeof milestoneValueRaw === 'number'
-                  ? milestoneValueRaw
-                  : typeof milestoneValueRaw === 'string'
-                  ? Number.parseInt(milestoneValueRaw, 10)
+            const milestoneRaw = metadata.milestone;
+            const milestoneValue =
+              typeof milestoneRaw === 'number'
+                ? milestoneRaw
+                : typeof milestoneRaw === 'string'
+                ? Number.parseInt(milestoneRaw, 10)
                   : null;
 
                 if (!latestMilestone) {
@@ -561,17 +870,17 @@ export const useAdminStore = create<AdminStore>()(
                   type: action,
                   title: 'Milestone reached',
                   description: pollId
-                    ? `Poll ${pollId} just crossed ${milestoneLabel} votes.`
+                ? `Poll ${pollId} crossed ${milestoneLabel} votes.`
                     : `A poll crossed ${milestoneLabel} votes.`,
                   timestamp: createdAt,
-                  metadata: withOptional(metadata, {
+                  metadata: mergeMetadata(metadata, {
                     pollId,
                     milestone: milestoneValue,
                   }),
                 });
 
                 const alreadyNotified = existingNotifications.some(
-                  (notification) => notification.metadata?.eventId === event.id,
+              (notification) => notification.metadata?.eventId === event.id
                 );
 
                 if (!alreadyNotified) {
@@ -584,19 +893,15 @@ export const useAdminStore = create<AdminStore>()(
                     read: false,
                     created_at: createdAt,
                     timestamp: createdAt,
-                    metadata: withOptional(
-                      {
-                        eventId: event.id,
-                      },
-                      {
+                    metadata: mergeMetadata({ eventId: event.id }, {
                         pollId,
                         milestone: milestoneValue,
-                      }
-                    ),
+                    }),
                   });
-                  pending.id = createId();
+              pending.id = ensureId();
                   pendingNotifications.push(pending);
                 }
+
                 return;
               }
 
@@ -610,14 +915,16 @@ export const useAdminStore = create<AdminStore>()(
                 if (!Number.isNaN(createdMs) && createdMs >= sinceTwentyFourHoursMs) {
                   shareActionsLast24h += 1;
                   const channelRaw = metadata.channel;
-                  const channel = typeof channelRaw === 'string' && channelRaw.trim().length > 0
+              const channel =
+                typeof channelRaw === 'string' && channelRaw.trim().length > 0
                     ? channelRaw
                     : action;
                   shareCounts.set(channel, (shareCounts.get(channel) ?? 0) + 1);
                 }
 
                 const channelLabelRaw = metadata.channel;
-                const channelLabel = typeof channelLabelRaw === 'string' && channelLabelRaw.trim().length > 0
+            const channelLabel =
+              typeof channelLabelRaw === 'string' && channelLabelRaw.trim().length > 0
                   ? channelLabelRaw
                   : action.replace('share_', '').replace('_', ' ');
 
@@ -629,7 +936,7 @@ export const useAdminStore = create<AdminStore>()(
                     ? `Poll ${pollId} shared via ${channelLabel}.`
                     : `A poll share event occurred via ${channelLabel}.`,
                   timestamp: createdAt,
-                  metadata: withOptional(metadata, {
+                  metadata: mergeMetadata(metadata, {
                     pollId,
                     channel: channelLabel,
                   }),
@@ -645,18 +952,24 @@ export const useAdminStore = create<AdminStore>()(
                   ? `Poll ${pollId} recorded a ${action.replace(/_/g, ' ')} event.`
                   : `Poll analytics event: ${action.replace(/_/g, ' ')}.`,
                 timestamp: createdAt,
-                metadata: withOptional(metadata, { pollId }),
+                metadata: mergeMetadata(metadata, { pollId }),
               });
             });
 
-            const topShareChannelEntry = Array.from(shareCounts.entries()).sort((a, b) => b[1] - a[1])[0];
+        const topShareChannelEntry = Array.from(shareCounts.entries()).sort(
+          (a, b) => b[1] - a[1]
+        )[0];
             const topShareChannel = topShareChannelEntry
               ? { channel: topShareChannelEntry[0], count: topShareChannelEntry[1] }
               : null;
 
-            const mergeActivityItems = (existing: ActivityItem[], incoming: ActivityItem[]): ActivityItem[] => {
+        const mergeActivityItems = (
+          existing: ActivityItem[],
+          incoming: ActivityItem[]
+        ): ActivityItem[] => {
               const seen = new Set<string>();
               const merged: ActivityItem[] = [];
+
               for (const item of [...incoming, ...existing]) {
                 if (!item.id || seen.has(item.id)) {
                   continue;
@@ -667,6 +980,7 @@ export const useAdminStore = create<AdminStore>()(
                   break;
                 }
               }
+
               return merged;
             };
 
@@ -686,11 +1000,11 @@ export const useAdminStore = create<AdminStore>()(
               return (pollsResult.count ?? 0) > 0 ? ('warning' as const) : ('critical' as const);
             })();
 
-            const stats = {
+        const stats: AdminDashboardStats = {
               totalUsers: usersResult.count ?? 0,
               activePolls: pollsResult.count ?? 0,
               totalVotes: votesResult.count ?? 0,
-              systemHealth: systemHealth as 'healthy' | 'warning' | 'critical',
+          systemHealth,
               pollsCreatedLast7Days,
               pollsCreatedToday,
               milestoneAlertsLast7Days,
@@ -699,24 +1013,24 @@ export const useAdminStore = create<AdminStore>()(
               latestMilestone,
             };
 
-            set((state: AdminStore) => ({
-              dashboardStats: stats,
-              activityItems: mergeActivityItems(state.activityItems, newActivityItems),
-            }));
+        setState((state) => {
+          state.dashboardStats = stats;
+          state.activityItems = mergeActivityItems(state.activityItems, newActivityItems);
 
             if (pendingNotifications.length > 0) {
-              set((state: AdminStore) => {
-                const existingEventIds = new Set(pendingNotifications.map((notification) => notification.metadata?.eventId));
-                const preservedNotifications = state.adminNotifications.filter((notification) => {
-                  const eventId = notification.metadata?.eventId;
-                  return !eventId || !existingEventIds.has(eventId);
-                });
+            const eventIds = new Set(
+              pendingNotifications.map((notification) => notification.metadata?.eventId)
+            );
 
-                return {
-                  adminNotifications: [...pendingNotifications, ...preservedNotifications].slice(0, 25),
-                };
-              });
-            }
+            state.adminNotifications = [
+              ...pendingNotifications,
+              ...state.adminNotifications.filter((notification) => {
+                  const eventId = notification.metadata?.eventId;
+                return !eventId || !eventIds.has(eventId);
+              }),
+            ].slice(0, 25);
+          }
+        });
 
             logger.info('Dashboard stats loaded successfully', {
               totalUsers: stats.totalUsers,
@@ -727,145 +1041,111 @@ export const useAdminStore = create<AdminStore>()(
               shareActionsLast24h,
             });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load dashboard stats:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to load dashboard stats',
+          error instanceof Error ? error : new Error(message)
+        );
           } finally {
-            setLoading(false);
+        setLoadingState(false);
           }
         },
 
         loadSystemSettings: async () => {
-          const { setLoading, setError } = get();
-
           try {
-            setLoading(true);
-            setError(null);
+        setLoadingState(true);
+        clearErrorState();
 
-            // Fetch system settings from database
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
               throw new Error('Database connection not available');
             }
 
-            // System settings are stored in user_profiles preferences or as constants
-            // Since system_settings table doesn't exist, use default settings
-
-            // Use default settings if none exist in database
-            const defaultSettings = {
-              general: {
-                siteName: 'Choices Platform',
-                siteDescription: 'A modern voting platform for democratic decision making',
-                maintenanceMode: false,
-                allowRegistration: true,
-                requireEmailVerification: true,
-              },
-              performance: {
-                enableCaching: true,
-                cacheTTL: 3600,
-                enableCompression: true,
-                maxFileSize: 10485760, // 10MB
-              },
-              security: {
-                enableRateLimiting: true,
-                maxRequestsPerMinute: 100,
-                enableCSP: true,
-                enableHSTS: true,
-              },
-              notifications: {
-                enableEmailNotifications: true,
-                enablePushNotifications: false,
-                notificationFrequency: 'immediate' as const,
-              },
-            };
-
-            const settings = defaultSettings;
-            set({ systemSettings: settings });
+        setState((state) => {
+          state.systemSettings = cloneSystemSettings(defaultSystemSettings);
+        });
 
             logger.info('System settings loaded successfully');
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load system settings:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to load system settings',
+          error instanceof Error ? error : new Error(message)
+        );
           } finally {
-            setLoading(false);
+        setLoadingState(false);
           }
         },
 
-        // User management actions
-        setUserFilters: (filters) => set((state) => {
-          const { selectedUsers: incomingSelectedUsers, ...rest } = filters;
-          const nextFilters = withOptional(state.userFilters, rest) as AdminStore['userFilters'];
+    setUserFilters: (filters) => {
+      setState((state) => {
+        if (filters.searchTerm !== undefined) {
+          state.userFilters.searchTerm = filters.searchTerm;
+        }
+        if (filters.roleFilter !== undefined) {
+          state.userFilters.roleFilter = filters.roleFilter;
+        }
+        if (filters.statusFilter !== undefined) {
+          state.userFilters.statusFilter = filters.statusFilter;
+        }
 
-          if (incomingSelectedUsers !== undefined) {
+        if (filters.selectedUsers !== undefined) {
+          const incoming = filters.selectedUsers as unknown;
             let normalized: string[];
 
-            if (incomingSelectedUsers instanceof Set) {
-              normalized = Array.from(incomingSelectedUsers);
-            } else if (Array.isArray(incomingSelectedUsers)) {
-              normalized = [...incomingSelectedUsers];
+          if (incoming instanceof Set) {
+            normalized = Array.from(incoming);
+          } else if (Array.isArray(incoming)) {
+            normalized = [...incoming];
             } else {
               normalized = [];
             }
 
-            normalized = Array.from(new Set(normalized));
-            nextFilters.selectedUsers = normalized;
-
-            if (typeof rest.showBulkActions === 'undefined') {
-              nextFilters.showBulkActions = normalized.length > 0;
-            }
+          state.userFilters.selectedUsers = Array.from(new Set(normalized));
+          if (filters.showBulkActions === undefined) {
+            state.userFilters.showBulkActions = state.userFilters.selectedUsers.length > 0;
           }
+        }
 
-          return { userFilters: nextFilters };
-        }),
+        if (filters.showBulkActions !== undefined) {
+          state.userFilters.showBulkActions = filters.showBulkActions;
+        }
+      });
+    },
 
-        selectUser: (userId) => set((state) => {
-          if (state.userFilters.selectedUsers.includes(userId)) {
-            return state;
-          }
-
-          const selectedUsers = [...state.userFilters.selectedUsers, userId];
-
-          return {
-            userFilters: withOptional(state.userFilters, {
-              selectedUsers,
-              showBulkActions: true,
-            }) as AdminStore['userFilters'],
-          };
-        }),
-
-        deselectUser: (userId) => set((state) => {
+    selectUser: (userId) => {
+      setState((state) => {
           if (!state.userFilters.selectedUsers.includes(userId)) {
-            return state;
+          state.userFilters.selectedUsers.push(userId);
+          state.userFilters.showBulkActions = true;
           }
+      });
+    },
 
-          const selectedUsers = state.userFilters.selectedUsers.filter((id) => id !== userId);
+    deselectUser: (userId) => {
+      setState((state) => {
+        state.userFilters.selectedUsers = state.userFilters.selectedUsers.filter(
+          (id) => id !== userId
+        );
+        state.userFilters.showBulkActions = state.userFilters.selectedUsers.length > 0;
+      });
+    },
 
-          return {
-            userFilters: withOptional(state.userFilters, {
-              selectedUsers,
-              showBulkActions: selectedUsers.length > 0,
-            }) as AdminStore['userFilters'],
-          };
-        }),
+    selectAllUsers: () => {
+      setState((state) => {
+        state.userFilters.selectedUsers = state.users.map((user) => user.id);
+        state.userFilters.showBulkActions = state.userFilters.selectedUsers.length > 0;
+      });
+    },
 
-        selectAllUsers: () => set((state) => {
-          const selectedUsers = state.users.map((user) => user.id);
-
-          return {
-            userFilters: withOptional(state.userFilters, {
-              selectedUsers,
-              showBulkActions: selectedUsers.length > 0,
-            }) as AdminStore['userFilters'],
-          };
-        }),
-
-        deselectAllUsers: () => set((state) => ({
-          userFilters: withOptional(state.userFilters, {
-            selectedUsers: [],
-            showBulkActions: false,
-          }) as AdminStore['userFilters'],
-        })),
+    deselectAllUsers: () => {
+      setState((state) => {
+        state.userFilters.selectedUsers = [];
+        state.userFilters.showBulkActions = false;
+      });
+    },
 
         updateUserRole: async (userId, role) => {
           try {
@@ -883,20 +1163,22 @@ export const useAdminStore = create<AdminStore>()(
               throw new Error(`Failed to update user role: ${error.message}`);
             }
 
-            // Update local state
-            set((state) => ({
-              users: state.users.map((user) =>
-                user.id === userId
-                  ? (withOptional(user, { role: role as 'admin' | 'moderator' | 'user' }) as AdminUser)
-                  : user
-              ),
-            }));
+        setState((state) => {
+          const target = state.users.find((user) => user.id === userId);
+          if (target) {
+            target.role = role as AdminUser['role'];
+            target.is_admin = role === 'admin';
+          }
+        });
 
             logger.info('User role updated successfully', { userId, role });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            set({ error: errorMessage });
-            logger.error('Failed to update user role:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to update user role',
+          error instanceof Error ? error : new Error(message)
+        );
           }
         },
 
@@ -916,20 +1198,21 @@ export const useAdminStore = create<AdminStore>()(
               throw new Error(`Failed to update user status: ${error.message}`);
             }
 
-            // Update local state
-            set((state) => ({
-              users: state.users.map((user) =>
-                user.id === userId
-                  ? (withOptional(user, { status: status as 'active' | 'inactive' | 'suspended' }) as AdminUser)
-                  : user
-              ),
-            }));
+        setState((state) => {
+          const target = state.users.find((user) => user.id === userId);
+          if (target) {
+            target.status = status as AdminUser['status'];
+          }
+        });
 
             logger.info('User status updated successfully', { userId, status });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            set({ error: errorMessage });
-            logger.error('Failed to update user status:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to update user status',
+          error instanceof Error ? error : new Error(message)
+        );
           }
         },
 
@@ -940,60 +1223,66 @@ export const useAdminStore = create<AdminStore>()(
               throw new Error('Database connection not available');
             }
 
-            const { error } = await supabase
-              .from('user_profiles')
-              .delete()
-              .eq('user_id', userId);
+        const { error } = await supabase.from('user_profiles').delete().eq('user_id', userId);
 
             if (error) {
               throw new Error(`Failed to delete user: ${error.message}`);
             }
 
-            // Update local state
-            set((state) => ({
-              users: state.users.filter(user => user.id !== userId)
-            }));
+        setState((state) => {
+          state.users = state.users.filter((user) => user.id !== userId);
+        });
 
             logger.info('User deleted successfully', { userId });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            set({ error: errorMessage });
-            logger.error('Failed to delete user:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to delete user',
+          error instanceof Error ? error : new Error(message)
+        );
           }
         },
 
-        // Dashboard actions
-        setActiveTab: (tab) => set({ activeTab: tab }),
+    setActiveTab: (tab) => {
+      setState((state) => {
+        state.activeTab = tab;
+      });
+    },
 
-        // System settings actions
-        setSystemSettings: (settings) => set({ systemSettings: settings }),
+    setSystemSettings: (settings) => {
+      setState((state) => {
+        state.systemSettings = cloneSystemSettings(settings);
+      });
+    },
 
-        updateSystemSetting: (section, key, value) => set((state) => {
-          const currentSettings = state.systemSettings;
-          if (!currentSettings) return state;
+    updateSystemSetting: (section, key, value) => {
+      setState((state) => {
+        const settings = state.systemSettings;
+        if (!settings) {
+          return;
+        }
 
-          const updatedSection = withOptional(currentSettings[section] ?? {}, {
-            [key]: value,
-          }) as Record<string, unknown>;
+        const targetSection = settings[section] as Record<string, unknown>;
+        if (targetSection) {
+          targetSection[key] = value;
+        }
+      });
+    },
 
-          return {
-            systemSettings: withOptional(currentSettings, {
-              [section]: updatedSection,
-            }) as NonNullable<AdminStore['systemSettings']>,
-          };
-        }),
-
-        setSettingsTab: (tab) => set({ settingsTab: tab }),
+    setSettingsTab: (tab) => {
+      setState((state) => {
+        state.settingsTab = tab;
+      });
+    },
 
         saveSystemSettings: async () => {
-          const { setIsSavingSettings, setError } = get();
-
           try {
-            setIsSavingSettings(true);
-            setError(null);
+        setIsSavingSettingsState(true);
+        clearErrorState();
 
-            const { systemSettings } = get();
-            if (!systemSettings) {
+        const settings = get().systemSettings;
+        if (!settings) {
               throw new Error('No settings to save');
             }
 
@@ -1002,103 +1291,340 @@ export const useAdminStore = create<AdminStore>()(
               throw new Error('Database connection not available');
             }
 
-            // System settings are not stored in database - they're application constants
-            // This is a no-op for now, but could be implemented with a proper settings table
-
             logger.info('System settings saved successfully');
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to save system settings:', error instanceof Error ? error : new Error(errorMessage));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setErrorState(message);
+        logger.error(
+          'Failed to save system settings',
+          error instanceof Error ? error : new Error(message)
+        );
           } finally {
-            setIsSavingSettings(false);
+        setIsSavingSettingsState(false);
           }
         },
 
-        // Reimport actions
-        setReimportProgress: (progress) => set((state) => ({
-          reimportProgress: withOptional(state.reimportProgress, progress) as AdminStore['reimportProgress'],
-        })),
+    setIsSavingSettings: setIsSavingSettingsState,
 
-        addReimportLog: (message) => set((state) => ({
-          reimportLogs: [...state.reimportLogs, message]
-        })),
+    setUpdating: (updating) => {
+      setIsSavingSettingsState(updating);
+    },
 
-        clearReimportLogs: () => set({ reimportLogs: [] }),
+    setReimportProgress: (progress) => {
+      setState((state) => {
+        const target = state.reimportProgress;
 
-        setIsReimportRunning: (running) => set({ isReimportRunning: running }),
+        if (progress.totalStates !== undefined) {
+          target.totalStates = progress.totalStates;
+        }
+        if (progress.processedStates !== undefined) {
+          target.processedStates = progress.processedStates;
+        }
+        if (progress.successfulStates !== undefined) {
+          target.successfulStates = progress.successfulStates;
+        }
+        if (progress.failedStates !== undefined) {
+          target.failedStates = progress.failedStates;
+        }
+        if (progress.totalRepresentatives !== undefined) {
+          target.totalRepresentatives = progress.totalRepresentatives;
+        }
+        if (progress.federalRepresentatives !== undefined) {
+          target.federalRepresentatives = progress.federalRepresentatives;
+        }
+        if (progress.stateRepresentatives !== undefined) {
+          target.stateRepresentatives = progress.stateRepresentatives;
+        }
+        if (progress.errors !== undefined) {
+          target.errors = [...progress.errors];
+        }
+        if (progress.stateResults !== undefined) {
+          target.stateResults = [...progress.stateResults];
+        }
+      });
+    },
+
+    addReimportLog: (message) => {
+      setState((state) => {
+        state.reimportLogs.push(message);
+      });
+    },
+
+    clearReimportLogs: () => {
+      setState((state) => {
+        state.reimportLogs = [];
+      });
+    },
+
+    setIsReimportRunning: setIsReimportRunningState,
 
         startReimport: async () => {
-          const { setIsReimportRunning, addReimportLog, setReimportProgress } = get();
+      setIsReimportRunningState(true);
+      setState((state) => {
+        state.reimportLogs.push('Starting reimport process...');
+        state.reimportProgress = createDefaultReimportProgress();
+      });
 
-          try {
-            setIsReimportRunning(true);
-            addReimportLog('Starting reimport process...');
-
-            // Reset progress
-            setReimportProgress({
-              totalStates: 0,
-              processedStates: 0,
-              successfulStates: 0,
-              failedStates: 0,
-              totalRepresentatives: 0,
-              federalRepresentatives: 0,
-              stateRepresentatives: 0,
-              errors: [],
-              stateResults: [],
-            });
-
-            // Implementation would go here
-            addReimportLog('Reimport process completed');
+      try {
+        await Promise.resolve();
+        setState((state) => {
+          state.reimportLogs.push('Reimport process completed');
+        });
           } catch (error) {
-            addReimportLog(`Reimport failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setState((state) => {
+          state.reimportLogs.push(`Reimport failed: ${message}`);
+        });
           } finally {
-            setIsReimportRunning(false);
+        setIsReimportRunningState(false);
           }
         },
 
-        // Activity and notifications
-        addActivityItem: (item) => set((state) => ({
-          activityItems: [item, ...state.activityItems.slice(0, 99)] // Keep last 100 items
-        })),
+    addActivityItem: (item) => {
+      const entry: ActivityItem =
+        'id' in item && 'timestamp' in item
+          ? item
+          : {
+              id:
+                typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+                  ? crypto.randomUUID()
+                  : Math.random().toString(36).slice(2),
+              timestamp: new Date().toISOString(),
+              ...item,
+            };
 
-        clearActivityItems: () => set({ activityItems: [] }),
+      setState((state) => {
+        state.activityItems.unshift(entry);
+        if (state.activityItems.length > 100) {
+          state.activityItems.length = 100;
+        }
+      });
+    },
 
-        addAdminNotification: (notification) => set((state) => ({
-          adminNotifications: [notification, ...state.adminNotifications]
-        })),
+    clearActivityItems: () => {
+      setState((state) => {
+        state.activityItems = [];
+        state.activityFeed = [];
+      });
+    },
 
-        clearAdminNotifications: () => set({ adminNotifications: [] }),
+    addAdminNotification: (notification) => {
+      setState((state) => {
+        state.adminNotifications.unshift(notification);
+        if (state.adminNotifications.length > 25) {
+          state.adminNotifications.length = 25;
+        }
+      });
+    },
 
-        markNotificationAsRead: (id) => set((state) => ({
-          adminNotifications: state.adminNotifications.map((notification) =>
-            notification.id === id
-              ? (withOptional(notification, { read: true }) as typeof notification)
-              : notification
-          ),
-        })),
+    clearAdminNotifications: () => {
+      setState((state) => {
+        state.adminNotifications = [];
+      });
+    },
 
-        // Utility actions
-        setLoading: (loading) => set({ isLoading: loading }),
-        setUpdating: (updating) => set({ isSavingSettings: updating }),
-        setError: (error) => set({ error }),
-        clearError: () => set({ error: null }),
-        setIsSavingSettings: (saving) => set({ isSavingSettings: saving }),
+    enableFeatureFlag: (flagId) => {
+      const state = get();
+      if (!Object.prototype.hasOwnProperty.call(state.featureFlags.flags, flagId)) {
+        logger.warn('Attempted to enable locked feature flag', { flagId });
+        return false;
+      }
+
+      const success = featureFlagManager.enable(flagId);
+      if (success) {
+        setState((draft) => {
+          draft.featureFlags = recalcFeatureFlags(draft.featureFlags, {
+            ...draft.featureFlags.flags,
+            [flagId]: true,
+          });
+        });
+
+        logger.info('Feature flag enabled', { flagId, action: 'enable_flag' });
+      }
+
+      return success;
+    },
+
+    disableFeatureFlag: (flagId) => {
+      const state = get();
+      if (!Object.prototype.hasOwnProperty.call(state.featureFlags.flags, flagId)) {
+        logger.warn('Attempted to disable locked feature flag', { flagId });
+        return false;
+      }
+
+      const success = featureFlagManager.disable(flagId);
+      if (success) {
+        setState((draft) => {
+          draft.featureFlags = recalcFeatureFlags(draft.featureFlags, {
+            ...draft.featureFlags.flags,
+            [flagId]: false,
+          });
+        });
+
+        logger.info('Feature flag disabled', { flagId, action: 'disable_flag' });
+      }
+
+      return success;
+    },
+
+    toggleFeatureFlag: (flagId) => {
+      const state = get();
+      if (!Object.prototype.hasOwnProperty.call(state.featureFlags.flags, flagId)) {
+        logger.warn('Attempted to toggle locked feature flag', { flagId });
+        return false;
+      }
+
+      const success = featureFlagManager.toggle(flagId);
+      if (success) {
+        setState((draft) => {
+          draft.featureFlags = recalcFeatureFlags(draft.featureFlags, {
+            ...draft.featureFlags.flags,
+            [flagId]: !draft.featureFlags.flags[flagId],
+          });
+        });
+
+        logger.info('Feature flag toggled', { flagId, action: 'toggle_flag' });
+      }
+
+      return success;
+    },
+
+    isFeatureFlagEnabled: (flagId) => featureFlagManager.isEnabled(flagId),
+
+    getFeatureFlag: (flagId) => featureFlagManager.getFlag(flagId),
+
+    getAllFeatureFlags: () => {
+      const state = get();
+
+      const mutableFlags = Object.entries(state.featureFlags.flags).map(([key, enabled]) => {
+        const managerFlag = featureFlagManager.getFlag(key);
+        if (managerFlag) {
+          return managerFlag as DisplayFeatureFlag;
+        }
+        return {
+          id: key,
+          name: formatFlagName(key),
+          description: `Feature flag for ${formatFlagName(key)}`,
+          enabled,
+          category: resolveCategory(state.featureFlags.categories, key),
+        } satisfies DisplayFeatureFlag;
+      }) as DisplayFeatureFlag[];
+
+      const lockedFlags = state.featureFlags.lockedFlags.map((flagId) => {
+        const managerFlag = featureFlagManager.getFlag(flagId);
+        if (managerFlag) {
+          return { ...(managerFlag as DisplayFeatureFlag), locked: true };
+        }
+        return {
+          id: flagId,
+          name: formatFlagName(flagId),
+          description: `Core capability ${formatFlagName(flagId)} is always enabled`,
+          enabled: true,
+          category: resolveCategory(state.featureFlags.categories, flagId),
+          locked: true,
+        } satisfies DisplayFeatureFlag;
+      }) as DisplayFeatureFlag[];
+
+      return [...lockedFlags, ...mutableFlags].sort((a, b) => a.name.localeCompare(b.name));
+    },
+
+    exportFeatureFlagConfig: () => featureFlagManager.exportConfig(),
+
+    importFeatureFlagConfig: (configInput) => {
+      const rawConfig =
+        typeof configInput === 'object' && configInput !== null
+          ? (configInput as Record<string, unknown>)
+          : null;
+
+      if (!rawConfig) {
+        logger.error('Failed to import feature flag config', undefined, { action: 'import_config' });
+        return false;
+      }
+
+      const flags = rawConfig.flags;
+      if (!isBooleanRecord(flags)) {
+        logger.error('Invalid feature flag configuration: flags must be a boolean record', undefined, {
+          action: 'import_config',
+        });
+        return false;
+      }
+
+      const normalizedConfig: FeatureFlagConfig = {
+        flags,
+        timestamp:
+          typeof rawConfig.timestamp === 'string' ? rawConfig.timestamp : new Date().toISOString(),
+        version: typeof rawConfig.version === 'string' ? rawConfig.version : '1.0.0',
+      };
+
+      try {
+        featureFlagManager.importConfig(normalizedConfig);
+        const nextFlags = featureFlagManager.exportConfig().flags;
+        setState((draft) => {
+          draft.featureFlags = recalcFeatureFlags(draft.featureFlags, { ...nextFlags });
+        });
+
+        logger.info('Feature flag config imported', { action: 'import_config' });
+        return true;
+      } catch (error) {
+        logger.error(
+          'Failed to import feature flag config',
+          error instanceof Error ? error : undefined,
+          { action: 'import_config' }
+        );
+        return false;
+      }
+    },
+
+    resetFeatureFlags: () => {
+      featureFlagManager.reset();
+      const refreshed = getInitialFlagState();
+      setState((draft) => {
+        draft.featureFlags.flags = refreshed.flags;
+        draft.featureFlags.enabledFlags = refreshed.enabledFlags;
+        draft.featureFlags.disabledFlags = refreshed.disabledFlags;
+        draft.featureFlags.lockedFlags = refreshed.lockedFlags;
+      });
+
+      logger.info('Feature flags reset to defaults', { action: 'reset_flags' });
+    },
+
+    setFeatureFlagLoading: (loading) => {
+      setState((state) => {
+        state.featureFlags.isLoading = loading;
+      });
+    },
+
+    setFeatureFlagError: (error) => {
+      setState((state) => {
+        state.featureFlags.error = error;
+      });
+    },
 
         refreshData: async () => {
           const { loadUsers, loadDashboardStats, loadSystemSettings } = get();
-          await Promise.all([
-            loadUsers(),
-            loadDashboardStats(),
-            loadSystemSettings()
-          ]);
+      await Promise.all([loadUsers(), loadDashboardStats(), loadSystemSettings()]);
         },
 
         syncData: async () => {
-          const { refreshData } = get();
-          await refreshData();
+      await get().refreshData();
         },
-      }),
+
+    resetAdminState: () => {
+      const next = createInitialAdminState();
+      setState((state) => {
+        Object.assign(state, next);
+      });
+    },
+  };
+};
+
+export const adminStoreCreator: AdminStoreCreator = (set, get) =>
+  Object.assign(createInitialAdminState(), createAdminActions(set, get));
+
+export const useAdminStore = create<AdminStore>()(
+  devtools(
+    persist(
+      immer(adminStoreCreator),
       {
         name: 'admin-store',
         storage: createSafeStorage(),
@@ -1109,26 +1635,65 @@ export const useAdminStore = create<AdminStore>()(
         }),
       }
     ),
-    {
-      name: 'admin-store',
-    }
+    { name: 'admin-store' }
   )
 );
 
-// Export individual selectors for better performance
+export const adminSelectors = {
+  sidebarCollapsed: (state: AdminStore) => state.sidebarCollapsed,
+  currentPage: (state: AdminStore) => state.currentPage,
+  notifications: (state: AdminStore) => state.notifications,
+  users: (state: AdminStore) => state.users,
+  dashboardStats: (state: AdminStore) => state.dashboardStats,
+  systemSettings: (state: AdminStore) => state.systemSettings,
+  reimportProgress: (state: AdminStore) => state.reimportProgress,
+  adminNotifications: (state: AdminStore) => state.adminNotifications,
+  isLoading: (state: AdminStore) => state.isLoading,
+  error: (state: AdminStore) => state.error,
+};
+
 export const useTrendingTopics = () => useAdminStore((state) => state.trendingTopics);
 export const useGeneratedPolls = () => useAdminStore((state) => state.generatedPolls);
 export const useSystemMetrics = () => useAdminStore((state) => state.systemMetrics);
 export const useActivityItems = () => useAdminStore((state) => state.activityItems);
 export const useActivityFeed = () => useAdminStore((state) => state.activityFeed);
-export const useAdminNotifications = () => useAdminStore((state) => state.adminNotifications);
+export const useAdminNotifications = () => useAdminStore((state) => state.notifications);
+export const useAdminFeatureFlags = () => useAdminStore((state) => state.featureFlags);
+export const useAdminSidebarCollapsed = () => useAdminStore((state) => state.sidebarCollapsed);
 export const useAdminLoading = () => useAdminStore((state) => state.isLoading);
 export const useAdminError = () => useAdminStore((state) => state.error);
 
-// User management selectors
+const filterAdminUsers = (users: AdminUser[], filters: AdminUserFilters): AdminUser[] => {
+  const normalizedSearch = filters.searchTerm.trim().toLowerCase();
+  const matchesSearch = (user: AdminUser) => {
+    if (!normalizedSearch.length) {
+      return true;
+    }
+    const emailMatch = user.email?.toLowerCase().includes(normalizedSearch);
+    const nameMatch = user.name?.toLowerCase().includes(normalizedSearch);
+    return Boolean(emailMatch || nameMatch);
+  };
+
+  const matchesRole = (user: AdminUser) =>
+    filters.roleFilter === 'all' || user.role === filters.roleFilter;
+
+  const matchesStatus = (user: AdminUser) =>
+    filters.statusFilter === 'all' || user.status === filters.statusFilter;
+
+  return users.filter((user) => matchesSearch(user) && matchesRole(user) && matchesStatus(user));
+};
+
 export const useAdminUsers = () => useAdminStore((state) => state.users);
+export const useAdminUserCount = () => useAdminStore((state) => state.users.length);
 export const useAdminUserFilters = () => useAdminStore((state) => state.userFilters);
-export const useAdminUserActions = () => useAdminStore((state) => ({
+export const useFilteredAdminUsers = () =>
+  useAdminStore((state) => filterAdminUsers(state.users, state.userFilters));
+export const useAdminSelectedUsers = () =>
+  useAdminStore((state) => state.userFilters.selectedUsers);
+export const useAdminShowBulkActions = () =>
+  useAdminStore((state) => state.userFilters.showBulkActions);
+export const useAdminUserActions = () =>
+  useAdminStore((state) => ({
   setUserFilters: state.setUserFilters,
   selectUser: state.selectUser,
   deselectUser: state.deselectUser,
@@ -1139,19 +1704,19 @@ export const useAdminUserActions = () => useAdminStore((state) => ({
   deleteUser: state.deleteUser,
 }));
 
-// Dashboard selectors
 export const useAdminActiveTab = () => useAdminStore((state) => state.activeTab);
 export const useAdminDashboardStats = () => useAdminStore((state) => state.dashboardStats);
-export const useAdminDashboardActions = () => useAdminStore((state) => ({
+export const useAdminDashboardActions = () =>
+  useAdminStore((state) => ({
   setActiveTab: state.setActiveTab,
   loadDashboardStats: state.loadDashboardStats,
 }));
 
-// System settings selectors
 export const useAdminSystemSettings = () => useAdminStore((state) => state.systemSettings);
 export const useAdminSettingsTab = () => useAdminStore((state) => state.settingsTab);
 export const useAdminIsSavingSettings = () => useAdminStore((state) => state.isSavingSettings);
-export const useAdminSystemSettingsActions = () => useAdminStore((state) => ({
+export const useAdminSystemSettingsActions = () =>
+  useAdminStore((state) => ({
   setSystemSettings: state.setSystemSettings,
   updateSystemSetting: state.updateSystemSetting,
   setSettingsTab: state.setSettingsTab,
@@ -1159,11 +1724,13 @@ export const useAdminSystemSettingsActions = () => useAdminStore((state) => ({
   loadSystemSettings: state.loadSystemSettings,
 }));
 
-// Reimport selectors
-export const useAdminReimportProgress = () => useAdminStore((state) => state.reimportProgress);
+export const useAdminReimportProgress = () =>
+  useAdminStore((state) => state.reimportProgress);
 export const useAdminReimportLogs = () => useAdminStore((state) => state.reimportLogs);
-export const useAdminIsReimportRunning = () => useAdminStore((state) => state.isReimportRunning);
-export const useAdminReimportActions = () => useAdminStore((state) => ({
+export const useAdminIsReimportRunning = () =>
+  useAdminStore((state) => state.isReimportRunning);
+export const useAdminReimportActions = () =>
+  useAdminStore((state) => ({
   setReimportProgress: state.setReimportProgress,
   addReimportLog: state.addReimportLog,
   clearReimportLogs: state.clearReimportLogs,
@@ -1171,49 +1738,68 @@ export const useAdminReimportActions = () => useAdminStore((state) => ({
   startReimport: state.startReimport,
 }));
 
-// General admin actions
-export const useAdminActions = () => useAdminStore((state) => ({
+export const useAdminActions = () =>
+  useAdminStore((state) => ({
+    addNotification: state.addNotification,
+    toggleSidebar: state.toggleSidebar,
   loadUsers: state.loadUsers,
   loadDashboardStats: state.loadDashboardStats,
   loadSystemSettings: state.loadSystemSettings,
+    setTrendingTopics: state.setTrendingTopics,
+    setGeneratedPolls: state.setGeneratedPolls,
+    setSystemMetrics: state.setSystemMetrics,
+    updateActivityFeed: state.updateActivityFeed,
   addActivityItem: state.addActivityItem,
   clearActivityItems: state.clearActivityItems,
   addAdminNotification: state.addAdminNotification,
   clearAdminNotifications: state.clearAdminNotifications,
   markNotificationAsRead: state.markNotificationAsRead,
+    markNotificationRead: state.markNotificationRead,
   setLoading: state.setLoading,
   setUpdating: state.setUpdating,
   setError: state.setError,
   clearError: state.clearError,
   refreshData: state.refreshData,
   syncData: state.syncData,
-}));
+    resetAdminState: state.resetAdminState,
+  }));
 
-// Admin store utilities
-export const useAdminStats = () => useAdminStore((state) => ({
+export const useAdminFeatureFlagActions = () =>
+  useAdminStore((state) => ({
+    enableFeatureFlag: state.enableFeatureFlag,
+    disableFeatureFlag: state.disableFeatureFlag,
+    toggleFeatureFlag: state.toggleFeatureFlag,
+    isFeatureFlagEnabled: state.isFeatureFlagEnabled,
+    getFeatureFlag: state.getFeatureFlag,
+    getAllFeatureFlags: state.getAllFeatureFlags,
+    exportFeatureFlagConfig: state.exportFeatureFlagConfig,
+    importFeatureFlagConfig: state.importFeatureFlagConfig,
+    resetFeatureFlags: state.resetFeatureFlags,
+    setFeatureFlagLoading: state.setFeatureFlagLoading,
+    setFeatureFlagError: state.setFeatureFlagError,
+  }));
+
+export const useAdminStats = () =>
+  useAdminStore((state) => ({
   totalUsers: state.users.length,
-  totalNotifications: state.adminNotifications.length,
-  unreadNotifications: state.adminNotifications.filter(n => !n.read).length,
+    totalNotifications: state.notifications.length,
+    unreadNotifications: state.notifications.filter((notification) => !notification.read).length,
   totalActivity: state.activityItems.length,
 }));
 
-// Recent activity selector
-export const useRecentActivity = () => useAdminStore((state) =>
-  state.activityItems.slice(0, 10)
-);
+export const useRecentActivity = () =>
+  useAdminStore((state) => state.activityItems.slice(0, 10));
 
-// Admin store utilities
 export const adminStoreUtils = {
   getAdminStats: () => {
     const state = useAdminStore.getState();
     return {
       totalUsers: state.users.length,
-      totalNotifications: state.adminNotifications.length,
-      unreadNotifications: state.adminNotifications.filter(n => !n.read).length,
+      totalNotifications: state.notifications.length,
+      unreadNotifications: state.notifications.filter((notification) => !notification.read).length,
       totalActivity: state.activityItems.length,
     };
   },
-
   getDataSummary: () => {
     const state = useAdminStore.getState();
     return {
@@ -1221,52 +1807,67 @@ export const adminStoreUtils = {
       trendingTopics: state.trendingTopics.length,
       generatedPolls: state.generatedPolls.length,
       activityItems: state.activityItems.length,
-      notifications: state.adminNotifications.length,
+      notifications: state.notifications.length,
     };
   },
+  reset: () => {
+    useAdminStore.getState().resetAdminState();
+  },
 };
 
-// Admin store subscriptions
 export const adminStoreSubscriptions = {
-  subscribeToUsers: (callback: (users: AdminUser[]) => void) => {
-    return useAdminStore.subscribe((state) => {
+  subscribeToUsers: (callback: (users: AdminUser[]) => void) =>
+    useAdminStore.subscribe((state, prevState) => {
+      if (state.users !== prevState.users) {
       callback(state.users);
-    });
-  },
-
-  subscribeToDashboardStats: (callback: (stats: AdminStore['dashboardStats']) => void) => {
-    return useAdminStore.subscribe((state) => {
+      }
+    }),
+  subscribeToDashboardStats: (callback: (stats: AdminDashboardStats | null) => void) =>
+    useAdminStore.subscribe((state, prevState) => {
+      if (state.dashboardStats !== prevState.dashboardStats) {
       callback(state.dashboardStats);
-    });
-  },
-
-  subscribeToNotifications: (callback: (notifications: AdminNotification[]) => void) => {
-    return useAdminStore.subscribe((state) => {
-      callback(state.adminNotifications);
-    });
-  },
+      }
+    }),
+  subscribeToNotifications: (callback: (notifications: AdminNotification[]) => void) =>
+    useAdminStore.subscribe((state, prevState) => {
+      if (state.notifications !== prevState.notifications) {
+        callback(state.notifications);
+      }
+    }),
 };
 
-// Admin store debug utilities
 export const adminStoreDebug = {
   logState: () => {
-    useAdminStore.getState();
-    logger.info('Admin store state logged');
+    const state = useAdminStore.getState();
+    const snapshot = {
+      sidebarCollapsed: state.sidebarCollapsed,
+      currentPage: state.currentPage,
+      activeTab: state.activeTab,
+      settingsTab: state.settingsTab,
+      isLoading: state.isLoading,
+      isSavingSettings: state.isSavingSettings,
+      users: state.users.length,
+      notifications: state.notifications.length,
+      adminNotifications: state.adminNotifications.length,
+      activityItems: state.activityItems.length,
+      reimportRunning: state.isReimportRunning,
+    };
+
+    logger.info('Admin store state snapshot', snapshot);
   },
 
   logStats: () => {
-    const stats = adminStoreUtils.getAdminStats();
-    logger.info('Admin statistics:', stats);
+    logger.info('Admin statistics', adminStoreUtils.getAdminStats());
   },
 
   logDataSummary: () => {
-    const summary = adminStoreUtils.getDataSummary();
-    logger.info('Admin data summary:', summary);
+    logger.info('Admin data summary', adminStoreUtils.getDataSummary());
   },
 
   reset: () => {
-    useAdminStore.getState().clearActivityItems();
-    useAdminStore.getState().clearAdminNotifications();
-    // Admin store reset
-  }
+    useAdminStore.getState().resetAdminState();
+    logger.info('Admin store reset to initial state');
+  },
 };
+
+

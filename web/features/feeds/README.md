@@ -38,39 +38,53 @@ import { UnifiedFeedRefactored } from '@/features/feeds';
 For maximum control, compose your own feed:
 
 ```tsx
-import { 
-  FeedDataProvider, 
+import {
+  FeedDataProvider,
   FeedCore,
   FeedPWAEnhancer,
   FeedRealTimeUpdates,
-  useFeedAnalytics
+  useFeedAnalytics,
 } from '@/features/feeds';
 
 function MyCustomFeed() {
   const { trackEvent } = useFeedAnalytics();
 
   return (
-    <FeedDataProvider 
+    <FeedDataProvider
       userId={userId}
       enableInfiniteScroll={true}
       maxItems={100}
     >
-      {({ feedItems, loading, error, actions, hashtags, onLoadMore, hasMore }) => (
+      {({
+        feeds,
+        isLoading,
+        error,
+        onLike,
+        onBookmark,
+        onShare,
+        onRefresh,
+        selectedHashtags,
+        trendingHashtags,
+        onHashtagAdd,
+        onHashtagRemove,
+        onLoadMore,
+        hasMore,
+      }) => (
         <FeedPWAEnhancer>
-          <FeedRealTimeUpdates onUpdate={actions.refreshFeeds}>
+          <FeedRealTimeUpdates enableWebSocket wsUrl="/api/ws/feeds">
             <FeedCore
-              feedItems={feedItems}
-              loading={loading}
+              feeds={feeds}
+              isLoading={isLoading}
               error={error}
-              onLike={actions.likeFeed}
-              onBookmark={actions.bookmarkFeed}
-              onShare={actions.shareFeed}
+              onLike={onLike}
+              onBookmark={onBookmark}
+              onShare={onShare}
               onLoadMore={onLoadMore}
               hasMore={hasMore}
-              hashtags={hashtags}
-              onHashtagClick={(hashtag) => {
-                trackEvent('hashtag_click', { hashtag });
-              }}
+              selectedHashtags={selectedHashtags}
+              onHashtagAdd={onHashtagAdd}
+              onHashtagRemove={onHashtagRemove}
+              trendingHashtags={trendingHashtags}
             />
           </FeedRealTimeUpdates>
         </FeedPWAEnhancer>
@@ -172,25 +186,31 @@ interface FeedCoreProps {
 **Features:** Render props pattern, Zustand integration
 
 ```tsx
-interface FeedDataProviderProps {
+type FeedDataProviderRenderProps = {
+  feeds: FeedItem[];
+  isLoading: boolean;
+  error: string | null;
+  onLike: (id: string) => Promise<void>;
+  onBookmark: (id: string) => Promise<void>;
+  onShare: (id: string) => void;
+  onRefresh: () => Promise<void>;
+  selectedHashtags: string[];
+  onHashtagAdd: (hashtag: string) => void;
+  onHashtagRemove: (hashtag: string) => void;
+  trendingHashtags: string[];
+  districtFilterEnabled: boolean;
+  onDistrictFilterToggle: () => void;
+  onLoadMore?: () => Promise<void>;
+  hasMore?: boolean;
+};
+
+type FeedDataProviderProps = {
   userId?: string;
+  userDistrict?: string | null;
   enableInfiniteScroll?: boolean;
   maxItems?: number;
-  children: (props: {
-    feedItems: FeedItemData[];
-    loading: boolean;
-    error: string | null;
-    actions: {
-      likeFeed: (itemId: string) => void;
-      bookmarkFeed: (itemId: string) => void;
-      shareFeed: (item: FeedItemData) => void;
-      refreshFeeds: () => void;
-    };
-    hashtags: string[];
-    onLoadMore?: () => void;
-    hasMore?: boolean;
-  }) => ReactNode;
-}
+  children: (props: FeedDataProviderRenderProps) => React.ReactNode;
+};
 ```
 
 ### Optional Enhancers
@@ -209,13 +229,12 @@ interface FeedDataProviderProps {
 #### `FeedRealTimeUpdates`
 **Status:** ✅ Production Ready  
 **Use Case:** Add WebSocket real-time updates  
-**Features:** Live content updates, engagement updates
+**Features:** Live content updates, engagement updates, automatic refresh via `useFeedsStore`
 
 ```tsx
-interface FeedRealTimeUpdatesProps {
-  onUpdate?: () => void;
-  children: ReactNode;
-}
+<FeedRealTimeUpdates enableWebSocket wsUrl="/api/ws/feeds">
+  <FeedCore {...feedsProps} />
+</FeedRealTimeUpdates>
 ```
 
 ### Utility Components
@@ -230,7 +249,8 @@ interface FeedRealTimeUpdatesProps {
 
 #### `HashtagPollsFeed`
 **Status:** ✅ Production Ready  
-**Use Case:** Hashtag-specific poll feed
+**Use Case:** Hashtag-specific poll feed backed by shared Zustand stores  
+**Notes:** Consumes `useFeedsStore` data directly—no extra fetches required
 
 ## Hooks
 
@@ -270,7 +290,7 @@ const feed = await feedService.generatePersonalizedFeed(
 
 ### Zustand Stores Used
 
-- **`useFeedsStore`** - Feed items, loading, actions
+- **`useFeedsStore` / `useFeedsActions`** - Feed items, loading, actions
 - **`useFeedsPagination`** - Total/loaded counts, `hasMore`, and `loadMoreFeeds` helper
 - **`useHashtagStore`** - Hashtags, trending, following
 - **`usePWAStore`** - PWA state, installation, notifications
@@ -398,6 +418,6 @@ See repository root for license information.
 ---
 
 **Status:** ✅ Production Ready  
-**Last Updated:** November 5, 2025  
+**Last Updated:** November 10, 2025  
 **Maintainer:** See CODEOWNERS
 

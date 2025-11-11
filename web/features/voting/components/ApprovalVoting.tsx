@@ -3,6 +3,7 @@
 import { CheckCircle, AlertCircle, Info, CheckSquare } from 'lucide-react'
 import React, { useState, useEffect } from 'react';
 
+import { useVotingIsVoting } from '@/features/voting/lib/store'
 
 import type { PollOption } from '../types'
 
@@ -27,10 +28,13 @@ export default function ApprovalVoting({
   hasVoted = false,
   userVote
 }: ApprovalVotingProps) {
+  const storeIsVoting = useVotingIsVoting()
   const [approvedOptions, setApprovedOptions] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveIsVoting = storeIsVoting || isVoting
 
   // Initialize from user's previous vote
   useEffect(() => {
@@ -40,7 +44,7 @@ export default function ApprovalVoting({
   }, [userVote])
 
   const handleOptionToggle = (optionId: string) => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     setError(null)
     setApprovedOptions(prev => 
@@ -51,7 +55,7 @@ export default function ApprovalVoting({
   }
 
   const handleSubmit = async () => {
-    if (hasVoted || isVoting) return
+    if (hasVoted || effectiveIsVoting) return
 
     if (approvedOptions.length === 0) {
       setError('Please approve at least one option')
@@ -83,6 +87,9 @@ export default function ApprovalVoting({
         })
       }
       
+      if (hasVoted || effectiveIsVoting) {
+        return
+      }
       await onVote(pollId, validApprovals)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote')
@@ -91,7 +98,7 @@ export default function ApprovalVoting({
     }
   }
 
-  const isDisabled = hasVoted || isVoting || isSubmitting
+  const isDisabled = hasVoted || effectiveIsVoting || isSubmitting
 
   return (
     <div className="max-w-2xl mx-auto">

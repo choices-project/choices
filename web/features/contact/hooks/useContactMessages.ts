@@ -1,219 +1,137 @@
 /**
  * Contact Messages Hooks
- * 
- * Custom hooks for managing contact messages and threads
- * Features:
- * - Send messages to representatives
- * - Retrieve message history
- * - Real-time updates
- * - Error handling
- * 
+ *
+ * Convenience React hooks layered on top of the contact Zustand store.
+ * Maintains backwards compatible signatures for feature components while
+ * delegating all state management to `web/lib/stores/contactStore.ts`.
+ *
  * Created: January 23, 2025
+ * Updated: November 10, 2025
  * Status: ✅ ACTIVE
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
-import { useAuth } from '@/hooks/useAuth';
+import {
+  useContactThreadsState,
+  useContactThreadsLoading,
+  useContactThreadsError,
+  useContactThreadByRepresentativeId,
+  useContactMessagesByThreadId,
+  useContactMessagesLoading,
+  useContactMessagesError,
+  useContactActions,
+  useContactIsCreatingThread,
+  useContactIsSendingMessage,
+} from '@/lib/stores';
+import type {
+  FetchThreadsOptions,
+  FetchMessagesOptions,
+  ContactMessage,
+} from '@/lib/stores/contactStore';
+import { useIsAuthenticated } from '@/lib/stores';
 
-type ContactMessage = {
-  id: string;
-  thread_id: string;
-  sender_id: string;
-  recipient_id: number;
-  content: string;
-  subject?: string;
-  message_type: 'text' | 'email' | 'attachment' | 'system';
-  status: 'sent' | 'delivered' | 'read' | 'replied' | 'failed';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  created_at: string;
-  updated_at: string;
-  read_at?: string;
-  replied_at?: string;
-}
+type UseContactThreadsOptions = {
+  autoFetch?: boolean;
+  fetchOptions?: FetchThreadsOptions;
+};
 
-type ContactThread = {
-  id: string;
-  user_id: string;
-  representative_id: number;
-  subject: string;
-  status: 'active' | 'closed' | 'archived' | 'spam';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  created_at: string;
-  updated_at: string;
-  last_message_at?: string;
-  message_count: number;
-}
+export function useContactThreads(options: UseContactThreadsOptions = {}) {
+  const { autoFetch = true, fetchOptions } = options;
+  const threads = useContactThreadsState();
+  const loading = useContactThreadsLoading();
+  const error = useContactThreadsError();
+  const isCreatingThread = useContactIsCreatingThread();
+  const isAuthenticated = useIsAuthenticated();
+  const { fetchThreads, createThread } = useContactActions();
 
-type SendMessageData = {
-  thread_id: string;
-  sender_id: string;
-  recipient_id: number;
-  content: string;
-  subject?: string;
-  message_type?: 'text' | 'email' | 'attachment' | 'system';
-  priority?: 'low' | 'normal' | 'high' | 'urgent';
-}
+  const memoisedFetchOptions = useMemo(() => fetchOptions ?? {}, [fetchOptions]);
 
-type CreateThreadData = {
-  user_id: string;
-  representative_id: number;
-  subject: string;
-  status?: 'active' | 'closed' | 'archived' | 'spam';
-  priority?: 'low' | 'normal' | 'high' | 'urgent';
-}
-
-export function useContactMessages(representativeId: string) {
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
-
-  const fetchMessages = useCallback(async () => {
-    if (!representativeId || !user) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/contact/messages?representative_id=${representativeId}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch messages: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setMessages(data.messages || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch messages');
-    } finally {
-      setLoading(false);
-    }
-  }, [representativeId, user]);
-
-  const sendMessage = useCallback(async (messageData: SendMessageData): Promise<ContactMessage> => {
-    if (!user) throw new Error('User not authenticated');
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/contact/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(messageData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to send message: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const newMessage = data.message;
-
-      // Add to local state
-      setMessages(prev => [...prev, newMessage]);
-
-      return newMessage;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send message');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Fetch messages on mount
   useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
-
-  return {
-    messages,
-    loading,
-    error,
-    sendMessage,
-    refetch: fetchMessages,
-  };
-}
-
-export function useContactThreads() {
-  const [threads, setThreads] = useState<ContactThread[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
-
-  const fetchThreads = useCallback(async () => {
-    if (!user) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/contact/threads', {
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch threads: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setThreads(data.threads || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch threads');
-    } finally {
-      setLoading(false);
+    if (!autoFetch || !isAuthenticated) {
+      return;
     }
-  }, [user]);
 
-  const createThread = useCallback(async (threadData: CreateThreadData): Promise<ContactThread> => {
-    if (!user) throw new Error('User not authenticated');
+    void fetchThreads(memoisedFetchOptions);
+  }, [autoFetch, isAuthenticated, fetchThreads, memoisedFetchOptions]);
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/contact/threads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(threadData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create thread: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const newThread = data.thread;
-
-      // Add to local state
-      setThreads(prev => [...prev, newThread]);
-
-      return newThread;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create thread');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Fetch threads on mount
-  useEffect(() => {
-    fetchThreads();
-  }, [fetchThreads]);
+  const refetch = useCallback(
+    (override?: FetchThreadsOptions) =>
+      fetchThreads({
+        ...memoisedFetchOptions,
+        ...override,
+        force: true,
+      }),
+    [fetchThreads, memoisedFetchOptions],
+  );
 
   return {
     threads,
-    loading,
+    loading: loading || isCreatingThread,
     error,
     createThread,
-    refetch: fetchThreads,
+    refetch,
+  };
+}
+
+type UseContactMessagesOptions = {
+  autoFetch?: boolean;
+  forceOnMount?: boolean;
+  fetchOptions?: FetchMessagesOptions;
+};
+
+export function useContactMessages(
+  representativeId: number | string | null | undefined,
+  options: UseContactMessagesOptions = {},
+) {
+  const { autoFetch = true, forceOnMount = false, fetchOptions } = options;
+  const memoisedFetchOptions = useMemo(() => fetchOptions ?? {}, [fetchOptions]);
+  const numericRepresentativeId =
+    representativeId == null
+      ? null
+      : typeof representativeId === 'string'
+      ? Number.parseInt(representativeId, 10)
+      : representativeId;
+
+  const thread = useContactThreadByRepresentativeId(numericRepresentativeId);
+  const threadId = thread?.id ?? null;
+  const messages = useContactMessagesByThreadId(threadId);
+  const loading = useContactMessagesLoading(threadId);
+  const requestError = useContactMessagesError(threadId);
+  const isSendingMessage = useContactIsSendingMessage();
+  const { fetchMessages, sendMessage } = useContactActions();
+
+  useEffect(() => {
+    if (!autoFetch || !threadId) {
+      return;
+    }
+
+    if (!forceOnMount && messages.length > 0) {
+      return;
+    }
+
+    void fetchMessages(threadId, memoisedFetchOptions);
+  }, [autoFetch, forceOnMount, fetchMessages, memoisedFetchOptions, messages.length, threadId]);
+
+  const refetch = useCallback(
+    (override?: FetchMessagesOptions) =>
+      threadId
+        ? fetchMessages(threadId, {
+            ...memoisedFetchOptions,
+            ...override,
+            force: true,
+          })
+        : Promise.resolve([] as ContactMessage[]),
+    [fetchMessages, memoisedFetchOptions, threadId],
+  );
+
+  return {
+    thread,
+    threadId,
+    messages,
+    loading: loading || isSendingMessage,
+    error: requestError,
+    refetch,
+    sendMessage,
   };
 }

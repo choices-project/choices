@@ -1,17 +1,17 @@
 /**
  * Demographics Analytics API
- * 
+ *
  * Returns user demographic breakdowns with privacy protections.
- * 
+ *
  * Privacy Features:
  * - Only includes users who opted in (collectAnalytics = true)
  * - Applies k-anonymity (min 5 users per category)
  * - Returns opt-out count for transparency
  * - No individual user data exposed
  * - Access logged for audit trail
- * 
+ *
  * Access: Admin-only
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready with privacy-first design
  */
@@ -19,7 +19,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { 
+import {
   PrivacyAwareQueryBuilder,
   applyKAnonymity,
   K_ANONYMITY_THRESHOLD,
@@ -30,6 +30,10 @@ import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
@@ -54,7 +58,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
     // Get opted-in users with demographics
-    const { users, totalUsers, optedInCount, optedOutCount } = 
+    const { users, totalUsers, optedInCount, optedOutCount } =
       await queryBuilder.getDemographics();
 
     // Process Trust Tiers
@@ -75,8 +79,8 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
     // Process Age Groups
     const ageGroups = privacyAwareAggregate(
-      users.map(u => ({ 
-        age: extractAgeGroup(u.demographics) 
+      users.map(u => ({
+        age: extractAgeGroup(u.demographics)
       })),
       'age',
       K_ANONYMITY_THRESHOLD
@@ -84,8 +88,8 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
     // Process Districts (top 10 only)
     const districts = privacyAwareAggregate(
-      users.map(u => ({ 
-        district: extractDistrict(u.demographics) 
+      users.map(u => ({
+        district: extractDistrict(u.demographics)
       })),
       'district',
       K_ANONYMITY_THRESHOLD
@@ -93,8 +97,8 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
     // Process Education
     const education = privacyAwareAggregate(
-      users.map(u => ({ 
-        education: extractEducation(u.demographics) 
+      users.map(u => ({
+        education: extractEducation(u.demographics)
       })),
       'education',
       K_ANONYMITY_THRESHOLD
@@ -146,10 +150,10 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
  */
 function extractAgeGroup(demographics: any): string {
   if (!demographics || typeof demographics !== 'object') return 'Unknown';
-  
+
   const age = demographics.age;
   if (typeof age !== 'number') return 'Unknown';
-  
+
   if (age < 18) return 'Under 18';
   if (age < 25) return '18-24';
   if (age < 35) return '25-34';
@@ -160,25 +164,25 @@ function extractAgeGroup(demographics: any): string {
 
 function extractDistrict(demographics: any): string {
   if (!demographics || typeof demographics !== 'object') return 'Unknown';
-  
+
   const location = demographics.location;
   if (!location || typeof location !== 'object') return 'Unknown';
-  
+
   const state = location.state;
   const district = location.district;
-  
+
   if (!state) return 'Unknown';
   if (!district) return state; // State-only
-  
+
   return `${state}-${district}`;
 }
 
 function extractEducation(demographics: any): string {
   if (!demographics || typeof demographics !== 'object') return 'Unknown';
-  
+
   const education = demographics.education;
   if (!education || typeof education !== 'string') return 'Unknown';
-  
+
   return education;
 }
 

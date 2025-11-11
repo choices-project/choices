@@ -1,17 +1,17 @@
 'use client';
 
-import { 
-Fingerprint, 
-  Loader2, 
-  CheckCircle, 
-  AlertCircle, 
-  Eye, 
+import {
+  AlertCircle,
+  CheckCircle,
+  Eye,
   EyeOff,
+  Fingerprint,
+  Laptop,
+  Loader2,
   Shield,
   Smartphone,
-  Laptop
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -21,33 +21,55 @@ import { Label } from '@/components/ui/label';
 import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
+import {
+  useBiometricError,
+  useBiometricRegistering,
+  useBiometricSuccess,
+  useBiometricSupported,
+  useInitializeBiometricState,
+  useUserActions,
+} from '../lib/store';
+
 type PasskeyRegisterProps = {
   onSuccess?: (credential: unknown) => void;
   onError?: (error: string) => void;
   className?: string;
-}
+};
 
 export function PasskeyRegister({
   onSuccess,
   onError,
-  className
+  className,
 }: PasskeyRegisterProps) {
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
+  const [username, setUsername] = React.useState('');
+  const [displayName, setDisplayName] = React.useState('');
 
-  const isWebAuthnSupported = () => {
-    return typeof window !== 'undefined' && 
-           window.PublicKeyCredential && 
-           typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
-  };
+  useInitializeBiometricState();
 
-  const checkPlatformAuthenticator = async () => {
+  const isSupported = useBiometricSupported();
+  const isRegistering = useBiometricRegistering();
+  const error = useBiometricError();
+  const success = useBiometricSuccess();
+
+  const {
+    setBiometricRegistering,
+    setBiometricError,
+    setBiometricSuccess,
+    setBiometricCredentials,
+  } = useUserActions();
+
+  const isWebAuthnSupported = React.useCallback(() => {
+    return (
+      typeof window !== 'undefined' &&
+      'PublicKeyCredential' in window &&
+      typeof window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+    );
+  }, []);
+
+  const checkPlatformAuthenticator = React.useCallback(async () => {
     if (!isWebAuthnSupported()) return false;
-    
+
     try {
       return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     } catch (err) {
@@ -56,29 +78,26 @@ export function PasskeyRegister({
       }
       return false;
     }
-  };
+  }, [isWebAuthnSupported]);
 
-  const handleRegister = async () => {
+  const handleRegister = React.useCallback(async () => {
     if (!isWebAuthnSupported()) {
-      setError('WebAuthn is not supported in this browser');
-      onError?.('WebAuthn is not supported in this browser');
+      const message = 'WebAuthn is not supported in this browser';
+      setBiometricError(message);
+      onError?.(message);
       return;
     }
 
-    setIsRegistering(true);
-    setError(null);
-    setSuccess(false);
+    setBiometricRegistering(true);
+    setBiometricError(null);
+    setBiometricSuccess(false);
 
     try {
-      // Check if platform authenticator is available
       const hasPlatformAuth = await checkPlatformAuthenticator();
-      
-      // Start WebAuthn registration (native implementation)
+
       const response = await fetch('/api/v1/auth/webauthn/native/register/options', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: username || undefined,
           displayName: displayName || undefined,
@@ -91,43 +110,39 @@ export function PasskeyRegister({
       }
 
       const credentialOptions = await response.json();
+      const publicKeyOptions = withOptional(credentialOptions ?? {}, {
+        authenticatorSelection: withOptional(
+          credentialOptions?.authenticatorSelection ?? {},
+          {
+            userVerification: 'required',
+            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+          }
+        ),
+      });
 
-      // Create credential
-      const publicKeyOptions = withOptional(
-        credentialOptions ?? {},
-        {
-          authenticatorSelection: withOptional(
-            credentialOptions?.authenticatorSelection ?? {},
-            {
-              userVerification: 'required',
-              authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-            }
-          ),
-        }
-      );
-
-      const credential = await navigator.credentials.create({
+      const credential = (await navigator.credentials.create({
         publicKey: publicKeyOptions,
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential | null;
 
       if (!credential) {
         throw new Error('Failed to create credential');
       }
 
-      // Complete registration (native implementation)
       const completeResponse = await fetch('/api/v1/auth/webauthn/native/register/verify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: credential.id,
           rawId: Array.from(new Uint8Array(credential.rawId)),
           response: {
-            attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
-            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+            attestationObject: Array.from(
+              new Uint8Array(
+                (credential.response as AuthenticatorAttestationResponse).attestationObject
+              )
+            ),
+            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
           },
-          type: credential.type
+          type: credential.type,
         }),
       });
 
@@ -137,28 +152,40 @@ export function PasskeyRegister({
       }
 
       const result = await completeResponse.json();
-      setSuccess(true);
+      setBiometricSuccess(true);
+      setBiometricCredentials(true);
       onSuccess?.(result);
-
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      setError(errorMessage);
-      onError?.(errorMessage);
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      setBiometricError(message);
+      onError?.(message);
     } finally {
-      setIsRegistering(false);
+      setBiometricRegistering(false);
     }
-  };
+  }, [
+    checkPlatformAuthenticator,
+    displayName,
+    isWebAuthnSupported,
+    onError,
+    onSuccess,
+    setBiometricCredentials,
+    setBiometricError,
+    setBiometricRegistering,
+    setBiometricSuccess,
+    username,
+  ]);
 
-  const getAuthenticatorIcon = () => {
+  const getAuthenticatorIcon = React.useCallback(() => {
     if (typeof window === 'undefined') return <Shield className="h-6 w-6" />;
-    
-    // Check if we're on a mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    return isMobile ? <Smartphone className="h-6 w-6" /> : <Laptop className="h-6 w-6" />;
-  };
 
-  if (!isWebAuthnSupported()) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+    return isMobile ? <Smartphone className="h-6 w-6" /> : <Laptop className="h-6 w-6" />;
+  }, []);
+
+  if (!isSupported) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -167,7 +194,8 @@ export function PasskeyRegister({
             <span>WebAuthn Not Supported</span>
           </CardTitle>
           <CardDescription>
-            Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
+            Your browser does not support WebAuthn. Please use a modern browser or try a different
+            authentication method.
           </CardDescription>
         </CardHeader>
       </Card>

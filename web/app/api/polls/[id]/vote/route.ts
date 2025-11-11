@@ -48,6 +48,24 @@ const SUPPORTED_METHODS = new Set(['single', 'multiple', 'approval', 'ranked']);
 
 const MULTI_SELECT_METHODS = new Set(['multiple', 'approval']);
 
+const normalizeVotingMethod = (method: string): 'single' | 'multiple' | 'approval' | 'ranked' | string => {
+  switch (method) {
+    case 'single':
+    case 'single_choice':
+      return 'single';
+    case 'multiple':
+    case 'multiple_choice':
+      return 'multiple';
+    case 'ranked':
+    case 'ranked_choice':
+      return 'ranked';
+    case 'approval':
+      return 'approval';
+    default:
+      return method;
+  }
+};
+
 const normalizeOptions = (options: PollOptionRow[]) =>
   [...options]
     .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
@@ -83,10 +101,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     return validationError({ body: 'Request body must be valid JSON' });
   }
 
-  const { data: poll, error: pollError } = await supabase
-    .from('polls')
-    .select(
-      `
+  const selectFieldsWithMetadata = `
         id,
         status,
         privacy_level,
@@ -99,21 +114,48 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
           option_text,
           order_index
         )
-      `,
-    )
-    .eq('id', pollId)
-    .maybeSingle<PollRecord>();
+      `;
+
+  const selectFieldsWithoutMetadata = `
+        id,
+        status,
+        privacy_level,
+        voting_method,
+        poll_settings,
+        poll_options:poll_options (
+          id,
+          text,
+          option_text,
+          order_index
+        )
+      `;
+
+  const loadPoll = async (fields: string) =>
+    supabase
+      .from('polls')
+      .select(fields)
+      .eq('id', pollId)
+      .maybeSingle<PollRecord>();
+
+  let { data: poll, error: pollError } = await loadPoll(selectFieldsWithMetadata);
+
+  if (pollError?.code === '42703') {
+    const fallback = await loadPoll(selectFieldsWithoutMetadata);
+    poll = fallback.data ? { ...fallback.data, metadata: null } : null;
+    pollError = fallback.error ?? null;
+  }
 
   if (pollError || !poll) {
     logger.error('Vote submission poll lookup failed', pollError ?? new Error('Poll not found'));
     return notFoundError('Poll not found');
   }
 
-  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+  const rawVotingMethod = (poll.voting_method ?? 'single').toLowerCase();
+  const votingMethod = normalizeVotingMethod(rawVotingMethod);
 
   if (!SUPPORTED_METHODS.has(votingMethod)) {
     return validationError({
-      voting_method: `Voting method '${votingMethod}' is not supported yet.`,
+      voting_method: `Voting method '${rawVotingMethod}' is not supported yet.`,
     });
   }
 

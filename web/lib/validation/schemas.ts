@@ -1,11 +1,24 @@
 /**
  * Runtime Validation Schemas
- * 
+ *
  * Comprehensive Zod schemas for runtime type validation of database responses
  * and API data. This provides better type safety than type assertions alone.
  */
 
 import { z } from 'zod';
+
+import type { Json } from '@/types/database';
+
+const JsonValueSchema: z.ZodType<Json> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(JsonValueSchema),
+    z.record(z.string(), JsonValueSchema)
+  ])
+);
 
 // Base schemas for common types
 /** ISO 8601 datetime string validation */
@@ -19,10 +32,10 @@ const TrustTierSchema = z.enum(['bronze', 'silver', 'gold', 'platinum', 'admin']
 
 /**
  * User Profile Schema
- * 
+ *
  * Validates user profile data from the database, ensuring all required fields
  * are present and properly formatted.
- * 
+ *
  * @example
  * ```typescript
  * const result = UserProfileSchema.safeParse(userData);
@@ -34,24 +47,50 @@ const TrustTierSchema = z.enum(['bronze', 'silver', 'gold', 'platinum', 'admin']
 export const UserProfileSchema = z.object({
   /** Unique user identifier (UUID) */
   user_id: UUIDSchema,
+  /** Row identifier (UUID) */
+  id: UUIDSchema,
   /** Username (1-50 characters) */
   username: z.string().min(1).max(50),
+  /** Optional public display name */
+  display_name: z.string().nullable(),
   /** User's email address */
   email: EmailSchema,
+  /** Short biography supplied by the user */
+  bio: z.string().nullable(),
+  /** Profile avatar URL (stored as string; may be null) */
+  avatar_url: z.string().nullable(),
   /** User's trust tier level */
-  trust_tier: TrustTierSchema,
+  trust_tier: TrustTierSchema.nullable(),
+  /** Preferred analytics dashboard mode */
+  analytics_dashboard_mode: z.string().nullable(),
+  /** Saved dashboard layout JSON */
+  dashboard_layout: JsonValueSchema.nullable(),
+  /** User privacy settings JSON */
+  privacy_settings: JsonValueSchema.nullable(),
+  /** Participation style selection */
+  participation_style: z.string().nullable(),
+  /** Primary concerns array */
+  primary_concerns: z.array(z.string()).nullable(),
+  /** Community focus interests */
+  community_focus: z.array(z.string()).nullable(),
+  /** Demographic metadata */
+  demographics: JsonValueSchema.nullable(),
+  /** Administrative flag */
+  is_admin: z.boolean().nullable(),
+  /** Active status flag */
+  is_active: z.boolean().nullable(),
   /** Profile creation timestamp */
-  created_at: TimestampSchema,
+  created_at: TimestampSchema.nullable(),
   /** Last profile update timestamp */
-  updated_at: TimestampSchema,
+  updated_at: TimestampSchema.nullable(),
 });
 
 /**
  * Poll Schema
- * 
+ *
  * Validates poll data from the database, ensuring all required fields
  * are present and properly formatted for voting operations.
- * 
+ *
  * @example
  * ```typescript
  * const result = PollSchema.safeParse(pollData);

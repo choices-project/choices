@@ -1,17 +1,17 @@
 /**
  * Poll Heatmap Analytics API
- * 
+ *
  * Returns poll engagement data showing which polls are "hot" right now.
- * 
+ *
  * Features:
  * - Engagement scoring (votes + unique voters)
  * - Category filtering
  * - Limit controls (top N polls)
  * - Privacy-aware (only opted-in users counted)
  * - Access control (admin-only)
- * 
+ *
  * Access: Admin-only
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -25,6 +25,10 @@ import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest): Promise<any> => {
   const supabase = await getSupabaseServerClient();
@@ -80,7 +84,7 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
 
     // Get votes for these polls (from opted-in users only)
     const pollIds = polls.map(p => p.id);
-    
+
     const votesQueryResult = await queryBuilder.getVoteAnalytics({});
     const { data: allVotes, error: votesError } = votesQueryResult;
 
@@ -97,13 +101,13 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
       const pollVotes = relevantVotes.filter(v => v.poll_id === poll.id);
       const totalVotes = pollVotes.length;
       const uniqueVoters = new Set(pollVotes.map(v => v.user_id)).size;
-      
+
       // ==========================================
       // ANALYTICS DISPLAY RANKING ONLY
       // ==========================================
       // This "engagement score" is ONLY used for ranking polls in the admin analytics dashboard.
       // It shows which polls are "hot" right now for analytics purposes.
-      // 
+      //
       // CRITICAL: This does NOT affect poll results or vote counting in any way!
       // - Poll results ALWAYS show exact vote counts (1 vote = 1 vote)
       // - This ranking helps admins see which polls have high engagement
@@ -112,7 +116,7 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
       // This is open-source and bias-free. Actual votes are NEVER weighted.
       // ==========================================
       const engagementScore = (totalVotes * 0.4) + (uniqueVoters * 0.6);
-      
+
       // Check if poll is currently active
       const isActive = poll.status === 'active';
 

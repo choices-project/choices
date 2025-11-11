@@ -51,11 +51,13 @@ describe('PWAAuth integration', () => {
     expect(exported).not.toBeNull();
     expect(exported?.offlineVotes).toHaveLength(1);
 
-    const [vote] = exported!.offlineVotes;
-    expect(vote.pollId).toBe('poll-1');
-    expect(vote.choice).toBe(2);
-    expect(typeof vote.timestamp).toBe('number');
-    expect(vote.metadata).toEqual({ source: 'cache' });
+    const vote = exported?.offlineVotes?.[0];
+    expect(vote).toBeDefined();
+    const definedVote = vote!;
+    expect(definedVote.pollId).toBe('poll-1');
+    expect(definedVote.choice).toBe(2);
+    expect(typeof definedVote.timestamp).toBe('number');
+    expect(definedVote.metadata).toEqual({ source: 'cache' });
   });
 
   it('disables functionality when feature flag is off', () => {

@@ -37,7 +37,7 @@ describe('usePollCreatedListener', () => {
     const notifications = useNotificationStore.getState().notifications;
     expect(notifications.length).toBe(1);
 
-    const [notification] = notifications;
+    const notification = notifications[0]!;
     expect(notification).toMatchObject({
       type: 'success',
       title: 'Poll published',

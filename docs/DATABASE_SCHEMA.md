@@ -1,6 +1,6 @@
 # Choices Platform - Database Schema Documentation
 
-**Last Updated**: November 5, 2025  
+**Last Updated**: November 9, 2025  
 **Source**: Generated from `/web/types/supabase.ts` (Supabase-generated types)  
 **Status**: ✅ CURRENT - Verified against production database  
 **Total Tables**: 70  

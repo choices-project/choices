@@ -19,9 +19,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
-import {
-  useAppStore
-} from '@/lib/stores';
+import { useIsMobile } from '@/lib/stores/appStore';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
@@ -49,7 +47,7 @@ export default function Civics2Page() {
   
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
-  const { isMobile } = useAppStore();
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {

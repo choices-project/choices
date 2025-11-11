@@ -12,11 +12,12 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import { devtools, persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { produce } from 'immer';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
+import { createBaseStoreActions } from './baseStoreActions';
 
 // -----------------------------------------------------------------------------
 // Domain Types
@@ -219,7 +220,13 @@ export type VotingStatusState = {
   error: string | null;
 };
 
-export type VotingSlice = VotingEntitiesState & VotingSelectionState & VotingStatusState;
+type TimerHandle = ReturnType<typeof setInterval>;
+
+export type VotingSlice = VotingEntitiesState &
+  VotingSelectionState &
+  VotingStatusState & {
+    timerHandles: Record<string, TimerHandle>;
+  };
 
 export type VotingActions = {
   // Ballots
@@ -268,6 +275,9 @@ export type VotingActions = {
   submitBallot: (ballotId: string, votes: Record<string, string[]>) => Promise<void>;
   clearUserVotingSession: () => void;
   reset: () => void;
+  registerTimer: (handle: TimerHandle) => string;
+  clearTimer: (id: string) => void;
+  clearAllTimers: () => void;
 
   // Loading/Error flags
   setLoading: (loading: boolean) => void;
@@ -355,16 +365,23 @@ const createInitialSlice = (): VotingSlice => ({
   isVoting: false,
   isUpdating: false,
   error: null,
+  timerHandles: {},
 });
 
-const mergeBallot = (ballot: Ballot, updates: Partial<Ballot>) =>
-  withOptional(ballot, updates as Record<string, unknown>) as Ballot;
+const mergeBallot = (ballot: Ballot, updates: Partial<Ballot>): Ballot => ({
+  ...ballot,
+  ...updates,
+});
 
-const mergeElection = (election: Election, updates: Partial<Election>) =>
-  withOptional(election, updates as Record<string, unknown>) as Election;
+const mergeElection = (election: Election, updates: Partial<Election>): Election => ({
+  ...election,
+  ...updates,
+});
 
-const mergeVotingRecord = (record: VotingRecord, updates: Partial<VotingRecord>) =>
-  withOptional(record, updates as Record<string, unknown>) as VotingRecord;
+const mergeVotingRecord = (record: VotingRecord, updates: Partial<VotingRecord>): VotingRecord => ({
+  ...record,
+  ...updates,
+});
 
 const mergeVotingPreferences = (
   preferences: VotingPreferences,
@@ -418,23 +435,22 @@ const prependItem = <T>(items: T[], item: T): T[] => [item, ...items];
 type VotingStoreSetter = StoreApi<VotingState>['setState'];
 type VotingStoreGetter = StoreApi<VotingState>['getState'];
 
-const mergeInitialSlice = (overrides?: Partial<VotingSlice>): VotingSlice => {
-  if (!overrides) {
-    return createInitialSlice();
-  }
+export const createInitialVotingSlice = (overrides?: Partial<VotingSlice>): VotingSlice => ({
+  ...createInitialSlice(),
+  ...(overrides ?? {}),
+});
 
-  return {
-    ...createInitialSlice(),
-    ...overrides,
-  };
-};
-
-const createVotingState = (
+export const createVotingActions = (
   set: VotingStoreSetter,
   get: VotingStoreGetter,
   initialSlice?: Partial<VotingSlice>
-): VotingState => ({
-  ...mergeInitialSlice(initialSlice),
+): VotingActions => {
+  const applyImmer = (recipe: (draft: VotingState) => void) =>
+    set((state) => produce(state, recipe));
+  const baseActions = createBaseStoreActions<VotingState>(applyImmer);
+
+  return {
+    ...baseActions,
 
   // ---------------------------------------------------------------------------
   // Ballot management
@@ -701,6 +717,35 @@ const createVotingState = (
       preferences: clonePreferences(),
     }),
 
+  registerTimer: (handle) => {
+    const id = `timer-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    set((state) => ({
+      timerHandles: {
+        ...state.timerHandles,
+        [id]: handle,
+      },
+    }));
+    return id;
+  },
+
+  clearTimer: (id) => {
+    const handle = get().timerHandles[id];
+    if (handle) {
+      clearInterval(handle);
+      set((state) => {
+        const nextHandles = { ...state.timerHandles };
+        delete nextHandles[id];
+        return { timerHandles: nextHandles };
+      });
+    }
+  },
+
+  clearAllTimers: () => {
+    const handles = Object.values(get().timerHandles);
+    handles.forEach((handle) => clearInterval(handle));
+    set({ timerHandles: {} });
+  },
+
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
@@ -898,9 +943,10 @@ const createVotingState = (
     })),
 
   reset: () => {
+    get().clearAllTimers();
     get().resetPreferences();
     set({
-      ...mergeInitialSlice(initialSlice),
+      ...createInitialVotingSlice(initialSlice),
       preferences: clonePreferences(),
     });
     logger.info('Voting store reset');
@@ -909,19 +955,26 @@ const createVotingState = (
   // ---------------------------------------------------------------------------
   // Loading/error flags
   // ---------------------------------------------------------------------------
-  setLoading: (loading) => set({ isLoading: loading }),
   setSearching: (searching) => set({ isSearching: searching }),
   setVoting: (voting) => set({ isVoting: voting }),
   setUpdating: (updating) => set({ isUpdating: updating }),
-  setError: (error) => set({ error }),
-  clearError: () => set({ error: null }),
+  };
+};
+
+export const createVotingStoreState = (
+  set: VotingStoreSetter,
+  get: VotingStoreGetter,
+  initialSlice?: Partial<VotingSlice>
+): VotingState => ({
+  ...createInitialVotingSlice(initialSlice),
+  ...createVotingActions(set, get, initialSlice),
 });
 
 export const createVotingStore = (initialState?: Partial<VotingSlice>) =>
   createStore<VotingState>()(
     devtools(
       persist(
-        (set, get) => createVotingState(set, get, initialState),
+        (set, get) => createVotingStoreState(set, get, initialState),
         {
           name: 'voting-store',
           storage: createSafeStorage(),
@@ -1021,6 +1074,9 @@ export const useVotingActions = () =>
       setError: state.setError,
       clearError: state.clearError,
       clearUserVotingSession: state.clearUserVotingSession,
+      registerTimer: state.registerTimer,
+      clearTimer: state.clearTimer,
+      clearAllTimers: state.clearAllTimers,
       reset: state.reset,
     }),
     shallow

@@ -17,7 +17,7 @@ import React, { useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
-import { useAppStore } from '@/lib/stores/appStore';
+import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
 
 type LanguageSelectorProps = {
@@ -39,7 +39,7 @@ export default function LanguageSelector({
     const opt = LANGUAGE_OPTIONS.find(o => o.code === code);
     return showNativeNames ? (opt?.native ?? code) : (opt?.name ?? code);
   };
-  const { updateSettings } = useAppStore();
+  const { updateSettings } = useAppActions();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLanguageChange = async (language: string) => {

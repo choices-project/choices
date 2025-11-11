@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-import { useIsAuthenticated, useUserStore } from '@/lib/stores';
+import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
 'use client';
@@ -36,7 +36,7 @@ export function AuthGuard({
   )
 }: AuthGuardProps) {
   const isAuthenticated = useIsAuthenticated();
-  const { isLoading } = useUserStore();
+  const isLoading = useUserLoading();
   const router = useRouter();
 
   useEffect(() => {

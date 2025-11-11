@@ -18,7 +18,8 @@
   "scripts": {
     "prepare": "husky install",
     "ci:install": "npm ci --ignore-scripts",
-    "ci:verify": "npm audit --audit-level=moderate"
+    "ci:verify": "npm audit --audit-level=moderate",
+    "test": "npm run test --prefix web"
   },
   "dependencies": {
     "pg": "8.13.1",

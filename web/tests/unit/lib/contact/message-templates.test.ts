@@ -1,8 +1,8 @@
 /**
  * Message Templates Unit Tests
- * 
+ *
  * Tests for message template system functionality
- * 
+ *
  * Created: January 26, 2025
  */
 
@@ -132,7 +132,6 @@ describe('Message Templates', () => {
 
       const userInfo = {
         email: 'supporter@example.com',
-        name: undefined,
       };
 
       const result = fillTemplate(template, values, userInfo);

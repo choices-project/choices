@@ -27,7 +27,7 @@ type BrowserFeatureSnapshot = PWAFeatures & {
   encryptedStorage: boolean;
 }
 
-type IconComponent = React.ComponentType<{ className?: string | undefined }>;
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 type TierDisplayMeta = {
   name: string;

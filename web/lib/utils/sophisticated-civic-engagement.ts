@@ -18,8 +18,19 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+
+const CIVIC_ENGAGEMENT_FLAG = 'CIVIC_ENGAGEMENT_V2' as const;
+
+function assertCivicEngagementEnabled(context: string): void {
+  if (!isFeatureEnabled(CIVIC_ENGAGEMENT_FLAG)) {
+    logger.warn('[CivicEngagementV2] Blocked call while feature disabled', { context });
+    throw new Error('Civic engagement v2 feature is disabled');
+  }
+}
 
 
 /**
@@ -211,6 +222,7 @@ export async function createSophisticatedCivicAction(
   },
   userId: string
 ): Promise<SophisticatedCivicAction | null> {
+  assertCivicEngagementEnabled('createSophisticatedCivicAction');
   try {
     // category column added in November 2025 migration
     const civicAction: any = {
@@ -269,6 +281,7 @@ export async function getRepresentativesByLocation(
     includeInactive?: boolean;
   } = {}
 ): Promise<RepresentativeData[]> {
+  assertCivicEngagementEnabled('getRepresentativesByLocation');
   try {
     // In a real implementation, this would query the representatives_core table
     // with sophisticated filtering based on trust scores, contact frequency, etc.
@@ -317,6 +330,7 @@ export function calculateCivicEngagementMetrics(
   interactions: number,
   signatures: number
 ): CivicEngagementMetrics {
+  assertCivicEngagementEnabled('calculateCivicEngagementMetrics');
   const totalActions = actions.length;
   const activePetitions = actions.filter(a => 
     a.action_type === 'petition' && a.status === 'active'
@@ -351,6 +365,7 @@ export async function trackRepresentativeContact(
   },
   userId: string
 ): Promise<boolean> {
+  assertCivicEngagementEnabled('trackRepresentativeContact');
   try {
     // Track the contact in analytics
     logger.info('Representative contact tracked', {
@@ -383,6 +398,7 @@ export async function getTrendingCivicActions(
   category?: string,
   supabaseClient?: SupabaseClient
 ): Promise<SophisticatedCivicAction[]> {
+  assertCivicEngagementEnabled('getTrendingCivicActions');
   try {
     logger.info('Fetching trending civic actions', { limit, category });
 
@@ -483,6 +499,7 @@ export function calculateCivicScore(
   interactions: number,
   signatures: number
 ): number {
+  assertCivicEngagementEnabled('calculateCivicScore');
   const actionScore = actions.length * 10;
   const interactionScore = interactions * 5;
   const signatureScore = Math.min(signatures / 100, 50); // Cap at 50 points
@@ -497,6 +514,7 @@ export function calculateCommunityImpact(
   actions: SophisticatedCivicAction[],
   signatures: number
 ): number {
+  assertCivicEngagementEnabled('calculateCommunityImpact');
   const publicActions = actions.filter(a => a.is_public).length;
   const signatureImpact = Math.min(signatures / 1000, 50); // Cap at 50 points
   
@@ -507,6 +525,7 @@ export function calculateCommunityImpact(
  * Calculate trust tier based on civic score
  */
 export function calculateTrustTier(civicScore: number): 'bronze' | 'silver' | 'gold' | 'platinum' {
+  assertCivicEngagementEnabled('calculateTrustTier');
   if (civicScore >= 90) return 'platinum';
   if (civicScore >= 75) return 'gold';
   if (civicScore >= 50) return 'silver';
@@ -520,6 +539,7 @@ export function getCivicEngagementRecommendations(
   userMetrics: CivicEngagementMetrics,
   _availableActions: SophisticatedCivicAction[]
 ): string[] {
+  assertCivicEngagementEnabled('getCivicEngagementRecommendations');
   const recommendations: string[] = [];
 
   if (userMetrics.total_actions < 3) {

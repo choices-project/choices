@@ -1,70 +1,63 @@
 /**
- * Centralized flags with case-insensitive lookups and typed keys.
- * Add new flags here; remove when dead.
+ * Centralised feature flag registry with typed lookups and runtime toggles.
+ * Core features that are always on live in `ALWAYS_ENABLED_FLAGS` and are
+ * treated as immutable capabilities (they no longer count as feature flags).
  */
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
-// Defensive check for module loading - log if this file is being loaded
 if (typeof window !== 'undefined') {
   logger.info('[FEATURE_FLAGS] Module loading on client');
 }
 
+const ALWAYS_ENABLED_FLAGS = [
+  'PWA',
+  'ADMIN',
+  'FEEDBACK_WIDGET',
+  'ENHANCED_ONBOARDING',
+  'ENHANCED_PROFILE',
+  'ENHANCED_AUTH',
+  'ENHANCED_DASHBOARD',
+  'ENHANCED_POLLS',
+  'ENHANCED_VOTING',
+  'CIVICS_ADDRESS_LOOKUP',
+  'CIVICS_REPRESENTATIVE_DATABASE',
+  'CIVICS_CAMPAIGN_FINANCE',
+  'CIVICS_VOTING_RECORDS',
+  'CANDIDATE_ACCOUNTABILITY',
+  'CANDIDATE_CARDS',
+  'ALTERNATIVE_CANDIDATES',
+  'FEATURE_DB_OPTIMIZATION_SUITE',
+  'ANALYTICS',
+  'WEBAUTHN',
+] as const;
+
+type AlwaysEnabledFlag = typeof ALWAYS_ENABLED_FLAGS[number];
+const ALWAYS_ENABLED_SET = new Set<string>(ALWAYS_ENABLED_FLAGS);
+
 export const FEATURE_FLAGS = {
-  // ===== CORE MVP FEATURES (Always Enabled) =====
-  // WEBAUTHN removed - always enabled, core to application
-  PWA: true,
-  ADMIN: true,
-  FEEDBACK_WIDGET: true,        // CRITICAL: User feedback collection widget
-  
-  // ===== ADMIN FEATURES (Nice-to-have for MVP) =====
-  USER_SUGGESTIONS_MANAGER: false, // Admin can access from laptop for now
-  
-  // ===== ENHANCED MVP FEATURES (FULLY IMPLEMENTED) =====
-  ENHANCED_ONBOARDING: true,         // Multi-step onboarding system with comprehensive data collection
-  ENHANCED_PROFILE: true,            // Advanced profile management with privacy controls
-  ENHANCED_AUTH: true,               // SSR-safe authentication with advanced utilities (IMPLEMENTED)
-  ENHANCED_DASHBOARD: true,          // Advanced dashboard with analytics and insights (COMPLETED)
-  ENHANCED_POLLS: true,              // Advanced poll creation and management system (164 polls active)
-  ENHANCED_VOTING: true,             // Advanced voting methods and analytics (3 votes active)
-  CIVICS_ADDRESS_LOOKUP: true,       // Address-based representative lookup system (IMPLEMENTED)
-  CIVICS_REPRESENTATIVE_DATABASE: true, // Federal, state, and local representative database (1,273 representatives)
-  CIVICS_CAMPAIGN_FINANCE: true,     // FEC campaign finance data integration (92 FEC records)
-  CIVICS_VOTING_RECORDS: true,       // Congressional voting records and analysis (2,185 voting records)
-  CANDIDATE_ACCOUNTABILITY: true,    // Promise tracking and performance metrics (IMPLEMENTED)
-  CANDIDATE_CARDS: true,             // Comprehensive candidate information cards (2 candidates)
-  ALTERNATIVE_CANDIDATES: true,      // Platform for non-duopoly candidates (IMPLEMENTED)
-  
-  // ===== FUTURE FEATURES (Development Required) =====
-  AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
-  ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy (PARTIALLY IMPLEMENTED - 30%)
-  MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (not MVP ready)
-  POLL_NARRATIVE_SYSTEM: false,      // AI-powered poll narrative generation (PARTIALLY IMPLEMENTED - 70%)
-  SOCIAL_SHARING: false,             // Master switch for all social features (PARTIALLY IMPLEMENTED - 60%)
-  SOCIAL_SHARING_POLLS: false,       // Poll sharing (Twitter, Facebook, LinkedIn) (PARTIALLY IMPLEMENTED - 60%)
-  SOCIAL_SHARING_CIVICS: false,      // Representative sharing (PARTIALLY IMPLEMENTED - 60%)
-  SOCIAL_SHARING_VISUAL: false,      // Visual content generation (IG, TikTok) (NOT IMPLEMENTED)
-  SOCIAL_SHARING_OG: false,          // Dynamic Open Graph image generation (NOT IMPLEMENTED)
-  SOCIAL_SIGNUP: false,              // Social OAuth signup (NOT IMPLEMENTED)
-  CONTACT_INFORMATION_SYSTEM: false, // Contact information system (PARTIALLY IMPLEMENTED - 50%)
-  CIVICS_TESTING_STRATEGY: false,    // Civics testing strategy (NOT IMPLEMENTED)
-  DEVICE_FLOW_AUTH: false,           // OAuth 2.0 Device Authorization Grant flow (PARTIALLY IMPLEMENTED - 80%)
-  
-  // ===== PERFORMANCE & OPTIMIZATION =====
-  PERFORMANCE_OPTIMIZATION: false,   // Image optimization, virtual scrolling, lazy loading
-  FEATURE_DB_OPTIMIZATION_SUITE: true, // Database optimization suite - enabled for performance
-  ANALYTICS: true,                   // Advanced analytics and user insights
-  // Removed experimental features that aren't actually implemented
-  
-  // ===== SYSTEM FEATURES =====
-  PUSH_NOTIFICATIONS: false,         // Push notifications and alerts (different from feedback widget)
-  THEMES: false,                     // Dark mode and theme customization
-  ACCESSIBILITY: false,              // Advanced accessibility features
-  INTERNATIONALIZATION: false,       // Multi-language support
+  AUTOMATED_POLLS: false,
+  ADVANCED_PRIVACY: false,
+  SOCIAL_SHARING: false,
+  SOCIAL_SHARING_POLLS: false,
+  SOCIAL_SHARING_CIVICS: false,
+  SOCIAL_SHARING_VISUAL: false,
+  SOCIAL_SHARING_OG: false,
+  SOCIAL_SIGNUP: false,
+  CONTACT_INFORMATION_SYSTEM: false,
+  CIVICS_TESTING_STRATEGY: false,
+  DEVICE_FLOW_AUTH: false,
+  PERFORMANCE_OPTIMIZATION: false,
+  PUSH_NOTIFICATIONS: false,
+  THEMES: false,
+  ACCESSIBILITY: false,
+  INTERNATIONALIZATION: false,
+  CIVIC_ENGAGEMENT_V2: false,
 } as const;
 
-// Define proper types for feature flag system
+type MutableFlag = keyof typeof FEATURE_FLAGS;
+export type FeatureFlagKey = MutableFlag | AlwaysEnabledFlag;
+
 export type FeatureFlag = {
   id: string;
   name: string;
@@ -72,7 +65,7 @@ export type FeatureFlag = {
   description: string;
   key?: FeatureFlagKey;
   category?: string;
-}
+};
 
 export type FeatureFlagMetadata = {
   description?: string;
@@ -80,17 +73,17 @@ export type FeatureFlagMetadata = {
   dependencies?: string[];
   experimental?: boolean;
   deprecated?: boolean;
-}
+};
 
 export type FeatureFlagConfig = {
   flags: Record<string, boolean>;
   timestamp: string;
   version: string;
-}
+};
 
 export type FeatureFlagSubscription = {
   unsubscribe: () => void;
-}
+};
 
 export type FeatureFlagSystemInfo = {
   totalFlags: number;
@@ -98,318 +91,349 @@ export type FeatureFlagSystemInfo = {
   disabledFlags: number;
   environment: string;
   categories: Record<string, number>;
-}
-
-type _KnownFlag = keyof typeof FEATURE_FLAGS;
-
-// Define the missing FeatureFlagKey type
-export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
-
-export type FeatureFlagManager = typeof featureFlagManager;
-
-// also accept lowercase legacy names found in code: 'pwa', 'advancedPrivacy'
-const ALIASES: Record<string, FeatureFlagKey> = {
-  pwa: 'PWA',
-  advancedprivacy: 'ADVANCED_PRIVACY',
-  'advanced-privacy': 'ADVANCED_PRIVACY',
-  analytics: 'ANALYTICS',
-  admin: 'ADMIN',
-  civics: 'CIVICS_ADDRESS_LOOKUP',
-  'civics-address-lookup': 'CIVICS_ADDRESS_LOOKUP',
 };
 
-function normalize(key: string): FeatureFlagKey | null {
-  if (key in FEATURE_FLAGS) return key as FeatureFlagKey;
-  const alias = ALIASES[key.toLowerCase()];
-  return alias || null;
+const CATEGORY_MAP: Record<string, ReadonlyArray<FeatureFlagKey>> = {
+  core: ALWAYS_ENABLED_FLAGS,
+  future: [
+    'AUTOMATED_POLLS',
+    'SOCIAL_SHARING',
+    'SOCIAL_SHARING_POLLS',
+    'SOCIAL_SHARING_CIVICS',
+    'SOCIAL_SHARING_VISUAL',
+    'SOCIAL_SHARING_OG',
+    'SOCIAL_SIGNUP',
+    'CIVIC_ENGAGEMENT_V2',
+  ],
+  privacy: ['ADVANCED_PRIVACY', 'CONTACT_INFORMATION_SYSTEM'],
+  performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE'],
+  civics: ['CIVICS_TESTING_STRATEGY'],
+  auth: ['DEVICE_FLOW_AUTH', 'WEBAUTHN'],
+  system: ['PUSH_NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION'],
+  analytics: ['ANALYTICS'],
+};
+
+const DEPENDENCY_MAP: Partial<Record<MutableFlag, FeatureFlagKey[]>> = {
+  SOCIAL_SHARING_POLLS: ['SOCIAL_SHARING'],
+  SOCIAL_SHARING_CIVICS: ['SOCIAL_SHARING', 'CIVICS_ADDRESS_LOOKUP'],
+  SOCIAL_SHARING_VISUAL: ['SOCIAL_SHARING'],
+  SOCIAL_SHARING_OG: ['SOCIAL_SHARING'],
+  PUSH_NOTIFICATIONS: ['PWA'],
+  DEVICE_FLOW_AUTH: ['ENHANCED_AUTH'],
+  CIVIC_ENGAGEMENT_V2: ['CIVICS_ADDRESS_LOOKUP'],
+};
+
+const ALIASES: Record<string, FeatureFlagKey> = {
+  pwa: 'PWA',
+  admin: 'ADMIN',
+  analytics: 'ANALYTICS',
+  aifeatures: 'ANALYTICS',
+  advancedprivacy: 'ADVANCED_PRIVACY',
+  'advanced-privacy': 'ADVANCED_PRIVACY',
+  civics: 'CIVICS_ADDRESS_LOOKUP',
+  'civics-address-lookup': 'CIVICS_ADDRESS_LOOKUP',
+  'social-sharing': 'SOCIAL_SHARING',
+  'social-sharing-polls': 'SOCIAL_SHARING_POLLS',
+  'social-sharing-civics': 'SOCIAL_SHARING_CIVICS',
+  'social-sharing-visual': 'SOCIAL_SHARING_VISUAL',
+  'social-sharing-og': 'SOCIAL_SHARING_OG',
+  'social-signup': 'SOCIAL_SIGNUP',
+  'device-flow-auth': 'DEVICE_FLOW_AUTH',
+  'performance-optimization': 'PERFORMANCE_OPTIMIZATION',
+  notifications: 'PUSH_NOTIFICATIONS',
+  themes: 'THEMES',
+  accessibility: 'ACCESSIBILITY',
+  internationalization: 'INTERNATIONALIZATION',
+  'civic-engagement-v2': 'CIVIC_ENGAGEMENT_V2',
+  civicengagementv2: 'CIVIC_ENGAGEMENT_V2',
+  webauthn: 'WEBAUTHN',
+  'feature-db-optimization-suite': 'FEATURE_DB_OPTIMIZATION_SUITE',
+  'feature_db_optimization_suite': 'FEATURE_DB_OPTIMIZATION_SUITE',
+};
+
+function isMutableFlag(key: FeatureFlagKey | string): key is MutableFlag {
+  return Object.prototype.hasOwnProperty.call(FEATURE_FLAGS, key);
 }
 
-// Subscriptions for flag changes
+function isAlwaysEnabledFlag(key: FeatureFlagKey | string): key is AlwaysEnabledFlag {
+  return ALWAYS_ENABLED_SET.has(String(key));
+}
+
+function formatFlagName(flagId: FeatureFlagKey): string {
+  return String(flagId)
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalize(key: string): FeatureFlagKey | null {
+  if (!key) return null;
+  const alias = ALIASES[key.toLowerCase()];
+  if (alias) return alias;
+  const canonical = key.toUpperCase().replace(/-/g, '_');
+  if (isAlwaysEnabledFlag(canonical)) {
+    return canonical as AlwaysEnabledFlag;
+  }
+  if (isMutableFlag(canonical)) {
+    return canonical as MutableFlag;
+  }
+  return null;
+}
+
+const mutableFlags: Record<MutableFlag, boolean> = { ...FEATURE_FLAGS };
+
+function buildSnapshot(): Record<string, boolean> {
+  const snapshot: Record<string, boolean> = { ...mutableFlags };
+  ALWAYS_ENABLED_FLAGS.forEach((flag) => {
+    snapshot[flag] = true;
+  });
+  return snapshot;
+}
+
 const subscribers = new Set<(flags: Record<string, boolean>) => void>();
+
 function notifySubscribers() {
-  const snapshot = withOptional({}, mutableFlags);
-  subscribers.forEach(cb => {
-    try { cb(snapshot); } catch { /* noop */ }
+  const snapshot = buildSnapshot();
+  subscribers.forEach((cb) => {
+    try {
+      cb(snapshot);
+    } catch {
+      // noop
+    }
   });
 }
 
-export function isFeatureEnabled<K extends string>(key: K): boolean {
-  const normalizedKey = normalize(key);
-  if (normalizedKey && FEATURE_FLAGS && normalizedKey in FEATURE_FLAGS) {
-    return FEATURE_FLAGS?.[normalizedKey] === true;
-  }
-  // Unknown flags default to false but don't crash
-  return false;
-}
-
-// Create a mutable copy of FEATURE_FLAGS for runtime modifications
-const mutableFlags: Record<string, boolean> = withOptional({}, FEATURE_FLAGS);
-
-// Helper function to categorize flags
-function categorizeFlag(flagId: string): string {
-  const categories: Record<string, string[]> = {
-    // Core MVP features
-    core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
-    
-    // Enhanced MVP features ready for implementation
-    enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
-    
-    // Future features requiring development
-    future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
-    
-    // Performance and optimization
-    performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
-    
-    // Experimental features removed - not actually implemented
-    
-    // System features
-    system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
-  };
-  
-  for (const [category, flags] of Object.entries(categories)) {
-    if (flags.includes(flagId)) {
+function categorizeFlag(flag: FeatureFlagKey): string {
+  const categoryEntries = Object.entries(CATEGORY_MAP);
+  for (const [category, flags] of categoryEntries) {
+    if (flags.includes(flag)) {
       return category;
     }
   }
-  return 'general';
+  return 'other';
 }
 
+const toFeatureFlagDescriptor = (
+  flag: FeatureFlagKey,
+  enabled: boolean,
+  description: string,
+): FeatureFlag => ({
+  id: flag,
+  name: formatFlagName(flag),
+  enabled,
+  description,
+  key: flag,
+  category: categorizeFlag(flag),
+});
+
+export function isFeatureEnabled<K extends string>(key: K): boolean {
+  const normalizedKey = normalize(key);
+  if (!normalizedKey) return false;
+  if (isAlwaysEnabledFlag(normalizedKey)) return true;
+  if (isMutableFlag(normalizedKey)) {
+    return mutableFlags[normalizedKey] === true;
+  }
+  return false;
+}
+
+export type FeatureFlagManager = typeof featureFlagManager;
+
 export const featureFlagManager = {
-  enable: (k: string | FeatureFlagKey): boolean => {
-    const key = normalize(String(k)); 
-    if (key && key in mutableFlags) {
+  enable: (input: string | FeatureFlagKey): boolean => {
+    const key = normalize(String(input));
+    if (!key) return false;
+    if (isAlwaysEnabledFlag(key)) {
+      logger.info(`[FEATURE_FLAGS] '${key}' is always enabled and cannot be toggled.`);
+      return true;
+    }
+    if (!isMutableFlag(key)) return false;
+    if (!mutableFlags[key]) {
       mutableFlags[key] = true;
       notifySubscribers();
-      return true;
     }
-    return false;
+    return true;
   },
-  disable: (k: string | FeatureFlagKey): boolean => {
-    const key = normalize(String(k)); 
-    if (key && key in mutableFlags) {
+  disable: (input: string | FeatureFlagKey): boolean => {
+    const key = normalize(String(input));
+    if (!key) return false;
+    if (isAlwaysEnabledFlag(key)) {
+      logger.warn(`[FEATURE_FLAGS] Attempted to disable always-on flag '${key}'.`);
+      return false;
+    }
+    if (!isMutableFlag(key)) return false;
+    if (mutableFlags[key]) {
       mutableFlags[key] = false;
       notifySubscribers();
+    }
+    return true;
+  },
+  toggle: (input: string | FeatureFlagKey): boolean => {
+    const key = normalize(String(input));
+    if (!key) return false;
+    if (isAlwaysEnabledFlag(key)) {
+      logger.info(`[FEATURE_FLAGS] '${key}' is always enabled and cannot be toggled.`);
       return true;
     }
+    if (!isMutableFlag(key)) return false;
+    mutableFlags[key] = !mutableFlags[key];
+    notifySubscribers();
+    return true;
+  },
+  get: (input: string | FeatureFlagKey): boolean => {
+    const key = normalize(String(input));
+    if (!key) return false;
+    if (isAlwaysEnabledFlag(key)) return true;
+    if (isMutableFlag(key)) return mutableFlags[key] ?? false;
     return false;
   },
-  toggle: (k: string | FeatureFlagKey): boolean => {
-    const key = normalize(String(k)); 
-    if (key && key in mutableFlags) {
-      mutableFlags[key] = !mutableFlags[key];
-      notifySubscribers();
-      return true;
-    }
-    return false;
-  },
-  get: (key: string | FeatureFlagKey): boolean => {
-    const normalizedKey = normalize(String(key));
-    if (normalizedKey && mutableFlags && normalizedKey in mutableFlags) {
-      return mutableFlags?.[normalizedKey] ?? false;
-    }
-    return false;
-  },
-  all: () => withOptional({}, mutableFlags),
-  
-  // Additional methods expected by useFeatureFlags hook
+  all: () => buildSnapshot(),
   getAllFlags: (): Map<string, FeatureFlag> => {
-    const flags: FeatureFlag[] = Object.entries(mutableFlags).map(([key, enabled]) => ({
-      id: key,
-      name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-      enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
-      key: key as FeatureFlagKey,
-      category: categorizeFlag(key)
-    }));
-    return new Map(flags.map(flag => [flag.id, flag]));
+    const descriptors: FeatureFlag[] = [
+      ...ALWAYS_ENABLED_FLAGS.map((flag) =>
+        toFeatureFlagDescriptor(flag, true, `Core capability '${flag}' is always enabled.`),
+      ),
+      ...Object.entries(mutableFlags).map(([key, enabled]) =>
+        toFeatureFlagDescriptor(
+          key as FeatureFlagKey,
+          Boolean(enabled),
+          `Feature flag for ${formatFlagName(key as FeatureFlagKey)}`,
+        ),
+      ),
+    ];
+    return new Map(descriptors.map((flag) => [flag.id, flag]));
   },
-  isEnabled: (key: string | FeatureFlagKey): boolean => {
-    const normalizedKey = normalize(String(key));
-    if (normalizedKey && mutableFlags && normalizedKey in mutableFlags) {
-      return mutableFlags?.[normalizedKey] ?? false;
+  isEnabled: (input: string | FeatureFlagKey): boolean => isFeatureEnabled(String(input)),
+  getFlag: (input: string): FeatureFlag | null => {
+    const normalizedKey = normalize(input);
+    if (!normalizedKey) return null;
+    if (isAlwaysEnabledFlag(normalizedKey)) {
+      return toFeatureFlagDescriptor(
+        normalizedKey,
+        true,
+        `Core capability '${normalizedKey}' is always enabled.`,
+      );
     }
-    return false;
-  },
-  getFlag: (flagId: string): FeatureFlag | null => {
-    const normalizedKey = normalize(flagId);
-    if (normalizedKey && normalizedKey in mutableFlags) {
-      const enabled = mutableFlags[normalizedKey] ?? false;
-      return {
-        id: flagId,
-        name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-        enabled,
-        description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
-        key: normalizedKey,
-        category: categorizeFlag(flagId)
-      };
-    }
-    return null;
-  },
-  getEnabledFlags: (): FeatureFlag[] => Object.entries(mutableFlags)
-    .filter(([_, enabled]) => enabled)
-    .map(([key, enabled]) => ({
-      id: key,
-      name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+    if (!isMutableFlag(normalizedKey)) return null;
+    const enabled = mutableFlags[normalizedKey] ?? false;
+    return toFeatureFlagDescriptor(
+      normalizedKey,
       enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
-      key: key as FeatureFlagKey,
-      category: categorizeFlag(key)
-    })),
-  getDisabledFlags: (): FeatureFlag[] => Object.entries(mutableFlags)
-    .filter(([_, enabled]) => !enabled)
-    .map(([key, enabled]) => ({
-      id: key,
-      name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-      enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
-      key: key as FeatureFlagKey,
-      category: categorizeFlag(key)
-    })),
+      `Feature flag for ${formatFlagName(normalizedKey)}`,
+    );
+  },
+  getEnabledFlags: (): FeatureFlag[] => [
+    ...ALWAYS_ENABLED_FLAGS.map((flag) =>
+      toFeatureFlagDescriptor(flag, true, `Core capability '${flag}' is always enabled.`),
+    ),
+    ...Object.entries(mutableFlags)
+      .filter(([, enabled]) => enabled)
+      .map(([key, enabled]) =>
+        toFeatureFlagDescriptor(
+          key as FeatureFlagKey,
+          Boolean(enabled),
+          `Feature flag for ${formatFlagName(key as FeatureFlagKey)}`,
+        ),
+      ),
+  ],
+  getDisabledFlags: (): FeatureFlag[] =>
+    Object.entries(mutableFlags)
+      .filter(([, enabled]) => !enabled)
+      .map(([key]) =>
+        toFeatureFlagDescriptor(
+          key as FeatureFlagKey,
+          false,
+          `Feature flag for ${formatFlagName(key as FeatureFlagKey)}`,
+        ),
+      ),
   getFlagsByCategory: (category: string): FeatureFlag[] => {
-    const categories: Record<string, string[]> = {
-      // Core MVP features (always enabled)
-      core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
-      
-      // Enhanced MVP features ready for implementation
-      enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING', 'CIVICS_ADDRESS_LOOKUP'],
-      
-      // Future features requiring development
-      future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
-      
-      // Performance and optimization
-      performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
-      
-      // Experimental features
-      experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS', 'EXPERIMENTAL_COMPONENTS'],
-      
-      // System features
-      system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
-    };
-    const flagIds = categories[category] ?? [];
-    return flagIds.map(flagId => ({
-      id: flagId,
-      name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-      enabled: mutableFlags[flagId as FeatureFlagKey] ?? false,
-      description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
-      key: flagId as FeatureFlagKey,
-      category: category
-    }));
+    const flags = CATEGORY_MAP[category] ?? [];
+    return flags.map((flag) =>
+      toFeatureFlagDescriptor(
+        flag,
+        isFeatureEnabled(flag),
+        `Feature flag for ${formatFlagName(flag)}`,
+      ),
+    );
   },
-  getSystemInfo: (): FeatureFlagSystemInfo => ({
-    totalFlags: Object.keys(mutableFlags).length,
-    enabledFlags: Object.values(mutableFlags).filter(Boolean).length,
-    disabledFlags: Object.values(mutableFlags).filter(f => !f).length,
-    environment: process.env.NODE_ENV || 'development',
-    categories: {
-      core: 4,        // WEBAUTHN, PWA, ADMIN, FEEDBACK_WIDGET
-      enhanced: 6,    // ENHANCED_ONBOARDING, ENHANCED_PROFILE, ENHANCED_DASHBOARD, ENHANCED_POLLS, ENHANCED_VOTING, CIVICS_ADDRESS_LOOKUP
-      future: 8,      // AUTOMATED_POLLS, ADVANCED_PRIVACY, SOCIAL_SHARING + 5 sub-features
-      performance: 3, // PERFORMANCE_OPTIMIZATION, FEATURE_DB_OPTIMIZATION_SUITE, ANALYTICS
-      // experimental: 0, // Removed - not actually implemented
-      system: 4       // NOTIFICATIONS, THEMES, ACCESSIBILITY, INTERNATIONALIZATION
-    }
-  }),
-  areDependenciesEnabled: (flagId: string): boolean => {
-    // Enhanced dependency check for all features
-    const dependencies: Record<string, string[]> = {
-      // Enhanced feature dependencies (simplified - no core dependencies needed)
-      'ENHANCED_ONBOARDING': [],
-      'ENHANCED_PROFILE': [],
-      'ENHANCED_DASHBOARD': [],
-      'ENHANCED_POLLS': [],
-      'ENHANCED_VOTING': [],
-      'CIVICS_ADDRESS_LOOKUP': [],
-      
-      // Future feature dependencies
-      'AUTOMATED_POLLS': ['ADMIN'],
-      'SOCIAL_SHARING': [],
-      'SOCIAL_SHARING_POLLS': ['SOCIAL_SHARING'],
-      'SOCIAL_SHARING_CIVICS': ['SOCIAL_SHARING', 'CIVICS_ADDRESS_LOOKUP'],
-      'SOCIAL_SHARING_VISUAL': ['SOCIAL_SHARING'],
-      'SOCIAL_SHARING_OG': ['SOCIAL_SHARING'],
-      'SOCIAL_SIGNUP': [],
-      
-      // Performance dependencies
-      'PERFORMANCE_OPTIMIZATION': [],
-      'ANALYTICS': [],
-      
-      // System feature dependencies
-      'NOTIFICATIONS': ['PWA'],
-      'THEMES': [],
-      'ACCESSIBILITY': [],
-      'INTERNATIONALIZATION': []
+  getSystemInfo: (): FeatureFlagSystemInfo => {
+    const enabledMutableCount = Object.values(mutableFlags).filter(Boolean).length;
+    const disabledMutableCount = Object.values(mutableFlags).filter((flag) => !flag).length;
+    const categoryCounts = Object.fromEntries(
+      Object.entries(CATEGORY_MAP).map(([category, flags]) => [category, flags.length]),
+    );
+    return {
+      totalFlags: ALWAYS_ENABLED_FLAGS.length + Object.keys(mutableFlags).length,
+      enabledFlags: ALWAYS_ENABLED_FLAGS.length + enabledMutableCount,
+      disabledFlags: disabledMutableCount,
+      environment: process.env.NODE_ENV || 'development',
+      categories: categoryCounts,
     };
-    const deps = dependencies[flagId] || [];
-    return deps.every(dep => {
-      const normalizedKey = normalize(dep);
-      return normalizedKey ? mutableFlags[normalizedKey] : false;
-    });
+  },
+  areDependenciesEnabled: (flagId: string): boolean => {
+    const normalizedKey = normalize(flagId);
+    if (!normalizedKey) return false;
+    if (isAlwaysEnabledFlag(normalizedKey)) return true;
+    if (!isMutableFlag(normalizedKey)) return false;
+    const deps = DEPENDENCY_MAP[normalizedKey] ?? [];
+    return deps.every((dep) => isFeatureEnabled(dep));
   },
   subscribe: (callback: (flags: Record<string, boolean>) => void): FeatureFlagSubscription => {
-    // Register and provide unsubscribe
     if (typeof callback === 'function') {
       subscribers.add(callback);
-      // Immediately push current state to new subscriber
-      try { callback(withOptional({}, mutableFlags)); } catch { /* noop */ }
+      try {
+        callback(buildSnapshot());
+      } catch {
+        // noop
+      }
     }
     return { unsubscribe: () => subscribers.delete(callback) };
   },
   updateFlagMetadata: (flagId: string, metadata: FeatureFlagMetadata): boolean => {
-    // For now, just return true - in a real app, this would update flag metadata
     logger.info(`Updating metadata for flag ${flagId}:`, metadata);
     return true;
   },
   reset: (): void => {
-    // Reset all flags to their default values
-    Object.keys(FEATURE_FLAGS).forEach(key => {
-      const flagKey = key as FeatureFlagKey;
-      mutableFlags[flagKey] = FEATURE_FLAGS[flagKey];
+    Object.keys(FEATURE_FLAGS).forEach((key) => {
+      const mutableKey = key as MutableFlag;
+      mutableFlags[mutableKey] = FEATURE_FLAGS[mutableKey];
     });
     notifySubscribers();
   },
-  exportConfig: (): FeatureFlagConfig => {
-    // Export current flag configuration
-    return {
-      flags: withOptional({}, mutableFlags),
-      timestamp: new Date().toISOString(),
-      version: '1.0.0'
-    };
-  },
+  exportConfig: (): FeatureFlagConfig => ({
+    flags: { ...mutableFlags },
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+  }),
   importConfig: (config: FeatureFlagConfig): void => {
-    // Import flag configuration
-    if (config?.flags) {
-      Object.entries(config.flags).forEach(([key, value]) => {
-        const normalizedKey = normalize(key);
-        if (normalizedKey && normalizedKey in mutableFlags && typeof value === 'boolean') {
-          mutableFlags[normalizedKey] = value;
-        }
-      });
-      notifySubscribers();
-    }
-  }
+    if (!config?.flags) return;
+    Object.entries(config.flags).forEach(([key, value]) => {
+      const normalizedKey = normalize(key);
+      if (normalizedKey && isMutableFlag(normalizedKey) && typeof value === 'boolean') {
+        mutableFlags[normalizedKey] = value;
+      }
+    });
+    notifySubscribers();
+  },
 };
 
-// Named helpers kept for compatibility
 export const enableFeature = featureFlagManager.enable;
 export const disableFeature = featureFlagManager.disable;
 export const toggleFeature = featureFlagManager.toggle;
-export const getFeatureFlag = (k: string | FeatureFlagKey) => isFeatureEnabled(k);
+export const getFeatureFlag = (k: string | FeatureFlagKey) => isFeatureEnabled(String(k));
 
-// E2E API functions
 export async function getFeatureFlags(): Promise<Record<string, boolean>> {
-  return featureFlagManager.all();
+  return buildSnapshot();
 }
 
 export async function setFeatureFlags(flags: Record<string, boolean>): Promise<void> {
   Object.entries(flags).forEach(([key, value]) => {
     const normalizedKey = normalize(key);
-    if (normalizedKey && normalizedKey in mutableFlags && typeof value === 'boolean') {
+    if (normalizedKey && isMutableFlag(normalizedKey) && typeof value === 'boolean') {
       mutableFlags[normalizedKey] = value;
     }
   });
   notifySubscribers();
 }
-export const getAllFeatureFlags = () => featureFlagManager.all();
 
-// Note: FeatureFlagManager type is exported above (line 102)
-// The featureFlagManager instance is already exported via the const declaration above
+export const getAllFeatureFlags = () => buildSnapshot();
+

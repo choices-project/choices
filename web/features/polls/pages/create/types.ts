@@ -1,4 +1,4 @@
-import type { PollWizardData } from '@/lib/stores/pollWizardStore';
+import type { PollWizardData } from '@/lib/polls/types';
 
 export type PollWizardSnapshot = PollWizardData;
 

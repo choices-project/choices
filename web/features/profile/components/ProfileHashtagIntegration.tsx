@@ -20,7 +20,11 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay, HashtagManagement } from '@/features/hashtags';
 import type { Hashtag, ProfileHashtagIntegration as ProfileHashtagIntegrationData } from '@/features/hashtags/types';
-import { useHashtagStore } from '@/lib/stores';
+import {
+  useHashtagList,
+  useFollowedHashtags,
+  useTrendingHashtags,
+} from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
 
@@ -55,7 +59,9 @@ export default function ProfileHashtagIntegration({
   const [hashtagIntegration, setHashtagIntegration] = useState<ProfileHashtagIntegrationData>(createEmptyIntegration);
 
   // Hashtag store hooks
-  const { hashtags, trendingHashtags, followedHashtags } = useHashtagStore();
+  const allHashtags = useHashtagList();
+  const trendingHashtags = useTrendingHashtags();
+  const followedHashtags = useFollowedHashtags();
 
   // Load user hashtags on mount
   useEffect(() => {
@@ -156,7 +162,7 @@ export default function ProfileHashtagIntegration({
   };
 
   // Get followed hashtags
-  const followedHashtagObjects = hashtags || [];
+  const followedHashtagObjects = allHashtags.filter((h) => followedHashtags.includes(h.id));
   const primaryHashtagObjects = followedHashtagObjects.filter(h => 
     hashtagIntegration?.primary_hashtags?.includes(h.id)
   );
@@ -386,7 +392,7 @@ export default function ProfileHashtagIntegration({
             </CardHeader>
             <CardContent>
               <HashtagManagement
-                userHashtags={hashtags || []}
+                userHashtags={followedHashtagObjects}
                 onFollow={handleFollowHashtag}
                 onUnfollow={handleUnfollowHashtag}
                 onReorder={handleReorderHashtags}

@@ -4,7 +4,7 @@
 import { act, renderHook } from '@testing-library/react';
 
 import { POLL_MILESTONES, usePollMilestoneNotifications } from '@/features/polls/hooks/usePollMilestones';
-import { useNotificationStore } from '@/lib/stores';
+import { useNotificationStore } from '@/lib/stores/notificationStore';
 
 describe('usePollMilestoneNotifications', () => {
   beforeEach(() => {

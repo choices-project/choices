@@ -210,7 +210,11 @@ export type RepresentativeListProps = {
   representatives: Representative[];
   loading?: boolean;
   error?: string;
+  showActions?: boolean;
+  showDetails?: boolean;
   onRepresentativeClick?: (representative: Representative) => void;
+  onRepresentativeContact?: (representative: Representative) => void;
+  onRepresentativeFollow?: (representative: Representative) => void;
   className?: string;
 }
 
