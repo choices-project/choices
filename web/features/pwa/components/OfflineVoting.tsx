@@ -13,7 +13,7 @@
 import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react';
 
-import { isOfflineVoteAction, usePWAStore, type OfflineVoteActionData } from '@/lib/stores/pwaStore'
+import { isOfflineVoteAction, usePWAOffline } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 import type { OfflineVoteRecord } from '@/types/pwa';
 
@@ -39,7 +39,7 @@ type OfflineVoteDisplay = OfflineVoteRecord & {
 };
 
 export default function OfflineVoting({ pollId, className = '' }: OfflineVotingProps) {
-  const { offline } = usePWAStore()
+  const offline = usePWAOffline();
   const [offlineVotes, setOfflineVotes] = useState<OfflineVoteDisplay[]>([])
   const [_isVoting, setIsVoting] = useState(false)
   

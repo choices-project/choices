@@ -2,8 +2,7 @@
 
 import React, { useEffect, useCallback } from 'react';
 
-
-import { 
+import {
   useDatabaseMetrics,
   useCacheStats,
   useLastRefresh,
@@ -13,11 +12,7 @@ import {
   usePerformanceError
 } from '@/lib/stores';
 
-type PerformanceDashboardProps = {
-  refreshInterval?: number // in milliseconds
-}
-
-export default function PerformanceDashboard({ refreshInterval = 30000 }: PerformanceDashboardProps) {
+export default function PerformanceDashboard() {
   // Get state from performanceStore
   const performanceStats = useDatabaseMetrics();
   const cacheStats = useCacheStats();
@@ -29,7 +24,8 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
     loadDatabasePerformance, 
     refreshMaterializedViews, 
     performDatabaseMaintenance,
-    setAutoRefresh
+    setAutoRefresh,
+    initialize,
   } = usePerformanceActions();
 
   // Load performance statistics
@@ -50,19 +46,9 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
 
   // Load data on mount
   useEffect(() => {
-    loadPerformanceStats()
-  }, [loadPerformanceStats])
-
-  // Auto-refresh setup
-  useEffect(() => {
-    if (!autoRefresh) return
-
-    const interval = setInterval(() => {
-      loadPerformanceStats()
-    }, refreshInterval)
-
-    return () => clearInterval(interval)
-  }, [autoRefresh, refreshInterval, loadPerformanceStats])
+    initialize();
+    loadPerformanceStats();
+  }, [initialize, loadPerformanceStats]);
 
   // Calculate performance insights
   const performanceInsights = {

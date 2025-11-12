@@ -12,6 +12,7 @@ import {
   useInitializeBiometricState,
   useUserActions,
 } from '../lib/store';
+
 import WebAuthnPrompt from './WebAuthnPrompt';
 
 type PasskeyButtonProps = {

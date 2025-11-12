@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
 
 import LanguageSelector from '@/components/shared/LanguageSelector';
 
@@ -53,8 +53,10 @@ describe('LanguageSelector', () => {
     const spanishOption = screen.getByRole('button', { name: /español/i });
     fireEvent.click(spanishOption);
 
-    expect(changeLanguage).toHaveBeenCalledWith('es');
-    expect(updateSettings).toHaveBeenCalledWith({ language: 'es' });
+    await waitFor(() => {
+      expect(changeLanguage).toHaveBeenCalledWith('es');
+      expect(updateSettings).toHaveBeenCalledWith({ language: 'es' });
+    });
   });
 
   it('renders native names when requested', () => {

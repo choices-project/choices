@@ -8,11 +8,10 @@
  * Status: ✅ REFACTORED - Production Ready
  */
 
-import type { FeedHashtagAnalytics, PollHashtagIntegration } from '@/features/hashtags/types';
-
 import type { 
   UserPreferences
 } from '@/features/civics/lib/types/civics-types';
+import type { FeedHashtagAnalytics, PollHashtagIntegration } from '@/features/hashtags/types';
 import { CACHE_DURATIONS, SCORING_WEIGHTS, NORMALIZATION } from '@/lib/config/constants';
 import { logger } from '@/lib/utils/logger';
 

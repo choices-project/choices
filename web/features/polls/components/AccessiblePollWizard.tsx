@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
-import type { PollCreateResult } from '@/features/polls/pages/create/types';
-import { useNotificationActions } from '@/lib/stores';
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
+import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/schema';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useNotificationActions } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
 const MAX_OPTIONS = 10;
@@ -22,6 +23,8 @@ type ShareInfo = {
   title: string;
   privacyLevel: string;
   category: string;
+  status: number;
+  durationMs?: number;
 };
 
 export function AccessiblePollWizard() {
@@ -55,9 +58,20 @@ export function AccessiblePollWizard() {
   const router = useRouter();
   const pathname = usePathname();
   const { addNotification } = useNotificationActions();
+  const baseAnalyticsMetadata = useCallback(
+    () => ({
+      source: 'accessible-wizard',
+      optionCount: data.options.length,
+      tagCount: data.tags.length,
+      privacyLevel: data.settings.privacyLevel,
+      category: data.category ?? null,
+    }),
+    [data.category, data.options.length, data.settings.privacyLevel, data.tags.length],
+  );
+  const recordPollEvent = useRecordPollEvent(baseAnalyticsMetadata);
 
   const [newTag, setNewTag] = useState('');
-  const [submissionResult, setSubmissionResult] = useState<PollCreateResult | null>(null);
+  const [submissionResult, setSubmissionResult] = useState<PollWizardSubmissionResult | null>(null);
   const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null);
   const [hasCopiedShareLink, setHasCopiedShareLink] = useState(false);
 
@@ -307,7 +321,7 @@ export function AccessiblePollWizard() {
     setSubmissionResult(result);
 
     if (result.success) {
-      const detail = { pollId: result.data.id, title: result.data.title };
+      const detail = { pollId: result.pollId, title: result.title };
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('choices:poll-created', { detail }));
       }
@@ -315,27 +329,47 @@ export function AccessiblePollWizard() {
       addNotification({
         type: 'success',
         title: 'Poll created',
-        message: `"${result.data.title}" is live for voters.`,
+        message: result.message ?? `"${result.title}" is live for voters.`,
       });
-      ScreenReaderSupport.announce(`Poll created successfully. "${result.data.title}" is live for voters.`, 'polite');
+      ScreenReaderSupport.announce(`Poll created successfully. "${result.title}" is live for voters.`, 'polite');
 
       logger.info('Poll created successfully', {
-        pollId: result.data.id,
-        title: result.data.title,
+        pollId: result.pollId,
+        title: result.title,
         category: data.category,
+        status: result.status,
+        durationMs: result.durationMs,
+      });
+      recordPollEvent('poll_created', {
+        category: 'poll_creation',
+        label: result.pollId,
+        metadata: {
+          pollId: result.pollId,
+          status: result.status,
+          durationMs: result.durationMs,
+        },
       });
 
       setShareInfo({
-        pollId: result.data.id,
-        title: result.data.title,
+        pollId: result.pollId,
+        title: result.title,
         privacyLevel: data.settings.privacyLevel,
         category: data.category,
+        status: result.status,
+        ...(result.durationMs !== undefined ? { durationMs: result.durationMs } : {}),
       });
       setHasCopiedShareLink(false);
       resetWizard();
       setNewTag('');
       return;
     }
+
+    const failureMetadata = {
+      status: result.status,
+      reason: result.reason,
+      durationMs: result.durationMs,
+      fieldErrors: result.fieldErrors ? Object.keys(result.fieldErrors) : undefined,
+    };
 
     if (result.status === 401) {
       const redirect = encodeURIComponent(pathname ?? '/polls/create');
@@ -345,7 +379,37 @@ export function AccessiblePollWizard() {
         message: 'Please sign in to publish your poll.',
       });
       ScreenReaderSupport.announce('Sign in required to publish your poll.', 'assertive');
+      recordPollEvent('poll_creation_failed', {
+        category: 'poll_creation',
+        metadata: failureMetadata,
+      });
       router.push(`/auth?redirect=${redirect}`);
+      return;
+    }
+
+    let failureRecorded = false;
+
+    if (result.status === 403 || result.status === 429) {
+      recordPollEvent('poll_creation_failed', {
+        category: 'poll_creation',
+        metadata: failureMetadata,
+      });
+      failureRecorded = true;
+
+      addNotification({
+        type: result.status === 403 ? 'error' : 'warning',
+        title: result.status === 403 ? 'Access denied' : 'Slow down',
+        message:
+          result.status === 403
+            ? 'You do not have permission to create polls on this account.'
+            : 'You are creating polls too quickly. Please wait a moment and try again.',
+      });
+      ScreenReaderSupport.announce(
+        result.status === 403
+          ? 'Access denied. You do not have permission to create polls on this account.'
+          : 'Rate limit reached. Please wait before creating another poll.',
+        'assertive',
+      );
       return;
     }
 
@@ -354,6 +418,12 @@ export function AccessiblePollWizard() {
       title: 'Unable to publish poll',
       message: result.message ?? 'We hit a snag while publishing your poll.',
     });
+    if (!failureRecorded) {
+      recordPollEvent('poll_creation_failed', {
+        category: 'poll_creation',
+        metadata: failureMetadata,
+      });
+    }
     ScreenReaderSupport.announce('Unable to publish poll. Please review errors and try again.', 'assertive');
   };
 
@@ -371,7 +441,67 @@ export function AccessiblePollWizard() {
       .catch(() => {
         setHasCopiedShareLink(false);
         ScreenReaderSupport.announce('Unable to copy the share link. Try copying manually.', 'assertive');
+        recordPollEvent('copy_link_failed', {
+          category: 'poll_creation',
+          label: shareInfo.pollId,
+          metadata: {
+            pollId: shareInfo.pollId,
+            location: 'accessible-wizard',
+            status: shareInfo.status,
+            durationMs: shareInfo.durationMs,
+          },
+        });
       });
+    recordPollEvent('copy_link', {
+      category: 'poll_creation',
+      label: shareInfo.pollId,
+      metadata: {
+        pollId: shareInfo.pollId,
+        location: 'accessible-wizard',
+        privacyLevel: shareInfo.privacyLevel,
+        category: shareInfo.category,
+        status: shareInfo.status,
+        durationMs: shareInfo.durationMs,
+      },
+      });
+  };
+
+  const resetShareDialog = () => {
+    setShareInfo(null);
+    setHasCopiedShareLink(false);
+  };
+
+  const handleCloseShareDialog = () => {
+    if (shareInfo) {
+      recordPollEvent('share_modal_closed', {
+        category: 'poll_creation',
+        label: shareInfo.pollId,
+        metadata: {
+          pollId: shareInfo.pollId,
+          status: shareInfo.status,
+          durationMs: shareInfo.durationMs,
+          location: 'accessible-wizard',
+        },
+      });
+    }
+    resetShareDialog();
+  };
+
+  const handleViewPublishedPoll = () => {
+    if (!shareInfo) {
+      return;
+    }
+    recordPollEvent('view_poll', {
+      category: 'poll_creation',
+      label: shareInfo.pollId,
+      metadata: {
+        pollId: shareInfo.pollId,
+        location: 'accessible-wizard',
+        status: shareInfo.status,
+        durationMs: shareInfo.durationMs,
+      },
+    });
+    handleCloseShareDialog();
   };
 
   const shareUrl =
@@ -379,20 +509,29 @@ export function AccessiblePollWizard() {
       ? `${window.location.origin}/polls/${shareInfo.pollId}`
       : '';
 
-  const closeShareDialog = () => {
-    setShareInfo(null);
-    setHasCopiedShareLink(false);
-  };
-
   useEffect(() => {
-    if (shareInfo && shareDialogTitleRef.current) {
+    if (shareInfo) {
+      if (shareDialogTitleRef.current) {
       ScreenReaderSupport.setFocus(shareDialogTitleRef.current, {
         announce: `Share your poll: ${shareInfo.title}`,
       });
-    } else if (!shareInfo && fieldRefs.current['submit']) {
+      }
+      recordPollEvent('share_modal_opened', {
+        category: 'poll_creation',
+        label: shareInfo.pollId,
+        metadata: {
+          pollId: shareInfo.pollId,
+          status: shareInfo.status,
+          durationMs: shareInfo.durationMs,
+          location: 'accessible-wizard',
+          privacyLevel: shareInfo.privacyLevel,
+          category: shareInfo.category,
+        },
+      });
+    } else if (fieldRefs.current['submit']) {
       fieldRefs.current['submit']?.focus();
     }
-  }, [shareInfo]);
+  }, [recordPollEvent, shareInfo]);
 
   const renderDetailsStep = () => (
     <div className="space-y-6" aria-labelledby="poll-details-heading">
@@ -866,7 +1005,7 @@ export function AccessiblePollWizard() {
               <CheckCircle2 className="mt-0.5 h-5 w-5" />
               <div>
                 <p className="font-medium">Poll published!</p>
-                <p>Your poll “{submissionResult.data.title}” is ready for voters.</p>
+                <p>Your poll “{submissionResult.title}” is ready for voters.</p>
               </div>
             </div>
           )}
@@ -1003,7 +1142,7 @@ export function AccessiblePollWizard() {
 
       <Dialog
         open={Boolean(shareInfo)}
-        onOpenChange={(open) => (open ? undefined : closeShareDialog())}
+        onOpenChange={(open) => (open ? undefined : handleCloseShareDialog())}
       >
         <DialogContent
           aria-live="polite"
@@ -1048,10 +1187,12 @@ export function AccessiblePollWizard() {
           <DialogFooter>
             {shareInfo && (
               <Button asChild variant="default">
-                <Link href={`/polls/${shareInfo.pollId}`}>View poll</Link>
+                <Link href={`/polls/${shareInfo.pollId}`} onClick={handleViewPublishedPoll}>
+                  View poll
+                </Link>
               </Button>
             )}
-            <Button type="button" onClick={closeShareDialog} variant="secondary">
+            <Button type="button" onClick={handleCloseShareDialog} variant="secondary">
               Close
             </Button>
           </DialogFooter>

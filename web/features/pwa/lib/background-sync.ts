@@ -7,10 +7,10 @@
  * @author Choices Platform Team
  */
 
+import { getPWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 import type { PWAHttpMethod, PWAQueuedRequest, PWAQueuedRequestType } from '@/types/pwa';
 import { PWA_QUEUED_REQUEST_TYPES } from '@/types/pwa';
-import { usePWAStore } from '@/lib/stores/pwaStore';
 
 import { BACKGROUND_SYNC_CONFIG, OFFLINE_QUEUE_CONFIG } from './sw-config';
 
@@ -23,7 +23,7 @@ type SyncManager = {
   getTags?: () => Promise<string[]>;
 };
 
-export const QueuedActionType = PWA_QUEUED_REQUEST_TYPES;
+export const QueuedActionTypes = PWA_QUEUED_REQUEST_TYPES;
 export type QueuedActionType = PWAQueuedRequestType;
 
 export type HttpMethod = PWAHttpMethod;
@@ -99,7 +99,7 @@ export function isPeriodicBackgroundSyncSupported(): boolean {
  * ```typescript
  * // User votes while offline
  * const actionId = await queueAction(
- *   QueuedActionType.VOTE,
+ *   QueuedActionTypes.VOTE,
  *   '/api/polls/123/vote',
  *   'POST',
  *   { optionIds: ['opt_1'] }
@@ -391,13 +391,13 @@ async function saveActionQueue(queue: QueuedAction[]): Promise<void> {
  */
 function getSyncTag(type: QueuedActionType): string {
   switch (type) {
-    case QueuedActionType.VOTE:
+    case QueuedActionTypes.VOTE:
       return BACKGROUND_SYNC_CONFIG.tags.votes;
-    case QueuedActionType.CIVIC_ACTION:
+    case QueuedActionTypes.CIVIC_ACTION:
       return BACKGROUND_SYNC_CONFIG.tags.civicActions;
-    case QueuedActionType.CONTACT:
+    case QueuedActionTypes.CONTACT:
       return BACKGROUND_SYNC_CONFIG.tags.contacts;
-    case QueuedActionType.PROFILE_UPDATE:
+    case QueuedActionTypes.PROFILE_UPDATE:
       return BACKGROUND_SYNC_CONFIG.tags.profile;
     default:
       return 'sync-default';
@@ -574,7 +574,7 @@ const notifyQueueSize = (size: number) => {
   }
 
   try {
-    usePWAStore.getState().setOfflineQueueSize(size, new Date().toISOString());
+    getPWAActions().setOfflineQueueSize(size, new Date().toISOString());
   } catch {
     // Store may not be initialized in certain environments (e.g., tests)
   }

@@ -8,12 +8,12 @@
  * Status: ✅ ACTIVE - Shared across store + UI
  */
 
-import type { PrivacySettings } from '@/types/profile';
 import type {
   CivicAction,
   Poll,
   PollOption,
 } from '@/types/database';
+import type { PrivacySettings } from '@/types/profile';
 
 // -----------------------------------------------------------------------------
 // Feed Item Core Types

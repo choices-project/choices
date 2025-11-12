@@ -2,18 +2,16 @@
 
 import { jest } from '@jest/globals';
 
+import { queueAction, QueuedActionTypes } from '@/features/pwa/lib/background-sync';
 import { PWAManager } from '@/features/pwa/lib/pwa-utils';
-import { queueAction, QueuedActionType } from '@/features/pwa/lib/background-sync';
 import { isPWAServiceWorkerMessage, PWA_SERVICE_WORKER_MESSAGE_TYPES } from '@/types/pwa';
 
 const mockSetOfflineQueueSize = jest.fn();
 
 jest.mock('@/lib/stores/pwaStore', () => ({
-  usePWAStore: {
-    getState: () => ({
-      setOfflineQueueSize: mockSetOfflineQueueSize,
-    }),
-  },
+  getPWAActions: () => ({
+    setOfflineQueueSize: mockSetOfflineQueueSize,
+  }),
 }));
 
 describe('PWA client utilities', () => {
@@ -88,7 +86,7 @@ describe('PWA client utilities', () => {
     it('queues typed actions and registers background sync', async () => {
       const dispatchSpy = jest.spyOn(window, 'dispatchEvent');
 
-      const actionId = await queueAction(QueuedActionType.VOTE, '/api/polls/123/vote', 'POST', {
+      const actionId = await queueAction(QueuedActionTypes.VOTE, '/api/polls/123/vote', 'POST', {
         ballotId: 'ballot-1',
       });
 
@@ -98,7 +96,7 @@ describe('PWA client utilities', () => {
       const stored = JSON.parse(localStorage.getItem('pwa-offline-queue') ?? '[]');
       expect(stored).toHaveLength(1);
       expect(stored[0]).toMatchObject({
-        type: QueuedActionType.VOTE,
+        type: QueuedActionTypes.VOTE,
         endpoint: '/api/polls/123/vote',
         method: 'POST',
         payload: { ballotId: 'ballot-1' },

@@ -7,11 +7,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { useState, useEffect, useCallback } from 'react';
 
+import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 import type { Database, Json } from '@/types/database';
 
 import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics-service';
-import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 
 
 type _SupabaseClient = ReturnType<typeof createClient<Database>>;

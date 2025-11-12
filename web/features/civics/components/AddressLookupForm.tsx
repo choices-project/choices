@@ -16,7 +16,6 @@
 import React, { useCallback, useState } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import logger from '@/lib/utils/logger';
 import { useUserActions, useUserAddressLoading } from '@/lib/stores';
 import {
   useFindByLocation,
@@ -24,6 +23,7 @@ import {
   useRepresentativeError,
   useClearError
 } from '@/lib/stores/representativeStore';
+import logger from '@/lib/utils/logger';
 
 /**
  * Props for the AddressLookupForm component

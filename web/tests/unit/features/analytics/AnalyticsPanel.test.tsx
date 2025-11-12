@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
+import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
 
 import AnalyticsPanel from '@/features/admin/components/AnalyticsPanel';
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
@@ -31,7 +31,9 @@ describe('AnalyticsPanel', () => {
   const originalFetch = global.fetch;
 
   afterEach(() => {
-    useAnalyticsStore.getState().resetAnalyticsState();
+    act(() => {
+      useAnalyticsStore.getState().resetAnalyticsState();
+    });
     restoreFetch(originalFetch);
     jest.clearAllMocks();
   });

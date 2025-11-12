@@ -318,10 +318,10 @@ export default function CreatePollPage() {
   }
 
   const handleSubmit = async () => {
-     const result = await submit();
+    const result = await submit();
 
     if (!result.success) {
-      if (result.status === 0) {
+      if (result.reason === 'cancelled') {
         return;
       }
 
@@ -361,6 +361,16 @@ export default function CreatePollPage() {
         return;
       }
 
+      recordPollEvent('poll_creation_failed', {
+        category: 'poll_creation',
+        metadata: {
+          status: result.status,
+          reason: result.reason,
+          durationMs: result.durationMs,
+          fieldErrors: result.fieldErrors ? Object.keys(result.fieldErrors) : undefined,
+        },
+      });
+
       addNotification({
         type: result.fieldErrors ? 'warning' : 'error',
         title: result.fieldErrors ? 'Check the highlighted fields' : 'Unable to create poll',
@@ -370,27 +380,32 @@ export default function CreatePollPage() {
       return;
     }
 
-    const { id, title } = result.data;
-    const shareTitle = title ?? data.title;
+    const { pollId, title: createdTitle } = result;
+    const shareTitle = createdTitle ?? data.title;
 
     addNotification({
       type: 'success',
       title: 'Poll created',
-      message: 'Share your poll to start collecting votes.',
+      message: result.message ?? 'Share your poll to start collecting votes.',
       duration: 4000,
     });
 
     recordPollEvent('poll_created', {
       category: 'poll_creation',
-      label: id,
+      label: pollId,
       value: 1,
       metadata: {
-        pollId: id,
+        pollId,
+        status: result.status,
+        durationMs: result.durationMs,
+        optionCount: data.options.length,
+        privacyLevel: data.settings.privacyLevel,
+        category: data.category,
       },
     });
 
     setShareInfo({
-      pollId: id,
+      pollId,
       title: shareTitle,
       privacyLevel: data.settings.privacyLevel,
       category: data.category,
@@ -400,7 +415,7 @@ export default function CreatePollPage() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('choices:poll-created', {
-          detail: { id, title },
+          detail: { id: pollId, title: createdTitle },
         }),
       );
     }

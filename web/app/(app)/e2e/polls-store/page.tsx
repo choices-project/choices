@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import type { PollRow, PollUpdate } from '@/features/polls/types';
 import {
   useFilteredPolls,
   usePollFilters,
@@ -13,7 +14,6 @@ import {
   usePollsStore,
   type PollsStore,
 } from '@/lib/stores/pollsStore';
-import type { PollRow, PollUpdate } from '@/features/polls/types';
 
 type PollsHarnessActions = ReturnType<typeof usePollsActions>;
 
@@ -35,9 +35,7 @@ export type PollsStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __pollsStoreHarness?: PollsStoreHarness;
-  }
+  var __pollsStoreHarness: PollsStoreHarness | undefined;
 }
 
 export default function PollsStoreHarnessPage() {

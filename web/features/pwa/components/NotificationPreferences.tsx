@@ -13,7 +13,7 @@
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type NotificationPreferencesProps = {
@@ -34,7 +34,8 @@ type NotificationPreferencesProps = {
  * @returns Preferences UI or null if notifications not supported
  */
 export default function NotificationPreferences({ className = '' }: NotificationPreferencesProps) {
-  const { preferences: pwaPreferences, updatePreferences } = usePWAStore();
+  const pwaPreferences = usePWAPreferences();
+  const { updatePreferences } = usePWAActions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

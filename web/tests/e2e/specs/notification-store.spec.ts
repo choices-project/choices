@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import type { NotificationStoreHarness } from '@/app/(app)/e2e/notification-store/page';
+
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
   interface Window {
@@ -90,6 +91,9 @@ test.describe('Notification store harness', () => {
     });
 
     const firstId = adminNotificationIds[0];
+    if (!firstId) {
+      throw new Error('Expected at least one admin notification id');
+    }
     await page.evaluate((id) => {
       window.__notificationStoreHarness?.markAdminAsRead(id);
     }, firstId);

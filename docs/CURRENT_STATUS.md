@@ -11,7 +11,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 | Area | Status | Notes |
 | --- | --- | --- |
 | Store modernization | 🔄 In progress | Notification store complete with integration + E2E coverage; profile/user stores partially migrated; app/admin/polls stores queued. |
-| Documentation | 🔄 In progress | Core docs are being refreshed; legacy “100% complete” narratives are being archived. |
+| Documentation | 🔄 In progress | Core docs refreshed (civics ingest, operations, quickstart); legacy “100% complete” narratives queued for archive. |
 | Testing | 🚧 Needs expansion | Jest suites cover key stores; Playwright harnesses exist for profile + notification stores; analytics and civic flows still lack modern coverage. |
 | Analytics dashboard | 🚧 Partially wired | UI components exist, but endpoints rely on mocks and Redis caching experiments. |
 | Admin tooling | 🔄 Being refit | Feature flag UI and notification system now consume shared hooks; broader audit tooling still references legacy patterns. |
@@ -21,6 +21,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 
 ## Recent Highlights
 
+- **OpenStates ingest overhaul** — Parser/stager now capture biographies, aliases, extras, expanded office metadata, and identifier maps; downstream enrichers + preview tooling surface the full dataset.
 - **Notification store** migrated to the shared creator/selectors pattern with unit, RTL integration, and new Playwright harness coverage (`/e2e/notification-store`).
 - **Admin notification widget** updated to consume shared hooks, aligning admin toasts with global behaviour.
 - **Documentation cleanup** underway: development guide refreshed, modernization guidelines captured, and outdated “perfect completion” docs queued for archival.
@@ -55,6 +56,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 | --- | --- | --- |
 | Notification docs shipped | Finalize modernization + harness notes in core docs | 🔄 |
 | App/admin store refactor | Apply shared creator/selectors and add smoke tests | 🔄 |
+| OpenStates ingest QA harness | Add fixture-based staging test + Supabase smoke-test script | 🔄 |
 | Analytics endpoint audit | Replace mocks with Supabase queries + Redis guardrails | ⏳ |
 | Documentation archival pass | Move legacy “perfect completion” docs into `/docs/archive` | 🔄 |
 

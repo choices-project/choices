@@ -13,6 +13,7 @@ import type {
 
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import type { Database } from '@/utils/supabase/client';
 
 import type {
   ActivityItem,
@@ -28,7 +29,6 @@ import type {
   TrackedNetworkRequest,
   UserJourney,
 } from '../types';
-import type { Database } from '@/utils/supabase/client';
 
 type FeedbackRow = Database['public']['Tables']['feedback']['Row'];
 type AdminActivityRow = Database['public']['Tables']['admin_activity_log']['Row'];

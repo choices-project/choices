@@ -13,7 +13,7 @@
 import { RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { useState } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
+import { usePWAOffline, usePWAActions } from '@/lib/stores/pwaStore'
 
 type OfflineSyncProps = {
   /** Additional CSS classes */
@@ -31,7 +31,8 @@ type OfflineSyncProps = {
  * @returns Sync UI with action list or null if no offline data
  */
 export default function OfflineSync({ className = '' }: OfflineSyncProps) {
-  const { offline, syncData } = usePWAStore()
+  const offline = usePWAOffline();
+  const { syncData } = usePWAActions();
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
   const [lastSync, setLastSync] = useState<Date | null>(null)
   

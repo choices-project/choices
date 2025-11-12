@@ -28,9 +28,7 @@ export type NotificationStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __notificationStoreHarness?: NotificationStoreHarness;
-  }
+  var __notificationStoreHarness: NotificationStoreHarness | undefined;
 }
 
 const formatTimestamp = (value?: string | null) => {

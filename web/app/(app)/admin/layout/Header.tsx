@@ -11,10 +11,13 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-import { useUser, useUserActions } from '@/lib/stores';
 import {
+  useUser,
+  useUserActions,
   useAdminActions,
-  useAdminNotifications,
+  useNotificationActions,
+  useNotificationAdminNotifications,
+  useNotificationAdminUnreadCount,
 } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
@@ -23,11 +26,11 @@ export const Header: React.FC = () => {
   const router = useRouter();
   const user = useUser();
   const { signOut: resetUserState } = useUserActions();
-  const notifications = useAdminNotifications();
-  const { toggleSidebar, markNotificationRead } = useAdminActions();
+  const notifications = useNotificationAdminNotifications();
+  const unreadCount = useNotificationAdminUnreadCount();
+  const { toggleSidebar } = useAdminActions();
+  const { markAdminNotificationAsRead } = useNotificationActions();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
-  const unreadNotifications = notifications.filter((n: { read: boolean }) => !n.read);
 
   const handleLogout = async () => {
     try {
@@ -79,9 +82,9 @@ export const Header: React.FC = () => {
         <div className="relative">
           <button className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 relative">
             <Bell className="h-5 w-5" />
-            {unreadNotifications.length > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {unreadNotifications.length}
+                {unreadCount}
               </span>
             )}
           </button>
@@ -92,7 +95,7 @@ export const Header: React.FC = () => {
               <div className="p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {notifications.slice(0, 5).map((notification: { id: string; title: string; message: string; read: boolean; timestamp: string }) => (
+                  {notifications.slice(0, 5).map((notification) => (
                     <div
                       key={notification.id}
                       className={`p-3 rounded-md cursor-pointer transition-colors ${
@@ -100,11 +103,11 @@ export const Header: React.FC = () => {
                           ? 'bg-gray-50 hover:bg-gray-100'
                           : 'bg-blue-50 hover:bg-blue-100'
                       }`}
-                      onClick={() => markNotificationRead(notification.id)}
+                      onClick={() => markAdminNotificationAsRead(notification.id)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          markNotificationRead(notification.id)
+                          markAdminNotificationAsRead(notification.id)
                         }
                       }}
                       tabIndex={0}

@@ -251,9 +251,9 @@ export type ProfilePageProps = {
 }
 
 export type ProfileEditProps = {
-  profile: UserProfile;
-  onSave: (data: ProfileUpdateData) => Promise<void>;
-  onCancel: () => void;
+  profile?: UserProfile | null;
+  onSave?: (data: ProfileUpdateData) => Promise<void>;
+  onCancel?: () => void;
   isLoading?: boolean;
   error?: string | null;
 }

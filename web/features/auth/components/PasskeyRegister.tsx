@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
 import {
@@ -29,6 +28,8 @@ import {
   useInitializeBiometricState,
   useUserActions,
 } from '../lib/store';
+import { beginRegister } from '../lib/webauthn/client';
+import type { BeginRegisterOptions } from '../lib/webauthn/native/client';
 
 type PasskeyRegisterProps = {
   onSuccess?: (credential: unknown) => void;
@@ -95,66 +96,28 @@ export function PasskeyRegister({
     try {
       const hasPlatformAuth = await checkPlatformAuthenticator();
 
-      const response = await fetch('/api/v1/auth/webauthn/native/register/options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username || undefined,
-          displayName: displayName || undefined,
-        }),
-      });
+        const registerOptions: BeginRegisterOptions = {
+          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+          userVerification: 'required',
+        };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to start registration');
+        if (username) {
+          registerOptions.username = username;
+        }
+
+        if (displayName) {
+          registerOptions.displayName = displayName;
+        }
+
+        const result = await beginRegister(registerOptions);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to complete registration');
       }
 
-      const credentialOptions = await response.json();
-      const publicKeyOptions = withOptional(credentialOptions ?? {}, {
-        authenticatorSelection: withOptional(
-          credentialOptions?.authenticatorSelection ?? {},
-          {
-            userVerification: 'required',
-            authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-          }
-        ),
-      });
-
-      const credential = (await navigator.credentials.create({
-        publicKey: publicKeyOptions,
-      })) as PublicKeyCredential | null;
-
-      if (!credential) {
-        throw new Error('Failed to create credential');
-      }
-
-      const completeResponse = await fetch('/api/v1/auth/webauthn/native/register/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: credential.id,
-          rawId: Array.from(new Uint8Array(credential.rawId)),
-          response: {
-            attestationObject: Array.from(
-              new Uint8Array(
-                (credential.response as AuthenticatorAttestationResponse).attestationObject
-              )
-            ),
-            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-          },
-          type: credential.type,
-        }),
-      });
-
-      if (!completeResponse.ok) {
-        const errorData = await completeResponse.json();
-        throw new Error(errorData.error || 'Failed to complete registration');
-      }
-
-      const result = await completeResponse.json();
       setBiometricSuccess(true);
       setBiometricCredentials(true);
-      onSuccess?.(result);
+      onSuccess?.(result.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       setBiometricError(message);

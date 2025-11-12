@@ -5,6 +5,7 @@ import React from 'react';
 import { logger } from '@/lib/utils/logger';
 
 import { useInitializeBiometricState, useUserActions } from '../lib/store';
+
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
 type Passkey = {
@@ -163,8 +164,8 @@ function PasskeyCard({
   onRename: (label: string) => void;
   onRevoke: () => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newLabel, setNewLabel] = useState(passkey.device_label ?? 'Unnamed Device');
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState(passkey.device_label ?? 'Unnamed Device');
 
   const handleSave = () => {
     onRename(newLabel);

@@ -7,17 +7,17 @@
  * Feature scope: Voting (excludes admin / analytics / profile per audit request).
  */
 
+import { produce } from 'immer';
 import { useStore } from 'zustand';
-import { createStore, type StoreApi } from 'zustand/vanilla';
 import { devtools, persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { produce } from 'immer';
+import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { logger } from '@/lib/utils/logger';
 
-import { createSafeStorage } from './storage';
 import { createBaseStoreActions } from './baseStoreActions';
+import { createSafeStorage } from './storage';
 
 // -----------------------------------------------------------------------------
 // Domain Types

@@ -42,9 +42,7 @@ export type AppStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __appStoreHarness?: AppStoreHarness;
-  }
+  var __appStoreHarness: AppStoreHarness | undefined;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
+import { useAdminActions, useNotificationActions } from '@/lib/stores';
 import { logger, devLog } from '@/lib/utils/logger';
 
 import type {
@@ -16,7 +17,6 @@ import type {
 } from '../types';
 
 import { realTimeService } from './real-time-service';
-import { useAdminActions } from '@/lib/stores';
 
 /**
  * Fallback values returned when admin APIs are unavailable.
@@ -253,12 +253,12 @@ export const useSystemMetrics = () => {
 
 // Mutation hooks
 export const useApproveTopic = () => {
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: approveTopic,
     onSuccess: () => {
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Topic Approved',
         message: 'The trending topic has been approved successfully.',
@@ -267,7 +267,7 @@ export const useApproveTopic = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to approve the trending topic.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Approval Failed',
         message: errorMessage,
@@ -278,12 +278,12 @@ export const useApproveTopic = () => {
 };
 
 export const useRejectTopic = () => {
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: rejectTopic,
     onSuccess: () => {
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Topic Rejected',
         message: 'The trending topic has been rejected.',
@@ -292,7 +292,7 @@ export const useRejectTopic = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to reject the trending topic.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Rejection Failed',
         message: errorMessage,
@@ -303,12 +303,12 @@ export const useRejectTopic = () => {
 };
 
 export const useApprovePoll = () => {
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: approvePoll,
     onSuccess: () => {
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Poll Approved',
         message: 'The generated poll has been approved successfully.',
@@ -317,7 +317,7 @@ export const useApprovePoll = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to approve the generated poll.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Approval Failed',
         message: errorMessage,
@@ -328,12 +328,12 @@ export const useApprovePoll = () => {
 };
 
 export const useRejectPoll = () => {
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: rejectPoll,
     onSuccess: () => {
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Poll Rejected',
         message: 'The generated poll has been rejected.',
@@ -342,7 +342,7 @@ export const useRejectPoll = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to reject the generated poll.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Rejection Failed',
         message: errorMessage,
@@ -354,13 +354,13 @@ export const useRejectPoll = () => {
 
 export const useAnalyzeTrendingTopics = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: analyzeTrendingTopics,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trending-topics'] });
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Analysis Complete',
         message: 'Trending topics analysis has been completed.',
@@ -369,7 +369,7 @@ export const useAnalyzeTrendingTopics = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze trending topics.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Analysis Failed',
         message: errorMessage,
@@ -402,13 +402,13 @@ export const useBreakingNews = () => {
 
 export const useCreateBreakingNews = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: createBreakingNews,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['breaking-news'] });
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Story Created',
         message: 'Breaking news story has been created successfully.',
@@ -417,7 +417,7 @@ export const useCreateBreakingNews = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create breaking news story.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Creation Failed',
         message: errorMessage,
@@ -429,13 +429,13 @@ export const useCreateBreakingNews = () => {
 
 export const useGeneratePollContext = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   return useMutation({
     mutationFn: generatePollContext,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['breaking-news'] });
-      addNotification({
+      addAdminNotification({
         type: 'success',
         title: 'Poll Context Generated',
         message: 'Poll context has been generated successfully.',
@@ -444,7 +444,7 @@ export const useGeneratePollContext = () => {
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate poll context.'
-      addNotification({
+      addAdminNotification({
         type: 'error',
         title: 'Generation Failed',
         message: errorMessage,
@@ -460,7 +460,8 @@ export const useRealTimeSubscriptions = () => {
   const [lastAdminEvent, setLastAdminEvent] = React.useState<AdminRealtimeEvent | null>(null);
   const [latestFeedbackEvent, setLatestFeedbackEvent] = React.useState<FeedbackRealtimeEvent | null>(null);
 
-  const { setSystemMetrics, addNotification, addActivityItem } = useAdminActions();
+  const { setSystemMetrics, addActivityItem } = useAdminActions();
+  const { addAdminNotification } = useNotificationActions();
 
   const handleAdminEvent = React.useCallback((event: AdminRealtimeEvent) => {
     setLastAdminEvent(event);
@@ -488,7 +489,7 @@ export const useRealTimeSubscriptions = () => {
           notificationPayload.action = event.payload.action;
         }
 
-        addNotification(notificationPayload);
+        addAdminNotification(notificationPayload);
         logger.info('Real-time admin notification received', {
           notificationId: event.payload.id,
           title: event.payload.title,
@@ -521,7 +522,7 @@ export const useRealTimeSubscriptions = () => {
       default:
         break;
     }
-  }, [addActivityItem, addNotification, setSystemMetrics]);
+  }, [addActivityItem, addAdminNotification, setSystemMetrics]);
 
   const handleFeedbackEvent = React.useCallback((event: FeedbackRealtimeEvent) => {
     setLatestFeedbackEvent(event);
@@ -537,7 +538,7 @@ export const useRealTimeSubscriptions = () => {
     };
 
     if (event.type === 'feedback-received') {
-      addNotification({
+      addAdminNotification({
         type: payload.priority === 'urgent' || payload.priority === 'high' ? 'warning' : 'info',
         title: 'New Feedback Received',
         message: summary,
@@ -548,7 +549,7 @@ export const useRealTimeSubscriptions = () => {
         priority: payload.priority,
       });
     } else if (event.type === 'feedback-updated') {
-      addNotification({
+      addAdminNotification({
         type: 'info',
         title: 'Feedback Updated',
         message: summary,
@@ -559,7 +560,7 @@ export const useRealTimeSubscriptions = () => {
         status: payload.severity,
       });
     }
-  }, [addNotification]);
+  }, [addAdminNotification]);
 
   React.useEffect(() => {
     // Subscribe to admin updates

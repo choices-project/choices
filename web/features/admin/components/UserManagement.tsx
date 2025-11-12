@@ -119,10 +119,10 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   };
 
   const handleUserRoleChange = (userId: string, newRole: AdminUser['role']) => {
+    const existingUser = filteredUsers.find((user: AdminUser) => user.id === userId);
     updateUserRole(userId, newRole);
-    const user = users.find((user: AdminUser) => user.id === userId);
-    if (user) {
-      onUserUpdate?.(user);
+    if (existingUser) {
+      onUserUpdate?.({ ...existingUser, role: newRole });
     }
     performanceMetrics.addMetric('user-role-change', 1);
   };

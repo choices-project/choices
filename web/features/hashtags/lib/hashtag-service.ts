@@ -249,7 +249,21 @@ const transformHashtagEngagement = (row: HashtagEngagementRow): HashtagEngagemen
   return engagement;
 };
 
-const supabaseClientPromise = getSupabaseBrowserClient();
+let supabaseClientPromise:
+  | Promise<Awaited<ReturnType<typeof getSupabaseBrowserClient>>>
+  | null = null;
+
+function ensureSupabaseClient() {
+  if (typeof window === 'undefined') {
+    throw new Error(
+      'Hashtag service requires a browser Supabase client. Provide an explicit client when using this module on the server.'
+    );
+  }
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = getSupabaseBrowserClient();
+  }
+  return supabaseClientPromise;
+}
 
 // ============================================================================
 // CORE HASHTAG OPERATIONS
@@ -259,7 +273,7 @@ const supabaseClientPromise = getSupabaseBrowserClient();
  * Get hashtag by ID
  */
 export async function getHashtagById(id: string): Promise<HashtagApiResponse<Hashtag>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const result = await supabase
       .from('hashtags')
@@ -290,7 +304,7 @@ export async function getHashtagById(id: string): Promise<HashtagApiResponse<Has
  * Get hashtag by name
  */
 export async function getHashtagByName(name: string): Promise<HashtagApiResponse<Hashtag>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
 
@@ -323,7 +337,7 @@ export async function createHashtag(
   description?: string,
   category?: HashtagCategory
 ): Promise<HashtagApiResponse<Hashtag>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
 
@@ -373,7 +387,7 @@ export async function updateHashtag(
   id: string,
   updates: Partial<Hashtag>
 ): Promise<HashtagApiResponse<Hashtag>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     // Map Hashtag fields to database fields
     const dbUpdates: Partial<Database['public']['Tables']['hashtags']['Update']> = {
@@ -416,7 +430,7 @@ export async function updateHashtag(
  * Delete hashtag
  */
 export async function deleteHashtag(id: string): Promise<HashtagApiResponse<boolean>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { error } = await supabase
       .from('hashtags')
@@ -444,7 +458,7 @@ export async function deleteHashtag(id: string): Promise<HashtagApiResponse<bool
  * Search hashtags
  */
 export async function searchHashtags(query: HashtagSearchQuery): Promise<HashtagApiResponse<HashtagSearchResponse>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const startTime = Date.now();
     let supabaseQuery = supabase
@@ -515,7 +529,7 @@ export async function getTrendingHashtags(
   category?: HashtagCategory,
   limit = 20
 ): Promise<HashtagApiResponse<TrendingHashtag[]>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     let supabaseQuery = supabase
       .from('hashtags')
@@ -591,7 +605,7 @@ export async function getHashtagSuggestions(
   context?: string,
   limit = 10
 ): Promise<HashtagApiResponse<HashtagSuggestion[]>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const normalizedInput = input.toLowerCase().replace(/^#/, '');
 
@@ -669,7 +683,7 @@ export async function getHashtagSuggestions(
  * Follow hashtag
  */
 export async function followHashtag(hashtagId: string): Promise<HashtagApiResponse<UserHashtag>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -744,7 +758,7 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
  * Unfollow hashtag
  */
 export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResponse<boolean>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -791,7 +805,7 @@ export async function unfollowHashtag(hashtagId: string): Promise<HashtagApiResp
  * Get user's followed hashtags
  */
 export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[]>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -833,7 +847,7 @@ export async function getHashtagAnalytics(
   hashtagId: string,
   period: '24h' | '7d' | '30d' | '90d' | '1y' = '7d'
 ): Promise<HashtagApiResponse<HashtagAnalytics>> {
-  const _supabase = await supabaseClientPromise; // kept for parity if needed later
+  const _supabase = await ensureSupabaseClient(); // kept for parity if needed later
   try {
     // Import the analytics function from hashtag-analytics.ts
     const { calculateHashtagAnalytics } = await import('./hashtag-analytics');
@@ -852,7 +866,7 @@ export async function getHashtagAnalytics(
  * Get hashtag stats
  */
 export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: stats, error } = await supabase
       .from('hashtags')
@@ -895,7 +909,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
  * Validate hashtag name
  */
 export async function validateHashtagName(name: string): Promise<HashtagApiResponse<HashtagValidation>> {
-  const _supabase = await supabaseClientPromise; // ensure client ready for potential calls
+  const _supabase = await ensureSupabaseClient(); // ensure client ready for potential calls
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
     const errors: string[] = [];
@@ -957,7 +971,7 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
 export async function getProfileHashtagIntegration(
   userId: string
 ): Promise<HashtagApiResponse<ProfileHashtagIntegration>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: userHashtagRows, error: userHashtagsError } = await supabase
       .from('user_hashtags')
@@ -1023,7 +1037,7 @@ export async function getProfileHashtagIntegration(
  * Get poll hashtag integration
  */
 export async function getPollHashtagIntegration(pollId: string): Promise<HashtagApiResponse<PollHashtagIntegration>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: poll, error: pollError } = await supabase
       .from('polls')
@@ -1107,7 +1121,7 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
  * Get feed hashtag integration
  */
 export async function getFeedHashtagIntegration(feedId: string): Promise<HashtagApiResponse<FeedHashtagIntegration>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     let feed, feedError;
     try {
@@ -1274,7 +1288,7 @@ function generateSuggestions(query: string, hashtags: Hashtag[]): HashtagSuggest
 }
 
 async function generateRelatedQueries(query: string): Promise<string[]> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const normalizedQuery = query.toLowerCase().trim();
     if (!normalizedQuery) return [];
@@ -1332,7 +1346,7 @@ async function generateRelatedQueries(query: string): Promise<string[]> {
 }
 
 async function calculateGrowthRate(hashtag: Hashtag): Promise<number> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -1375,7 +1389,7 @@ async function calculateGrowthRate(hashtag: Hashtag): Promise<number> {
 }
 
 async function calculateUsage24h(hashtag: Hashtag): Promise<number> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -1397,7 +1411,7 @@ async function calculateUsage24h(hashtag: Hashtag): Promise<number> {
 }
 
 async function calculateUsage7d(hashtag: Hashtag): Promise<number> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -1449,7 +1463,7 @@ function calculateConfidenceScore(hashtag: Hashtag, input: string): number {
  * Get user's custom hashtags (user-created hashtags)
  */
 async function getUserCustomHashtags(userId: string): Promise<string[]> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('hashtags')
@@ -1472,7 +1486,7 @@ async function getUserCustomHashtags(userId: string): Promise<string[]> {
 // ============================================================================
 
 async function calculatePeakPosition(hashtagId: string): Promise<number> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     // Get historical trending data (fallback to hashtags table if history table doesn't exist)
     // Get hashtag trending history using RPC function
@@ -1505,7 +1519,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
 }
 
 async function calculateCurrentPosition(hashtagId: string): Promise<number> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     // Get current trending ranking
     const { data: currentRanking, error } = await supabase
@@ -1544,7 +1558,7 @@ async function calculateCurrentPosition(hashtagId: string): Promise<number> {
  * Integrated into getHashtagSuggestions for enhanced related suggestions
  */
 export async function calculateRelatedHashtags(hashtagId: string): Promise<string[]> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     // Get hashtag details
     const { data: hashtag, error: hashtagError } = await supabase
@@ -1598,7 +1612,7 @@ export async function calculateRelatedHashtags(hashtagId: string): Promise<strin
  * Integrated into getTrendingHashtags when category filter is applied for category context metadata
  */
 export async function calculateCategoryTrends(category: HashtagCategory): Promise<CategoryTrendSummary | null> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: categoryData, error } = await supabase
       .from('hashtags')
@@ -1629,7 +1643,7 @@ export async function calculateCategoryTrends(category: HashtagCategory): Promis
 }
 
 async function getRecentActivity(): Promise<HashtagActivity[]> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data: recentUsage, error } = await supabase
       .from('hashtag_usage')
@@ -1704,7 +1718,7 @@ async function getRecentActivity(): Promise<HashtagActivity[]> {
 export async function updateUserPreferences(
   preferences: UpdateHashtagUserPreferencesInput
 ): Promise<HashtagApiResponse<HashtagUserPreferences>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const now = new Date().toISOString();
 
@@ -1772,7 +1786,7 @@ export async function updateUserPreferences(
  * Get user preferences
  */
 export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUserPreferences | null>> {
-  const supabase = await supabaseClientPromise;
+  const supabase = await ensureSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('hashtag_user_preferences')

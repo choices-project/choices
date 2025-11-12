@@ -11,6 +11,7 @@ export interface CongressMember {
   district: string | null;
   party: string | null;
   url: string | null;
+  name: string | null;
 }
 
 class MissingCongressApiKeyError extends Error {
@@ -20,7 +21,10 @@ class MissingCongressApiKeyError extends Error {
 }
 
 function getCongressApiKey(): string {
-  const key = process.env.CONGRESS_GOV_API_KEY ?? process.env.CONGRESS_GOV_APIKEY ?? process.env.CONGRESS_GOV_KEY;
+  const key =
+    process.env.CONGRESS_GOV_API_KEY ??
+    process.env.CONGRESS_GOV_APIKEY ??
+    process.env.CONGRESS_GOV_KEY;
   if (!key) {
     throw new MissingCongressApiKeyError();
   }
@@ -56,15 +60,39 @@ function extractState(raw: any): string | null {
   return normalised;
 }
 
+function extractName(raw: any): string | null {
+  const direct =
+    normaliseString(raw?.name) ??
+    normaliseString(raw?.personName) ??
+    normaliseString(raw?.fullName) ??
+    normaliseString(raw?.officialName);
+  if (direct) {
+    return direct;
+  }
+
+  const first = normaliseString(raw?.firstName ?? raw?.first_name);
+  const middle = normaliseString(raw?.middleName ?? raw?.middle_name);
+  const last = normaliseString(raw?.lastName ?? raw?.last_name);
+  const parts = [first, middle, last].filter(Boolean);
+  if (parts.length > 0) {
+    return parts.join(' ');
+  }
+  return null;
+}
+
 export async function fetchCongressMembers(): Promise<CongressMember[]> {
   const apiKey = getCongressApiKey();
   const members: CongressMember[] = [];
 
-  let nextUrl: string | null = buildMembersUrl(apiKey, 0);
+  let nextUrl: string | null = buildMembersUrl(0);
   let safetyCounter = 0;
 
   while (nextUrl) {
-    const response = await fetch(nextUrl);
+    const response = await fetch(nextUrl, {
+      headers: {
+        'X-API-Key': apiKey,
+      },
+    });
     if (!response.ok) {
       const body = await safeJson(response);
       throw new Error(
@@ -92,12 +120,11 @@ export async function fetchCongressMembers(): Promise<CongressMember[]> {
   return members;
 }
 
-function buildMembersUrl(apiKey: string, offset: number): string {
+function buildMembersUrl(offset: number): string {
   const url = new URL(`${BASE_URL}/member`);
   url.searchParams.set('format', 'json');
   url.searchParams.set('limit', String(DEFAULT_PAGE_SIZE));
   url.searchParams.set('offset', String(offset));
-  url.searchParams.set('api_key', apiKey);
   return url.toString();
 }
 
@@ -133,6 +160,7 @@ function normalizeMember(raw: any): CongressMember {
       normaliseString(raw?.role?.party) ??
       null,
     url: normaliseString(raw?.url) ?? normaliseString(raw?.uri) ?? null,
+    name: extractName(raw),
   };
 }
 

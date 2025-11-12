@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { withErrorHandling, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 

@@ -19,7 +19,9 @@ import type {
   ExportOptions,
   PrivacySettings,
   ProfileActionResult,
+  ProfileDemographics,
   ProfileExportData,
+  ProfileLocation,
   ProfilePreferences,
   ProfileUpdateData,
   ProfileUser,
@@ -104,7 +106,7 @@ type ProfileStoreCreator = StateCreator<
   [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
 >;
 
-export const initialProfileState: ProfileState = {
+export const createInitialProfileState = (): ProfileState => ({
   profile: null,
   userProfile: null,
   isProfileLoaded: false,
@@ -120,15 +122,10 @@ export const initialProfileState: ProfileState = {
   validationErrors: {},
   validationWarnings: {},
   preferences: null,
-  privacySettings: null
-};
-
-export const createInitialProfileState = (): ProfileState => ({
-  ...initialProfileState,
-    missingFields: [],
-    validationErrors: {},
-    validationWarnings: {},
+  privacySettings: null,
 });
+
+export const initialProfileState: ProfileState = createInitialProfileState();
 
 export const createProfileActions = (
   set: Parameters<ProfileStoreCreator>[0],
@@ -632,11 +629,29 @@ export const useProfileStore = create<ProfileStore>()(
   )
 );
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const coerceDemographics = (value: unknown): ProfileDemographics | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+  return value as ProfileDemographics;
+};
+
+const coerceLocation = (value: unknown): ProfileLocation | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+  return value as ProfileLocation;
+};
+
 // Profile store selectors for common use cases
 export const profileSelectors = {
   // Basic profile data
   profile: (state: ProfileStore) => state.profile,
   userProfile: (state: ProfileStore) => state.userProfile,
+  currentProfile: (state: ProfileStore) => state.profile ?? state.userProfile,
 
   // Profile state
   isProfileLoaded: (state: ProfileStore) => state.isProfileLoaded,
@@ -663,6 +678,24 @@ export const profileSelectors = {
   // Preferences and settings
   preferences: (state: ProfileStore) => state.preferences,
   privacySettings: (state: ProfileStore) => state.privacySettings,
+  demographics: (state: ProfileStore) => {
+    return (
+      coerceDemographics(state.profile?.demographics) ??
+      coerceDemographics(state.userProfile?.demographics) ??
+      null
+    );
+  },
+  location: (state: ProfileStore) => {
+    const demographics =
+      coerceDemographics(state.profile?.demographics) ??
+      coerceDemographics(state.userProfile?.demographics);
+
+    if (!demographics) {
+      return null;
+    }
+
+    return coerceLocation(demographics.location) ?? null;
+  },
 
   // Validation
   validationErrors: (state: ProfileStore) => state.validationErrors,

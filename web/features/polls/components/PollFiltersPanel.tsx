@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { BarChart3, Clock, Flame, Hash, Search, TrendingUp } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import {
   useHashtagActions,
@@ -12,14 +12,13 @@ import {
   usePollFilters,
   usePollSearch,
   usePollsActions,
-  type PollsActions,
 } from '@/lib/stores';
+import type { PollsActions } from '@/lib/stores/pollsStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
 import {
   POLL_CATEGORIES,
-  getPollCategoryColor,
 } from '../constants/categories';
 
 type PollFiltersPanelProps = {

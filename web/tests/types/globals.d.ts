@@ -32,7 +32,7 @@ declare global {
     };
   }
 
-  // eslint-disable-next-line no-var
+   
   var __playwrightAnalytics: PlaywrightAnalyticsBridge | undefined;
   var __pwaQueueHarness: NonNullable<Window['__pwaQueueHarness']>;
   var __onboardingStoreHarness: NonNullable<Window['__onboardingStoreHarness']>;

@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { usePWAInstallation, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type EnhancedInstallPromptProps = {
@@ -39,7 +39,8 @@ export default function EnhancedInstallPrompt({
   showBenefits = true,
   showPlatformInstructions = true
 }: EnhancedInstallPromptProps) {
-  const { installation, installPWA } = usePWAStore();
+  const installation = usePWAInstallation();
+  const { installPWA } = usePWAActions();
   const isSupported = 'serviceWorker' in navigator;
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState<string>('unknown');

@@ -10,9 +10,6 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import type {
   ActivityItem,
   AdminNotification,
@@ -27,6 +24,9 @@ import type {
   SystemMetrics,
   TrendingTopic,
 } from '@/features/admin/types';
+import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
@@ -842,6 +842,51 @@ export const createAdminActions = (
                 return;
               }
 
+              if (action === 'poll_creation_failed') {
+                const alreadyNotified = existingNotifications.some(
+                  (notification) => notification.metadata?.eventId === event.id
+                );
+
+                const failureReason =
+                  typeof metadata.reason === 'string' && metadata.reason.trim().length > 0
+                    ? metadata.reason
+                    : typeof metadata.status === 'number'
+                      ? `status ${metadata.status}`
+                      : metadata.status ?? 'unknown reason';
+
+                pushActivityItem({
+                  id: event.id,
+                  type: action,
+                  title: 'Poll creation failed',
+                  description: pollId
+                    ? `Poll ${pollId} failed to publish (${failureReason}).`
+                    : `A poll creation failed (${failureReason}).`,
+                  timestamp: createdAt,
+                  metadata: mergeMetadata(metadata, {
+                    pollId,
+                    reason: failureReason,
+                  }),
+                });
+
+                if (!alreadyNotified) {
+                  const pending = buildAdminNotification({
+                    type: 'error',
+                    title: 'Poll creation failed',
+                    message: pollId
+                      ? `Poll ${pollId} failed to publish (${failureReason}).`
+                      : `A poll creation failed (${failureReason}).`,
+                    read: false,
+                    created_at: createdAt,
+                    timestamp: createdAt,
+                    metadata: mergeMetadata({ eventId: event.id }, { pollId, reason: failureReason }),
+                  });
+                  pending.id = ensureId();
+                  pendingNotifications.push(pending);
+                }
+
+                return;
+              }
+
               if (action === 'milestone_reached') {
                 milestoneAlertsLast7Days += 1;
 
@@ -902,6 +947,23 @@ export const createAdminActions = (
                   pendingNotifications.push(pending);
                 }
 
+                return;
+              }
+
+              if (action === 'copy_link_failed') {
+                pushActivityItem({
+                  id: event.id,
+                  type: action,
+                  title: 'Share attempt failed',
+                  description: pollId
+                    ? `Copy link failed for poll ${pollId}.`
+                    : 'Copy link failed for a poll share attempt.',
+                  timestamp: createdAt,
+                  metadata: mergeMetadata(metadata, {
+                    pollId,
+                    location: metadata.location ?? 'unknown',
+                  }),
+                });
                 return;
               }
 
@@ -1682,6 +1744,9 @@ const filterAdminUsers = (users: AdminUser[], filters: AdminUserFilters): AdminU
 
   return users.filter((user) => matchesSearch(user) && matchesRole(user) && matchesStatus(user));
 };
+
+export const selectFilteredAdminUsers = (state: AdminState) =>
+  filterAdminUsers(state.users, state.userFilters);
 
 export const useAdminUsers = () => useAdminStore((state) => state.users);
 export const useAdminUserCount = () => useAdminStore((state) => state.users.length);

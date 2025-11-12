@@ -1,4 +1,5 @@
 import type React from 'react';
+
 import type { Representative } from '@/types/representative';
 /**
  * Onboarding Feature - Centralized Type Definitions
@@ -83,25 +84,42 @@ export type AuthData = {
 export type ProfileVisibility = 'public' | 'private' | 'friends_only' | 'anonymous';
 
 export type ProfileData = {
-  displayName: string;
-  profileVisibility: ProfileVisibility;
-  notifications: {
-    email: boolean;
-    push: boolean;
-  };
+  displayName?: string;
   bio?: string;
+  participationStyle?: ParticipationStyle;
+  profileVisibility?: ProfileVisibility;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  profileSetupCompleted?: boolean;
   interests?: string[];
-}
+};
 
 // ============================================================================
 // VALUES & INTERESTS
 // ============================================================================
 
 export type ValuesData = {
-  primaryConcerns: string[];
-  communityFocus: CommunityFocus;
-  participationStyle: 'observer' | 'contributor' | 'leader';
-}
+  primaryConcerns?: string[];
+  communityFocus?: CommunityFocus[];
+  participationStyle?: ParticipationStyle;
+  primaryInterests?: string[];
+  secondaryInterests?: string[];
+  values?: string[];
+  priorities?: string[];
+  engagementLevel?: 'low' | 'medium' | 'high';
+  notificationPreferences?: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  demographics?: UserDemographics;
+  valuesCompleted?: boolean;
+  stepProgress?: {
+    currentStep: string;
+    completedSteps: string[];
+    timeSpent?: number;
+  };
+};
 
 export type CommunityFocus = 'local' | 'regional' | 'national' | 'global';
 
@@ -141,6 +159,7 @@ export type AuthSetupStepProps = {
   onUpdate: (updates: Partial<AuthSetupStepData>) => void;
   onNext: () => void;
   onBack: () => void;
+  forceInteractive?: boolean;
 };
 
 export type ProfileSetupStepData = {
@@ -160,17 +179,7 @@ export type ProfileSetupStepProps = {
 
 export type ParticipationStyle = 'observer' | 'contributor' | 'leader';
 
-export type ValuesStepData = {
-  primaryConcerns?: string[];
-  communityFocus?: CommunityFocus[];
-  participationStyle?: ParticipationStyle;
-  valuesCompleted?: boolean;
-  stepProgress?: {
-    currentStep: string;
-    completedSteps: string[];
-    timeSpent?: number;
-  };
-};
+export type ValuesStepData = ValuesData;
 
 export type ValuesStepProps = {
   data: ValuesStepData;

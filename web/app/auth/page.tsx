@@ -5,10 +5,14 @@ import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-import { loginAction } from '@/app/actions/login';
-import { register } from '@/app/actions/register';
-import { withOptional } from '@/lib/util/objects';
+import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
+import {
+  useUserError,
+  useUserLoading,
+  useUserActions,
+} from '@/features/auth/lib/store';
+import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
@@ -23,8 +27,15 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const userError = useUserError();
+  const isLoading = useUserLoading();
+  const {
+    setLoading: setAuthLoading,
+    setError: setAuthError,
+    clearError: clearAuthError,
+  } = useUserActions();
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -53,7 +64,7 @@ export default function AuthPage() {
     e.preventDefault();
     logger.info('Native toggle clicked! Current isSignUp', { isSignUp });
     setIsSignUp(!isSignUp);
-    setError(null);
+    clearAuthError();
     setMessage(null);
     setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
     logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
@@ -62,8 +73,12 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    clearAuthError();
     setMessage(null);
+
+    const setError = (msg: string) => {
+      setAuthError(msg);
+    };
 
     // Client-side validation
     if (!formData.email) {
@@ -86,17 +101,19 @@ export default function AuthPage() {
     }
 
     try {
+      setAuthLoading(true);
       if (isSignUp) {
-        // Create FormData for the register function
-        const formDataObj = new FormData();
-        formDataObj.append('email', formData.email);
-        formDataObj.append('username', formData.displayName.toLowerCase().replace(/\s+/g, '_'));
-        formDataObj.append('password', formData.password);
-
         // Create context object for security
-        const context = withOptional({}, typeof window !== 'undefined' && window.navigator.userAgent ? { userAgent: window.navigator.userAgent } : undefined);
+        const context: ServerActionContext = {
+          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+        };
 
-        const result = await register(formDataObj, context);
+        const result = await registerUser({
+          email: formData.email,
+          username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),
+          password: formData.password,
+          context,
+        });
         if (result.ok) {
           setMessage('Account created successfully');
           setTimeout(() => {
@@ -107,12 +124,11 @@ export default function AuthPage() {
         }
       } else {
         // Create FormData for login
-        const loginFormData = new FormData();
-        loginFormData.append('email', formData.email);
-        loginFormData.append('password', formData.password);
-        
         try {
-          await loginAction(loginFormData);
+          await loginWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
           // If we reach here, loginAction did not throw an error,
           // but it also handles redirection internally.
           // We might not see this message if redirection happens immediately.
@@ -130,6 +146,9 @@ export default function AuthPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     }
+    finally {
+      setAuthLoading(false);
+    }
   };
 
   return (
@@ -137,7 +156,7 @@ export default function AuthPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Hydration sentinel for E2E tests */}
         <div data-testid="auth-hydrated" hidden>{'1'}</div>
-        
+
         <div>
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
@@ -170,9 +189,9 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid="login-form">
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
-              {error && (
-                <div 
-                  className="bg-red-50 border border-red-200 rounded-md p-4" 
+              {userError && (
+                <div
+                  className="bg-red-50 border border-red-200 rounded-md p-4"
                   data-testid="auth-error"
                   role="alert"
                   aria-live="assertive"
@@ -180,7 +199,7 @@ export default function AuthPage() {
                   <div className="flex">
                     <AlertCircle className="h-5 w-5 text-red-400" />
                     <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-sm text-red-700">{userError}</p>
                     </div>
                   </div>
                 </div>
@@ -352,10 +371,11 @@ export default function AuthPage() {
                 type="submit"
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
                 data-testid="login-submit"
-                aria-busy="false"
-              >
-                {isSignUp ? 'Sign Up' : 'Sign In'}
-              </button>
+                aria-busy={isLoading}
+                disabled={isLoading}
+            >
+              {isLoading ? 'Working...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            </button>
         </form>
 
         {/* Passkey Authentication */}

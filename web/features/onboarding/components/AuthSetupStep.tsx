@@ -1,14 +1,14 @@
 'use client'
 
 import { Shield, Mail, Key, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Smartphone } from 'lucide-react'
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+import { useUserActions, useUserError, useUserLoading } from '@/lib/stores';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import type { AuthSetupStepProps, AuthMethod } from '../types';
@@ -46,16 +46,33 @@ const toErrorMessage = (error: unknown): string => {
   return 'An unexpected error occurred. Please try again.';
 };
 
-export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepProps) {
+export default function AuthSetupStep({
+  data,
+  onUpdate,
+  onNext,
+  onBack,
+  forceInteractive = false,
+}: AuthSetupStepProps) {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
   const [email, setEmail] = useState(data?.email || '')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'setup' | 'complete'>('overview')
 
+  const userError = useUserError();
+  const isLoading = useUserLoading();
+  const { setLoading, setError, clearError } = useUserActions();
+
+  useEffect(() => {
+    clearError();
+    setSuccess(false);
+  }, [authMethod, clearError]);
+
   // E2E bypass: If we're in test environment, render a simple version
-  if (process.env.NODE_ENV === 'test' || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co') {
+  if (
+    !forceInteractive &&
+    (process.env.NODE_ENV === 'test' ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co')
+  ) {
     return (
       <div className="max-w-2xl mx-auto text-center">
         <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
@@ -76,8 +93,8 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       return
     }
 
-    setIsLoading(true)
-    setError(null)
+    setLoading(true)
+    clearError()
 
     try {
       const supabase = await getSupabaseBrowserClient()
@@ -89,7 +106,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/onboarding?step=auth-setup`
+          emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding?step=auth-setup`
         }
       })
 
@@ -106,13 +123,13 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
     } catch (err: unknown) {
       setError(toErrorMessage(err) || 'Failed to send verification email');
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   const handleSocialAuth = async (provider: 'google' | 'github') => {
-    setIsLoading(true)
-    setError(null)
+    setLoading(true)
+    clearError()
 
     try {
       const supabase = await getSupabaseBrowserClient()
@@ -124,7 +141,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/onboarding?step=auth-setup`
+          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding?step=auth-setup`
         }
       })
 
@@ -133,7 +150,8 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       }
     } catch (err: unknown) {
       setError(toErrorMessage(err) || `Failed to sign in with ${provider}`);
-      setIsLoading(false);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -142,6 +160,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       authMethod: 'webauthn',
       authSetupCompleted: true
     })
+    clearError();
     setSuccess(true)
   }
 
@@ -150,6 +169,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       authMethod: 'anonymous',
       authSetupCompleted: true
     })
+    clearError();
     setSuccess(true)
   }
 
@@ -352,14 +372,14 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               />
             </div>
 
-            {error && (
+            {userError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-shake">
                 <div className="flex items-center gap-2 text-red-800">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">{error}</span>
+                  <span className="text-sm">{userError}</span>
                 </div>
                 <button
-                  onClick={() => setError(null)}
+                  onClick={() => clearError()}
                   className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
                 >
                   Dismiss
@@ -429,11 +449,11 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               Continue with GitHub
             </Button>
 
-            {error && (
+            {userError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2 text-red-800">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">{error}</span>
+                  <span className="text-sm">{userError}</span>
                 </div>
               </div>
             )}
@@ -472,15 +492,15 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               mode="register"
               primary={true}
               onSuccess={handleWebAuthnAuth}
-              onError={(errorMessage) => setError(errorMessage ?? 'Passkey registration failed')}
+        onError={(errorMessage) => setError(errorMessage)}
               className="w-full"
             />
 
-            {error && (
+      {userError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2 text-red-800">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">{error}</span>
+            <span className="text-sm">{userError}</span>
                 </div>
               </div>
             )}

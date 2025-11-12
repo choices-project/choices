@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo } from 'react';
 
-import logger from '@/lib/utils/logger';
 import { useUserCurrentAddress, useUserRepresentatives } from '@/lib/stores';
 import {
   useFindByLocation,
@@ -21,6 +20,7 @@ import {
   useRepresentativeError,
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
+import logger from '@/lib/utils/logger';
 
 type CivicsLureProps = {
   userLocation?: string;

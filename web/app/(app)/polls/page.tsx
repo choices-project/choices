@@ -4,9 +4,10 @@ import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
-import type { HashtagSearchQuery, PollHashtagIntegration } from '@/features/hashtags/types';
+import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
+import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 import {
-  useFilteredPolls,
+  useFilteredPollCards,
   usePollFilters,
   usePollPagination,
   usePollSearch,
@@ -15,92 +16,8 @@ import {
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
 
-import {
-  getPollCategoryColor,
-  getPollCategoryIcon,
-} from '@/features/polls/constants/categories';
-import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
-
-// Enhanced poll interface with hashtag integration
-type EnhancedPoll = {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  category: string;
-  tags: string[];
-  totalVotes: number;
-  createdAt: string;
-  hashtags?: string[];
-  primary_hashtag?: string;
-  hashtagIntegration?: PollHashtagIntegration;
-  trending_position?: number;
-  engagement_rate?: number;
-  user_interest_level?: number;
-  author: {
-    name: string;
-    verified: boolean;
-  };
-};
-
-const mapApiPollToEnhanced = (rawPoll: any): EnhancedPoll => {
-  const hashtags = Array.isArray(rawPoll.hashtags)
-    ? rawPoll.hashtags.filter((tag: unknown): tag is string => typeof tag === 'string')
-    : [];
-
-  const hashtagIntegration: PollHashtagIntegration | undefined = rawPoll.hashtag_engagement
-    ? {
-        poll_id: rawPoll.id,
-        hashtags,
-        primary_hashtag:
-          typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined,
-        hashtag_engagement: {
-          total_views: rawPoll.hashtag_engagement?.total_views ?? 0,
-          hashtag_clicks: rawPoll.hashtag_engagement?.hashtag_clicks ?? 0,
-          hashtag_shares: rawPoll.hashtag_engagement?.hashtag_shares ?? 0,
-        },
-        related_polls: Array.isArray(rawPoll.related_polls)
-          ? rawPoll.related_polls.filter((id: unknown): id is string => typeof id === 'string')
-          : [],
-        hashtag_trending_score: rawPoll.hashtag_trending_score ?? 0,
-      }
-    : undefined;
-
-  const primaryHashtag =
-    typeof rawPoll.primary_hashtag === 'string' ? rawPoll.primary_hashtag : undefined;
-  const trendingPosition =
-    typeof rawPoll.trending_position === 'number' ? rawPoll.trending_position : undefined;
-  const engagementRate =
-    typeof rawPoll.engagement_rate === 'number' ? rawPoll.engagement_rate : undefined;
-  const userInterestLevel =
-    typeof rawPoll.user_interest_level === 'number' ? rawPoll.user_interest_level : undefined;
-
-  return {
-    id: rawPoll.id,
-    title: rawPoll.title,
-    description: rawPoll.description ?? '',
-    status: rawPoll.status ?? 'active',
-    category: rawPoll.category ?? 'general',
-    tags: Array.isArray(rawPoll.tags)
-      ? rawPoll.tags.filter((tag: unknown): tag is string => typeof tag === 'string')
-      : [],
-    totalVotes: rawPoll.totalVotes ?? rawPoll.total_votes ?? 0,
-    createdAt: rawPoll.createdAt ?? rawPoll.created_at ?? new Date().toISOString(),
-    ...(hashtags.length > 0 ? { hashtags } : {}),
-    ...(primaryHashtag ? { primary_hashtag: primaryHashtag } : {}),
-    ...(hashtagIntegration ? { hashtagIntegration } : {}),
-    ...(trendingPosition !== undefined ? { trending_position: trendingPosition } : {}),
-    ...(engagementRate !== undefined ? { engagement_rate: engagementRate } : {}),
-    ...(userInterestLevel !== undefined ? { user_interest_level: userInterestLevel } : {}),
-    author: {
-      name: rawPoll.author?.name ?? 'Anonymous',
-      verified: Boolean(rawPoll.author?.verified),
-    },
-  };
-};
-
 export default function PollsPage() {
-  const polls = useFilteredPolls();
+  const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
   const error = usePollsError();
   const filters = usePollFilters();
@@ -130,8 +47,6 @@ export default function PollsPage() {
     setFilters({ status: [] });
     void loadPolls();
   }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
-
-  const enhancedPolls = useMemo(() => polls.map(mapApiPollToEnhanced), [polls]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
     if (filters.trendingOnly) {
@@ -254,7 +169,7 @@ export default function PollsPage() {
       <PollFiltersPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {enhancedPolls.length === 0 ? (
+        {polls.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <div className="text-gray-400 mb-4">
               <BarChart3 className="h-12 w-12 mx-auto" />
@@ -274,16 +189,16 @@ export default function PollsPage() {
             </Link>
           </div>
         ) : (
-          enhancedPolls.map((poll) => (
+          polls.map((poll) => (
             <div key={poll.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                   {poll.title}
                 </h3>
-                {poll.trending_position && (
+                {poll.trendingPosition && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                     <Flame className="h-3 w-3 mr-1" />
-                    Trending #{poll.trending_position}
+                    Trending #{poll.trendingPosition}
                   </span>
                 )}
               </div>

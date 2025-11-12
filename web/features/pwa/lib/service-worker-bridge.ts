@@ -6,7 +6,7 @@
  * infrastructure.
  */
 
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { getPWAActions } from '@/lib/stores/pwaStore';
 import { isPWAServiceWorkerMessage, PWA_SERVICE_WORKER_MESSAGE_TYPES } from '@/types/pwa';
 
 let bridgeInitialized = false;
@@ -26,7 +26,7 @@ export const initializeServiceWorkerBridge = () => {
       case PWA_SERVICE_WORKER_MESSAGE_TYPES.OFFLINE_QUEUE_UPDATED: {
         const size = data.size;
         const updatedAt = data.updatedAt;
-        usePWAStore.getState().setOfflineQueueSize(size, updatedAt);
+        getPWAActions().setOfflineQueueSize(size, updatedAt);
 
         window.dispatchEvent(
           new CustomEvent('pwa-analytics', {

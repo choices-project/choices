@@ -126,12 +126,23 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     return channel.replace(/_/g, ' ');
   };
 
-  const shareSummary =
-    shareActionsLast24h > 0 && topShareChannel
-      ? `${formatShareChannel(topShareChannel.channel)} is leading with ${topShareChannel.count} share action${
-          topShareChannel.count === 1 ? '' : 's'
-        } in the last 24 hours.`
-      : 'Share activity is quiet in the last day.';
+const shareSummary = (() => {
+  if (!(shareActionsLast24h > 0 && topShareChannel)) {
+    return 'Share activity is quiet in the last day.';
+  }
+
+  const channelLabel = formatShareChannel(topShareChannel.channel);
+
+  if (channelLabel === 'Copy failed') {
+    return `Attempts to copy share links failed ${topShareChannel.count} time${
+      topShareChannel.count === 1 ? '' : 's'
+    } in the last 24 hours.`;
+  }
+
+  return `${channelLabel} is leading with ${topShareChannel.count} share action${
+    topShareChannel.count === 1 ? '' : 's'
+  } in the last 24 hours.`;
+})();
 
   const milestoneSummary =
     milestoneAlertsLast7Days > 0
@@ -454,15 +465,16 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
+                <div className="flex items-start">
                   <div className="p-2 bg-purple-100 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                    </svg>
+                    <Share2 className="w-6 h-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Votes</p>
-                    <p className="text-2xl font-semibold text-gray-900">{totalVotesCount.toLocaleString()}</p>
+                    <p className="text-sm font-medium text-gray-600">Share Signals (24h)</p>
+                    <p className="text-2xl font-semibold text-gray-900">{shareActionsLast24h.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {shareSummary}
+                    </p>
                   </div>
                 </div>
               </div>

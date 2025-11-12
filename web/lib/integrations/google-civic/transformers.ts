@@ -5,10 +5,6 @@
  * with proper validation and error handling.
  */
 
-import { logger } from '@/lib/utils/logger';
-
-import { withOptional } from '../../util/objects';
-
 import type {
   AddressLookupResult,
   CandidateCardV1,
@@ -17,6 +13,9 @@ import type {
   CivicsRepresentative,
   CivicsRepresentativeSocialMedia,
 } from '@/features/civics/lib/types/contracts';
+import { logger } from '@/lib/utils/logger';
+
+
 import type {
   GoogleCivicResponse,
   GoogleCivicRepresentative,

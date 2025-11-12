@@ -7,10 +7,12 @@
 
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { useProfileStore } from '@/lib/stores/profileStore';
+import { useUserProfileEditData } from '@/lib/stores';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
 
 import type {
@@ -23,7 +25,6 @@ import type {
   UseProfileExportReturn,
   UseProfileReturn,
   UseProfileUpdateReturn,
-  UserProfile,
 } from '../index';
 
 export const profileQueryKeys = {
@@ -35,8 +36,7 @@ export const profileQueryKeys = {
 
 export function useProfile(): UseProfileReturn {
   const {
-    profile,
-    userProfile,
+    currentProfile,
     isProfileLoaded,
     isProfileLoading,
     error,
@@ -44,8 +44,7 @@ export function useProfile(): UseProfileReturn {
     refreshProfile,
   } = useProfileStore(
     useShallow((state) => ({
-      profile: state.profile,
-      userProfile: state.userProfile,
+      currentProfile: profileSelectors.currentProfile(state),
       isProfileLoaded: state.isProfileLoaded,
       isProfileLoading: state.isProfileLoading,
       error: state.error,
@@ -65,7 +64,7 @@ export function useProfile(): UseProfileReturn {
   }, [refreshProfile]);
 
   return {
-    profile: (profile ?? userProfile) as UserProfile | null,
+    profile: currentProfile ?? null,
     isLoading: isProfileLoading,
     error,
     refetch,
@@ -118,6 +117,48 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
     isUploading: isUploadingAvatar,
     error,
   };
+}
+
+export function useProfileDraft() {
+  return useUserProfileEditData();
+}
+
+export function useProfileDraftActions() {
+  const setProfileEditData = useUserStore((state) => state.setProfileEditData);
+  const updateProfileEditData = useUserStore((state) => state.updateProfileEditData);
+  const updateProfileField = useUserStore((state) => state.updateProfileField);
+  const updateArrayField = useUserStore((state) => state.updateArrayField);
+  const updatePrivacySetting = useUserStore((state) => state.updatePrivacySetting);
+  const setProfileEditing = useUserStore((state) => state.setProfileEditing);
+  const clearAllProfileEditErrors = useUserStore((state) => state.clearAllProfileEditErrors);
+  const setProfileEditError = useUserStore((state) => state.setProfileEditError);
+  const clearProfileEditError = useUserStore((state) => state.clearProfileEditError);
+
+  return useMemo(
+    () => ({
+      initializeDraft: setProfileEditData,
+      mergeDraft: updateProfileEditData,
+      setDraftField: updateProfileField,
+      toggleDraftArrayField: updateArrayField,
+      setDraftPrivacySetting: updatePrivacySetting,
+      setProfileEditing,
+      clearDraft: () => setProfileEditData(null),
+      clearDraftErrors: clearAllProfileEditErrors,
+      setFieldError: setProfileEditError,
+      clearFieldError: clearProfileEditError,
+    }),
+    [
+      setProfileEditData,
+      updateProfileEditData,
+      updateProfileField,
+      updateArrayField,
+      updatePrivacySetting,
+      setProfileEditing,
+      clearAllProfileEditErrors,
+      setProfileEditError,
+      clearProfileEditError,
+    ],
+  );
 }
 
 export function useProfileExport(): UseProfileExportReturn {

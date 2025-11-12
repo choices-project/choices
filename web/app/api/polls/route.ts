@@ -13,6 +13,7 @@
 
 import type { NextRequest } from 'next/server';
 
+import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
 import {
   withErrorHandling,
   successResponse,
@@ -21,7 +22,6 @@ import {
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
 
 const buildPollHashtagIntegration = (poll: any): PollHashtagIntegration | undefined => {
   if (!poll.hashtags) {

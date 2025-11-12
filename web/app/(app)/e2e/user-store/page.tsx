@@ -13,15 +13,21 @@ export type UserStoreHarness = {
   setProfile: UserStore['setProfile'];
   updateProfileField: UserStore['updateProfileField'];
   updateArrayField: UserStore['updateArrayField'];
+  setCurrentAddress: UserStore['setCurrentAddress'];
+  setRepresentatives: UserStore['setRepresentatives'];
+  setBiometricSupported: UserStore['setBiometricSupported'];
+  setBiometricAvailable: UserStore['setBiometricAvailable'];
+  setBiometricCredentials: UserStore['setBiometricCredentials'];
+  setBiometricRegistering: UserStore['setBiometricRegistering'];
+  setBiometricError: UserStore['setBiometricError'];
+  setBiometricSuccess: UserStore['setBiometricSuccess'];
+  resetBiometric: UserStore['resetBiometric'];
   clearUser: UserStore['clearUser'];
   getSnapshot: () => UserStore;
 };
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface Window {
-    __userStoreHarness?: UserStoreHarness;
-  }
+  var __userStoreHarness: UserStoreHarness | undefined;
 }
 
 const toDisplayString = (value: unknown) => {
@@ -43,6 +49,7 @@ export default function UserStoreHarnessPage() {
   const preferences = useUserStore((state) => state.profile?.privacy_settings ?? null);
   const currentAddress = useUserStore((state) => state.currentAddress);
   const representatives = useUserStore((state) => state.representatives);
+  const biometric = useUserStore((state) => state.biometric);
 
   useEffect(() => {
     const api = useUserStore.getState();
@@ -55,6 +62,15 @@ export default function UserStoreHarnessPage() {
       setProfile: api.setProfile,
       updateProfileField: api.updateProfileField,
       updateArrayField: api.updateArrayField,
+      setCurrentAddress: api.setCurrentAddress,
+      setRepresentatives: api.setRepresentatives,
+      setBiometricSupported: api.setBiometricSupported,
+      setBiometricAvailable: api.setBiometricAvailable,
+      setBiometricCredentials: api.setBiometricCredentials,
+      setBiometricRegistering: api.setBiometricRegistering,
+      setBiometricError: api.setBiometricError,
+      setBiometricSuccess: api.setBiometricSuccess,
+      resetBiometric: api.resetBiometric,
       clearUser: api.clearUser,
       getSnapshot: () => useUserStore.getState(),
     };
@@ -139,6 +155,36 @@ export default function UserStoreHarnessPage() {
             </div>
           </dl>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-medium">Biometric / Passkey State</h2>
+        <dl className="mt-2 space-y-1 text-sm">
+          <div className="flex justify-between gap-2">
+            <dt>Supported</dt>
+            <dd data-testid="user-biometric-supported">{toDisplayString(biometric.isSupported)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Available</dt>
+            <dd data-testid="user-biometric-available">{toDisplayString(biometric.isAvailable)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Has Credentials</dt>
+            <dd data-testid="user-biometric-credentials">{toDisplayString(biometric.hasCredentials)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Registering</dt>
+            <dd data-testid="user-biometric-registering">{String(biometric.isRegistering)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Success</dt>
+            <dd data-testid="user-biometric-success">{String(biometric.success)}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Error</dt>
+            <dd data-testid="user-biometric-error">{toDisplayString(biometric.error)}</dd>
+          </div>
+        </dl>
       </section>
     </main>
   );

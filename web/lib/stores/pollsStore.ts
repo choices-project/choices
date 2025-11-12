@@ -3,11 +3,12 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { PollInsert, PollRow, PollUpdate } from '@/features/polls/types';
+import type { PollRow, PollUpdate } from '@/features/polls/types';
 import {
   createDefaultPollFilters,
   createDefaultPollPreferences,
 } from '@/lib/polls/defaults';
+import { createPollCardView } from '@/lib/polls/transformers';
 import type { PollFilters, PollPreferences } from '@/lib/polls/types';
 import {
   derivePollAnalytics,
@@ -16,6 +17,15 @@ import {
   validatePollFilters,
   type PollStatusTransition,
 } from '@/lib/polls/validation';
+import {
+  createPollRequest,
+  type PollCreatePayload,
+  type PollCreateRequestResult,
+  type PollUndoVoteRequestResult,
+  type PollVoteRequestResult,
+  undoVoteRequest,
+  voteOnPollRequest,
+} from '@/lib/polls/api';
 import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
@@ -24,6 +34,7 @@ import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 export type { PollFilters, PollPreferences } from '@/lib/polls/types';
+export type { PollCardView } from '@/lib/polls/transformers';
 
 export type PollSearch = {
   query: string;
@@ -73,8 +84,8 @@ export type PollsActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErr
   closePoll: (id: string) => void;
   archivePoll: (id: string) => void;
 
-  voteOnPoll: (pollId: string, optionId: string) => Promise<void>;
-  undoVote: (pollId: string) => Promise<void>;
+  voteOnPoll: (pollId: string, optionId: string, options?: VoteOnPollOptions) => Promise<PollVoteRequestResult>;
+  undoVote: (pollId: string, options?: UndoVoteOptions) => Promise<PollUndoVoteRequestResult>;
 
   setFilters: (filters: Partial<PollFilters>) => void;
   clearFilters: () => void;
@@ -90,7 +101,7 @@ export type PollsActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErr
 
   loadPolls: (options?: LoadPollsOptions) => Promise<void>;
   loadPoll: (id: string) => Promise<void>;
-  createPoll: (data: PollInsert) => Promise<void>;
+  createPoll: (payload: PollCreatePayload, options?: CreatePollOptions) => Promise<PollCreateRequestResult>;
 
   getPollById: (id: string) => PollRow | undefined;
   getFilteredPolls: () => PollRow[];
@@ -115,6 +126,21 @@ export type LoadPollsOptions = {
   viewMode?: PollPreferences['defaultView'];
   page?: number;
   trendingOnly?: boolean;
+};
+
+export type CreatePollOptions = {
+  signal?: AbortSignal;
+  request?: (payload: PollCreatePayload, signal?: AbortSignal) => Promise<PollCreateRequestResult>;
+};
+
+export type VoteOnPollOptions = {
+  signal?: AbortSignal;
+  request?: (pollId: string, optionId: string, signal?: AbortSignal) => Promise<PollVoteRequestResult>;
+};
+
+export type UndoVoteOptions = {
+  signal?: AbortSignal;
+  request?: (pollId: string, signal?: AbortSignal) => Promise<PollUndoVoteRequestResult>;
 };
 
 const createDefaultFilters = (): PollFilters => createDefaultPollFilters();
@@ -345,7 +371,11 @@ export const createPollsActions = (
       }
     });
 
-  const voteOnPoll = async (pollId: string, optionId: string) => {
+  const voteOnPoll = async (
+    pollId: string,
+    optionId: string,
+    options?: VoteOnPollOptions,
+  ): Promise<PollVoteRequestResult> => {
     setVoting(true);
     clearError();
 
@@ -355,43 +385,69 @@ export const createPollsActions = (
       }
     });
 
-    try {
-      const response = await fetch('/api/polls/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pollId, optionId }),
-      });
+    const request = options?.request ?? voteOnPollRequest;
+    const signal = options?.signal;
 
-      if (!response.ok) {
-        throw new Error('Failed to vote on poll');
+    try {
+      const result = await request(pollId, optionId, signal);
+
+      if (!result.success) {
+        if (result.reason !== 'cancelled') {
+          setError(result.message);
+          logger.error('Failed to vote on poll', {
+            pollId,
+            optionId,
+            status: result.status,
+            reason: result.reason,
+            details: result.details,
+            fieldErrors: result.fieldErrors,
+          });
+          notifyError('Unable to record vote', result.message);
+        }
+        return result;
       }
 
       setState((state) => {
         const poll = state.polls.find((item) => item.id === pollId);
         if (poll) {
-          poll.total_votes = (poll.total_votes ?? 0) + 1;
+          const nextTotal =
+            result.data.totalVotes !== undefined
+              ? result.data.totalVotes
+              : (poll.total_votes ?? 0) + 1;
+          poll.total_votes = Math.max(0, nextTotal);
           poll.updated_at = new Date().toISOString();
         }
       });
 
-      logger.info('Vote cast successfully', { pollId, optionId });
-      notifySuccess('Vote recorded', 'Thanks for sharing your opinion!');
+      logger.info('Vote cast successfully', {
+        pollId,
+        optionId,
+        durationMs: result.durationMs,
+      });
+
+      notifySuccess('Vote recorded', result.message ?? 'Thanks for sharing your opinion!');
+      return result;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unable to record vote. Please try again.';
       setError(message);
-      logger.error('Failed to vote on poll', { error });
+      logger.error('Failed to vote on poll', { pollId, optionId, error });
       notifyError('Unable to record vote', message);
+      return {
+        success: false,
+        status: 0,
+        message,
+        reason: 'network',
+        details: error instanceof Error ? { name: error.name, message: error.message } : error,
+      };
     } finally {
       setVoting(false);
       setState((state) => {
-        state.uiState.votingInProgress = state.uiState.votingInProgress.filter(
-          (id) => id !== pollId
-        );
+        state.uiState.votingInProgress = state.uiState.votingInProgress.filter((id) => id !== pollId);
       });
     }
   };
 
-  const undoVote = async (pollId: string) => {
+  const undoVote = async (pollId: string, options?: UndoVoteOptions): Promise<PollUndoVoteRequestResult> => {
     setVoting(true);
     clearError();
 
@@ -401,38 +457,55 @@ export const createPollsActions = (
       }
     });
 
-    try {
-      const response = await fetch('/api/polls/undo-vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pollId }),
-      });
+    const request = options?.request ?? undoVoteRequest;
+    const signal = options?.signal;
 
-      if (!response.ok) {
-        throw new Error('Failed to undo vote');
+    try {
+      const result = await request(pollId, signal);
+
+      if (!result.success) {
+        if (result.reason !== 'cancelled') {
+          setError(result.message);
+          logger.error('Failed to undo vote', {
+            pollId,
+            status: result.status,
+            reason: result.reason,
+            details: result.details,
+            fieldErrors: result.fieldErrors,
+          });
+          notifyError('Unable to undo vote', result.message);
+        }
+        return result;
       }
 
       setState((state) => {
         const poll = state.polls.find((item) => item.id === pollId);
         if (poll) {
-          poll.total_votes = Math.max(0, (poll.total_votes ?? 0) - 1);
+          const nextTotal =
+            result.data.totalVotes !== undefined ? result.data.totalVotes : Math.max(0, (poll.total_votes ?? 0) - 1);
+          poll.total_votes = Math.max(0, nextTotal);
           poll.updated_at = new Date().toISOString();
         }
       });
 
-      logger.info('Vote undone successfully', { pollId });
-      notifySuccess('Vote undone', 'You can now submit a new response.');
+      notifySuccess('Vote undone', result.message ?? 'You can now submit a new response.');
+      return result;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unable to undo vote. Please try again.';
       setError(message);
-      logger.error('Failed to undo vote', { error });
+      logger.error('Failed to undo vote', { pollId, error });
       notifyError('Unable to undo vote', message);
+      return {
+        success: false,
+        status: 0,
+        message,
+        reason: 'network',
+        details: error instanceof Error ? { name: error.name, message: error.message } : error,
+      };
     } finally {
       setVoting(false);
       setState((state) => {
-        state.uiState.votingInProgress = state.uiState.votingInProgress.filter(
-          (id) => id !== pollId
-        );
+        state.uiState.votingInProgress = state.uiState.votingInProgress.filter((id) => id !== pollId);
       });
     }
   };
@@ -650,31 +723,58 @@ export const createPollsActions = (
     }
   };
 
-  const createPoll = async (data: PollInsert) => {
+  const createPoll = async (
+    payload: PollCreatePayload,
+    options?: CreatePollOptions,
+  ): Promise<PollCreateRequestResult> => {
     setLoading(true);
     clearError();
 
-    try {
-      const response = await fetch('/api/polls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    const request = options?.request ?? createPollRequest;
+    const signal = options?.signal;
 
-      if (!response.ok) {
-        throw new Error('Failed to create poll');
+    try {
+      const result = await request(payload, signal);
+
+      if (!result.success) {
+        if (result.reason !== 'cancelled') {
+          setError(result.message);
+          logger.error('Failed to create poll', {
+            status: result.status,
+            reason: result.reason,
+            details: result.details,
+            fieldErrors: result.fieldErrors,
+          });
+          notifyError('Unable to create poll', result.message);
+        }
+        return result;
       }
 
-      const poll = (await response.json()) as PollRow;
-      addPoll(poll);
+      clearError();
 
-      logger.info('Poll created', { pollId: poll.id });
-      notifySuccess('Poll created', 'Your poll is now available to voters.');
+      if (result.data.id) {
+        void loadPoll(result.data.id).catch((error) => {
+          logger.warn('Unable to hydrate poll after creation', {
+            pollId: result.data.id,
+            error: error instanceof Error ? error.message : error,
+          });
+        });
+      }
+
+      notifySuccess('Poll created', result.message ?? 'Your poll is now available to voters.');
+      return result;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unable to create poll. Please try again.';
       setError(message);
       logger.error('Failed to create poll', { error });
       notifyError('Unable to create poll', message);
+      return {
+        success: false,
+        status: 0,
+        message,
+        reason: 'network',
+        details: error instanceof Error ? { name: error.name, message: error.message } : error,
+      };
     } finally {
       setLoading(false);
     }
@@ -807,6 +907,8 @@ export const usePollPagination = () =>
   }));
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
+export const useFilteredPollCards = () =>
+  usePollsStore((state) => state.getFilteredPolls().map(createPollCardView));
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
 export const useSelectedPoll = () => {

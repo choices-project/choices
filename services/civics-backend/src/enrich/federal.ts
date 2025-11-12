@@ -28,10 +28,20 @@ export interface FinanceSummary {
 
 export interface FederalEnrichment {
   googleCivicId: string | null;
+  congressGovId: string | null;
   nextElectionDate: string | null;
   finance: FinanceSummary | null;
   issues: Array<{ issue: string; weight?: number }>;
   social: Record<string, string>;
+  contacts: {
+    emails: string[];
+    phones: string[];
+    links: string[];
+  };
+  biography: string | null;
+  aliases: CanonicalRepresentative['aliases'];
+  identifiers: CanonicalRepresentative['identifiers'];
+  extras: Record<string, unknown> | null;
   sources: { fec: string[] };
 }
 
@@ -44,13 +54,21 @@ export async function enrichFederalRepresentative(
   const cycle = getCurrentFecCycle();
 
   const finance = await fetchFecFinance(canonical, { officeCode, district, cycle });
+  const contacts = buildContactSnapshot(canonical);
+  const social = buildSocialLookup(canonical);
 
   return {
-    googleCivicId: null,
+    googleCivicId: canonical.identifiers.other.google_civic ?? null,
+    congressGovId: canonical.identifiers.other.congress_gov ?? null,
     nextElectionDate: null,
     finance,
     issues: [],
-    social: {},
+    social,
+    contacts,
+    biography: canonical.biography ?? null,
+    aliases: canonical.aliases,
+    identifiers: canonical.identifiers,
+    extras: canonical.extras,
     sources: {
       fec: finance?.sources ?? [],
     },
@@ -135,5 +153,34 @@ function computeSmallDonorPercentage(totals: FecTotals): number | null {
   }
 
   return Math.round((unitemized / individual) * 1000) / 10;
+}
+
+function buildSocialLookup(
+  canonical: CanonicalRepresentative,
+): Record<string, string> {
+  const social: Record<string, string> = {};
+  for (const profile of canonical.social) {
+    const key = profile.platform.toLowerCase();
+    if (profile.url) {
+      social[key] = profile.url;
+    } else if (profile.handle) {
+      social[key] = profile.handle;
+    }
+  }
+  return social;
+}
+
+function buildContactSnapshot(
+  canonical: CanonicalRepresentative,
+): {
+  emails: string[];
+  phones: string[];
+  links: string[];
+} {
+  return {
+    emails: [...canonical.emails],
+    phones: [...canonical.phones],
+    links: [...canonical.links],
+  };
 }
 

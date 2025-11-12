@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 
 import PWAInstaller from '@/features/pwa/components/PWAInstaller';
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { usePWAInstallation, usePWAOffline, usePWAPreferences } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -31,12 +31,15 @@ import { logger } from '@/lib/utils/logger';
  * @returns PWAInstaller component or null if PWA not enabled/supported
  */
 export default function PWAIntegration() {
-  const { installation, offline, preferences } = usePWAStore();
+  const installation = usePWAInstallation();
+  const offline = usePWAOffline();
+  const preferences = usePWAPreferences();
   
-  const isSupported = 'serviceWorker' in navigator;
+  const isSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+  const hasNotificationApi = typeof Notification !== 'undefined';
   const isEnabled = preferences.installPrompt;
   const hasOfflineData = offline.offlineData.queuedActions.length > 0;
-  const notificationsEnabled = preferences.pushNotifications && Notification.permission === 'granted';
+  const notificationsEnabled = preferences.pushNotifications && hasNotificationApi && Notification.permission === 'granted';
 
   useEffect(() => {
     // Log PWA status for debugging

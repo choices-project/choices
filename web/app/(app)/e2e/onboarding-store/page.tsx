@@ -31,10 +31,7 @@ export type OnboardingStoreHarness = {
 };
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface Window {
-    __onboardingStoreHarness?: OnboardingStoreHarness;
-  }
+  var __onboardingStoreHarness: OnboardingStoreHarness | undefined;
 }
 
 const useDisplayJson = (value: unknown) =>

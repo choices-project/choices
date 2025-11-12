@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { hashtagPollsIntegrationService } from './hashtag-polls-integration';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -574,14 +575,11 @@ export async function GET(request: NextRequest) {
     let hashtagPollsFeed = null;
     if (includeTrending) {
       try {
-        // Import hashtag-polls integration service (client version)
-        const { hashtagPollsIntegrationServiceClient } = await import('./hashtag-polls-integration-client');
-        
         // Generate hashtag-based poll recommendations
         const locationData = (userProfile.demographics as any)?.location_data as LocationData | null;
         const demographics = userProfile.demographics as Demographics | null;
         
-        hashtagPollsFeed = await hashtagPollsIntegrationServiceClient.generateHashtagPollFeed(
+        hashtagPollsFeed = await hashtagPollsIntegrationService.generateHashtagPollFeed(
           userId,
           {
             ...(locationData?.state ? { state: locationData.state } : {}),

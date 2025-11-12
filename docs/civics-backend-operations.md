@@ -15,10 +15,10 @@ Federal Supabase ─┘           │
                               └─ representative_campaign_finance (via enrich:finance)
 ```
 
-- **Stage loader** (`src/scripts/stage-openstates.ts`): parses OpenStates YAML, writes source rows into the `openstates_people_*` tables in bulk.
+- **Stage loader** (`src/scripts/openstates/stage-openstates.ts`): parses OpenStates YAML, writes source rows into the `openstates_people_*` tables in bulk.
 - **SQL merge function** (`sync_representatives_from_openstates()`): set-based merge that upserts `representatives_core`, contacts, social, photos, provenance, and quality metrics.
-- **Legacy persistence utilities** (`src/persist/*.ts`): still available while the SQL pipeline is rolled out; executes replace-by-source writes via REST.
-- **CLI scripts** (`src/scripts/*.ts`): orchestration commands with shared argument parsing (`--states`, `--limit`, `--dry-run`).
+- **Targeted persistence utilities** (`src/persist/*.ts`): still available while the SQL pipeline is rolled out; executes replace-by-source writes via REST.
+- **CLI scripts** (`src/scripts/openstates|federal|state|tools/*.ts`): orchestration commands with shared argument parsing (`--states`, `--limit`, `--dry-run`).
 - **Shared helpers** (`@choices/civics-shared`): reused logic for FEC office codes, district normalization, finance scoring, etc.
 
 ## 2. Key workflows
@@ -29,7 +29,7 @@ Federal Supabase ─┘           │
 cd services/civics-backend
 cp env.example .env.local          # populate with Supabase + API keys
 npm install
-npm run ingest:openstates          # stage OpenStates YAML + run SQL merge
+npm run openstates:ingest          # stage OpenStates YAML + run SQL merge
 npm run ingest:qa                  # schema check, duplicate audit, 5-record preview
 ```
 
@@ -37,27 +37,30 @@ npm run ingest:qa                  # schema check, duplicate audit, 5-record pre
 
 ### 2.1 Preview & verification
 
-1. `npm run ingest:openstates` — Stage YAML + execute `sync_representatives_from_openstates()`.
+1. `npm run openstates:ingest` — Stage YAML + execute `sync_representatives_from_openstates()`.
 2. `npm run ingest:qa` — Schema inspection, duplicate audit, and a 5-record preview snapshot.
-3. `npm run preview -- --states=CA --limit=10` — Optional: inspect a state slice before shipping.
+3. `npm run preview -- --states=CA --limit=10` — Optional: inspect a state slice before shipping. The preview now prints biography snippets, alias history, contact snapshots, social handles, identifier maps (including “other” schemes), notable offices, and extras so you can verify canonical enrichments without querying Supabase directly.
 4. The merge automatically refreshes OpenStates bill activity (set `SKIP_ACTIVITY_SYNC=1` to skip).
-5. Legacy writers (`sync:contacts`, `sync:social`, `sync:photos`, `sync:committees`, `sync:activity`, `sync:data-sources`) remain available with `--dry-run` until the SQL-first flow covers every table.
-5. `npm run enrich:finance -- --dry-run` — Validate FEC enrichment, then rerun without `--dry-run`.
-6. `npm run audit:crosswalk` — Ensure canonical IDs remain healthy; apply `npm run fix:crosswalk` if required.
+5. State refreshers (`state:refresh`, `state:sync:contacts`, `state:sync:social`, `state:sync:photos`, `state:sync:committees`, `state:sync:activity`, `state:sync:data-sources`, `state:sync:google-civic`) remain available with `--dry-run` until the SQL-first flow covers every table.
+5. `npm run federal:enrich:finance -- --dry-run` — Validate FEC enrichment, then rerun without `--dry-run`.
+6. `npm run tools:audit:crosswalk` — Ensure canonical IDs remain healthy; apply `npm run tools:fix:crosswalk` if required.
 
 ### 2.2 Data sync commands
 
 | Script | Source fields | Destination table | Replace semantics |
 | --- | --- | --- | --- |
-| `stage:openstates` | Raw OpenStates YAML | `openstates_people_*` staging tables | Bulk upsert (1000 row chunks); set `OPENSTATES_PEOPLE_DIR` env var |
-| `sync:contacts` | Emails, phones, faxes, postal addresses | `representative_contacts` | (Legacy) Delete `source = 'openstates_yaml'` then insert |
-| `sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | (Legacy) Delete by representative, dedupe per platform |
-| `sync:photos` | Primary portrait URL | `representative_photos` | (Legacy) Delete `source = 'openstates_yaml'`, insert canonical portrait |
-| `sync:committees` | Committee and caucus memberships derived from OpenStates roles | `representative_committees` | Deletes existing rows per rep, then inserts normalized assignments |
-| `sync:activity` | Latest bill activity derived from OpenStates | `representative_activity` | Deletes existing OpenStates-sourced rows per rep, then inserts bill summaries (also runs automatically after the merge) |
-| `sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
-| `enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Writes missing rows by default; supports stale refresh + explicit cycle overrides |
-| `enrich:congress` | Congress.gov/GovInfo identifiers | `representatives_core` (`congress_gov_id`, `govinfo_id`) + provenance entries | Populates official IDs from Congress.gov export (uses GOVINFO API when available) |
+| `openstates:stage` | Raw OpenStates YAML | `openstates_people_*` staging tables | Bulk upsert (1000 row chunks); set `OPENSTATES_PEOPLE_DIR` env var |
+| `openstates:merge` | YAML staging tables | `representatives_core` + related tables | Executes `sync_representatives_from_openstates()` (SQL) |
+| `state:refresh` | Orchestrates contacts → social → photos → committees → activity → data sources → Google Civic | Multiple tables | Accepts `--states`, `--limit`, `--dry-run`, `--only`, `--skip` to customise the run |
+| `state:sync:contacts` | Emails, phones, faxes, postal addresses | `representative_contacts` | (Legacy) Delete `source = 'openstates_yaml'` then insert |
+| `state:sync:social` | Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok | `representative_social_media` | (Legacy) Delete by representative, dedupe per platform |
+| `state:sync:photos` | Primary portrait URL | `representative_photos` | (Legacy) Delete `source = 'openstates_yaml'`, insert canonical portrait |
+| `state:sync:committees` | Committee and caucus memberships derived from OpenStates roles | `representative_committees` | Deletes existing rows per rep, then inserts normalized assignments |
+| `state:sync:activity` | Latest bill activity derived from OpenStates | `representative_activity` | Deletes existing OpenStates-sourced rows per rep, then inserts bill summaries (also runs automatically after the merge) |
+| `state:sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
+| `state:sync:google-civic` | Supplemental contacts/social/photo links | `representative_contacts` (`source = google_civic`), `representative_social_media`, `representative_photos`, `representative_data_sources` | Requires `GOOGLE_CIVIC_API_KEY`; only inserts rows missing from OpenStates |
+| `federal:enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Writes missing rows by default; supports stale refresh + explicit cycle overrides |
+| `federal:enrich:congress` | Congress.gov/GovInfo identifiers | `representatives_core` (`congress_gov_id`, `govinfo_id`) + provenance entries | Populates official IDs from Congress.gov export (uses GovInfo API when available) |
 
 All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid Cloudflare 414 responses.
 
@@ -84,7 +87,7 @@ Need to confirm live column lengths or nullability before changing ingest logic?
 
 ```
 cd services/civics-backend
-npm run build --silent && node scripts/inspect-schema.js
+npm run tools:inspect:schema
 ```
 
 Requirements:
@@ -96,36 +99,37 @@ Output lists each representative-facing table along with exact types, lengths an
 
 ### 2.6 Duplicate canonicals
 
-- `npm run audit:duplicates` — surfaces canonicals with more than one `representatives_core` row (uses `public.get_duplicate_canonical_ids()`).
-- `npm run fix:duplicates -- --canonical=<id>` — removes extras for a single canonical. Dry-run by default; pass `--apply` to delete rows.  
+- `npm run tools:report:duplicates` — surfaces canonicals with more than one `representatives_core` row (uses `public.get_duplicate_canonical_ids()`).
+- `npm run tools:fix:duplicates -- --canonical=<id>` — removes extras for a single canonical. Dry-run by default; pass `--apply` to delete rows.  
   Use `--force` if dependent data exists and you are confident it should be dropped.
 - Always rerun `npm run ingest:qa` after any fixes to confirm the dataset is clean.
 - Deduplication keeps the representative backed by official sources (`congress_gov_id`, `govinfo_id`, or `congress.gov` provenance) and only falls back to Wikipedia-derived records when no official source exists.
 
 ### 2.7 Gap reporting
 
-- `npm run report:gaps` — prints headline counts for:
+- `npm run tools:report:gaps` — prints headline counts for:
   - Federal reps with FEC IDs who lack `representative_campaign_finance` rows.
   - Federal reps with recorded `fec:no-data` rows (FEC returned no totals; script will retry once stale).
   - Federal reps missing `congress_gov_id` / `govinfo_id`.
   - State reps missing `primary_phone`.
-- Use this output to prioritise enrichment batches (e.g., targeted `--state` runs for `npm run enrich:finance`, or planning OpenStates API calls).
+- Use this output to prioritise enrichment batches (e.g., targeted `--state` runs for `npm run federal:enrich:finance`, or planning OpenStates API calls).
 - Run after each enrichment cycle to monitor progress.
 
 ### 2.8 Finance auto-update cadence
 
-- **Daily / weekly cron:** `npm run enrich:finance -- --limit=40 --stale-days=7`  
+- **Daily / weekly cron:** `npm run federal:enrich:finance -- --limit=40 --stale-days=7`  
   Processes up to 40 representatives needing finance updates (missing rows first, then stale ones). Increase the throttle window if the FEC API still rate-limits.
 - **Zero-impact validation:** Always dry-run first (`--dry-run`) when testing new filters or keys.
 - **No-data handling:** When the FEC API returns no totals, the script stores a placeholder row (`sources` contains `fec:no-data`) so subsequent runs skip it until the row becomes stale (controlled by `--stale-days`).
-- **Monitoring:** Follow each run with `npm run report:gaps` to confirm the missing-count drops and to review the “Recorded FEC no-data rows” table for manual follow-up.
+- **Monitoring:** Follow each run with `npm run tools:report:gaps` to confirm the missing-count drops and to review the “Recorded FEC no-data rows” table for manual follow-up.
 
 ## 3. Testing & validation
 
 - `npm run lint` — Type-checks the entire ingest service (`tsc --noEmit`).
+- `npm run test:openstates` — Compiles the ingest package and runs the canonical OpenStates parser test to confirm YAML → canonical coverage stays lossless.
 - `npm run preview -- CA` — Quick sanity check with minimal state slice.
 - `npm run sample` — Exercises shared helpers in isolation (no Supabase access required).
-- Future work: unit tests under `services/civics-backend/tests/` (see roadmap for planned coverage).
+- Integration roadmap: fixture-driven staging + merge assertions live under `services/civics-backend/docs/persistence-verification-plan.md`.
 
 ## 4. Extending the pipeline
 

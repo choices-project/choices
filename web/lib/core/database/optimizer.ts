@@ -12,17 +12,6 @@ import { smartCache } from '@/lib/database/smart-cache'
 import { minimalTelemetry } from '@/lib/telemetry/minimal'
 import { logger } from '@/lib/utils/logger'
 import { DatabaseSchemas } from '@/lib/validation/schemas'
-import {
-  safeParse,
-  validateDatabaseResponse
-} from '@/lib/validation/validator'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-
-import type {
-  UserProfile,
-  Vote,
-  VoteInsert
-} from '@/types/database'
 import type {
   AnalyticsData,
   CacheDatabaseEntry,
@@ -31,6 +20,17 @@ import type {
   VoteGroupedByChoice,
   VoteWithUserInfo
 } from '@/lib/validation/schemas'
+import {
+  safeParse,
+  validateDatabaseResponse
+} from '@/lib/validation/validator'
+import type {
+  UserProfile,
+  Vote,
+  VoteInsert
+} from '@/types/database'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 
 type PollWithVotes = PollsResponse['polls'][number]
 

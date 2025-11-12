@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import type { AdminStoreHarness } from '@/app/(app)/e2e/admin-store/page';
+
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
   interface Window {

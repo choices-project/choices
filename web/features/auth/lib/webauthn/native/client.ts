@@ -13,7 +13,9 @@ import type {
   RegistrationResponse,
   AuthenticationResponse,
   WebAuthnError,
-  WebAuthnErrorMessages
+  WebAuthnErrorMessages,
+  AuthenticatorAttachment,
+  UserVerificationRequirement,
 } from './types';
 
 // Error message mapping
@@ -141,6 +143,24 @@ export function generateChallenge(): Uint8Array {
   return challenge;
 }
 
+export type BeginRegisterOptions = {
+  username?: string;
+  displayName?: string;
+  authenticatorAttachment?: AuthenticatorAttachment;
+  userVerification?: UserVerificationRequirement;
+};
+
+export type BeginAuthenticateOptions = {
+  authenticatorAttachment?: AuthenticatorAttachment;
+  userVerification?: UserVerificationRequirement;
+};
+
+type WebAuthnResult<TData = Record<string, unknown>> = {
+  success: boolean;
+  error?: string;
+  data?: TData;
+};
+
 /**
  * Create public key credential for registration
  */
@@ -236,13 +256,20 @@ function mapWebAuthnError(error: unknown): WebAuthnError {
 /**
  * Begin WebAuthn registration
  */
-export async function beginRegister(fetcher = fetch): Promise<{ success: boolean; error?: string }> {
+export async function beginRegister(
+  fetcher = fetch,
+  options?: BeginRegisterOptions
+): Promise<WebAuthnResult> {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/register/options', {
+    const opts = await fetcher('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        username: options?.username,
+        displayName: options?.displayName,
+      }),
     }).then(r => r.json());
 
     if (opts.error) {
@@ -265,14 +292,18 @@ export async function beginRegister(fetcher = fetch): Promise<{ success: boolean
         id: base64URLToArrayBuffer(cred.id),
         transports: cred.transports
       })),
-      authenticatorSelection: opts.authenticatorSelection,
+      authenticatorSelection: {
+        ...opts.authenticatorSelection,
+        authenticatorAttachment: options?.authenticatorAttachment ?? opts.authenticatorSelection?.authenticatorAttachment,
+        userVerification: options?.userVerification ?? opts.authenticatorSelection?.userVerification,
+      },
       attestation: opts.attestation,
       extensions: opts.extensions
     };
 
     const credential = await createCredential(nativeOptions);
     
-    const result = await fetcher('/api/v1/auth/webauthn/register/verify', {
+    const result = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -280,7 +311,7 @@ export async function beginRegister(fetcher = fetch): Promise<{ success: boolean
       body: JSON.stringify(credential),
     }).then(r => r.json());
 
-    return { success: !result.error, error: result.error };
+    return { success: !result.error, error: result.error, data: result };
 
   } catch (error) {
     logger.error('WebAuthn registration error', error instanceof Error ? error : new Error(String(error)));
@@ -294,13 +325,20 @@ export async function beginRegister(fetcher = fetch): Promise<{ success: boolean
 /**
  * Begin WebAuthn authentication
  */
-export async function beginAuthenticate(fetcher = fetch): Promise<{ success: boolean; error?: string }> {
+export async function beginAuthenticate(
+  fetcher = fetch,
+  options?: BeginAuthenticateOptions
+): Promise<WebAuthnResult> {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/authenticate/options', {
+    const opts = await fetcher('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        userVerification: options?.userVerification,
+        authenticatorAttachment: options?.authenticatorAttachment,
+      }),
     }).then(r => r.json());
 
     if (opts.error) {
@@ -317,13 +355,13 @@ export async function beginAuthenticate(fetcher = fetch): Promise<{ success: boo
       })),
       timeout: opts.timeout,
       rpId: opts.rpId,
-      userVerification: opts.userVerification,
+      userVerification: options?.userVerification ?? opts.userVerification,
       extensions: opts.extensions
     };
 
     const assertion = await getCredential(nativeOptions);
     
-    const result = await fetcher('/api/v1/auth/webauthn/authenticate/verify', {
+    const result = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -331,7 +369,7 @@ export async function beginAuthenticate(fetcher = fetch): Promise<{ success: boo
       body: JSON.stringify(assertion),
     }).then(r => r.json());
 
-    return { success: !result.error, error: result.error };
+    return { success: !result.error, error: result.error, data: result };
 
   } catch (error) {
     logger.error('WebAuthn authentication error', error instanceof Error ? error : new Error(String(error)));

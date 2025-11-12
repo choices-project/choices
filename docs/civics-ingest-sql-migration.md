@@ -78,7 +78,7 @@ Supabase core ───┘                 ├─ representative_photos
 - Generate Supabase types in `services/civics-backend` for compile-time safety.
 
 ### 4. Decommission legacy scripts
-- Remove `sync:contacts`, `sync:social`, `sync:photos`, `sync:data-sources` JS implementations once SQL workflow is live.
+- Remove `state:sync:contacts`, `state:sync:social`, `state:sync:photos`, `state:sync:data-sources` JS implementations once SQL workflow is live.
 - Update documentation (`README`, operations guide) to reflect the new flow.
 
 ### 5. Extensions (future)
@@ -91,7 +91,7 @@ Supabase core ───┘                 ├─ representative_photos
 ## Next Steps
 
 1. Draft the SQL migration (staging views + merge function skeleton). **✅ Helper views + implemented merge function (`20251108023000_sync_representatives_function_v2.sql`).**
-2. Prototype the stage loader script and verify batch inserts. **✅ `npm run stage:openstates`.**
+2. Prototype the stage loader script and verify batch inserts. **✅ `npm run openstates:stage`.**
 3. Iterate on conflict resolution strategies (shared hotlines, shared emails). **← Legacy writers still enforce dedupe; evaluate SQL approach next.**
 4. Update docs and remove redundant scripts after successful end-to-end test. **← pending once SQL pipeline replaces legacy writers.**
 
@@ -147,7 +147,7 @@ This file will be updated as each step lands.
 ### Committees (`representative_committees`)
 - Derived from `openstates_people_roles` entries whose `role_type` is not legislative/executive (treated as committee/task force membership).
 - `committee_name` defaults to role `title`/`member_role`; `is_current` based on end date.
-- `npm run sync:committees` performs the legacy delete+insert flow until SQL merge covers this table.
+- `npm run state:sync:committees` performs the legacy delete+insert flow until SQL merge covers this table.
 
 ### Data sources (`representative_data_sources`)
 - Derived from `openstates_people_sources_v` plus Supabase-specific tokens (`supabase:representatives_core`, `crosswalk:*`).
@@ -162,8 +162,8 @@ This file will be updated as each step lands.
 - `source_confidence` varies by scheme; attrs store start/end metadata.
 
 ### Committees & activity
-- Roles view already provides `jurisdiction` + `member_role`; use to populate `representative_committees` (currently via `sync:committees`).
-- Activity table populated via OpenStates bills (`sync:activity`); migrate to SQL-first ingest alongside future Congress.gov vote feeds.
+- Roles view already provides `jurisdiction` + `member_role`; use to populate `representative_committees` (currently via `state:sync:committees`).
+- Activity table populated via OpenStates bills (`state:sync:activity`); migrate to SQL-first ingest alongside future Congress.gov vote feeds.
 
 ---
 

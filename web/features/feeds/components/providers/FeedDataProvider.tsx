@@ -27,8 +27,8 @@ import {
   useHashtagActions,
   useTrendingHashtags,
 } from '@/lib/stores';
-import logger from '@/lib/utils/logger';
 import type { FeedItem } from '@/lib/stores/feedsStore';
+import logger from '@/lib/utils/logger';
 
 type FeedDataProviderProps = {
   userId?: string;

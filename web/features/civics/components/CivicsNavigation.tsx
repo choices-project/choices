@@ -7,7 +7,6 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useCallback } from 'react';
 
-import logger from '@/lib/utils/logger';
 import {
   useUserActions,
   useUserCurrentAddress,
@@ -19,6 +18,7 @@ import {
   useFindByLocation,
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
+import logger from '@/lib/utils/logger';
 
 type CivicsNavigationProps = {
   onRepresentativesClick: () => void;

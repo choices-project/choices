@@ -43,9 +43,7 @@ export type PollWizardHarness = {
 };
 
 declare global {
-  interface Window {
-    __pollWizardHarness?: PollWizardHarness;
-  }
+  var __pollWizardHarness: PollWizardHarness | undefined;
 }
 
 export default function PollWizardStoreHarnessPage() {

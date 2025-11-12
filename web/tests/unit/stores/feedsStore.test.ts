@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+jest.mock('@/lib/utils/privacy-guard', () => ({
+  hasPrivacyConsent: jest.fn().mockReturnValue(true),
+  PrivacyDataType: { FEED_ACTIVITY: 'FEED_ACTIVITY' },
+}));
+
 import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
 import {
   createInitialFeedsState,
   feedsStoreCreator,
 } from '@/lib/stores/feedsStore';
+import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
 const createTestFeedsStore = () =>
   create<FeedsStore>()(immer(feedsStoreCreator));
@@ -254,6 +260,100 @@ describe('feedsStore', () => {
     expect(state.preferences.sortBy).toBe('newest');
     expect(state.totalAvailableFeeds).toBe(0);
     expect(state.hasMoreFeeds).toBe(false);
+  });
+
+  it('loadMoreFeeds merges unique feed items without duplicates', async () => {
+    const store = createTestFeedsStore();
+
+    const responses = [
+      {
+        success: true,
+        data: {
+          feeds: [
+            createFeed({ id: 'feed-1' }),
+            createFeed({ id: 'feed-2' }),
+          ],
+          count: 3,
+          filters: {
+            category: 'all',
+            district: null,
+            sort: 'newest',
+          },
+        },
+      },
+      {
+        success: true,
+        data: {
+          feeds: [
+            createFeed({ id: 'feed-2' }),
+            createFeed({ id: 'feed-3' }),
+          ],
+          count: 3,
+          filters: {
+            category: 'all',
+            district: null,
+            sort: 'newest',
+          },
+        },
+      },
+    ];
+
+    const fetchSpy = jest.spyOn(global, 'fetch').mockImplementation(async () => {
+      const next = responses.shift();
+      if (!next) {
+        throw new Error('Unexpected fetch call');
+      }
+      return {
+        ok: true,
+        json: async () => next,
+      } as Response;
+    });
+
+    await store.getState().loadFeeds();
+    expect(store.getState().feeds).toHaveLength(2);
+    expect(store.getState().hasMoreFeeds).toBe(true);
+
+    await store.getState().loadMoreFeeds();
+    const feedIds = store.getState().feeds.map((feed) => feed.id);
+
+    expect(feedIds).toEqual(['feed-1', 'feed-2', 'feed-3']);
+    expect(new Set(feedIds).size).toBe(feedIds.length);
+    expect(store.getState().hasMoreFeeds).toBe(false);
+
+    fetchSpy.mockRestore();
+  });
+
+  it('likeFeed respects privacy consent when persisting interactions', async () => {
+    const store = createTestFeedsStore();
+    const feed = createFeed();
+
+    store.getState().setFeeds([feed]);
+
+    const privacyMock =
+      hasPrivacyConsent as jest.MockedFunction<typeof hasPrivacyConsent>;
+
+    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    } as Response);
+
+    privacyMock.mockReturnValueOnce(false);
+
+    await store.getState().likeFeed(feed.id);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(store.getState().feeds[0].userInteraction.liked).toBe(true);
+
+    store.getState().setFeeds([createFeed({ id: feed.id })]);
+
+    privacyMock.mockReturnValue(true);
+
+    await store.getState().likeFeed(feed.id);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe('/api/feeds/interactions');
+
+    fetchSpy.mockRestore();
   });
 });
 

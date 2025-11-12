@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { usePWAActions, usePWAStats } from '@/lib/stores/pwaStore';
+import { cn } from '@/lib/utils';
 
 import type { WidgetProps } from '../../types/widget';
 

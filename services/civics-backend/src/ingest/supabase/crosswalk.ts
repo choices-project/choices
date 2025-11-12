@@ -8,7 +8,9 @@ export interface CrosswalkRow {
   attrs: Record<string, unknown> | null;
 }
 
-const SOURCE_TO_IDENTIFIER: Record<string, keyof CanonicalRepresentative['identifiers'] | undefined> = {
+type PrimaryIdentifierKey = Exclude<keyof CanonicalRepresentative['identifiers'], 'other'>;
+
+const SOURCE_TO_IDENTIFIER: Record<string, PrimaryIdentifierKey | undefined> = {
   'open-states': 'openstates',
   'bioguide': 'bioguide',
   'fec': 'fec',
@@ -16,7 +18,7 @@ const SOURCE_TO_IDENTIFIER: Record<string, keyof CanonicalRepresentative['identi
   'ballotpedia': 'ballotpedia',
 };
 
-const SOURCE_ALIAS: Record<string, keyof CanonicalRepresentative['identifiers'] | undefined> = {
+const SOURCE_ALIAS: Record<string, PrimaryIdentifierKey | undefined> = {
   'fec-committee': 'fec',
   'fec-candidate': 'fec',
 };
@@ -63,7 +65,10 @@ export function applyCrosswalkToRepresentative(
     return rep;
   }
 
-  const updatedIdentifiers = { ...rep.identifiers };
+  const updatedIdentifiers: CanonicalRepresentative['identifiers'] = {
+    ...rep.identifiers,
+    other: { ...rep.identifiers.other },
+  };
   const crosswalkLinks: CanonicalCrosswalkLink[] = [];
   const mergedSources = new Set<string>(rep.sources);
 
@@ -80,6 +85,8 @@ export function applyCrosswalkToRepresentative(
     const key = SOURCE_TO_IDENTIFIER[entry.source] ?? SOURCE_ALIAS[entry.source];
     if (key && entry.source_id) {
       updatedIdentifiers[key] = entry.source_id;
+    } else if (entry.source_id) {
+      updatedIdentifiers.other[entry.source] = entry.source_id;
     }
 
     mergedSources.add(`crosswalk:${entry.source}`);

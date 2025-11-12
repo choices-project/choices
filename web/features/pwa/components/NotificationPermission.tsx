@@ -13,7 +13,7 @@
 import { Bell, BellOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { useState, useEffect } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
+import { usePWAActions } from '@/lib/stores/pwaStore'
 
 type NotificationPermissionState = 'default' | 'granted' | 'denied'
 
@@ -33,12 +33,12 @@ type NotificationPermissionProps = {
  * @returns Permission UI or null if notifications not supported
  */
 export default function NotificationPermission({ className = '' }: NotificationPermissionProps) {
-  const { updatePreferences } = usePWAStore()
+  const { updatePreferences } = usePWAActions();
   const [permission, setPermission] = useState<NotificationPermissionState>('default')
   const [isRequesting, setIsRequesting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const notificationsSupported = 'Notification' in window
+  const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
 
   useEffect(() => {
     if (notificationsSupported) {

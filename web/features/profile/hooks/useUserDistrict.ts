@@ -9,8 +9,8 @@
 
 'use client';
 
-import { useProfileStore } from '@/lib/stores/profileStore';
-import type { ProfileDemographics } from '@/types/profile';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import type { ProfileLocation } from '@/types/profile';
 
 export type UserDistrict = {
   state?: string;
@@ -32,39 +32,28 @@ export type UserDistrict = {
  * }
  */
 export function useUserDistrict(): UserDistrict | null {
-  const profile = useProfileStore((state) => state.profile);
+  const location = useProfileStore(profileSelectors.location) as ProfileLocation | null;
 
-  if (!profile || !profile.demographics) {
+  if (!location?.state) {
     return null;
   }
 
-  const demographics =
-    typeof profile.demographics === 'object' && profile.demographics !== null
-      ? (profile.demographics as ProfileDemographics)
-      : null;
+  const { state, district, county } = location;
+  const fullDistrict = district ? `${state}-${district}` : undefined;
 
-  if (!demographics?.location) {
-    return null;
+  const result: UserDistrict = { state };
+
+  if (district) {
+    result.district = district;
+  }
+  if (county) {
+    result.county = county;
+  }
+  if (fullDistrict) {
+    result.fullDistrict = fullDistrict;
   }
 
-  const location = demographics.location;
-  const state = location.state as string | undefined;
-  const district = location.district as string | undefined;
-  const county = location.county as string | undefined;
-
-  if (!state) {
-    return null;
-  }
-
-  // Format as "STATE-DISTRICT" (e.g., "CA-12")
-  const fullDistrict = state && district ? `${state}-${district}` : undefined;
-
-  return {
-    state,
-    ...(district !== undefined ? { district } : {}),
-    ...(county !== undefined ? { county } : {}),
-    ...(fullDistrict !== undefined ? { fullDistrict } : {})
-  };
+  return result;
 }
 
 /**

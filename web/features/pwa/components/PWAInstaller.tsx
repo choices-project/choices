@@ -13,7 +13,7 @@
 import { useState, useEffect } from 'react';
 
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { usePWAInstallation, usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -30,7 +30,10 @@ import { logger } from '@/lib/utils/logger';
  * @returns Installation UI or null if PWA already installed/not supported
  */
 export default function PWAInstaller() {
-  const { installation, offline, preferences, installPWA, syncData } = usePWAStore();
+  const installation = usePWAInstallation();
+  const offline = usePWAOffline();
+  const preferences = usePWAPreferences();
+  const { installPWA, syncData } = usePWAActions();
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [showOfflineStatus, setShowOfflineStatus] = useState(false)
   

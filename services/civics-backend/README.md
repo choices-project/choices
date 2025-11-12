@@ -42,20 +42,29 @@ npm run ingest:qa           # schema check, duplicate audit, 5-record preview
 
 When needed:
 - `npm run preview -- --states=CA --limit=5` – sanity check specific states.
-- `npm run enrich:finance -- --dry-run` – confirm FEC updates, then drop `--dry-run`.
-- `npm run sync:committees` – refresh committee assignments (the merge already writes the default OpenStates snapshot).
-- `npm run sync:activity` – re-run bill activity enrichment if you skipped the automatic step or need a narrow refresh.
+- `npm run federal:enrich:finance -- --dry-run` – confirm FEC updates, then drop `--dry-run`.
+- `npm run federal:enrich:congress -- --dry-run` – fill missing Congress.gov & GovInfo IDs (dry-run logs changes without persisting).
+- `npm run state:refresh -- --states=CA --dry-run` – run the entire OpenStates API refresh stack in order.
+- `npm run state:sync:committees` – refresh committee assignments (the merge already writes the default OpenStates snapshot).
+- `npm run state:sync:activity` – replay bill activity if you skipped the automatic step or need a narrow refresh.
 
 All commands accept `--states`, `--limit`, and `--dry-run` for safe testing. Finance-specific scripts also support `--stale-days`, `--include-existing`, and `--cycle`.
 
 ---
 
 ## 4. What happens under the hood
-- **Stage loader** (`src/scripts/stage-openstates.ts`) ingests the raw YAML into staging tables.
+- **Stage loader** (`src/scripts/openstates/stage-openstates.ts`) ingests the raw YAML into staging tables.
 - **SQL merge** (`sync_representatives_from_openstates`) updates `representatives_core` plus contacts, social, photos, provenance, and quality metrics.
 - **Post-merge activity sync** replays OpenStates bill data into `representative_activity` (unless you set `SKIP_ACTIVITY_SYNC`).
-- **Legacy writers** (`sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources`) remain available for targeted re-runs while the SQL merge continues to expand its coverage.
+- **Federal enrichers** (`src/scripts/federal/*`) hydrate Congress.gov IDs and FEC data separately from the YAML ingest.
+- **State refreshers** (`state:sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources` / `google-civic`) remain available for surgical reruns while we continue expanding the SQL-first flow.
 - **Shared helpers** live in `@choices/civics-shared` so the ingest service and orchestrator stay in lockstep.
+
+The `src/scripts/` directory is now organised around the ingest lifecycle:
+- `openstates/` – people YAML staging and SQL merge orchestration.
+- `federal/` – enrichment passes for Congress.gov, GovInfo, and FEC.
+- `state/` – OpenStates API-driven refreshers for contacts, committees, activity, and provenance.
+- `tools/` – diagnostics, repair tools, and reporting utilities (duplicates, schema introspection, coverage gaps).
 
 Each writer uses replace-by-source semantics: rows inserted with `source = 'openstates_yaml'` are deleted before new data is written, ensuring idempotent reruns.
 
@@ -65,18 +74,22 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 
 | Command | Purpose (plain language) | Good to know |
 | --- | --- | --- |
-| `npm run ingest:openstates` | Pull latest OpenStates data, merge into Supabase, refresh bill activity | Requires `.env.local` and local YAML |
+| `npm run openstates:ingest` | Pull latest OpenStates data, merge into Supabase, refresh bill activity | Requires `.env.local` and local YAML |
 | `npm run ingest:qa` | Verify schema alignment, duplicate canonicals, and preview records | Fails fast with actionable guidance |
 | `npm run preview` | Show sample representatives without writing anything | Use `--states` / `--limit` |
-| `npm run enrich:finance` | Fetch FEC totals & contributors and update Supabase rows | Records “no data” placeholders when FEC has nothing |
-| `npm run sync:committees` | Rebuild committee memberships from OpenStates roles | Automatically run post-merge coverage coming soon |
-| `npm run sync:activity` | Rebuild bill activity (only needed if you skipped the auto-sync) | Honors `OPENSTATES_ACTIVITY_LIMIT` |
-| `npm run report:gaps` | Show remaining finance/contact/identifier gaps | Helps prioritise follow-up runs |
-| `npm run audit:duplicates` / `npm run fix:duplicates` | Inspect and repair duplicate canonicals | Always re-run `ingest:qa` afterward |
-| `npm run audit:crosswalk` / `npm run fix:crosswalk` | Validate canonical ID mappings | Keeps external IDs aligned |
-| `npm run inspect:schema` | Print live Supabase column definitions | Useful before changing ingest logic |
+| `npm run federal:enrich:finance` | Fetch FEC totals & contributors and update Supabase rows | Records “no data” placeholders when FEC has nothing |
+| `npm run federal:enrich:congress` | Hydrate missing bioguide, Congress.gov, and GovInfo IDs | Honors `--dry-run` for change previews |
+| `npm run state:sync:committees` | Rebuild committee memberships from OpenStates roles | Automatically run post-merge coverage coming soon |
+| `npm run state:sync:activity` | Rebuild bill activity (only needed if you skipped the auto-sync) | Honors `OPENSTATES_ACTIVITY_LIMIT` |
+| `npm run state:sync:google-civic` | Pull supplemental contacts/social/photos from Google Civic | Requires `GOOGLE_CIVIC_API_KEY`; writes to `representative_contacts` (`source = google_civic`) |
+| `npm run state:refresh` | Sequentially run contacts → social → photos → committees → activity → data sources → Google Civic | Accepts `--states`, `--limit`, `--dry-run`, `--only`, `--skip` |
+| `npm run tools:report:gaps` | Show remaining finance/contact/identifier gaps | Helps prioritise follow-up runs |
+| `npm run tools:report:duplicates` / `npm run tools:fix:duplicates` | Inspect and repair duplicate canonicals | Always re-run `ingest:qa` afterward |
+| `npm run tools:audit:crosswalk` / `npm run tools:fix:crosswalk` | Validate canonical ID mappings | Keeps external IDs aligned |
+| `npm run tools:inspect:schema` | Print live Supabase column definitions | Useful before changing ingest logic |
+| `npm run state:sync:social` / `npm run state:sync:contacts` / `npm run state:sync:photos` | Rebuild targeted tables from OpenStates YAML | Support `--dry-run`, `--states`, `--limit` |
 
-For the full list—including `stage:openstates`, `merge:openstates`, and development helpers—inspect `package.json` or the **Operations Guide** linked below.
+For the full list—including `openstates:stage`, `openstates:merge`, and development helpers—inspect `package.json` or the **Operations Guide** linked below.
 
 ---
 

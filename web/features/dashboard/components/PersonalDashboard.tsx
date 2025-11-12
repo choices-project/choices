@@ -36,6 +36,7 @@ import React, {
   useState,
 } from 'react';
 
+import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,8 +44,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
 import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+import type { Poll } from '@/features/polls/types';
 import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
 import {
   useAnalyticsBehavior,
@@ -60,22 +61,20 @@ import {
   usePollsAnalytics,
   usePollsError,
   usePollsLoading,
-  usePollsStore,
   useTrendingHashtags,
   useUserLoading,
+  usePollsActions,
 } from '@/lib/stores';
 import { useProfileStore } from '@/lib/stores/profileStore';
-import type { Poll } from '@/features/polls/types';
-import type { PersonalAnalytics } from '@/types/features/dashboard';
-import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
-import { logger } from '@/lib/utils/logger';
-
 import {
   useGetUserRepresentatives,
   useRepresentativeError,
   useRepresentativeGlobalLoading,
   useUserRepresentativeEntries,
 } from '@/lib/stores/representativeStore';
+import { logger } from '@/lib/utils/logger';
+import type { PersonalAnalytics } from '@/types/features/dashboard';
+import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
 
 const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
   showElectedOfficials: false,
@@ -138,7 +137,7 @@ export default function PersonalDashboard({ userId: fallbackUserId, className = 
   const pollsAnalytics = usePollsAnalytics();
   const isPollsLoading = usePollsLoading();
   const pollsError = usePollsError();
-  const loadPolls = usePollsStore((state) => state.loadPolls);
+  const { loadPolls } = usePollsActions();
   const lastPollsFetchedAt = usePollLastFetchedAt();
 
   const analyticsEvents = useAnalyticsEvents();

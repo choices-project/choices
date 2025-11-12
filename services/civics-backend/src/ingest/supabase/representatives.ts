@@ -69,12 +69,21 @@ function buildContact(row: SupabaseRepresentativeRow) {
 }
 
 function buildIdentifiers(row: SupabaseRepresentativeRow): CanonicalRepresentative['identifiers'] {
+  const other: Record<string, string> = {};
+  if (row.google_civic_id) {
+    other.google_civic = row.google_civic_id;
+  }
+  if (row.congress_gov_id) {
+    other.congress_gov = row.congress_gov_id;
+  }
+
   return {
     openstates: row.openstates_id ?? null,
     bioguide: row.bioguide_id ?? null,
     fec: row.fec_id ?? null,
     wikipedia: row.wikipedia_url ?? null,
     ballotpedia: row.ballotpedia_url ?? null,
+    other,
   };
 }
 
@@ -146,6 +155,10 @@ function buildCanonicalFromRow(row: SupabaseRepresentativeRow): CanonicalReprese
     district: row.district,
     startDate: row.term_start_date,
     endDate: row.term_end_date,
+    divisionId: null,
+    title: row.office ?? null,
+    memberRole: null,
+    endReason: null,
   };
 
   const contacts = buildContact(row);
@@ -159,9 +172,15 @@ function buildCanonicalFromRow(row: SupabaseRepresentativeRow): CanonicalReprese
     name: row.name,
     givenName: null,
     familyName: null,
+    middleName: null,
+    nickname: null,
+    suffix: null,
     gender: null,
     party: row.party,
     image: row.primary_photo_url,
+    birthDate: null,
+    deathDate: null,
+    biography: null,
     emails: contacts.emails,
     phones: contacts.phones,
     links: contacts.links,
@@ -171,6 +190,8 @@ function buildCanonicalFromRow(row: SupabaseRepresentativeRow): CanonicalReprese
     offices: [],
     identifiers: buildIdentifiers(row),
     social: buildSocialFromRow(row),
+    aliases: [],
+    extras: null,
   };
 }
 
@@ -270,11 +291,19 @@ export function applyRepresentativeCore(
   const contact = buildContact(row);
   const identifiers = {
     ...rep.identifiers,
+    other: { ...rep.identifiers.other },
     bioguide: row.bioguide_id ?? rep.identifiers.bioguide,
     fec: row.fec_id ?? rep.identifiers.fec,
     wikipedia: row.wikipedia_url ?? rep.identifiers.wikipedia,
     ballotpedia: row.ballotpedia_url ?? rep.identifiers.ballotpedia,
   };
+
+  if (row.google_civic_id) {
+    identifiers.other.google_civic = row.google_civic_id;
+  }
+  if (row.congress_gov_id) {
+    identifiers.other.congress_gov = row.congress_gov_id;
+  }
 
   const sources = new Set<string>(rep.sources);
   sources.add('supabase:representatives_core');
@@ -298,6 +327,10 @@ export function applyRepresentativeCore(
       district: role.district ?? row.district,
       startDate: role.startDate ?? row.term_start_date,
       endDate: role.endDate ?? row.term_end_date,
+      title: role.title ?? row.office ?? null,
+      memberRole: role.memberRole ?? null,
+      divisionId: role.divisionId ?? null,
+      endReason: role.endReason ?? null,
     })),
     allRoles: rep.allRoles,
   };

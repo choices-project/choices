@@ -9,7 +9,9 @@ import {
   isWebAuthnSupported as nativeIsWebAuthnSupported,
   isBiometricAvailable as nativeIsBiometricAvailable,
   getUserCredentials as nativeGetUserCredentials,
-  getPrivacyStatus as nativeGetPrivacyStatus
+  getPrivacyStatus as nativeGetPrivacyStatus,
+  type BeginRegisterOptions,
+  type BeginAuthenticateOptions,
 } from './native/client';
 
 
@@ -19,10 +21,13 @@ import {
  * Minimal client-side functions for WebAuthn operations
  */
 
-export async function beginRegister(fetcher = fetch) {
+export async function beginRegister(
+  options?: BeginRegisterOptions,
+  fetcher = fetch
+) {
   try {
     // Use native implementation
-    const result = await nativeBeginRegister(fetcher);
+    const result = await nativeBeginRegister(fetcher, options);
     return result;
   } catch (error) {
     // Use proper logging instead of console.error
@@ -31,10 +36,13 @@ export async function beginRegister(fetcher = fetch) {
   }
 }
 
-export async function beginAuthenticate(fetcher = fetch) {
+export async function beginAuthenticate(
+  options?: BeginAuthenticateOptions,
+  fetcher = fetch
+) {
   try {
     // Use native implementation
-    const result = await nativeBeginAuthenticate(fetcher);
+    const result = await nativeBeginAuthenticate(fetcher, options);
     return result;
   } catch (error) {
     // Use proper logging instead of console.error

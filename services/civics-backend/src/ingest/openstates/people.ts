@@ -1,3 +1,14 @@
+/**
+ * Utilities for turning the OpenStates "people" YAML archive into the canonical
+ * representative shape used throughout the ingest service. This module does **not**
+ * talk to the live OpenStates API – it only reads the vendored YAML snapshots that
+ * describe state, executive, and municipal officials.
+ *
+ * The code here is intentionally file-system oriented so that state-level ingest runs
+ * can operate without network access. API-based enrichment lives in
+ * `src/clients/openstates.ts` and related enrichers.
+ */
+
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -5,17 +16,23 @@ import yaml from 'js-yaml';
 
 export interface CanonicalOffice {
   classification: string | null;
+  name: string | null;
   address: string | null;
   phone: string | null;
   fax: string | null;
+  email: string | null;
 }
 
 export interface CanonicalRole {
   chamber: string | null;
   jurisdiction: string | null;
   district: string | null;
+  divisionId: string | null;
+  title: string | null;
+  memberRole: string | null;
   startDate: string | null;
   endDate: string | null;
+  endReason: string | null;
 }
 
 export interface CanonicalIdentifiers {
@@ -24,6 +41,7 @@ export interface CanonicalIdentifiers {
   fec: string | null;
   wikipedia: string | null;
   ballotpedia: string | null;
+  other: Record<string, string>;
 }
 
 export interface CanonicalCrosswalkLink {
@@ -50,9 +68,15 @@ export interface CanonicalRepresentative {
   name: string;
   givenName: string | null;
   familyName: string | null;
+  middleName: string | null;
+  nickname: string | null;
+  suffix: string | null;
   gender: string | null;
   party: string | null;
   image: string | null;
+  birthDate: string | null;
+  deathDate: string | null;
+  biography: string | null;
   emails: string[];
   phones: string[];
   links: string[];
@@ -63,6 +87,14 @@ export interface CanonicalRepresentative {
   offices: CanonicalOffice[];
   identifiers: CanonicalIdentifiers;
   social: CanonicalSocialProfile[];
+  aliases: CanonicalAlias[];
+  extras: Record<string, unknown> | null;
+}
+
+export interface CanonicalAlias {
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface ParseOptions {
@@ -80,6 +112,15 @@ const PEOPLE_ROOT = path.resolve(PACKAGE_ROOT, 'data/openstates-people/data');
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Iterate through OpenStates YAML files on disk and yield canonicalized representative
+ * objects. Consumers can filter by state or include retired/inactive people, but by
+ * default the generator only returns currently serving officials.
+ *
+ * @param options.states Optional list of two-letter state codes to include (case-insensitive)
+ * @param options.includeRetired When true, include entries under the `retired` folders
+ * @param options.includeInactive When true, include people who no longer have any current roles
+ */
 export async function* readOpenStatesPeople(
   options: ParseOptions = {},
 ): AsyncGenerator<CanonicalRepresentative> {
@@ -133,6 +174,10 @@ export async function* readOpenStatesPeople(
   }
 }
 
+/**
+ * Parse a single YAML file and promote it into a `CanonicalRepresentative`. Returns `null`
+ * when the file cannot be parsed or lacks an OpenStates person identifier.
+ */
 async function parsePersonFile(
   filePath: string,
   context: { stateCode: string; isRetired: boolean },
@@ -147,6 +192,11 @@ async function parsePersonFile(
   }
 }
 
+/**
+ * Promote a raw OpenStates person record into the canonical in-memory representation. This
+ * step is strictly deterministic and does not perform any Supabase lookups; it prepares the
+ * data so that downstream pipelines (dedupe, enrichment, persistence) can run uniformly.
+ */
 function buildCanonicalPerson(
   raw: Record<string, any>,
   { stateCode, isRetired }: { stateCode: string; isRetired: boolean },
@@ -160,7 +210,10 @@ function buildCanonicalPerson(
   const currentRoles = roles.filter((role) => isRoleActive(role));
   const allRoles = roles.map(normalizeRole);
 
+  const contactInfo = collectContactInfo(raw, offices);
   const normalizedLinks = normalizeUrlArray(raw.links);
+  const combinedLinks = mergeUniqueStrings(normalizedLinks, contactInfo.links);
+  const normalizedSources = normalizeUrlArray(raw.sources);
 
   return {
     openstatesId,
@@ -171,13 +224,19 @@ function buildCanonicalPerson(
     name: String(raw.name ?? ''),
     givenName: raw.given_name ?? null,
     familyName: raw.family_name ?? null,
+    middleName: raw.middle_name ?? null,
+    nickname: raw.nickname ?? null,
+    suffix: raw.suffix ?? null,
     gender: raw.gender ?? null,
     party: extractParty(raw),
     image: raw.image ?? null,
-    emails: collectEmails(raw, offices),
-    phones: collectPhones(offices),
-    links: normalizedLinks,
-    sources: normalizeUrlArray(raw.sources),
+    birthDate: raw.birth_date ?? null,
+    deathDate: raw.death_date ?? null,
+    biography: typeof raw.biography === 'string' ? raw.biography : null,
+    emails: contactInfo.emails,
+    phones: contactInfo.phones,
+    links: combinedLinks,
+    sources: normalizedSources,
     currentRoles: currentRoles.map(normalizeRole),
     allRoles,
     offices: offices.map(normalizeOffice),
@@ -187,8 +246,11 @@ function buildCanonicalPerson(
       fec: raw?.ids?.fec ?? raw.fec_id ?? null,
       wikipedia: extractUrlForDomain(raw.links, 'wikipedia.org'),
       ballotpedia: extractUrlForDomain(raw.links, 'ballotpedia.org'),
+      other: collectOtherIdentifiers(raw),
     },
     social: collectSocialProfiles(raw, normalizedLinks),
+    aliases: collectAliases(raw),
+    extras: extractExtras(raw),
   };
 }
 
@@ -221,44 +283,117 @@ function extractParty(raw: Record<string, any>): string | null {
   return null;
 }
 
-function collectEmails(raw: Record<string, any>, offices: any[]): string[] {
+const EMAIL_CONTACT_TYPES = new Set(['email', 'email address']);
+const PHONE_CONTACT_TYPES = new Set(['voice', 'phone', 'telephone', 'office phone', 'main']);
+const URL_CONTACT_TYPES = new Set(['url', 'website', 'home page', 'link']);
+const FAX_CONTACT_TYPES = new Set(['fax']);
+
+/**
+ * Collects contact information from the raw YAML shape, deduplicating email/phone/link
+ * values that appear across both the person record and office listings.
+ */
+function collectContactInfo(
+  raw: Record<string, any>,
+  offices: Array<Record<string, any>>,
+): { emails: string[]; phones: string[]; links: string[] } {
   const emails = new Set<string>();
+  const phones = new Set<string>();
+  const links = new Set<string>();
+
+  const addEmail = (value: unknown) => {
+    if (!value) return;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized) {
+      emails.add(normalized);
+    }
+  };
+
+  const addPhone = (value: unknown) => {
+    if (!value) return;
+    const normalized = String(value).trim();
+    if (normalized) {
+      phones.add(normalized);
+    }
+  };
+
+  const addLink = (value: unknown) => {
+    if (!value) return;
+    const normalized = String(value).trim();
+    if (normalized) {
+      links.add(normalized);
+    }
+  };
 
   if (raw.email) {
-    emails.add(String(raw.email).toLowerCase());
+    addEmail(raw.email);
   }
 
-  for (const office of offices) {
-    if (office?.email) {
-      emails.add(String(office.email).toLowerCase());
+  if (Array.isArray(raw.contact_details)) {
+    for (const entry of raw.contact_details) {
+      if (!entry?.value) continue;
+      const type = typeof entry.type === 'string' ? entry.type.toLowerCase() : '';
+      if (EMAIL_CONTACT_TYPES.has(type)) {
+        addEmail(entry.value);
+      } else if (PHONE_CONTACT_TYPES.has(type) || FAX_CONTACT_TYPES.has(type)) {
+        addPhone(entry.value);
+      } else if (URL_CONTACT_TYPES.has(type)) {
+        addLink(entry.value);
+      }
     }
   }
 
-  return Array.from(emails);
-}
-
-function collectPhones(offices: any[]): string[] {
-  const phones = new Set<string>();
   for (const office of offices) {
-    if (office?.voice) {
-      phones.add(String(office.voice));
-    }
+    addEmail(office?.email);
+    addPhone(office?.voice);
+    addLink(office?.url);
   }
-  return Array.from(phones);
+
+  return {
+    emails: Array.from(emails),
+    phones: Array.from(phones),
+    links: Array.from(links),
+  };
 }
 
 function normalizeUrlArray(values: any): string[] {
   if (!Array.isArray(values)) return [];
-  return values
-    .map((entry) => {
-      if (!entry) return null;
-      if (typeof entry === 'string') return entry;
-      if (typeof entry === 'object' && typeof entry.url === 'string') {
-        return entry.url;
+  const urls = new Set<string>();
+  for (const entry of values) {
+    let candidate: unknown;
+    if (!entry) {
+      candidate = null;
+    } else if (typeof entry === 'string') {
+      candidate = entry;
+    } else if (typeof entry === 'object' && typeof entry.url === 'string') {
+      candidate = entry.url;
+    } else {
+      candidate = null;
+    }
+
+    if (!candidate) continue;
+    const normalized = String(candidate).trim();
+    if (normalized) {
+      urls.add(normalized);
+    }
+  }
+  return Array.from(urls);
+}
+
+function mergeUniqueStrings(
+  ...collections: Array<Iterable<string> | null | undefined>
+): string[] {
+  const merged = new Set<string>();
+  for (const collection of collections) {
+    if (!collection) continue;
+    for (const value of collection) {
+      if (!value) continue;
+      const normalized = String(value).trim();
+      if (normalized) {
+        merged.add(normalized);
       }
-      return null;
-    })
-    .filter((url): url is string => Boolean(url));
+    }
+  }
+  return Array.from(merged);
 }
 
 function isRoleActive(role: Record<string, any>): boolean {
@@ -275,17 +410,23 @@ function normalizeRole(role: Record<string, any>): CanonicalRole {
     chamber: role?.type ?? null,
     jurisdiction: role?.jurisdiction ?? null,
     district: role?.district ?? null,
+    divisionId: role?.division_id ?? null,
+    title: role?.title ?? null,
+    memberRole: role?.role ?? null,
     startDate: role?.start_date ?? null,
     endDate: role?.end_date ?? null,
+    endReason: role?.end_reason ?? null,
   };
 }
 
 function normalizeOffice(office: Record<string, any>): CanonicalOffice {
   return {
     classification: office?.classification ?? null,
+    name: office?.name ?? null,
     address: office?.address ?? null,
     phone: office?.voice ?? null,
     fax: office?.fax ?? null,
+    email: office?.email ?? null,
   };
 }
 
@@ -315,6 +456,25 @@ const KNOWN_SOCIAL_IDS: Record<string, string> = {
   linkedin_id: 'linkedin',
 };
 
+const RESERVED_IDENTIFIER_SCHEMES = new Set([
+  'openstates',
+  'bioguide',
+  'fec',
+  'wikipedia',
+  'wiki',
+  'ballotpedia',
+  'twitter',
+  'twitter_id',
+  'facebook',
+  'instagram',
+  'youtube',
+  'linkedin',
+  'tiktok',
+  'google',
+  'google_civic',
+  'wikidata',
+]);
+
 const SOCIAL_DOMAINS: Array<{ domain: string; platform: string }> = [
   { domain: 'twitter.com', platform: 'twitter' },
   { domain: 'facebook.com', platform: 'facebook' },
@@ -323,6 +483,26 @@ const SOCIAL_DOMAINS: Array<{ domain: string; platform: string }> = [
   { domain: 'tiktok.com', platform: 'tiktok' },
   { domain: 'linkedin.com', platform: 'linkedin' },
 ];
+
+function buildPlatformUrl(platform: string, handle: string | null): string | null {
+  if (!handle) return null;
+  switch (platform) {
+    case 'twitter':
+      return `https://twitter.com/${handle}`;
+    case 'facebook':
+      return `https://www.facebook.com/${handle}`;
+    case 'instagram':
+      return `https://www.instagram.com/${handle}`;
+    case 'youtube':
+      return `https://www.youtube.com/${handle}`;
+    case 'tiktok':
+      return `https://www.tiktok.com/@${handle}`;
+    case 'linkedin':
+      return `https://www.linkedin.com/in/${handle}`;
+    default:
+      return null;
+  }
+}
 
 function sanitizeHandle(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -347,11 +527,7 @@ function buildSocialProfile(params: {
   isOfficial?: boolean;
 }): CanonicalSocialProfile {
   const handle = params.handle ? params.handle.replace(/^@/, '').trim() : null;
-  const preferredUrl =
-    params.url ??
-    (handle
-      ? `https://www.${params.platform}.com/${handle}`
-      : null);
+  const preferredUrl = params.url ?? buildPlatformUrl(params.platform, handle);
   return {
     platform: params.platform,
     handle: handle ?? null,
@@ -389,6 +565,20 @@ function collectSocialProfiles(
     }
   }
 
+  if (Array.isArray(raw.social_media)) {
+    for (const entry of raw.social_media) {
+      if (!entry?.platform || !entry?.username) continue;
+      addProfile(
+        buildSocialProfile({
+          platform: entry.platform.toLowerCase(),
+          handle: sanitizeHandle(entry.username),
+          url: entry.url ?? null,
+          isOfficial: true,
+        }),
+      );
+    }
+  }
+
   for (const link of normalizedLinks) {
     const match = SOCIAL_DOMAINS.find(({ domain }) => link.includes(domain));
     if (!match) continue;
@@ -406,4 +596,64 @@ function collectSocialProfiles(
 
   return Array.from(profiles.values());
 }
+
+function collectOtherIdentifiers(raw: Record<string, any>): Record<string, string> {
+  const entries = new Map<string, string>();
+
+  const add = (scheme: unknown, value: unknown) => {
+    if (!scheme || !value) return;
+    const normalizedScheme = String(scheme).trim().toLowerCase();
+    if (!normalizedScheme || RESERVED_IDENTIFIER_SCHEMES.has(normalizedScheme)) return;
+
+    const normalizedValue = String(value).trim();
+    if (!normalizedValue) return;
+
+    if (!entries.has(normalizedScheme)) {
+      entries.set(normalizedScheme, normalizedValue);
+    }
+  };
+
+  const addFromArray = (identifierList: any) => {
+    if (!Array.isArray(identifierList)) return;
+    for (const identifier of identifierList) {
+      if (!identifier) continue;
+      add(identifier.scheme, identifier.identifier);
+    }
+  };
+
+  addFromArray(raw.identifiers);
+  addFromArray(raw.other_identifiers);
+
+  if (raw.ids && typeof raw.ids === 'object') {
+    for (const [scheme, value] of Object.entries(raw.ids)) {
+      add(scheme, value);
+    }
+  }
+
+  if (entries.size === 0) {
+    return {};
+  }
+
+  return Object.fromEntries(entries.entries());
+}
+
+function collectAliases(raw: Record<string, any>): CanonicalAlias[] {
+  if (!Array.isArray(raw.other_names)) return [];
+  return raw.other_names
+    .filter((entry): entry is { name: string; start_date?: string; end_date?: string } => typeof entry?.name === 'string')
+    .map((entry) => ({
+      name: entry.name,
+      startDate: entry.start_date ?? null,
+      endDate: entry.end_date ?? null,
+    }));
+}
+
+function extractExtras(raw: Record<string, any>): Record<string, unknown> | null {
+  if (!raw?.extras || typeof raw.extras !== 'object') {
+    return null;
+  }
+  return { ...(raw.extras as Record<string, unknown>) };
+}
+
+export { buildCanonicalPerson as _test_buildCanonicalPerson };
 

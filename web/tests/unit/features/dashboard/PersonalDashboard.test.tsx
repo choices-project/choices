@@ -1,12 +1,23 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import type * as NavigationModule from 'next/navigation';
+import React from 'react';
 
 import PersonalDashboard from '@/features/dashboard/components/PersonalDashboard';
+import type * as ProfileHooksModule from '@/features/profile/hooks/use-profile';
+import type * as StoresModule from '@/lib/stores';
+import type * as ProfileStoreModule from '@/lib/stores/profileStore';
+import type * as RepresentativeStoreModule from '@/lib/stores/representativeStore';
 import type { DashboardPreferences } from '@/types/profile';
 import type { Representative } from '@/types/representative';
+
+jest.mock('@/components/shared/FeatureWrapper', () => ({
+  FeatureWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  FeatureWrapperBatch: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  FeatureWrapperWithDependencies: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -25,7 +36,7 @@ jest.mock('@/lib/stores', () => ({
   usePollsAnalytics: jest.fn(),
   usePollsLoading: jest.fn(),
   usePollsError: jest.fn(),
-  usePollsStore: jest.fn(),
+  usePollsActions: jest.fn(),
   usePollLastFetchedAt: jest.fn(),
   useAnalyticsEvents: jest.fn(),
   useAnalyticsBehavior: jest.fn(),
@@ -48,14 +59,8 @@ jest.mock('@/lib/stores/representativeStore', () => ({
   useRepresentativeError: jest.fn(),
 }));
 
-type UseProfileHook = typeof import('@/features/profile/hooks/use-profile');
-type StoresModule = typeof import('@/lib/stores');
-type NavigationModule = typeof import('next/navigation');
-type ProfileStoreModule = typeof import('@/lib/stores/profileStore');
-type RepresentativeStoreModule = typeof import('@/lib/stores/representativeStore');
-
 type MockedProfileModule = {
-  [K in keyof UseProfileHook]: jest.Mock;
+  [K in keyof ProfileHooksModule]: jest.Mock;
 };
 
 type MockedStoresModule = {
@@ -84,6 +89,22 @@ const mockRouterReplace = jest.fn();
 const mockLoadPolls = jest.fn().mockResolvedValue(undefined);
 const mockGetTrendingHashtags = jest.fn().mockResolvedValue(undefined);
 const mockGetUserRepresentatives = jest.fn().mockResolvedValue([]);
+
+const hashtagActionsState = {
+  getTrendingHashtags: (...args: Parameters<typeof mockGetTrendingHashtags>) =>
+    mockGetTrendingHashtags(...args),
+};
+
+const hashtagLoadingState = { isLoading: false };
+const hashtagErrorState = { error: null };
+
+const profileStoreState = {
+  getDisplayName: () => 'Your',
+  preferences: { dashboard: undefined as DashboardPreferences | undefined } as {
+    dashboard?: DashboardPreferences;
+  },
+  updatePreferences: jest.fn(() => Promise.resolve(true)),
+};
 
 type ProfileValue = Record<string, unknown> | null;
 
@@ -130,17 +151,19 @@ function mockHooks(options: MockOptions = {}) {
   } = options;
 
   mockedProfileHooks.useProfile.mockReturnValue({
-    ...baseProfileState,
-    profile: profileOverrides,
+    profile: profileOverrides ?? null,
     isLoading: profileLoading,
-    error: profileError,
+    error: profileError ?? null,
+    refetch: baseProfileState.refetch,
   });
   mockedProfileHooks.useProfileLoadingStates.mockReturnValue(baseLoadingStates);
   mockedProfileHooks.useProfileErrorStates.mockReturnValue({
-     ...baseErrorStates,
-     profileError,
-     hasAnyError: !!profileError,
-   });
+    profileError: profileError ?? null,
+    updateError: baseErrorStates.updateError,
+    avatarError: baseErrorStates.avatarError,
+    exportError: baseErrorStates.exportError,
+    hasAnyError: Boolean(profileError),
+  });
  
    mockedStores.useIsAuthenticated.mockReturnValue(isAuthenticated);
    mockedStores.useUserLoading.mockReturnValue(userLoading);
@@ -153,40 +176,34 @@ function mockHooks(options: MockOptions = {}) {
    });
    mockedStores.usePollsLoading.mockReturnValue(false);
    mockedStores.usePollsError.mockReturnValue(null);
-   mockedStores.usePollsStore.mockImplementation((selector: (state: { loadPolls: typeof mockLoadPolls }) => unknown) =>
-     selector({ loadPolls: mockLoadPolls }),
-   );
+  mockedStores.usePollsActions.mockReturnValue({ loadPolls: mockLoadPolls });
    mockedStores.usePollLastFetchedAt.mockReturnValue(null);
    mockedStores.useAnalyticsEvents.mockReturnValue([]);
    mockedStores.useAnalyticsBehavior.mockReturnValue(null);
    mockedStores.useAnalyticsError.mockReturnValue(null);
    mockedStores.useAnalyticsLoading.mockReturnValue(false);
-   mockedStores.useTrendingHashtags.mockReturnValue([]);
-   mockedStores.useHashtagActions.mockReturnValue({ getTrendingHashtags: mockGetTrendingHashtags });
-   mockedStores.useHashtagLoading.mockReturnValue({ isLoading: false });
-   mockedStores.useHashtagError.mockReturnValue({ error: null });
+  mockedStores.useTrendingHashtags.mockReturnValue([]);
+  mockedStores.useHashtagActions.mockReturnValue(hashtagActionsState);
+  mockedStores.useHashtagLoading.mockReturnValue(hashtagLoadingState);
+  mockedStores.useHashtagError.mockReturnValue(hashtagErrorState);
  
    mockedNavigation.useRouter.mockReturnValue({
      replace: mockRouterReplace,
    });
 
-   mockedProfileStore.useProfileStore.mockImplementation((selector: (state: {
-     getDisplayName: () => string;
-     preferences: { dashboard?: DashboardPreferences } | null;
-     updatePreferences: () => Promise<boolean>;
-   }) => unknown) =>
-     selector({
-       getDisplayName: () =>
-         (profileOverrides && typeof profileOverrides.display_name === 'string'
-           ? (profileOverrides.display_name as string)
-           : 'Your'),
-       preferences: {
-         dashboard: (profileOverrides as Record<string, unknown> | null)?.dashboard_preferences as
-           | DashboardPreferences
-           | undefined,
-       },
-       updatePreferences: () => Promise.resolve(true),
-     }));
+  profileStoreState.getDisplayName = () =>
+    (profileOverrides && typeof profileOverrides === 'object'
+      && typeof (profileOverrides as Record<string, unknown>).display_name === 'string'
+      ? ((profileOverrides as Record<string, unknown>).display_name as string)
+      : 'Your');
+  profileStoreState.preferences = {
+    dashboard: (profileOverrides as Record<string, unknown> | null)?.dashboard_preferences as
+      | DashboardPreferences
+      | undefined,
+  };
+  mockedProfileStore.useProfileStore.mockImplementation((selector: (state: typeof profileStoreState) => unknown) =>
+    selector(profileStoreState),
+  );
 
   mockedRepresentativeStore.useUserRepresentativeEntries.mockReturnValue(
     representativeOverrides.map((representative) => ({
@@ -216,6 +233,7 @@ describe('PersonalDashboard', () => {
     mockGetTrendingHashtags.mockResolvedValue(undefined);
     mockGetUserRepresentatives.mockReset();
     mockGetUserRepresentatives.mockResolvedValue([]);
+    profileStoreState.updatePreferences.mockClear();
   });
 
   it('redirects unauthenticated users to the auth page and shows sign-in prompt', () => {

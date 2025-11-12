@@ -9,7 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+import {
+  createBallotFromPoll,
+  createVotingRecordFromPollSubmission,
+  type PollBallotContext,
+} from '@/features/voting/lib/pollAdapters';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useNotificationActions,
@@ -20,12 +26,6 @@ import {
 } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
-import {
-  createBallotFromPoll,
-  createVotingRecordFromPollSubmission,
-  type PollBallotContext,
-} from '@/features/voting/lib/pollAdapters';
-import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 
 const PRIVACY_LABELS: Record<string, string> = {
   public: 'Public',

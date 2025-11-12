@@ -3,10 +3,10 @@
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
-import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
 import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
+import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
-import { useRecordPollEvent } from '@/lib/stores/analyticsStore'
 
 import ApprovalVoting from './ApprovalVoting'
 import MultipleChoiceVoting from './MultipleChoiceVoting'
@@ -97,10 +97,11 @@ export default function VotingInterface({
     (action: string, payload?: VoteAnalyticsPayload) => {
       const metadata = payload?.metadata ?? {}
       recordPollEvent(action, {
-        pollId: poll.id,
         ...payload,
+        label: payload?.label ?? poll.id,
         metadata: {
           ...metadata,
+          pollId: metadata.pollId ?? poll.id,
           source: metadata.source ?? 'voting-interface',
         },
       })
@@ -110,6 +111,30 @@ export default function VotingInterface({
       }
     },
     [onAnalyticsEvent, poll.id, recordPollEvent]
+  )
+
+  const notifySuccess = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'success',
+        title: 'Vote submitted',
+        message,
+        duration: notificationSettings.duration,
+      })
+    },
+    [addNotification, notificationSettings.duration]
+  )
+
+  const notifyError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: 'Vote failed',
+        message,
+        duration: notificationSettings.duration,
+      })
+    },
+    [addNotification, notificationSettings.duration]
   )
 
   const handleVoteResult = useCallback(
@@ -208,30 +233,6 @@ export default function VotingInterface({
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
-
-  const notifySuccess = useCallback(
-    (message: string) => {
-      addNotification({
-        type: 'success',
-        title: 'Vote submitted',
-        message,
-        duration: notificationSettings.duration,
-      })
-    },
-    [addNotification, notificationSettings.duration]
-  )
-
-  const notifyError = useCallback(
-    (message: string) => {
-      addNotification({
-        type: 'error',
-        title: 'Vote failed',
-        message,
-        duration: notificationSettings.duration,
-      })
-    },
-    [addNotification, notificationSettings.duration]
-  )
 
   const onSingle = useCallback(
     async (choice: number) => {

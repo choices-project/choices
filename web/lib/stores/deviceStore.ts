@@ -206,7 +206,7 @@ const resolveCapabilities = (win?: Window, nav?: Navigator): DeviceCapabilities 
     camera: 'mediaDevices' in nav && !!nav.mediaDevices?.getUserMedia,
     microphone: 'mediaDevices' in nav && !!nav.mediaDevices?.getUserMedia,
     vibration: 'vibrate' in nav,
-    notifications: typeof win.Notification !== 'undefined',
+    notifications: 'Notification' in win,
     clipboard: 'clipboard' in nav,
     share: typeof (nav as Navigator & { share?: unknown }).share === 'function',
   };

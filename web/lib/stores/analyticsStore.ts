@@ -11,11 +11,6 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { logger } from '@/lib/utils/logger';
-
-import { createSafeStorage } from './storage';
-import { createBaseStoreActions } from './baseStoreActions';
-
 import type {
   AnalyticsAsyncState,
   AnalyticsDateRange,
@@ -26,6 +21,20 @@ import type {
   TrendDataPoint,
   TrustTierComparisonData,
 } from '@/features/analytics/types/analytics';
+import { logger } from '@/lib/utils/logger';
+import {
+  fetchAnalyticsDemographics,
+  fetchAnalyticsPollHeatmap,
+  fetchAnalyticsTemporal,
+  fetchAnalyticsTrends,
+  fetchAnalyticsTrustTiers,
+  generateAnalyticsReport,
+  sendAnalyticsEvents,
+} from '@/lib/analytics/services/analyticsService';
+
+import { createBaseStoreActions } from './baseStoreActions';
+import { createSafeStorage } from './storage';
+
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +93,30 @@ type PerformanceMetrics = {
   networkLatency?: number;
 };
 
+const DEFAULT_PERFORMANCE_METRICS: PerformanceMetrics = {
+  pageLoadTime: 0,
+  timeToInteractive: 0,
+  firstContentfulPaint: 0,
+  largestContentfulPaint: 0,
+  cumulativeLayoutShift: 0,
+  firstInputDelay: 0,
+  totalBlockingTime: 0,
+};
+
+const DEFAULT_USER_BEHAVIOR: UserBehaviorData = {
+  sessionDuration: 0,
+  pageViews: 0,
+  interactions: 0,
+  bounceRate: 0,
+  conversionRate: 0,
+  userJourney: [],
+  engagementScore: 0,
+  lastActivity: '',
+  deviceType: 'unknown',
+  browser: 'unknown',
+  os: 'unknown',
+};
+
 type UserBehaviorData = {
   sessionDuration: number;
   pageViews: number;
@@ -109,7 +142,7 @@ type AnalyticsPreferences = {
   shareWithThirdParties: boolean;
 };
 
-type AnalyticsDashboard = {
+export type AnalyticsDashboard = {
   totalEvents: number;
   uniqueUsers: number;
   sessionCount: number;
@@ -232,7 +265,6 @@ const buildAnalyticsEvent = (
   ...event,
     id: createEventId(),
     timestamp: new Date().toISOString(),
-    sessionId,
     session_id: sessionId,
 });
 
@@ -429,8 +461,9 @@ export const createAnalyticsActions = (
         return;
       }
 
-      const updatedMetrics = {
-        ...(state.performanceMetrics ?? {}),
+      const baselineMetrics = state.performanceMetrics ?? DEFAULT_PERFORMANCE_METRICS;
+      const updatedMetrics: PerformanceMetrics = {
+        ...baselineMetrics,
         ...metrics,
       };
 
@@ -473,8 +506,9 @@ export const createAnalyticsActions = (
 
     updateUserBehavior: (behavior) => {
       setState((draft) => {
+        const baselineBehavior = draft.userBehavior ?? DEFAULT_USER_BEHAVIOR;
         draft.userBehavior = {
-          ...(draft.userBehavior ?? {}),
+          ...baselineBehavior,
           ...behavior,
         };
       });
@@ -593,18 +627,18 @@ export const createAnalyticsActions = (
       const snapshot = get();
 
       try {
-        const response = await fetch('/api/analytics/unified/events?methods=comprehensive&ai-provider=rule-based', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            events: snapshot.events,
-            sessionId: snapshot.sessionId,
-            timestamp: new Date().toISOString(),
-          }),
+        const result = await sendAnalyticsEvents({
+          events: snapshot.events,
+          sessionId: snapshot.sessionId,
+          timestamp: new Date().toISOString(),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to send analytics data');
+        if (!result.success) {
+          setState((draft) => {
+            draft.error = result.error;
+          });
+          logger.error('Failed to send analytics data:', new Error(result.error));
+          return;
         }
 
         setState((draft) => {
@@ -615,12 +649,6 @@ export const createAnalyticsActions = (
           eventCount: snapshot.events.length,
           sessionId: snapshot.sessionId,
         });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        setState((draft) => {
-          draft.error = errorMessage;
-        });
-        logger.error('Failed to send analytics data:', error instanceof Error ? error : new Error(errorMessage));
       } finally {
         setState((draft) => {
           draft.isSending = false;
@@ -643,17 +671,17 @@ export const createAnalyticsActions = (
       });
 
       try {
-        const response = await fetch('/api/analytics/unified/report?methods=comprehensive&ai-provider=rule-based', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ startDate, endDate }),
-        });
+        const result = await generateAnalyticsReport({ startDate, endDate });
 
-        if (!response.ok) {
-          throw new Error('Failed to generate analytics report');
+        if (!result.success) {
+          setState((draft) => {
+            draft.error = result.error;
+          });
+          logger.error('Failed to generate analytics report:', new Error(result.error));
+          throw new Error(result.error);
         }
 
-        const dashboard = (await response.json()) as AnalyticsDashboard;
+        const dashboard = result.data;
         setState((draft) => {
           draft.dashboard = dashboard;
         });
@@ -665,13 +693,6 @@ export const createAnalyticsActions = (
         });
 
         return dashboard;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        setState((draft) => {
-          draft.error = errorMessage;
-        });
-        logger.error('Failed to generate analytics report:', error instanceof Error ? error : new Error(errorMessage));
-        throw error;
       } finally {
         setState((draft) => {
           draft.isLoading = false;
@@ -697,32 +718,13 @@ export const createAnalyticsActions = (
         draft.demographics.error = null;
       });
 
-      try {
-        const response = await fetch('/api/analytics/demographics');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch demographics data: ${response.statusText}`);
-        }
+      const result = await fetchAnalyticsDemographics();
 
-        const result = (await response.json()) as DemographicsData;
-        if (!result.ok) {
-          throw new Error('Invalid demographics API response');
-        }
-
-        setState((draft) => {
-          draft.demographics.data = result;
-          draft.demographics.loading = false;
-          draft.demographics.error = null;
-          draft.demographics.lastUpdated = new Date().toISOString();
-        });
-
-        return result;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load demographics data';
+      if (!result.success) {
         const fallback = options?.fallback ? options.fallback() : null;
-
         setState((draft) => {
           draft.demographics.loading = false;
-          draft.demographics.error = message;
+          draft.demographics.error = result.error;
           if (fallback) {
             draft.demographics.data = fallback;
             draft.demographics.lastUpdated = new Date().toISOString();
@@ -730,12 +732,21 @@ export const createAnalyticsActions = (
         });
 
         logger.error('Failed to fetch demographics data', {
-          error,
-          message,
+          error: new Error(result.error),
+          message: result.error,
         });
 
         return fallback;
       }
+
+      setState((draft) => {
+        draft.demographics.data = result.data;
+        draft.demographics.loading = false;
+        draft.demographics.error = null;
+        draft.demographics.lastUpdated = new Date().toISOString();
+      });
+
+      return result.data;
     },
 
     fetchTrends: async (range, options) => {
@@ -748,34 +759,14 @@ export const createAnalyticsActions = (
         draft.trends.meta.range = targetRange;
       });
 
-      try {
-        const params = new URLSearchParams({ range: targetRange });
-        const response = await fetch(`/api/analytics/trends?${params.toString()}`);
+      const result = await fetchAnalyticsTrends(targetRange);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch trends data: ${response.statusText}`);
-        }
-
-        const result = (await response.json()) as { ok?: boolean; trends?: TrendDataPoint[] };
-        if (!result.ok || !Array.isArray(result.trends)) {
-          throw new Error('Invalid trends API response');
-        }
-
-        setState((draft) => {
-          draft.trends.data = result.trends ?? [];
-          draft.trends.loading = false;
-          draft.trends.error = null;
-          draft.trends.lastUpdated = new Date().toISOString();
-        });
-
-        return result.trends ?? [];
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load trends data';
+      if (!result.success) {
         const fallback = options?.fallback ? options.fallback(targetRange) : null;
 
         setState((draft) => {
           draft.trends.loading = false;
-          draft.trends.error = message;
+          draft.trends.error = result.error;
           if (fallback) {
             draft.trends.data = fallback;
             draft.trends.lastUpdated = new Date().toISOString();
@@ -783,13 +774,22 @@ export const createAnalyticsActions = (
         });
 
         logger.error('Failed to fetch trends data', {
-          error,
-          message,
+          error: new Error(result.error),
+          message: result.error,
           range: targetRange,
         });
 
         return fallback;
       }
+
+      setState((draft) => {
+        draft.trends.data = result.data;
+        draft.trends.loading = false;
+        draft.trends.error = null;
+        draft.trends.lastUpdated = new Date().toISOString();
+      });
+
+      return result.data;
     },
 
     fetchTemporal: async (range, options) => {
@@ -802,34 +802,14 @@ export const createAnalyticsActions = (
         draft.temporal.meta.range = targetRange;
       });
 
-      try {
-        const params = new URLSearchParams({ range: targetRange });
-        const response = await fetch(`/api/analytics/temporal?${params.toString()}`);
+      const result = await fetchAnalyticsTemporal(targetRange);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch temporal analytics: ${response.statusText}`);
-        }
-
-        const result = (await response.json()) as TemporalAnalyticsData;
-        if (!result.ok) {
-          throw new Error('Invalid temporal analytics response');
-        }
-
-        setState((draft) => {
-          draft.temporal.data = result;
-          draft.temporal.loading = false;
-          draft.temporal.error = null;
-          draft.temporal.lastUpdated = new Date().toISOString();
-        });
-
-        return result;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load temporal analytics';
+      if (!result.success) {
         const fallback = options?.fallback ? options.fallback(targetRange) : null;
 
         setState((draft) => {
           draft.temporal.loading = false;
-          draft.temporal.error = message;
+          draft.temporal.error = result.error;
           if (fallback) {
             draft.temporal.data = fallback;
             draft.temporal.lastUpdated = new Date().toISOString();
@@ -837,14 +817,24 @@ export const createAnalyticsActions = (
         });
 
         logger.error('Failed to fetch temporal analytics', {
-          error,
-          message,
+          error: new Error(result.error),
+          message: result.error,
           range: targetRange,
         });
 
         return fallback;
       }
+
+      setState((draft) => {
+        draft.temporal.data = result.data;
+        draft.temporal.loading = false;
+        draft.temporal.error = null;
+        draft.temporal.lastUpdated = new Date().toISOString();
+      });
+
+      return result.data;
     },
+
 
     fetchPollHeatmap: async (filters, options) => {
       const currentState = get();
@@ -860,38 +850,14 @@ export const createAnalyticsActions = (
         draft.pollHeatmap.meta = { ...mergedFilters };
       });
 
-      try {
-        const params = new URLSearchParams();
-        if (mergedFilters.category && mergedFilters.category !== 'All Categories') {
-          params.append('category', mergedFilters.category);
-        }
-        params.append('limit', String(mergedFilters.limit));
+      const result = await fetchAnalyticsPollHeatmap(mergedFilters);
 
-        const response = await fetch(`/api/analytics/poll-heatmap?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch poll heatmap: ${response.statusText}`);
-        }
-
-        const result = (await response.json()) as { ok?: boolean; polls?: PollHeatmapEntry[] };
-        if (!result.ok || !Array.isArray(result.polls)) {
-          throw new Error('Invalid poll heatmap response');
-        }
-
-        setState((draft) => {
-          draft.pollHeatmap.data = result.polls ?? [];
-          draft.pollHeatmap.loading = false;
-          draft.pollHeatmap.error = null;
-          draft.pollHeatmap.lastUpdated = new Date().toISOString();
-        });
-
-        return result.polls ?? [];
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load poll heatmap';
+      if (!result.success) {
         const fallback = options?.fallback ? options.fallback(mergedFilters) : null;
 
         setState((draft) => {
           draft.pollHeatmap.loading = false;
-          draft.pollHeatmap.error = message;
+          draft.pollHeatmap.error = result.error;
           if (fallback) {
             draft.pollHeatmap.data = fallback;
             draft.pollHeatmap.lastUpdated = new Date().toISOString();
@@ -899,13 +865,22 @@ export const createAnalyticsActions = (
         });
 
         logger.error('Failed to fetch poll heatmap', {
-          error,
-          message,
+          error: new Error(result.error),
+          message: result.error,
           filters: mergedFilters,
         });
 
         return fallback;
       }
+
+      setState((draft) => {
+        draft.pollHeatmap.data = result.data;
+        draft.pollHeatmap.loading = false;
+        draft.pollHeatmap.error = null;
+        draft.pollHeatmap.lastUpdated = new Date().toISOString();
+      });
+
+      return result.data;
     },
 
     fetchTrustTierComparison: async (options) => {
@@ -914,32 +889,14 @@ export const createAnalyticsActions = (
         draft.trustTiers.error = null;
       });
 
-      try {
-        const response = await fetch('/api/analytics/trust-tiers');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch trust tier analytics: ${response.statusText}`);
-        }
+      const result = await fetchAnalyticsTrustTiers();
 
-        const result = (await response.json()) as TrustTierComparisonData;
-        if (!result.ok) {
-          throw new Error('Invalid trust tier analytics response');
-        }
-
-        setState((draft) => {
-          draft.trustTiers.data = result;
-          draft.trustTiers.loading = false;
-          draft.trustTiers.error = null;
-          draft.trustTiers.lastUpdated = new Date().toISOString();
-        });
-
-        return result;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load trust tier analytics';
+      if (!result.success) {
         const fallback = options?.fallback ? options.fallback() : null;
 
         setState((draft) => {
           draft.trustTiers.loading = false;
-          draft.trustTiers.error = message;
+          draft.trustTiers.error = result.error;
           if (fallback) {
             draft.trustTiers.data = fallback;
             draft.trustTiers.lastUpdated = new Date().toISOString();
@@ -947,12 +904,21 @@ export const createAnalyticsActions = (
         });
 
         logger.error('Failed to fetch trust tier analytics', {
-          error,
-          message,
+          error: new Error(result.error),
+          message: result.error,
         });
 
         return fallback;
       }
+
+      setState((draft) => {
+        draft.trustTiers.data = result.data;
+        draft.trustTiers.loading = false;
+        draft.trustTiers.error = null;
+        draft.trustTiers.lastUpdated = new Date().toISOString();
+      });
+
+      return result.data;
     },
 
   };

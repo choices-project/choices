@@ -20,7 +20,7 @@ import {
   usePWANotifications,
   usePWALoading,
   usePWAError,
-  usePWAStore
+  usePWAActions
 } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -35,7 +35,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   const notifications = usePWANotifications();
   const loading = usePWALoading();
   const error = usePWAError();
-  const pwa = usePWAStore();
+  const { installPWA, addNotification, processOfflineActions } = usePWAActions();
 
   // Debug logging for tests
   if (typeof window !== 'undefined') {
@@ -169,7 +169,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
       <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
         {installation.canInstall && !installation.isInstalled && (
           <button
-            onClick={() => pwa.installPWA()}
+            onClick={() => installPWA()}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
             data-testid="pwa-status-install-button"
           >
@@ -179,7 +179,16 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
 
         {notifications.length === 0 && (
           <button
-            onClick={() => pwa.addNotification({ type: 'permission', title: 'Enable Notifications', message: 'Allow notifications for better experience', dismissible: true, priority: 'medium', read: false })}
+            onClick={() =>
+              addNotification({
+                type: 'permission',
+                title: 'Enable Notifications',
+                message: 'Allow notifications for better experience',
+                dismissible: true,
+                priority: 'medium',
+                read: false,
+              })
+            }
             className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
             data-testid="request-notification-permission"
           >
@@ -189,7 +198,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
 
         {offline.offlineData.cachedPages.length > 0 && offline.isOnline && (
           <button
-            onClick={() => pwa.processOfflineActions()}
+            onClick={() => processOfflineActions()}
             className="w-full px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
             data-testid="sync-offline-data-button"
           >

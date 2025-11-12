@@ -2,8 +2,15 @@
 
 
 import type { User, Session } from '@supabase/supabase-js'
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 
+import { useUserStore } from '@/lib/stores/userStore'
 import logger from '@/lib/utils/logger'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
@@ -24,14 +31,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  
+
+  const initializeAuth = useUserStore((state) => state.initializeAuth)
+  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived)
+  const setProfile = useUserStore((state) => state.setProfile)
+  const setProfileLoading = useUserStore((state) => state.setProfileLoading)
+  const setUserError = useUserStore((state) => state.setUserError)
+  const clearUserError = useUserStore((state) => state.clearUserError)
+  const storeSignOut = useUserStore((state) => state.signOut)
+
+  const hydrateProfile = useCallback(
+    async (client: Awaited<ReturnType<typeof getSupabaseBrowserClient>>, userId: string) => {
+      setProfileLoading(true)
+      try {
+        const { data, error } = await client
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+
+        if (error) {
+          logger.error('Failed to fetch user profile from Supabase', error)
+          setUserError('Unable to load profile information. Please try again.')
+          return
+        }
+
+        setProfile(data ?? null)
+        clearUserError()
+      } catch (error) {
+        logger.error('Unexpected error while hydrating user profile', error)
+        setUserError('Unexpected error while loading profile.')
+      } finally {
+        setProfileLoading(false)
+      }
+    },
+    [clearUserError, setProfile, setProfileLoading, setUserError],
+  )
+
+  const applySession = useCallback(
+    async (
+      supabaseClient: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
+      nextSession: Session | null,
+    ) => {
+      if (nextSession?.user) {
+        initializeAuth(nextSession.user, nextSession, true)
+        setSessionAndDerived(nextSession)
+        await hydrateProfile(supabaseClient, nextSession.user.id)
+      } else {
+        initializeAuth(null, null, false)
+        storeSignOut()
+      }
+    },
+    [hydrateProfile, initializeAuth, setSessionAndDerived, storeSignOut],
+  )
+
   useEffect(() => {
     let mounted = true
 
-    const initializeAuth = async () => {
+    const bootstrapAuth = async () => {
       try {
         const supabase = await getSupabaseBrowserClient()
-        
+
         if (!mounted) return
 
         // Get initial session
@@ -39,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setSession(session)
           setUser(session?.user ?? null)
+          await applySession(supabase, session)
           setLoading(false)
         }
 
@@ -49,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setSession(session)
               setUser(session?.user ?? null)
               setLoading(false)
+              await applySession(supabase, session)
             }
           }
         )
@@ -62,18 +124,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const cleanup = initializeAuth()
+    const cleanup = bootstrapAuth()
 
     return () => {
       mounted = false
       cleanup.then(cleanupFn => cleanupFn?.())
     }
-  }, [])
+  }, [applySession])
 
   const signOut = async () => {
     try {
       const supabase = await getSupabaseBrowserClient()
       await supabase.auth.signOut()
+      storeSignOut()
+      initializeAuth(null, null, false)
+      setSession(null)
+      setUser(null)
     } catch (error) {
       logger.error('Failed to sign out:', error)
     }
@@ -85,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
+      await applySession(supabase, session)
     } catch (error) {
       logger.error('Failed to refresh session:', error)
     }

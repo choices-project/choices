@@ -1,5 +1,8 @@
 # Testing Status - Current
 
+> Canonical testing strategies live under [`docs/testing/`](../../docs/testing).  
+> Use this file for a quick snapshot; update the docs for detailed procedures.
+
 **Date**: November 7, 2025  
 **Last Run**: Pending automated CI sweep
 

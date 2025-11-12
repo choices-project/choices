@@ -5,9 +5,9 @@
  * Transforms raw API responses into structured, normalized data for database storage.
  */
 
+import type { AddressLookupResult } from '@/features/civics/lib/types/contracts';
 import { logger } from '@/lib/utils/logger';
 
-import type { AddressLookupResult } from '@/features/civics/lib/types/contracts';
 
 export type GovernmentLevel = {
   level: 'federal' | 'state' | 'local';

@@ -15,8 +15,9 @@ import {
 } from 'lucide-react'
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 import type { DeviceFingerprint, PWAFeatures, PWAUser } from '@/types/pwa';
+
+import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 
 type PWAUserProfileProps = {
   user?: PWAUser

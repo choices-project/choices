@@ -30,45 +30,47 @@ const validateEnvironment = () => {
  */
 export async function getSupabaseServerClient(): Promise<SupabaseClient<Database>> {
   const env = validateEnvironment()
-  
-  let cookieStore
+
+  let cookieStore: ReturnType<typeof cookies> | undefined
   try {
     cookieStore = cookies()
   } catch {
-    // During build time, cookies() might not be available
-    // Throw an error to prevent build-time usage
-    throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
+    // During build or static rendering, cookies() may be unavailable.
+    // Fall back to a no-op cookie adapter so we can still construct the client.
+    cookieStore = undefined
   }
-  
+
   const { createServerClient } = await import('@supabase/ssr') // dynamic!
-  
+
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const key = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) {
     throw new Error('Missing required Supabase environment variables');
   }
-  
+
+  const cookieAdapter = {
+    get: (name: string) => cookieStore?.get(name)?.value,
+    set: (name: string, value: string, options: Record<string, unknown>) => {
+      try {
+        cookieStore?.set(name, value, options)
+      } catch {
+        // Ignore errors when cookies are unavailable (e.g., build time)
+      }
+    },
+    remove: (name: string, _options: Record<string, unknown>) => {
+      try {
+        cookieStore?.delete(name)
+      } catch {
+        // Ignore errors when cookies are unavailable (e.g., build time)
+      }
+    },
+  }
+
   return createServerClient<Database>(
     url,
     key,
     {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: Record<string, unknown>) => {
-          try {
-            cookieStore.set(name, value, options)
-          } catch {
-            // Ignore errors in RSC context
-          }
-        },
-        remove: (name: string, _options: Record<string, unknown>) => {
-          try {
-            cookieStore.delete(name)
-          } catch {
-            // Ignore errors in RSC context
-          }
-        },
-      },
+      cookies: cookieAdapter,
     },
   )
 }

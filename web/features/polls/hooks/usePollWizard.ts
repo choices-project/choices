@@ -12,7 +12,6 @@ import {
   POLL_WIZARD_TOTAL_STEPS,
 } from '@/lib/polls/defaults';
 import { validatePollWizardStep } from '@/lib/polls/validation';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import type {
@@ -34,20 +33,23 @@ const INITIAL_WIZARD_STATE: PollWizardState = {
   isComplete: false,
 };
 
-const mergeWizardState = (state: PollWizardState, updates: Partial<PollWizardState>): PollWizardState => {
-  return withOptional(state, updates);
-};
+const mergeWizardState = (state: PollWizardState, updates: Partial<PollWizardState>): PollWizardState => ({
+  ...state,
+  ...updates,
+});
 
-const mergeWizardData = (data: PollWizardData, updates: Partial<PollWizardData>): PollWizardData => {
-  return withOptional(data, updates);
-};
+const mergeWizardData = (data: PollWizardData, updates: Partial<PollWizardData>): PollWizardData => ({
+  ...data,
+  ...updates,
+});
 
 const mergeWizardSettings = (
   settings: PollWizardData['settings'],
   updates: Partial<PollWizardData['settings']>
-): PollWizardData['settings'] => {
-  return withOptional(settings, updates);
-};
+): PollWizardData['settings'] => ({
+  ...settings,
+  ...updates,
+});
 
 export function usePollWizard() {
   const [wizardState, setWizardState] = useState<PollWizardState>(INITIAL_WIZARD_STATE);

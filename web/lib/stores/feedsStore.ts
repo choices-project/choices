@@ -10,6 +10,7 @@
  * Status: ✅ REFACTORED - Eliminated 67 lines via helper function
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -20,22 +21,22 @@ import type { ApiSuccessResponse } from '@/lib/api/types';
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
-import {
-  type FeedCategory,
-  type FeedFilters,
-  type FeedItem,
-  type FeedPreferences,
-  type FeedSearch,
-  type FeedEngagement,
-  type FeedUserInteraction,
-  type FeedsStore,
-  type FeedsApiPayload,
-  type FeedsState,
-  type FeedsActions,
-  type ResetFeedsStateOptions,
-} from './types/feeds';
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+import type {
+  FeedCategory,
+  FeedFilters,
+  FeedItem,
+  FeedPreferences,
+  FeedSearch,
+  FeedEngagement,
+  FeedUserInteraction,
+  FeedsStore,
+  FeedsApiPayload,
+  FeedsState,
+  FeedsActions,
+  ResetFeedsStateOptions,
+} from './types/feeds';
 
 type FetchFeedsParams = {
   category?: string | null;
@@ -1092,6 +1093,7 @@ export const useFeedPreferences = () =>
 export const useFeedFilters = () => useFeedsStore(feedsSelectors.filters);
 export const useFeedsLoading = () => useFeedsStore(feedsSelectors.isLoading);
 export const useFeedsError = () => useFeedsStore(feedsSelectors.error);
+export const useFeedsRefreshing = () => useFeedsStore(feedsSelectors.isRefreshing);
 export const useFeedsTotalAvailable = () =>
   useFeedsStore(feedsSelectors.totalAvailableFeeds);
 export const useFeedsHasMore = () => useFeedsStore(feedsSelectors.hasMoreFeeds);
@@ -1151,7 +1153,23 @@ const selectFeedsActions = (state: FeedsStore) => ({
   resetFeedsState: state.resetFeedsState,
 });
 
-export const useFeedsActions = () => useFeedsStore(selectFeedsActions, shallow);
+export const useFeedsActions = () =>
+  (useFeedsStore as unknown as (
+    selector: typeof selectFeedsActions,
+    equalityFn: typeof shallow,
+  ) => ReturnType<typeof selectFeedsActions>)(selectFeedsActions, shallow);
+
+export const selectFeedById =
+  (id: string) =>
+  (state: FeedsStore): FeedItem | null =>
+    state.feeds.find((feed) => feed.id === id) ??
+    state.filteredFeeds.find((feed) => feed.id === id) ??
+    null;
+
+export const useFeedById = (id: string) => {
+  const selector = useMemo(() => selectFeedById(id), [id]);
+  return useFeedsStore(selector);
+};
 
 export const useFeedsStats = () =>
   useFeedsStore((state) => ({
@@ -1194,6 +1212,14 @@ export const feedsStoreUtils = {
       searchResults: state.search.results.length,
       preferences: state.preferences,
     };
+  },
+  getFeedById: (id: string) => {
+    const state = useFeedsStore.getState();
+    return (
+      state.feeds.find((feed) => feed.id === id) ??
+      state.filteredFeeds.find((feed) => feed.id === id) ??
+      null
+    );
   },
   getFeedsByCategory: (category: string) => {
     const state = useFeedsStore.getState();

@@ -9,6 +9,7 @@
  * Status: ✅ REFACTORED - Eliminates duplication via base class
  */
 
+import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -18,7 +19,6 @@ import {
   type HashtagPollIntegration,
   type PersonalizedHashtagFeed,
 } from './hashtag-polls-integration-base';
-import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 
 // Re-export types for convenience
 export type {

@@ -44,7 +44,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 import { useUserActions } from '@/lib/stores';
-import { useProfileStore } from '@/lib/stores/profileStore';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import type { PrivacySettings } from '@/types/profile';
 
@@ -81,7 +81,7 @@ export default function MyDataDashboard({
   const { exportProfile, isExporting } = useProfileExport();
   const { deleteProfile } = useProfileDelete();
   const { signOut: resetUserStore } = useUserActions();
-  const storePrivacySettings = useProfileStore((state) => state.privacySettings);
+  const storePrivacySettings = useProfileStore(profileSelectors.privacySettings);
   const updatePrivacySettingsAction = useProfileStore((state) => state.updatePrivacySettings);
   const resetProfileState = useProfileStore((state) => state.resetProfile);
   const effectivePrivacySettings = privacySettings ?? storePrivacySettings;

@@ -1,11 +1,33 @@
 import { act } from '@testing-library/react';
 
+import {
+  createAutoRefreshTimer,
+  createPerformanceMonitor,
+} from '@/lib/performance/performanceMonitorService';
 import { usePerformanceStore } from '@/lib/stores/performanceStore';
+
+jest.mock('@/lib/performance/performanceMonitorService', () => ({
+  createPerformanceMonitor: jest.fn(),
+  createAutoRefreshTimer: jest.fn(),
+}));
+
+const mockedCreatePerformanceMonitor =
+  createPerformanceMonitor as jest.MockedFunction<typeof createPerformanceMonitor>;
+const mockedCreateAutoRefreshTimer =
+  createAutoRefreshTimer as jest.MockedFunction<typeof createAutoRefreshTimer>;
+
+const originalWindow = globalThis.window;
 
 describe('performanceStore', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    (globalThis as unknown as { window?: Window }).window = {
+      setInterval: jest.fn(() => 1),
+      clearInterval: jest.fn(),
+    } as unknown as Window;
     act(() => {
       const store = usePerformanceStore.getState();
+      store.resetPerformanceState();
       store.clearMetrics();
       store.clearAlerts();
     });
@@ -51,6 +73,73 @@ describe('performanceStore', () => {
     expect(definedAlert.timestamp).toBeInstanceOf(Date);
     expect(definedAlert.resolved).toBe(false);
     expect(definedAlert.metric).toBe('cls');
+  });
+
+  it('starts and stops performance monitoring via the monitor service', () => {
+    const stopMonitor = jest.fn();
+    mockedCreatePerformanceMonitor.mockReturnValue(stopMonitor);
+
+    act(() => {
+      usePerformanceStore.getState().startMonitoring();
+    });
+
+    expect(mockedCreatePerformanceMonitor).toHaveBeenCalled();
+    expect(usePerformanceStore.getState().isMonitoring).toBe(true);
+
+    act(() => {
+      usePerformanceStore.getState().stopMonitoring();
+    });
+
+    expect(stopMonitor).toHaveBeenCalled();
+    expect(usePerformanceStore.getState().isMonitoring).toBe(false);
+  });
+
+  it('creates and clears auto refresh timers when toggled', () => {
+    const stopTimer = jest.fn();
+    mockedCreateAutoRefreshTimer.mockReturnValue(stopTimer);
+
+    act(() => {
+      usePerformanceStore.getState().setAutoRefresh(true);
+    });
+
+    expect(mockedCreateAutoRefreshTimer).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      usePerformanceStore.getState().setAutoRefresh(false);
+    });
+
+    expect(stopTimer).toHaveBeenCalledTimes(1);
+  });
+
+  it('restarts auto refresh timer when interval changes while enabled', () => {
+    const firstStop = jest.fn();
+    const secondStop = jest.fn();
+    mockedCreateAutoRefreshTimer
+      .mockReturnValueOnce(firstStop)
+      .mockReturnValueOnce(secondStop);
+
+    act(() => {
+      usePerformanceStore.getState().setAutoRefresh(true);
+    });
+
+    act(() => {
+      usePerformanceStore.getState().setRefreshInterval(60_000);
+    });
+
+    expect(firstStop).toHaveBeenCalledTimes(1);
+    expect(secondStop).not.toHaveBeenCalled();
+    expect(mockedCreateAutoRefreshTimer).toHaveBeenLastCalledWith(
+      expect.any(Function),
+      60_000,
+    );
+  });
+
+  afterEach(() => {
+    if (originalWindow) {
+      (globalThis as unknown as { window?: Window }).window = originalWindow;
+    } else {
+      delete (globalThis as { window?: Window }).window;
+    }
   });
 });
 

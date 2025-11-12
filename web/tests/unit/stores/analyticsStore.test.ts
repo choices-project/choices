@@ -6,6 +6,17 @@ import {
   analyticsStoreCreator,
   createInitialAnalyticsState,
 } from '@/lib/stores/analyticsStore';
+import { sendAnalyticsEvents } from '@/lib/analytics/services/analyticsService';
+
+jest.mock('@/lib/analytics/services/analyticsService', () => ({
+  sendAnalyticsEvents: jest.fn(),
+  generateAnalyticsReport: jest.fn(),
+  fetchAnalyticsDemographics: jest.fn(),
+  fetchAnalyticsTrends: jest.fn(),
+  fetchAnalyticsTemporal: jest.fn(),
+  fetchAnalyticsPollHeatmap: jest.fn(),
+  fetchAnalyticsTrustTiers: jest.fn(),
+}));
 
 const createTestAnalyticsStore = () =>
   create<AnalyticsStore>()(immer(analyticsStoreCreator));
@@ -13,6 +24,7 @@ const createTestAnalyticsStore = () =>
 describe('analyticsStore', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    jest.mocked(sendAnalyticsEvents).mockResolvedValue({ success: true, data: undefined });
   });
 
   it('initializes with default state', () => {
@@ -126,19 +138,48 @@ describe('analyticsStore', () => {
       });
     });
 
-    const fetchSpy = jest
-      .spyOn(global, 'fetch')
-      .mockResolvedValue({
-        ok: true,
-        json: async () => ({}),
-      } as Response);
+    const serviceMock = jest.mocked(sendAnalyticsEvents);
+    serviceMock.mockResolvedValueOnce({ success: true, data: undefined });
 
     await store.getState().sendAnalytics();
 
-    expect(fetchSpy).toHaveBeenCalled();
+    expect(serviceMock).toHaveBeenCalledWith({
+      events: expect.any(Array),
+      sessionId: expect.any(String),
+      timestamp: expect.any(String),
+    });
     expect(store.getState().events).toHaveLength(0);
     expect(store.getState().isSending).toBe(false);
     expect(store.getState().error).toBeNull();
+  });
+
+  it('sendAnalytics records error when service fails', async () => {
+    const store = createTestAnalyticsStore();
+
+    store.setState((state) => {
+      state.events.push({
+        id: 'event_2',
+        event_type: 'failure',
+        session_id: state.sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        type: 'failure',
+        category: 'failure',
+        action: 'failure',
+      });
+    });
+
+    jest.mocked(sendAnalyticsEvents).mockResolvedValueOnce({
+      success: false,
+      error: 'Failed to send analytics data',
+    });
+
+    await store.getState().sendAnalytics();
+
+    expect(store.getState().events).toHaveLength(1);
+    expect(store.getState().isSending).toBe(false);
+    expect(store.getState().error).toBe('Failed to send analytics data');
   });
 });
 

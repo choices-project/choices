@@ -11,14 +11,9 @@ import {
   usePollWizardStep,
   usePollWizardStepValidation,
 } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
 
-import { createPollRequest } from './api';
 import { CATEGORIES, POLL_CREATION_STEPS, STEP_TIPS } from './constants';
-import { buildPollCreatePayload, mapValidationErrors, validateWizardDataForSubmission } from './schema';
-import type { PollCreateResult } from './types';
-
-const isCancelledResult = (result: PollCreateResult) => !result.success && result.status === 0;
+import type { PollWizardSubmissionResult } from './schema';
 
 export const usePollCreateController = () => {
   const data = usePollWizardData();
@@ -41,13 +36,13 @@ export const usePollCreateController = () => {
     addTag,
     removeTag,
     updateTags,
-    setLoading,
     setFieldError,
     clearFieldError,
     clearAllErrors,
     validateCurrentStep,
     canProceedToNextStep,
     resetWizard,
+    submitPoll,
   } = usePollWizardActions();
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -63,16 +58,13 @@ export const usePollCreateController = () => {
 
   const progress = useMemo(() => {
     const total = POLL_CREATION_STEPS.length;
-    const steps = POLL_CREATION_STEPS.map((step, index) => {
-      const extras = {
-        index,
-        isCurrent: index === currentStep,
-        isCompleted: index < currentStep,
-        hasError: index === currentStep && Object.keys(errors).length > 0,
-      };
-      return withOptional(step as Record<string, unknown>, extras) as typeof step & typeof extras;
-    });
-
+    const steps = POLL_CREATION_STEPS.map((step, index) => ({
+      ...step,
+      index,
+      isCurrent: index === currentStep,
+      isCompleted: index < currentStep,
+      hasError: index === currentStep && Object.keys(errors).length > 0,
+    }));
     return {
       percent: Math.round(((currentStep + 1) / total) * 100),
       steps,
@@ -96,24 +88,7 @@ export const usePollCreateController = () => {
     }
   }, [canGoBack, prevStep]);
 
-  const submit = useCallback(async (): Promise<PollCreateResult> => {
-    const validation = validateWizardDataForSubmission(data);
-    if (!validation.success) {
-      clearAllErrors();
-      const fieldErrors = mapValidationErrors(validation.error);
-      Object.entries(fieldErrors).forEach(([field, message]) => {
-        setFieldError(field, message);
-      });
-
-      return {
-        success: false,
-        message: 'Please fix the highlighted issues before publishing.',
-        fieldErrors,
-      };
-    }
-
-    const payload = buildPollCreatePayload(validation.data);
-
+  const submit = useCallback(async (): Promise<PollWizardSubmissionResult> => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -121,36 +96,29 @@ export const usePollCreateController = () => {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setLoading(true);
-
     try {
-      const result = await createPollRequest(payload, controller.signal);
-
-      if (isCancelledResult(result)) {
-        return result;
-      }
+      const result = await submitPoll({ signal: controller.signal });
 
       if (!result.success) {
-        clearAllErrors();
-
-        if (result.fieldErrors) {
-          Object.entries(result.fieldErrors).forEach(([field, message]) => {
-            setFieldError(field, message);
-          });
-        } else {
-          setFieldError('_form', result.message);
+        if (result.reason !== 'cancelled') {
+          clearAllErrors();
+          if (result.fieldErrors) {
+            Object.entries(result.fieldErrors).forEach(([field, message]) => {
+              setFieldError(field, message);
+            });
+          } else {
+            setFieldError('_form', result.message);
+          }
         }
-
-        return result;
+      } else {
+        clearAllErrors();
       }
 
-      clearAllErrors();
       return result;
     } finally {
-      setLoading(false);
       abortControllerRef.current = null;
     }
-  }, [clearAllErrors, data, setFieldError, setLoading]);
+  }, [clearAllErrors, setFieldError, submitPoll]);
 
   return {
     data,

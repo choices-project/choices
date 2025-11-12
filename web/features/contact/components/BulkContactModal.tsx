@@ -1,17 +1,17 @@
 /**
  * Bulk Contact Modal Component
- * 
+ *
  * Allows users to send the same message to multiple representatives at once
- * 
+ *
  * Created: January 26, 2025
  * Status: ✅ PRODUCTION
  */
 
 'use client';
 
-import { 
-  XMarkIcon, 
-  PaperAirplaneIcon, 
+import {
+  XMarkIcon,
+  PaperAirplaneIcon,
   UsersIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -23,6 +23,7 @@ import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
+import { useContactActions } from '@/lib/stores';
 
 import { useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
@@ -42,11 +43,11 @@ type SendResult = {
   threadId?: string;
 }
 
-export default function BulkContactModal({ 
-  isOpen, 
-  onClose, 
+export default function BulkContactModal({
+  isOpen,
+  onClose,
   representatives,
-  userId 
+  userId
 }: BulkContactModalProps) {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
@@ -76,6 +77,7 @@ export default function BulkContactModal({
 
   // Contact hooks
   const { createThread } = useContactThreads();
+  const { sendMessage } = useContactActions();
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -151,33 +153,20 @@ export default function BulkContactModal({
       for (const representative of selectedReps) {
         try {
           // Create thread
-          const thread = await createThread({
-            user_id: userId,
-            representative_id: representative.id,
+          const { thread } = await createThread({
+            representativeId: representative.id,
             subject,
-            status: 'active'
+            priority: 'normal',
           });
 
-          // Send message
-          const response = await fetch('/api/contact/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              threadId: thread.id,
-              representativeId: representative.id.toString(),
-              subject,
-              content: message,
-              priority: 'normal',
-              messageType: 'text',
-            }),
+          await sendMessage({
+            threadId: thread.id,
+            representativeId: representative.id,
+            subject,
+            content: message,
+            priority: 'normal',
+            messageType: 'text',
           });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Failed to send message' }));
-            const errorMessage = errorData.error ?? 'Failed to send message';
-            logger.error(`Failed to send message to ${representative.name}:`, errorMessage);
-            throw new Error(errorMessage);
-          }
 
           results.push({
             representativeId: representative.id,
@@ -196,7 +185,7 @@ export default function BulkContactModal({
       }
 
       setSendResults(results);
-      
+
       const successCount = results.filter(r => r.success).length;
       if (successCount === selectedReps.length) {
         setSuccess(true);
@@ -223,14 +212,14 @@ export default function BulkContactModal({
         onClose();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       // Focus first input when modal opens
       const firstInput = document.querySelector('#bulk-subject') as HTMLInputElement;
       firstInput?.focus();
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
@@ -240,7 +229,7 @@ export default function BulkContactModal({
 
   if (!contactSystemEnabled) {
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         role="dialog"
         aria-modal="true"
@@ -270,7 +259,7 @@ export default function BulkContactModal({
   }
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       role="dialog"
       aria-modal="true"
@@ -338,9 +327,9 @@ export default function BulkContactModal({
               <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />
               <span>{selectedTemplate ? `Using: ${selectedTemplate.title}` : 'Use a Template'}</span>
             </button>
-            
+
             {showTemplates && (
-              <div 
+              <div
                 id="bulk-template-selector"
                 className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto"
                 role="listbox"
@@ -509,7 +498,7 @@ export default function BulkContactModal({
 
           {/* Error/Success Messages */}
           {error && (
-            <div 
+            <div
               className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg"
               role="alert"
               aria-live="polite"
@@ -520,7 +509,7 @@ export default function BulkContactModal({
           )}
 
           {success && (
-            <div 
+            <div
               className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg"
               role="alert"
               aria-live="polite"

@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import {
-  useOnboardingStep,
+  useNotificationActions,
   useOnboardingActions,
-  useUser,
-  useUserLoading,
+  useOnboardingStep,
+  useUserActions,
+  useUserAddressLoading,
   useUserCurrentAddress,
   useUserCurrentState,
   useUserRepresentatives,
-  useUserAddressLoading,
-  useUserActions,
-  useNotificationActions
 } from '@/lib/stores';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 
 import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
@@ -33,7 +32,7 @@ type LoadRepresentativesOptions = {
  * - Address input and validation
  * - State selection
  * - Representative lookup and display
- * - Data persistence in localStorage
+ * - State managed through shared stores
  *
  * Features:
  * - Integration with civics API endpoints
@@ -73,9 +72,10 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   // Notification store for user feedback
   const { addNotification } = useNotificationActions();
+  const profileLocation = useProfileStore(profileSelectors.location);
 
   // ✅ Keep local state for component-specific concerns
-  const [selectedState] = useState('CA'); // Default state selection
+  const selectedState = useMemo(() => profileLocation?.state ?? 'CA', [profileLocation?.state]);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [completionPayload, setCompletionPayload] = useState<UserOnboardingResult | null>(null);
 
@@ -86,6 +86,12 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (profileLocation?.state) {
+      setCurrentState(profileLocation.state);
+    }
+  }, [profileLocation?.state, setCurrentState]);
 
   const loadRepresentativesForState = async (
     state: string,
@@ -117,11 +123,6 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       markStepCompleted(2);
 
       updateFormData(2, { state, representatives: representativesList, jurisdiction });
-      localStorage.setItem('userState', state);
-      localStorage.setItem('userRepresentatives', JSON.stringify(representativesList));
-      if (jurisdiction) {
-        localStorage.setItem('userJurisdiction', JSON.stringify(jurisdiction));
-      }
 
       const payload: UserOnboardingResult = {
         state,
@@ -210,9 +211,6 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
       const jurisdiction = normalizeJurisdiction(result.jurisdiction);
       const resolvedState = jurisdiction?.state ?? null;
-
-      localStorage.setItem('userAddress', currentAddress);
-
       if (!resolvedState) {
         goToStep(1);
         setAddressError(

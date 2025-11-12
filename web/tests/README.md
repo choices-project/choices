@@ -4,6 +4,16 @@
 
 ---
 
+## Canonical Testing Docs
+
+- Global auth guidance: [`docs/testing/AUTH.md`](../../docs/testing/AUTH.md)
+- Onboarding harness plan: [`docs/testing/ONBOARDING.md`](../../docs/testing/ONBOARDING.md)
+- Passkey rollback runbook: [`docs/operations/passkey-rollback-playbook.md`](../../docs/operations/passkey-rollback-playbook.md)
+
+Use this README for quick commands; update the docs above for authoritative instructions.
+
+---
+
 ## Quick Start
 
 ### Poll Creation Regression
@@ -75,11 +85,14 @@ web/tests/
 
 ## Documentation
 
-### E2E Testing
-- **[e2e/README.md](./e2e/README.md)** – Playwright configuration & helpers
+- **Canonical references**  
+  - [`docs/testing/AUTH.md`](../../docs/testing/AUTH.md) – Auth/Playwright harness strategy  
+  - [`docs/testing/ONBOARDING.md`](../../docs/testing/ONBOARDING.md) – Upcoming onboarding plan  
+  - [`docs/operations/passkey-rollback-playbook.md`](../../docs/operations/passkey-rollback-playbook.md) – Rollback procedure
 
-### Status
-- **[TEST_STATUS.md](./TEST_STATUS.md)** – Project-wide testing status and known gaps
+- **Local indexes**  
+  - [`e2e/README.md`](./e2e/README.md) – Playwright configuration & helpers  
+  - [`TEST_STATUS.md`](./TEST_STATUS.md) – Snapshot of current suites (links back to canonical docs)
 
 ---
 

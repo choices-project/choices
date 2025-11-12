@@ -1,15 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import type { VotingStoreHarness } from '@/app/(app)/e2e/voting-store/page';
+import type { Ballot, Election, VotingRecord } from '@/lib/stores/votingStore';
+
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
-  interface Window {
-    __votingStoreHarness?: VotingStoreHarness;
-  }
+  var __votingStoreHarness: VotingStoreHarness | undefined;
 }
 
-const createHarnessBallot = () => ({
+const createHarnessBallot = (): Ballot => ({
   id: 'ballot-harness',
   electionId: 'election-harness',
   title: 'Harness Ballot',
@@ -25,9 +25,9 @@ const createHarnessBallot = () => ({
     turnout: 0,
     totalVoters: 0,
   },
-});
+} satisfies Ballot);
 
-const createHarnessElection = () => ({
+const createHarnessElection = (): Election => ({
   id: 'election-harness',
   name: 'Harness Election',
   date: new Date('2025-02-01T00:00:00Z').toISOString(),
@@ -41,9 +41,9 @@ const createHarnessElection = () => ({
     turnout: 0,
     totalVoters: 0,
   },
-});
+} satisfies Election);
 
-const createHarnessVotingRecord = () => ({
+const createHarnessVotingRecord = (): VotingRecord => ({
   id: 'record-harness',
   ballotId: 'ballot-harness',
   contestId: 'contest-harness',
@@ -51,7 +51,7 @@ const createHarnessVotingRecord = () => ({
   votedAt: new Date('2025-01-01T12:00:00Z').toISOString(),
   method: 'digital' as const,
   verified: true,
-});
+} satisfies VotingRecord);
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/voting-store', { waitUntil: 'domcontentloaded' });

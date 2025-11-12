@@ -199,14 +199,10 @@ export const pollsFeatureStatus = {
  * @example
  * ```tsx
  * import { PollCard } from '@/features/polls';
- * import {
- *   useFilteredPolls,
- *   usePollFilters,
- *   usePollsActions,
- * } from '@/lib/stores';
+ * import { useFilteredPollCards, usePollFilters, usePollsActions } from '@/lib/stores';
  *
  * function PollsOverview() {
- *   const polls = useFilteredPolls();
+ *   const polls = useFilteredPollCards();
  *   const filters = usePollFilters();
  *   const { loadPolls, setFilters } = usePollsActions();
  *

@@ -29,7 +29,7 @@ import {
   useAnalyticsLoading,
   useAnalyticsError
 } from '@/lib/stores/analyticsStore'
-import { logger , devLog } from '@/lib/utils/logger'
+import {  devLog } from '@/lib/utils/logger'
 
 type FeedbackData = {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'

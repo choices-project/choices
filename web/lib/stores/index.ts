@@ -24,6 +24,7 @@ export {
   useBiometricError,
   useBiometricSuccess
 } from './userStore';
+export { useUserError } from './userStore';
 export {
   usePollsStore,
   usePolls,
@@ -34,6 +35,7 @@ export {
   usePollPagination,
   usePollLastFetchedAt,
   useFilteredPolls,
+  useFilteredPollCards,
   useActivePollsCount,
   usePollById,
   useSelectedPoll,
@@ -61,6 +63,7 @@ export {
 export { useProfileStore } from './profileStore';
 export {
   useAdminStore,
+  selectFilteredAdminUsers,
   useAdminActiveTab,
   useAdminDashboardStats,
   useAdminDashboardActions,
@@ -106,10 +109,13 @@ export {
   useFeedFilters,
   useFeedsLoading,
   useFeedsError,
+  useFeedsRefreshing,
   useFeedsTotalAvailable,
   useFeedsHasMore,
   useFeedsPagination,
   useFeedsActions,
+  useFeedById,
+  selectFeedById,
   useFeedsStats,
   useBookmarkedFeeds,
   useUnreadFeeds,
@@ -219,3 +225,24 @@ export {
   useContactMessagesError,
   useContactActions,
 } from './contactStore';
+export {
+  useVotingStore,
+  useVotingActions,
+  useVotingStats,
+  useVotingLoading,
+  useVotingError,
+  useVotingIsVoting,
+  useVotingIsSearching,
+  useVotingIsUpdating,
+  useBallots,
+  useElections,
+  useVotingRecords,
+  useVotingSearch,
+  useSelectedBallot,
+  useSelectedElection,
+  useCurrentBallot,
+  useVotingPreferences,
+  useUpcomingElections,
+  useActiveElections,
+  useUserVotingHistory,
+} from './votingStore';

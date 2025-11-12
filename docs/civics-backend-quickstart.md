@@ -42,7 +42,7 @@ npm install
 
 ### B. Refresh OpenStates data + QA
 ```bash
-npm run ingest:openstates
+npm run openstates:ingest
 npm run ingest:qa
 ```
 What to expect:
@@ -52,15 +52,21 @@ What to expect:
 ### C. Optional enrichment commands
 Dry-run first; remove `--dry-run` when ready.
 ```bash
-npm run enrich:finance -- --dry-run
-npm run sync:committees -- --dry-run
-npm run sync:activity -- --dry-run
+npm run federal:enrich:finance -- --dry-run
+npm run federal:enrich:congress -- --dry-run
+npm run state:refresh -- --states=CA --dry-run
+npm run state:sync:google-civic -- --states=CA --dry-run
+npm run state:sync:committees -- --dry-run
+npm run state:sync:activity -- --dry-run
 ```
 When satisfied:
 ```bash
-npm run enrich:finance
-npm run sync:committees
-# `sync:activity` runs automatically after the merge, only rerun if you need an additional refresh
+npm run federal:enrich:finance
+npm run federal:enrich:congress
+npm run state:refresh -- --states=CA
+npm run state:sync:google-civic -- --states=CA
+npm run state:sync:committees
+# `state:sync:activity` runs automatically after the merge, only rerun if you need an additional refresh
 ```
 
 ### D. Spot checks
@@ -68,17 +74,25 @@ npm run sync:committees
    ```bash
    npm run preview -- --states=CA --limit=5
    ```
+   The preview output now shows biography snippets, aliases, contact snapshots, social handles, and key offices alongside identifiers so you can sanity-check enriched data immediately.
 2. **Supabase Console:** open the tables below and verify recent timestamps and row counts:
    - `representatives_core`
    - `representative_committees`
    - `representative_activity`
    - `representative_campaign_finance`
 
+### E. (Optional, developer) Parser regression test
+If you are iterating on ingest code, run the canonical parser harness before committing:
+```bash
+npm run test:openstates
+```
+It recompiles the service and validates that the OpenStates → canonical mapping still preserves every field we rely on downstream.
+
 ---
 
 ## 4. Interpreting Output
 - **“Updated X / inserted Y / committees Z …”** – merge summary; higher numbers mean more data changed.
-- **Activity sync complete (processed/total, failed)** – should read `failed: 0`. If not, re-run `npm run sync:activity` after checking API keys.
+- **Activity sync complete (processed/total, failed)** – should read `failed: 0`. If not, re-run `npm run state:sync:activity` after checking API keys.
 - **Finance enrichment** – ends with counts of updated vs. rate-limited reps. Re-run later if rate-limited.
 - **Dry-run messages** – safe previews; no Supabase updates are made.
 
@@ -91,7 +105,7 @@ npm run sync:committees
 | `OpenStates request failed (401)` | `OPENSTATES_API_KEY` missing/invalid | Update the key, retry |
 | `FEC_API_KEY is required` | Finance enrichment without key | Add the key or skip enrichment |
 | Rate-limit warnings | API throttling | Re-run command with `--limit` or wait 2–3 minutes |
-| Bill activity not updating | `SKIP_ACTIVITY_SYNC` set to `1` or API failures | Remove the env flag or re-run `npm run sync:activity` |
+| Bill activity not updating | `SKIP_ACTIVITY_SYNC` set to `1` or API failures | Remove the env flag or re-run `npm run state:sync:activity` |
 
 ---
 

@@ -16,7 +16,6 @@ import { useHashtagStore } from '@/lib/stores/hashtagStore';
 
 import type {
   HashtagSearchQuery,
-  HashtagSuggestion,
 } from '../types';
 
 type UseHashtagsOptions = {
@@ -57,9 +56,13 @@ export function useHashtags(options: UseHashtagsOptions = {}) {
     clearErrors,
   } = useHashtagActions();
 
+  type TrendingCategory = Parameters<typeof getTrendingHashtags>[0];
+
   const loadTrendingHashtags = useCallback(
-    async (category: Parameters<typeof getTrendingHashtags>[0] = 'politics', limit = 10) => {
-      await getTrendingHashtags(category === 'all' ? undefined : category, limit);
+    async (category: TrendingCategory | 'all' = 'politics', limit = 10) => {
+      const normalizedCategory =
+        category === 'all' ? undefined : (category as TrendingCategory | undefined);
+      await getTrendingHashtags(normalizedCategory, limit);
     },
     [getTrendingHashtags],
   );

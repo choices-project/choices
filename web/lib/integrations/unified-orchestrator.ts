@@ -8,24 +8,6 @@
  * @date 2025-01-15
  */
 
-import type {
-  UserLocation,
-  ElectoralRace,
-  Representative,
-  CampaignFinance,
-  Activity,
-} from '@/lib/types/electoral-unified';
-import { NotImplementedError } from '@/lib/errors';
-import { logger } from '@/lib/utils/logger';
-
-import { createCongressGovClient } from './congress-gov/client';
-import { createFECClient } from './fec/client';
-import type { FECCandidate } from './fec/client';
-import { createGoogleCivicClient } from './google-civic/client';
-import { createGovTrackClient } from './govtrack/client';
-import { createOpenStatesClient } from './open-states/client';
-import { createOpenSecretsClient } from './opensecrets/client';
-import type { GoogleCivicElectionInfo } from '@/types/external/google-civic';
 import {
   extractDivisionMetadata,
   determineRaceImportance,
@@ -43,6 +25,24 @@ import {
   type ActiveCampaignData,
   type RaceContext,
 } from '@choices/civics-shared';
+
+import { NotImplementedError } from '@/lib/errors';
+import type {
+  UserLocation,
+  ElectoralRace,
+  Representative,
+  CampaignFinance,
+} from '@/lib/types/electoral-unified';
+import { logger } from '@/lib/utils/logger';
+import type { GoogleCivicElectionInfo } from '@/types/external/google-civic';
+
+import { createCongressGovClient } from './congress-gov/client';
+import { createFECClient } from './fec/client';
+import type { FECCandidate } from './fec/client';
+import { createGoogleCivicClient } from './google-civic/client';
+import { createGovTrackClient } from './govtrack/client';
+import { createOpenStatesClient } from './open-states/client';
+import { createOpenSecretsClient } from './opensecrets/client';
 
 
 // Unified data types

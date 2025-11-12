@@ -23,13 +23,12 @@ import {
   useContactActions,
   useContactIsCreatingThread,
   useContactIsSendingMessage,
-} from '@/lib/stores';
+ useIsAuthenticated } from '@/lib/stores';
 import type {
   FetchThreadsOptions,
   FetchMessagesOptions,
   ContactMessage,
 } from '@/lib/stores/contactStore';
-import { useIsAuthenticated } from '@/lib/stores';
 
 type UseContactThreadsOptions = {
   autoFetch?: boolean;

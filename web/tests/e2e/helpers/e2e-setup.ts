@@ -29,10 +29,31 @@ export type TestDataPayload = {
 
 export type SeedHandle = string;
 
+import {
+  buildFeedCategoriesResponse,
+  buildFeedInteractionResponse,
+  buildFeedSearchResponse,
+  buildFeedsResponse,
+  FEED_FIXTURES,
+} from '../../msw/feeds-handlers';
+
+const DISABLE_FLAGS = new Set(['0', 'false', 'no', 'off']);
+
+const envFlagEnabled = (value: string | undefined, defaultEnabled: boolean): boolean => {
+  if (value === undefined) {
+    return defaultEnabled;
+  }
+  return !DISABLE_FLAGS.has(value.trim().toLowerCase());
+};
+
+export const SHOULD_USE_MOCKS = envFlagEnabled(process.env.PLAYWRIGHT_USE_MOCKS, true);
+
 export type ExternalMockOptions = {
   civics: boolean;
   analytics: boolean;
   notifications: boolean;
+  auth: boolean;
+  feeds: boolean;
 };
 
 export type LoginOptions = {
@@ -173,11 +194,89 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
   await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
 }
 
+export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
+  const { email, password } = user;
+  if (!email || !password) {
+    throw new Error('loginTestUser requires both email and password');
+  }
+
+  await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
+  await waitForPageReady(page);
+
+  const toggle = page.locator('[data-testid="auth-toggle"]');
+  const toggleText = await toggle.textContent().catch(() => null);
+  if (toggleText?.includes('Already have an account')) {
+    await toggle.click();
+    await page.waitForTimeout(300);
+  }
+
+  let emailInput = page.getByTestId('login-email');
+  if ((await emailInput.count()) === 0) {
+    emailInput = page.locator('#email');
+  }
+  if ((await emailInput.count()) === 0) {
+    emailInput = page.locator('input[name="email"]');
+  }
+
+  let passwordInput = page.getByTestId('login-password');
+  if ((await passwordInput.count()) === 0) {
+    passwordInput = page.locator('#password');
+  }
+  if ((await passwordInput.count()) === 0) {
+    passwordInput = page.locator('input[name="password"]');
+  }
+
+  await emailInput.first().waitFor({ state: 'visible', timeout: 10_000 });
+  await passwordInput.first().waitFor({ state: 'visible', timeout: 10_000 });
+
+  await emailInput.first().fill(email, { timeout: 5_000 });
+  await passwordInput.first().fill(password, { timeout: 5_000 });
+
+  const submitButton = page.getByTestId('login-submit');
+  await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
+  await submitButton.click();
+
+  await Promise.race([
+    page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: 15_000 }).catch(() => undefined),
+    page.waitForFunction(
+      () =>
+        document.cookie.includes('sb-') ||
+        window.localStorage.getItem('supabase.auth.token') !== null ||
+        window.sessionStorage.getItem('supabase.auth.token') !== null,
+      { timeout: 15_000 },
+    ),
+  ]);
+}
+
+export async function loginAsAdmin(page: Page, overrides: Partial<TestUser> = {}): Promise<void> {
+  const adminEmail = overrides.email ?? process.env.E2E_ADMIN_EMAIL;
+  const adminPassword = overrides.password ?? process.env.E2E_ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword) {
+    throw new Error('E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD must be set for loginAsAdmin');
+  }
+
+  const resolvedEmail = adminEmail;
+  const resolvedPassword = adminPassword;
+
+  await loginTestUser(page, {
+    email: resolvedEmail,
+    password: resolvedPassword,
+    username: overrides.username ?? resolvedEmail.split('@')[0] ?? 'admin',
+  });
+}
+
 export async function setupExternalAPIMocks(page: Page, overrides: Partial<ExternalMockOptions> = {}): Promise<() => Promise<void>> {
+  if (!SHOULD_USE_MOCKS) {
+    return async () => Promise.resolve();
+  }
+
   const options: ExternalMockOptions = {
     civics: overrides.civics ?? true,
     analytics: overrides.analytics ?? true,
     notifications: overrides.notifications ?? true,
+    auth: overrides.auth ?? true,
+    feeds: overrides.feeds ?? true,
   };
 
   const routes: Array<{ url: RoutePattern; handler: RouteHandler }> = [];
@@ -231,6 +330,202 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     };
     await page.route('**/api/notifications/**', notificationsHandler);
     routes.push({ url: '**/api/notifications/**', handler: notificationsHandler });
+  }
+
+  if (options.auth) {
+    const registerOptionsHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challenge: 'dGVzdC1jaGFsbGVuZ2U=',
+          rp: { id: 'localhost', name: 'Choices' },
+          user: {
+            id: 'dGVzdC11c2VyLWlk',
+            name: 'user@example.com',
+            displayName: 'Test User',
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7 },
+            { type: 'public-key', alg: -257 },
+          ],
+          timeout: 60_000,
+          excludeCredentials: [],
+          authenticatorSelection: {
+            userVerification: 'required',
+            authenticatorAttachment: 'platform',
+          },
+          attestation: 'none',
+          extensions: {},
+        }),
+      });
+    };
+
+    const registerVerifyHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          credentialId: 'test-credential',
+          publicKey: 'BASE64_PUBLIC_KEY',
+          counter: 0,
+          transports: ['internal'],
+        }),
+      });
+    };
+
+    const authOptionsHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challenge: 'dGVzdC1jaGFsbGVuZ2U=',
+          allowCredentials: [
+            {
+              id: 'dGVzdC1jaGFsbGVuZ2U=',
+              type: 'public-key',
+              transports: ['internal'],
+            },
+          ],
+          timeout: 60_000,
+          rpId: 'localhost',
+          userVerification: 'required',
+          extensions: {},
+        }),
+      });
+    };
+
+    const authVerifyHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          credentialId: 'test-credential',
+          newCounter: 1,
+        }),
+      });
+    };
+
+    const loginHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          token: 'mock-auth-token',
+          user: { id: 'test-user', email: 'user@example.com' },
+        }),
+      });
+    };
+
+    const registerHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          user: { id: 'test-user', email: 'user@example.com' },
+        }),
+      });
+    };
+
+    const profileHandler: RouteHandler = async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          profile: {
+            id: 'test-profile',
+            user_id: 'test-user',
+            username: 'testuser',
+          },
+        }),
+      });
+    };
+
+    await page.route('**/api/v1/auth/webauthn/native/register/options', registerOptionsHandler);
+    await page.route('**/api/v1/auth/webauthn/native/register/verify', registerVerifyHandler);
+    await page.route('**/api/v1/auth/webauthn/native/authenticate/options', authOptionsHandler);
+    await page.route('**/api/v1/auth/webauthn/native/authenticate/verify', authVerifyHandler);
+    await page.route('**/api/auth/login', loginHandler);
+    await page.route('**/api/auth/register', registerHandler);
+    await page.route('**/api/profile', profileHandler);
+
+    routes.push({ url: '**/api/v1/auth/webauthn/native/register/options', handler: registerOptionsHandler });
+    routes.push({ url: '**/api/v1/auth/webauthn/native/register/verify', handler: registerVerifyHandler });
+    routes.push({ url: '**/api/v1/auth/webauthn/native/authenticate/options', handler: authOptionsHandler });
+    routes.push({ url: '**/api/v1/auth/webauthn/native/authenticate/verify', handler: authVerifyHandler });
+    routes.push({ url: '**/api/auth/login', handler: loginHandler });
+    routes.push({ url: '**/api/auth/register', handler: registerHandler });
+    routes.push({ url: '**/api/profile', handler: profileHandler });
+  }
+
+  if (options.feeds) {
+    const feedsUrl = '**/api/feeds**';
+    const feedsHandler: RouteHandler = async (route) => {
+      const requestUrl = new URL(route.request().url());
+      const limit = Number(requestUrl.searchParams.get('limit') ?? FEED_FIXTURES.length);
+      const category = requestUrl.searchParams.get('category');
+      const district = requestUrl.searchParams.get('district');
+      const sort = requestUrl.searchParams.get('sort');
+      const response = buildFeedsResponse({ limit, category, district, sort });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    };
+
+    const feedSearchUrl = '**/api/feeds/search';
+    const feedSearchHandler: RouteHandler = async (route) => {
+      const raw = route.request().postData();
+      let query = '';
+      if (raw) {
+        try {
+          const body = JSON.parse(raw) as { query?: string };
+          query = body.query ?? '';
+        } catch {
+          query = '';
+        }
+      }
+      const response = buildFeedSearchResponse(query);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    };
+
+    const feedInteractionUrl = '**/api/feeds/interactions';
+    const feedInteractionHandler: RouteHandler = async (route) => {
+      const response = buildFeedInteractionResponse();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    };
+
+    const feedCategoriesUrl = '**/api/feeds/categories';
+    const feedCategoriesHandler: RouteHandler = async (route) => {
+      const response = buildFeedCategoriesResponse();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    };
+
+    await page.route(feedsUrl, feedsHandler);
+    await page.route(feedSearchUrl, feedSearchHandler);
+    await page.route(feedInteractionUrl, feedInteractionHandler);
+    await page.route(feedCategoriesUrl, feedCategoriesHandler);
+
+    routes.push({ url: feedsUrl, handler: feedsHandler });
+    routes.push({ url: feedSearchUrl, handler: feedSearchHandler });
+    routes.push({ url: feedInteractionUrl, handler: feedInteractionHandler });
+    routes.push({ url: feedCategoriesUrl, handler: feedCategoriesHandler });
   }
 
   return async () => {

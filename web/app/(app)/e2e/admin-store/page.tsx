@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 
+import type { AdminUser, NewAdminNotification } from '@/features/admin/types';
 import {
   useAdminStore,
   useAdminActions,
@@ -16,7 +17,6 @@ import {
   useAdminShowBulkActions,
   useAdminUserActions,
 } from '@/lib/stores';
-import type { AdminUser, NewAdminNotification } from '@/features/admin/types';
 
 export type AdminStoreHarness = {
   toggleSidebar: () => void;
@@ -36,9 +36,7 @@ export type AdminStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __adminStoreHarness?: AdminStoreHarness;
-  }
+  var __adminStoreHarness: AdminStoreHarness | undefined;
 }
 
 const formatList = (values: string[]) => (values.length ? values.join(', ') : 'none');

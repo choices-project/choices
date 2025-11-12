@@ -30,23 +30,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 import {
   useAdminActions,
   useAdminDashboardStats,
   useAdminError,
   useAdminLoading,
-  useAdminNotifications,
   useAdminStats,
   useRecentActivity,
   useSystemMetrics,
-} from '@/lib/stores';
-import {
   useHashtagActions,
   useHashtagError,
   useHashtagLoading,
   useTrendingHashtags,
+  useNotificationActions,
+  useNotificationAdminNotifications,
 } from '@/lib/stores';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 
 type ComprehensiveAdminDashboardProps = {
   className?: string;
@@ -63,13 +62,18 @@ type NewSiteMessage = {
 export default function ComprehensiveAdminDashboard({ className = '' }: ComprehensiveAdminDashboardProps) {
   const dashboardStats = useAdminDashboardStats();
   const adminStats = useAdminStats();
-  const notifications = useAdminNotifications();
+  const notifications = useNotificationAdminNotifications();
   const recentActivity = useRecentActivity();
   const systemMetrics = useSystemMetrics();
   const loading = useAdminLoading();
   const error = useAdminError();
 
-  const { refreshData, addAdminNotification, markNotificationAsRead, clearAdminNotifications } = useAdminActions();
+  const { refreshData } = useAdminActions();
+  const {
+    addAdminNotification,
+    markAdminNotificationAsRead,
+    clearAllAdminNotifications,
+  } = useNotificationActions();
 
   const trendingHashtags = useTrendingHashtags();
   const { isLoading: hashtagLoading } = useHashtagLoading();
@@ -107,16 +111,14 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
     if (!newMessage.title.trim() || !newMessage.message.trim()) {
       return;
     }
-    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}`;
     const timestamp = new Date().toISOString();
     addAdminNotification({
-      id,
       timestamp,
+      created_at: timestamp,
       type: newMessage.type,
       title: newMessage.title,
       message: newMessage.message,
       read: !newMessage.is_active,
-      created_at: timestamp,
       metadata: {
         priority: newMessage.priority,
         status: newMessage.is_active ? 'active' : 'inactive',
@@ -198,9 +200,6 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       };
     });
   }, [notifications]);
-
-  const activeMessages = siteMessages.filter((message) => message.is_active).length;
-  const criticalMessages = siteMessages.filter((message) => message.priority === 'critical').length;
 
   if (loading) {
     return (
@@ -402,7 +401,11 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               <p className="text-sm text-gray-600">Manage announcements and broadcast notices</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => clearAdminNotifications()} disabled={!notifications.length}>
+              <Button
+                variant="outline"
+                onClick={() => clearAllAdminNotifications()}
+                disabled={!notifications.length}
+              >
                 Clear All
               </Button>
               <Button onClick={() => setShowMessageForm(true)}>
@@ -424,14 +427,30 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                     <Input
                       id="message-title"
                       value={newMessage.title}
-                      onChange={(event) => setNewMessage((prev) => ({ ...prev, title: event.target.value }))}
+                      onChange={(event) =>
+                        setNewMessage((prev) => ({
+                          title: event.target.value,
+                          message: prev.message,
+                          type: prev.type,
+                          priority: prev.priority,
+                          is_active: prev.is_active,
+                        }))
+                      }
                     />
                   </div>
                   <div>
                     <Label htmlFor="message-type">Type</Label>
                     <Select
                       value={newMessage.type}
-                      onValueChange={(value) => setNewMessage((prev) => ({ ...prev, type: value as NewSiteMessage['type'] }))}
+                      onValueChange={(value) =>
+                        setNewMessage((prev) => ({
+                          title: prev.title,
+                          message: prev.message,
+                          type: value as NewSiteMessage['type'],
+                          priority: prev.priority,
+                          is_active: prev.is_active,
+                        }))
+                      }
                     >
                       <SelectTrigger id="message-type">
                         <SelectValue />
@@ -450,7 +469,13 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                     <Select
                       value={newMessage.priority}
                       onValueChange={(value) =>
-                        setNewMessage((prev) => ({ ...prev, priority: value as NewSiteMessage['priority'] }))
+                        setNewMessage((prev) => ({
+                          title: prev.title,
+                          message: prev.message,
+                          type: prev.type,
+                          priority: value as NewSiteMessage['priority'],
+                          is_active: prev.is_active,
+                        }))
                       }
                     >
                       <SelectTrigger id="message-priority">
@@ -471,7 +496,13 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                       type="checkbox"
                       checked={newMessage.is_active}
                       onChange={(event) =>
-                        setNewMessage((prev) => ({ ...prev, is_active: event.target.checked }))
+                        setNewMessage((prev) => ({
+                          title: prev.title,
+                          message: prev.message,
+                          type: prev.type,
+                          priority: prev.priority,
+                          is_active: event.target.checked,
+                        }))
                       }
                       className="h-4 w-4"
                     />
@@ -483,7 +514,15 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   <Textarea
                     id="message-body"
                     value={newMessage.message}
-                    onChange={(event) => setNewMessage((prev) => ({ ...prev, message: event.target.value }))}
+                    onChange={(event) =>
+                      setNewMessage((prev) => ({
+                        title: prev.title,
+                        message: event.target.value,
+                        type: prev.type,
+                        priority: prev.priority,
+                        is_active: prev.is_active,
+                      }))
+                    }
                     rows={4}
                   />
                 </div>
@@ -533,7 +572,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsRead(message.id)}
                           title="Archive message"
                         >
                           <CheckCircle className="h-4 w-4" />
@@ -541,7 +580,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsRead(message.id)}
                           title="Mark as read"
                         >
                           <Edit className="h-4 w-4" />
@@ -549,7 +588,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsRead(message.id)}
                           title="Dismiss message"
                         >
                           <Trash2 className="h-4 w-4" />

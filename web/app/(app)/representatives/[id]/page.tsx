@@ -33,7 +33,6 @@ import {
   useGetUserRepresentatives
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
-import type { Representative } from '@/types/representative';
 
 export default function RepresentativeDetailPage() {
   const params = useParams();
@@ -169,7 +168,7 @@ export default function RepresentativeDetailPage() {
     );
   }
 
-  if ((error && !representative) || numericRepresentativeId == null) {
+  if (!representative || numericRepresentativeId == null) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <button
@@ -182,7 +181,7 @@ export default function RepresentativeDetailPage() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <p className="text-red-800 font-semibold mb-2">Representative Not Found</p>
           <p className="text-red-600">
-            {error || 'The representative you are looking for does not exist.'}
+            {error ?? 'The representative you are looking for does not exist.'}
           </p>
         </div>
       </div>

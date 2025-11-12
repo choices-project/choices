@@ -83,9 +83,8 @@ test.describe('User store harness', () => {
     await page.evaluate(() => {
       const harness = window.__userStoreHarness;
       if (!harness) return;
-      const snapshot = harness.getSnapshot();
-      snapshot.setCurrentAddress?.('123 Main St');
-      snapshot.setRepresentatives?.([{ id: 'rep-1' }] as any);
+      harness.setCurrentAddress('123 Main St');
+      harness.setRepresentatives([{ id: 'rep-1' }] as any);
     });
 
     await expect(currentAddress).toHaveText('123 Main St');
@@ -134,6 +133,71 @@ test.describe('User store harness', () => {
     await expect(authenticated).toHaveText('false');
     await expect(userId).toHaveText('none');
     await expect(sessionToken).toHaveText('none');
+  });
+
+  test('handles biometric/passkey state transitions', async ({ page }) => {
+    await gotoHarness(page);
+
+    const supported = page.getByTestId('user-biometric-supported');
+    const available = page.getByTestId('user-biometric-available');
+    const credentials = page.getByTestId('user-biometric-credentials');
+    const registering = page.getByTestId('user-biometric-registering');
+    const success = page.getByTestId('user-biometric-success');
+    const error = page.getByTestId('user-biometric-error');
+
+    await expect(supported).toHaveText('none');
+    await expect(available).toHaveText('none');
+    await expect(credentials).toHaveText('none');
+    await expect(registering).toHaveText('false');
+    await expect(success).toHaveText('false');
+    await expect(error).toHaveText('none');
+
+    await page.evaluate(() => {
+      const harness = window.__userStoreHarness;
+      if (!harness) return;
+      harness.setBiometricSupported(true);
+      harness.setBiometricAvailable(true);
+      harness.setBiometricCredentials(false);
+      harness.setBiometricRegistering(true);
+    });
+
+    await expect(supported).toHaveText('true');
+    await expect(available).toHaveText('true');
+    await expect(credentials).toHaveText('false');
+    await expect(registering).toHaveText('true');
+
+    await page.evaluate(() => {
+      const harness = window.__userStoreHarness;
+      if (!harness) return;
+      harness.setBiometricSuccess(true);
+      harness.setBiometricError(null);
+      harness.setBiometricCredentials(true);
+      harness.setBiometricRegistering(false);
+    });
+
+    await expect(success).toHaveText('true');
+    await expect(error).toHaveText('none');
+    await expect(credentials).toHaveText('true');
+    await expect(registering).toHaveText('false');
+
+    await page.evaluate(() => {
+      window.__userStoreHarness?.setBiometricError('Hardware failure');
+      window.__userStoreHarness?.setBiometricSuccess(false);
+    });
+
+    await expect(error).toHaveText('Hardware failure');
+    await expect(success).toHaveText('false');
+
+    await page.evaluate(() => {
+      window.__userStoreHarness?.resetBiometric();
+    });
+
+    await expect(supported).toHaveText('none');
+    await expect(available).toHaveText('none');
+    await expect(credentials).toHaveText('none');
+    await expect(registering).toHaveText('false');
+    await expect(success).toHaveText('false');
+    await expect(error).toHaveText('none');
   });
 });
 

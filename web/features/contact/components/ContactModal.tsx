@@ -1,22 +1,22 @@
 /**
  * Contact Modal Component
- * 
+ *
  * Modal for users to send messages to their representatives
  * Features:
  * - Direct messaging to representatives
  * - Message threading
  * - Real-time updates
  * - Mobile-optimized interface
- * 
+ *
  * Created: January 23, 2025
  * Status: ✅ ACTIVE
  */
 
 'use client';
 
-import { 
-  XMarkIcon, 
-  PaperAirplaneIcon, 
+import {
+  XMarkIcon,
+  PaperAirplaneIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
   CheckCircleIcon,
@@ -45,11 +45,11 @@ type ContactModalProps = {
   userId: string;
 }
 
-export default function ContactModal({ 
-  isOpen, 
-  onClose, 
-  representative, 
-  userId 
+export default function ContactModal({
+  isOpen,
+  onClose,
+  representative,
+  userId
 }: ContactModalProps) {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
@@ -75,17 +75,17 @@ export default function ContactModal({
   } = useMessageTemplates();
 
   // Contact hooks
-  const { 
-    messages: _messages, 
-    loading: _messagesLoading, 
+  const {
+    messages: _messages,
+    loading: _messagesLoading,
     error: _messagesError,
-    sendMessage 
+    sendMessage
   } = useContactMessages(representative.id.toString());
 
-  const { 
-    threads, 
+  const {
+    threads,
     loading: _threadsLoading,
-    createThread 
+    createThread
   } = useContactThreads();
 
   // Reset state when modal opens/closes
@@ -122,7 +122,7 @@ export default function ContactModal({
 
   // Memoize thread lookup for performance
   const existingThreadId = useMemo(() => {
-    return threads.find(t => t.representative_id === representative.id)?.id;
+    return threads.find(t => t.representativeId === representative.id)?.id;
   }, [threads, representative.id]);
 
   const handleSendMessage = useCallback(async () => {
@@ -137,32 +137,30 @@ export default function ContactModal({
     try {
       // Create thread if it doesn't exist
       let threadId = existingThreadId;
-      
+
       if (!threadId) {
-        const newThread = await createThread({
-          user_id: userId,
-          representative_id: representative.id,
+        const { thread } = await createThread({
+          representativeId: representative.id,
           subject,
-          status: 'active'
+          priority: 'normal',
         });
-        threadId = newThread.id;
+        threadId = thread.id;
       }
 
       // Send message
       await sendMessage({
-        thread_id: threadId,
-        sender_id: userId,
-        recipient_id: representative.id,
-        content: message,
+        threadId,
+        representativeId: representative.id,
         subject,
-        message_type: 'text',
-        priority: 'normal'
+        content: message,
+        messageType: 'text',
+        priority: 'normal',
       });
 
       setSuccess(true);
       setMessage('');
       setSubject('');
-      
+
       // Auto-close after success
       setTimeout(() => {
         onClose();
@@ -182,14 +180,14 @@ export default function ContactModal({
         onClose();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       // Focus trap: focus first focusable element
       const firstInput = document.querySelector('#subject') as HTMLInputElement;
       firstInput?.focus();
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
@@ -219,7 +217,7 @@ export default function ContactModal({
   }
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       role="dialog"
       aria-modal="true"
@@ -286,9 +284,9 @@ export default function ContactModal({
               <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />
               <span>{selectedTemplate ? `Using: ${selectedTemplate.title}` : 'Use a Template'}</span>
             </button>
-            
+
             {showTemplates && (
-              <div 
+              <div
                 id="template-selector"
                 className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto"
                 role="listbox"
@@ -427,7 +425,7 @@ export default function ContactModal({
 
           {/* Error/Success Messages */}
           {error && (
-            <div 
+            <div
               className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg"
               role="alert"
               aria-live="polite"
@@ -438,7 +436,7 @@ export default function ContactModal({
           )}
 
           {success && (
-            <div 
+            <div
               className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg"
               role="alert"
               aria-live="polite"

@@ -7,8 +7,8 @@
  * @author Choices Platform Team
  */
 
-import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
 
 import { PUSH_CONFIG } from './sw-config';
 

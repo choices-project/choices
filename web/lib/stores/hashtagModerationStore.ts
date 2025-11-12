@@ -15,9 +15,9 @@ import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
 
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
-import { createBaseStoreActions } from './baseStoreActions';
 
 // Hashtag moderation types
 export type HashtagFlagType = 'inappropriate' | 'spam' | 'misleading' | 'harassment' | 'other';

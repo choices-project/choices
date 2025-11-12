@@ -7,9 +7,9 @@
  * Status: ✅ ACTIVE
  */
 
-import type { PollWizardData, PollWizardSettings } from '@/lib/polls/types';
-import type { Database } from '@/types/database';
 import type { PollHashtagIntegration as CorePollHashtagIntegration } from '@/features/hashtags/types';
+import type { PollWizardData } from '@/lib/polls/types';
+import type { Database } from '@/types/database';
 
 // ============================================================================
 // BASE TYPES FROM DATABASE

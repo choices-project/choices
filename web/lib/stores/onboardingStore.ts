@@ -13,7 +13,13 @@ import { create } from 'zustand';
 import type { StateCreator, StoreApi } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import type { AuthSetupStepData } from '@/features/onboarding/types';
+import type {
+  AuthSetupStepData,
+  ProfileData as FeatureProfileData,
+  ValuesData as FeatureValuesData,
+  PrivacyPreferences,
+} from '@/features/onboarding/types';
+import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
@@ -30,12 +36,11 @@ type AuthData = {
   marketingOptIn?: boolean;
 }
 
-type ProfileData = {
+type ProfileData = FeatureProfileData & {
   firstName?: string;
   lastName?: string;
   username?: string;
   avatar?: string;
-  bio?: string;
   location?: string;
   state?: string;
   zipCode?: string;
@@ -43,11 +48,10 @@ type ProfileData = {
   gender?: string;
   phone?: string;
   website?: string;
-}
+};
 
-type ValuesData = {
+type ValuesData = FeatureValuesData & {
   politicalAffiliation?: string;
-  primaryInterests?: string[];
   secondaryInterests?: string[];
   values?: string[];
   priorities?: string[];
@@ -57,18 +61,17 @@ type ValuesData = {
     push: boolean;
     sms: boolean;
   };
-}
+};
 
-type PreferencesData = {
+type PreferencesData = PrivacyPreferences & {
   theme?: 'light' | 'dark' | 'system';
   language?: string;
   timezone?: string;
   notifications?: boolean;
   privacy?: 'public' | 'private' | 'friends';
   dataSharing?: boolean;
-  analytics?: boolean;
   marketing?: boolean;
-}
+};
 
 type OnboardingStep = {
   id: number;
@@ -202,19 +205,17 @@ const defaultSteps: OnboardingStep[] = [
   },
 ];
 
-const mergeState = <T extends object>(state: T, updates: Partial<T>): T => ({
-  ...state,
-  ...updates,
-});
+const mergeState = <T extends object>(state: T, updates: Partial<T>): T => {
+  const base = Object.assign({}, state) as Record<string, unknown>;
+  return withOptional(base as T, updates as Record<string, unknown>);
+};
 
 const mergeStepData = (
   stepData: Record<number, unknown>,
   step: number,
   data: unknown,
-): Record<number, unknown> => ({
-  ...stepData,
-  [step]: data,
-});
+): Record<number, unknown> =>
+  mergeState(stepData, { [step]: data } as Record<number, unknown>);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -241,7 +242,7 @@ const getAuthMethod = (value: unknown): AuthSetupStepData['authMethod'] | undefi
   return (authMethods as string[]).includes(value) ? (value as AuthSetupStepData['authMethod']) : undefined;
 };
 
-const cloneSteps = () => defaultSteps.map((step) => ({ ...step }));
+const cloneSteps = () => defaultSteps.map((step) => mergeState(step, {}));
 
 export const createInitialOnboardingState = (): OnboardingState => ({
   currentStep: 0,
@@ -353,10 +354,7 @@ export const createOnboardingActions = (
   updateFormData: (step, data) =>
     set((state: OnboardingStore) => {
       const existing = asRecord(state.stepData[step]);
-      const merged = {
-        ...existing,
-        ...(data as Record<string, unknown>),
-      };
+      const merged = mergeState(existing, data as Record<string, unknown>);
       return {
         stepData: mergeStepData(state.stepData, step, merged),
       };

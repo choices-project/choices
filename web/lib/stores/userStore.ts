@@ -21,19 +21,52 @@ import type {
   PrivacySettings,
 } from '@/types/profile';
 import type { Representative } from '@/types/representative';
+import type { Database } from '@/types/supabase';
 
-import { createSafeStorage } from './storage';
 import { createBaseStoreActions } from './baseStoreActions';
+import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
-type ProfileEditDraft = Record<string, unknown> & {
-  privacy_settings?: Partial<PrivacySettings>;
+export type ProfileEditDraft = ProfileUpdateData;
+export type PrivacySettingKey = keyof NonNullable<ProfileEditDraft['privacy_settings']>;
+export type PrivacySettingValue<K extends PrivacySettingKey> =
+  NonNullable<ProfileEditDraft['privacy_settings']>[K];
+export type UserProfileUpdatePayload = Partial<UserProfile>;
+export type ProfileEditErrorKey =
+  | keyof ProfileEditDraft
+  | `privacy_settings.${PrivacySettingKey}`
+  | `demographics.${string}`
+  | 'avatar'
+  | 'global';
+export type ProfileEditErrorMap = Partial<Record<ProfileEditErrorKey, string>>;
+
+export type SupabaseUserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
+
+const mapProfileRowToUserProfile = (
+  row: SupabaseUserProfileRow | UserProfile | null | undefined,
+): UserProfile | null => {
+  if (!row) return null;
+  return {
+    ...row,
+  };
 };
-type PrivacySettingKey = keyof NonNullable<ProfileUpdateData['privacy_settings']>;
-type PrivacySettingValue<K extends PrivacySettingKey> =
-  NonNullable<ProfileUpdateData['privacy_settings']>[K];
+
+export const fromSupabaseProfileRow = mapProfileRowToUserProfile;
+
+const assignDefined = <T extends object>(
+  target: T,
+  updates: Partial<T> | undefined
+) => {
+  if (!updates) return;
+  const record = target as Record<keyof T, unknown>;
+  (Object.entries(updates) as [keyof T, T[keyof T]][]).forEach(([key, value]) => {
+    if (value !== undefined) {
+      record[key] = value as unknown;
+    }
+  });
+};
 
 // User store state interface
 export type UserState = {
@@ -48,7 +81,7 @@ export type UserState = {
   // Profile editing state
   profileEditData: ProfileEditDraft | null;
   isProfileEditing: boolean;
-  profileEditErrors: Record<string, string>;
+  profileEditErrors: ProfileEditErrorMap;
 
   // Address and representatives
   currentAddress: string;
@@ -97,15 +130,15 @@ export type UserActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErro
   // Actions - Profile Editing
   setProfileEditData: (data: ProfileEditDraft | null) => void;
   updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
-  updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => void;
+  updateProfileField: (field: keyof ProfileEditDraft, value: ProfileEditDraft[keyof ProfileEditDraft]) => void;
   updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => void;
   updatePrivacySetting: <K extends PrivacySettingKey>(
     setting: K,
     value: PrivacySettingValue<K>
   ) => void;
   setProfileEditing: (editing: boolean) => void;
-  setProfileEditError: (field: string, error: string) => void;
-  clearProfileEditError: (field: string) => void;
+  setProfileEditError: (field: ProfileEditErrorKey, error: string) => void;
+  clearProfileEditError: (field: ProfileEditErrorKey) => void;
   clearAllProfileEditErrors: () => void;
 
   // Actions - Address and Representatives
@@ -128,8 +161,8 @@ export type UserActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErro
   clearAvatar: () => void;
 
   // Actions - Profile
-  setProfile: (profile: UserProfile | null) => void;
-  updateProfile: (updates: Record<string, unknown>) => void;
+  setProfile: (profile: SupabaseUserProfileRow | UserProfile | null) => void;
+  updateProfile: (updates: UserProfileUpdatePayload) => void;
 
   // Actions - Biometric
   setBiometricSupported: (supported: boolean) => void;
@@ -287,20 +320,20 @@ export const createUserActions = (
       resetUserState(state);
     }),
 
-    setProfile: (profile: UserProfile | null) => setState((state) => {
-      state.profile = profile ?? null;
+    setProfile: (profile: SupabaseUserProfileRow | UserProfile | null) => setState((state) => {
+      state.profile = mapProfileRowToUserProfile(profile);
     }),
 
-    updateProfile: (updates: Record<string, unknown>) => {
+    updateProfile: (updates: UserProfileUpdatePayload) => {
       const current = get().profile;
       if (!current) {
         return;
       }
-      const next = {
-        ...(current as Record<string, unknown>),
-        ...updates,
-        updated_at: new Date().toISOString(),
-      } as UserProfile & Record<string, unknown>;
+      const next: UserProfile = { ...current };
+      assignDefined(next, updates);
+      if (!updates.updated_at) {
+        next.updated_at = new Date().toISOString();
+      }
       setState((state) => {
         state.profile = next;
       });
@@ -353,49 +386,61 @@ export const createUserActions = (
       state.profileEditData = data ?? null;
     }),
 
-    updateProfileEditData: (updates: Partial<ProfileUpdateData>) => setState((state) => {
-      if (Object.keys(updates).length === 0) {
-        return;
-      }
-      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value !== undefined) {
-          (target as Record<string, unknown>)[key] = value;
+    updateProfileEditData: (updates: Partial<ProfileUpdateData>) =>
+      setState((state) => {
+        if (Object.keys(updates).length === 0) {
+          return;
         }
-      });
-    }),
+        const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+        assignDefined(target, updates);
+      }),
 
-    updateProfileField: (field: keyof ProfileUpdateData, value: ProfileUpdateData[keyof ProfileUpdateData]) => setState((state) => {
-      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
-      (target as Record<string, unknown>)[field] = value;
-    }),
+    updateProfileField: <K extends keyof ProfileEditDraft>(
+      field: K,
+      value: ProfileEditDraft[K]
+    ) =>
+      setState((state) => {
+        const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+        target[field] = value;
+      }),
 
-    updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) => setState((state) => {
-      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
-      const currentArray = Array.isArray(target[field])
-        ? (target[field] as string[]).slice()
-        : [];
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((item: string) => item !== value)
-        : [...currentArray, value];
-      target[field] = newArray;
-    }),
+    updateArrayField: (field: 'primary_concerns' | 'community_focus', value: string) =>
+      setState((state) => {
+        const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+        const currentArray = Array.isArray(target[field])
+          ? [...(target[field] as string[])]
+          : [];
+        const newArray = currentArray.includes(value)
+          ? currentArray.filter((item) => item !== value)
+          : [...currentArray, value];
 
-    updatePrivacySetting: <K extends PrivacySettingKey>(setting: K, value: PrivacySettingValue<K>) => setState((state) => {
-      const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
-      const settings = target.privacy_settings ?? (target.privacy_settings = {} as Partial<PrivacySettings>);
-      settings[setting] = value;
-    }),
+        if (field === 'primary_concerns') {
+          target.primary_concerns = newArray;
+        } else {
+          target.community_focus = newArray;
+        }
+      }),
+
+    updatePrivacySetting: <K extends PrivacySettingKey>(
+      setting: K,
+      value: PrivacySettingValue<K>
+    ) =>
+      setState((state) => {
+        const target = state.profileEditData ?? (state.profileEditData = {} as ProfileEditDraft);
+        const settings =
+          target.privacy_settings ?? (target.privacy_settings = {} as Partial<PrivacySettings>);
+        settings[setting] = value;
+      }),
 
     setProfileEditing: (editing: boolean) => setState((state) => {
       state.isProfileEditing = editing;
     }),
 
-    setProfileEditError: (field: string, error: string) => setState((state) => {
+    setProfileEditError: (field: ProfileEditErrorKey, error: string) => setState((state) => {
       state.profileEditErrors[field] = error;
     }),
 
-    clearProfileEditError: (field: string) => setState((state) => {
+    clearProfileEditError: (field: ProfileEditErrorKey) => setState((state) => {
       delete state.profileEditErrors[field];
     }),
 
@@ -568,6 +613,9 @@ export const useBiometricSuccess = () => useUserStore(state => state.biometric.s
 
 // Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
 export const useUserActions = () => {
+  const setLoading = useUserStore(state => state.setLoading);
+  const setError = useUserStore(state => state.setError);
+  const clearError = useUserStore(state => state.clearError);
   const setUser = useUserStore(state => state.setUser);
   const setSession = useUserStore(state => state.setSession);
   const setAuthenticated = useUserStore(state => state.setAuthenticated);
@@ -615,6 +663,9 @@ export const useUserActions = () => {
   const clearAvatar = useUserStore(state => state.clearAvatar);
 
   return {
+    setLoading,
+    setError,
+    clearError,
     setUser,
     setSession,
     setAuthenticated,

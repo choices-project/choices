@@ -19,44 +19,69 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
-import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
+import {
+  useProfileData,
+  useProfileDraft,
+  useProfileDraftActions,
+} from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
+import { useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 import type { PrivacySettings } from '@/types/profile';
 
 export default function PrivacyPage() {
   const router = useRouter();
-  const { profile, isLoading: profileLoading } = useProfile();
+  const { profile, isLoading: profileLoading, error: profileError } = useProfileData();
   const user = useUser();
-  const { updateProfile } = useProfileUpdate();
-  const [isSaving, setIsSaving] = useState(false);
+  const privacySettingsFromStore = useProfileStore((state) => state.privacySettings);
+  const updatePrivacySettings = useProfileStore((state) => state.updatePrivacySettings);
+  const isUpdating = useProfileStore((state) => state.isUpdating);
+  const draft = useProfileDraft();
+  const { mergeDraft, setProfileEditing } = useProfileDraftActions();
 
-  const storedPrivacySettings = profile?.privacy_settings as PrivacySettings | null | undefined;
-  const privacySettings: PrivacySettings | null = storedPrivacySettings ?? getDefaultPrivacySettings();
+  const privacySettings = useMemo<PrivacySettings>(() => {
+    const existing =
+      privacySettingsFromStore ??
+      (draft?.privacy_settings as PrivacySettings | null | undefined) ??
+      (profile?.privacy_settings as PrivacySettings | null | undefined);
+    return existing ?? getDefaultPrivacySettings();
+  }, [draft?.privacy_settings, privacySettingsFromStore, profile?.privacy_settings]);
+
+  useEffect(() => {
+    if (privacySettings) {
+      mergeDraft({ privacy_settings: privacySettings });
+      setProfileEditing(true);
+    }
+  }, [mergeDraft, privacySettings, setProfileEditing]);
+
+  useEffect(
+    () => () => {
+      setProfileEditing(false);
+    },
+    [setProfileEditing],
+  );
+
   const userId = profile?.id ?? profile?.user_id ?? user?.id ?? null;
 
   const handlePrivacyUpdate = useCallback(
     async (updates: Partial<PrivacySettings>) => {
-      if (!privacySettings) {
-        return;
-      }
-
       try {
-        setIsSaving(true);
-        const updatedSettings = {
-          ...privacySettings,
-          ...updates,
-        };
+        mergeDraft({
+          privacy_settings: {
+            ...privacySettings,
+            ...updates,
+          },
+        });
 
-        const result = await updateProfile({ privacy_settings: updatedSettings });
+        const result = await updatePrivacySettings(updates);
 
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to update privacy settings');
+        if (!result) {
+          throw new Error('Failed to update privacy settings');
         }
 
         logger.info('Privacy settings updated', { updates });
@@ -66,11 +91,9 @@ export default function PrivacyPage() {
           error instanceof Error ? error : new Error(String(error))
         );
         throw error;
-      } finally {
-        setIsSaving(false);
       }
     },
-    [privacySettings, updateProfile]
+    [mergeDraft, privacySettings, updatePrivacySettings]
   );
 
   if (profileLoading) {
@@ -79,6 +102,17 @@ export default function PrivacyPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading privacy settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">We couldn&apos;t load your privacy settings</h1>
+          <p className="text-gray-600">Please refresh the page or try again later.</p>
         </div>
       </div>
     );
@@ -100,7 +134,7 @@ export default function PrivacyPage() {
             userId={userId}
             privacySettings={privacySettings}
             onPrivacyUpdate={handlePrivacyUpdate}
-            isSaving={isSaving}
+            isSaving={isUpdating}
           />
         </div>
       </div>

@@ -9,6 +9,7 @@
  * Status: ✅ REFACTORED - Eliminates duplication via base class
  */
 
+import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -18,7 +19,6 @@ import {
   type HashtagPollIntegration,
   type PersonalizedHashtagFeed,
 } from './hashtag-polls-integration-base';
-import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
 
 // Re-export types for convenience
 export type {
@@ -52,4 +52,18 @@ export class HashtagPollsIntegrationServiceClient extends BaseHashtagPollsIntegr
 // SINGLETON INSTANCE
 // ============================================================================
 
-export const hashtagPollsIntegrationServiceClient = new HashtagPollsIntegrationServiceClient();
+let clientInstance: HashtagPollsIntegrationServiceClient | null = null;
+
+export function getHashtagPollsIntegrationServiceClient(): HashtagPollsIntegrationServiceClient {
+  if (typeof window === 'undefined') {
+    throw new Error(
+      'HashtagPollsIntegrationServiceClient can only be used in the browser. Import the server version for server-side usage.'
+    );
+  }
+
+  if (!clientInstance) {
+    clientInstance = new HashtagPollsIntegrationServiceClient();
+  }
+
+  return clientInstance;
+}

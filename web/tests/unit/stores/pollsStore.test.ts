@@ -6,6 +6,7 @@ import {
   createInitialPollsState,
   createPollsActions,
 } from '@/lib/stores/pollsStore';
+import type { PollCreatePayload } from '@/lib/polls/wizard/submission';
 
 const createTestPollsStore = () =>
   create<PollsStore>()(
@@ -67,10 +68,11 @@ describe('pollsStore', () => {
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
+      status: 200,
       json: async () => ({}),
     }) as unknown as typeof global.fetch;
 
-    await store.getState().voteOnPoll('poll-1', 'option-1');
+    const result = await store.getState().voteOnPoll('poll-1', 'option-1');
 
     const state = store.getState();
     expect(global.fetch).toHaveBeenCalledWith(
@@ -83,6 +85,7 @@ describe('pollsStore', () => {
     expect(state.isVoting).toBe(false);
     expect(state.uiState.votingInProgress).toEqual([]);
     expect(state.error).toBeNull();
+    expect(result.success).toBe(true);
   });
 
   it('voteOnPoll captures errors from failed requests', async () => {
@@ -97,12 +100,15 @@ describe('pollsStore', () => {
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
+      status: 500,
+      json: async () => ({}),
     }) as unknown as typeof global.fetch;
 
-    await store.getState().voteOnPoll('poll-1', 'option-1');
+    const result = await store.getState().voteOnPoll('poll-1', 'option-1');
 
     const state = store.getState();
-    expect(state.error).toBe('Failed to vote on poll');
+    expect(result.success).toBe(false);
+    expect(state.error).toBe(result.message);
     expect(state.isVoting).toBe(false);
     expect(state.polls[0].total_votes).toBe(0);
   });
@@ -136,6 +142,42 @@ describe('pollsStore', () => {
     expect(state.lastFetchedAt).not.toBeNull();
   });
 
+  it('setSearchQuery tracks recent searches without duplicates', () => {
+    const store = createTestPollsStore();
+
+    store.getState().setSearchQuery('climate');
+    store.getState().setSearchQuery('Climate');
+    store.getState().setSearchQuery('education');
+
+    expect(store.getState().search.recentSearches).toEqual(['education', 'Climate']);
+    expect(store.getState().search.query).toBe('education');
+  });
+
+  it('setFilters normalizes values and applies trending toggle', () => {
+    const store = createTestPollsStore();
+
+    store.getState().setFilters({ status: ['active', 'invalid'], trendingOnly: true });
+
+    const filters = store.getState().filters;
+    expect(filters.status).toEqual(['active']);
+    expect(filters.trendingOnly).toBe(true);
+  });
+
+  it('setItemsPerPage recalculates total pages when results exist', () => {
+    const store = createTestPollsStore();
+
+    store.setState((state) => {
+      state.search.totalResults = 45;
+      state.search.totalPages = 3;
+    });
+
+    store.getState().setItemsPerPage(25);
+
+    const state = store.getState();
+    expect(state.preferences.itemsPerPage).toBe(25);
+    expect(state.search.totalPages).toBe(2);
+  });
+
   it('resetPollsState restores defaults', () => {
     const store = createTestPollsStore();
 
@@ -158,6 +200,93 @@ describe('pollsStore', () => {
     expect(state.isVoting).toBe(false);
     expect(state.filters.trendingOnly).toBe(false);
     expect(state.lastFetchedAt).toBeNull();
+  });
+
+  it('createPoll returns structured success result', async () => {
+    const store = createTestPollsStore();
+    const payload: PollCreatePayload = {
+      title: 'Transit Improvements',
+      question: 'Transit Improvements',
+      description: 'Share your feedback on the proposed transit upgrades.',
+      category: 'infrastructure',
+      tags: ['transit'],
+      options: [{ text: 'Support' }, { text: 'Oppose' }],
+      settings: {
+        allowMultipleVotes: false,
+        allowAnonymousVotes: true,
+        requireAuthentication: false,
+        showResultsBeforeClose: true,
+        allowComments: true,
+        allowSharing: true,
+        privacyLevel: 'public',
+      },
+      metadata: {},
+    };
+
+    const mockRequest = jest.fn().mockResolvedValue({
+      success: true,
+      ok: true,
+      status: 201,
+      data: { id: 'poll-created', title: 'Transit Improvements' },
+      durationMs: 123,
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: 'poll-created',
+        status: 'draft',
+        title: 'Transit Improvements',
+      }),
+    }) as unknown as typeof global.fetch;
+
+    const result = await store.getState().createPoll(payload, { request: mockRequest });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(mockRequest).toHaveBeenCalledWith(payload, undefined);
+    expect(result.success).toBe(true);
+    expect(store.getState().error).toBeNull();
+    expect(global.fetch).toHaveBeenCalledWith('/api/polls/poll-created');
+    expect(store.getState().polls[0]?.id).toBe('poll-created');
+  });
+
+  it('createPoll surfaces error details when request fails', async () => {
+    const store = createTestPollsStore();
+    const payload: PollCreatePayload = {
+      title: 'Library Upgrade',
+      question: 'Library Upgrade',
+      description: 'Should we renovate the community library?',
+      category: 'community',
+      tags: ['library'],
+      options: [{ text: 'Yes' }, { text: 'No' }],
+      settings: {
+        allowMultipleVotes: false,
+        allowAnonymousVotes: false,
+        requireAuthentication: true,
+        showResultsBeforeClose: false,
+        allowComments: false,
+        allowSharing: false,
+        privacyLevel: 'unlisted',
+      },
+      metadata: {},
+    };
+
+    const failure = {
+      success: false as const,
+      status: 422,
+      message: 'Title already exists',
+      reason: 'validation' as const,
+      fieldErrors: { title: 'Duplicate title' },
+    };
+
+    const mockRequest = jest.fn().mockResolvedValue(failure);
+
+    const result = await store.getState().createPoll(payload, { request: mockRequest });
+
+    expect(mockRequest).toHaveBeenCalledWith(payload, undefined);
+    expect(result).toEqual(failure);
+    expect(store.getState().error).toBe('Title already exists');
   });
 });
 

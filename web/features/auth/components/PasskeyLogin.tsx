@@ -15,10 +15,14 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
-import { useBiometricSupported, useInitializeBiometricState } from '../lib/store';
+import {
+  useBiometricSupported,
+  useInitializeBiometricState,
+  useUserActions,
+} from '../lib/store';
+import { beginAuthenticate } from '../lib/webauthn/client';
 
 type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
@@ -38,6 +42,7 @@ export function PasskeyLogin({
   useInitializeBiometricState({ fetchCredentials: false });
 
   const isSupported = useBiometricSupported();
+  const { setBiometricSuccess, setBiometricError } = useUserActions();
 
   const isWebAuthnSupported = React.useCallback(() => {
     return (
@@ -62,96 +67,38 @@ export function PasskeyLogin({
     if (!isWebAuthnSupported()) {
       const message = 'WebAuthn is not supported in this browser';
       setError(message);
+      setBiometricError(message);
+      setBiometricSuccess(false);
       onError?.(message);
       return;
     }
 
     setIsAuthenticating(true);
     setError(null);
+    setBiometricError(null);
     setSuccess(false);
+    setBiometricSuccess(false);
 
     try {
       const hasPlatformAuth = await checkPlatformAuthenticator();
 
-      const response = await fetch('/api/v1/auth/webauthn/native/authenticate/options', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userVerification: 'required',
-          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to start authentication');
-      }
-
-      const credentialOptions = await response.json();
-
-      const publicKeyOptions = withOptional(credentialOptions ?? {}, {
+      const result = await beginAuthenticate({
+        authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
         userVerification: 'required',
-        authenticatorSelection: {
-          userVerification: 'required',
-          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-        },
       });
 
-      const credential = (await navigator.credentials.get({
-        publicKey: publicKeyOptions,
-      })) as PublicKeyCredential | null;
-
-      if (!credential) {
-        throw new Error('Authentication was cancelled or failed');
+      if (!result.success) {
+        throw new Error(result.error || 'Authentication failed');
       }
 
-      const completeResponse = await fetch('/api/v1/auth/webauthn/native/authenticate/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          credential: {
-            id: credential.id,
-            rawId: Array.from(new Uint8Array(credential.rawId)),
-            response: {
-              authenticatorData: Array.from(
-                new Uint8Array(
-                  (credential.response as AuthenticatorAssertionResponse).authenticatorData
-                )
-              ),
-              clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-              signature: Array.from(
-                new Uint8Array(
-                  (credential.response as AuthenticatorAssertionResponse).signature
-                )
-              ),
-              userHandle: (credential.response as AuthenticatorAssertionResponse).userHandle
-                ? Array.from(
-                    new Uint8Array(
-                      (credential.response as AuthenticatorAssertionResponse).userHandle!
-                    )
-                  )
-                : null,
-            },
-            type: credential.type,
-          },
-        }),
-      });
-
-      if (!completeResponse.ok) {
-        const errorData = await completeResponse.json();
-        throw new Error(errorData.error || 'Authentication failed');
-      }
-
-      const result = await completeResponse.json();
       setSuccess(true);
-      onSuccess?.(result);
+      setBiometricSuccess(true);
+      onSuccess?.(result.data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage);
+      setBiometricError(errorMessage);
+      setBiometricSuccess(false);
       onError?.(errorMessage);
     } finally {
       setIsAuthenticating(false);

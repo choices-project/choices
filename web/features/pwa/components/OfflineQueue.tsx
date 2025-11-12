@@ -13,7 +13,7 @@
 import { Clock, WifiOff } from 'lucide-react'
 import { useState } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
+import { usePWAOffline, usePWAActions, usePWASyncing } from '@/lib/stores/pwaStore'
 import { logger } from '@/lib/utils/logger'
 
 type OfflineQueueProps = {
@@ -31,7 +31,9 @@ type OfflineQueueProps = {
  * @returns Queue UI with sync button or null if no queued actions
  */
 export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
-  const { offline, syncData, isSyncing } = usePWAStore()
+  const offline = usePWAOffline();
+  const { syncData } = usePWAActions();
+  const isSyncing = usePWASyncing();
   const [localSyncing, setLocalSyncing] = useState(false)
   
   // Use real queued actions from store

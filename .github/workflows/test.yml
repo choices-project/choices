@@ -158,6 +158,116 @@ jobs:
           path: web/test-results/
           retention-days: 7
 
+  auth-production-e2e:
+    name: Auth E2E (prod backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: e2e-tests
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Check production credentials
+        id: prod_creds
+        run: |
+          missing=()
+          [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] && missing+=("NEXT_PUBLIC_SUPABASE_URL")
+          [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ] && missing+=("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+          [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ] && missing+=("SUPABASE_SERVICE_ROLE_KEY")
+          [ -z "${E2E_ADMIN_EMAIL}" ] && missing+=("E2E_ADMIN_EMAIL")
+          [ -z "${E2E_ADMIN_PASSWORD}" ] && missing+=("E2E_ADMIN_PASSWORD")
+          [ -z "${E2E_USER_EMAIL}" ] && missing+=("E2E_USER_EMAIL")
+          [ -z "${E2E_USER_PASSWORD}" ] && missing+=("E2E_USER_PASSWORD")
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip auth-production e2e (missing secrets)
+        if: steps.prod_creds.outputs.run != 'true'
+        run: echo "Skipping auth-production-e2e job because required secrets are not configured."
+
+      - name: Checkout code
+        if: steps.prod_creds.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: steps.prod_creds.outputs.run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        if: steps.prod_creds.outputs.run == 'true'
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Setup gtimeout compatibility (Linux uses 'timeout')
+        if: steps.prod_creds.outputs.run == 'true'
+        run: |
+          if ! command -v gtimeout &> /dev/null; then
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
+          fi
+          which gtimeout || which timeout
+
+      - name: Clean workspace
+        if: steps.prod_creds.outputs.run == 'true'
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        if: steps.prod_creds.outputs.run == 'true'
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        if: steps.prod_creds.outputs.run == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        if: steps.prod_creds.outputs.run == 'true'
+        run: npm run build
+
+      - name: Run auth-production spec
+        if: steps.prod_creds.outputs.run == 'true'
+        run: |
+          PLAYWRIGHT_USE_MOCKS=0 \
+          npx playwright test tests/e2e/specs/auth-production.spec.ts \
+            --config tests/e2e/playwright.config.ts \
+            --project=chromium \
+            --reporter=html,junit
+        env:
+          CI: true
+          BASE_URL: http://127.0.0.1:3000
+
+      - name: Upload auth-production results
+        if: steps.prod_creds.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-auth-production
+          path: web/playwright-report/
+          retention-days: 7
+
+      - name: Upload auth-production junit
+        if: steps.prod_creds.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results-auth-production
+          path: web/test-results/
+          retention-days: 7
+
   # Performance Tests
   performance-tests:
     name: Performance Tests
@@ -338,7 +448,7 @@ jobs:
   test-summary:
     name: Test Results Summary
     runs-on: ubuntu-latest
-    needs: [unit-integration-tests, e2e-tests, performance-tests, security-tests, load-tests]
+    needs: [unit-integration-tests, e2e-tests, auth-production-e2e, performance-tests, security-tests, load-tests]
     if: always()
 
     steps:

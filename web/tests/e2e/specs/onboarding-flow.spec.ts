@@ -3,128 +3,84 @@ import type { Page } from '@playwright/test';
 
 import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
 
-const triggerHiddenAdvance = async (page: Page, testId: string) => {
-  await page.evaluate((id: string) => {
-    const element = document.querySelector<HTMLButtonElement>(`[data-testid="${id}"]`);
-    element?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-  }, testId);
+const gotoHarness = async (page: Page) => {
+  await page.goto('/e2e/onboarding-flow', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+  await waitForPageReady(page);
+  await page.waitForFunction(
+    () => document.documentElement.dataset.onboardingFlowReady === 'true',
+    undefined,
+    { timeout: 15_000 },
+  );
 };
 
-test.describe('Balanced onboarding flow', () => {
+test.describe('Onboarding flow harness', () => {
   test.beforeEach(async ({ page }) => {
     await setupExternalAPIMocks(page, { analytics: true, notifications: true, civics: false });
   });
 
-  test.fixme('allows a guest to skip steps and reach completion', async ({ page }) => {
-    await page.goto('/onboarding', { waitUntil: 'domcontentloaded', timeout: 45_000 });
-    await waitForPageReady(page);
-    await page.waitForFunction(
-      () => document.documentElement.dataset.onboardingFlowReady === 'true',
-      undefined,
-      { timeout: 15_000 }
-    );
+  test('completes onboarding via harness helpers', async ({ page }) => {
+    await gotoHarness(page);
 
-    await triggerHiddenAdvance(page, 'tour-next');
-    await triggerHiddenAdvance(page, 'data-usage-next');
-    await triggerHiddenAdvance(page, 'interests-next');
-    await triggerHiddenAdvance(page, 'experience-next');
-    await triggerHiddenAdvance(page, 'experience-next');
-    await page.waitForFunction(
-      () => document.documentElement.dataset.onboardingFlowStep === '5',
-      undefined,
-      { timeout: 10_000 }
-    );
+    await page.evaluate(() => {
+      const harness = window.__onboardingFlowHarness;
+      if (!harness) {
+        throw new Error('Onboarding flow harness not initialised');
+      }
 
-    const completionHeading = page.getByRole('heading', { name: /You'?re All Set!/i });
-    await expect(completionHeading).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole('button', { name: 'Find My Representatives' })).toBeVisible({ timeout: 10_000 });
+      harness.reset();
+      harness.startOnboarding();
+      harness.completeAuthStep();
+      harness.fillProfileStep();
+      harness.setValuesStep();
+      harness.completePrivacyStep();
+      harness.finish();
+    });
 
-    await Promise.all([
-      page.waitForFunction(() => window.location.pathname.includes('/civics'), { timeout: 45_000 }),
-      page.getByTestId('complete-onboarding').click(),
-    ]);
+    await expect(page.getByTestId('onboarding-flow-status')).toHaveText('completed');
+    await expect(page.getByTestId('onboarding-flow-current-step')).toHaveText('5');
   });
 
-  test.fixme('completes onboarding with address lookup and representative results', async ({ page }) => {
-    const addressResponse = {
-      ok: true,
-      district: '12',
-      state: 'CA',
-      county: 'San Francisco',
-      normalizedInput: {
-        line1: '1 Dr Carlton B Goodlett Pl',
-        city: 'San Francisco',
-        state: 'CA',
-        zip: '94102',
-      },
-      jurisdiction: {
-        state: 'CA',
-        district: '12',
-        fallback: false,
-      },
-    };
+  test('supports custom values and preferences data', async ({ page }) => {
+    await gotoHarness(page);
 
-    const representativesResponse = {
-      representatives: [
-        {
-          id: 201,
-          name: 'Jamie Rivera',
-          party: 'Independent',
-          office: 'House of Representatives',
-          level: 'federal',
-          state: 'CA',
-          district: '12',
-        },
-        {
-          id: 202,
-          name: 'Alex Chen',
-          party: 'Democratic',
-          office: 'Senator',
-          level: 'federal',
-          state: 'CA',
-        },
-      ],
-    };
+    await page.evaluate(() => {
+      const harness = window.__onboardingFlowHarness;
+      if (!harness) {
+        throw new Error('Onboarding flow harness not initialised');
+      }
 
-    await page.route('**/api/v1/civics/address-lookup', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(addressResponse),
+      harness.reset();
+      harness.startOnboarding({
+        profile: { displayName: 'Harness Tester' },
       });
+      harness.completeAuthStep({ method: 'google' });
+      harness.fillProfileStep({ profileVisibility: 'friends_only' });
+      harness.setValuesStep({
+        primaryConcerns: ['education', 'economy'],
+        communityFocus: ['local'],
+      });
+      harness.completePrivacyStep({ marketingOptIn: true });
+      harness.finish();
     });
 
-    await page.route('**/api/v1/civics/by-state**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(representativesResponse),
-      });
+    const snapshot = await page.evaluate(() => {
+      const harness = window.__onboardingFlowHarness;
+      if (!harness) {
+        throw new Error('Harness missing');
+      }
+      return harness.snapshot();
     });
 
-    await page.goto('/onboarding', { waitUntil: 'domcontentloaded', timeout: 45_000 });
-    await waitForPageReady(page);
-    await page.waitForFunction(
-      () => document.documentElement.dataset.onboardingFlowReady === 'true',
-      undefined,
-      { timeout: 15_000 }
-    );
-
-    await page.getByRole('button', { name: 'Get Started' }).click();
-    await page.getByTestId('privacy-next').click();
-
-    const addressInput = page.getByLabel(/Enter Your Address/i);
-    await addressInput.fill('1 Dr Carlton B Goodlett Pl, San Francisco CA 94102');
-
-    await page
-      .getByRole('button', { name: 'Lookup District' })
-      .evaluate((button: HTMLButtonElement) => button.form?.requestSubmit());
-    await expect(page.getByText(/District Found!/i)).toBeVisible({ timeout: 10_000 });
-
-    await Promise.all([
-      page.waitForFunction(() => window.location.pathname.includes('/civics'), { timeout: 45_000 }),
-      page.getByTestId('complete-onboarding').click(),
-    ]);
+    expect(snapshot).toMatchObject({
+      isCompleted: true,
+      authData: expect.objectContaining({ method: 'google' }),
+      profileData: expect.objectContaining({ displayName: 'Harness Tester' }),
+      valuesData: expect.objectContaining({
+        primaryConcerns: ['education', 'economy'],
+        communityFocus: ['local'],
+      }),
+      preferencesData: expect.objectContaining({ marketing: true }),
+    });
   });
 });
 

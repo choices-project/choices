@@ -18,13 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
 import ContactModal from '@/features/contact/components/ContactModal';
+import { useAuth } from '@/hooks/useAuth';
 import {
   useUserRepresentativeEntries,
   useGetUserRepresentatives,
   useRepresentativeGlobalLoading,
   useRepresentativeError
 } from '@/lib/stores/representativeStore';
-import { useAuth } from '@/hooks/useAuth';
 import { withOptional } from '@/lib/util/objects';
 import type { Representative } from '@/types/representative';
 

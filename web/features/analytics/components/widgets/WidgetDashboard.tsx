@@ -34,8 +34,8 @@ import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/utils/logger';
 
 import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
-import { getWidget } from '../../lib/widgetRegistry';
 import { getPreset, getAllPresets } from '../../lib/widgetPresets';
+import { getWidget } from '../../lib/widgetRegistry';
 import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
 import type { WidgetConfig } from '../../types/widget';
 

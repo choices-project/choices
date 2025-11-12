@@ -1,17 +1,12 @@
 /**
  * @jest-environment jsdom
  */
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
 
 import type { AdminUser } from '@/features/admin/types';
 import {
-  useAdminActions,
-  useAdminSelectedUsers,
-  useAdminShowBulkActions,
+  selectFilteredAdminUsers,
   useAdminStore,
-  useAdminUserFilters,
-  useAdminUserCount,
-  useFilteredAdminUsers,
 } from '@/lib/stores';
 
 const createAdminUser = (overrides: Partial<AdminUser> = {}): AdminUser => ({
@@ -64,38 +59,49 @@ describe('adminStore selectors', () => {
 
     seedAdminUsers(users);
 
-    const { result: filtered } = renderHook(() => useFilteredAdminUsers());
-    const { result: filters } = renderHook(() => useAdminUserFilters());
+    const initialState = useAdminStore.getState();
 
-    expect(filters.current.searchTerm).toBe('');
-    expect(filtered.current).toHaveLength(3);
+    expect(initialState.userFilters.searchTerm).toBe('');
+    expect(selectFilteredAdminUsers(initialState)).toHaveLength(3);
 
     act(() => {
       useAdminStore.getState().setUserFilters({ searchTerm: 'maya' });
     });
 
-    expect(filtered.current).toHaveLength(1);
-    expect(filtered.current[0]?.id).toBe('moderator-1');
+    let currentState = useAdminStore.getState();
+    let filteredUsers = selectFilteredAdminUsers(currentState);
+
+    expect(filteredUsers).toHaveLength(1);
+    expect(filteredUsers[0]?.id).toBe('moderator-1');
 
     act(() => {
       useAdminStore.getState().setUserFilters({ searchTerm: '', roleFilter: 'support' });
     });
 
-    expect(filtered.current).toHaveLength(1);
-    expect(filtered.current[0]?.id).toBe('support-1');
+    currentState = useAdminStore.getState();
+    filteredUsers = selectFilteredAdminUsers(currentState);
+
+    expect(filteredUsers).toHaveLength(1);
+    expect(filteredUsers[0]?.id).toBe('support-1');
 
     act(() => {
       useAdminStore.getState().setUserFilters({ statusFilter: 'inactive' });
     });
 
-    expect(filtered.current).toHaveLength(0);
+    currentState = useAdminStore.getState();
+    filteredUsers = selectFilteredAdminUsers(currentState);
+
+    expect(filteredUsers).toHaveLength(0);
 
     act(() => {
       useAdminStore.getState().setUserFilters({ roleFilter: 'moderator', statusFilter: 'inactive' });
     });
 
-    expect(filtered.current).toHaveLength(1);
-    expect(filtered.current[0]?.id).toBe('moderator-1');
+    currentState = useAdminStore.getState();
+    filteredUsers = selectFilteredAdminUsers(currentState);
+
+    expect(filteredUsers).toHaveLength(1);
+    expect(filteredUsers[0]?.id).toBe('moderator-1');
   });
 
   it('tracks selected users and bulk action visibility', () => {
@@ -107,49 +113,51 @@ describe('adminStore selectors', () => {
 
     seedAdminUsers(users);
 
-    const { result: selected } = renderHook(() => useAdminSelectedUsers());
-    const { result: showBulk } = renderHook(() => useAdminShowBulkActions());
-    const { result: total } = renderHook(() => useAdminUserCount());
-    const { result: adminActions } = renderHook(() => useAdminActions());
+    let state = useAdminStore.getState();
 
-    expect(total.current).toBe(3);
-    expect(selected.current).toEqual([]);
-    expect(showBulk.current).toBe(false);
+    expect(state.users.length).toBe(3);
+    expect(state.userFilters.selectedUsers).toEqual([]);
+    expect(state.userFilters.showBulkActions).toBe(false);
 
     act(() => {
-      adminActions.current.selectUser('admin-1');
+      useAdminStore.getState().selectUser('admin-1');
     });
 
-    expect(selected.current).toEqual(['admin-1']);
-    expect(showBulk.current).toBe(true);
+    state = useAdminStore.getState();
+    expect(state.userFilters.selectedUsers).toEqual(['admin-1']);
+    expect(state.userFilters.showBulkActions).toBe(true);
 
     act(() => {
-      adminActions.current.selectUser('admin-2');
+      useAdminStore.getState().selectUser('admin-2');
     });
 
-    expect(selected.current).toEqual(['admin-1', 'admin-2']);
-    expect(showBulk.current).toBe(true);
+    state = useAdminStore.getState();
+    expect(state.userFilters.selectedUsers).toEqual(['admin-1', 'admin-2']);
+    expect(state.userFilters.showBulkActions).toBe(true);
 
     act(() => {
-      adminActions.current.deselectUser('admin-1');
+      useAdminStore.getState().deselectUser('admin-1');
     });
 
-    expect(selected.current).toEqual(['admin-2']);
-    expect(showBulk.current).toBe(true);
+    state = useAdminStore.getState();
+    expect(state.userFilters.selectedUsers).toEqual(['admin-2']);
+    expect(state.userFilters.showBulkActions).toBe(true);
 
     act(() => {
-      adminActions.current.deselectAllUsers();
+      useAdminStore.getState().deselectAllUsers();
     });
 
-    expect(selected.current).toEqual([]);
-    expect(showBulk.current).toBe(false);
+    state = useAdminStore.getState();
+    expect(state.userFilters.selectedUsers).toEqual([]);
+    expect(state.userFilters.showBulkActions).toBe(false);
 
     act(() => {
-      adminActions.current.selectAllUsers();
+      useAdminStore.getState().selectAllUsers();
     });
 
-    expect(selected.current).toEqual(['admin-1', 'admin-2', 'admin-3']);
-    expect(showBulk.current).toBe(true);
+    state = useAdminStore.getState();
+    expect(state.userFilters.selectedUsers).toEqual(['admin-1', 'admin-2', 'admin-3']);
+    expect(state.userFilters.showBulkActions).toBe(true);
   });
 });
 

@@ -8,8 +8,8 @@
  * @date 2025-01-15
  */
 
-import { logger } from '@/lib/utils/logger';
 import { NotImplementedError } from '@/lib/errors';
+import { logger } from '@/lib/utils/logger';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {

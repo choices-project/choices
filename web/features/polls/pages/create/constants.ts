@@ -1,10 +1,12 @@
 import type { PollCategory } from '@/lib/types/poll-templates';
 
-export const TITLE_CHAR_LIMIT = 120;
-export const DESCRIPTION_CHAR_LIMIT = 360;
-export const MAX_OPTIONS = 10;
-export const MIN_OPTIONS = 2;
-export const MAX_TAGS = 5;
+export {
+  TITLE_CHAR_LIMIT,
+  DESCRIPTION_CHAR_LIMIT,
+  MAX_OPTIONS,
+  MIN_OPTIONS,
+  MAX_TAGS,
+} from '@/lib/polls/wizard/constants';
 
 export type PollCreationStep = 'details' | 'options' | 'audience' | 'review';
 

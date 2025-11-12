@@ -9,8 +9,8 @@
  */
 
 import logger from '@/lib/utils/logger';
-
 import type { Json } from '@/types/database';
+
 import type {
   ProfileUser,
   UserProfile,

@@ -11,9 +11,9 @@
 'use client'
 
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore'
+import { usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
   /** Whether to show detailed status information */
@@ -32,41 +32,42 @@ type OfflineIndicatorProps = {
  * @returns Offline indicator UI or null if online and not showing details
  */
 export default function OfflineIndicator({ showDetails = false, className = '' }: OfflineIndicatorProps) {
-  const { offline, preferences } = usePWAStore()
-  const [isOnline, setIsOnline] = useState(true)
-  const [_showIndicator, setShowIndicator] = useState(false)
-  
-  // Get queued actions count
-  const offlineVotes = offline.offlineData.queuedActions.length
-  const hasOfflineData = offlineVotes > 0
+  const offline = usePWAOffline();
+  const preferences = usePWAPreferences();
+  const { setOnlineStatus } = usePWAActions();
+  const [isOnline, setIsOnline] = useState<boolean>(offline.isOnline);
+
+  const offlineVotes = offline.offlineData.queuedActions.length;
+  const hasOfflineData = offlineVotes > 0;
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const handleOnline = () => {
-      setIsOnline(true)
-      setShowIndicator(false)
-    }
-    
+      setOnlineStatus(true);
+      setIsOnline(true);
+    };
+
     const handleOffline = () => {
-      setIsOnline(false)
-      setShowIndicator(true)
-    }
+      setOnlineStatus(false);
+      setIsOnline(false);
+    };
 
-    // Set initial state (only on client side)
-    if (typeof window !== 'undefined') {
-      setIsOnline(navigator.onLine)
-      setShowIndicator(!navigator.onLine)
-
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-    }
+    setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
-    }
-  }, [])
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [setOnlineStatus]);
+
+  useEffect(() => {
+    setIsOnline(offline.isOnline);
+  }, [offline.isOnline]);
 
   // Don't show if PWA is not enabled
   if (!preferences.offlineMode) {

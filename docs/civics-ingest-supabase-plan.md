@@ -16,14 +16,14 @@ This document enumerates the outstanding work needed to ensure the rebuilt civic
 | Table | Current usage | Gaps | Required ingest action |
 | ----- | ------------- | ---- | ---------------------- |
 | `representatives_core` | Filled via YAML + Supabase merge | `data_sources`, verification state, and some term metadata still pending | Map canonical roles to `level`, `office`, `district`, `term_*`, maintain `data_sources`, and persist `verification_status` |
-| `representative_contacts` | **Synced via `npm run sync:contacts`** | Committee/staff-specific contacts not yet captured | Expand to include capitol/district office metadata; consider secondary sources |
-| `representative_social_media` | **Synced via `npm run sync:social`** | Influence metrics and verification proofs missing | Optionally enrich with follower counts / verification evidence |
-| `representative_photos` | **Synced via `npm run sync:photos`** | Alternate angles / congressional portraits not yet fetched | Add additional sources with attribution metadata where available |
-| `representative_committees` | **Partially populated via `sync:committees`** | Federal + state committee data still missing from SQL merge | Extend merge pipeline to replace per-representative REST write; add federal Congress.gov committees |
-| `representative_activity` | **Populated via `sync:activity` (OpenStates bills, auto-run post-merge)** | Additional sources (Congress.gov votes, GovTrack) not yet ingested | Expand inputs beyond OpenStates; migrate logic into SQL merge/orchestrator |
+| `representative_contacts` | **Synced via `npm run state:sync:contacts`** + Google Civic supplement | Committee/staff-specific contacts not yet captured | Expand to include capitol/district office metadata; consider secondary sources |
+| `representative_social_media` | **Synced via `npm run state:sync:social`** (Google Civic adds extra channels) | Influence metrics and verification proofs missing | Optionally enrich with follower counts / verification evidence |
+| `representative_photos` | **Synced via `npm run state:sync:photos`** (Google Civic adds fallback portrait) | Alternate angles / congressional portraits not yet fetched | Add additional sources with attribution metadata where available |
+| `representative_committees` | **Partially populated via `state:sync:committees`** | Federal + state committee data still missing from SQL merge | Extend merge pipeline to replace per-representative REST write; add federal Congress.gov committees |
+| `representative_activity` | **Populated via `state:sync:activity` (OpenStates bills, auto-run post-merge)** | Additional sources (Congress.gov votes, GovTrack) not yet ingested | Expand inputs beyond OpenStates; migrate logic into SQL merge/orchestrator |
 | `id_crosswalk` | Partially populated | Quality scores missing, conflicting FEC IDs handled manually | Continue using `applyCrosswalkToRepresentative`; on ingest, upsert deterministic mappings per canonical ID with `quality_score` attribute |
 | `representative_crosswalk_enhanced` / `representative_enhanced_crosswalk` | Unused | Intended for richer metadata | Decide on a single table (likely `representative_crosswalk_enhanced`) and persist external attrs (confidence, last_verified) from orchestrator |
-| `representative_data_sources` | **Synced via `npm run sync:data-sources`** | Raw payload hashes & validation metadata still optional | Consider storing payload excerpts / hash digests for audit trail |
+| `representative_data_sources` | **Synced via `npm run state:sync:data-sources`** | Raw payload hashes & validation metadata still optional | Consider storing payload excerpts / hash digests for audit trail |
 | `representative_data_quality` | Populated by SQL merge baseline | Finance enrichment did not persist updates | Finance enrichment now upserts freshness/completeness; extend SQL merge to capture state-specific metrics |
 | `representative_campaign_finance` | Populated with totals | Cycle metadata now available after widening | Update FEC enrichment to write new columns (`cycle`, `small_donor_percentage`, `top_contributors`, `office_code`, `district`, `sources`) – already implemented |
 
@@ -38,13 +38,13 @@ This document enumerates the outstanding work needed to ensure the rebuilt civic
    - Chunked `.in()` queries avoid Cloudflare 414 errors.
 
 3. 🔄 **Write modules for normalized tables**
-   - ✅ Contacts (`sync:contacts`)
-   - ✅ Social (`sync:social`)
-   - ✅ Photos (`sync:photos`)
-   - ⏳ Committees/activities still pending.
+   - ✅ Contacts (`state:sync:contacts`)
+   - ✅ Social (`state:sync:social`)
+   - ✅ Photos (`state:sync:photos`)
+   - ⏳ Committees/activities still pending (`state:sync:committees` / `state:sync:activity`).
 
 4. 🔄 **Provenance + quality logging**
-   - ✅ `representative_data_sources` via `sync:data-sources`.
+   - ✅ `representative_data_sources` via `state:sync:data-sources`.
    - ⚙️ TODO: persist `representative_data_quality` metrics and notes.
 
 5. ⚙️ **Enrichment orchestration (planned)**
@@ -67,15 +67,15 @@ This document enumerates the outstanding work needed to ensure the rebuilt civic
 - Capture API notes (current rate limits, error types, typical response sizes) for FEC and OpenStates.
 
 ### Phase 2 — Congress.gov & GovInfo Identifier Push
-- Build `npm run enrich:congress-ids` to download the official Congress.gov member export (includes GovInfo identifiers) and upsert `congress_gov_id` / `govinfo_id`.
+- Build `npm run federal:enrich:congress` to download the official Congress.gov member export (includes GovInfo identifiers) and upsert `congress_gov_id` / `govinfo_id`.
 - Backfill bioguide/FEC/Congress.gov crosswalks where missing; update `representative_data_sources` with provenance (`congress_gov_member_export`).
-- Extend `report:gaps` to show remaining missing identifiers until the backlog hits zero.
+- Extend `tools:report:gaps` to show remaining missing identifiers until the backlog hits zero.
 - Re-run `npm run ingest:qa` after the first sync to verify schema alignment and spot-check a sample of updated reps.
 
 ### Phase 3 — Finance Enhancements (FEC)
-- Continue batching `npm run enrich:finance` with controlled `--limit`/`--offset`/`--states`.
+- Continue batching `npm run federal:enrich:finance` with controlled `--limit`/`--offset`/`--states`.
 - Default runs still target missing/stale rows; use `--stale-days=<n>` for refresher batches, `--include-existing` for full rebuilds.
-- Persist `fec:no-data` placeholders so repeat cron jobs skip empty totals until stale; `report:gaps` surfaces these separately.
+- Persist `fec:no-data` placeholders so repeat cron jobs skip empty totals until stale; `tools:report:gaps` surfaces these separately.
 - Append run metrics (processed/succeeded/rate-limited) to the shared ingest log; re-run `npm run ingest:qa` for verification.
 
 ### Phase 4 — Congress.gov Activity
@@ -83,10 +83,10 @@ This document enumerates the outstanding work needed to ensure the rebuilt civic
 - Implement `npm run enrich:congress-activity` (or similar) to populate `representative_committees` and `representative_activity` with official committee assignments, votes, and bill sponsorship summaries.
 - Cache raw payloads, store hashes/provenance in `representative_data_sources`, and update docs as coverage lands.
 
-### Phase 5 — OpenStates API Enrichment (State Contacts/Social)
+### Phase 5 — OpenStates API Enrichment (State Contacts/Social + Google Civic)
 - Identify remaining state-level contact/social gaps via Supabase queries.
 - Prototype OpenStates API fetches (respect rate limits); design `npm run enrich:openstates-api -- --states=CA --limit=50 --dry-run`.
-- Roll out contacts, then committees/social/activity; persist payloads in `representative_data_sources.raw_data`. (`sync:committees`/`sync:activity` cover interim OpenStates writes → Supabase tables.)
+- Roll out contacts, then committees/social/activity; persist payloads in `representative_data_sources.raw_data`. (`state:sync:committees` / `state:sync:activity` cover interim OpenStates writes → Supabase tables; `state:sync:google-civic` backfills missing contact and social data.)
 - Update docs (`README`, operations guide) and re-run `npm run ingest:qa` after each new data class.
 
 ## Sequencing / Milestones

@@ -10,16 +10,18 @@ Need more context? Start with [`docs/civics-backend-quickstart.md`](./civics-bac
 - [ ] Supabase migrations are up to date (run `supabase db push` or apply via the dashboard if needed).
 
 ## Ingest
-- [ ] `npm run ingest:openstates` completes without errors.
+- [ ] `npm run openstates:ingest` completes without errors.
 - [ ] `npm run ingest:qa` completes successfully (schema aligned, no duplicate canonicals, preview returns data).
-- [ ] If `ingest:qa` fails, resolve the issue (`npm run inspect:schema`, `npm run audit:duplicates`, `npm run fix:duplicates`, etc.) and rerun `ingest:qa` until it passes.
+- [ ] If `ingest:qa` fails, resolve the issue (`npm run tools:inspect:schema`, `npm run tools:report:duplicates`, `npm run tools:fix:duplicates`, etc.) and rerun `ingest:qa` until it passes.
 
 ## Optional enrichments (run as required)
-- [ ] `npm run enrich:finance -- --dry-run` (review output) then rerun without `--dry-run`.
-- [ ] `npm run sync:contacts/social/photos/data-sources -- --dry-run` (if legacy REST writers are still in use) before running live.
-- [ ] `npm run sync:committees -- --dry-run` (if committee assignments need refreshing) before running live.
-- [ ] `npm run sync:activity -- --dry-run` (if OpenStates bill activity needs refreshing) before running live.
-- [ ] `npm run audit:crosswalk` passes after any manual adjustments.
+- [ ] `npm run federal:enrich:finance -- --dry-run` (review output) then rerun without `--dry-run`.
+- [ ] `npm run federal:enrich:congress -- --dry-run` (fill missing Congress.gov / GovInfo IDs) before running live.
+- [ ] `npm run state:sync:contacts/social/photos/data-sources -- --dry-run` (if legacy REST writers are still in use) before running live.
+- [ ] `npm run state:sync:committees -- --dry-run` (if committee assignments need refreshing) before running live.
+- [ ] `npm run state:sync:activity -- --dry-run` (if OpenStates bill activity needs refreshing) before running live.
+- [ ] `npm run state:refresh -- --states=CA --dry-run` (optional shortcut; honours `--only` / `--skip`).
+- [ ] `npm run tools:audit:crosswalk` passes after any manual adjustments.
 
 ## Post-ingest
 - [ ] Spot-check a handful of representatives (`npm run preview -- --states=CA --limit=5`).
@@ -27,9 +29,9 @@ Need more context? Start with [`docs/civics-backend-quickstart.md`](./civics-bac
 - [ ] Archive/commit ingest notes so future runs know what changed.
 
 ## Reference commands
-- Full run: `npm run ingest:openstates && npm run ingest:qa`
-- Schema inspection: `npm run inspect:schema`
-- Duplicate audit: `npm run audit:duplicates`
-- Duplicate fix: `npm run fix:duplicates -- --canonical=<ID> --apply`
+- Full run: `npm run openstates:ingest && npm run ingest:qa`
+- Schema inspection: `npm run tools:inspect:schema`
+- Duplicate audit: `npm run tools:report:duplicates`
+- Duplicate fix: `npm run tools:fix:duplicates -- --canonical=<ID> --apply`
 - Preview slice: `npm run preview -- --states=CA --limit=10`
 

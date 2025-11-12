@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';

@@ -6,6 +6,7 @@ import {
   useVotingStore,
   type VotingState,
   type VotingActions,
+  getVotingState,
 } from '@/lib/stores/votingStore';
 
 export type VotingStoreHarness = {
@@ -20,9 +21,7 @@ export type VotingStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __votingStoreHarness?: VotingStoreHarness;
-  }
+  var __votingStoreHarness: VotingStoreHarness | undefined;
 }
 
 export default function VotingStoreHarnessPage() {
@@ -51,13 +50,13 @@ export default function VotingStoreHarnessPage() {
       registerTimer,
       clearTimer,
       clearAllTimers,
-      getSnapshot: () => useVotingStore.getState(),
+      getSnapshot: () => getVotingState(),
     };
 
     window.__votingStoreHarness = harness;
     return () => {
       if (window.__votingStoreHarness === harness) {
-        delete window.__votingStoreHarness;
+        window.__votingStoreHarness = undefined;
       }
     };
   }, [clearAllTimers, clearTimer, registerTimer, reset, setBallots, setElections, setVotingRecords]);

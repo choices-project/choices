@@ -1,6 +1,6 @@
 # Feature Inventory — November 2025
 
-_Last updated: November 9, 2025_
+_Last updated: November 11, 2025_
 
 The table below reflects the current maturity of the major product surfaces. Rows are intentionally concise—see the linked files or code locations for deeper implementation notes.
 
@@ -12,7 +12,7 @@ The table below reflects the current maturity of the major product surfaces. Row
 | Admin dashboard | 🚧 Needs attention | Feature flag UI uses modern hooks, but analytics widgets still reference mocked data and legacy store patterns. Admin store refactor and Supabase-backed analytics endpoints are on the roadmap. |
 | Analytics & reporting | 🚧 Needs attention | UI components exist (charts, heatmaps), yet the backing APIs remain partially mocked and Redis caching is experimental. Privacy filter enforcement and end-to-end validation are outstanding. |
 | Civic data (representatives, actions) | ✅ Stable foundation | Core queries and UI flows function, but we lack modern integration tests. Future iterations should align these modules with the refreshed store standards. |
-| PWA & offline features | ⚠️ Lightly exercised | Service worker, push notifications, and background sync are present but not covered by current regression suites. Re-validate before promising offline guarantees. |
+| PWA & offline features | 🔄 In progress | Service worker, push notifications, and background sync now ship with a dedicated harness (`/e2e/pwa-store`) and Playwright coverage, but broader device permutations still need validation before we claim full offline guarantees. |
 
 ---
 

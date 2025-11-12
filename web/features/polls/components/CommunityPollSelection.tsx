@@ -72,7 +72,8 @@ const formatWeek = (dateString: string) => {
   }
   const weekStart = new Date(date);
   weekStart.setDate(date.getDate() - date.getDay());
-  return weekStart.toISOString().split('T')[0];
+  const isoDate = weekStart.toISOString().split('T')[0];
+  return isoDate ?? 'This Week';
 };
 
 export default function CommunityPollSelection() {
@@ -99,16 +100,25 @@ export default function CommunityPollSelection() {
       const totalVotes = typeof poll.total_votes === 'number' ? poll.total_votes : 0;
       const participation = typeof poll.participation === 'number' ? poll.participation : 0;
       const trendingScore = Math.min(100, Math.round(totalVotes * 0.08 + participation * 0.12 + options.length * 3));
+      const rawSuggestedBy =
+        (poll as Record<string, unknown>).created_by ??
+        (poll as Record<string, unknown>).owner ??
+        (poll as Record<string, unknown>).author;
+      const suggestedBy =
+        typeof rawSuggestedBy === 'string'
+          ? rawSuggestedBy
+          : typeof rawSuggestedBy === 'object' && rawSuggestedBy !== null
+          ? 'name' in rawSuggestedBy && typeof (rawSuggestedBy as { name?: unknown }).name === 'string'
+            ? (rawSuggestedBy as { name: string }).name
+            : 'community'
+          : 'community';
 
       return {
         id: poll.id,
         title: poll.title ?? (poll as Record<string, unknown>).question ?? 'Untitled Poll',
         description: poll.description ?? '',
         category: poll.category ?? 'general',
-        suggestedBy:
-          (poll as Record<string, unknown>).created_by ??
-          (poll as Record<string, unknown>).owner ??
-          'community',
+        suggestedBy,
         votes: totalVotes,
         status: 'trending' as const,
         createdAt: poll.created_at ?? new Date().toISOString(),
@@ -125,8 +135,9 @@ export default function CommunityPollSelection() {
     }
 
     const groups = pollSuggestions.reduce<Record<string, PollSuggestion[]>>((acc, suggestion) => {
-      const key = formatWeek(suggestion.createdAt);
-      acc[key] = acc[key] ? [...acc[key], suggestion] : [suggestion];
+      const key: string = formatWeek(suggestion.createdAt);
+      const existing = acc[key] ?? [];
+      acc[key] = [...existing, suggestion];
       return acc;
     }, {});
 
@@ -167,11 +178,13 @@ export default function CommunityPollSelection() {
         ];
         const icons = ['🗳️', '📊', '📺', '🌐', '🏆', '🏛️'];
         const index = Object.keys(acc).length % palette.length;
+        const icon = icons[index % icons.length] ?? '🗳️';
+        const color = palette[index] ?? 'bg-blue-100 text-blue-700';
         acc[suggestion.category] = {
           id: suggestion.category,
           name: suggestion.category.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-          icon: icons[index % icons.length],
-          color: palette[index],
+          icon,
+          color,
         };
         return acc;
       },
@@ -248,7 +261,7 @@ export default function CommunityPollSelection() {
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{suggestion.description}</p>
-                  
+
                   <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
                     <span>Suggested by {suggestion.suggestedBy}</span>
                     <span>•</span>
@@ -256,7 +269,7 @@ export default function CommunityPollSelection() {
                     <span>•</span>
                     <span>{suggestion.createdAt}</span>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
@@ -266,17 +279,17 @@ export default function CommunityPollSelection() {
                       {categories.find((c) => c.id === suggestion.category)?.icon ?? '🗳️'}{' '}
                       {categories.find((c) => c.id === suggestion.category)?.name ?? suggestion.category}
                     </span>
-                    
+
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getCostColor(suggestion.estimatedCost)}`}>
                       {suggestion.estimatedCost} cost
                     </span>
-                    
+
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getEngagementColor(suggestion.expectedEngagement)}`}>
                       {suggestion.expectedEngagement} engagement
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col space-y-2">
                   <button className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
                     <Heart className="w-4 h-4" />
@@ -307,7 +320,7 @@ export default function CommunityPollSelection() {
               <span>{selection.totalVotes} total votes</span>
             </div>
           </div>
-          
+
           <div className="mb-4">
             <h4 className="font-medium text-gray-900 mb-2">Selection Criteria</h4>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -316,7 +329,7 @@ export default function CommunityPollSelection() {
               ))}
             </ul>
           </div>
-          
+
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">Selected Polls</h4>
             {selection.selectedPolls.map((poll) => (
@@ -343,8 +356,14 @@ export default function CommunityPollSelection() {
     </div>
   );
 
-  const renderAnalyticsView = () => (
-    <div className="space-y-6">
+  const renderAnalyticsView = () => {
+    const firstSelection = weeklySelections[0];
+    const featuredPollCount = firstSelection
+      ? firstSelection.selectedPolls.length
+      : Math.min(3, pollSuggestions.length);
+
+    return (
+      <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
@@ -354,7 +373,7 @@ export default function CommunityPollSelection() {
           <div className="text-2xl font-bold text-blue-600">{analytics.total ?? pollSuggestions.length}</div>
           <div className="text-sm text-gray-500">Currently published</div>
         </div>
-        
+
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-5 h-5 text-green-600" />
@@ -365,28 +384,24 @@ export default function CommunityPollSelection() {
           </div>
           <div className="text-sm text-gray-500">Across featured polls</div>
         </div>
-        
+
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Award className="w-5 h-5 text-purple-600" />
             <span className="font-semibold text-gray-900">Featured Polls</span>
           </div>
-          <div className="text-2xl font-bold text-purple-600">
-            {weeklySelections.length
-              ? weeklySelections[0].selectedPolls.length
-              : Math.min(3, pollSuggestions.length)}
-          </div>
+          <div className="text-2xl font-bold text-purple-600">{featuredPollCount}</div>
           <div className="text-sm text-gray-500">This week</div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
         <div className="space-y-3">
           {categories.map((category) => {
             const count = pollSuggestions.filter((poll) => poll.category === category.id).length;
             const percentage = pollSuggestions.length ? (count / pollSuggestions.length) * 100 : 0;
-            
+
             return (
               <div key={category.id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -408,7 +423,8 @@ export default function CommunityPollSelection() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-4">

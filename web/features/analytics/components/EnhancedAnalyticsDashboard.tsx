@@ -40,19 +40,19 @@ import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/types/database';
 
 import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
 import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
-import type { Database } from '@/types/database';
-
-type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
-type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
 
 import DemographicsChart from './DemographicsChart';
 import PollHeatmap from './PollHeatmap';
 import TemporalAnalysisChart from './TemporalAnalysisChart';
 import TrendsChart from './TrendsChart';
 import TrustTierComparisonChart from './TrustTierComparisonChart';
+
+type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
+type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
 
 
 type EnhancedAnalyticsDashboardProps = {

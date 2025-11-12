@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
-import { useProfile, useProfileExport } from '@/features/profile/hooks/use-profile';
+import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
-  const { profile, isLoading: profileLoading, error: profileError, refetch } = useProfile();
+  const { profile, isLoading: profileLoading, profileError, refetch } = useProfileData();
   const { exportProfile, isExporting } = useProfileExport();
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
 

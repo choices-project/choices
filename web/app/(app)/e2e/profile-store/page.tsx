@@ -13,9 +13,7 @@ export type ProfileStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __profileStoreHarness?: ProfileStoreHarness;
-  }
+  var __profileStoreHarness: ProfileStoreHarness | undefined;
 }
 
 const formatArray = (values: string[]) => (values.length ? values.join(',') : 'none');

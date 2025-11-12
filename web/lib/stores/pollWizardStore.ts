@@ -10,6 +10,7 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { createPollRequest, type PollCreateRequestResult } from '@/lib/polls/api';
 import {
   createInitialPollWizardData,
   POLL_WIZARD_TOTAL_STEPS,
@@ -19,6 +20,13 @@ import {
   validateAllPollWizardSteps,
   validatePollWizardStep,
 } from '@/lib/polls/validation';
+import {
+  buildPollCreatePayload,
+  mapValidationErrors,
+  validateWizardDataForSubmission,
+  type PollWizardSubmissionResult,
+  type PollWizardSubmissionError,
+} from '@/lib/polls/wizard/submission';
 import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
@@ -31,11 +39,17 @@ export type PollWizardState = {
   totalSteps: number;
   data: PollWizardData;
   isLoading: boolean;
+  error: string | null;
   errors: Record<string, string>;
   progress: number;
   canGoBack: boolean;
   canProceed: boolean;
   isComplete: boolean;
+};
+
+export type PollWizardSubmitOptions = {
+  signal?: AbortSignal;
+  request?: (payload: Parameters<typeof createPollRequest>[0], signal?: AbortSignal) => Promise<PollCreateRequestResult>;
 };
 
 export type PollWizardActions = {
@@ -66,11 +80,7 @@ export type PollWizardActions = {
 
   // Error handling
   setFieldError: (field: string, error: string) => void;
-  /** @deprecated use setFieldError */
-  setError: (field: string, error: string) => void;
   clearFieldError: (field: string) => void;
-  /** @deprecated use clearFieldError */
-  clearError: (field: string) => void;
   clearAllErrors: () => void;
 
   // Utilities
@@ -79,6 +89,8 @@ export type PollWizardActions = {
   canProceedToNextStep: (step: number) => boolean;
   isStepValid: (step: number) => boolean;
   getStepErrors: (step: number) => Record<string, string>;
+
+  submitPoll: (options?: PollWizardSubmitOptions) => Promise<PollWizardSubmissionResult>;
 };
 
 export type PollWizardStore = PollWizardState & PollWizardActions;
@@ -93,6 +105,7 @@ export const createInitialPollWizardState = (): PollWizardState => ({
   totalSteps: POLL_WIZARD_TOTAL_STEPS,
   data: createInitialPollWizardData(),
   isLoading: false,
+  error: null,
   errors: {},
   progress: 0,
   canGoBack: false,
@@ -130,11 +143,156 @@ export const createPollWizardActions = (
       state.canProceed = step < totalSteps - 1;
       state.isComplete = step === totalSteps - 1;
       state.errors = {};
+      state.error = null;
     });
   };
 
   const runValidation = (step: number, data: PollWizardData) =>
     validatePollWizardStep(step, data);
+
+  const applyRequestErrorReason = (
+    status: number,
+    fieldErrors: Record<string, string> | undefined,
+    details: unknown,
+  ): PollWizardSubmissionError['reason'] => {
+    if (status === 0) {
+      if (details && typeof details === 'object' && 'reason' in (details as Record<string, unknown>)) {
+        const reason = (details as Record<string, unknown>).reason;
+        if (reason === 'aborted') {
+          return 'cancelled';
+        }
+      }
+      return 'network';
+    }
+
+    if (status === 401) {
+      return 'authentication';
+    }
+
+    if (status === 403) {
+      return 'permission';
+    }
+
+    if (status === 429) {
+      return 'rate_limit';
+    }
+
+    if (status >= 500) {
+      return 'network';
+    }
+
+    if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+      return 'validation';
+    }
+
+    if (status >= 400 && status < 500) {
+      return 'unknown';
+    }
+
+    return 'unknown';
+  };
+
+  const submitPoll = async (options?: PollWizardSubmitOptions): Promise<PollWizardSubmissionResult> => {
+    const { signal, request = createPollRequest } = options ?? {};
+    const state = get();
+
+    const validation = validateWizardDataForSubmission(state.data);
+
+    if (!validation.success) {
+      const fieldErrors = mapValidationErrors(validation.error);
+      setState((draft) => {
+        draft.errors = fieldErrors;
+        draft.canProceed = false;
+        draft.error = 'Please fix the highlighted issues before publishing.';
+      });
+
+      return {
+        success: false,
+        status: 422,
+        message: 'Please fix the highlighted issues before publishing.',
+        fieldErrors,
+        reason: 'validation',
+      };
+    }
+
+    baseActions.setLoading(true);
+
+    try {
+      const payload = buildPollCreatePayload(validation.data);
+      const result = await request(payload, signal);
+
+      if (!result.success) {
+        const reason = applyRequestErrorReason(result.status, result.fieldErrors, result.details);
+
+        if (reason !== 'cancelled') {
+          setState((draft) => {
+            draft.errors = result.fieldErrors ?? (result.message ? { _form: result.message } : {});
+            draft.canProceed = false;
+            draft.error = result.message ?? null;
+          });
+        }
+
+        const failureResult: PollWizardSubmissionError = {
+          success: false,
+          status: result.status,
+          message: result.message,
+          reason,
+        };
+
+        if (result.fieldErrors) {
+          failureResult.fieldErrors = result.fieldErrors;
+        }
+        if (result.durationMs !== undefined) {
+          failureResult.durationMs = result.durationMs;
+        }
+
+        return failureResult;
+      }
+
+      setState((draft) => {
+        draft.errors = {};
+        draft.canProceed = false;
+        draft.error = null;
+      });
+
+      const successResult: PollWizardSubmissionResult = {
+        success: true,
+        pollId: result.data.id,
+        title: result.data.title,
+        status: result.status,
+      };
+
+      if (result.message) {
+        successResult.message = result.message;
+      }
+      if (result.durationMs !== undefined) {
+        successResult.durationMs = result.durationMs;
+      }
+
+      return successResult;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create poll. Please try again.';
+
+      logger.error('Poll wizard submission failed unexpectedly', {
+        error,
+      });
+
+      setState((draft) => {
+        draft.errors = { _form: message };
+        draft.canProceed = false;
+        draft.error = message;
+      });
+
+      return {
+        success: false,
+        status: 0,
+        message,
+        reason: 'network',
+      };
+    } finally {
+      baseActions.setLoading(false);
+    }
+  };
 
   return {
     setLoading: baseActions.setLoading,
@@ -144,17 +302,7 @@ export const createPollWizardActions = (
         state.errors[field] = error;
       }),
 
-    setError: (field, error) =>
-      setState((state) => {
-        state.errors[field] = error;
-      }),
-
     clearFieldError: (field) =>
-      setState((state) => {
-        delete state.errors[field];
-      }),
-
-    clearError: (field) =>
       setState((state) => {
         delete state.errors[field];
       }),
@@ -333,6 +481,8 @@ export const createPollWizardActions = (
       const state = get();
       return runValidation(step, state.data);
     },
+
+    submitPoll: submitPoll,
   };
 };
 
@@ -384,14 +534,13 @@ export const usePollWizardActions = () =>
     setLoading: state.setLoading,
     setFieldError: state.setFieldError,
     clearFieldError: state.clearFieldError,
-    setError: state.setError,
-    clearError: state.clearError,
     clearAllErrors: state.clearAllErrors,
     getStepData: state.getStepData,
     getProgress: state.getProgress,
     canProceedToNextStep: state.canProceedToNextStep,
     isStepValid: state.isStepValid,
     getStepErrors: state.getStepErrors,
+    submitPoll: state.submitPoll,
   }));
 
 export const usePollWizardStats = () =>

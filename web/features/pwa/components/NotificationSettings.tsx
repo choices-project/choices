@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { usePWAStore } from '@/lib/stores/pwaStore';
+import { usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 
 type NotificationSettingsProps = {
@@ -31,19 +31,20 @@ type NotificationSettingsProps = {
  * @returns Settings UI or null if notifications not supported
  */
 export default function NotificationSettings({ className = '' }: NotificationSettingsProps) {
-  const { preferences, updatePreferences } = usePWAStore();
+  const preferences = usePWAPreferences();
+  const { updatePreferences } = usePWAActions();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   
-  const notificationsSupported = 'Notification' in window;
+  const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
 
   useEffect(() => {
     // Check current notification status from preferences
-    setIsSubscribed(preferences.pushNotifications && Notification.permission === 'granted');
     if (notificationsSupported) {
       setNotificationPermission(Notification.permission);
+      setIsSubscribed(preferences.pushNotifications && Notification.permission === 'granted');
     }
   }, [preferences.pushNotifications, notificationsSupported]);
 

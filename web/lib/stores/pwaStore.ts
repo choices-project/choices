@@ -15,7 +15,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
-import type { BeforeInstallPromptEvent, OfflineVotePayload, OfflineVoteRecord, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
+import type { BeforeInstallPromptEvent, OfflineVotePayload, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -874,10 +874,11 @@ export const usePWANotifications = () => usePWAStore(state => state.notification
 export const usePWAPerformance = () => usePWAStore(state => state.performance);
 export const usePWAPreferences = () => usePWAStore(state => state.preferences);
 export const usePWALoading = () => usePWAStore(state => state.isLoading);
+export const usePWASyncing = () => usePWAStore(state => state.isSyncing);
 export const usePWAError = () => usePWAStore(state => state.error);
 
 // Action selectors
-export const usePWAActions = () => usePWAStore(state => ({
+const selectPWAActions = (state: PWAStore) => ({
   setInstallation: state.setInstallation,
   setInstallPrompt: state.setInstallPrompt,
   setCanInstall: state.setCanInstall,
@@ -918,7 +919,10 @@ export const usePWAActions = () => usePWAStore(state => ({
   setSyncing: state.setSyncing,
   setError: state.setError,
   clearError: state.clearError,
-}));
+});
+
+export const usePWAActions = () => usePWAStore(selectPWAActions);
+export const getPWAActions = () => selectPWAActions(usePWAStore.getState());
 
 export const pwaSelectors = {
   installation: (state: PWAStore) => state.installation,

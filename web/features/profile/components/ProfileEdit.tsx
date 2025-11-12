@@ -1,29 +1,29 @@
 /**
  * Profile Edit Component
- * 
+ *
  * Profile editing form component
  * Consolidates profile editing functionality
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
 
 'use client';
 
-import { 
-  User, 
-  Camera, 
-  Save, 
-  Shield, 
-  ArrowLeft, 
-  Heart, 
+import {
+  User,
+  Camera,
+  Save,
+  Shield,
+  ArrowLeft,
+  Heart,
   Upload,
   Loader2,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,11 +34,31 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useProfileStore } from '@/lib/stores/profileStore';
-import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
-import type { ProfileEditProps } from '../index';
-import type { ProfileUpdateData, ProfileDemographics, PrivacySettings } from '@/types/profile';
+import { useUserAvatarFile, useUserAvatarPreview } from '@/lib/stores';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import { useUserStore } from '@/lib/stores/userStore';
+import type {
+  ProfileEditDraft,
+  ProfileEditErrorKey,
+  PrivacySettingKey,
+  PrivacySettingValue,
+} from '@/lib/stores/userStore';
+import { withOptional } from '@/lib/util/objects';
 import { PROFILE_DEFAULTS } from '@/types/profile';
+import type {
+  ProfileUpdateData,
+  ProfileDemographics,
+  PrivacySettings,
+} from '@/types/profile';
+
+import {
+  useProfileUpdate,
+  useProfileAvatar,
+  useProfileDisplay,
+  useProfileDraft,
+  useProfileDraftActions,
+} from '../hooks/use-profile';
+import type { ProfileEditProps } from '../index';
 
 // Constants for form options
 const COMMUNITY_FOCUS_OPTIONS = [
@@ -99,13 +119,15 @@ const basePrivacyDefaults: Partial<PrivacySettings> = {
   profile_visibility: 'public',
 };
 
-const defaultPrivacySettings: Partial<PrivacySettings> = {
-  ...basePrivacyDefaults,
-  ...(PROFILE_DEFAULTS.privacy_settings ?? {}),
-};
+const defaultPrivacySettings: Partial<PrivacySettings> = withOptional(
+  basePrivacyDefaults,
+  PROFILE_DEFAULTS.privacy_settings ?? {},
+);
 
-const defaultDemographics: ProfileDemographics =
-  PROFILE_DEFAULTS.demographics ? { ...PROFILE_DEFAULTS.demographics } : {};
+const defaultDemographics: ProfileDemographics = withOptional(
+  {} as ProfileDemographics,
+  PROFILE_DEFAULTS.demographics ?? {},
+);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -131,71 +153,161 @@ const toParticipationStyle = (
 
 const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
   if (!isRecord(value)) {
-    return { ...defaultPrivacySettings };
+    return withOptional(defaultPrivacySettings);
   }
 
-  const result = { ...defaultPrivacySettings } as Partial<PrivacySettings>;
+  const extras: Partial<PrivacySettings> = {};
   Object.entries(value).forEach(([key, raw]) => {
     if (typeof raw === 'boolean') {
-      (result as Record<string, boolean | undefined>)[key] = raw;
+      (extras as Record<string, boolean>)[key] = raw;
     } else if (key === 'profile_visibility' && isProfileVisibility(raw)) {
-      result.profile_visibility = raw;
+      extras.profile_visibility = raw;
     }
   });
 
-  return result;
+  return withOptional(defaultPrivacySettings, extras);
 };
 
 const parseDemographics = (value: unknown): ProfileDemographics => {
   if (!isRecord(value)) {
-    return { ...defaultDemographics };
+    return withOptional(defaultDemographics);
   }
-  return { ...defaultDemographics, ...(value as ProfileDemographics) };
+  return withOptional(defaultDemographics, value as ProfileDemographics);
 };
 
-const buildInitialFormData = (userProfile: ProfileEditProps['profile']): ProfileUpdateData => {
-  const participationStyle = toParticipationStyle(userProfile.participation_style);
+const buildInitialFormData = (
+  userProfile?: ProfileEditProps['profile'] | null,
+): ProfileUpdateData => {
+  const participationStyle = toParticipationStyle(userProfile?.participation_style);
 
-  return {
-    display_name: userProfile.display_name ?? '',
-    bio: userProfile.bio ?? '',
-    username: userProfile.username ?? '',
-    primary_concerns: toStringArray(userProfile.primary_concerns ?? []),
-    community_focus: toStringArray(userProfile.community_focus ?? []),
-    ...(participationStyle ? { participation_style: participationStyle } : {}),
-    privacy_settings: parsePrivacySettings(userProfile.privacy_settings),
-    demographics: parseDemographics(userProfile.demographics),
-  };
+  return withOptional(
+    {
+      display_name: userProfile?.display_name ?? '',
+      bio: userProfile?.bio ?? '',
+      username: userProfile?.username ?? '',
+      primary_concerns: toStringArray(userProfile?.primary_concerns ?? []),
+      community_focus: toStringArray(userProfile?.community_focus ?? []),
+      privacy_settings: parsePrivacySettings(userProfile?.privacy_settings),
+      demographics: parseDemographics(userProfile?.demographics),
+    },
+    participationStyle ? { participation_style: participationStyle } : undefined,
+  );
 };
 
-export default function ProfileEdit({ 
-  profile, 
-  onSave, 
-  onCancel, 
-  isLoading: externalLoading, 
-  error: externalError 
+const buildProfileUpdatePayload = (draft: ProfileEditDraft): ProfileUpdateData => {
+  const payload: ProfileUpdateData = {};
+
+  if (draft.display_name !== undefined) {
+    payload.display_name = draft.display_name;
+  }
+  if (draft.bio !== undefined) {
+    payload.bio = draft.bio;
+  }
+  if (draft.username !== undefined) {
+    payload.username = draft.username;
+  }
+  if (draft.primary_concerns !== undefined) {
+    payload.primary_concerns = draft.primary_concerns;
+  }
+  if (draft.community_focus !== undefined) {
+    payload.community_focus = draft.community_focus;
+  }
+  if (draft.participation_style !== undefined) {
+    payload.participation_style = draft.participation_style;
+  }
+  if (draft.privacy_settings !== undefined) {
+    payload.privacy_settings = draft.privacy_settings;
+  }
+  if (draft.demographics !== undefined) {
+    payload.demographics = draft.demographics;
+  }
+
+  return payload;
+};
+
+export default function ProfileEdit({
+  profile,
+  onSave,
+  onCancel,
+  isLoading: externalLoading,
+  error: externalError,
 }: ProfileEditProps) {
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
   const { uploadAvatar, isUploading: isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
-  const storeProfile = useProfileStore((state) => state.profile ?? state.userProfile);
+  const storeProfile = useProfileStore(profileSelectors.currentProfile);
   const setUserProfileInStore = useProfileStore((state) => state.setUserProfile);
-  const storeProfileId = storeProfile?.id;
-  
-  // Local form data state
-  const [formData, setFormData] = useState<ProfileUpdateData>(() => buildInitialFormData(profile));
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const storeProfileId = storeProfile?.id ?? null;
+  const effectiveProfile = profile ?? storeProfile;
+
+  const profileDraft = useProfileDraft();
+  const {
+    initializeDraft,
+    setDraftField,
+    toggleDraftArrayField,
+    setDraftPrivacySetting,
+    setProfileEditing,
+    clearDraft,
+    clearDraftErrors,
+    clearFieldError,
+  } = useProfileDraftActions();
+
+  const avatarFile = useUserAvatarFile();
+  const avatarPreview = useUserAvatarPreview();
+  const setAvatarFile = useUserStore((state) => state.setAvatarFile);
+  const setAvatarPreview = useUserStore((state) => state.setAvatarPreview);
+  const clearAvatar = useUserStore((state) => state.clearAvatar);
+
+  const lastProfileKeyRef = useRef<string | null>(null);
 
   // Local UI state (not in store)
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Initialize form data (local and store)
+  const fallbackDraft = useMemo(
+    () => buildInitialFormData(effectiveProfile),
+    [effectiveProfile],
+  );
+  const draft = profileDraft ?? fallbackDraft;
+
+  const privacySettings = useMemo(
+    () => withOptional(defaultPrivacySettings, draft.privacy_settings ?? {}),
+    [draft.privacy_settings],
+  );
+
+  const primaryConcerns = draft.primary_concerns ?? [];
+  const communityFocus = draft.community_focus ?? [];
+
   useEffect(() => {
-    const initialData = buildInitialFormData(profile);
-    setFormData(initialData);
-  }, [profile]);
+    if (!effectiveProfile) {
+      clearDraft();
+      clearDraftErrors();
+      setProfileEditing(false);
+      lastProfileKeyRef.current = null;
+      return;
+    }
+
+    const profileKey = `${effectiveProfile.id ?? 'no-id'}:${effectiveProfile.updated_at ?? ''}`;
+    if (lastProfileKeyRef.current === profileKey) {
+      return;
+    }
+
+    initializeDraft(buildInitialFormData(effectiveProfile));
+    clearDraftErrors();
+    setProfileEditing(true);
+    lastProfileKeyRef.current = profileKey;
+  }, [effectiveProfile, initializeDraft, clearDraft, clearDraftErrors, setProfileEditing]);
+
+  useEffect(
+    () => () => {
+      clearDraft();
+      clearDraftErrors();
+      setProfileEditing(false);
+      clearAvatar();
+      lastProfileKeyRef.current = null;
+    },
+    [clearDraft, clearDraftErrors, setProfileEditing, clearAvatar],
+  );
 
   useEffect(() => {
     if (profile && storeProfileId !== profile.id) {
@@ -207,32 +319,35 @@ export default function ProfileEdit({
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
   const combinedError = formError ?? externalError ?? updateError ?? null;
 
-  // Handle form field changes
-  const handleFieldChange = <K extends keyof ProfileUpdateData>(field: K, value: ProfileUpdateData[K]) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const resetUiFeedback = () => {
     setFormError(null);
     setSuccess(null);
   };
 
-  // Handle array field changes (concerns, focus)
+  const handleFieldChange = <K extends keyof ProfileEditDraft>(
+    field: K,
+    value: ProfileEditDraft[K],
+  ) => {
+    setDraftField(field, value);
+    clearFieldError(field as ProfileEditErrorKey);
+    resetUiFeedback();
+  };
+
   const handleArrayFieldChange = (field: 'primary_concerns' | 'community_focus', value: string) => {
-    const currentValues = formData[field] ?? [];
-    const updatedValues = currentValues.includes(value)
-      ? currentValues.filter(item => item !== value)
-      : [...currentValues, value];
-
-    setFormData(prev => ({
-      ...prev,
-      [field]: updatedValues,
-    }));
-    setFormError(null);
-    setSuccess(null);
+    toggleDraftArrayField(field, value);
+    clearFieldError(field);
+    resetUiFeedback();
   };
 
-  // Handle avatar file selection
+  const handlePrivacyChange = <K extends PrivacySettingKey>(
+    setting: K,
+    value: PrivacySettingValue<K>,
+  ) => {
+    setDraftPrivacySetting(setting, value);
+    clearFieldError(`privacy_settings.${setting}` as ProfileEditErrorKey);
+    resetUiFeedback();
+  };
+
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -242,50 +357,42 @@ export default function ProfileEdit({
         setAvatarPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      clearAvatar();
     }
+    resetUiFeedback();
   };
 
-  // Handle avatar upload
   const handleAvatarUpload = async () => {
-    if (!avatarFile) return;
+    if (!avatarFile) {
+      return;
+    }
 
     try {
       const result = await uploadAvatar(avatarFile);
       if (result.success) {
         setSuccess('Avatar updated successfully');
-        setAvatarFile(null);
-        setAvatarPreview(null);
+        clearAvatar();
       } else {
         setFormError(result.error ?? 'Failed to update avatar');
       }
-    } catch {
-      setFormError('Failed to update avatar');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update avatar';
+      setFormError(message);
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormError(null);
-    setSuccess(null);
+    resetUiFeedback();
 
     try {
-      // Convert userStore ProfileUpdateData to profile types ProfileUpdateData
-      const profileUpdateData: ProfileUpdateData = {
-        ...(formData.display_name !== undefined ? { display_name: formData.display_name } : {}),
-        ...(formData.bio !== undefined ? { bio: formData.bio } : {}),
-        ...(formData.username !== undefined ? { username: formData.username } : {}),
-        ...(formData.primary_concerns !== undefined ? { primary_concerns: formData.primary_concerns } : {}),
-        ...(formData.community_focus !== undefined ? { community_focus: formData.community_focus } : {}),
-        ...(formData.participation_style !== undefined ? { participation_style: formData.participation_style } : {}),
-        ...(formData.privacy_settings !== undefined ? { privacy_settings: formData.privacy_settings } : {})
-      };
-      
+      const profileUpdateData = buildProfileUpdatePayload(draft);
       const result = await updateProfile(profileUpdateData);
       if (result.success) {
         setSuccess('Profile updated successfully');
         if (result.data) {
-          setFormData(buildInitialFormData(result.data));
+          initializeDraft(buildInitialFormData(result.data));
         }
         await onSave?.(profileUpdateData);
       } else {
@@ -297,13 +404,15 @@ export default function ProfileEdit({
     }
   };
 
-  // Handle cancel
   const handleCancel = () => {
-    setFormData(buildInitialFormData(profile));
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    setFormError(null);
-    setSuccess(null);
+    if (effectiveProfile) {
+      initializeDraft(buildInitialFormData(effectiveProfile));
+    } else {
+      clearDraft();
+    }
+    clearDraftErrors();
+    clearAvatar();
+    resetUiFeedback();
     onCancel?.();
   };
 
@@ -311,8 +420,8 @@ export default function ProfileEdit({
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onClick={handleCancel}
         >
@@ -355,7 +464,10 @@ export default function ProfileEdit({
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarPreview ?? profile.avatar_url ?? ''} alt={displayName} />
+                <AvatarImage
+                  src={avatarPreview ?? effectiveProfile?.avatar_url ?? ''}
+                  alt={displayName}
+                />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="space-y-2">
@@ -373,8 +485,8 @@ export default function ProfileEdit({
                   </Button>
                 </Label>
                 {avatarFile && (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={handleAvatarUpload}
                     disabled={isUploadingAvatar}
                     size="sm"
@@ -411,7 +523,7 @@ export default function ProfileEdit({
                 <Label htmlFor="display_name">Display Name</Label>
                 <Input
                   id="display_name"
-                  value={formData.display_name}
+                  value={draft.display_name ?? ''}
                   onChange={(e) => handleFieldChange('display_name', e.target.value)}
                   placeholder="Enter your display name"
                   maxLength={100}
@@ -421,7 +533,7 @@ export default function ProfileEdit({
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  value={formData.username}
+                  value={draft.username ?? ''}
                   onChange={(e) => handleFieldChange('username', e.target.value)}
                   placeholder="Enter your username"
                   maxLength={50}
@@ -432,14 +544,14 @@ export default function ProfileEdit({
               <Label htmlFor="bio">Bio</Label>
               <Textarea
                 id="bio"
-                value={formData.bio}
+                value={draft.bio ?? ''}
                 onChange={(e) => handleFieldChange('bio', e.target.value)}
                 placeholder="Tell us about yourself"
                 maxLength={500}
                 rows={3}
               />
               <p className="text-sm text-gray-500 mt-1">
-                {formData.bio?.length ?? 0}/500 characters
+                {draft.bio?.length ?? 0}/500 characters
               </p>
             </div>
           </CardContent>
@@ -464,7 +576,7 @@ export default function ProfileEdit({
                   <Button
                     key={concern}
                     type="button"
-                    variant={formData.primary_concerns?.includes(concern) ? "default" : "outline"}
+                    variant={primaryConcerns.includes(concern) ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleArrayFieldChange('primary_concerns', concern)}
                   >
@@ -480,7 +592,7 @@ export default function ProfileEdit({
                   <Button
                     key={focus}
                     type="button"
-                    variant={formData.community_focus?.includes(focus) ? "default" : "outline"}
+                    variant={communityFocus.includes(focus) ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleArrayFieldChange('community_focus', focus)}
                   >
@@ -492,7 +604,7 @@ export default function ProfileEdit({
             <div>
               <Label htmlFor="participation_style">Participation Style</Label>
               <Select
-                value={formData.participation_style ?? ''}
+                value={draft.participation_style ?? ''}
                 onValueChange={(value) =>
                   handleFieldChange(
                     'participation_style',
@@ -533,12 +645,9 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-email"
-                checked={formData.privacy_settings?.show_email ?? false}
-                onChange={(e) => 
-                  handleFieldChange('privacy_settings', {
-                    ...formData.privacy_settings,
-                    show_email: e.target.checked
-                  })
+                checked={privacySettings.show_email ?? false}
+                onCheckedChange={(checked) =>
+                  handlePrivacyChange('show_email', checked)
                 }
               />
             </div>
@@ -549,12 +658,9 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="show-activity"
-                checked={formData.privacy_settings?.show_activity ?? false}
-                onChange={(e) => 
-                  handleFieldChange('privacy_settings', {
-                    ...formData.privacy_settings,
-                    show_activity: e.target.checked
-                  })
+                checked={privacySettings.show_activity ?? false}
+                onCheckedChange={(checked) =>
+                  handlePrivacyChange('show_activity', checked)
                 }
               />
             </div>
@@ -565,12 +671,9 @@ export default function ProfileEdit({
               </div>
               <Switch
                 id="allow-messages"
-                checked={formData.privacy_settings?.allow_messages ?? false}
-                onChange={(e) => 
-                  handleFieldChange('privacy_settings', {
-                    ...formData.privacy_settings,
-                    allow_messages: e.target.checked
-                  })
+                checked={privacySettings.allow_messages ?? false}
+                onCheckedChange={(checked) =>
+                  handlePrivacyChange('allow_messages', checked)
                 }
               />
             </div>
@@ -579,16 +682,16 @@ export default function ProfileEdit({
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={handleCancel}
             disabled={finalLoading}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={finalLoading}
           >
             {finalLoading ? (

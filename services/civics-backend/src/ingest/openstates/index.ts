@@ -1,3 +1,13 @@
+/**
+ * High-level helpers for working with the OpenStates YAML canonical data inside the ingest
+ * pipeline. These helpers stitch together the file-system sourced canonical records with
+ * existing Supabase rows and crosswalk entries so other flows can operate without worrying
+ * about the raw YAML layout.
+ *
+ * ⚠️  This module is **separate** from the OpenStates HTTP client. If you need live API
+ *      data (bills, votes, committees) see `src/clients/openstates.ts`.
+ */
+
 import { readOpenStatesPeople } from './people.js';
 import {
   fetchRepresentativeCoreByOpenStates,
@@ -15,6 +25,19 @@ export interface CollectOptions {
   limit?: number;
 }
 
+/**
+ * Read the OpenStates YAML archive and merge the resulting canonical people with any
+ * persisted Supabase data (contacts, identifiers, crosswalk entries). The result is a list
+ * of `CanonicalRepresentative` objects that include the latest YAML metadata plus any
+ * persisted enrichments.
+ *
+ * Useful when building state-level pipelines that should operate entirely offline until
+ * the moment we persist the final output, or when we want to seed additional enrichers
+ * (like the OpenStates API, GovTrack, etc.) with the canonical baseline.
+ *
+ * @param options.states Optional collection of two-letter state codes to filter on (case-insensitive)
+ * @param options.limit Optional maximum number of representatives to return
+ */
 export async function collectActiveRepresentatives(
   options: CollectOptions = {},
 ) {

@@ -119,7 +119,7 @@ controller.activeTip;       // optional tip per step
 controller.canProceed;      // boolean
 controller.canGoBack;       // boolean
 controller.isLoading;       // submission state
-controller.actions;         // { updateData, addOption, removeOption, addTag, removeTag, updateSettings, clearError, ... }
+controller.actions;         // { updateData, addOption, removeOption, addTag, removeTag, updateSettings, clearFieldError, ... }
 controller.goToNextStep();
 controller.goToPreviousStep();
 const result = await controller.submit();

@@ -2,7 +2,7 @@ import { deriveKeyIssuesFromBills } from '@choices/civics-shared';
 import type { OpenStatesLikeBill } from '@choices/civics-shared';
 
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
-import { fetchRecentBillsForPerson } from '../clients/openstates.js';
+import { fetchRecentBillsForPerson, type FetchBillsOptions } from '../clients/openstates.js';
 
 export interface StateIssueSignal {
   issue: string;
@@ -15,6 +15,16 @@ export interface StateIssueSignal {
 export interface StateEnrichment {
   issues: StateIssueSignal[];
   social: Record<string, string>;
+  contacts: {
+    emails: string[];
+    phones: string[];
+    links: string[];
+  };
+  biography: string | null;
+  aliases: CanonicalRepresentative['aliases'];
+  identifiers: CanonicalRepresentative['identifiers'];
+  offices: CanonicalRepresentative['offices'];
+  extras: Record<string, unknown> | null;
   sources: Record<string, string[]>;
 }
 
@@ -23,6 +33,7 @@ export async function enrichStateRepresentative(
 ): Promise<StateEnrichment> {
   const issues = await deriveIssueSignals(canonical);
   const social = buildSocialLookup(canonical);
+  const contacts = buildContactSnapshot(canonical);
 
   const sources: Record<string, string[]> = {};
   if (issues.length > 0) {
@@ -32,6 +43,12 @@ export async function enrichStateRepresentative(
   return {
     issues,
     social,
+    contacts,
+    biography: canonical.biography ?? null,
+    aliases: canonical.aliases,
+    identifiers: canonical.identifiers,
+    offices: canonical.offices,
+    extras: canonical.extras,
     sources,
   };
 }
@@ -43,11 +60,19 @@ async function deriveIssueSignals(
     return [];
   }
 
-  const bills = await fetchRecentBillsForPerson(canonical.openstatesId, {
+  const fetchOptions: FetchBillsOptions = {
     limit: 30,
-    jurisdiction: deriveJurisdictionFilter(canonical),
-    query: canonical.name ?? undefined,
-  });
+  };
+
+  const jurisdiction = deriveJurisdictionFilter(canonical);
+  if (jurisdiction) {
+    fetchOptions.jurisdiction = jurisdiction;
+  }
+  if (canonical.name) {
+    fetchOptions.query = canonical.name;
+  }
+
+  const bills = await fetchRecentBillsForPerson(canonical.openstatesId, fetchOptions);
 
   if (bills.length === 0) {
     return [];
@@ -128,6 +153,20 @@ function buildSocialLookup(
     }
   }
   return social;
+}
+
+function buildContactSnapshot(
+  canonical: CanonicalRepresentative,
+): {
+  emails: string[];
+  phones: string[];
+  links: string[];
+} {
+  return {
+    emails: [...canonical.emails],
+    phones: [...canonical.phones],
+    links: [...canonical.links],
+  };
 }
 
 function deriveJurisdictionFilter(canonical: CanonicalRepresentative): string | undefined {

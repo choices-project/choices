@@ -4,14 +4,14 @@ import { AlertCircle, Plus, Save, Shield, X } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { PrivacyLevelSelector } from '@/components/ui/PrivacyLevelSelector';
-import { HybridPrivacyManager, PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
-import type { PollCreateResult } from '@/features/polls/pages/create/types';
-import type { PollPrivacyLevel } from '@/lib/polls/types';
+import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import type { PollPrivacyLevel } from '@/lib/polls/types';
+import { HybridPrivacyManager, PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 
 type CreatePollFormProps = {
-  onSubmit?: (result: PollCreateResult) => Promise<void> | void;
+  onSubmit?: (result: PollWizardSubmissionResult) => Promise<void> | void;
   onCancel?: () => void;
 };
 

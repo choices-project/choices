@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 
 import ProfilePage from '@/features/profile/components/ProfilePage';
 
@@ -188,7 +188,8 @@ describe('ProfilePage', () => {
 
     render(<ProfilePage user={null as any} isOwnProfile />);
 
-    fireEvent.click(screen.getByRole('button', { name: /edit profile/i }));
+    const editButtons = screen.getAllByRole('button', { name: /edit profile/i });
+    fireEvent.click(editButtons[0]);
 
     expect(mockRouterPush).toHaveBeenCalledWith('/profile/edit');
   });

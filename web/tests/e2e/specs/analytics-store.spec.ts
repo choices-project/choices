@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import type { AnalyticsStoreHarness } from '@/app/(app)/e2e/analytics-store/page';
 import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
+
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
   interface Window {

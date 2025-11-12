@@ -9,7 +9,7 @@ import {
 import Image from 'next/image';
 import React, { useEffect } from 'react';
 
-import { 
+import {
   useUserCurrentAddress,
   useUserCurrentState,
   useUserRepresentatives,
@@ -19,12 +19,11 @@ import {
   useUserSavedSuccessfully,
   useUserActions
 } from '@/lib/stores';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
-
 import type { Representative } from '@/types/representative';
 
-import { extractRepresentatives, parseStoredRepresentatives } from '../lib/representatives';
-
+import { extractRepresentatives } from '../lib/representatives';
 import type { UserProfileProps } from '../types';
 
 /**
@@ -39,7 +38,7 @@ import type { UserProfileProps } from '../types';
  * - Address input and validation
  * - State selection
  * - Representative data display
- * - Data persistence in localStorage
+ * - State managed via shared stores
  * 
  * @param {UserProfileProps} props - Component props
  * @returns {JSX.Element} User profile interface
@@ -64,21 +63,13 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     setAddressLoading,
     setSavedSuccessfully
   } = useUserActions();
+  const profileLocation = useProfileStore(profileSelectors.location);
 
   useEffect(() => {
-    // Load current user data from localStorage
-    const savedAddress = localStorage.getItem('userAddress');
-    const savedState = localStorage.getItem('userState');
-    const storedRepresentatives = parseStoredRepresentatives(
-      localStorage.getItem('userRepresentatives')
-    );
-
-    if (savedAddress) setCurrentAddress(savedAddress);
-    if (savedState) setCurrentState(savedState);
-    if (storedRepresentatives.length > 0) {
-      setRepresentatives(storedRepresentatives);
+    if (profileLocation?.state) {
+      setCurrentState(profileLocation.state);
     }
-  }, [setCurrentAddress, setCurrentState, setRepresentatives]);
+  }, [profileLocation?.state, setCurrentState]);
 
   const handleAddressUpdateLocal = async () => {
     setAddressLoading(true);
@@ -91,10 +82,6 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       // Update state
       setCurrentAddress(newAddress);
       setRepresentatives(normalizedRepresentatives);
-      
-      // Save to localStorage
-      localStorage.setItem('userAddress', newAddress);
-      localStorage.setItem('userRepresentatives', JSON.stringify(normalizedRepresentatives));
       
       // Notify parent component
       onRepresentativesUpdate(normalizedRepresentatives);
@@ -123,10 +110,6 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       setCurrentState(state);
       setRepresentatives(normalizedRepresentatives);
       
-      // Save to localStorage
-      localStorage.setItem('userState', state);
-      localStorage.setItem('userRepresentatives', JSON.stringify(normalizedRepresentatives));
-      
       // Notify parent component
       onRepresentativesUpdate(normalizedRepresentatives);
       
@@ -141,9 +124,6 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   };
 
   const clearUserData = () => {
-    localStorage.removeItem('userAddress');
-    localStorage.removeItem('userState');
-    localStorage.removeItem('userRepresentatives');
     setCurrentAddress('');
     setCurrentState('');
     setRepresentatives([]);

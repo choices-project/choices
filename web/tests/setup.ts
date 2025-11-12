@@ -11,6 +11,20 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
+import { authServer } from './msw/server';
+
+beforeAll(() => {
+  authServer.listen({ onUnhandledRequest: 'warn' });
+});
+
+afterAll(() => {
+  authServer.close();
+});
+
+afterEach(() => {
+  authServer.resetHandlers();
+});
+
 jest.mock('lucide-react', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   const icons: Record<string, unknown> = {};

@@ -14,7 +14,6 @@ import {
   useAnalyticsStore,
   useAnalyticsTracking,
   type AnalyticsStore,
-  type AnalyticsActions,
 } from '@/lib/stores/analyticsStore';
 
 import { AnalyticsTestBridge } from '../_components/AnalyticsTestBridge';
@@ -37,9 +36,7 @@ export type AnalyticsStoreHarness = {
 };
 
 declare global {
-  interface Window {
-    __analyticsStoreHarness?: AnalyticsStoreHarness;
-  }
+  var __analyticsStoreHarness: AnalyticsStoreHarness | undefined;
 }
 
 const formatNumber = (value: number | undefined | null) =>
@@ -90,6 +87,7 @@ export default function AnalyticsStoreHarnessPage() {
       }
     };
   }, [
+    actions,
     actions.clearEvents,
     actions.generateReport,
     actions.resetAnalyticsState,

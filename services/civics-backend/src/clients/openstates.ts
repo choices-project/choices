@@ -1,3 +1,11 @@
+/**
+ * Lightweight OpenStates API client used for live state-level enrichment
+ * (recent bills, committee updates, etc.). This client is intentionally
+ * separate from the YAML ingest helpers so we can clearly distinguish between
+ * static "people" data sourced from the vendored archive and dynamic data
+ * fetched from the V3 REST API.
+ */
+
 const OPENSTATES_API_BASE =
   process.env.OPENSTATES_API_BASE ?? 'https://v3.openstates.org';
 
@@ -112,6 +120,17 @@ export interface FetchBillsOptions {
   query?: string;
 }
 
+/**
+ * Fetch the most recent bills associated with an OpenStates person identifier
+ * using the live OpenStates API. This is typically called after the YAML ingest
+ * completes so enrichers can attach activity data without re-processing the raw
+ * archive.
+ *
+ * @param openstatesPersonId The `ocd-person/...` identifier to query
+ * @param options.limit Optional maximum number of bills to return (default 25)
+ * @param options.jurisdiction Optional jurisdiction filter accepted by OpenStates
+ * @param options.query Optional text query (OpenStates `q` parameter)
+ */
 export async function fetchRecentBillsForPerson(
   openstatesPersonId: string,
   options: FetchBillsOptions = {},
