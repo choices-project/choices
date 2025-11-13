@@ -7,6 +7,11 @@ import {
   isBlockedUserAgent,
   anonymizeIP
 } from '@/lib/core/security/config'
+import {
+  LOCALE_COOKIE_MAX_AGE,
+  LOCALE_COOKIE_NAME,
+  resolveLocale
+} from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
 
 /**
@@ -206,6 +211,22 @@ export function middleware(request: NextRequest) {
 
   // Create response
   const response = NextResponse.next()
+
+  if (!pathname.startsWith('/api/')) {
+    const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value
+    const acceptLanguage = request.headers.get('accept-language')
+    const resolvedLocale = resolveLocale(cookieLocale, acceptLanguage)
+
+    if (cookieLocale !== resolvedLocale) {
+      response.cookies.set({
+        name: LOCALE_COOKIE_NAME,
+        value: resolvedLocale,
+        maxAge: LOCALE_COOKIE_MAX_AGE,
+        path: '/',
+        sameSite: 'lax'
+      })
+    }
+  }
 
   // Add security headers
   Object.entries(SECURITY_CONFIG.headers).forEach(([header, value]) => {

@@ -7,7 +7,7 @@ import {
   type VotingState,
   type VotingActions,
   getVotingState,
-} from '@/lib/stores/votingStore';
+} from '@/features/voting/lib/store';
 
 export type VotingStoreHarness = {
   setBallots: VotingActions['setBallots'];

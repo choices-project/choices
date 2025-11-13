@@ -4,6 +4,7 @@ import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+import { AccessibleResultsChart } from '@/components/accessible/AccessibleResultsChart';
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,6 +20,7 @@ import {
 import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {
@@ -129,6 +131,25 @@ export default function PollClient({ poll }: PollClientProps) {
   const [isUndoing, setIsUndoing] = useState(false);
   const notificationSettings = useNotificationSettings();
   const { addNotification } = useNotificationActions();
+
+  const getOptionLabel = useCallback(
+    (optionIndex: number, explicitLabel?: string | null) => {
+      if (typeof explicitLabel === 'string' && explicitLabel.trim().length > 0) {
+        return explicitLabel.trim();
+      }
+
+      if (Number.isFinite(optionIndex) && optionIndex >= 0) {
+        const fallback = poll.options[optionIndex];
+        if (typeof fallback === 'string' && fallback.trim().length > 0) {
+          return fallback;
+        }
+        return `Option ${optionIndex + 1}`;
+      }
+
+      return explicitLabel && explicitLabel.trim().length > 0 ? explicitLabel.trim() : 'Unknown option';
+    },
+    [poll.options],
+  );
 
   const pollDetailsForBallot = useMemo(
     () => ({
@@ -635,6 +656,77 @@ export default function PollClient({ poll }: PollClientProps) {
   const isPollClosed = poll.status === 'closed';
   const isPollLocked = poll.status === 'locked';
 
+  const rankedChartData = useMemo(() => {
+    if (!results || results.votingMethod !== 'ranked') {
+      return null;
+    }
+
+    return results.optionStats
+      .map((stat) => {
+        const label = getOptionLabel(stat.optionIndex, stat.text);
+        const isWinner =
+          results.winner != null &&
+          (String(results.winner) === String(stat.optionId) ||
+            Number.parseInt(String(results.winner), 10) === stat.optionIndex);
+
+        return {
+          id: stat.optionId || String(stat.optionIndex),
+          name: label,
+          votes: stat.firstChoiceVotes,
+          percentage: stat.firstChoicePercentage,
+          isWinner,
+        };
+      })
+      .sort((a, b) => b.votes - a.votes);
+  }, [getOptionLabel, results]);
+
+  const standardChartData = useMemo(() => {
+    if (!results || results.votingMethod === 'ranked') {
+      return null;
+    }
+
+    const maxVotes = results.optionTotals.reduce(
+      (max, option) => Math.max(max, option.voteCount),
+      0,
+    );
+
+    return results.optionTotals
+      .map((option, index) => {
+        const label = getOptionLabel(index, option.optionText);
+        return {
+          id: option.optionId || String(index),
+          name: label,
+          votes: option.voteCount,
+          percentage: option.percentage,
+          isWinner: option.voteCount === maxVotes && maxVotes > 0,
+        };
+      })
+      .sort((a, b) => b.votes - a.votes);
+  }, [getOptionLabel, results]);
+
+  useEffect(() => {
+    if (!results) {
+      return;
+    }
+
+    const leadingName =
+      results.votingMethod === 'ranked'
+        ? rankedChartData?.[0]?.name
+        : standardChartData?.[0]?.name;
+
+    if (typeof leadingName === 'string') {
+      ScreenReaderSupport.announce(
+        `Poll results updated. ${leadingName} currently leads with ${results.totalVotes} total votes counted.`,
+        'polite',
+      );
+    } else {
+      ScreenReaderSupport.announce(
+        `Poll results updated. ${results.totalVotes} total votes recorded.`,
+        'polite',
+      );
+    }
+  }, [rankedChartData, results, standardChartData]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8" data-testid="poll-details">
@@ -823,53 +915,34 @@ export default function PollClient({ poll }: PollClientProps) {
                   </div>
                 </div>
 
-                {results.votingMethod === 'ranked' ? (
+                {results.votingMethod === 'ranked' && rankedChartData?.length && (
                   <div className="space-y-8">
-                    <div className="space-y-3">
-                      {results.optionStats.map((stat) => {
-                        const label = stat.text ?? poll.options[stat.optionIndex] ?? `Option ${stat.optionIndex + 1}`;
-                        return (
-                          <div key={stat.optionId} className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="font-medium">{label}</span>
-                              <span className="text-gray-600">
-                                {stat.firstChoiceVotes} first-choice vote{stat.firstChoiceVotes === 1 ? '' : 's'}
-                                {' '}
-                                ({stat.firstChoicePercentage.toFixed(1)}%)
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${Math.min(100, stat.firstChoicePercentage)}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Borda score: {stat.bordaScore}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <AccessibleResultsChart
+                      data={rankedChartData}
+                      title="First-choice support"
+                      aria-label="Ranked choice poll first-choice results"
+                      showPercentages
+                      showVoteCounts
+                    />
 
                     <div className="space-y-4">
-                      <h4 className="text-sm font-semibold text-gray-700">Instant Runoff Rounds</h4>
+                      <h4 className="text-sm font-semibold text-gray-700">Instant runoff rounds</h4>
                       {results.rounds.map((round) => (
-                        <div key={round.round} className="border rounded-lg p-4 bg-gray-50">
-                          <div className="flex items-center justify-between mb-2">
+                        <div key={round.round} className="rounded-lg border bg-gray-50 p-4">
+                          <div className="mb-2 flex items-center justify-between">
                             <span className="font-medium text-gray-800">Round {round.round}</span>
                             {round.eliminated !== undefined && (
                               <span className="text-xs text-red-600">
-                                Eliminated: {poll.options[Number(round.eliminated)] ?? `Option ${Number(round.eliminated) + 1}`}
+                                Eliminated: {getOptionLabel(Number(round.eliminated))}
                               </span>
                             )}
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1 text-xs text-gray-600">
                             {Object.entries(round.votes).map(([optionKey, voteCount]) => {
                               const percentage = round.percentages[optionKey] ?? 0;
-                              const label = poll.options[Number(optionKey)] ?? `Option ${Number(optionKey) + 1}`;
+                              const label = getOptionLabel(Number(optionKey));
                               return (
-                                <div key={`${round.round}-${optionKey}`} className="flex justify-between text-xs text-gray-600">
+                                <div key={`${round.round}-${optionKey}`} className="flex justify-between">
                                   <span className="font-medium text-gray-700">{label}</span>
                                   <span>
                                     {voteCount} vote{voteCount === 1 ? '' : 's'} ({percentage.toFixed(1)}%)
@@ -880,33 +953,35 @@ export default function PollClient({ poll }: PollClientProps) {
                           </div>
                         </div>
                       ))}
-
-                      {results.winner && (
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-800">
-                          Winner: {poll.options[Number(results.winner)] ?? `Option ${Number(results.winner) + 1}`}
-                        </div>
-                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {results.optionTotals.map((option, index) => (
-                      <div key={option.optionId || index} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{option.optionText ?? `Option ${index + 1}`}</span>
-                          <span className="text-gray-600">
-                            {option.voteCount} vote{option.voteCount === 1 ? '' : 's'} ({option.percentage.toFixed(1)}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, option.percentage)}%` }}
-                          />
-                        </div>
+
+                    {results.winner && (
+                      <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-800">
+                        Winner:{' '}
+                        {rankedChartData?.find(
+                          (item) => String(item.id) === String(results.winner),
+                        )?.name ?? getOptionLabel(Number(results.winner))}
                       </div>
-                    ))}
+                    )}
                   </div>
+                )}
+
+                {results.votingMethod === 'ranked' && !rankedChartData?.length && (
+                  <p className="text-sm text-gray-600">No first-choice votes recorded yet.</p>
+                )}
+
+                {results.votingMethod !== 'ranked' && standardChartData?.length && (
+                  <AccessibleResultsChart
+                    data={standardChartData}
+                    title="Vote distribution"
+                    aria-label="Poll results showing vote distribution across options"
+                    showPercentages
+                    showVoteCounts
+                  />
+                )}
+
+                {results.votingMethod !== 'ranked' && !standardChartData?.length && (
+                  <p className="text-sm text-gray-600">No votes recorded yet.</p>
                 )}
               </div>
             </CardContent>

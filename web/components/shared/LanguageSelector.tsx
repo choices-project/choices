@@ -17,7 +17,8 @@ import React, { useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
-import { useAppActions } from '@/lib/stores/appStore';
+import { SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n/config';
+import { useAppStore } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
 
 type LanguageSelectorProps = {
@@ -26,6 +27,10 @@ type LanguageSelectorProps = {
   showLabel?: boolean;
   showNativeNames?: boolean;
 }
+
+const SUPPORTED_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.filter((option) =>
+  SUPPORTED_LOCALES.includes(option.code as SupportedLocale),
+);
 
 export default function LanguageSelector({ 
   className = '',
@@ -36,19 +41,20 @@ export default function LanguageSelector({
   const { t, currentLanguage, changeLanguage } = useI18n();
   const isLoading = false;
   const getDisplayName = (code: string) => {
-    const opt = LANGUAGE_OPTIONS.find(o => o.code === code);
+    const opt = SUPPORTED_LANGUAGE_OPTIONS.find(o => o.code === code);
     return showNativeNames ? (opt?.native ?? code) : (opt?.name ?? code);
   };
-  const { updateSettings } = useAppActions();
+  const updateSettings = useAppStore((state) => state.updateSettings);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLanguageChange = async (language: string) => {
     try {
-      await changeLanguage(language);
       updateSettings({ language });
-      setIsOpen(false);
+      await changeLanguage(language);
     } catch (error) {
       logger.error('Failed to change language:', error);
+    } finally {
+      setIsOpen(false);
     }
   };
 
@@ -61,7 +67,7 @@ export default function LanguageSelector({
           </label>
         )}
         <div className="flex flex-wrap gap-2">
-          {LANGUAGE_OPTIONS.map((lang) => (
+          {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
@@ -96,7 +102,7 @@ export default function LanguageSelector({
         {isOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
             <div className="py-1">
-              {LANGUAGE_OPTIONS.map((lang) => (
+              {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
@@ -145,7 +151,7 @@ export default function LanguageSelector({
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
             <div className="py-1">
-              {LANGUAGE_OPTIONS.map((lang) => (
+              {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}

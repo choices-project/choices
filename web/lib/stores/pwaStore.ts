@@ -1,10 +1,10 @@
 /**
  * PWA Store - Zustand Implementation
- * 
+ *
  * Comprehensive PWA state management including installation status,
  * offline mode, update notifications, and PWA-specific settings.
  * Consolidates PWA state management and service worker integration.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -221,25 +221,56 @@ const createDefaultPreferences = (): PWAPreferences => ({
   },
 });
 
-export const createPWAEnvironment = (): PWAEnvironment => ({
-  getWindow: () => (typeof window === 'undefined' ? undefined : window),
-  getDocument: () => (typeof document === 'undefined' ? undefined : document),
-  getNavigator: () => (typeof navigator === 'undefined' ? undefined : navigator),
-  getFetch: () => (typeof fetch === 'undefined' ? undefined : fetch),
-  getCaches: () => {
-    const win = typeof window === 'undefined' ? undefined : window;
-    if (!win || !('caches' in win)) {
-      return undefined;
+export const createPWAEnvironment = (): PWAEnvironment => {
+  const resolveWindow = (): (Window & typeof globalThis) | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') {
+      return (globalThis as any).window as Window & typeof globalThis;
     }
-    return win.caches;
-  },
-  getServiceWorkerContainer: () => {
-    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
-      return undefined;
+    return typeof window === 'undefined' ? undefined : window;
+  };
+
+  const resolveDocument = (): Document | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).document !== 'undefined') {
+      return (globalThis as any).document as Document;
     }
-    return navigator.serviceWorker;
-  },
-});
+    return typeof document === 'undefined' ? undefined : document;
+  };
+
+  const resolveNavigator = (): Navigator | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).navigator !== 'undefined') {
+      return (globalThis as any).navigator as Navigator;
+    }
+    return typeof navigator === 'undefined' ? undefined : navigator;
+  };
+
+  const resolveFetch = (): typeof fetch | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).fetch !== 'undefined') {
+      return (globalThis as any).fetch as typeof fetch;
+    }
+    return typeof fetch === 'undefined' ? undefined : fetch;
+  };
+
+  return {
+    getWindow: resolveWindow,
+    getDocument: resolveDocument,
+    getNavigator: resolveNavigator,
+    getFetch: resolveFetch,
+    getCaches: () => {
+      const win = resolveWindow();
+      if (!win || !('caches' in win)) {
+        return undefined;
+      }
+      return win.caches;
+    },
+    getServiceWorkerContainer: () => {
+      const nav = resolveNavigator();
+      if (!nav || !('serviceWorker' in nav)) {
+        return undefined;
+      }
+      return nav.serviceWorker;
+    },
+  };
+};
 
 export const createInitialPWAState = (
   environment: PWAEnvironment = createPWAEnvironment(),
@@ -961,11 +992,11 @@ export const usePWAStats = () => usePWAStore(state => ({
   error: state.error,
 }));
 
-export const useUnreadNotifications = () => usePWAStore(state => 
+export const useUnreadNotifications = () => usePWAStore(state =>
   state.notifications.filter(notification => !notification.read)
 );
 
-export const useHighPriorityNotifications = () => usePWAStore(state => 
+export const useHighPriorityNotifications = () => usePWAStore(state =>
   state.notifications.filter(notification => notification.priority === 'high')
 );
 
@@ -987,7 +1018,7 @@ export const pwaStoreUtils = {
       offlineQueueUpdatedAt: state.offlineQueueUpdatedAt,
     };
   },
-  
+
   /**
    * Get offline capability score
    */
@@ -997,14 +1028,14 @@ export const pwaStoreUtils = {
     const cachedResources = state.offline.offlineData.cachedResources.length;
     return Math.min(100, (cachedPages + cachedResources) * 10);
   },
-  
+
   /**
    * Get cache usage
    */
   getCacheUsage: () => {
     const state = usePWAStore.getState();
     const maxSize = state.preferences.dataUsage.maxCacheSize;
-    const used = state.offline.offlineData.cachedPages.length + 
+    const used = state.offline.offlineData.cachedPages.length +
                  state.offline.offlineData.cachedResources.length;
     return {
       used,
@@ -1012,7 +1043,7 @@ export const pwaStoreUtils = {
       percentage: (used / maxSize) * 100,
     };
   },
-  
+
   /**
    * Check if update is needed
    */
@@ -1086,7 +1117,7 @@ export const pwaStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to offline status changes
    */
@@ -1103,7 +1134,7 @@ export const pwaStoreSubscriptions = {
       }
     );
   },
-  
+
   /**
    * Subscribe to update availability
    */
@@ -1158,7 +1189,7 @@ export const pwaStoreDebug = {
       error: state.error
     });
   },
-  
+
   /**
    * Log PWA summary
    */
@@ -1166,7 +1197,7 @@ export const pwaStoreDebug = {
     const summary = pwaStoreUtils.getPWASummary();
     logger.debug('PWA Summary', summary);
   },
-  
+
   /**
    * Log offline capability
    */
@@ -1174,7 +1205,7 @@ export const pwaStoreDebug = {
     const capability = pwaStoreUtils.getOfflineCapability();
     logger.debug('Offline Capability', { capability });
   },
-  
+
   /**
    * Reset PWA store
    */

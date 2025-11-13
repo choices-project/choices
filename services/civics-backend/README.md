@@ -45,6 +45,7 @@ When needed:
 - `npm run federal:enrich:finance -- --dry-run` – confirm FEC updates, then drop `--dry-run`.
 - `npm run federal:enrich:congress -- --dry-run` – fill missing Congress.gov & GovInfo IDs (dry-run logs changes without persisting).
 - `npm run state:refresh -- --states=CA --dry-run` – run the entire OpenStates API refresh stack in order.
+- `npm run state:sync:google-elections -- --dry-run` – pull the Google Civic election list into `civic_elections`.
 - `npm run state:sync:committees` – refresh committee assignments (the merge already writes the default OpenStates snapshot).
 - `npm run state:sync:activity` – replay bill activity if you skipped the automatic step or need a narrow refresh.
 
@@ -57,7 +58,7 @@ All commands accept `--states`, `--limit`, and `--dry-run` for safe testing. Fin
 - **SQL merge** (`sync_representatives_from_openstates`) updates `representatives_core` plus contacts, social, photos, provenance, and quality metrics.
 - **Post-merge activity sync** replays OpenStates bill data into `representative_activity` (unless you set `SKIP_ACTIVITY_SYNC`).
 - **Federal enrichers** (`src/scripts/federal/*`) hydrate Congress.gov IDs and FEC data separately from the YAML ingest.
-- **State refreshers** (`state:sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources` / `google-civic`) remain available for surgical reruns while we continue expanding the SQL-first flow.
+- **State refreshers** (`state:sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources` / `google-civic` / `google-elections`) remain available for surgical reruns while we continue expanding the SQL-first flow.
 - **Shared helpers** live in `@choices/civics-shared` so the ingest service and orchestrator stay in lockstep.
 
 The `src/scripts/` directory is now organised around the ingest lifecycle:
@@ -82,7 +83,9 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 | `npm run state:sync:committees` | Rebuild committee memberships from OpenStates roles | Automatically run post-merge coverage coming soon |
 | `npm run state:sync:activity` | Rebuild bill activity (only needed if you skipped the auto-sync) | Honors `OPENSTATES_ACTIVITY_LIMIT` |
 | `npm run state:sync:google-civic` | Pull supplemental contacts/social/photos from Google Civic | Requires `GOOGLE_CIVIC_API_KEY`; writes to `representative_contacts` (`source = google_civic`) |
-| `npm run state:refresh` | Sequentially run contacts → social → photos → committees → activity → data sources → Google Civic | Accepts `--states`, `--limit`, `--dry-run`, `--only`, `--skip` |
+| `npm run state:sync:google-elections` | Upsert upcoming elections from Google Civic into Supabase | Requires `GOOGLE_CIVIC_API_KEY`; writes to `civic_elections` |
+| `npm run state:sync:divisions` | Rebuild `representative_divisions` from OpenStates roles | Invokes `refresh_divisions_from_openstates()` RPC |
+| `npm run state:refresh` | Sequentially run contacts → social → photos → committees → activity → data sources → Google Civic → Google elections | Accepts `--states`, `--limit`, `--dry-run`, `--only`, `--skip` |
 | `npm run tools:report:gaps` | Show remaining finance/contact/identifier gaps | Helps prioritise follow-up runs |
 | `npm run tools:report:duplicates` / `npm run tools:fix:duplicates` | Inspect and repair duplicate canonicals | Always re-run `ingest:qa` afterward |
 | `npm run tools:audit:crosswalk` / `npm run tools:fix:crosswalk` | Validate canonical ID mappings | Keeps external IDs aligned |

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
+import { runAxeAudit } from '../helpers/accessibility';
 
 const POLL_ID = 'harness-poll';
 const RESULTS_ROUTE = new RegExp(`/api/polls/${POLL_ID}/results$`);
@@ -76,8 +77,10 @@ test.describe('Poll viewer harness', () => {
     await page.goto(`/e2e/poll-run/${POLL_ID}`);
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
+    await runAxeAudit(page, 'poll run initial state');
 
     await page.getByRole('button', { name: /Share/i }).click();
+    await runAxeAudit(page, 'poll share dialog');
     await expect.poll(() => getEventCount(page, 'detail_copy_link')).toBeGreaterThan(0);
 
     await page.getByTestId('start-voting-button').click();
@@ -85,6 +88,7 @@ test.describe('Poll viewer harness', () => {
 
     await page.getByTestId('option-1-radio').click();
     await page.getByTestId('submit-vote-button').click();
+    await runAxeAudit(page, 'poll vote confirmation');
     await expect.poll(() => getEventCount(page, 'vote_cast')).toBeGreaterThan(0);
 
     await page.getByTestId('undo-vote-button').click();

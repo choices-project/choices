@@ -1,49 +1,35 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import {
-  usePWAInstallation,
-  usePWAOffline,
-  usePWAUpdate,
-  usePWANotifications,
-  usePWAPreferences,
-  usePWASyncing,
-  usePWAError,
-  usePWAActions,
-  usePWAStore,
-  type PWAStore,
-  type PWANotification,
-} from '@/lib/stores/pwaStore';
+import { usePWAStore, type PWAStore, type PWANotification } from '@/lib/stores/pwaStore';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
-type PWAHarnessActions = ReturnType<typeof usePWAActions>;
-
 export type PWAStoreHarness = {
   getSnapshot: () => PWAStore;
-  setInstallation: PWAHarnessActions['setInstallation'];
-  setInstallPrompt: PWAHarnessActions['setInstallPrompt'];
-  setCanInstall: PWAHarnessActions['setCanInstall'];
-  installPWA: PWAHarnessActions['installPWA'];
-  uninstallPWA: PWAHarnessActions['uninstallPWA'];
-  setOnlineStatus: PWAHarnessActions['setOnlineStatus'];
-  setOfflineData: PWAHarnessActions['setOfflineData'];
-  setOfflineQueueSize: PWAHarnessActions['setOfflineQueueSize'];
-  queueOfflineAction: PWAHarnessActions['queueOfflineAction'];
-  processOfflineActions: PWAHarnessActions['processOfflineActions'];
-  updatePreferences: PWAHarnessActions['updatePreferences'];
-  resetPreferences: PWAHarnessActions['resetPreferences'];
-  addNotification: PWAHarnessActions['addNotification'];
-  removeNotification: PWAHarnessActions['removeNotification'];
-  clearNotifications: PWAHarnessActions['clearNotifications'];
-  markNotificationRead: PWAHarnessActions['markNotificationRead'];
-  syncData: PWAHarnessActions['syncData'];
-  setSyncing: PWAHarnessActions['setSyncing'];
-  setError: PWAHarnessActions['setError'];
-  clearError: PWAHarnessActions['clearError'];
+  setInstallation: PWAStore['setInstallation'];
+  setInstallPrompt: PWAStore['setInstallPrompt'];
+  setCanInstall: PWAStore['setCanInstall'];
+  installPWA: PWAStore['installPWA'];
+  uninstallPWA: PWAStore['uninstallPWA'];
+  setOnlineStatus: PWAStore['setOnlineStatus'];
+  setOfflineData: PWAStore['setOfflineData'];
+  setOfflineQueueSize: PWAStore['setOfflineQueueSize'];
+  queueOfflineAction: PWAStore['queueOfflineAction'];
+  processOfflineActions: PWAStore['processOfflineActions'];
+  updatePreferences: PWAStore['updatePreferences'];
+  resetPreferences: PWAStore['resetPreferences'];
+  addNotification: PWAStore['addNotification'];
+  removeNotification: PWAStore['removeNotification'];
+  clearNotifications: PWAStore['clearNotifications'];
+  markNotificationRead: PWAStore['markNotificationRead'];
+  syncData: PWAStore['syncData'];
+  setSyncing: PWAStore['setSyncing'];
+  setError: PWAStore['setError'];
+  clearError: PWAStore['clearError'];
   resetAll: () => void;
 };
 
@@ -71,15 +57,25 @@ export default function PWAStoreHarnessPage() {
     notFound();
   }
 
-  const installation = usePWAInstallation();
-  const offline = usePWAOffline();
-  const update = usePWAUpdate();
-  const notifications = usePWANotifications();
-  const preferences = usePWAPreferences();
-  const isSyncing = usePWASyncing();
-  const error = usePWAError();
-  const offlineQueueUpdatedAt = usePWAStore((state) => state.offlineQueueUpdatedAt);
-  const actions = usePWAActions();
+  const [pwaState, setPwaState] = useState<PWAStore>(() => usePWAStore.getState());
+
+  useEffect(() => {
+    const unsubscribe = usePWAStore.subscribe((state) => {
+      setPwaState(state);
+    });
+    return unsubscribe;
+  }, []);
+
+  const {
+    installation,
+    offline,
+    update,
+    notifications,
+    preferences,
+    isSyncing,
+    error,
+    offlineQueueUpdatedAt,
+  } = pwaState;
 
   const queueSize = offline.offlineData.queuedActions.length;
   const cachedPages = offline.offlineData.cachedPages.length;
@@ -111,46 +107,46 @@ export default function PWAStoreHarnessPage() {
   useEffect(() => {
     const harness: PWAStoreHarness = {
       getSnapshot: () => usePWAStore.getState(),
-      setInstallation: actions.setInstallation,
-      setInstallPrompt: actions.setInstallPrompt,
-      setCanInstall: actions.setCanInstall,
-      installPWA: actions.installPWA,
-      uninstallPWA: actions.uninstallPWA,
-      setOnlineStatus: actions.setOnlineStatus,
-      setOfflineData: actions.setOfflineData,
-      setOfflineQueueSize: actions.setOfflineQueueSize,
-      queueOfflineAction: actions.queueOfflineAction,
-      processOfflineActions: actions.processOfflineActions,
-      updatePreferences: actions.updatePreferences,
-      resetPreferences: actions.resetPreferences,
-      addNotification: actions.addNotification,
-      removeNotification: actions.removeNotification,
-      clearNotifications: actions.clearNotifications,
-      markNotificationRead: actions.markNotificationRead,
-      syncData: actions.syncData,
-      setSyncing: actions.setSyncing,
-      setError: actions.setError,
-      clearError: actions.clearError,
+      setInstallation: (installation) => usePWAStore.getState().setInstallation(installation),
+      setInstallPrompt: (prompt) => usePWAStore.getState().setInstallPrompt(prompt),
+      setCanInstall: (canInstall) => usePWAStore.getState().setCanInstall(canInstall),
+      installPWA: () => usePWAStore.getState().installPWA(),
+      uninstallPWA: () => usePWAStore.getState().uninstallPWA(),
+      setOnlineStatus: (isOnline) => usePWAStore.getState().setOnlineStatus(isOnline),
+      setOfflineData: (data) => usePWAStore.getState().setOfflineData(data),
+      setOfflineQueueSize: (size, updatedAt) => usePWAStore.getState().setOfflineQueueSize(size, updatedAt),
+      queueOfflineAction: (action) => usePWAStore.getState().queueOfflineAction(action),
+      processOfflineActions: () => usePWAStore.getState().processOfflineActions(),
+      updatePreferences: (partial) => usePWAStore.getState().updatePreferences(partial),
+      resetPreferences: () => usePWAStore.getState().resetPreferences(),
+      addNotification: (notification) => usePWAStore.getState().addNotification(notification),
+      removeNotification: (id) => usePWAStore.getState().removeNotification(id),
+      clearNotifications: () => usePWAStore.getState().clearNotifications(),
+      markNotificationRead: (id) => usePWAStore.getState().markNotificationRead(id),
+      syncData: () => usePWAStore.getState().syncData(),
+      setSyncing: (value) => usePWAStore.getState().setSyncing(value),
+      setError: (value) => usePWAStore.getState().setError(value),
+      clearError: () => usePWAStore.getState().clearError(),
       resetAll: () => {
-        const state = usePWAStore.getState();
-        actions.setInstallation({
+        const api = usePWAStore.getState();
+        api.setInstallation({
           isInstalled: false,
           canInstall: true,
           installPrompt: null,
-          installSource: state.installation.installSource,
-          version: state.installation.version,
+          installSource: api.installation.installSource,
+          version: api.installation.version,
         });
-        actions.setOnlineStatus(true);
-        actions.setOfflineData({
+        api.setOnlineStatus(true);
+        api.setOfflineData({
           queuedActions: [],
           cachedPages: [],
           cachedResources: [],
         });
-        actions.setOfflineQueueSize(0, new Date().toISOString());
-        actions.resetPreferences();
-        actions.clearNotifications();
-        actions.clearError();
-        actions.setSyncing(false);
+        api.setOfflineQueueSize(0, new Date().toISOString());
+        api.resetPreferences();
+        api.clearNotifications();
+        api.clearError();
+        api.setSyncing(false);
       },
     };
 
@@ -160,7 +156,46 @@ export default function PWAStoreHarnessPage() {
         delete window.__pwaStoreHarness;
       }
     };
-  }, [actions]);
+  }, []);
+
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.pwaStoreHarness = 'ready';
+      }
+    };
+
+    const persist = (usePWAStore as typeof usePWAStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.pwaStoreHarness;
+      }
+    };
+  }, []);
 
   return (
     <main

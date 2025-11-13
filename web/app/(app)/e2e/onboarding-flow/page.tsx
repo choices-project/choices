@@ -49,11 +49,9 @@ type OnboardingFlowHarness = {
   >;
 };
 
-declare global {
-  interface Window {
-    __onboardingFlowHarness?: OnboardingFlowHarness;
-  }
-}
+type OnboardingHarnessWindow = typeof window & {
+  __onboardingFlowHarness?: OnboardingFlowHarness;
+};
 
 const useDisplayJson = (value: unknown) =>
   useMemo(() => JSON.stringify(value ?? null, null, 2) ?? 'null', [value]);
@@ -221,7 +219,7 @@ export default function OnboardingFlowHarnessPage() {
   const preferencesDataJson = useDisplayJson(preferencesData);
 
   useEffect(() => {
-    window.__onboardingFlowHarness = createHarness();
+    (window as OnboardingHarnessWindow).__onboardingFlowHarness = createHarness();
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.onboardingFlowReady = 'true';
     }
@@ -232,7 +230,7 @@ export default function OnboardingFlowHarnessPage() {
         delete document.documentElement.dataset.onboardingFlowStep;
         delete document.documentElement.dataset.onboardingFlowStatus;
       }
-      delete window.__onboardingFlowHarness;
+      delete (window as OnboardingHarnessWindow).__onboardingFlowHarness;
     };
   }, []);
 

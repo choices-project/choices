@@ -1,0 +1,376 @@
+{
+  "settings": {
+    "language": "Language"
+  },
+  "common": {
+    "skipToContent": "Skip to main content"
+  },
+  "navigation": {
+    "home": "Home",
+    "polls": "Polls",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Sign out",
+    "login": "Log in",
+    "register": "Create account"
+  },
+  "accessibility": {
+    "loading": "Loading Choices..."
+  },
+  "onboarding": {
+    "loading": "Loading onboarding...",
+    "labels": {
+      "welcome": "Welcome",
+      "privacy": "Privacy",
+      "demographics": "Demographics",
+      "authentication": "Authentication",
+      "profile": "Profile",
+      "complete": "Complete"
+    },
+    "progress": {
+      "valueText": "Step {current} of {total}: {label}"
+    },
+    "welcome": {
+      "title": "Welcome to Choices",
+      "subtitle": "Make informed decisions with transparent, data-driven insights",
+      "features": {
+        "vote": {
+          "title": "Vote on Issues",
+          "description": "Participate in polls on topics that matter to you"
+        },
+        "representatives": {
+          "title": "Track Representatives",
+          "description": "See how your elected officials vote and fundraise"
+        },
+        "finance": {
+          "title": "Campaign Finance",
+          "description": "Understand who funds political campaigns"
+        }
+      },
+      "duration": "⏱️ This will take about 3 minutes to get you started",
+      "cta": {
+        "next": "Get Started",
+        "skip": "I'm a returning user"
+      }
+    },
+    "privacy": {
+      "title": "Your Privacy Matters",
+      "subtitle": "We believe in transparency and data protection",
+      "cards": {
+        "location": {
+          "title": "Location Data",
+          "description": "We only need your state or district to find your representatives. We never store your exact address."
+        },
+        "demographics": {
+          "title": "Demographics",
+          "description": "Age and education help us show relevant polls and match you with similar voters."
+        },
+        "protection": {
+          "title": "Data Protection",
+          "description": "All data is encrypted, anonymized, and never sold. You can delete your data anytime."
+        }
+      }
+    },
+    "demographics": {
+      "title": "Help Us Personalize Your Experience",
+      "subtitle": "This information helps us show you relevant content",
+      "location": {
+        "title": "Find Your District",
+        "description": "Enter your address to find your congressional district and representatives. We only store your district, never your full address.",
+        "whyLabel": "Why we ask:",
+        "whyDescription": "Your district helps us show you relevant representatives, local civic actions, and polls that matter to your area.",
+        "privacyLabel": "Privacy:",
+        "privacyDescription": "We never store your full address. Only your district (e.g., \"CA-12\") is saved, and you can remove it anytime from your profile settings."
+      },
+      "profile": {
+        "title": "Demographics",
+        "description": "This helps us show you relevant polls and match you with similar voters"
+      },
+      "fields": {
+        "age": {
+          "label": "Age Range",
+          "placeholder": "Select age range",
+          "options": {
+            "18_24": "18-24",
+            "25_34": "25-34",
+            "35_44": "35-44",
+            "45_54": "45-54",
+            "55_64": "55-64",
+            "65_plus": "65+"
+          }
+        },
+        "education": {
+          "label": "Education Level",
+          "placeholder": "Select education",
+          "options": {
+            "high_school": "High School",
+            "some_college": "Some College",
+            "bachelor": "Bachelor's Degree",
+            "graduate": "Graduate Degree"
+          }
+        },
+        "engagement": {
+          "label": "Political Engagement",
+          "placeholder": "Select engagement",
+          "options": {
+            "casual": "Casual (vote occasionally)",
+            "moderate": "Moderate (follow politics)",
+            "very_engaged": "Very Engaged (very active)"
+          }
+        }
+      },
+      "actions": {
+        "back": "Back",
+        "skip": "Skip for now",
+        "continue": "Continue",
+        "reminder": "You can always add this information later"
+      }
+    }
+  },
+  "polls": {
+    "filters": {
+      "search": {
+        "placeholder": "Search polls, hashtags, or topics...",
+        "ariaLabel": "Search polls"
+      },
+      "hashtags": {
+        "label": "Filter by hashtags",
+        "remove": "Remove {hashtag} filter",
+        "addPlaceholder": "Add hashtags to filter polls...",
+        "addAria": "Add hashtag filter"
+      },
+      "status": {
+        "all": "All",
+        "active": "Active",
+        "trending": "Trending",
+        "closed": "Closed"
+      },
+      "categories": {
+        "label": "Categories",
+        "all": "All Categories"
+      },
+      "trending": {
+        "heading": "Trending Hashtags",
+        "headingWithCount": "Trending Hashtags ({count})",
+        "count": "{formattedCount} active {count, plural, one {trend} other {trends}}"
+      }
+    },
+    "card": {
+      "status": {
+        "active": "Active",
+        "closed": "Closed",
+        "draft": "Draft",
+        "archived": "Archived"
+      },
+      "votingMethod": {
+        "single": "Single Choice",
+        "approval": "Approval",
+        "ranked": "Ranked Choice",
+        "quadratic": "Quadratic",
+        "range": "Range",
+        "multiple": "Multiple Choice",
+        "unknown": "Unknown"
+      },
+      "createdBy": "Created by {name}",
+      "createdOn": "Created {date}",
+      "endsOn": "Ends {date} at {time}",
+      "unknownCreator": "Unknown",
+      "untitled": "Untitled Poll",
+      "optionsHeading": "Options",
+      "optionItem": "{index}. {option}",
+      "moreOptions": "+{count} more options",
+      "votes": "{formattedCount} {count, plural, one {vote} other {votes}}",
+      "participation": "{formattedCount} {count, plural, one {participant} other {participants}}",
+      "actions": {
+        "view": "View Poll",
+        "vote": "Vote Now"
+      }
+    },
+    "categories": {
+      "general": "General",
+      "business": "Business",
+      "education": "Education",
+      "technology": "Technology",
+      "health": "Health",
+      "finance": "Finance",
+      "environment": "Environment",
+      "social": "Social"
+    },
+    "page": {
+      "title": "Polls",
+      "subtitle": "Discover and participate in community polls",
+      "descriptionFallback": "No description provided",
+      "trendingBadge": "Trending #{position}",
+      "metadata": {
+        "votes": "{formattedCount} {count, plural, one {vote} other {votes}}",
+        "created": "Created on {date}"
+      },
+      "empty": {
+        "title": "No polls found",
+        "filters": "Try adjusting your filters or search terms",
+        "ctaMessage": "Be the first to create a poll!"
+      },
+      "cta": {
+        "create": "Create Poll",
+        "view": "View Poll",
+        "results": "View Results"
+      },
+      "pagination": {
+        "showing": "Showing {start}\u2013{end} of {total} polls",
+        "previous": "Previous",
+        "next": "Next",
+        "pageLabel": "Page {current} of {total}"
+      }
+    }
+  },
+  "feeds": {
+    "infiniteScroll": {
+      "loadingMore": "Loading more...",
+      "end": {
+        "heading": "You’ve reached the end of the feed",
+        "body": "Check back later for more updates"
+      },
+      "pull": {
+        "release": "Release to refresh",
+        "hint": "Pull to refresh"
+      },
+      "refreshing": "Refreshing...",
+      "scrollToTopAria": "Scroll to top"
+    },
+    "hashtagPolls": {
+      "error": {
+        "retry": "Try Again"
+      },
+      "empty": {
+        "title": "No hashtag polls are available right now."
+      },
+      "header": {
+        "title": "Hashtag Polls Feed",
+        "subtitle": "Discover polls tailored to your hashtag interests"
+      },
+      "metrics": {
+        "feedScore": "Feed Score",
+        "polls": "Polls"
+      },
+      "filters": {
+        "title": "Hashtag Filters",
+        "selectedBadge": "#{hashtag} ×",
+        "trendingLabel": "Trending Hashtags:",
+        "sortBy": "Sort by",
+        "sort": {
+          "relevance": "Relevance",
+          "trending": "Trending",
+          "engagement": "Engagement"
+        }
+      },
+      "tabs": {
+        "recommended": "Recommended",
+        "trending": "Trending",
+        "analytics": "Analytics"
+      },
+      "recommended": {
+        "empty": "No polls match your current filters",
+        "clearFilters": "Clear Filters",
+        "matches": "Matches: {matches}",
+        "noMatches": "Matches: No direct matches",
+        "recommendedTag": "Recommended poll",
+        "noDescription": "No description available.",
+        "votes": "{formattedCount} {count, plural, one {vote} other {votes}}",
+        "matchPercent": "{value}% match",
+        "viewPoll": "View Poll"
+      },
+      "trending": {
+        "title": "Trending Hashtags",
+        "empty": "No trending hashtags available",
+        "rank": "#{rank}",
+        "badge": "Trending",
+        "select": "Select hashtag {hashtag}"
+      },
+      "analytics": {
+        "pollsLabel": "Polls",
+        "engagementLabel": "Engagement",
+        "interestLabel": "Interest",
+        "trendingLabel": "Trending",
+        "trendingRank": "#{rank}",
+        "percent": "{value}%",
+        "empty": "Analytics not available"
+      },
+      "date": {
+        "unknown": "Unknown date",
+        "invalid": "Invalid date",
+        "relative": {
+          "justNow": "Just now",
+          "hours": "{formattedCount} {count, plural, one {hour ago} other {hours ago}}",
+          "yesterday": "Yesterday"
+        }
+      }
+    }
+  },
+  "auth": {
+    "loadingOptions": "Loading authentication options...",
+    "heading": {
+      "signIn": "Sign in to your account",
+      "signUp": "Create your account"
+    },
+    "subheading": {
+      "signIn": "Welcome back to Choices",
+      "signUp": "Join Choices today"
+    },
+    "toggle": {
+      "toSignIn": "Already have an account? Sign In",
+      "toSignUp": "Don't have an account? Sign Up"
+    },
+    "errors": {
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "displayNameRequired": "Display name is required",
+      "passwordsMismatch": "Passwords do not match",
+      "registrationFailed": "Registration failed",
+      "loginFailed": "Login failed",
+      "unexpected": "An unexpected error occurred"
+    },
+    "success": {
+      "accountCreated": "Account created successfully",
+      "login": "Login successful"
+    },
+    "form": {
+      "errorSummaryTitle": "Please fix the following errors:",
+      "errorSummaryCount": "{count, plural, one {# error remaining} other {# errors remaining}}",
+      "rateLimited": "Too many attempts. Please try again later.",
+      "displayNameLabel": "Display Name",
+      "displayNamePlaceholder": "Your display name",
+      "displayNameAria": "Display name",
+      "displayNameValidation": "✓ Display name is available",
+      "displayNameError": "Display name is required",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your@email.com",
+      "emailAria": "Email address",
+      "emailValidation": "✓ Valid email format",
+      "emailError": "Email is required",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "passwordAria": "Password",
+      "hidePassword": "Hide password",
+      "showPassword": "Show password",
+      "passwordStrength": "Strong",
+      "passwordSecurity": "Password is secure",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordAria": "Confirm password",
+      "passwordsMatch": "✓ Passwords match",
+      "working": "Working...",
+      "submit": {
+        "signUp": "Sign Up",
+        "signIn": "Sign In"
+      },
+      "altSignInDivider": "Or continue with"
+    }
+  },
+  "harness": {
+    "globalNavigation": {
+      "title": "Global Navigation Harness",
+      "description": "This harness renders the primary navigation component in isolation so automated accessibility tests can verify skip links, mobile toggles, and language selector behaviour without requiring full app routing."
+    }
+  }
+}
+

@@ -1,27 +1,28 @@
 'use client'
 
-import { 
-  Smartphone, 
-  Wifi, 
-  WifiOff, 
-  Download, 
-  Bell, 
-  BellOff, 
+import {
+  Smartphone,
+  Wifi,
+  WifiOff,
+  Download,
+  Bell,
+  BellOff,
   CheckCircle,
   RefreshCw,
-  Settings
+  Settings,
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 
-import { 
+import {
   usePWAInstallation,
   usePWAOffline,
   usePWANotifications,
   usePWALoading,
   usePWAError,
-  usePWAActions
+  usePWAActions,
 } from '@/lib/stores/pwaStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
 
 type PWAStatusProps = {
@@ -36,6 +37,51 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   const loading = usePWALoading();
   const error = usePWAError();
   const { installPWA, addNotification, processOfflineActions } = usePWAActions();
+  const previousState = useRef({
+    isOnline: offline.isOnline,
+    queuedActions: offline.offlineData.queuedActions.length,
+    notifications: notifications.length,
+    isInstalled: installation.isInstalled,
+    error,
+  });
+
+  useEffect(() => {
+    const prev = previousState.current;
+
+    if (prev.isOnline !== offline.isOnline) {
+      ScreenReaderSupport.announce(
+        offline.isOnline ? 'Connection restored. You are online.' : 'You are offline. Changes will sync when reconnected.',
+        offline.isOnline ? 'polite' : 'assertive',
+      );
+    }
+
+    if (prev.queuedActions !== offline.offlineData.queuedActions.length && offline.offlineData.queuedActions.length > 0) {
+      ScreenReaderSupport.announce(
+        `${offline.offlineData.queuedActions.length} offline action${offline.offlineData.queuedActions.length === 1 ? '' : 's'} pending.`,
+        'polite',
+      );
+    }
+
+    if (prev.notifications !== notifications.length && notifications.length > 0) {
+      ScreenReaderSupport.announce('Notifications enabled.', 'polite');
+    }
+
+    if (!prev.isInstalled && installation.isInstalled) {
+      ScreenReaderSupport.announce('App installed successfully.', 'polite');
+    }
+
+    if (error && error !== prev.error) {
+      ScreenReaderSupport.announce(`PWA error: ${error}`, 'assertive');
+    }
+
+    previousState.current = {
+      isOnline: offline.isOnline,
+      queuedActions: offline.offlineData.queuedActions.length,
+      notifications: notifications.length,
+      isInstalled: installation.isInstalled,
+      error,
+    };
+  }, [error, installation.isInstalled, notifications.length, offline.isOnline, offline.offlineData.queuedActions.length]);
 
   // Debug logging for tests
   if (typeof window !== 'undefined') {
@@ -73,38 +119,52 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   };
 
   const getConnectionIcon = () => {
-    return offline.isOnline ? 
-      <Wifi className="w-4 h-4 text-green-500" /> : 
+    return offline.isOnline ?
+      <Wifi className="w-4 h-4 text-green-500" /> :
       <WifiOff className="w-4 h-4 text-red-500" />;
   };
 
   const getNotificationIcon = () => {
-    return notifications.length > 0 ? 
-      <Bell className="w-4 h-4 text-green-500" /> : 
+    return notifications.length > 0 ?
+      <Bell className="w-4 h-4 text-green-500" /> :
       <BellOff className="w-4 h-4 text-gray-400" />;
   };
 
   if (!showDetails) {
     return (
-      <div className={`flex items-center space-x-2 ${className}`}>
-        {getStatusIcon()}
-        <span className="text-sm font-medium">{getStatusText()}</span>
-        {getConnectionIcon()}
-        {getNotificationIcon()}
+      <div className={`flex items-center space-x-2 ${className}`} role="status" aria-live="polite">
+        <span aria-hidden="true">{getStatusIcon()}</span>
+        <span className="text-sm font-medium" aria-label={`PWA status: ${getStatusText()}`}>
+          {getStatusText()}
+        </span>
+        <span aria-hidden="true">{getConnectionIcon()}</span>
+        <span aria-hidden="true">{getNotificationIcon()}</span>
+        <span className="sr-only">
+          {offline.isOnline ? 'Online' : 'Offline'}. Notifications{' '}
+          {notifications.length > 0 ? 'enabled' : 'disabled'}.
+        </span>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`} data-testid="pwa-status">
+    <section
+      className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}
+      data-testid="pwa-status"
+      aria-live="polite"
+      aria-busy={loading}
+      role="status"
+      aria-label="Progressive web app status"
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">PWA Status</h3>
         <button
           onClick={() => window.location.reload()}
           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           title="Refresh PWA status"
+          aria-label="Refresh PWA status"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
@@ -112,7 +172,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {/* Installation Status */}
         <div className="flex items-center justify-between" data-testid="installation-status">
           <div className="flex items-center space-x-2">
-            {getStatusIcon()}
+            <span aria-hidden="true">{getStatusIcon()}</span>
             <span className="text-sm font-medium text-gray-700">Installation</span>
           </div>
           <span className="text-sm text-gray-600">{getStatusText()}</span>
@@ -121,7 +181,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {/* Connection Status */}
         <div className="flex items-center justify-between" data-testid="offline-status">
           <div className="flex items-center space-x-2">
-            {getConnectionIcon()}
+            <span aria-hidden="true">{getConnectionIcon()}</span>
             <span className="text-sm font-medium text-gray-700">Connection</span>
           </div>
           <span className="text-sm text-gray-600">
@@ -132,7 +192,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {/* Notifications Status */}
         <div className="flex items-center justify-between" data-testid="notification-status">
           <div className="flex items-center space-x-2">
-            {getNotificationIcon()}
+            <span aria-hidden="true">{getNotificationIcon()}</span>
             <span className="text-sm font-medium text-gray-700">Notifications</span>
           </div>
           <span className="text-sm text-gray-600">
@@ -144,7 +204,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {offline.offlineData.cachedPages.length > 0 && (
           <div className="flex items-center justify-between" data-testid="offline-data-status">
             <div className="flex items-center space-x-2">
-              <Settings className="w-4 h-4 text-yellow-500" />
+              <Settings className="w-4 h-4 text-yellow-500" aria-hidden="true" />
               <span className="text-sm font-medium text-gray-700">Offline Data</span>
             </div>
             <span className="text-sm text-gray-600">
@@ -156,7 +216,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         {/* Service Worker Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
+            <CheckCircle className="w-4 h-4 text-green-500" aria-hidden="true" />
             <span className="text-sm font-medium text-gray-700">Service Worker</span>
           </div>
           <span className="text-sm text-gray-600">
@@ -172,6 +232,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
             onClick={() => installPWA()}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
             data-testid="pwa-status-install-button"
+            aria-label="Install app"
           >
             Install App
           </button>
@@ -209,10 +270,11 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         <button
           onClick={() => window.location.reload()}
           className="w-full px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+          aria-label="Update app"
         >
           Update App
         </button>
       </div>
-    </div>
+    </section>
   );
 }

@@ -4,7 +4,12 @@ import { immer } from 'zustand/middleware/immer';
 
 import type { ProfileStore } from '@/lib/stores/profileStore';
 import { profileStoreCreator } from '@/lib/stores/profileStore';
+import { updateProfile } from '@/features/profile/lib/profile-service';
 import { createSafeStorage } from '@/lib/stores/storage';
+
+jest.mock('@/features/profile/lib/profile-service', () => ({
+  updateProfile: jest.fn(),
+}));
 
 const createTestProfileStore = () =>
   create<ProfileStore>()(
@@ -30,6 +35,10 @@ const createTestProfileStore = () =>
   );
 
 describe('profileStore', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('setProfile updates profile and loaded flag', () => {
     const store = createTestProfileStore();
 
@@ -92,6 +101,47 @@ describe('profileStore', () => {
     expect(isProfileComplete).toBe(false);
     expect(missingFields).toContain('username');
     expect(profileCompleteness).toBeLessThan(100);
+  });
+
+  it('updatePreferences merges partial updates into existing preferences on success', async () => {
+    const store = createTestProfileStore();
+    store.setState((state) => {
+      state.preferences = { theme: 'dark', showDashboardCards: true } as any;
+    });
+
+    (updateProfile as jest.Mock).mockResolvedValue({
+      success: true,
+      data: null,
+      error: null,
+    });
+
+    const result = await store.getState().updatePreferences({ theme: 'light' });
+
+    expect(updateProfile).toHaveBeenCalledWith({});
+    expect(result).toBe(true);
+    expect(store.getState().preferences).toEqual({
+      theme: 'light',
+      showDashboardCards: true,
+    });
+    expect(store.getState().isUpdating).toBe(false);
+    expect(store.getState().error).toBeNull();
+  });
+
+  it('updatePreferences records error state when service fails', async () => {
+    const store = createTestProfileStore();
+    (updateProfile as jest.Mock).mockResolvedValue({
+      success: false,
+      data: null,
+      error: 'network error',
+    });
+
+    const result = await store.getState().updatePreferences({ theme: 'light' });
+
+    expect(updateProfile).toHaveBeenCalledWith({});
+    expect(result).toBe(false);
+    expect(store.getState().preferences).toBeNull();
+    expect(store.getState().isUpdating).toBe(false);
+    expect(store.getState().error).toBe('network error');
   });
 });
 

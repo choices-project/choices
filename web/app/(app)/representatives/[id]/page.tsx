@@ -16,7 +16,17 @@
 
 'use client';
 
-import { ArrowLeft, Mail, Phone, MapPin, ExternalLink, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  ExternalLink,
+  User,
+  CalendarClock,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
@@ -32,9 +42,54 @@ import {
   useRepresentativeFollowLoading,
   useGetUserRepresentatives
 } from '@/lib/stores/representativeStore';
+import {
+  useElectionsForDivisions,
+  useFetchElectionsForDivisions,
+  useElectionLoading,
+  useElectionError,
+  useAnalyticsActions,
+} from '@/lib/stores';
+import { Badge } from '@/components/ui/badge';
 import { logger } from '@/lib/utils/logger';
+import {
+  trackCivicsRepresentativeEvent,
+  type CivicsRepresentativeEventBase
+} from '@/features/civics/analytics/civicsAnalyticsEvents';
+
+const formatElectionDate = (isoDate: string | undefined) => {
+  if (!isoDate) {
+    return '';
+  }
+  try {
+    return new Date(isoDate).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return isoDate;
+  }
+};
+
+const getElectionCountdown = (isoDate: string | undefined) => {
+  if (!isoDate) {
+    return null;
+  }
+  const now = new Date();
+  const target = new Date(isoDate);
+  if (Number.isNaN(target.getTime())) {
+    return null;
+  }
+  const diffMs = target.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) {
+    return null;
+  }
+  return diffDays;
+};
 
 export default function RepresentativeDetailPage() {
+  const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
   const representativeIdParam = params?.id as string | undefined;
@@ -54,6 +109,34 @@ export default function RepresentativeDetailPage() {
   const getUserRepresentatives = useGetUserRepresentatives();
   const followRepresentative = useFollowRepresentative();
   const unfollowRepresentative = useUnfollowRepresentative();
+  const fetchElections = useFetchElectionsForDivisions();
+  const divisionIds = useMemo(() => {
+    const ocd = representative?.ocdDivisionIds;
+    const fallback = representative?.division_ids;
+    const source = Array.isArray(ocd)
+      ? ocd
+      : Array.isArray(fallback)
+      ? fallback
+      : [];
+    return source
+      .map((value) => (typeof value === 'string' ? value.trim() : null))
+      .filter((value): value is string => Boolean(value));
+  }, [representative?.ocdDivisionIds, representative?.division_ids]);
+
+  const elections = useElectionsForDivisions(divisionIds);
+  const electionLoading = useElectionLoading();
+  const electionError = useElectionError();
+  const upcomingElections = useMemo(() => {
+    if (!Array.isArray(elections) || elections.length === 0) {
+      return [];
+    }
+    return [...elections].sort(
+      (a, b) => new Date(a.election_day).getTime() - new Date(b.election_day).getTime(),
+    );
+  }, [elections]);
+
+const nextElection = upcomingElections[0];
+const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
 
   const loading = detailLoading || globalLoading;
   const isFollowing =
@@ -70,6 +153,16 @@ export default function RepresentativeDetailPage() {
     void getUserRepresentatives();
   }, [getUserRepresentatives]);
 
+  useEffect(() => {
+    if (divisionIds.length === 0) {
+      return;
+    }
+    if (upcomingElections.length > 0) {
+      return;
+    }
+    void fetchElections(divisionIds);
+  }, [divisionIds, fetchElections, upcomingElections.length]);
+
   const handleFollow = useCallback(async () => {
     if (numericRepresentativeId == null) {
       return;
@@ -85,6 +178,26 @@ export default function RepresentativeDetailPage() {
         representativeId: numericRepresentativeId,
         name: representative?.name ?? 'Unknown representative'
       });
+
+      const eventBase: CivicsRepresentativeEventBase = {
+        representativeId: numericRepresentativeId,
+        representativeName: representative?.name ?? null,
+        divisionIds,
+        nextElectionId: nextElection?.election_id ?? null,
+        nextElectionDay: nextElection?.election_day ?? null,
+        electionCountdownDays: daysUntilNextElection,
+        source: 'representative_detail',
+      };
+
+      trackCivicsRepresentativeEvent(trackEvent, {
+        type: 'civics_representative_follow_toggle',
+        value: isFollowing ? 0 : 1,
+        data: {
+          ...eventBase,
+          action: isFollowing ? 'unfollow' : 'follow',
+          previousFollowState: isFollowing ? 'following' : 'not_following',
+        },
+      });
     }
   }, [
     numericRepresentativeId,
@@ -92,7 +205,12 @@ export default function RepresentativeDetailPage() {
     followRepresentative,
     unfollowRepresentative,
     getUserRepresentatives,
-    representative?.name
+    representative?.name,
+    divisionIds,
+    nextElection?.election_day,
+    nextElection?.election_id,
+    daysUntilNextElection,
+    trackEvent
   ]);
 
   const handleBack = () => {
@@ -229,6 +347,46 @@ export default function RepresentativeDetailPage() {
                   <span className="text-sm capitalize">{representative.level} Level</span>
                 )}
               </div>
+
+              {divisionIds.length > 0 && (
+                <div className="mt-4">
+                  {electionLoading ? (
+                    <Badge className="flex items-center gap-2 bg-blue-500/20 text-white border-white/30 text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Checking elections…
+                    </Badge>
+                  ) : electionError ? (
+                    <Badge className="flex items-center gap-2 bg-red-500/30 text-white border-white/40 text-xs">
+                      <AlertTriangle className="w-3 h-3" />
+                      Election data unavailable
+                    </Badge>
+                  ) : nextElection ? (
+                    <Badge className="flex items-center gap-2 bg-white/15 text-white border-white/40 text-xs">
+                      <CalendarClock className="w-3 h-3" />
+                      <span className="truncate max-w-[220px]">{nextElection.name}</span>
+                      <span className="text-blue-100">
+                        · {formatElectionDate(nextElection.election_day)}
+                      </span>
+                      {upcomingElections.length > 1 && (
+                        <span className="text-blue-100/80">
+                          (+{upcomingElections.length - 1})
+                        </span>
+                      )}
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-white/10 text-white border-white/30 text-xs">
+                      No upcoming elections recorded
+                    </Badge>
+                  )}
+                </div>
+              )}
+              {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
+                <div className="mt-2 text-xs text-blue-100">
+                  {daysUntilNextElection === 0
+                    ? 'Election is today'
+                    : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                </div>
+              )}
             </div>
 
             <button
@@ -292,6 +450,53 @@ export default function RepresentativeDetailPage() {
               </div>
             )}
           </div>
+
+        {divisionIds.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Upcoming Elections</h3>
+            <div className="space-y-3">
+              {electionLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Checking elections for this district…
+                </div>
+              ) : electionError ? (
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <AlertTriangle className="w-4 h-4" />
+                  Unable to load election information. Please try again later.
+                </div>
+              ) : upcomingElections.length > 0 ? (
+                upcomingElections.slice(0, 5).map((election) => (
+                  <div
+                    key={election.election_id}
+                    className="flex items-start justify-between bg-blue-50 border border-blue-100 rounded-lg p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">{election.name}</p>
+                      <p className="text-xs text-blue-700">
+                        {formatElectionDate(election.election_day)}
+                        {(() => {
+                          const countdown = getElectionCountdown(election.election_day);
+                          if (countdown == null || countdown > 90) {
+                            return null;
+                          }
+                          return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
+                        })()}
+                      </p>
+                    </div>
+                    <Badge className="bg-blue-600 text-white text-xs">
+                      {election.ocd_division_id}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-gray-600">
+                  We don’t have any upcoming elections recorded for this representative’s divisions.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
           {/* Official Website */}
           {website && (

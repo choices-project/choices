@@ -1,0 +1,376 @@
+{
+  "settings": {
+    "language": "Idioma"
+  },
+  "feeds": {
+    "infiniteScroll": {
+      "loadingMore": "Cargando más...",
+      "end": {
+        "heading": "Has llegado al final del feed",
+        "body": "Vuelve más tarde para ver nuevas actualizaciones"
+      },
+      "pull": {
+        "release": "Suelta para actualizar",
+        "hint": "Desliza hacia abajo para actualizar"
+      },
+      "refreshing": "Actualizando...",
+      "scrollToTopAria": "Volver al inicio"
+    },
+    "hashtagPolls": {
+      "error": {
+        "retry": "Intentar de nuevo"
+      },
+      "empty": {
+        "title": "No hay encuestas por hashtag disponibles en este momento."
+      },
+      "header": {
+        "title": "Feed de encuestas por hashtag",
+        "subtitle": "Descubre encuestas según tus intereses de hashtag"
+      },
+      "metrics": {
+        "feedScore": "Índice del feed",
+        "polls": "Encuestas"
+      },
+      "filters": {
+        "title": "Filtros de hashtags",
+        "selectedBadge": "#{hashtag} ×",
+        "trendingLabel": "Hashtags en tendencia:",
+        "sortBy": "Ordenar por",
+        "sort": {
+          "relevance": "Relevancia",
+          "trending": "Tendencia",
+          "engagement": "Participación"
+        }
+      },
+      "tabs": {
+        "recommended": "Recomendadas",
+        "trending": "Tendencia",
+        "analytics": "Analítica"
+      },
+      "recommended": {
+        "empty": "Ninguna encuesta coincide con tus filtros actuales",
+        "clearFilters": "Borrar filtros",
+        "matches": "Coincidencias: {matches}",
+        "noMatches": "Coincidencias: sin coincidencias directas",
+        "recommendedTag": "Encuesta recomendada",
+        "noDescription": "Sin descripción disponible.",
+        "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
+        "matchPercent": "{value}% de coincidencia",
+        "viewPoll": "Ver encuesta"
+      },
+      "trending": {
+        "title": "Hashtags en tendencia",
+        "empty": "No hay hashtags en tendencia disponibles",
+        "rank": "#{rank}",
+        "badge": "Tendencia",
+        "select": "Seleccionar hashtag {hashtag}"
+      },
+      "analytics": {
+        "pollsLabel": "Encuestas",
+        "engagementLabel": "Participación",
+        "interestLabel": "Interés",
+        "trendingLabel": "Tendencia",
+        "trendingRank": "#{rank}",
+        "percent": "{value}%",
+        "empty": "Analítica no disponible"
+      },
+      "date": {
+        "unknown": "Fecha desconocida",
+        "invalid": "Fecha inválida",
+        "relative": {
+          "justNow": "Justo ahora",
+          "hours": "{formattedCount} {count, plural, one {hora atrás} other {horas atrás}}",
+          "yesterday": "Ayer"
+        }
+      }
+    }
+  },
+  "common": {
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "polls": "Encuestas",
+    "dashboard": "Panel",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta"
+  },
+  "accessibility": {
+    "loading": "Cargando Choices..."
+  },
+  "onboarding": {
+    "loading": "Cargando el proceso de incorporación...",
+    "labels": {
+      "welcome": "Bienvenida",
+      "privacy": "Privacidad",
+      "demographics": "Demografía",
+      "authentication": "Autenticación",
+      "profile": "Perfil",
+      "complete": "Finalizado"
+    },
+    "progress": {
+      "valueText": "Paso {current} de {total}: {label}"
+    },
+    "welcome": {
+      "title": "Bienvenido a Choices",
+      "subtitle": "Toma decisiones informadas con información transparente y basada en datos",
+      "features": {
+        "vote": {
+          "title": "Vota sobre temas",
+          "description": "Participa en encuestas sobre los temas que te importan"
+        },
+        "representatives": {
+          "title": "Sigue a tus representantes",
+          "description": "Conoce cómo votan y financian tus funcionarios electos"
+        },
+        "finance": {
+          "title": "Financiación de campañas",
+          "description": "Entiende quién financia las campañas políticas"
+        }
+      },
+      "duration": "⏱️ Te tomará unos 3 minutos comenzar",
+      "cta": {
+        "next": "Comenzar",
+        "skip": "Ya soy usuario"
+      }
+    },
+    "privacy": {
+      "title": "Tu privacidad importa",
+      "subtitle": "Creemos en la transparencia y la protección de datos",
+      "cards": {
+        "location": {
+          "title": "Datos de ubicación",
+          "description": "Solo necesitamos tu estado o distrito para encontrar a tus representantes. Nunca almacenamos tu dirección exacta."
+        },
+        "demographics": {
+          "title": "Datos demográficos",
+          "description": "La edad y la educación nos ayudan a mostrarte encuestas relevantes y a conectarte con votantes similares."
+        },
+        "protection": {
+          "title": "Protección de datos",
+          "description": "Todos los datos están cifrados, anonimizados y nunca se venden. Puedes eliminar tu información en cualquier momento."
+        }
+      }
+    },
+    "demographics": {
+      "title": "Personalicemos tu experiencia",
+      "subtitle": "Esta información nos ayuda a mostrarte contenido relevante",
+      "location": {
+        "title": "Encuentra tu distrito",
+        "description": "Introduce tu dirección para encontrar tu distrito y representantes. Solo guardamos tu distrito, nunca tu dirección completa.",
+        "whyLabel": "Por qué lo pedimos:",
+        "whyDescription": "Tu distrito nos permite mostrarte representantes, acciones cívicas y encuestas relevantes para tu zona.",
+        "privacyLabel": "Privacidad:",
+        "privacyDescription": "Nunca guardamos tu dirección completa. Solo almacenamos tu distrito (p. ej., \"CA-12\") y puedes eliminarlo en cualquier momento desde tu perfil."
+      },
+      "profile": {
+        "title": "Datos demográficos",
+        "description": "Esto nos ayuda a mostrarte encuestas relevantes y vincularte con votantes similares"
+      },
+      "fields": {
+        "age": {
+          "label": "Rango de edad",
+          "placeholder": "Selecciona un rango de edad",
+          "options": {
+            "18_24": "18-24",
+            "25_34": "25-34",
+            "35_44": "35-44",
+            "45_54": "45-54",
+            "55_64": "55-64",
+            "65_plus": "65+"
+          }
+        },
+        "education": {
+          "label": "Nivel educativo",
+          "placeholder": "Selecciona un nivel educativo",
+          "options": {
+            "high_school": "Secundaria completa",
+            "some_college": "Algunos estudios universitarios",
+            "bachelor": "Licenciatura",
+            "graduate": "Estudios de posgrado"
+          }
+        },
+        "engagement": {
+          "label": "Participación política",
+          "placeholder": "Selecciona tu nivel de participación",
+          "options": {
+            "casual": "Casual (voto ocasional)",
+            "moderate": "Moderado (sigo la política)",
+            "very_engaged": "Muy activo (muy involucrado)"
+          }
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "skip": "Omitir por ahora",
+        "continue": "Continuar",
+        "reminder": "Siempre podrás agregar esta información más adelante"
+      }
+    }
+  },
+  "polls": {
+    "filters": {
+      "search": {
+        "placeholder": "Busca encuestas, hashtags o temas...",
+        "ariaLabel": "Buscar encuestas"
+      },
+      "hashtags": {
+        "label": "Filtrar por hashtags",
+        "remove": "Quitar filtro {hashtag}",
+        "addPlaceholder": "Agrega hashtags para filtrar encuestas...",
+        "addAria": "Agregar filtro de hashtag"
+      },
+      "status": {
+        "all": "Todas",
+        "active": "Activas",
+        "trending": "Tendencia",
+        "closed": "Cerradas"
+      },
+      "categories": {
+        "label": "Categorías",
+        "all": "Todas las categorías"
+      },
+      "trending": {
+        "heading": "Hashtags en tendencia",
+        "headingWithCount": "Hashtags en tendencia ({count})",
+        "count": "{formattedCount} {count, plural, one {tendencia activa} other {tendencias activas}}"
+      }
+    },
+    "card": {
+      "status": {
+        "active": "Activa",
+        "closed": "Cerrada",
+        "draft": "Borrador",
+        "archived": "Archivada"
+      },
+      "votingMethod": {
+        "single": "Selección única",
+        "approval": "Aprobación",
+        "ranked": "Voto preferencial",
+        "quadratic": "Cuadrático",
+        "range": "Rango",
+        "multiple": "Selección múltiple",
+        "unknown": "Desconocido"
+      },
+      "createdBy": "Creado por {name}",
+      "createdOn": "Creado el {date}",
+      "endsOn": "Termina el {date} a las {time}",
+      "unknownCreator": "Desconocido",
+      "untitled": "Encuesta sin título",
+      "optionsHeading": "Opciones",
+      "optionItem": "{index}. {option}",
+      "moreOptions": "+{count} opciones adicionales",
+      "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
+      "participation": "{formattedCount} {count, plural, one {participante} other {participantes}}",
+      "actions": {
+        "view": "Ver encuesta",
+        "vote": "Votar ahora"
+      }
+    },
+    "categories": {
+      "general": "General",
+      "business": "Negocios",
+      "education": "Educación",
+      "technology": "Tecnología",
+      "health": "Salud",
+      "finance": "Finanzas",
+      "environment": "Medio ambiente",
+      "social": "Social"
+    },
+    "page": {
+      "title": "Encuestas",
+      "subtitle": "Descubre y participa en encuestas de la comunidad",
+      "descriptionFallback": "Sin descripción disponible",
+      "trendingBadge": "Tendencia #{position}",
+      "metadata": {
+        "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
+        "created": "Creada el {date}"
+      },
+      "empty": {
+        "title": "No se encontraron encuestas",
+        "filters": "Prueba ajustando tus filtros o términos de búsqueda",
+        "ctaMessage": "¡Sé la primera persona en crear una encuesta!"
+      },
+      "cta": {
+        "create": "Crear encuesta",
+        "view": "Ver encuesta",
+        "results": "Ver resultados"
+      },
+      "pagination": {
+        "showing": "Mostrando {start}\u2013{end} de {total} encuestas",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "pageLabel": "Página {current} de {total}"
+      }
+    }
+  },
+  "auth": {
+    "loadingOptions": "Cargando opciones de autenticación...",
+    "heading": {
+      "signIn": "Inicia sesión en tu cuenta",
+      "signUp": "Crea tu cuenta"
+    },
+    "subheading": {
+      "signIn": "Bienvenido de nuevo a Choices",
+      "signUp": "Únete a Choices hoy"
+    },
+    "toggle": {
+      "toSignIn": "¿Ya tienes una cuenta? Inicia sesión",
+      "toSignUp": "¿No tienes una cuenta? Regístrate"
+    },
+    "errors": {
+      "emailRequired": "El correo electrónico es obligatorio",
+      "passwordRequired": "La contraseña es obligatoria",
+      "displayNameRequired": "El nombre visible es obligatorio",
+      "passwordsMismatch": "Las contraseñas no coinciden",
+      "registrationFailed": "El registro falló",
+      "loginFailed": "El inicio de sesión falló",
+      "unexpected": "Ocurrió un error inesperado"
+    },
+    "success": {
+      "accountCreated": "La cuenta se creó correctamente",
+      "login": "Inicio de sesión exitoso"
+    },
+    "form": {
+      "errorSummaryTitle": "Corrige los siguientes errores:",
+      "errorSummaryCount": "{count, plural, one {Queda # error} other {Quedan # errores}}",
+      "rateLimited": "Demasiados intentos. Inténtalo de nuevo más tarde.",
+      "displayNameLabel": "Nombre visible",
+      "displayNamePlaceholder": "Tu nombre visible",
+      "displayNameAria": "Nombre visible",
+      "displayNameValidation": "✓ El nombre visible está disponible",
+      "displayNameError": "El nombre visible es obligatorio",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "emailAria": "Dirección de correo electrónico",
+      "emailValidation": "✓ Formato de correo válido",
+      "emailError": "El correo electrónico es obligatorio",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "passwordAria": "Contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "showPassword": "Mostrar contraseña",
+      "passwordStrength": "Segura",
+      "passwordSecurity": "La contraseña es segura",
+      "confirmPasswordLabel": "Confirmar contraseña",
+      "confirmPasswordAria": "Confirmar contraseña",
+      "passwordsMatch": "✓ Las contraseñas coinciden",
+      "working": "Trabajando...",
+      "submit": {
+        "signUp": "Registrarse",
+        "signIn": "Iniciar sesión"
+      },
+      "altSignInDivider": "O continúa con"
+    }
+  },
+  "harness": {
+    "globalNavigation": {
+      "title": "Entorno de Navegación Global",
+      "description": "Este entorno representa la navegación principal de forma aislada para que las pruebas automatizadas de accesibilidad puedan verificar enlaces de salto, menús móviles y el selector de idioma sin requerir el enrutamiento completo de la aplicación."
+    }
+  }
+}
+

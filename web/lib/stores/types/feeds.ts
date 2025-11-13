@@ -224,7 +224,7 @@ export type FeedsActions = {
   // Feed management
   setFeeds: (feeds: FeedItem[]) => void;
   addFeed: (feed: FeedItem) => void;
-  updateFeed: (id: string, updates: Partial<FeedItem>) => void;
+  updateFeed: (id: string, updates: FeedUpdateInput) => void;
   removeFeed: (id: string) => void;
   refreshFeeds: () => Promise<void>;
   loadMoreFeeds: () => Promise<void>;
@@ -266,7 +266,7 @@ export type FeedsActions = {
   loadCategories: () => Promise<void>;
   saveUserInteraction: (
     feedId: string,
-    interaction: Partial<FeedUserInteraction>
+    interaction: FeedInteractionPayload
   ) => Promise<void>;
 
   // Loading states
@@ -300,5 +300,8 @@ export type FeedsApiPayload = {
     sort: string;
   };
 };
+
+export type FeedUpdateInput = Partial<FeedItem>;
+export type FeedInteractionPayload = Partial<FeedUserInteraction>;
 
 

@@ -50,6 +50,7 @@ export class RepresentativeService {
       if (query?.office) params.append('office', query.office);
       if (query?.query) params.append('query', query.query);
       if (query?.limit) params.append('limit', query.limit.toString());
+      params.append('include', 'divisions');
       // Note: page is not part of RepresentativeSearchQuery type, using default pagination
       
       // Call API route (client-safe)
@@ -59,12 +60,28 @@ export class RepresentativeService {
       }
       
       const apiResult = await response.json();
+      const representatives = (apiResult.data ?? []).map(
+        (rep: Representative & { division_ids?: string[]; ocdDivisionIds?: string[] }) => {
+          const divisionsSource = Array.isArray(rep.ocdDivisionIds)
+            ? rep.ocdDivisionIds
+            : Array.isArray(rep.division_ids)
+            ? rep.division_ids
+            : [];
+          const divisions = divisionsSource.filter((value): value is string => typeof value === 'string');
+
+          return {
+            ...rep,
+            division_ids: divisions,
+            ocdDivisionIds: divisions,
+          };
+        }
+      );
       
       logger.info('✅ Service: Returning API response');
       return {
         success: true,
         data: {
-          representatives: apiResult.data ?? [],
+          representatives,
           total: apiResult.total ?? 0,
           page: 1, // API doesn't support pagination in query type
           limit: query?.limit ?? 20,
@@ -94,7 +111,7 @@ export class RepresentativeService {
   async getRepresentativeById(id: number): Promise<RepresentativeApiResponse> {
     try {
       // Call API route (client-safe)
-      const response = await fetch(`/api/v1/civics/representative/${id}`);
+      const response = await fetch(`/api/v1/civics/representative/${id}?include=divisions`);
       if (!response.ok) {
         if (response.status === 404) {
           return {
@@ -107,9 +124,24 @@ export class RepresentativeService {
 
       const apiResult = await response.json();
       
+      const data = (apiResult.data ?? apiResult) as Representative & {
+        division_ids?: string[];
+        ocdDivisionIds?: string[];
+      };
+      const divisionsSource = Array.isArray(data.ocdDivisionIds)
+        ? data.ocdDivisionIds
+        : Array.isArray(data.division_ids)
+        ? data.division_ids
+        : [];
+      const divisions = divisionsSource.filter((value): value is string => typeof value === 'string');
+
       return {
         success: true,
-        data: apiResult.data ?? apiResult
+        data: {
+          ...data,
+          division_ids: divisions,
+          ocdDivisionIds: divisions,
+        }
       };
     } catch (error) {
       return {
@@ -128,6 +160,7 @@ export class RepresentativeService {
       // Call API route (client-safe)
       const params = new URLSearchParams();
       params.append('address', query.address);
+      params.append('include', 'divisions');
       
       const response = await fetch(`/api/v1/civics/by-state?${params.toString()}`);
       if (!response.ok) {
@@ -135,11 +168,27 @@ export class RepresentativeService {
       }
       
       const apiResult = await response.json();
+      const representatives = (apiResult.data ?? []).map(
+        (rep: Representative & { division_ids?: string[]; ocdDivisionIds?: string[] }) => {
+          const divisionsSource = Array.isArray(rep.ocdDivisionIds)
+            ? rep.ocdDivisionIds
+            : Array.isArray(rep.division_ids)
+            ? rep.division_ids
+            : [];
+          const divisions = divisionsSource.filter((value): value is string => typeof value === 'string');
+
+          return {
+            ...rep,
+            division_ids: divisions,
+            ocdDivisionIds: divisions,
+          };
+        }
+      );
       
       return {
         success: true,
         data: {
-          representatives: apiResult.data ?? [],
+          representatives,
           total: apiResult.total ?? 0,
           page: 1,
           limit: 20,

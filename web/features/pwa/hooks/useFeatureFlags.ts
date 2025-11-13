@@ -10,11 +10,35 @@ import { useState, useEffect } from 'react';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { useAppActions, useAppFeatureFlags } from '@/lib/stores/appStore';
 
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
 export function useFeatureFlags() {
   const features = useAppFeatureFlags();
   const { setFeatureFlag, toggleFeatureFlag, setFeatureFlags } = useAppActions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (IS_E2E_HARNESS) {
+    return {
+      flags: features,
+      isLoading: false,
+      error: null,
+      fetchFlags: async () => {},
+      setFeatureFlag,
+      toggleFeatureFlag,
+      setFeatureFlags,
+      clearError: () => {},
+      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
+      getAllFlags: () => featureFlagManager.getAllFlags(),
+      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
+      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
+      getFlagsByCategory: (category: string) => featureFlagManager.getFlagsByCategory(category),
+      getSystemInfo: () => featureFlagManager.getSystemInfo(),
+      systemInfo: featureFlagManager.getSystemInfo(),
+      areDependenciesEnabled: (flagId: string) => featureFlagManager.areDependenciesEnabled(flagId),
+      subscribe: () => ({ unsubscribe: () => {} })
+    };
+  }
 
   // Fetch flags from API and sync with appStore
   const fetchFlags = async () => {

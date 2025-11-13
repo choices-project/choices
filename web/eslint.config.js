@@ -4,11 +4,14 @@ import typescriptParser from '@typescript-eslint/parser';
 import boundaries from 'eslint-plugin-boundaries';
 import eslintComments from 'eslint-plugin-eslint-comments';
 import importPlugin from 'eslint-plugin-import';
+import formatjs from 'eslint-plugin-formatjs';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
+
+const hasLegacyCopy = true;
 
 export default [
   // Global environment
@@ -22,6 +25,27 @@ export default [
         ...globals.node,
         ...globals.jest,
       },
+    },
+  },
+
+  // i18n safeguards
+  {
+    files: [
+      'app/(app)/layout.tsx',
+      'app/providers.tsx',
+      'app/auth/page.tsx',
+      'components/shared/LanguageSelector.tsx',
+      'features/onboarding/components/**/*.{ts,tsx}',
+    ],
+    plugins: {
+      formatjs,
+    },
+    rules: hasLegacyCopy
+      ? {
+          'formatjs/no-literal-string-in-jsx': 'warn',
+        }
+      : {
+          'formatjs/no-literal-string-in-jsx': 'error',
     },
   },
   // Base JavaScript recommended rules
@@ -92,6 +116,7 @@ export default [
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      'formatjs/no-literal-string-in-jsx': 'off',
 
       // Console logging - enforce use of logger
       'no-console': ['error', { allow: ['warn', 'error'] }],

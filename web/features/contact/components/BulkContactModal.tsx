@@ -15,18 +15,22 @@ import {
   UsersIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { useAnalyticsActions, useContactActions } from '@/lib/stores';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
-import { useContactActions } from '@/lib/stores';
 
 import { useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
+import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 type BulkContactModalProps = {
   isOpen: boolean;
@@ -79,6 +83,34 @@ export default function BulkContactModal({
   const { createThread } = useContactThreads();
   const { sendMessage } = useContactActions();
 
+  const divisionIds = useMemo(() => {
+    const divisions = new Set<string>();
+    representatives.forEach((rep) => {
+      const candidate = rep.ocdDivisionIds ?? rep.division_ids ?? [];
+      if (!Array.isArray(candidate)) {
+        return;
+      }
+      candidate.forEach((division) => {
+        if (typeof division === 'string' && division.trim().length > 0) {
+          divisions.add(division.trim());
+        }
+      });
+    });
+    return Array.from(divisions);
+  }, [representatives]);
+
+  const {
+    elections: upcomingElections,
+    loading: electionLoading,
+    error: electionError,
+    daysUntilNextElection,
+  } = useElectionCountdown(divisionIds, { autoFetch: isOpen });
+
+  const { trackEvent } = useAnalyticsActions();
+  const openTrackedRef = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -93,6 +125,31 @@ export default function BulkContactModal({
       resetTemplate();
     }
   }, [isOpen, representatives, resetTemplate]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      openTrackedRef.current = false;
+      return;
+    }
+
+    if (openTrackedRef.current) {
+      return;
+    }
+
+    openTrackedRef.current = true;
+
+    trackCivicsRepresentativeEvent(trackEvent, {
+      type: 'civics_representative_bulk_contact_modal_open',
+      value: selectedRepresentatives.size,
+      label: String(representatives.length),
+      data: {
+        representativeIds: representatives.map((rep) => rep.id),
+        totalRepresentatives: representatives.length,
+        selectedCount: selectedRepresentatives.size,
+        divisionIds,
+      },
+    });
+  }, [divisionIds, isOpen, representatives, selectedRepresentatives.size, trackEvent]);
 
   // Initialize local template values when template is selected
   useEffect(() => {
@@ -129,6 +186,44 @@ export default function BulkContactModal({
   const selectedReps = useMemo(() => {
     return representatives.filter(r => selectedRepresentatives.has(r.id));
   }, [representatives, selectedRepresentatives]);
+
+  const handleClose = useCallback(() => {
+    trackCivicsRepresentativeEvent(trackEvent, {
+      type: 'civics_representative_bulk_contact_modal_close',
+      value: selectedRepresentatives.size,
+      label: String(representatives.length),
+      data: {
+        representativeIds: representatives.map((rep) => rep.id),
+        totalRepresentatives: representatives.length,
+        selectedCount: selectedRepresentatives.size,
+        divisionIds,
+        hadDraftContent: message.trim().length > 0,
+        wasSuccessful: success,
+      },
+    });
+    openTrackedRef.current = false;
+    onClose();
+  }, [
+    divisionIds,
+    message,
+    onClose,
+    openTrackedRef,
+    representatives,
+    selectedRepresentatives.size,
+    success,
+    trackEvent,
+  ]);
+
+  useAccessibleDialog({
+    isOpen,
+    dialogRef,
+    ...(contactSystemEnabled ? { initialFocusRef: subjectInputRef } : {}),
+    onClose: handleClose,
+    liveMessage: contactSystemEnabled
+      ? 'Contact multiple representatives dialog opened.'
+      : 'Contact feature unavailable dialog opened.',
+    ariaLabelId: contactSystemEnabled ? 'bulk-contact-title' : 'bulk-disabled-title',
+  });
 
   const handleBulkSend = useCallback(async () => {
     if (!message.trim() || !subject.trim()) {
@@ -191,39 +286,61 @@ export default function BulkContactModal({
         setSuccess(true);
         // Auto-close after 3 seconds
         setTimeout(() => {
-          onClose();
+          handleClose();
         }, 3000);
       } else if (successCount > 0) {
         setError(`Sent to ${successCount} of ${selectedReps.length} representatives. Some failed.`);
       } else {
         setError('Failed to send to all representatives');
       }
+
+      trackCivicsRepresentativeEvent(trackEvent, {
+        type: 'civics_representative_bulk_contact_send',
+        value: successCount,
+        label: String(representatives.length),
+        data: {
+          representativeIds: representatives.map((rep) => rep.id),
+          selectedRepresentativeIds: selectedReps.map((rep) => rep.id),
+          totalRepresentatives: representatives.length,
+          selectedCount: selectedRepresentatives.size,
+          divisionIds,
+          successCount,
+          failureCount: results.length - successCount,
+          templateId: selectedTemplate?.id ?? null,
+        },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send messages');
+      trackCivicsRepresentativeEvent(trackEvent, {
+        type: 'civics_representative_bulk_contact_send_error',
+        value: selectedRepresentatives.size,
+        label: String(representatives.length),
+        data: {
+          representativeIds: representatives.map((rep) => rep.id),
+          selectedRepresentativeIds: selectedReps.map((rep) => rep.id),
+          totalRepresentatives: representatives.length,
+          selectedCount: selectedRepresentatives.size,
+          divisionIds,
+          errorMessage: err instanceof Error ? err.message : 'Unknown error',
+          templateId: selectedTemplate?.id ?? null,
+        },
+      });
     } finally {
       setIsSending(false);
     }
-  }, [message, subject, selectedRepresentatives, selectedReps, representatives, userId, createThread]);
-
-  // Handle escape key to close modal
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      // Focus first input when modal opens
-      const firstInput = document.querySelector('#bulk-subject') as HTMLInputElement;
-      firstInput?.focus();
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
+  }, [
+    createThread,
+    divisionIds,
+    handleClose,
+    message,
+    representatives,
+    selectedRepresentatives,
+    selectedReps,
+    selectedTemplate?.id,
+    sendMessage,
+    subject,
+    trackEvent,
+  ]);
 
   if (!isOpen) return null;
 
@@ -234,6 +351,7 @@ export default function BulkContactModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="bulk-disabled-title"
+        ref={dialogRef}
       >
         <div className="bg-white rounded-lg p-6 max-w-md mx-4">
           <div className="flex items-center justify-center mb-4">
@@ -246,7 +364,7 @@ export default function BulkContactModal({
             Contact system is currently disabled. This feature will be available soon.
           </p>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="mt-4 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
             aria-label="Close dialog"
             type="button"
@@ -265,6 +383,7 @@ export default function BulkContactModal({
       aria-modal="true"
       aria-labelledby="bulk-contact-title"
       aria-describedby="bulk-contact-description"
+      ref={dialogRef}
     >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
@@ -281,7 +400,7 @@ export default function BulkContactModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
             aria-label="Close bulk contact modal"
             type="button"
@@ -315,6 +434,44 @@ export default function BulkContactModal({
             </div>
           </div>
 
+          {(upcomingElections.length > 0 || electionLoading || electionError) && (
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
+              <p className="font-semibold flex items-center gap-2">
+                <ClockIcon className="h-5 w-5 text-blue-500" />
+                Upcoming elections for selected divisions
+              </p>
+              {electionLoading && <p>Loading election calendar…</p>}
+              {electionError && !electionLoading && (
+                <p className="text-red-600">Unable to load elections right now.</p>
+              )}
+              {!electionLoading && !electionError && upcomingElections.length > 0 && (
+                <ul className="space-y-1 text-blue-700">
+                  {upcomingElections.slice(0, 4).map((election) => (
+                    <li key={election.election_id} className="flex items-center gap-2">
+                      <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                      <span>
+                        <span className="font-medium">{election.name}</span>
+                        <span className="ml-1">
+                          ({formatElectionDate(election.election_day)})
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                  {upcomingElections.length > 4 && (
+                    <li>+{upcomingElections.length - 4} additional election(s)</li>
+                  )}
+                  {daysUntilNextElection != null && (
+                    <li className="text-xs text-blue-700">
+                      Next election {daysUntilNextElection === 0
+                        ? 'is today!'
+                        : `in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
+
           {/* Template Selector (same as ContactModal) */}
           <div className="space-y-2">
             <button
@@ -346,6 +503,18 @@ export default function BulkContactModal({
                           onClick={() => {
                             selectTemplate(template.id);
                             setShowTemplates(false);
+                            trackCivicsRepresentativeEvent(trackEvent, {
+                              type: 'civics_representative_bulk_contact_template_select',
+                              label: template.id,
+                              data: {
+                                representativeIds: representatives.map((rep) => rep.id),
+                                totalRepresentatives: representatives.length,
+                                selectedCount: selectedRepresentatives.size,
+                                divisionIds,
+                                templateId: template.id,
+                                templateTitle: template.title,
+                              },
+                            });
                           }}
                           className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white transition-colors ${
                             selectedTemplate?.id === template.id ? 'bg-blue-100 text-blue-900' : 'text-gray-700'
@@ -364,10 +533,22 @@ export default function BulkContactModal({
                 {selectedTemplate && (
                   <button
                     onClick={() => {
+                      const lastTemplateId = selectedTemplate.id;
                       resetTemplate();
                       setSubject('');
                       setMessage('');
                       setLocalTemplateValues({});
+                      trackCivicsRepresentativeEvent(trackEvent, {
+                        type: 'civics_representative_bulk_contact_template_clear',
+                        label: lastTemplateId,
+                        data: {
+                          representativeIds: representatives.map((rep) => rep.id),
+                          totalRepresentatives: representatives.length,
+                          selectedCount: selectedRepresentatives.size,
+                          divisionIds,
+                          lastTemplateId,
+                        },
+                      });
                     }}
                     className="mt-3 text-xs text-gray-600 hover:text-gray-800"
                   >
@@ -429,6 +610,7 @@ export default function BulkContactModal({
                 aria-invalid={error && !subject.trim() ? 'true' : 'false'}
                 aria-describedby={error && !subject.trim() ? 'bulk-subject-error' : undefined}
                 maxLength={200}
+                ref={subjectInputRef}
               />
               {error && !subject.trim() && (
                 <p id="bulk-subject-error" className="mt-1 text-xs text-red-600" role="alert">
@@ -527,7 +709,7 @@ export default function BulkContactModal({
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
               disabled={isSending}
             >

@@ -22,8 +22,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import {
-  useFeedsStore,
+  useFilteredFeeds,
+  useFeedsLoading,
+  useFeedsRefreshing,
+  useFeedsError,
   useFeedsActions,
   useTrendingHashtags,
   useHashtagActions,
@@ -31,8 +35,7 @@ import {
 import type { FeedItem } from '@/lib/stores/feedsStore';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
-
-
+ 
 type HashtagPollsFeedProps = {
   userId: string;
   className?: string;
@@ -57,13 +60,6 @@ const getEngagementScore = (poll: FeedItem): number => {
   const shares = poll.engagement?.shares ?? 0;
   const comments = poll.engagement?.comments ?? 0;
   return likes + shares + comments;
-};
-
-const formatDate = (date?: string | null): string => {
-  if (!date) return 'Unknown date';
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return 'Unknown date';
-  return parsed.toLocaleDateString();
 };
 
 const normalizeTrendingHashtags = (raw: unknown[]): string[] =>
@@ -91,17 +87,90 @@ export default function HashtagPollsFeed({
   enableAnalytics = false,
   maxPolls = 20,
 }: HashtagPollsFeedProps) {
+  const { t, currentLanguage } = useI18n();
   const [activeTab, setActiveTab] = useState('recommended');
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'relevance' | 'trending' | 'engagement'>('relevance');
 
-  const filteredFeeds = useFeedsStore((state) => state.filteredFeeds);
-  const isLoading = useFeedsStore((state) => state.isLoading || state.isRefreshing);
-  const storeError = useFeedsStore((state) => state.error);
+  const filteredFeeds = useFilteredFeeds();
+  const isLoading = useFeedsLoading();
+  const isRefreshing = useFeedsRefreshing();
+  const loadingState = isLoading || isRefreshing;
+  const storeError = useFeedsError();
 
   const { loadFeeds } = useFeedsActions();
   const { getTrendingHashtags } = useHashtagActions();
   const trendingHashtagsRaw = useTrendingHashtags();
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    [currentLanguage],
+  );
+
+  const formatDate = useCallback(
+    (date: Date | string | null | undefined) => {
+      if (!date) return t('feeds.hashtagPolls.date.unknown');
+
+      const parsed = typeof date === 'string' ? new Date(date) : date;
+      if (!parsed || Number.isNaN(parsed.getTime())) {
+        return t('feeds.hashtagPolls.date.invalid');
+      }
+
+      const now = new Date();
+      const diffInHours = Math.floor((now.getTime() - parsed.getTime()) / (1000 * 60 * 60));
+
+      if (diffInHours < 1) {
+        return t('feeds.hashtagPolls.date.relative.justNow');
+      }
+      if (diffInHours < 24) {
+        return t('feeds.hashtagPolls.date.relative.hours', {
+          count: diffInHours,
+          formattedCount: numberFormatter.format(diffInHours),
+        });
+      }
+      if (diffInHours < 48) {
+        return t('feeds.hashtagPolls.date.relative.yesterday');
+      }
+
+      return dateFormatter.format(parsed);
+    },
+    [dateFormatter, numberFormatter, t],
+  );
+
+  const formatVotes = useCallback(
+    (value: number) =>
+      t('feeds.hashtagPolls.recommended.votes', {
+        count: value,
+        formattedCount: numberFormatter.format(value),
+      }),
+    [numberFormatter, t],
+  );
+
+  const formatMatchPercent = useCallback(
+    (value: number) =>
+      t('feeds.hashtagPolls.recommended.matchPercent', {
+        value: numberFormatter.format(value),
+      }),
+    [numberFormatter, t],
+  );
+
+  const formatPercent = useCallback(
+    (fraction: number) =>
+      t('feeds.hashtagPolls.analytics.percent', {
+        value: numberFormatter.format(Math.round(fraction * 100)),
+      }),
+    [numberFormatter, t],
+  );
 
   const trendingHashtags = useMemo(
     () => normalizeTrendingHashtags(trendingHashtagsRaw).slice(0, 20),
@@ -228,7 +297,7 @@ export default function HashtagPollsFeed({
     [selectedHashtags, feedScore]
   );
 
-  if (isLoading && pollItems.length === 0) {
+  if (loadingState && pollItems.length === 0) {
     return (
       <div className={cn('space-y-6', className)}>
         <div className="flex items-center justify-center py-12">
@@ -245,7 +314,7 @@ export default function HashtagPollsFeed({
           <CardContent className="p-6 text-center">
             <p className="text-red-600 mb-4">{storeError}</p>
             <Button onClick={() => void loadFeeds()} variant="outline">
-              Try Again
+              {t('feeds.hashtagPolls.error.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -259,7 +328,7 @@ export default function HashtagPollsFeed({
         <Card>
           <CardContent className="p-6 text-center">
             <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No hashtag-polls feed available</p>
+            <p className="text-gray-600">{t('feeds.hashtagPolls.empty.title')}</p>
           </CardContent>
         </Card>
       </div>
@@ -270,23 +339,25 @@ export default function HashtagPollsFeed({
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Hashtag-Polls Feed</h2>
-          <p className="text-sm text-gray-600">
-            Personalized polls based on your hashtag interests
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {t('feeds.hashtagPolls.header.title')}
+          </h2>
+          <p className="text-sm text-gray-600">{t('feeds.hashtagPolls.header.subtitle')}</p>
         </div>
         {enableAnalytics && (
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-gray-600">Feed Score</p>
+              <p className="text-sm text-gray-600">
+                {t('feeds.hashtagPolls.metrics.feedScore')}
+              </p>
               <p className="text-lg font-semibold text-blue-600">
-                {Math.round(feedScore * 100)}%
+                {formatPercent(feedScore)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">Polls</p>
+              <p className="text-sm text-gray-600">{t('feeds.hashtagPolls.metrics.polls')}</p>
               <p className="text-lg font-semibold text-green-600">
-                {filteredPolls.length}
+                {numberFormatter.format(filteredPolls.length)}
               </p>
             </div>
           </div>
@@ -297,9 +368,9 @@ export default function HashtagPollsFeed({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Hash className="h-5 w-5" />
-            Hashtag Filters
+            {t('feeds.hashtagPolls.filters.title')}
             {selectedHashtags.length > 0 && (
-              <Badge variant="secondary">{selectedHashtags.length}</Badge>
+              <Badge variant="secondary">{numberFormatter.format(selectedHashtags.length)}</Badge>
             )}
           </CardTitle>
         </CardHeader>
@@ -314,7 +385,7 @@ export default function HashtagPollsFeed({
                     className="cursor-pointer hover:bg-red-100"
                     onClick={() => handleHashtagSelect(hashtag)}
                   >
-                    #{hashtag} ×
+                    {t('feeds.hashtagPolls.filters.selectedBadge', { hashtag })}
                   </Badge>
                 ))}
               </div>
@@ -323,7 +394,7 @@ export default function HashtagPollsFeed({
             {enableTrending && trendingHashtags.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">
-                  Trending Hashtags:
+                  {t('feeds.hashtagPolls.filters.trendingLabel')}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {trendingHashtags.slice(0, 10).map((hashtag) => (
@@ -342,12 +413,14 @@ export default function HashtagPollsFeed({
             )}
 
             <div className="flex items-center space-x-4">
-              <p className="text-sm font-medium text-gray-700">Sort by:</p>
+              <p className="text-sm font-medium text-gray-700">
+                {t('feeds.hashtagPolls.filters.sortBy')}
+              </p>
               <div className="flex space-x-2">
                 {[
-                  { value: 'relevance', label: 'Relevance' },
-                  { value: 'trending', label: 'Trending' },
-                  { value: 'engagement', label: 'Engagement' },
+                  { value: 'relevance', label: t('feeds.hashtagPolls.filters.sort.relevance') },
+                  { value: 'trending', label: t('feeds.hashtagPolls.filters.sort.trending') },
+                  { value: 'engagement', label: t('feeds.hashtagPolls.filters.sort.engagement') },
                 ].map((option) => (
                   <Button
                     key={option.value}
@@ -366,9 +439,11 @@ export default function HashtagPollsFeed({
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="recommended">Recommended</TabsTrigger>
-          <TabsTrigger value="trending">Trending</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="recommended">
+            {t('feeds.hashtagPolls.tabs.recommended')}
+          </TabsTrigger>
+          <TabsTrigger value="trending">{t('feeds.hashtagPolls.tabs.trending')}</TabsTrigger>
+          <TabsTrigger value="analytics">{t('feeds.hashtagPolls.tabs.analytics')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recommended" className="space-y-4">
@@ -376,77 +451,85 @@ export default function HashtagPollsFeed({
             <Card>
               <CardContent className="p-6 text-center">
                 <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No polls match your current filters</p>
+                <p className="text-gray-600">
+                  {t('feeds.hashtagPolls.recommended.empty')}
+                </p>
                 <Button
                   variant="outline"
                   onClick={() => setSelectedHashtags([])}
                   className="mt-4"
                 >
-                  Clear Filters
+                  {t('feeds.hashtagPolls.recommended.clearFilters')}
                 </Button>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
-              {filteredPolls.map((poll) => (
-                <Card key={poll.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {poll.title}
-                        </h3>
-                        <p className="text-gray-600 mb-4">
-                          {poll.summary ?? poll.content ?? 'No description available.'}
-                        </p>
+              {filteredPolls.map((poll) => {
+                const matchedTags = poll.tags.filter((tag) => selectedHashtags.includes(tag));
+                const matchSummary =
+                  selectedHashtags.length > 0
+                    ? matchedTags.length > 0
+                      ? t('feeds.hashtagPolls.recommended.matches', {
+                          matches: matchedTags.join(', '),
+                        })
+                      : t('feeds.hashtagPolls.recommended.noMatches')
+                    : t('feeds.hashtagPolls.recommended.recommendedTag');
 
-                        {poll.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {poll.tags.map((hashtag) => (
-                              <Badge
-                                key={hashtag}
-                                variant="outline"
-                                className="cursor-pointer hover:bg-blue-100"
-                                onClick={() => handleHashtagSelect(hashtag)}
-                              >
-                                #{hashtag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                return (
+                  <Card key={poll.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            {poll.title}
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            {poll.summary ?? poll.content ?? t('feeds.hashtagPolls.recommended.noDescription')}
+                          </p>
 
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            {poll.pollData?.totalVotes ?? 0} votes
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {formatDate(poll.publishedAt)}
-                          </div>
-                          <div className="flex items-center">
-                            <BarChart3 className="h-4 w-4 mr-1" />
-                            {getMatchScore(poll)}% match
+                          {poll.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {poll.tags.map((hashtag) => (
+                                <Badge
+                                  key={hashtag}
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-blue-100"
+                                  onClick={() => handleHashtagSelect(hashtag)}
+                                >
+                                  #{hashtag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1" />
+                              {formatVotes(poll.pollData?.totalVotes ?? 0)}
+                            </div>
+                            <div className="flex items-center">
+                              <Clock className="h-4 w-4 mr-1" />
+                              {formatDate(poll.publishedAt)}
+                            </div>
+                            <div className="flex items-center">
+                              <BarChart3 className="h-4 w-4 mr-1" />
+                              {formatMatchPercent(getMatchScore(poll))}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        {selectedHashtags.length > 0
-                          ? `Matches: ${poll.tags
-                              .filter((tag) => selectedHashtags.includes(tag))
-                              .join(', ') || 'No direct matches'}`
-                          : 'Recommended poll'}
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">{matchSummary}</div>
+                        <Button onClick={() => handlePollSelect(poll)} className="ml-4">
+                          {t('feeds.hashtagPolls.recommended.viewPoll')}
+                        </Button>
                       </div>
-                      <Button onClick={() => handlePollSelect(poll)} className="ml-4">
-                        View Poll
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
@@ -456,33 +539,39 @@ export default function HashtagPollsFeed({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Trending Hashtags
+                {t('feeds.hashtagPolls.trending.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {trendingHashtags.length === 0 ? (
                 <p className="text-gray-600 text-center py-8">
-                  No trending hashtags available
+                  {t('feeds.hashtagPolls.trending.empty')}
                 </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {trendingHashtags.map((hashtag, index) => (
-                    <div
+                    <button
+                      type="button"
                       key={hashtag}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      className="flex w-full items-center justify-between rounded-lg border p-4 text-left transition hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                       onClick={() => handleHashtagSelect(hashtag)}
+                      aria-label={t('feeds.hashtagPolls.trending.select', { hashtag })}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="text-2xl font-bold text-blue-600">
-                          #{index + 1}
+                          {t('feeds.hashtagPolls.trending.rank', {
+                            rank: numberFormatter.format(index + 1),
+                          })}
                         </div>
                         <div>
                           <p className="font-medium">#{hashtag}</p>
-                          <p className="text-sm text-gray-600">Trending</p>
+                          <p className="text-sm text-gray-600">
+                            {t('feeds.hashtagPolls.trending.badge')}
+                          </p>
                         </div>
                       </div>
                       <TrendingUp className="h-5 w-5 text-green-600" />
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -504,26 +593,38 @@ export default function HashtagPollsFeed({
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Polls:</span>
-                        <span className="font-medium">{analytic.poll_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Engagement:</span>
+                        <span className="text-sm text-gray-600">
+                          {t('feeds.hashtagPolls.analytics.pollsLabel')}
+                        </span>
                         <span className="font-medium">
-                          {Math.round(analytic.engagement_rate * 100)}%
+                          {numberFormatter.format(analytic.poll_count)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Interest:</span>
+                        <span className="text-sm text-gray-600">
+                          {t('feeds.hashtagPolls.analytics.engagementLabel')}
+                        </span>
                         <span className="font-medium">
-                          {Math.round(analytic.user_interest_level * 100)}%
+                          {formatPercent(analytic.engagement_rate)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">
+                          {t('feeds.hashtagPolls.analytics.interestLabel')}
+                        </span>
+                        <span className="font-medium">
+                          {formatPercent(analytic.user_interest_level)}
                         </span>
                       </div>
                       {analytic.trending_position > 0 && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Trending:</span>
+                          <span className="text-sm text-gray-600">
+                            {t('feeds.hashtagPolls.analytics.trendingLabel')}
+                          </span>
                           <span className="font-medium text-green-600">
-                            #{analytic.trending_position}
+                            {t('feeds.hashtagPolls.analytics.trendingRank', {
+                              rank: numberFormatter.format(analytic.trending_position),
+                            })}
                           </span>
                         </div>
                       )}
@@ -536,7 +637,9 @@ export default function HashtagPollsFeed({
             <Card>
               <CardContent className="p-6 text-center">
                 <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Analytics not available</p>
+                <p className="text-gray-600">
+                  {t('feeds.hashtagPolls.analytics.empty')}
+                </p>
               </CardContent>
             </Card>
           )}

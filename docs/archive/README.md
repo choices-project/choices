@@ -6,7 +6,8 @@ This directory contains legacy documentation that has been superseded by the ref
 docs/archive/
 ├─ legacy-status/           # Outdated status reports & feature rundowns
 ├─ release-notes/           # One-off status memos and completion announcements
-└─ reference/               # Miscellaneous guides kept for posterity
+├─ reference/               # Miscellaneous guides (see civics/, guides/, testing/)
+└─ runbooks/                # Operational playbooks and emergency procedures
 ```
 
 When archiving additional documents:

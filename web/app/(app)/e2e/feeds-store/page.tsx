@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   feedsStoreUtils,
@@ -50,7 +50,7 @@ declare global {
 const formatList = (values: string[]) =>
   values.length ? values.map((value) => `#${value}`).join(', ') : 'none';
 
-export default function FeedsStoreHarnessPage() {
+function FeedsStoreHarnessView() {
   const feeds = useFeeds();
   const filteredFeeds = useFilteredFeeds();
   const isLoading = useFeedsLoading();
@@ -74,6 +74,11 @@ export default function FeedsStoreHarnessPage() {
   } = useFeedsActions();
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.info('[E2E] Initializing feeds store harness');
+    }
+
     const harness: FeedsStoreHarness = {
       actions: {
         loadFeeds,
@@ -95,9 +100,16 @@ export default function FeedsStoreHarnessPage() {
     };
 
     window.__feedsStoreHarness = harness;
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.feedsStoreHarness = 'ready';
+    }
+
     return () => {
       if (window.__feedsStoreHarness === harness) {
         delete window.__feedsStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.feedsStoreHarness;
       }
     };
   }, [
@@ -253,4 +265,23 @@ export default function FeedsStoreHarnessPage() {
   );
 }
 
+export default function FeedsStoreHarnessPage() {
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <main
+        data-testid="feeds-store-harness-loading"
+        className="mx-auto flex max-w-4xl flex-col gap-6 p-6 text-sm text-slate-500"
+      >
+        Preparing feeds store harness…
+      </main>
+    );
+  }
+
+  return <FeedsStoreHarnessView />;
+}

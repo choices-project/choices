@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import React, { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { Suspense, useState } from 'react';
 
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import FontProvider from '@/components/shared/FontProvider';
@@ -10,33 +10,62 @@ import SiteMessages from '@/components/SiteMessages';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
-import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
+import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
 const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export default function AppLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   // Create QueryClient instance for TanStack Query with memory optimization
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 5 * 60 * 1000, // 5 minutes (reduced from 10)
-        retry: 1,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false, // Prevent unnecessary refetches
-        refetchOnReconnect: false, // Prevent refetch on reconnect
-      },
-      mutations: {
-        retry: 1, // Reduce mutation retries
-      },
-    },
-  }))
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 5 * 60 * 1000, // 5 minutes (reduced from 10)
+            retry: 1,
+            refetchOnWindowFocus: false,
+            refetchOnMount: false, // Prevent unnecessary refetches
+            refetchOnReconnect: false, // Prevent refetch on reconnect
+          },
+          mutations: {
+            retry: 1, // Reduce mutation retries
+          },
+        },
+      }),
+  );
 
   usePollCreatedListener();
+
+  if (IS_E2E_HARNESS) {
+    return (
+      <FontProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <UserStoreProvider>
+              <Suspense
+                fallback={
+                  <div
+                    data-testid="e2e-harness-loading"
+                    className="p-6 text-center text-sm text-slate-500"
+                  >
+                    Loading harness environment…
+                  </div>
+                }
+              >
+                {children}
+              </Suspense>
+            </UserStoreProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </FontProvider>
+    );
+  }
 
   return (
     <FontProvider>
@@ -62,5 +91,5 @@ export default function AppLayout({
         </AuthProvider>
       </QueryClientProvider>
     </FontProvider>
-  )
+  );
 }

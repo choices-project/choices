@@ -26,12 +26,22 @@ import {
 import React, { useMemo, useEffect, useState } from 'react';
 
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useUser, useContactActions } from '@/lib/stores';
+import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
+import {
+  useAnalyticsActions,
+  useContactActions,
+  useUser
+} from '@/lib/stores';
 import type { Representative } from '@/types/representative';
 
 import { useContactThreads } from '../hooks/useContactMessages';
 
 import ContactModal from './ContactModal';
+import {
+  trackCivicsRepresentativeEvent,
+  type CivicsRepresentativeEventBase
+} from '@/features/civics/analytics/civicsAnalyticsEvents';
 
 const getRepresentativePhotoUrl = (rep: Representative): string | undefined => {
   if (rep.primary_photo_url) {
@@ -66,6 +76,32 @@ export default function ContactRepresentativesSection({
   const { threads, loading: threadsLoading } = useContactThreads();
   const { resetContactState } = useContactActions();
 
+  // Elections context
+  const divisionIds = useMemo(() => {
+    const divisions = new Set<string>();
+    representatives.forEach((rep) => {
+      const candidate = rep.ocdDivisionIds ?? rep.division_ids ?? [];
+      if (!Array.isArray(candidate)) {
+        return;
+      }
+      candidate.forEach((division) => {
+        if (typeof division === 'string' && division.trim().length > 0) {
+          divisions.add(division.trim());
+        }
+      });
+    });
+    return Array.from(divisions);
+  }, [representatives]);
+
+  const { trackEvent } = useAnalyticsActions();
+  const {
+    elections: upcomingElections,
+    nextElection: hookNextElection,
+    loading: electionLoading,
+    error: electionError,
+    daysUntilNextElection,
+  } = useElectionCountdown(divisionIds);
+
   useEffect(() => {
     if (!user) {
       resetContactState();
@@ -75,6 +111,22 @@ export default function ContactRepresentativesSection({
   const recentThreads = useMemo(() => threads.slice(0, 3), [threads]);
 
   const handleContactRepresentative = (representative: Representative) => {
+    const divisions = getRepresentativeDivisionIds(representative);
+
+    const baseEvent: CivicsRepresentativeEventBase = {
+      representativeId: representative.id ?? null,
+      representativeName: representative.name ?? null,
+      divisionIds: divisions,
+      nextElectionId: hookNextElection?.election_id ?? null,
+      nextElectionDay: hookNextElection?.election_day ?? null,
+      electionCountdownDays: daysUntilNextElection ?? null,
+      source: 'contact_section',
+    };
+
+    trackCivicsRepresentativeEvent(trackEvent, {
+      type: 'civics_representative_contact_launch',
+      data: baseEvent,
+    });
     setSelectedRepresentative(representative);
     setShowContactModal(true);
   };
@@ -122,6 +174,49 @@ export default function ContactRepresentativesSection({
           {representatives.length} representative{representatives.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      {/* Upcoming Elections Context */}
+      {(upcomingElections.length > 0 || electionLoading || electionError) && (
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800 flex items-start space-x-3">
+          <ClockIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">
+              Upcoming elections for your districts
+            </p>
+            {electionLoading && <p>Loading election calendar…</p>}
+            {electionError && !electionLoading && (
+              <p className="text-red-600">Unable to load elections right now.</p>
+            )}
+            {!electionLoading && !electionError && upcomingElections.length > 0 && (
+              <ul className="mt-1 space-y-1">
+                {upcomingElections.slice(0, 3).map((election) => (
+                  <li key={election.election_id} className="flex items-center space-x-2">
+                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                    <span>
+                      <span className="font-medium">{election.name}</span>
+                      <span className="ml-1 text-blue-700">
+                        ({formatElectionDate(election.election_day)})
+                      </span>
+                    </span>
+                  </li>
+                ))}
+                {upcomingElections.length > 3 && (
+                  <li className="text-blue-700">
+                    +{upcomingElections.length - 3} more elections on file
+                  </li>
+                )}
+                {daysUntilNextElection != null && (
+                  <li className="text-blue-700 text-xs">
+                    Next election {daysUntilNextElection === 0
+                      ? 'is today!'
+                      : `in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Representatives List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

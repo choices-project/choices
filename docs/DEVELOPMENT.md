@@ -1,13 +1,14 @@
 # Development Guide
 
-**Last Updated**: November 3, 2025
+**Last Updated**: November 12, 2025
 
 ---
 
 ## Prerequisites
 
-- Node.js 18+
-- pnpm (package manager)
+- Node.js 24.11+ (matches the enforced version in `web/package.json`)
+- npm 11+ (ships with the Node.js installer above)
+- Supabase CLI (`npm install -g supabase`), required for migrations/type generation
 - Supabase account
 - Git
 
@@ -19,31 +20,26 @@
 ```bash
 git clone <repo>
 cd Choices/web
-pnpm install
+npm install
 ```
 
 ### 2. Environment Variables
-Copy `.env.example` to `.env.local`:
-```bash
-cp .env.example .env.local
-```
-
-Required variables (see `ENVIRONMENT_VARIABLES.md`):
+Create `web/.env.local` and populate it using the template in `web/_reports/env.example.txt` or the values documented in `ENVIRONMENT_VARIABLES.md`. At minimum you need:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 ### 3. Database Setup
-Types are pre-generated. If schema changes:
+Generated Supabase types are committed, but regenerate them any time migrations change:
 ```bash
-supabase link --project-ref <your-project-id>
-cd web && npm run types:generate
-# Runs: npx supabase gen types typescript --project-id <your-project-id> > types/supabase.ts
+supabase link --project-ref <your-project-id>   # run once
+npm run types:generate                           # inside web/
+# wraps: npx supabase gen types typescript --project-id <project> > web/types/supabase.ts
 ```
 
 ### 4. Run Development Server
 ```bash
-pnpm dev
+npm run dev
 ```
 
 ---
@@ -52,31 +48,34 @@ pnpm dev
 
 ```
 web/
-├── app/                  # Next.js 15 app directory
-├── features/             # Feature modules (polls, analytics, admin)
-├── lib/                  # Utilities and services
-├── types/                # TypeScript type definitions
-├── utils/                # Supabase clients
-└── components/           # React components
+├── app/                  # Next.js App Router routes, layouts, API handlers, E2E harness pages
+├── features/             # Feature modules (polls, analytics, admin, onboarding, civics)
+├── lib/                  # Shared utilities, services, and Zustand stores
+├── components/           # Shared UI components
+├── tests/                # Jest + Playwright suites
+├── supabase/             # SQL migrations and generated metadata
+└── types/                # TypeScript type definitions (Supabase, domain models)
 ```
 
 ---
 
 ## Database
 
-**Schema**: 64 tables, 33 RPC functions  
-**Types**: Auto-generated from Supabase  
-**Import**: `import type { Database } from '@/types/database'`
+See `DATABASE_SCHEMA.md` for an overview of tables, views, and RPC functions. Supabase types are generated into `web/types/supabase.ts` and re-exported via `web/types/database.d.ts`.
 
-See `DATABASE_SCHEMA.md` for details.
+Typical import pattern:
+
+```ts
+import type { Database } from '@/types/database';
+```
 
 ---
 
 ## Code Standards
 
-- **Linting**: `pnpm lint`
-- **Type check**: `pnpm type-check`
-- **Standards**: See `LINT_STANDARDS.md`
+- **Linting**: `npm run lint`
+- **Type check**: `npm run type-check`
+- **Config**: Rules live in `web/eslint.config.js`; formatting follows the repo-standard Prettier settings.
 
 ### Key Rules
 - Use `??` for nullish coalescing (not `||` for non-boolean)
@@ -89,11 +88,11 @@ See `DATABASE_SCHEMA.md` for details.
 ## Testing
 
 ```bash
-pnpm test              # Unit tests
-pnpm test:e2e          # E2E tests
+npm run test           # Jest unit + integration tests
+npm run test:e2e       # Playwright suites (uses mocks by default)
 ```
 
-See `guides/testing/` for details.
+See `TESTING.md` for the broader strategy and harness overview.
 
 ---
 
@@ -123,7 +122,7 @@ See `guides/testing/` for details.
 1. Create SQL in `supabase/migrations/`
 2. Apply: `supabase db push`
 3. Regenerate types (see above)
-4. Archive migration to `database/migrations/.archive/`
+4. Archive old migration files per the Supabase docs if they are superseded
 
 ---
 

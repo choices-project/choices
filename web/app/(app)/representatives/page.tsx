@@ -14,8 +14,8 @@ import { MapPin, Users, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-import { RepresentativeList  } from '@/components/representative/RepresentativeList';
-import { RepresentativeSearch } from '@/components/representative/RepresentativeSearch';
+import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
+import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

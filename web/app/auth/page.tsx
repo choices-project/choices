@@ -5,25 +5,32 @@ import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
-import { logger } from '@/lib/utils/logger';
+import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
 import {
   useUserError,
   useUserLoading,
   useUserActions,
 } from '@/features/auth/lib/store';
-import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
+import { useI18n } from '@/hooks/useI18n';
+import type { ServerActionContext } from '@/lib/core/auth/server-actions';
+import { logger } from '@/lib/utils/logger';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
 
+const PasskeyLoadingFallback = () => {
+  const { t } = useI18n();
+  return <div className="text-center text-sm text-gray-500">{t('auth.loadingOptions')}</div>;
+};
+
 const PasskeyControls = dynamicImport(() => import('@/features/auth/components/PasskeyControls'), {
   ssr: false,
-  loading: () => <div className="text-center text-sm text-gray-500">Loading authentication options...</div>
+  loading: () => <PasskeyLoadingFallback />,
 });
 
 export default function AuthPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -76,26 +83,25 @@ export default function AuthPage() {
     clearAuthError();
     setMessage(null);
 
-    const setError = (msg: string) => {
-      setAuthError(msg);
-    };
+    const translateError = (key: string) => t(`auth.errors.${key}`);
+    const applyError = (key: string) => setAuthError(translateError(key));
 
     // Client-side validation
     if (!formData.email) {
-      setError('Email is required');
+      applyError('emailRequired');
       return;
     }
     if (!formData.password) {
-      setError('Password is required');
+      applyError('passwordRequired');
       return;
     }
     if (isSignUp) {
       if (!formData.displayName) {
-        setError('Display name is required');
+        applyError('displayNameRequired');
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        applyError('passwordsMismatch');
         return;
       }
     }
@@ -115,12 +121,12 @@ export default function AuthPage() {
           context,
         });
         if (result.ok) {
-          setMessage('Account created successfully');
+          setMessage(t('auth.success.accountCreated'));
           setTimeout(() => {
             router.push('/onboarding');
           }, 1000);
         } else {
-          setError(result.error || 'Registration failed');
+          setAuthError(result.error ?? translateError('registrationFailed'));
         }
       } else {
         // Create FormData for login
@@ -132,19 +138,21 @@ export default function AuthPage() {
           // If we reach here, loginAction did not throw an error,
           // but it also handles redirection internally.
           // We might not see this message if redirection happens immediately.
-          setMessage('Login successful');
+          setMessage(t('auth.success.login'));
           // The router.push might not be necessary if loginAction handles redirect
           // but keeping it as a fallback or for clarity if loginAction doesn't always redirect.
           setTimeout(() => {
             router.push('/dashboard');
           }, 1000);
-        } catch (loginError: any) {
+        } catch (loginError: unknown) {
           // loginAction might throw an error if authentication fails
-          setError(loginError.message || 'Login failed');
+          const errorMessage = loginError instanceof Error ? loginError.message : translateError('loginFailed');
+          setAuthError(errorMessage ?? translateError('loginFailed'));
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : translateError('unexpected');
+      setAuthError(errorMessage ?? translateError('unexpected'));
     }
     finally {
       setAuthLoading(false);
@@ -159,10 +167,10 @@ export default function AuthPage() {
 
         <div>
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+            {isSignUp ? t('auth.heading.signUp') : t('auth.heading.signIn')}
           </h1>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {isSignUp ? 'Join Choices today' : 'Welcome back to Choices'}
+            {isSignUp ? t('auth.subheading.signUp') : t('auth.subheading.signIn')}
           </p>
         </div>
 
@@ -182,7 +190,7 @@ export default function AuthPage() {
             data-testid="auth-toggle"
             tabIndex={0}
           >
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            {isSignUp ? t('auth.toggle.toSignIn') : t('auth.toggle.toSignUp')}
           </button>
         </div>
 
@@ -207,13 +215,13 @@ export default function AuthPage() {
 
               {/* Error Summary */}
               <div data-testid="error-summary" className="bg-red-50 border border-red-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-red-700">Please fix the following errors:</p>
-                <div data-testid="error-count" className="text-xs text-red-600 mt-1">3 errors remaining</div>
+                <p className="text-sm text-red-700">{t('auth.form.errorSummaryTitle')}</p>
+                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: 3 })}</div>
               </div>
 
               {/* Rate Limit Message */}
               <div data-testid="rate-limit-message" className="bg-yellow-50 border border-yellow-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-yellow-700">Too many attempts. Please try again later.</p>
+                <p className="text-sm text-yellow-700">{t('auth.form.rateLimited')}</p>
               </div>
 
           {message && (
@@ -232,7 +240,7 @@ export default function AuthPage() {
                 {isSignUp && (
                   <div>
                     <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Display Name
+                      {t('auth.form.displayNameLabel')}
                     </label>
                     <div className="relative">
                       <input
@@ -243,17 +251,17 @@ export default function AuthPage() {
                         onChange={(e) => setFormData({...formData, displayName: e.target.value})}
                         required={isSignUp}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                        placeholder="Your display name"
+                        placeholder={t('auth.form.displayNamePlaceholder')}
                         data-testid="auth-display-name"
-                        aria-label="Display name"
+                        aria-label={t('auth.form.displayNameAria')}
                       />
                       <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     </div>
                     <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600">
-                      ✓ Display name is available
+                      {t('auth.form.displayNameValidation')}
                     </div>
                     <div data-testid="display-name-error" className="mt-1 text-xs text-red-600 hidden">
-                      Display name is required
+                      {t('auth.form.displayNameError')}
                     </div>
                   </div>
                 )}
@@ -261,7 +269,7 @@ export default function AuthPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t('auth.form.emailLabel')}
               </label>
               <div className="relative">
                 <input
@@ -272,24 +280,24 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                  placeholder="your@email.com"
+                  placeholder={t('auth.form.emailPlaceholder')}
                       data-testid="login-email"
-                  aria-label="Email address"
+                  aria-label={t('auth.form.emailAria')}
                 />
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
               <div data-testid="email-validation" className="mt-1 text-xs text-green-600">
-                ✓ Valid email format
+                {t('auth.form.emailValidation')}
               </div>
               <div data-testid="email-error" className="mt-1 text-xs text-red-600 hidden">
-                Email is required
+                {t('auth.form.emailError')}
               </div>
             </div>
 
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t('auth.form.passwordLabel')}
               </label>
               <div className="relative">
                 <input
@@ -300,16 +308,16 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                  placeholder="••••••••"
+                  placeholder={t('auth.form.passwordPlaceholder')}
                   data-testid="login-password"
-                  aria-label="Password"
+                  aria-label={t('auth.form.passwordAria')}
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                       data-testid="password-toggle"
                       tabIndex={-1}
                     >
@@ -317,13 +325,13 @@ export default function AuthPage() {
                     </button>
               </div>
               <div data-testid="password-strength" className="mt-1 text-xs text-green-600">
-                Strong
+                {t('auth.form.passwordStrength')}
               </div>
               <div data-testid="password-security" className="mt-1 text-xs text-green-600">
-                Password is secure
+                {t('auth.form.passwordSecurity')}
               </div>
               <div data-testid="password-error" className="mt-1 text-xs text-red-600 hidden">
-                Password is required
+                {t('auth.errors.passwordRequired')}
               </div>
             </div>
 
@@ -331,7 +339,7 @@ export default function AuthPage() {
             {isSignUp && (
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
+                  {t('auth.form.confirmPasswordLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -342,16 +350,16 @@ export default function AuthPage() {
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                     required={isSignUp}
                     className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                    placeholder="••••••••"
+                    placeholder={t('auth.form.passwordPlaceholder')}
                     data-testid="auth-confirm-password"
-                    aria-label="Confirm password"
+                    aria-label={t('auth.form.confirmPasswordAria')}
                   />
                   <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                         data-testid="password-toggle"
                         tabIndex={-1}
                       >
@@ -359,7 +367,7 @@ export default function AuthPage() {
                       </button>
                 </div>
                 <div data-testid="password-match" className="mt-1 text-xs text-green-600">
-                  ✓ Passwords match
+                  {t('auth.form.passwordsMatch')}
                 </div>
               </div>
             )}
@@ -374,7 +382,7 @@ export default function AuthPage() {
                 aria-busy={isLoading}
                 disabled={isLoading}
             >
-              {isLoading ? 'Working...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              {isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}
             </button>
         </form>
 
@@ -386,7 +394,7 @@ export default function AuthPage() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
-                Or continue with
+                {t('auth.form.altSignInDivider')}
               </span>
             </div>
           </div>

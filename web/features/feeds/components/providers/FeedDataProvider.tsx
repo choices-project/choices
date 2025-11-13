@@ -21,11 +21,14 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 
 import {
   useUser,
-  useFeedsStore,
+  useFilteredFeeds,
+  useFeedsLoading,
+  useFeedsError,
   useFeedsPagination,
   useFeedsActions,
   useHashtagActions,
   useTrendingHashtags,
+  useNotificationActions,
 } from '@/lib/stores';
 import type { FeedItem } from '@/lib/stores/feedsStore';
 import logger from '@/lib/utils/logger';
@@ -67,10 +70,10 @@ export default function FeedDataProvider({
   maxItems = 50,
   children 
 }: FeedDataProviderProps) {
-  // Get ONLY data from stores (not functions)
-  const feeds = useFeedsStore((state) => state.filteredFeeds);
-  const isLoading = useFeedsStore((state) => state.isLoading);
-  const storeError = useFeedsStore((state) => state.error);
+  // Get ONLY data from store selectors (not full state)
+  const feeds = useFilteredFeeds();
+  const isLoading = useFeedsLoading();
+  const storeError = useFeedsError();
   const { totalAvailable, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
   const trendingHashtags = useTrendingHashtags()
     .map((h) => {
@@ -93,10 +96,22 @@ export default function FeedDataProvider({
     clearError: clearErrorAction,
   } = useFeedsActions();
   const user = useUser();
+  const { addNotification } = useNotificationActions();
   
   // Local state for hashtag filtering and district filtering
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
+
+  const notifyFeedError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: 'Feed update failed',
+        message,
+      });
+    },
+    [addNotification],
+  );
 
   const initialLoadRef = useRef(false);
 
@@ -116,6 +131,7 @@ export default function FeedDataProvider({
         if (!active) return;
         logger.error('Failed to load feeds:', err);
         setErrorAction('Failed to load feeds');
+        notifyFeedError('We couldn’t load your feeds. Please try again.');
       } finally {
         initialLoadRef.current = true;
       }
@@ -124,7 +140,7 @@ export default function FeedDataProvider({
     return () => {
       active = false;
     };
-  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction]);
+  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError]);
 
   // Load trending hashtags on mount - ONCE
   useEffect(() => {
@@ -145,8 +161,9 @@ export default function FeedDataProvider({
     } catch (err) {
       logger.error('Failed to like feed:', err);
       setErrorAction('Failed to like feed');
+      notifyFeedError('We couldn’t update your reaction. Please try again.');
     }
-  }, [likeFeedAction, clearErrorAction, setErrorAction]);
+  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
     clearErrorAction();
@@ -155,8 +172,9 @@ export default function FeedDataProvider({
     } catch (err) {
       logger.error('Failed to bookmark feed:', err);
       setErrorAction('Failed to bookmark feed');
+      notifyFeedError('We couldn’t update your bookmarks. Please try again.');
     }
-  }, [bookmarkFeedAction, clearErrorAction, setErrorAction]);
+  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError]);
 
   const handleShare = useCallback((itemId: string) => {
     // Social sharing logic here
@@ -170,8 +188,9 @@ export default function FeedDataProvider({
     } catch (err) {
       logger.error('Failed to refresh feeds:', err);
       setErrorAction('Failed to refresh feeds');
+      notifyFeedError('We couldn’t refresh your feeds. Please try again.');
     }
-  }, [refreshFeeds, clearErrorAction, setErrorAction]);
+  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError]);
 
   const handleHashtagAdd = useCallback((tag: string) => {
     if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
@@ -198,8 +217,9 @@ export default function FeedDataProvider({
     refreshFeeds().catch((err) => {
       logger.error('Failed to refresh feeds with district filter:', err);
       setErrorAction('Failed to refresh feeds');
+      notifyFeedError('We couldn’t refresh your feeds. Please try again.');
     });
-  }, [districtFilterEnabled, userDistrict, setFiltersAction, refreshFeeds, setErrorAction]);
+  }, [districtFilterEnabled, userDistrict, setFiltersAction, refreshFeeds, setErrorAction, notifyFeedError]);
 
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
@@ -207,23 +227,12 @@ export default function FeedDataProvider({
     if (feeds.length >= maxItems) return;
 
     clearErrorAction();
-    const previousCount = useFeedsStore.getState().feeds.length;
-
     try {
       await loadMoreFeeds();
-      const nextState = useFeedsStore.getState();
-
-      if (nextState.error) {
-        setErrorAction(nextState.error);
-        return;
-      }
-
-      if (nextState.feeds.length === previousCount) {
-        return;
-      }
     } catch (err) {
       logger.error('Failed to load more feeds:', err);
       setErrorAction('Failed to load more feeds');
+      notifyFeedError('We couldn’t load more items. Please try again.');
     }
   }, [
     enableInfiniteScroll,
@@ -233,6 +242,7 @@ export default function FeedDataProvider({
     loadMoreFeeds,
     clearErrorAction,
     setErrorAction,
+    notifyFeedError,
   ]);
 
   // Filter feeds by selected hashtags

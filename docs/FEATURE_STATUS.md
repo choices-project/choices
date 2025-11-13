@@ -19,7 +19,7 @@ This document captures the features that still require engineering work before t
 | Push Notifications | `PUSH_NOTIFICATIONS` | Backend scaffolding only | `web/app/api/pwa/notifications/*`, `web/features/pwa/components` | Routes exist but client opt-in + delivery guarantees remain unfinished. Needs testing + product sign-off. |
 | Themes / Dark Mode | `THEMES` | Not implemented | – | No theme provider or tokens. Remove flag or schedule UX project. |
 | Accessibility Enhancements | `ACCESSIBILITY` | Not implemented | – | Accessibility work is ongoing but not behind a flag. Replace with concrete tasks (e.g., axe audits). |
-| Internationalisation | `INTERNATIONALIZATION` | Not implemented | – | No i18n library or localized copy. Define locales or drop the flag. |
+| Internationalisation | `INTERNATIONALIZATION` | **In progress** | `web/app/layout.tsx`, `web/hooks/useI18n.ts`, `web/messages/*.json` | `next-intl` provider, locale middleware, and `LanguageSelector` ship with `en`/`es`. Finish extraction tooling & lint (`npm run i18n:extract`) and expand catalogue coverage before enabling flag. |
 | Civic Engagement v2 | `CIVIC_ENGAGEMENT_V2` | WIP module gated behind flag | `web/lib/utils/sophisticated-civic-engagement.ts`, `web/lib/core/feature-flags.ts` | Helpers exist but require Supabase integration, UI surfacing, and QA. |
 
 ## Always-On Capabilities

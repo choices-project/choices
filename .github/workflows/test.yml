@@ -26,6 +26,12 @@ jobs:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
+      SUPABASE_SECRET_KEY: dev-only-secret
+      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
     defaults:
       run:
         working-directory: web
@@ -63,7 +69,7 @@ jobs:
         run: npm run ci:install
 
       - name: Verify lockfile unchanged
-        run: git diff --exit-code web/package-lock.json
+        run: git diff --exit-code -- package-lock.json
 
       - name: Type check (strict)
         run: npm run types:strict -- --exclude "**/quarantine/**" --exclude "**/*.disabled" || echo "Type check completed with errors (non-blocking)"
@@ -94,6 +100,13 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
+      SUPABASE_SECRET_KEY: dev-only-secret
+      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      PLAYWRIGHT_USE_MOCKS: '1'
     defaults:
       run:
         working-directory: web
@@ -273,6 +286,12 @@ jobs:
     name: Performance Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
+      SUPABASE_SECRET_KEY: dev-only-secret
+      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
     defaults:
       run:
         working-directory: web
@@ -392,6 +411,12 @@ jobs:
     name: Load Tests
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
+      SUPABASE_SECRET_KEY: dev-only-secret
+      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
     defaults:
       run:
         working-directory: web

@@ -23,27 +23,51 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const level = searchParams.get('level');
     const fields = searchParams.get('fields')?.split(',') ?? [];
     const include = searchParams.get('include')?.split(',') ?? [];
+    const includeDivisions = include.includes('divisions');
     const limit = parseInt(searchParams.get('limit') ?? '50');
 
   if (!state) {
     return validationError({ state: 'State parameter is required' });
   }
 
-    // Build query
+    type RepresentativeDivisionRow = {
+      division_id: string | null;
+    };
+
+    type RepresentativeRow = {
+      id: string;
+      name: string;
+      office: string;
+      level: 'federal' | 'state' | 'local';
+      jurisdiction: string;
+      district: string | null;
+      party: string | null;
+      last_updated: string;
+      person_id: string | null;
+      contact: string | Record<string, unknown> | null;
+      representative_divisions?: RepresentativeDivisionRow[] | null;
+    };
+
+    const selectFields = [
+      'id',
+      'name',
+      'office',
+      'level',
+      'jurisdiction',
+      'district',
+      'party',
+      'last_updated',
+      'person_id',
+      'contact'
+    ];
+
+    if (includeDivisions) {
+      selectFields.push('representative_divisions:representative_divisions(division_id)');
+    }
+
     let query = supabase
       .from('civics_representatives')
-      .select(`
-        id,
-        name,
-        office,
-        level,
-        jurisdiction,
-        district,
-        party,
-        last_updated,
-        person_id,
-        contact
-      `)
+      .select(selectFields.join(','))
       .eq('valid_to', 'infinity')
       .limit(limit);
 
@@ -70,19 +94,33 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       throw error;
     }
 
+    const rows: RepresentativeRow[] = Array.isArray(reps)
+      ? (reps as unknown as RepresentativeRow[])
+      : [];
+
     // Process each representative
     const processedReps = await Promise.all(
-      (reps ?? []).map(async (rep) => {
+      rows.map(async (rep: RepresentativeRow) => {
         const response: Record<string, unknown> = {
           id: rep.id,
           name: rep.name,
           office: rep.office,
           level: rep.level,
           jurisdiction: rep.jurisdiction,
-          district: rep.district,
-          party: rep.party,
+          district: rep.district ?? undefined,
+          party: rep.party ?? undefined,
           last_updated: rep.last_updated
         };
+
+        if (includeDivisions && Array.isArray(rep.representative_divisions)) {
+          const divisions = rep.representative_divisions
+            .map((entry: RepresentativeDivisionRow) => entry?.division_id)
+            .filter((value): value is string => Boolean(value));
+
+          if (divisions.length > 0) {
+            response.division_ids = divisions;
+          }
+        }
 
         // Include FEC data if requested
         if (include.includes('fec') && rep.person_id) {
@@ -127,13 +165,21 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         // Include contact data if requested
         if (include.includes('contact') && rep.contact) {
-          const contact = typeof rep.contact === 'string' ? JSON.parse(rep.contact) : rep.contact;
-          response.contact = {
-            phone: contact.phone,
-            website: contact.website,
-            twitter_url: contact.twitter_url,
-            last_updated: rep.last_updated
-          };
+          const contact =
+            typeof rep.contact === 'string' ? JSON.parse(rep.contact) : rep.contact;
+          if (contact && typeof contact === 'object') {
+            const contactRecord = contact as Record<string, unknown>;
+            response.contact = {
+              ...(typeof contactRecord.phone === 'string' ? { phone: contactRecord.phone } : {}),
+              ...(typeof contactRecord.website === 'string'
+                ? { website: contactRecord.website }
+                : {}),
+              ...(typeof contactRecord.twitter_url === 'string'
+                ? { twitter_url: contactRecord.twitter_url }
+                : {}),
+              last_updated: rep.last_updated
+            };
+          }
         }
 
         return response;
@@ -145,7 +191,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     if (fields.length > 0) {
       finalResponse = processedReps.map(rep => {
         const filtered: Record<string, unknown> = {};
-        fields.forEach(field => {
+        fields.forEach((field) => {
           if (field in rep) {
             filtered[field] = rep[field];
           }

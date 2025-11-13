@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: November 11, 2025_
+_Last updated: November 13, 2025_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -10,12 +10,13 @@ This guide explains how we exercise the Choices web app and where to add coverag
 
 ```bash
 # From the repository root:
-npm run test                 # Delegates to web/test (Jest unit + integration)
-npm run test -- <pattern>    # Pass flags straight through to Jest (e.g. --testPathPattern=admin)
+npm run test                  # Delegates to web/test (Jest unit + integration)
+npm run test -- <pattern>     # Pass flags straight through to Jest (e.g. --testPathPattern=admin)
+npm run test:e2e              # Runs Playwright with the curated web/playwright.config.ts (harness suite)
 
-# Direct Playwright usage remains unchanged:
-npx playwright test          # Playwright end-to-end suites
-npx playwright test <spec>   # Run a specific Playwright file
+# When running Playwright manually, always point at the web config:
+cd web && npx playwright test --config=playwright.config.ts
+cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user-store.spec.ts
 ```
 
 Utilities:
@@ -42,36 +43,21 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 - `admin-store`
 - `analytics-store`
 - `app-store`
+- `auth-access`
+- `admin-navigation`
+- `global-navigation`
+- `feeds-store`
+- `feedback`
 - `notification-store`
 - `onboarding-store`
+- `onboarding-flow`
 - `poll-create`
 - `poll-run/[id]`
 - `poll-wizard`
 - `polls-store`
-- `profile-store`
+- `profile-store` *(see profile harness plan below for upcoming privacy/export scenario)*
 - `pwa-analytics`
 - `pwa-store`
+- `dashboard-journey` *(seeds user/profile/polls state for the post-onboarding dashboard journey; current Playwright spec `dashboard-journey.spec.ts` is marked `fixme` while we resolve a `PersonalDashboard` “Maximum update depth exceeded” loop surfaced in harness mode.)*
 - `user-store`
-
-Each harness registers a `window.__<feature>Harness` object so Playwright tests can drive state transitions without touching production pages. When modernizing a store, add a harness + spec to mirror the notification-store pattern.
-
----
-
-## Writing New Tests
-
-1. **Identify the layer** (unit, RTL, Playwright) that best matches the behaviour you need to verify.
-2. **Leverage helpers**:
-   - `tests/setup.ts` provides global mocks (TextEncoder, crypto, etc.).
-   - `tests/helpers/e2e-setup.ts` contains Playwright navigation helpers.
-3. **Keep tests deterministic** — mock timers with `jest.useFakeTimers({ legacyFakeTimers: true })` when stores schedule timeouts (notifications, admin banners, etc.).
-4. **Document coverage** — update the relevant store checklist (`scratch/gpt5-codex/store-roadmaps/…`) and mention new suites in PR descriptions. Recent additions: device & PWA store unit suites, `PWAStatus` RTL coverage, the `/app/(app)/e2e/pwa-store` harness, and `tests/e2e/specs/pwa-store.spec.ts`.
-
----
-
-## Gaps & TODOs
-
-- Add Jest coverage for analytics client utilities once Supabase endpoints are unmocked.
-- Stand up Playwright specs for polls, admin dashboards, and feed personalization after harness pages are created.
-- Evaluate K6/load testing scripts once the Supabase analytics pipeline is stable.
-
-For questions, sync with the web platform team in `#web-platform`.
+- `voting-store`

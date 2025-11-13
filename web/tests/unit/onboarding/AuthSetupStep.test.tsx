@@ -69,7 +69,8 @@ describe('AuthSetupStep', () => {
 
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: /Continue with Email/i }));
+    const continueEmail = await screen.findByRole('button', { name: /Continue with Email/i });
+    await user.click(continueEmail);
 
     const emailField = screen.getByLabelText(/Email Address/i);
     await user.type(emailField, 'auth@example.com');
@@ -109,7 +110,8 @@ describe('AuthSetupStep', () => {
 
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: /Continue with Email/i }));
+    const continueEmail = await screen.findByRole('button', { name: /Continue with Email/i });
+    await user.click(continueEmail);
 
     await user.type(screen.getByLabelText(/Email Address/i), 'auth@example.com');
     await user.click(screen.getByRole('button', { name: /Send Login Link/i }));
@@ -131,7 +133,9 @@ describe('AuthSetupStep', () => {
 
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: /Continue with Passkey/i }));
+    await user.click(screen.getByRole('heading', { name: 'Passkey' }));
+    const continuePasskey = await screen.findByRole('button', { name: /Continue with Passkey/i });
+    await user.click(continuePasskey);
 
     await user.click(screen.getByTestId('mock-passkey-button'));
 

@@ -2,7 +2,7 @@ name: Web CI (Secure)
 
 on:
   push:
-    paths: 
+    paths:
       - "web/**"
       - ".github/workflows/web-ci.yml"
       - "!web/**/*.md"
@@ -67,9 +67,7 @@ jobs:
         run: npm run ci:install
 
       - name: Lockfile unchanged
-        run: |
-          cd ..
-          git diff --exit-code web/package-lock.json
+        run: git diff --exit-code -- package-lock.json
 
       - name: Debug Next.js version
         run: node -e "console.log('Next.js version:', require('next/package.json').version)"
@@ -103,6 +101,15 @@ jobs:
       - name: Lint (allow warnings for MVP)
         run: npm run lint || echo "Lint completed with warnings (non-blocking)"
         continue-on-error: true
+
+      - name: Verify i18n snapshot
+        run: |
+          npm run i18n:extract
+          if ! git diff --quiet --exit-code messages/en.snapshot.json; then
+            echo "::error::Detected stale i18n snapshot. Run npm run i18n:extract locally and commit the diff."
+            git --no-pager diff messages/en.snapshot.json
+            exit 1
+          fi
 
       - name: Build
         run: npm run build

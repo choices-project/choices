@@ -26,6 +26,7 @@ import { usePollMilestoneNotifications, type PollMilestone } from '@/features/po
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
 import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import {
   DESCRIPTION_CHAR_LIMIT,
@@ -81,6 +82,8 @@ export default function CreatePollPage() {
   const [hasCopiedShareLink, setHasCopiedShareLink] = useState(false)
   const { addNotification } = useNotificationActions()
   const errorSummaryRef = useRef<HTMLDivElement | null>(null)
+  const shareDialogRef = useRef<HTMLDivElement | null>(null)
+  const shareCopyButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const recordPollEvent = useRecordPollEvent();
 
@@ -164,6 +167,28 @@ export default function CreatePollPage() {
     if (typeof window === 'undefined') return `/polls/${shareInfo.pollId}`
     return `${window.location.origin}/polls/${shareInfo.pollId}`
   }, [shareInfo])
+
+  const handleCloseShareDialog = useCallback(() => {
+    if (!shareInfo) return
+    recordPollEvent('share_modal_closed', {
+      metadata: {
+        pollId: shareInfo.pollId,
+      },
+      label: shareInfo.pollId,
+    })
+    setShareInfo(null)
+  }, [recordPollEvent, shareInfo])
+
+  useAccessibleDialog({
+    isOpen: Boolean(shareInfo),
+    dialogRef: shareDialogRef,
+    initialFocusRef: shareCopyButtonRef,
+    onClose: handleCloseShareDialog,
+    liveMessage: shareInfo
+      ? `Share dialog opened for ${shareInfo.title}.`
+      : 'Share dialog opened.',
+    ariaLabelId: 'share-dialog-title',
+  })
 
   const focusField = useCallback((field: string) => {
     if (typeof window === 'undefined') return;
@@ -874,19 +899,16 @@ export default function CreatePollPage() {
         </footer>
       </div>
 
-      <Dialog
-        open={Boolean(shareInfo)}
-        onOpenChange={(open) => {
-          if (!open && shareInfo) {
-            recordPollEvent('share_modal_closed', { metadata: { pollId: shareInfo?.pollId ?? null } });
-            setShareInfo(null);
-          }
-        }}
-      >
-        <DialogContent>
+      <Dialog open={Boolean(shareInfo)} onOpenChange={(open) => !open && handleCloseShareDialog()}>
+        <DialogContent
+          ref={shareDialogRef}
+          aria-modal="true"
+          aria-labelledby="share-dialog-title"
+          aria-describedby="share-dialog-description share-dialog-link"
+        >
           <DialogHeader>
-            <DialogTitle>Share your poll</DialogTitle>
-            <DialogDescription>
+            <DialogTitle id="share-dialog-title">Share your poll</DialogTitle>
+            <DialogDescription id="share-dialog-description">
               Help voters discover “{shareInfo?.title ?? 'your poll'}” by sharing the link below.
             </DialogDescription>
           </DialogHeader>
@@ -926,10 +948,26 @@ export default function CreatePollPage() {
             <div>
               <Label htmlFor="share-link">Poll link</Label>
               <div className="mt-2 flex items-center gap-2">
-                <Input id="share-link" value={shareUrl} readOnly onFocus={(event) => event.target.select()} />
-                <Button type="button" variant="outline" onClick={handleCopyShareLink}>
+                <Input
+                  id="share-link"
+                  value={shareUrl}
+                  readOnly
+                  onFocus={(event) => event.target.select()}
+                  aria-describedby="share-dialog-link"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyShareLink}
+                  ref={shareCopyButtonRef}
+                >
                   {hasCopiedShareLink ? 'Copied' : 'Copy link'}
                 </Button>
+              </div>
+              <div id="share-dialog-link" className="sr-only">
+                {hasCopiedShareLink
+                  ? 'Share link copied to clipboard.'
+                  : 'Press copy to place the share link on your clipboard.'}
               </div>
             </div>
 

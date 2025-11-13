@@ -182,17 +182,23 @@ function normalize(key: string): FeatureFlagKey | null {
 
 const mutableFlags: Record<MutableFlag, boolean> = { ...FEATURE_FLAGS };
 
+let cachedSnapshot: Record<string, boolean> | null = null;
+
 function buildSnapshot(): Record<string, boolean> {
-  const snapshot: Record<string, boolean> = { ...mutableFlags };
-  ALWAYS_ENABLED_FLAGS.forEach((flag) => {
-    snapshot[flag] = true;
-  });
-  return snapshot;
+  if (!cachedSnapshot) {
+    const snapshot: Record<string, boolean> = { ...mutableFlags };
+    ALWAYS_ENABLED_FLAGS.forEach((flag) => {
+      snapshot[flag] = true;
+    });
+    cachedSnapshot = snapshot;
+  }
+  return cachedSnapshot;
 }
 
 const subscribers = new Set<(flags: Record<string, boolean>) => void>();
 
 function notifySubscribers() {
+  cachedSnapshot = null;
   const snapshot = buildSnapshot();
   subscribers.forEach((cb) => {
     try {
@@ -397,6 +403,7 @@ export const featureFlagManager = {
       const mutableKey = key as MutableFlag;
       mutableFlags[mutableKey] = FEATURE_FLAGS[mutableKey];
     });
+    cachedSnapshot = null;
     notifySubscribers();
   },
   exportConfig: (): FeatureFlagConfig => ({
@@ -412,6 +419,7 @@ export const featureFlagManager = {
         mutableFlags[normalizedKey] = value;
       }
     });
+    cachedSnapshot = null;
     notifySubscribers();
   },
 };

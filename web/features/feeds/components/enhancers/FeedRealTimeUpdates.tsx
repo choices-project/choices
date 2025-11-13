@@ -18,7 +18,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useFeedsActions, useFeedsStore } from '@/lib/stores';
+import {
+  useFeedsActions,
+  useFeedsError,
+  useNotificationActions,
+} from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
 type FeedRealTimeUpdatesProps = {
@@ -43,6 +47,19 @@ export default function FeedRealTimeUpdates({
   const [newItemsCount, setNewItemsCount] = useState(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { refreshFeeds } = useFeedsActions();
+  const feedsError = useFeedsError();
+  const { addNotification } = useNotificationActions();
+
+  const notifyFeedError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: 'Feed update failed',
+        message,
+      });
+    },
+    [addNotification],
+  );
 
   // Client-side only
   useEffect(() => {
@@ -120,16 +137,18 @@ export default function FeedRealTimeUpdates({
 
     try {
       await refreshFeeds();
-      const { error } = useFeedsStore.getState();
-      if (error) {
-        logger.warn('Refresh after real-time update surfaced store error:', error);
-        window.location.reload();
+
+      if (feedsError) {
+        logger.warn('Refresh after real-time update surfaced store error:', feedsError);
+        notifyFeedError(feedsError);
+        return;
       }
     } catch (err) {
       logger.error('Failed to refresh feeds after real-time update:', err);
-      window.location.reload();
+      const message = err instanceof Error ? err.message : String(err);
+      notifyFeedError(message);
     }
-  }, [refreshFeeds]);
+  }, [feedsError, refreshFeeds, notifyFeedError]);
 
   if (!isClient || !enableWebSocket) {
     // SSR or disabled: just render children

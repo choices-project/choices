@@ -50,8 +50,9 @@ npx playwright test web/tests/e2e/specs/feedback-widget.spec.ts --config=web/tes
 
 ### Full Suites
 ```bash
-npm test            # runs all Jest projects
-npm run test:e2e    # Playwright suite (configured in package.json)
+npm test             # runs all Jest projects
+npm run test:e2e     # Playwright suite (configured in package.json)
+# from repo root you can also run: npm run test:e2e
 ```
 
 > Tip: the Playwright spec stubs the `/api/polls` request, so it is safe to run against `npm run dev` without a Supabase backend. Set `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000` if you are using a non-default port.

@@ -551,6 +551,33 @@ export type Database = {
         }
         Relationships: []
       }
+      civic_elections: {
+        Row: {
+          election_day: string
+          election_id: string
+          fetched_at: string
+          name: string
+          ocd_division_id: string
+          raw_payload: Json | null
+        }
+        Insert: {
+          election_day: string
+          election_id: string
+          fetched_at?: string
+          name: string
+          ocd_division_id: string
+          raw_payload?: Json | null
+        }
+        Update: {
+          election_day?: string
+          election_id?: string
+          fetched_at?: string
+          name?: string
+          ocd_division_id?: string
+          raw_payload?: Json | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -2591,6 +2618,41 @@ export type Database = {
           },
         ]
       }
+      representative_divisions: {
+        Row: {
+          created_at: string
+          division_id: string
+          level: string | null
+          representative_id: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          division_id: string
+          level?: string | null
+          representative_id: number
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          division_id?: string
+          level?: string | null
+          representative_id?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_divisions_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       representative_enhanced_crosswalk: {
         Row: {
           attrs: Json | null
@@ -3968,6 +4030,16 @@ export type Database = {
         }[]
       }
       get_trust_tier_progression: { Args: { p_user_id: string }; Returns: Json }
+      get_upcoming_elections: {
+        Args: { divisions: string[] }
+        Returns: {
+          election_day: string
+          election_id: string
+          fetched_at: string
+          name: string
+          ocd_division_id: string
+        }[]
+      }
       get_user_voting_history: { Args: { p_user_id: string }; Returns: Json }
       link_anonymous_votes_to_user: {
         Args: { p_user_id: string; p_voter_session: string }
@@ -3983,6 +4055,7 @@ export type Database = {
         }[]
       }
       rebuild_poll_indexes: { Args: never; Returns: undefined }
+      refresh_divisions_from_openstates: { Args: never; Returns: number }
       refresh_poll_statistics_view: { Args: never; Returns: undefined }
       run_maintenance_job: {
         Args: { p_job_name: string; p_job_type: string }

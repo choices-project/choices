@@ -1,108 +1,149 @@
 'use client';
+
 import * as React from 'react';
 
 import { T } from '@/lib/testing/testIds';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 export function PasskeyControls() {
-  const [mode, setMode] = React.useState<'idle'|'register'|'login'|'viewing'|'crossDevice'|'biometric'>('idle');
-  const [credentials, setCredentials] = React.useState<Array<{id: string, name: string}>>([]);
+  const [mode, setMode] = React.useState<
+    'idle' | 'register' | 'login' | 'viewing' | 'crossDevice' | 'biometric'
+  >('idle');
+  const [credentials, setCredentials] = React.useState<Array<{ id: string; name: string }>>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
 
-  const handleRegister = async () => {
+  const handleRegister = React.useCallback(() => {
     setMode('register');
     setError(null);
     setSuccess(null);
-  };
+  }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = React.useCallback(() => {
     setMode('login');
     setError(null);
     setSuccess(null);
-  };
+  }, []);
 
-  const handleCompleteRegistration = async () => {
-    // Mock successful registration
+  const handleCompleteRegistration = React.useCallback(() => {
     setSuccess('registration-success');
     setMode('idle');
-  };
+  }, []);
 
-  const handleCompleteAuthentication = async () => {
-    // Mock successful authentication
+  const handleCompleteAuthentication = React.useCallback(() => {
     setSuccess('login-success');
     setMode('idle');
-  };
+  }, []);
 
-  const handleBiometricAuth = async () => {
+  const handleBiometricAuth = React.useCallback(() => {
     setMode('biometric');
     setError(null);
-  };
+  }, []);
 
-  const handleCrossDeviceAuth = async () => {
+  const handleCrossDeviceAuth = React.useCallback(() => {
     setMode('crossDevice');
     setError(null);
-  };
+  }, []);
 
-  const handleViewCredentials = () => {
+  const handleViewCredentials = React.useCallback(() => {
     setMode('viewing');
-  };
+  }, []);
 
-  const handleRemoveCredential = async () => {
+  const handleRemoveCredential = React.useCallback(() => {
     setCredentials([]);
     setSuccess('credential-removed-success');
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = React.useCallback(() => {
     setMode('idle');
     setError('operation-cancelled');
-  };
+  }, []);
 
-  const handleNetworkError = () => {
+  const handleNetworkError = React.useCallback(() => {
     setError('network-error');
-  };
+  }, []);
 
-  const handleServerError = () => {
+  const handleServerError = React.useCallback(() => {
     setError('server-error');
-  };
+  }, []);
+
+  const registerDialogRef = React.useRef<HTMLDivElement>(null);
+  const loginDialogRef = React.useRef<HTMLDivElement>(null);
+  const biometricDialogRef = React.useRef<HTMLDivElement>(null);
+  const registerPrimaryRef = React.useRef<HTMLButtonElement>(null);
+  const loginPrimaryRef = React.useRef<HTMLButtonElement>(null);
+  const biometricPrimaryRef = React.useRef<HTMLButtonElement>(null);
+
+  const closeDialog = React.useCallback(() => {
+    setMode('idle');
+  }, []);
+
+  useAccessibleDialog({
+    isOpen: mode === 'register',
+    dialogRef: registerDialogRef,
+    ...(mode === 'register'
+      ? {
+          initialFocusRef: registerPrimaryRef,
+          ariaLabelId: 'harness-register-title',
+          liveMessage: 'Register passkey prompt opened.',
+        }
+      : {}),
+    onClose: closeDialog,
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'login',
+    dialogRef: loginDialogRef,
+    ...(mode === 'login'
+      ? {
+          initialFocusRef: loginPrimaryRef,
+          ariaLabelId: 'harness-login-title',
+          liveMessage: 'Authenticate with passkey prompt opened.',
+        }
+      : {}),
+    onClose: closeDialog,
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'biometric',
+    dialogRef: biometricDialogRef,
+    ...(mode === 'biometric'
+      ? {
+          initialFocusRef: biometricPrimaryRef,
+          ariaLabelId: 'harness-biometric-title',
+          liveMessage: 'Biometric authentication prompt opened.',
+        }
+      : {}),
+    onClose: closeDialog,
+  });
 
   return (
     <div className="space-y-4">
-      {/* Main buttons */}
       <div className="space-x-2">
-        <button 
-          data-testid={T.webauthn.register} 
-          className="btn" 
-          onClick={handleRegister}
-        >
+        <button data-testid={T.webauthn.register} className="btn" onClick={handleRegister}>
           Register a passkey
         </button>
-        <button 
-          data-testid={T.webauthn.login} 
-          className="btn" 
-          onClick={handleLogin}
-        >
+        <button data-testid={T.webauthn.login} className="btn" onClick={handleLogin}>
           Sign in with passkey
         </button>
-        <button 
-          data-testid="register-additional-passkey-button" 
-          className="btn" 
-          onClick={handleRegister}
-        >
+        <button data-testid="register-additional-passkey-button" className="btn" onClick={handleRegister}>
           Register additional passkey
         </button>
-        <button 
-          data-testid="view-credentials-button" 
-          className="btn" 
-          onClick={handleViewCredentials}
-        >
+        <button data-testid="view-credentials-button" className="btn" onClick={handleViewCredentials}>
           View credentials
         </button>
       </div>
 
-      {/* Registration prompt */}
       {mode === 'register' && (
-        <div data-testid={T.webauthn.prompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
-          <p>Registering passkey…</p>
+        <div
+          data-testid={T.webauthn.prompt}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="harness-register-title"
+          className="modal p-4 border rounded"
+          ref={registerDialogRef}
+        >
+          <p id="harness-register-title">Registering passkey…</p>
           <div className="space-x-2 mt-4">
             <button data-testid={T.webauthn.biometricButton} className="btn" onClick={handleBiometricAuth}>
               Use biometrics
@@ -110,7 +151,12 @@ export function PasskeyControls() {
             <button data-testid={T.webauthn.crossDeviceButton} className="btn" onClick={handleCrossDeviceAuth}>
               Use another device
             </button>
-            <button data-testid="complete-registration-button" className="btn" onClick={handleCompleteRegistration}>
+            <button
+              data-testid="complete-registration-button"
+              className="btn"
+              onClick={handleCompleteRegistration}
+              ref={registerPrimaryRef}
+            >
               Complete registration
             </button>
             <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
@@ -121,15 +167,26 @@ export function PasskeyControls() {
         </div>
       )}
 
-      {/* Authentication prompt */}
       {mode === 'login' && (
-        <div data-testid={T.webauthn.authPrompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
-          <p>Authenticate with passkey…</p>
+        <div
+          data-testid={T.webauthn.authPrompt}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="harness-login-title"
+          className="modal p-4 border rounded"
+          ref={loginDialogRef}
+        >
+          <p id="harness-login-title">Authenticate with passkey…</p>
           <div className="space-x-2 mt-4">
             <button data-testid={T.webauthn.biometricButton} className="btn" onClick={handleBiometricAuth}>
               Use biometrics
             </button>
-            <button data-testid="complete-authentication-button" className="btn" onClick={handleCompleteAuthentication}>
+            <button
+              data-testid="complete-authentication-button"
+              className="btn"
+              onClick={handleCompleteAuthentication}
+              ref={loginPrimaryRef}
+            >
               Complete authentication
             </button>
             <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
@@ -139,12 +196,23 @@ export function PasskeyControls() {
         </div>
       )}
 
-      {/* Biometric prompt */}
       {mode === 'biometric' && (
-        <div data-testid={T.webauthn.biometricPrompt} role="dialog" aria-modal="true" className="modal p-4 border rounded">
-          <p>Biometric authentication…</p>
+        <div
+          data-testid={T.webauthn.biometricPrompt}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="harness-biometric-title"
+          className="modal p-4 border rounded"
+          ref={biometricDialogRef}
+        >
+          <p id="harness-biometric-title">Biometric authentication…</p>
           <div className="space-x-2 mt-4">
-            <button data-testid="complete-biometric-auth-button" className="btn" onClick={handleCompleteAuthentication}>
+            <button
+              data-testid="complete-biometric-auth-button"
+              className="btn"
+              onClick={handleCompleteAuthentication}
+              ref={biometricPrimaryRef}
+            >
               Complete biometric auth
             </button>
             <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
@@ -154,7 +222,6 @@ export function PasskeyControls() {
         </div>
       )}
 
-      {/* Cross-device authentication */}
       {mode === 'crossDevice' && (
         <div className="modal p-4 border rounded">
           <p>Cross-device authentication…</p>
@@ -176,7 +243,6 @@ export function PasskeyControls() {
         </div>
       )}
 
-      {/* Credential management */}
       {mode === 'viewing' && (
         <div className="modal p-4 border rounded">
           <h3>Manage Credentials</h3>
@@ -186,9 +252,7 @@ export function PasskeyControls() {
                 {cred.name}
               </div>
             ))}
-            {credentials.length === 0 && (
-              <p>No credentials found</p>
-            )}
+            {credentials.length === 0 && <p>No credentials found</p>}
           </div>
           <div className="space-x-2 mt-4">
             <button data-testid="remove-credential-button" className="btn" onClick={handleRemoveCredential}>
@@ -204,70 +268,24 @@ export function PasskeyControls() {
         </div>
       )}
 
-      {/* Success messages */}
-      {success === 'registration-success' && (
-        <div data-testid="registration-success" className="p-4 bg-green-50 border border-green-200 rounded">
-          Registration successful!
-        </div>
-      )}
-      {success === 'login-success' && (
-        <div data-testid="login-success" className="p-4 bg-green-50 border border-green-200 rounded">
-          Login successful!
-        </div>
-      )}
-      {success === 'biometric-success' && (
-        <div data-testid="biometric-success" className="p-4 bg-green-50 border border-green-200 rounded">
-          Biometric authentication successful!
-        </div>
-      )}
-      {success === 'cross-device-success' && (
-        <div data-testid="cross-device-success" className="p-4 bg-green-50 border border-green-200 rounded">
-          Cross-device authentication successful!
-        </div>
-      )}
-      {success === 'credential-removed-success' && (
-        <div data-testid="credential-removed-success" className="p-4 bg-green-50 border border-green-200 rounded">
-          Credential removed successfully!
-        </div>
+      {error && (
+        <p data-testid="webauthn-error" className="text-red-600">
+          {error}
+        </p>
       )}
 
-      {/* Error messages */}
-      {error === 'operation-cancelled' && (
-        <div data-testid="operation-cancelled" className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-          Operation cancelled
-        </div>
-      )}
-      {error === 'operation-timeout' && (
-        <div data-testid="operation-timeout" className="p-4 bg-red-50 border border-red-200 rounded">
-          Operation timed out
-        </div>
-      )}
-      {error === 'authentication-error' && (
-        <div data-testid="authentication-error" className="p-4 bg-red-50 border border-red-200 rounded">
-          No credentials found
-        </div>
-      )}
-      {error === 'network-error' && (
-        <div data-testid={T.webauthn.networkError} className="p-4 bg-red-50 border border-red-200 rounded">
-          Network error
-        </div>
-      )}
-      {error === 'server-error' && (
-        <div data-testid={T.webauthn.serverError} className="p-4 bg-red-50 border border-red-200 rounded">
-          Server error
-        </div>
+      {success && (
+        <p data-testid="webauthn-success" className="text-green-600">
+          {success}
+        </p>
       )}
 
-      {/* Test buttons for error simulation */}
-      <div className="space-x-2 mt-4">
-        <button className="btn btn-sm" onClick={handleNetworkError}>
-          Simulate Network Error
+      <div className="space-x-2">
+        <button className="btn" onClick={handleNetworkError}>
+          Simulate network error
         </button>
-        <button className="btn btn-sm" onClick={handleServerError}>
-          Simulate Server Error
-        </button>
-        <button className="btn btn-sm" onClick={() => setError('operation-timeout')}>
-          Simulate Timeout
+        <button className="btn" onClick={handleServerError}>
+          Simulate server error
         </button>
       </div>
     </div>

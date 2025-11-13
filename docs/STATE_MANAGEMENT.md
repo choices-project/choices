@@ -82,7 +82,7 @@ export const useNotificationActions = () => { /* memoized action hook */ };
 | RTL Integration | `tests/unit/stores/<store>.integration.test.tsx` | Render a lightweight harness component; drive state through hooks/actions; rely on fake timers where needed. |
 | Playwright Harness | `app/(app)/e2e/<store>/page.tsx` + `tests/e2e/specs/<store>.spec.ts` | Expose a `window.__<store>Harness` facade. Verify UI-facing behaviour (auto-dismiss, admin flows, etc.). |
 
-Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `notification-store`, `onboarding-store`, `poll-wizard`, `polls-store`, `profile-store`, and `user-store`. Use these as blueprints when modernizing the remaining stores.
+Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-access`, `feeds-store`, `feedback`, `notification-store`, `onboarding-store`, `onboarding-flow`, `poll-create`, `poll-run/[id]`, `poll-wizard`, `polls-store`, `profile-store`, `pwa-analytics`, `pwa-store`, `user-store`, and `voting-store`. Use these as blueprints when modernizing the remaining stores.
 
 ---
 

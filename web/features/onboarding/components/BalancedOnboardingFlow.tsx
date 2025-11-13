@@ -26,6 +26,7 @@ import type {
 } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
+import { useI18n } from '@/hooks/useI18n';
 import {
   useUser,
   useUserLoading,
@@ -71,39 +72,40 @@ const WelcomeStep: React.FC<{
   onNext: () => void;
   onSkip: () => void;
 }> = ({ onNext, onSkip }) => {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="max-w-2xl mx-auto text-center p-8">
         <div className="mb-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Welcome to Choices
+            {t('onboarding.welcome.title')}
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Make informed decisions with transparent, data-driven insights
+            {t('onboarding.welcome.subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="text-4xl mb-4">🗳️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Vote on Issues</h3>
-            <p className="text-gray-600 text-sm">Participate in polls on topics that matter to you</p>
+            <div className="text-4xl mb-4" aria-hidden="true">🗳️</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.vote.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.vote.description')}</p>
           </div>
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="text-4xl mb-4">🏛️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Track Representatives</h3>
-            <p className="text-gray-600 text-sm">See how your elected officials vote and fundraise</p>
+            <div className="text-4xl mb-4" aria-hidden="true">🏛️</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.representatives.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.representatives.description')}</p>
           </div>
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="text-4xl mb-4">📊</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Campaign Finance</h3>
-            <p className="text-gray-600 text-sm">Understand who funds political campaigns</p>
+            <div className="text-4xl mb-4" aria-hidden="true">📊</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.finance.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.finance.description')}</p>
           </div>
         </div>
 
         <div className="bg-blue-50 rounded-lg p-4 mb-8">
           <p className="text-blue-800 font-medium">
-            ⏱️ This will take about 3 minutes to get you started
+            {t('onboarding.welcome.duration')}
           </p>
         </div>
 
@@ -113,13 +115,13 @@ const WelcomeStep: React.FC<{
             data-testid="welcome-next"
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
-            Get Started
+            {t('onboarding.welcome.cta.next')}
           </button>
           <button
             onClick={onSkip}
             className="w-full text-gray-500 hover:text-gray-700 transition-colors"
           >
-            I&apos;m a returning user
+            {t('onboarding.welcome.cta.skip')}
           </button>
         </div>
       </div>
@@ -134,54 +136,46 @@ const PrivacyStep: React.FC<{
   privacy: PrivacyPreferences;
   setPrivacy: (privacy: PrivacyPreferences) => void;
 }> = ({ onNext, onBack, privacy, setPrivacy }) => {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Your Privacy Matters
+            {t('onboarding.privacy.title')}
           </h2>
           <p className="text-xl text-gray-600">
-            We believe in transparency and data protection
+            {t('onboarding.privacy.subtitle')}
           </p>
         </div>
 
         <div className="space-y-6 mb-8">
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
-              <div className="text-3xl">🔒</div>
+              <div className="text-3xl" aria-hidden="true">🔒</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Location Data</h3>
-                <p className="text-gray-600">
-                  We only need your state/district to find your representatives.
-                  We never store your exact address.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.location.title')}</h3>
+                <p className="text-gray-600">{t('onboarding.privacy.cards.location.description')}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
-              <div className="text-3xl">📊</div>
+              <div className="text-3xl" aria-hidden="true">📊</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Demographics</h3>
-                <p className="text-gray-600">
-                  Age and education help us show you relevant polls and
-                  match you with similar voters.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.demographics.title')}</h3>
+                <p className="text-gray-600">{t('onboarding.privacy.cards.demographics.description')}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
-              <div className="text-3xl">🛡️</div>
+              <div className="text-3xl" aria-hidden="true">🛡️</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Protection</h3>
-                <p className="text-gray-600">
-                  All data is encrypted, anonymized, and never sold.
-                  You can delete your data anytime.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.protection.title')}</h3>
+                <p className="text-gray-600">{t('onboarding.privacy.cards.protection.description')}</p>
               </div>
             </div>
           </div>
@@ -274,15 +268,42 @@ const DemographicsStep: React.FC<{
   demographics: UserDemographics;
   setDemographics: (demographics: UserDemographics) => void;
 }> = ({ onNext, onBack, onSkip, demographics, setDemographics }) => {
+  const { t } = useI18n();
+
+  const ageOptions = [
+    { value: '', label: t('onboarding.demographics.fields.age.placeholder') },
+    { value: '18-24', label: t('onboarding.demographics.fields.age.options.18_24') },
+    { value: '25-34', label: t('onboarding.demographics.fields.age.options.25_34') },
+    { value: '35-44', label: t('onboarding.demographics.fields.age.options.35_44') },
+    { value: '45-54', label: t('onboarding.demographics.fields.age.options.45_54') },
+    { value: '55-64', label: t('onboarding.demographics.fields.age.options.55_64') },
+    { value: '65+', label: t('onboarding.demographics.fields.age.options.65_plus') },
+  ];
+
+  const educationOptions = [
+    { value: '', label: t('onboarding.demographics.fields.education.placeholder') },
+    { value: 'high_school', label: t('onboarding.demographics.fields.education.options.high_school') },
+    { value: 'some_college', label: t('onboarding.demographics.fields.education.options.some_college') },
+    { value: 'bachelor', label: t('onboarding.demographics.fields.education.options.bachelor') },
+    { value: 'graduate', label: t('onboarding.demographics.fields.education.options.graduate') },
+  ];
+
+  const engagementOptions = [
+    { value: '', label: t('onboarding.demographics.fields.engagement.placeholder') },
+    { value: 'casual', label: t('onboarding.demographics.fields.engagement.options.casual') },
+    { value: 'moderate', label: t('onboarding.demographics.fields.engagement.options.moderate') },
+    { value: 'very_engaged', label: t('onboarding.demographics.fields.engagement.options.very_engaged') },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Help Us Personalize Your Experience
+            {t('onboarding.demographics.title')}
           </h2>
           <p className="text-xl text-gray-600">
-            This information helps us show you relevant content
+            {t('onboarding.demographics.subtitle')}
           </p>
         </div>
 
@@ -291,11 +312,10 @@ const DemographicsStep: React.FC<{
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-3">📍</span>
-              Find Your District
+              {t('onboarding.demographics.location.title')}
             </h3>
             <p className="text-gray-600 mb-4">
-              Enter your address to find your congressional district and representatives.
-              We only store your district, never your full address.
+              {t('onboarding.demographics.location.description')}
             </p>
 
             <AddressLookup
@@ -316,12 +336,12 @@ const DemographicsStep: React.FC<{
 
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">
-                <strong>Why we ask:</strong> Your district helps us show you relevant representatives,
-                local civic actions, and polls that matter to your area.
+                <strong>{t('onboarding.demographics.location.whyLabel')}</strong>{' '}
+                {t('onboarding.demographics.location.whyDescription')}
               </p>
               <p className="text-sm text-gray-600 mt-2">
-                <strong>Privacy:</strong> We never store your full address. Only your district (e.g., &quot;CA-12&quot;)
-                is saved, and you can remove it anytime from your profile settings.
+                <strong>{t('onboarding.demographics.location.privacyLabel')}</strong>{' '}
+                {t('onboarding.demographics.location.privacyDescription')}
               </p>
             </div>
           </div>
@@ -330,16 +350,16 @@ const DemographicsStep: React.FC<{
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <span className="text-2xl mr-3">👤</span>
-              Demographics
+              {t('onboarding.demographics.profile.title')}
             </h3>
             <p className="text-gray-600 mb-4">
-              This helps us show you relevant polls and match you with similar voters
+              {t('onboarding.demographics.profile.description')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Age Range
+                  {t('onboarding.demographics.fields.age.label')}
                 </label>
                 <select
                   value={demographics.age_range ?? ''}
@@ -352,19 +372,17 @@ const DemographicsStep: React.FC<{
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select age range</option>
-                  <option value="18-24">18-24</option>
-                  <option value="25-34">25-34</option>
-                  <option value="35-44">35-44</option>
-                  <option value="45-54">45-54</option>
-                  <option value="55-64">55-64</option>
-                  <option value="65+">65+</option>
+                  {ageOptions.map((option) => (
+                    <option key={option.value || 'placeholder'} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Education Level
+                  {t('onboarding.demographics.fields.education.label')}
                 </label>
                 <select
                   value={demographics.education ?? ''}
@@ -377,17 +395,17 @@ const DemographicsStep: React.FC<{
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select education</option>
-                  <option value="high_school">High School</option>
-                  <option value="some_college">Some College</option>
-                  <option value="bachelor">Bachelor&apos;s Degree</option>
-                  <option value="graduate">Graduate Degree</option>
+                  {educationOptions.map((option) => (
+                    <option key={option.value || 'placeholder'} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Political Engagement
+                  {t('onboarding.demographics.fields.engagement.label')}
                 </label>
                 <select
                   value={demographics.political_engagement ?? ''}
@@ -400,10 +418,11 @@ const DemographicsStep: React.FC<{
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select engagement</option>
-                  <option value="casual">Casual (vote occasionally)</option>
-                  <option value="moderate">Moderate (follow politics)</option>
-                  <option value="very_engaged">Very Engaged (very active)</option>
+                  {engagementOptions.map((option) => (
+                    <option key={option.value || 'placeholder'} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -415,7 +434,10 @@ const DemographicsStep: React.FC<{
             onClick={onBack}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
-            ← Back
+            <span aria-hidden="true" className="mr-1">
+              ←
+            </span>
+            {t('onboarding.demographics.actions.back')}
           </button>
 
           <div className="flex space-x-4">
@@ -423,20 +445,20 @@ const DemographicsStep: React.FC<{
               onClick={onSkip}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Skip for now
+              {t('onboarding.demographics.actions.skip')}
             </button>
             <button
               onClick={onNext}
               data-testid="form-submit-button"
               className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              Continue
+              {t('onboarding.demographics.actions.continue')}
             </button>
           </div>
         </div>
 
         <p className="text-sm text-gray-500 text-center mt-4">
-          You can always add this information later
+          {t('onboarding.demographics.actions.reminder')}
         </p>
       </div>
     </div>
@@ -920,8 +942,21 @@ const CompleteStep: React.FC<{
  * @returns {JSX.Element} The complete onboarding flow interface
  */
 const BalancedOnboardingFlow: React.FC = () => {
+  const { t } = useI18n();
   const currentStep = useOnboardingStep();
   const onboardingData = useOnboardingData();
+  const stepLabels = useMemo(
+    () => [
+      t('onboarding.labels.welcome'),
+      t('onboarding.labels.privacy'),
+      t('onboarding.labels.demographics'),
+      t('onboarding.labels.authentication'),
+      t('onboarding.labels.profile'),
+      t('onboarding.labels.complete'),
+    ],
+    [t],
+  );
+  const totalSteps = stepLabels.length || 6;
   const profileStepData = useMemo<ProfileData>(() => {
     const extras = onboardingData?.profileData ?? undefined;
     return withOptional(DEFAULT_PROFILE_DATA, extras);
@@ -1122,14 +1157,11 @@ const BalancedOnboardingFlow: React.FC = () => {
 
       <nav role="navigation" aria-label="Onboarding progress">
         <div className="sr-only">
-          Step {currentStep + 1} of 6: {
-            currentStep === 0 ? 'Welcome' :
-            currentStep === 1 ? 'Privacy' :
-            currentStep === 2 ? 'Demographics' :
-            currentStep === 3 ? 'Authentication' :
-            currentStep === 4 ? 'Profile' :
-            'Complete'
-          }
+          {t('onboarding.progress.valueText', {
+            current: currentStep + 1,
+            total: totalSteps,
+            label: stepLabels[currentStep] ?? stepLabels[0],
+          })}
         </div>
       </nav>
 

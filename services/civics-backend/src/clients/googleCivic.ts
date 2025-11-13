@@ -58,6 +58,18 @@ export interface GoogleCivicRepresentativeInfoResponse {
   officials?: GoogleCivicOfficial[];
 }
 
+export interface GoogleCivicElection {
+  id: string;
+  name: string;
+  electionDay: string;
+  ocdDivisionId?: string;
+}
+
+interface GoogleCivicElectionsResponse {
+  kind: string;
+  elections?: GoogleCivicElection[];
+}
+
 export async function fetchRepresentativeInfoByDivision(
   divisionId: string,
 ): Promise<GoogleCivicRepresentativeInfoResponse | null> {
@@ -95,6 +107,30 @@ export async function fetchRepresentativeInfoByDivision(
     );
   }
   return json;
+}
+
+export async function fetchElections(): Promise<GoogleCivicElection[]> {
+  if (!GOOGLE_CIVIC_API_KEY) {
+    return [];
+  }
+
+  const url = new URL(`${GOOGLE_CIVIC_API_BASE}/elections`);
+  url.searchParams.set('key', GOOGLE_CIVIC_API_KEY);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `Google Civic API error (${response.status} ${response.statusText}) for elections: ${text}`,
+    );
+  }
+
+  const payload = (await response.json()) as GoogleCivicElectionsResponse;
+  const elections = payload.elections ?? [];
+  if (elections.length === 0) {
+    console.warn('[googleCivic] Elections endpoint returned an empty list.');
+  }
+  return elections;
 }
 
 

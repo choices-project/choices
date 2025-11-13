@@ -157,17 +157,34 @@ const DEFAULT_NETWORK: NetworkInfo = {
   online: true,
 };
 
-export const createDeviceEnvironment = (): DeviceEnvironment => ({
-  getWindow: () => (typeof window === 'undefined' ? undefined : window),
-  getNavigator: () => (typeof navigator === 'undefined' ? undefined : navigator),
-  getConnection: () => {
-    if (typeof navigator === 'undefined') {
-      return undefined;
+export const createDeviceEnvironment = (): DeviceEnvironment => {
+  const resolveWindow = (): (Window & typeof globalThis) | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') {
+      return (globalThis as any).window as Window & typeof globalThis;
     }
-    const connection = (navigator as Navigator & { connection?: NetworkConnection }).connection;
-    return connection ?? undefined;
-  },
-});
+    return typeof window === 'undefined' ? undefined : window;
+  };
+
+  const resolveNavigator = (): Navigator | undefined => {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).navigator !== 'undefined') {
+      return (globalThis as any).navigator as Navigator;
+    }
+    return typeof navigator === 'undefined' ? undefined : navigator;
+  };
+
+  return {
+    getWindow: resolveWindow,
+    getNavigator: resolveNavigator,
+    getConnection: () => {
+      const nav = resolveNavigator();
+      if (!nav) {
+        return undefined;
+      }
+      const connection = (nav as Navigator & { connection?: NetworkConnection }).connection;
+      return connection ?? undefined;
+    },
+  };
+};
 
 const deriveDeviceType = (width: number): DeviceType => {
   if (width < 768) return 'mobile';
@@ -190,8 +207,13 @@ const resolveCapabilities = (win?: Window, nav?: Navigator): DeviceCapabilities 
     return defaults;
   }
 
-  const match = (query: string): boolean =>
-    typeof win.matchMedia === 'function' ? win.matchMedia(query).matches : false;
+  const match = (query: string): boolean => {
+    if (typeof win.matchMedia !== 'function') {
+      return false;
+    }
+    const result = win.matchMedia(query);
+    return !!(result && typeof result.matches === 'boolean' ? result.matches : false);
+  };
   const connection = (nav as Navigator & { connection?: NetworkConnection }).connection;
 
   return {

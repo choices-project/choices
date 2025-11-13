@@ -8,6 +8,13 @@ async function stubWebAuthn(page: Page) {
 
     const toBuffer = (value: string) => encoder.encode(value).buffer;
 
+    if (!window.isSecureContext) {
+      Object.defineProperty(window, 'isSecureContext', {
+        configurable: true,
+        get: () => true,
+      });
+    }
+
     class MockAttestationResponse {
       attestationObject = new ArrayBuffer(0);
       clientDataJSON = toBuffer('{"type":"webauthn.create"}');
@@ -93,6 +100,10 @@ test.describe('Auth access harness', () => {
   test('registers a passkey successfully', async ({ page }) => {
     await page.goto('/e2e/auth-access', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    console.info(
+      'auth harness ready state (register)',
+      await page.evaluate(() => document.documentElement.dataset.authAccessHarness ?? 'missing'),
+    );
     await page.waitForFunction(
       () => document.documentElement.dataset.authAccessHarness === 'ready',
       undefined,
@@ -110,6 +121,10 @@ test.describe('Auth access harness', () => {
   test('authenticates with a passkey successfully', async ({ page }) => {
     await page.goto('/e2e/auth-access', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    console.info(
+      'auth harness ready state (login)',
+      await page.evaluate(() => document.documentElement.dataset.authAccessHarness ?? 'missing'),
+    );
     await page.waitForFunction(
       () => document.documentElement.dataset.authAccessHarness === 'ready',
       undefined,

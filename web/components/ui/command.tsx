@@ -6,6 +6,7 @@ import { Search } from "lucide-react"
 import * as React from "react"
 
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { useAccessibleDialog } from "@/lib/accessibility/useAccessibleDialog"
 import { cn } from "@/lib/utils"
 
 const Command = React.forwardRef<
@@ -23,12 +24,53 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-type CommandDialogProps = DialogProps
+type CommandDialogProps = DialogProps & {
+  liveMessage?: string
+}
 
-const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
+const CommandDialog = ({
+  children,
+  open,
+  defaultOpen,
+  onOpenChange,
+  liveMessage = "Command palette dialog opened. Start typing to search.",
+  ...props
+}: CommandDialogProps) => {
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
+  const isControlled = open !== undefined
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false)
+  const currentOpen = isControlled ? open : internalOpen
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setInternalOpen(nextOpen)
+      }
+      onOpenChange?.(nextOpen)
+    },
+    [isControlled, onOpenChange]
+  )
+
+  useAccessibleDialog({
+    isOpen: Boolean(currentOpen),
+    dialogRef: contentRef,
+    onClose: () => handleOpenChange(false),
+    liveMessage,
+  })
+
+  React.useEffect(() => {
+    if (!isControlled) {
+      setInternalOpen(defaultOpen ?? false)
+    }
+  }, [defaultOpen, isControlled])
+
   return (
-    <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-lg">
+    <Dialog open={currentOpen} onOpenChange={handleOpenChange} {...props}>
+      <DialogContent
+        ref={contentRef}
+        className="overflow-hidden p-0 shadow-lg"
+        aria-label="Command palette"
+      >
         <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
           {children}
         </Command>

@@ -23,13 +23,16 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
+import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { withOptional } from '@/lib/util/objects';
 
 import { useContactMessages, useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 
 type ContactModalProps = {
@@ -41,6 +44,8 @@ type ContactModalProps = {
     office: string;
     party?: string;
     photo?: string;
+    division_ids?: string[];
+    ocdDivisionIds?: string[];
   };
   userId: string;
 }
@@ -88,6 +93,36 @@ export default function ContactModal({
     createThread
   } = useContactThreads();
 
+  const {
+    divisionIds: representativeDivisionIds,
+    elections: representativeElections,
+    loading: electionLoading,
+    error: electionError,
+    daysUntilNextElection,
+    trackCtaEvent,
+  } = useRepresentativeCtaAnalytics(representative, { source: 'contact_modal' });
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClose = useCallback(() => {
+    trackCtaEvent('civics_representative_contact_modal_close', {
+      hadDraftContent: message.trim().length > 0,
+      wasSuccessful: success,
+    });
+    onClose();
+  }, [message, onClose, success, trackCtaEvent]);
+
+  useAccessibleDialog({
+    isOpen,
+    dialogRef,
+    ...(contactSystemEnabled ? { initialFocusRef: subjectInputRef, ariaLabelId: 'contact-modal-title' } : {}),
+    onClose: handleClose,
+    liveMessage: contactSystemEnabled
+      ? `Contact ${representative.name} dialog opened.`
+      : 'Contact feature unavailable dialog opened.',
+  });
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -100,6 +135,14 @@ export default function ContactModal({
       resetTemplate();
     }
   }, [isOpen, resetTemplate]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    trackCtaEvent('civics_representative_contact_modal_open');
+  }, [isOpen, trackCtaEvent]);
 
   // Initialize local template values when template is selected
   useEffect(() => {
@@ -161,53 +204,63 @@ export default function ContactModal({
       setMessage('');
       setSubject('');
 
+      trackCtaEvent('civics_representative_contact_send', {
+        threadId,
+        usedTemplateId: selectedTemplate?.id ?? null,
+        characterCount: message.length,
+      });
+
       // Auto-close after success
       setTimeout(() => {
-        onClose();
+        handleClose();
       }, 2000);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
+      trackCtaEvent('civics_representative_contact_send_error', {
+        errorMessage: err instanceof Error ? err.message : 'Unknown error',
+        usedTemplateId: selectedTemplate?.id ?? null,
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [message, subject, existingThreadId, representative.id, userId, sendMessage, createThread, onClose]);
-
-  // Handle escape key to close modal (must be before early returns)
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      // Focus trap: focus first focusable element
-      const firstInput = document.querySelector('#subject') as HTMLInputElement;
-      firstInput?.focus();
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
+  }, [
+    message,
+    subject,
+    existingThreadId,
+    representative.id,
+    sendMessage,
+    createThread,
+    handleClose,
+    selectedTemplate?.id,
+    trackCtaEvent,
+  ]);
 
   if (!isOpen) return null;
 
   if (!contactSystemEnabled) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-          <div className="flex items-center justify-center mb-4">
-            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-disabled-title"
+      >
+        <div className="bg-white rounded-lg p-6 max-w-md mx-4 text-center space-y-4">
+          <div className="flex items-center justify-center">
+            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" aria-hidden="true" />
           </div>
-          <p className="text-yellow-800 text-center">
+          <h2 id="contact-disabled-title" className="text-yellow-800 font-semibold">
+            Contact System Disabled
+          </h2>
+          <p className="text-yellow-800">
             Contact system is currently disabled. This feature will be available soon.
           </p>
           <button
-            onClick={onClose}
-            className="mt-4 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+            onClick={handleClose}
+            className="mt-2 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+            type="button"
           >
             Close
           </button>
@@ -223,6 +276,7 @@ export default function ContactModal({
       aria-modal="true"
       aria-labelledby="contact-modal-title"
       aria-describedby="contact-modal-description"
+      ref={dialogRef}
     >
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
@@ -237,7 +291,7 @@ export default function ContactModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
             aria-label="Close contact modal"
             type="button"
@@ -272,6 +326,44 @@ export default function ContactModal({
             </div>
           </div>
 
+          {(representativeElections.length > 0 || electionLoading || electionError) && (
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
+              <p className="font-semibold flex items-center gap-2">
+                <ClockIcon className="h-5 w-5 text-blue-500" />
+                Upcoming elections linked to this representative
+              </p>
+              {electionLoading && <p>Polling election calendar…</p>}
+              {electionError && !electionLoading && (
+                <p className="text-red-600">Unable to load elections right now.</p>
+              )}
+              {!electionLoading && !electionError && representativeElections.length > 0 && (
+                <ul className="space-y-1 text-blue-700">
+                  {representativeElections.slice(0, 3).map((election) => (
+                    <li key={election.election_id} className="flex items-center gap-2">
+                      <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                      <span>
+                        <span className="font-medium">{election.name}</span>
+                        <span className="ml-1">
+                          ({formatElectionDate(election.election_day)})
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                  {representativeElections.length > 3 && (
+                    <li>+{representativeElections.length - 3} more election(s) tracked</li>
+                  )}
+                  {daysUntilNextElection != null && (
+                    <li className="text-xs text-blue-700">
+                      Next election {daysUntilNextElection === 0
+                        ? 'is today!'
+                        : `in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
+
           {/* Template Selector */}
           <div className="space-y-2">
             <button
@@ -303,6 +395,10 @@ export default function ContactModal({
                           onClick={() => {
                             selectTemplate(template.id);
                             setShowTemplates(false);
+                            trackCtaEvent('civics_representative_contact_template_select', {
+                              templateId: template.id,
+                              templateTitle: template.title,
+                            });
                           }}
                           className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white transition-colors ${
                             selectedTemplate?.id === template.id ? 'bg-blue-100 text-blue-900' : 'text-gray-700'
@@ -321,9 +417,13 @@ export default function ContactModal({
                 {selectedTemplate && (
                   <button
                     onClick={() => {
+                      const lastTemplateId = selectedTemplate.id;
                       resetTemplate();
                       setSubject('');
                       setMessage('');
+                      trackCtaEvent('civics_representative_contact_template_clear', {
+                        lastTemplateId,
+                      });
                     }}
                     className="mt-3 text-xs text-gray-600 hover:text-gray-800"
                   >
@@ -385,6 +485,7 @@ export default function ContactModal({
                 aria-invalid={error && !subject.trim() ? 'true' : 'false'}
                 aria-describedby={error && !subject.trim() ? 'subject-error' : undefined}
                 maxLength={200}
+                ref={subjectInputRef}
               />
               {error && !subject.trim() && (
                 <p id="subject-error" className="mt-1 text-xs text-red-600" role="alert">
@@ -455,7 +556,7 @@ export default function ContactModal({
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={onClose}
+            onClick={handleClose}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
               disabled={isLoading}
             >
@@ -486,3 +587,4 @@ export default function ContactModal({
     </div>
   );
 }
+

@@ -28,7 +28,7 @@ import {
 } from '@heroicons/react/24/solid';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useAnalyticsActions, useFeedsActions, useFeedsStore } from '@/lib/stores';
+import { useAnalyticsActions, useFeedsActions, useFeedById } from '@/lib/stores';
 
 import type { EngagementData } from '../lib/types/civics-types';
 
@@ -62,11 +62,7 @@ export default function EngagementMetrics({
   const [localBookmarked, setLocalBookmarked] = useState(false);
   const [mutationPending, setMutationPending] = useState(false);
 
-  const storeFeed = useFeedsStore((state) => {
-    const fromFeeds = state.feeds.find((feed) => feed.id === itemId);
-    if (fromFeeds) return fromFeeds;
-    return state.filteredFeeds.find((feed) => feed.id === itemId) ?? null;
-  });
+  const storeFeed = useFeedById(itemId);
   const { likeFeed, unlikeFeed, shareFeed, bookmarkFeed, unbookmarkFeed } = useFeedsActions();
   const { trackUserAction } = useAnalyticsActions();
 

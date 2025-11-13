@@ -15,6 +15,8 @@ import React from 'react';
 
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
 
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
 export type FeatureWrapperProps = {
   /** Feature flag ID to check */
   feature: string;
@@ -55,6 +57,13 @@ export function FeatureWrapper({
   className,
   style
 }: FeatureWrapperProps): React.ReactElement | null {
+  if (IS_E2E_HARNESS) {
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    );
+  }
   const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
   // Show loading state if requested and loading
@@ -127,6 +136,13 @@ export function FeatureWrapperBatch({
   className,
   style
 }: FeatureWrapperBatchProps): React.ReactElement | null {
+  if (IS_E2E_HARNESS) {
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    );
+  }
   const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
   // Show loading state if requested and loading
@@ -202,6 +218,13 @@ export function FeatureWrapperWithDependencies({
   className,
   style
 }: FeatureWrapperWithDependenciesProps): React.ReactElement | null {
+  if (IS_E2E_HARNESS) {
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    );
+  }
   const { enabled, disabled: _disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
 
   // Show loading state if requested and loading

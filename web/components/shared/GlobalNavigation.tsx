@@ -1,17 +1,17 @@
 'use client';
 
 
-import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import React, { useState } from 'react';
+import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * @fileoverview Global Navigation Component
- * 
+ *
  * Global navigation component providing site navigation, user authentication,
  * and responsive mobile menu functionality.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -21,21 +21,93 @@ import React, { useState } from 'react';
 
 
 
-import { Button } from '@/components/ui/button'
-import logger from '@/lib/utils/logger'
+import LanguageSelector from '@/components/shared/LanguageSelector';
+import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
+import logger from '@/lib/utils/logger';
 
 /**
  * Global Navigation Component
- * 
+ *
  * @returns {JSX.Element} Global navigation component
- * 
+ *
  * @example
  * <GlobalNavigation />
  */
 export default function GlobalNavigation() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [_hasError, _setHasError] = useState(false)
-  const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [_hasError, _setHasError] = useState(false);
+  const pathname = usePathname();
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstMobileNavLinkRef = useRef<HTMLAnchorElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const mobileMenuId = 'global-navigation-mobile-menu';
+  const { t } = useI18n();
+
+  // Auth stubs to avoid build-time hook resolution issues
+  const user: { id?: string; email?: string; [key: string]: unknown } | null = null;
+  const _signOut: (() => Promise<void>) | null = null;
+  const isLoading = false;
+  const _isAuthenticated = false;
+
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen((open) => !open);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      closeMobileMenu();
+    } catch (error) {
+      logger.error('Logout failed:', error);
+    }
+  }, [closeMobileMenu]);
+
+  const isActive = useCallback(
+    (path: string) => pathname === path,
+    [pathname],
+  );
+
+  const navigationItems = [
+    { href: '/feed', label: t('navigation.home'), icon: Home },
+    { href: '/polls', label: t('navigation.polls'), icon: Vote },
+    { href: '/dashboard', label: t('navigation.dashboard'), icon: BarChart3 },
+  ];
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      previouslyFocusedElementRef.current = document.activeElement as HTMLElement | null;
+      const focusTimeout = window.setTimeout(() => {
+        firstMobileNavLinkRef.current?.focus();
+      }, 0);
+      return () => window.clearTimeout(focusTimeout);
+    }
+
+    if (previouslyFocusedElementRef.current) {
+      previouslyFocusedElementRef.current.focus();
+      previouslyFocusedElementRef.current = null;
+    }
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        event.preventDefault();
+        closeMobileMenu();
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeMobileMenu, isMobileMenuOpen]);
 
   // Error boundary for component
   if (_hasError) {
@@ -54,16 +126,9 @@ export default function GlobalNavigation() {
       </nav>
     );
   }
-  
-  // Auth/i18n stubs to avoid build-time hook resolution issues
-  const user: { id?: string; email?: string; [key: string]: unknown } | null = null;
-  const _signOut: (() => Promise<void>) | null = null;
-  const isLoading = false;
-  const isAuthenticated = false;
-  const t: (key: string) => string = (key) => key;
 
   // Show loading state if user data is still loading or if we're not authenticated yet
-  if (isLoading || (!isAuthenticated && !user)) {
+  if (isLoading) {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,36 +145,17 @@ export default function GlobalNavigation() {
     );
   }
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false)
-  }
-
-  const handleLogout = async () => {
-    try {
-      closeMobileMenu()
-    } catch (error) {
-      logger.error('Logout failed:', error)
-    }
-  }
-
-  const isActive = (path: string) => {
-    return pathname === path
-  }
-
-  const navigationItems = [
-    { href: '/feed', label: t('navigation.home'), icon: Home },
-    { href: '/polls', label: t('navigation.polls'), icon: Vote },
-    { href: '/dashboard', label: t('navigation.dashboard'), icon: BarChart3 },
-  ]
-
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"
+      >
+        {t('common.skipToContent')}
+      </a>
+      <nav className="bg-white" aria-label="Primary navigation">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
@@ -142,8 +188,7 @@ export default function GlobalNavigation() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {/* Language Selector (temporarily disabled) */}
-            
+            <LanguageSelector variant="compact" />
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
@@ -193,13 +238,15 @@ export default function GlobalNavigation() {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <Button
+              ref={mobileMenuButtonRef}
               variant="ghost"
               size="sm"
               onClick={toggleMobileMenu}
               className="p-2"
-              aria-label="Toggle mobile menu"
+              aria-label={isMobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
               data-testid="mobile-menu"
               aria-expanded={isMobileMenuOpen}
+              aria-controls="global-navigation-mobile-menu"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -208,32 +255,45 @@ export default function GlobalNavigation() {
               )}
             </Button>
           </div>
-        </div>
+          </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+          {/* Mobile Navigation Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden" id={mobileMenuId}>
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
               {/* Mobile Navigation Items */}
-              {navigationItems.map((item) => {
-                const Icon = item.icon
+              {navigationItems.map((item, index) => {
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={closeMobileMenu}
-                    data-testid={item.href === '/polls' ? 'polls-nav' : item.href === '/dashboard' ? 'dashboard-nav' : item.href === '/' ? 'home-nav' : undefined}
+                    data-testid={
+                      item.href === '/polls'
+                        ? 'polls-nav'
+                        : item.href === '/dashboard'
+                        ? 'dashboard-nav'
+                        : item.href === '/'
+                        ? 'home-nav'
+                        : undefined
+                    }
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive(item.href)
                         ? 'text-blue-600 bg-blue-50'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                     }`}
+                    ref={index === 0 ? firstMobileNavLinkRef : undefined}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
                   </Link>
-                )
+                );
               })}
+
+              <div className="pt-4 border-t border-gray-200">
+                <LanguageSelector />
+              </div>
 
               {/* Mobile Auth Section */}
               <div className="pt-4 border-t border-gray-200">
@@ -255,7 +315,7 @@ export default function GlobalNavigation() {
                       variant="outline"
                       size="sm"
                       onClick={handleLogout}
-                      className="w-full justify-start flex items-center space-x-2"
+                      className="flex w-full items-center space-x-2"
                       data-testid="logout-button"
                     >
                       <LogOut className="h-5 w-5" />
@@ -265,10 +325,14 @@ export default function GlobalNavigation() {
                 ) : (
                   <div className="space-y-2">
                     <Button asChild variant="outline" size="sm" className="w-full">
-                      <Link href="/login" onClick={closeMobileMenu}>Sign In</Link>
+                      <Link href="/login" onClick={closeMobileMenu}>
+                        Sign In
+                      </Link>
                     </Button>
                     <Button asChild size="sm" className="w-full">
-                      <Link href="/register" onClick={closeMobileMenu}>Get Started</Link>
+                      <Link href="/register" onClick={closeMobileMenu}>
+                        Get Started
+                      </Link>
                     </Button>
                   </div>
                 )}
@@ -278,5 +342,6 @@ export default function GlobalNavigation() {
         )}
       </div>
     </nav>
-  )
+  </div>
+  );
 }

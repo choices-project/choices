@@ -6,17 +6,40 @@ jest.mock('@/lib/utils/privacy-guard', () => ({
   PrivacyDataType: { FEED_ACTIVITY: 'FEED_ACTIVITY' },
 }));
 
+jest.mock('@/lib/stores/services/feedsService', () => {
+  const actual = jest.requireActual('@/lib/stores/services/feedsService');
+  return {
+    ...actual,
+    fetchFeedsFromApi: jest.fn(),
+  };
+});
+
 import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
 import {
   createInitialFeedsState,
   feedsStoreCreator,
 } from '@/lib/stores/feedsStore';
+import { fetchFeedsFromApi } from '@/lib/stores/services/feedsService';
 import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
 const createTestFeedsStore = () =>
   create<FeedsStore>()(immer(feedsStoreCreator));
 
-const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0));
+const fetchFeedsFromApiMock =
+  fetchFeedsFromApi as jest.MockedFunction<typeof fetchFeedsFromApi>;
+
+beforeEach(() => {
+  fetchFeedsFromApiMock.mockReset();
+  fetchFeedsFromApiMock.mockResolvedValue({
+    feeds: [],
+    count: 0,
+    filters: {
+      category: 'all',
+      district: null,
+      sort: 'trending',
+    },
+  });
+});
 
 const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
   id: 'feed-1',
@@ -63,6 +86,7 @@ const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
 
 describe('feedsStore', () => {
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
@@ -104,6 +128,10 @@ describe('feedsStore', () => {
   it('bookmarkFeed toggles bookmark state', async () => {
     const store = createTestFeedsStore();
     const civicFeed = createFeed();
+    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    } as Response);
 
     store.getState().setFeeds([civicFeed]);
     await store.getState().bookmarkFeed(civicFeed.id);
@@ -113,42 +141,50 @@ describe('feedsStore', () => {
 
     await store.getState().unbookmarkFeed(civicFeed.id);
     expect(store.getState().feeds[0].userInteraction.bookmarked).toBe(false);
+
+    fetchSpy.mockRestore();
+  });
+
+  it('searchFeeds handles network errors gracefully', async () => {
+    const store = createTestFeedsStore();
+    const error = new Error('network failure');
+
+    jest.spyOn(global, 'fetch').mockRejectedValueOnce(error);
+
+    await store.getState().searchFeeds('civics');
+
+    const state = store.getState();
+    expect(state.error).toMatch(/network failure/i);
+    expect(state.isSearching).toBe(false);
   });
 
   it('loadFeeds fetches data and updates pagination', async () => {
     const store = createTestFeedsStore();
-    const feedsResponse = {
-      success: true,
-      data: {
-        feeds: [
-          createFeed({ id: 'feed-1' }),
-          createFeed({ id: 'feed-2' }),
-          createFeed({ id: 'feed-3' }),
-        ],
-        count: 3,
-        filters: {
-          category: 'all',
-          district: null,
-          sort: 'trending',
-        },
+    const feedsPayload = {
+      feeds: [
+        createFeed({ id: 'feed-1' }),
+        createFeed({ id: 'feed-2' }),
+        createFeed({ id: 'feed-3' }),
+      ],
+      count: 3,
+      filters: {
+        category: 'all',
+        district: null,
+        sort: 'trending',
       },
     };
 
-    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => feedsResponse,
-    } as Response);
+    fetchFeedsFromApiMock.mockResolvedValueOnce(feedsPayload);
 
     await store.getState().loadFeeds();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(
-      '/api/feeds?limit=20&sort=newest',
-      expect.objectContaining({
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      }),
-    );
+    expect(fetchFeedsFromApiMock).toHaveBeenCalledTimes(1);
+    expect(fetchFeedsFromApiMock).toHaveBeenCalledWith({
+      category: null,
+      district: null,
+      limit: 20,
+      sort: 'newest',
+    });
 
     const state = store.getState();
     expect(state.feeds).toHaveLength(3);
@@ -162,49 +198,35 @@ describe('feedsStore', () => {
   it('loadMoreFeeds appends new items and respects hasMore flag', async () => {
     const store = createTestFeedsStore();
 
-    const initialResponse = {
-      success: true,
-      data: {
-        feeds: [
-          createFeed({ id: 'feed-1' }),
-          createFeed({ id: 'feed-2' }),
-        ],
-        count: 4,
-        filters: {
-          category: 'all',
-          district: null,
-          sort: 'newest',
-        },
+    const initialPayload = {
+      feeds: [
+        createFeed({ id: 'feed-1' }),
+        createFeed({ id: 'feed-2' }),
+      ],
+      count: 4,
+      filters: {
+        category: 'all',
+        district: null,
+        sort: 'newest',
       },
     };
 
-    const additionalResponse = {
-      success: true,
-      data: {
-        feeds: [
-          createFeed({ id: 'feed-3' }),
-          createFeed({ id: 'feed-4' }),
-        ],
-        count: 4,
-        filters: {
-          category: 'all',
-          district: null,
-          sort: 'newest',
-        },
+    const additionalPayload = {
+      feeds: [
+        createFeed({ id: 'feed-3' }),
+        createFeed({ id: 'feed-4' }),
+      ],
+      count: 4,
+      filters: {
+        category: 'all',
+        district: null,
+        sort: 'newest',
       },
     };
 
-    const responses = [initialResponse, additionalResponse];
-    const fetchSpy = jest.spyOn(global, 'fetch').mockImplementation(async () => {
-      const next = responses.shift();
-      if (!next) {
-        throw new Error('Unexpected fetch call');
-      }
-      return {
-        ok: true,
-        json: async () => next,
-      } as Response;
-    });
+    fetchFeedsFromApiMock
+      .mockResolvedValueOnce(initialPayload)
+      .mockResolvedValueOnce(additionalPayload);
 
     await store.getState().loadFeeds();
     expect(store.getState().feeds).toHaveLength(2);
@@ -213,9 +235,19 @@ describe('feedsStore', () => {
     await store.getState().loadMoreFeeds();
     const state = store.getState();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe('/api/feeds?limit=20&sort=newest');
-    expect(fetchSpy.mock.calls[1]?.[0]).toBe('/api/feeds?limit=22&sort=newest');
+    expect(fetchFeedsFromApiMock).toHaveBeenCalledTimes(2);
+    expect(fetchFeedsFromApiMock.mock.calls[0]?.[0]).toEqual({
+      category: null,
+      district: null,
+      limit: 20,
+      sort: 'newest',
+    });
+    expect(fetchFeedsFromApiMock.mock.calls[1]?.[0]).toEqual({
+      category: null,
+      district: null,
+      limit: 22,
+      sort: 'newest',
+    });
     expect(state.feeds).toHaveLength(4);
     expect(state.hasMoreFeeds).toBe(false);
   });
@@ -223,11 +255,9 @@ describe('feedsStore', () => {
   it('loadFeeds handles error responses gracefully', async () => {
     const store = createTestFeedsStore();
 
-    jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({}),
-    } as Response);
+    fetchFeedsFromApiMock.mockRejectedValueOnce(
+      new Error('Failed to fetch feeds (status 500)'),
+    );
 
     await store.getState().loadFeeds();
 
@@ -265,49 +295,34 @@ describe('feedsStore', () => {
   it('loadMoreFeeds merges unique feed items without duplicates', async () => {
     const store = createTestFeedsStore();
 
-    const responses = [
-      {
-        success: true,
-        data: {
-          feeds: [
-            createFeed({ id: 'feed-1' }),
-            createFeed({ id: 'feed-2' }),
-          ],
-          count: 3,
-          filters: {
-            category: 'all',
-            district: null,
-            sort: 'newest',
-          },
-        },
+    const initialPayload = {
+      feeds: [
+        createFeed({ id: 'feed-1' }),
+        createFeed({ id: 'feed-2' }),
+      ],
+      count: 3,
+      filters: {
+        category: 'all',
+        district: null,
+        sort: 'newest',
       },
-      {
-        success: true,
-        data: {
-          feeds: [
-            createFeed({ id: 'feed-2' }),
-            createFeed({ id: 'feed-3' }),
-          ],
-          count: 3,
-          filters: {
-            category: 'all',
-            district: null,
-            sort: 'newest',
-          },
-        },
+    };
+    const additionalPayload = {
+      feeds: [
+        createFeed({ id: 'feed-2' }),
+        createFeed({ id: 'feed-3' }),
+      ],
+      count: 3,
+      filters: {
+        category: 'all',
+        district: null,
+        sort: 'newest',
       },
-    ];
+    };
 
-    const fetchSpy = jest.spyOn(global, 'fetch').mockImplementation(async () => {
-      const next = responses.shift();
-      if (!next) {
-        throw new Error('Unexpected fetch call');
-      }
-      return {
-        ok: true,
-        json: async () => next,
-      } as Response;
-    });
+    fetchFeedsFromApiMock
+      .mockResolvedValueOnce(initialPayload)
+      .mockResolvedValueOnce(additionalPayload);
 
     await store.getState().loadFeeds();
     expect(store.getState().feeds).toHaveLength(2);
@@ -319,8 +334,6 @@ describe('feedsStore', () => {
     expect(feedIds).toEqual(['feed-1', 'feed-2', 'feed-3']);
     expect(new Set(feedIds).size).toBe(feedIds.length);
     expect(store.getState().hasMoreFeeds).toBe(false);
-
-    fetchSpy.mockRestore();
   });
 
   it('likeFeed respects privacy consent when persisting interactions', async () => {
@@ -337,6 +350,7 @@ describe('feedsStore', () => {
       json: async () => ({}),
     } as Response);
 
+    privacyMock.mockReturnValueOnce(false);
     privacyMock.mockReturnValueOnce(false);
 
     await store.getState().likeFeed(feed.id);

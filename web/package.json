@@ -44,6 +44,7 @@
     "test:performance": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.monitoring.config.ts --grep=performance --reporter=line",
     "test:load": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.monitoring.config.ts --grep=load --reporter=line",
     "test:schema": "npx jest --testPathPattern=schema",
+    "i18n:extract": "node ./scripts/run-with-timeout.js 180 npx formatjs extract \"app/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"features/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" --ignore \"**/node_modules/**\" --ignore \"**/.next/**\" --ignore \"**/__tests__/**\" --ignore \"**/*.test.*\" --ignore \"**/*.spec.*\" --ignore \"**/*.d.ts\" --ignore \"tests/**\" --ignore \"e2e/**\" --additional-function-names t --extract-source-location --format simple --out-file messages/en.snapshot.json",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "type-check:ci": "node ./scripts/run-with-timeout.js 180 tsc --noEmit --skipLibCheck || echo 'TypeScript warnings found (non-blocking)'",
     "types:strict": "node ./scripts/run-with-timeout.js 180 tsc -p ../tsconfig.ci.json --noEmit --skipLibCheck",
@@ -105,6 +106,7 @@
     "jszip": "~3.10.1",
     "lucide-react": "~0.553.0",
     "next": "~14.2.32",
+    "next-intl": "~3.26.5",
     "pg": "~8.16.3",
     "qrcode": "~1.5.4",
     "react": "~18.2.0",
@@ -131,6 +133,7 @@
     "@babel/preset-env": "~7.28.5",
     "@babel/preset-react": "~7.28.5",
     "@babel/preset-typescript": "~7.28.5",
+    "@formatjs/cli": "~6.7.4",
     "@jest/globals": "~30.1.2",
     "@next/bundle-analyzer": "~15.5.3",
     "@playwright/test": "~1.56.0",
@@ -157,6 +160,7 @@
     "eslint-config-next": "~15.5.3",
     "eslint-plugin-boundaries": "~5.0.1",
     "eslint-plugin-eslint-comments": "~3.2.0",
+    "eslint-plugin-formatjs": "~5.4.2",
     "eslint-plugin-react-hooks": "~7.0.1",
     "eslint-plugin-unused-imports": "~4.2.0",
     "ignore-loader": "~0.1.2",
@@ -169,7 +173,8 @@
     "tailwindcss": "~3.4.17",
     "ts-morph": "~27.0.0",
     "tsx": "~4.20.5",
-    "typescript": "~5.7.2"
+    "typescript": "~5.7.2",
+    "whatwg-fetch": "~3.6.20"
   },
   "overrides": {
     "chalk": "4.1.2",

@@ -199,5 +199,82 @@ test.describe('User store harness', () => {
     await expect(success).toHaveText('false');
     await expect(error).toHaveText('none');
   });
+
+  test('sign out clears authentication and profile state', async ({ page }) => {
+    await gotoHarness(page);
+
+    const authenticated = page.getByTestId('user-authenticated');
+    const userId = page.getByTestId('user-id');
+    const sessionToken = page.getByTestId('user-session');
+    const profileDisplayName = page.getByTestId('user-profile-display-name');
+    const profileEdit = page.getByTestId('user-profile-edit');
+
+    await page.evaluate(() => {
+      const harness = window.__userStoreHarness;
+      if (!harness) return;
+      harness.setUserAndAuth(
+        { id: 'signed-in-user', email: 'signed@choices.dev' } as any,
+        true,
+      );
+      harness.setSession({
+        access_token: 'signed-session',
+        user: { id: 'signed-in-user' },
+      } as any);
+      harness.setProfile({
+        id: 'profile-123',
+        username: 'Signed In',
+        display_name: 'Signed In',
+      } as any);
+      harness.updateProfileField('display_name', 'Pending Draft');
+    });
+
+    await expect(authenticated).toHaveText('true');
+    await expect(userId).toHaveText('signed-in-user');
+    await expect(sessionToken).toHaveText('signed-session');
+    await expect(profileDisplayName).toHaveText('Signed In');
+    await expect(profileEdit).toContainText('Pending Draft');
+
+    await page.evaluate(() => {
+      window.__userStoreHarness?.signOut();
+    });
+
+    await expect(authenticated).toHaveText('false');
+    await expect(userId).toHaveText('none');
+    await expect(sessionToken).toHaveText('none');
+    await expect(profileDisplayName).toHaveText('none');
+    await expect(profileEdit).not.toContainText('Pending Draft');
+    await expect(profileEdit).toContainText('{');
+  });
+
+  test('surfacing and clearing profile errors updates harness output', async ({ page }) => {
+    await gotoHarness(page);
+
+    const userError = page.getByTestId('user-error');
+    const profileErrors = page.getByTestId('user-profile-edit-errors');
+
+    await expect(userError).toHaveText('none');
+    await expect(profileErrors).toContainText('{}');
+
+    await page.evaluate(() => {
+      const harness = window.__userStoreHarness;
+      if (!harness) return;
+      harness.setUserError('Profile failed to save');
+      harness.setProfileEditError('display_name', 'Display name is required');
+    });
+
+    await expect(userError).toHaveText('Profile failed to save');
+    await expect(profileErrors).toContainText('display_name');
+    await expect(profileErrors).toContainText('Display name is required');
+
+    await page.evaluate(() => {
+      const harness = window.__userStoreHarness;
+      if (!harness) return;
+      harness.clearUserError();
+      harness.clearProfileEditError('display_name');
+    });
+
+    await expect(userError).toHaveText('none');
+    await expect(profileErrors).not.toContainText('display_name');
+  });
 });
 

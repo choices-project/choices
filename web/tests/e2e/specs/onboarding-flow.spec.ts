@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
+import { runAxeAudit } from '../helpers/accessibility';
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/onboarding-flow', { waitUntil: 'domcontentloaded', timeout: 45_000 });
@@ -20,6 +21,7 @@ test.describe('Onboarding flow harness', () => {
 
   test('completes onboarding via harness helpers', async ({ page }) => {
     await gotoHarness(page);
+    await runAxeAudit(page, 'onboarding flow initial state');
 
     await page.evaluate(() => {
       const harness = window.__onboardingFlowHarness;
@@ -38,10 +40,13 @@ test.describe('Onboarding flow harness', () => {
 
     await expect(page.getByTestId('onboarding-flow-status')).toHaveText('completed');
     await expect(page.getByTestId('onboarding-flow-current-step')).toHaveText('5');
+
+    await runAxeAudit(page, 'onboarding flow completion state');
   });
 
   test('supports custom values and preferences data', async ({ page }) => {
     await gotoHarness(page);
+    await runAxeAudit(page, 'onboarding flow custom data initial state');
 
     await page.evaluate(() => {
       const harness = window.__onboardingFlowHarness;
@@ -81,6 +86,8 @@ test.describe('Onboarding flow harness', () => {
       }),
       preferencesData: expect.objectContaining({ marketing: true }),
     });
+
+    await runAxeAudit(page, 'onboarding flow custom data completion state');
   });
 });
 

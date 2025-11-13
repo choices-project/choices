@@ -24,6 +24,7 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
 
 export { AuthContext }
 
@@ -86,6 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   useEffect(() => {
+    if (IS_E2E_HARNESS) {
+      initializeAuth(null, null, false)
+      setLoading(false)
+      return
+    }
+
     let mounted = true
 
     const bootstrapAuth = async () => {
@@ -130,9 +137,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       cleanup.then(cleanupFn => cleanupFn?.())
     }
-  }, [applySession])
+  }, [applySession, initializeAuth])
 
   const signOut = async () => {
+    if (IS_E2E_HARNESS) {
+      storeSignOut()
+      initializeAuth(null, null, false)
+      setSession(null)
+      setUser(null)
+      return
+    }
+
     try {
       const supabase = await getSupabaseBrowserClient()
       await supabase.auth.signOut()
@@ -146,6 +161,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshSession = async () => {
+    if (IS_E2E_HARNESS) {
+      return
+    }
+
     try {
       const supabase = await getSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()

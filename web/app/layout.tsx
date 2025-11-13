@@ -1,7 +1,16 @@
 
 import type { Metadata } from 'next'
+import { cookies, headers } from 'next/headers'
 import React from 'react'
 
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_NAME,
+  type SupportedLocale,
+  resolveLocale,
+} from '@/lib/i18n/config'
+
+import { Providers } from './providers'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -11,11 +20,11 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Choices'
+    title: 'Choices',
   },
   formatDetection: {
-    telephone: false
-  }
+    telephone: false,
+  },
 }
 
 export const viewport = {
@@ -23,24 +32,44 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#3b82f6'
+  themeColor: '#3b82f6',
 }
 
-export default function RootLayout({
+type IntlMessages = Record<string, unknown>;
+
+async function loadMessages(locale: SupportedLocale): Promise<IntlMessages> {
+  switch (locale) {
+    case 'es':
+      return (await import('@/messages/es.json')).default;
+    case 'en':
+    default:
+      return (await import('@/messages/en.json')).default;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = cookies();
+  const headerStore = headers();
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
+  const acceptLanguage = headerStore.get('accept-language');
+  const locale = resolveLocale(cookieLocale, acceptLanguage);
+
+  const messages = await loadMessages(locale);
+
   return (
-    <html lang="en">
+    <html lang={locale ?? DEFAULT_LOCALE}>
       <head>
         {/* Preload critical resources */}
         <link rel="preload" href="/icons/icon-192x192.svg" as="image" />
         <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
-        
+
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        
+
         {/* PWA Icons - Optimized loading */}
         <link rel="icon" href="/icons/icon-192x192.svg" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
@@ -52,7 +81,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.svg" />
         <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.svg" />
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.svg" />
-        
+
         {/* PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -61,19 +90,20 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tileImage" content="/icons/icon-144x144.svg" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        
+
         {/* PWA Theme */}
         <meta name="theme-color" content="#3b82f6" />
         <meta name="background-color" content="#ffffff" />
-        
+
         {/* Performance optimizations */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body>
-        {/* Minimal root layout - providers moved to route groups */}
-        {children}
-        
+        <Providers locale={locale} messages={messages}>
+          {children}
+        </Providers>
+
         {/* PWA Background is handled in app layout */}
       </body>
     </html>

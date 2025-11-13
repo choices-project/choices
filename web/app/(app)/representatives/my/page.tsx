@@ -13,7 +13,7 @@ import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
+import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';

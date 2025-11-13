@@ -15,8 +15,10 @@ import {
   usePollsError,
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
+import { useI18n } from '@/hooks/useI18n';
 
 export default function PollsPage() {
+  const { t, currentLanguage } = useI18n();
   const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
   const error = usePollsError();
@@ -36,6 +38,64 @@ export default function PollsPage() {
   const initializedRef = useRef(false);
 
   const selectedCategory = filters.category[0] ?? 'all';
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    [currentLanguage],
+  );
+
+  const formatVoteCount = useCallback(
+    (value: number) =>
+      t('polls.page.metadata.votes', {
+        count: value,
+        formattedCount: numberFormatter.format(value),
+      }),
+    [numberFormatter, t],
+  );
+
+  const formatCreatedDate = useCallback(
+    (value: string) => dateFormatter.format(new Date(value)),
+    [dateFormatter],
+  );
+
+  const paginationStart = useMemo(
+    () => (pagination.currentPage - 1) * pagination.itemsPerPage + 1,
+    [pagination.currentPage, pagination.itemsPerPage],
+  );
+
+  const paginationEnd = useMemo(
+    () => Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalResults),
+    [pagination.currentPage, pagination.itemsPerPage, pagination.totalResults],
+  );
+
+  const paginationLabel = useMemo(
+    () =>
+      t('polls.page.pagination.showing', {
+        start: numberFormatter.format(paginationStart),
+        end: numberFormatter.format(paginationEnd),
+        total: numberFormatter.format(pagination.totalResults),
+      }),
+    [numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t],
+  );
+
+  const paginationPageLabel = useMemo(
+    () =>
+      t('polls.page.pagination.pageLabel', {
+        current: numberFormatter.format(pagination.currentPage),
+        total: numberFormatter.format(pagination.totalPages),
+      }),
+    [numberFormatter, pagination.currentPage, pagination.totalPages, t],
+  );
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -156,8 +216,8 @@ export default function PollsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Polls</h1>
-        <p className="text-gray-600">Discover and participate in community polls</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('polls.page.title')}</h1>
+        <p className="text-gray-600">{t('polls.page.subtitle')}</p>
       </div>
 
       {error && (
@@ -174,18 +234,18 @@ export default function PollsPage() {
             <div className="text-gray-400 mb-4">
               <BarChart3 className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No polls found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('polls.page.empty.title')}</h3>
             <p className="text-gray-600 mb-4">
               {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
-                ? 'Try adjusting your filters or search terms'
-                : 'Be the first to create a poll!'}
+                ? t('polls.page.empty.filters')
+                : t('polls.page.empty.ctaMessage')}
             </p>
             <Link
               href="/polls/create"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Poll
+              {t('polls.page.cta.create')}
             </Link>
           </div>
         ) : (
@@ -195,29 +255,33 @@ export default function PollsPage() {
                 <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                   {poll.title}
                 </h3>
-                {poll.trendingPosition && (
+                {typeof poll.trendingPosition === 'number' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                     <Flame className="h-3 w-3 mr-1" />
-                    Trending #{poll.trendingPosition}
+                    {t('polls.page.trendingBadge', { position: poll.trendingPosition })}
                   </span>
                 )}
               </div>
 
               <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                {poll.description || 'No description provided'}
+                {poll.description || t('polls.page.descriptionFallback')}
               </p>
 
               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                 <span className="inline-flex items-center">
                   <Users className="h-4 w-4 mr-1" />
-                  {poll.totalVotes} votes
+                  {formatVoteCount(typeof poll.totalVotes === 'number' ? poll.totalVotes : 0)}
                 </span>
-                <span>{new Date(poll.createdAt).toLocaleDateString()}</span>
+                <span>
+                  {t('polls.page.metadata.created', {
+                    date: formatCreatedDate(poll.createdAt),
+                  })}
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getPollCategoryColor(poll.category)}`}>
-                  {getPollCategoryIcon(poll.category)} {poll.category}
+                  {getPollCategoryIcon(poll.category)} {t(`polls.categories.${poll.category}`, { defaultValue: poll.category })}
                 </span>
                 {poll.tags?.slice(0, 3).map((tag, index) => (
                   <span key={`${poll.id}-tag-${index}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
@@ -232,14 +296,14 @@ export default function PollsPage() {
                   className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  View Poll
+                  {t('polls.page.cta.view')}
                 </Link>
                 <Link
                   href={`/polls/${poll.id}/results`}
                   className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  View Results
+                  {t('polls.page.cta.results')}
                 </Link>
               </div>
             </div>
@@ -249,11 +313,7 @@ export default function PollsPage() {
 
       {pagination.totalPages > 1 && (
         <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <span>
-            Showing {(pagination.currentPage - 1) * pagination.itemsPerPage + 1}–
-            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalResults)} of{' '}
-            {pagination.totalResults} polls
-          </span>
+          <span>{paginationLabel}</span>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -261,10 +321,10 @@ export default function PollsPage() {
               disabled={pagination.currentPage === 1 || isLoading}
               className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Previous
+              {t('polls.page.pagination.previous')}
             </button>
             <span className="text-xs text-gray-500">
-              Page {pagination.currentPage} of {pagination.totalPages}
+              {paginationPageLabel}
             </span>
             <button
               type="button"
@@ -272,7 +332,7 @@ export default function PollsPage() {
               disabled={pagination.currentPage === pagination.totalPages || isLoading}
               className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Next
+              {t('polls.page.pagination.next')}
             </button>
           </div>
         </div>

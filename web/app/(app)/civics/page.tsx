@@ -2,7 +2,7 @@
 
 /**
  * Civics Main Page
- * 
+ *
  * Beautiful, mobile-first civics platform with:
  * - Rich representative data
  * - Beautiful candidate cards
@@ -10,8 +10,8 @@
  * - FREE APIs integration
  */
 
-import { 
-  MagnifyingGlassIcon, 
+import {
+  MagnifyingGlassIcon,
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
@@ -25,10 +25,16 @@ import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 // Lazy load heavy components to reduce initial bundle size
-const RepresentativeCard = dynamic(() => import('@/components/representative/RepresentativeCard').then(mod => ({ default: mod.RepresentativeCard })), {
+const RepresentativeCard = dynamic(
+  () =>
+    import('@/features/civics/components/representative/RepresentativeCard').then((mod) => ({
+      default: mod.RepresentativeCard,
+    })),
+  {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg" />,
   ssr: false
-});
+  }
+);
 
 const UnifiedFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.UnifiedFeedRefactored })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
@@ -44,7 +50,7 @@ export default function Civics2Page() {
   const [_likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
-  
+
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
   const isMobile = useIsMobile();
@@ -53,11 +59,11 @@ export default function Civics2Page() {
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
-    
+
     try {
       const response = await fetch(`/api/v1/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
       logger.info('📡 Response status', { status: response.status });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to load representatives: ${response.status}`);
       }
@@ -85,10 +91,10 @@ export default function Civics2Page() {
     const checkMobile = () => {
       // Device detection is handled by appStore
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -200,7 +206,7 @@ export default function Civics2Page() {
                 )}
               </div>
             </button>
-            
+
             <button
               onClick={() => setActiveTab('feed')}
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
@@ -295,8 +301,8 @@ export default function Civics2Page() {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">No representatives found</h3>
                   <p className="text-gray-600 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
-                  <button 
-                    onClick={() => window.location.reload()} 
+                  <button
+                    onClick={() => window.location.reload()}
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Refresh
@@ -341,7 +347,7 @@ export default function Civics2Page() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">State Filter</label>
-                        <select 
+                        <select
                           data-testid="state-filter"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           value={selectedState}
@@ -356,7 +362,7 @@ export default function Civics2Page() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Level Filter</label>
-                        <select 
+                        <select
                           data-testid="level-filter"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           value={selectedLevel}
@@ -370,7 +376,7 @@ export default function Civics2Page() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Quality Filter</label>
-                        <select 
+                        <select
                           data-testid="quality-filter"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
@@ -400,7 +406,7 @@ export default function Civics2Page() {
                   {/* Comprehensive Candidate Cards */}
                   <div className={`grid gap-8 ${
                     isMobile === true
-                        ? 'grid-cols-1 max-w-lg mx-auto' 
+                        ? 'grid-cols-1 max-w-lg mx-auto'
                         : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
               }`}>
                 {filteredRepresentatives.map((representative) => {
@@ -413,7 +419,7 @@ export default function Civics2Page() {
                     level: representative.level,
                     state: representative.state,
                     data_quality_score: representative.dataQualityScore ?? 0,
-                    verification_status: representative.verificationStatus === 'verified' ? 'verified' : 
+                    verification_status: representative.verificationStatus === 'verified' ? 'verified' :
                                         representative.verificationStatus === 'pending' ? 'pending' : 'failed',
                     data_sources: representative.dataSource ?? [],
                     created_at: new Date().toISOString(),
@@ -431,7 +437,7 @@ export default function Civics2Page() {
                     term_end_date: representative.termEnd,
                     next_election_date: representative.nextElection
                   });
-                  
+
                   return (
                     <RepresentativeCard
                       key={representative.id}

@@ -3,6 +3,7 @@
 import { BarChart3, Clock, Flame, Hash, Search, TrendingUp } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   useHashtagActions,
   useHashtagStats,
@@ -39,6 +40,7 @@ type PollFiltersPanelProps = {
  * Consumers can optionally provide specific action overrides (useful for tests).
  */
 export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
+  const { t, currentLanguage } = useI18n();
   const filters = usePollFilters();
   const search = usePollSearch();
   const {
@@ -196,6 +198,19 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
   );
 
   const trendingCount = hashtagStats?.trendingCount ?? 0;
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
+  const formattedTrendingCount = numberFormatter.format(trendingCount);
+  const trendingHeading =
+    trendingCount > 0
+      ? t('polls.filters.trending.headingWithCount', { count: formattedTrendingCount })
+      : t('polls.filters.trending.heading');
+  const trendingCountLabel = t('polls.filters.trending.count', {
+    count: trendingCount,
+    formattedCount: formattedTrendingCount,
+  });
 
   return (
     <div className="mb-8 space-y-6">
@@ -204,7 +219,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <input
             type="text"
-            placeholder="Search polls, hashtags, or topics..."
+            placeholder={t('polls.filters.search.placeholder')}
             value={search.query ?? ''}
             onChange={handleSearchInputChange}
             onKeyDown={(event) => {
@@ -214,11 +229,14 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
               }
             }}
             className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+            aria-label={t('polls.filters.search.ariaLabel')}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Filter by Hashtags:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('polls.filters.hashtags.label')}
+          </label>
           <div className="flex flex-wrap gap-2">
             {selectedHashtags.map((hashtag) => (
               <span
@@ -229,7 +247,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                 <button
                   onClick={() => handleHashtagRemove(hashtag)}
                   className="ml-1 text-blue-500 hover:text-blue-700"
-                  aria-label={`Remove ${hashtag} filter`}
+                  aria-label={t('polls.filters.hashtags.remove', { hashtag })}
                 >
                   ×
                 </button>
@@ -237,7 +255,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
             ))}
             <input
               type="text"
-              placeholder="Add hashtags to filter polls..."
+              placeholder={t('polls.filters.hashtags.addPlaceholder')}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && event.currentTarget.value.trim()) {
                   const newHashtag = event.currentTarget.value.trim().replace(/^#/, '');
@@ -246,7 +264,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                 }
               }}
               className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Add hashtag filter"
+              aria-label={t('polls.filters.hashtags.addAria')}
             />
           </div>
         </div>
@@ -254,10 +272,10 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
 
       <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
         {[
-          { id: 'all', label: 'All', icon: BarChart3 },
-          { id: 'active', label: 'Active', icon: TrendingUp },
-          { id: 'trending', label: 'Trending', icon: Flame },
-          { id: 'closed', label: 'Closed', icon: Clock },
+          { id: 'all', label: t('polls.filters.status.all'), icon: BarChart3 },
+          { id: 'active', label: t('polls.filters.status.active'), icon: TrendingUp },
+          { id: 'trending', label: t('polls.filters.status.trending'), icon: Flame },
+          { id: 'closed', label: t('polls.filters.status.closed'), icon: Clock },
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -273,8 +291,12 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button
+      <div>
+        <span className="mb-2 block text-sm font-medium text-gray-700">
+          {t('polls.filters.categories.label')}
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <button
           onClick={() => handleCategoryChange('all')}
           className={cn(
             'rounded-full px-3 py-1 text-sm font-medium transition-colors',
@@ -283,7 +305,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
           )}
         >
-          All Categories
+          {t('polls.filters.categories.all')}
         </button>
         {POLL_CATEGORIES.map((category) => (
           <button
@@ -296,18 +318,21 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
             )}
           >
-            {category.icon} {category.name}
+            {category.icon} {t(category.nameKey)}
           </button>
         ))}
+        </div>
       </div>
 
       {trendingHashtags.length > 0 && (
         <div className="mt-4 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
-            <h3 className="text-sm font-semibold text-gray-900">
-              Trending Hashtags {trendingCount ? `(${trendingCount})` : ''}
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-900">{trendingHeading}</h3>
+          </div>
+          <div className="mb-2 flex items-center text-sm text-gray-600">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            <span>{trendingCountLabel}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {trendingHashtags.slice(0, 10).map((hashtag: any, index: number) => (

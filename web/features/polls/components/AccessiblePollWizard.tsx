@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
@@ -14,6 +14,7 @@ import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/s
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useNotificationActions } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 const MAX_OPTIONS = 10;
 const MAX_TAG_LENGTH = 50;
@@ -81,6 +82,8 @@ export function AccessiblePollWizard() {
   const assertiveLiveRef = useRef<HTMLDivElement>(null);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
   const shareDialogTitleRef = useRef<HTMLHeadingElement>(null);
+  const shareDialogRef = useRef<HTMLDivElement>(null);
+  const copyButtonRef = useRef<HTMLButtonElement>(null);
 
   const [lastAnnouncedStep, setLastAnnouncedStep] = useState<string | null>(null);
   const [lastAnnouncedError, setLastAnnouncedError] = useState<string | null>(null);
@@ -504,10 +507,27 @@ export function AccessiblePollWizard() {
     handleCloseShareDialog();
   };
 
-  const shareUrl =
-    shareInfo && typeof window !== 'undefined'
-      ? `${window.location.origin}/polls/${shareInfo.pollId}`
-      : '';
+  const shareUrl = useMemo(() => {
+    if (shareInfo && typeof window !== 'undefined') {
+      return `${window.location.origin}/polls/${shareInfo.pollId}`;
+    }
+    return '';
+  }, [shareInfo?.pollId]);
+
+  const isShareOpen = Boolean(shareInfo);
+
+  useAccessibleDialog({
+    isOpen: isShareOpen,
+    dialogRef: shareDialogRef,
+    ...(isShareOpen
+      ? {
+          initialFocusRef: copyButtonRef,
+          ariaLabelId: 'share-dialog-title',
+          liveMessage: 'Share dialog opened. Copy the link or view the published poll.',
+        }
+      : {}),
+    onClose: handleCloseShareDialog,
+  });
 
   useEffect(() => {
     if (shareInfo) {
@@ -1141,16 +1161,19 @@ export function AccessiblePollWizard() {
       </main>
 
       <Dialog
-        open={Boolean(shareInfo)}
+        open={isShareOpen}
         onOpenChange={(open) => (open ? undefined : handleCloseShareDialog())}
       >
         <DialogContent
           aria-live="polite"
           aria-modal="true"
           aria-describedby="share-dialog-description share-dialog-link"
+          ref={shareDialogRef}
         >
           <DialogHeader>
-            <DialogTitle ref={shareDialogTitleRef}>Share your poll</DialogTitle>
+            <DialogTitle id="share-dialog-title" ref={shareDialogTitleRef}>
+              Share your poll
+            </DialogTitle>
             <DialogDescription id="share-dialog-description">
               Spread the word so people can vote on <strong>{shareInfo?.title}</strong>.
             </DialogDescription>
@@ -1163,7 +1186,7 @@ export function AccessiblePollWizard() {
               </label>
               <div className="flex gap-2">
                 <Input id="share-link-input" value={shareUrl} readOnly className="flex-1" aria-describedby="share-dialog-link" />
-                <Button type="button" onClick={handleCopyShareLink} variant="secondary">
+                <Button type="button" onClick={handleCopyShareLink} variant="secondary" ref={copyButtonRef}>
                   {hasCopiedShareLink ? 'Copied!' : 'Copy'}
                 </Button>
               </div>

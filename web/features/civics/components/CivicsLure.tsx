@@ -9,11 +9,16 @@ import {
   Star,
   Shield,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  CalendarClock,
 } from 'lucide-react';
 import React, { useEffect, useMemo } from 'react';
 
-import { useUserCurrentAddress, useUserRepresentatives } from '@/lib/stores';
+import {
+  useUserCurrentAddress,
+  useUserRepresentatives,
+  useAnalyticsActions,
+} from '@/lib/stores';
 import {
   useFindByLocation,
   useLocationRepresentatives,
@@ -21,6 +26,9 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
+import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
+import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
+import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
 
 type CivicsLureProps = {
   userLocation?: string;
@@ -89,6 +97,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
   const isLoading = useRepresentativeGlobalLoading();
   const findByLocation = useFindByLocation();
   const followedRepresentatives = useUserRepresentatives();
+  const { trackEvent } = useAnalyticsActions();
 
   const locationLabel = userLocation ?? storedAddress;
 
@@ -107,6 +116,27 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       }
     })();
   }, [findByLocation, locationLabel, locationRepresentatives.length]);
+
+  const divisionIds = useMemo(() => {
+    const divisions = new Set<string>();
+    for (const representative of locationRepresentatives) {
+      const source = representative.ocdDivisionIds ?? representative.division_ids ?? [];
+      if (!Array.isArray(source)) continue;
+      source
+        .map((value) => (typeof value === 'string' ? value.trim() : null))
+        .filter((value): value is string => Boolean(value))
+        .forEach((value) => divisions.add(value));
+    }
+    return Array.from(divisions);
+  }, [locationRepresentatives]);
+
+  const {
+    elections: upcomingElections,
+    nextElection,
+    daysUntilNextElection,
+    loading: electionLoading,
+    error: electionError,
+  } = useElectionCountdown(divisionIds);
 
   const candidateSummaries = useMemo<CandidateSummary[]>(() => {
     if (!locationRepresentatives.length) {
@@ -189,6 +219,26 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
     return null;
   }, [locationRepresentatives]);
 
+  const handleEngage = () => {
+    trackEvent?.({
+      event_type: 'civics_lure_engage',
+      type: 'civics',
+      category: 'civics',
+      action: 'engage',
+      label: locationLabel ?? undefined,
+      session_id: '',
+      event_data: {
+        hasLocation: Boolean(locationLabel),
+        representativeCount: locationRepresentatives.length,
+        upcomingElectionId: nextElection?.election_id ?? null,
+        upcomingElectionDay: nextElection?.election_day ?? null,
+        electionCountdownDays: daysUntilNextElection,
+      },
+      created_at: new Date().toISOString(),
+    });
+    onEngage();
+  };
+
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200 rounded-2xl p-6 mb-8">
       {/* Header */}
@@ -229,7 +279,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       )}
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-5 h-5 text-blue-600" />
@@ -268,7 +318,53 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
             Representatives you’re tracking
           </div>
         </div>
+
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <CalendarClock className="w-5 h-5 text-purple-600" />
+            <span className="font-semibold text-gray-900">Next Election</span>
+          </div>
+          {divisionIds.length === 0 ? (
+            <div className="text-sm text-gray-500">
+              Add your address to see district elections.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <ElectionCountdownBadge
+                className="justify-start"
+                loading={electionLoading}
+                error={electionError}
+                nextElection={nextElection ?? null}
+                daysUntil={daysUntilNextElection}
+                totalUpcoming={upcomingElections.length}
+                emptyMessage="No elections recorded for your divisions."
+                loadingMessage="Checking…"
+                errorMessage="Election data unavailable"
+              />
+              {daysUntilNextElection != null && daysUntilNextElection > 90 && (
+                <p className="text-xs text-gray-500">
+                  Next election is more than 90 days away.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {divisionIds.length > 0 && (
+        <ElectionCountdownCard
+          className="mb-6"
+          title="Election calendar"
+          description="Key dates across your divisions."
+          loading={electionLoading}
+          error={electionError}
+          elections={upcomingElections}
+          nextElection={nextElection}
+          daysUntilNextElection={daysUntilNextElection}
+          totalUpcoming={upcomingElections.length}
+          ariaLabel="Upcoming elections for your divisions"
+        />
+      )}
 
       {/* Candidate Preview */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
@@ -382,7 +478,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       {/* Call to Action */}
       <div className="text-center mt-6">
         <button
-          onClick={onEngage}
+          onClick={handleEngage}
           className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center mx-auto"
         >
           <span>See All My Local Candidates</span>

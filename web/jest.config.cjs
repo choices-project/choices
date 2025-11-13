@@ -54,7 +54,7 @@ module.exports = {
     },
     {
       displayName: 'server',
-      testEnvironment: 'node',
+      testEnvironment: 'jsdom',
       testTimeout: 25000, // 25 seconds for server tests
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [

@@ -60,22 +60,6 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Home page on desktop"
-    },
-    {
-      "src": "/screenshots/mobile-poll.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Poll voting on mobile"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Create Poll",
@@ -84,8 +68,9 @@
       "url": "/create",
       "icons": [
         {
-          "src": "/icons/shortcut-create.png",
-          "sizes": "96x96"
+          "src": "/icons/shortcut-create.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -96,8 +81,9 @@
       "url": "/my-polls",
       "icons": [
         {
-          "src": "/icons/shortcut-mypolls.png",
-          "sizes": "96x96"
+          "src": "/icons/shortcut-mypolls.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
         }
       ]
     }

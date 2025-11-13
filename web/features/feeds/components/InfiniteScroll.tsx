@@ -15,6 +15,8 @@
 import { ChevronUpIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
+
 type InfiniteScrollProps = {
   children: React.ReactNode;
   onLoadMore: () => Promise<void>;
@@ -46,6 +48,7 @@ export default function InfiniteScroll({
   endComponent,
   scrollToTopThreshold = 5
 }: InfiniteScrollProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastItemRef = useRef<HTMLDivElement>(null);
@@ -153,15 +156,15 @@ export default function InfiniteScroll({
   const defaultLoadingComponent = (
     <div className="flex items-center justify-center py-8">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-      <span className="ml-3 text-gray-500">Loading more...</span>
+      <span className="ml-3 text-gray-500">{t('feeds.infiniteScroll.loadingMore')}</span>
     </div>
   );
 
   // Default end component
   const defaultEndComponent = (
     <div className="text-center py-8 text-gray-500">
-      <p>You&apos;ve reached the end of the feed</p>
-      <p className="text-sm mt-1">Check back later for more updates</p>
+      <p>{t('feeds.infiniteScroll.end.heading')}</p>
+      <p className="text-sm mt-1">{t('feeds.infiniteScroll.end.body')}</p>
     </div>
   );
 
@@ -180,12 +183,12 @@ export default function InfiniteScroll({
             {pullDistance > 50 ? (
               <div className="flex items-center space-x-2 text-blue-500">
                 <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                <span className="text-sm font-medium">Release to refresh</span>
+                <span className="text-sm font-medium">{t('feeds.infiniteScroll.pull.release')}</span>
               </div>
             ) : (
               <div className="flex items-center space-x-2 text-gray-500">
                 <ArrowPathIcon className="w-5 h-5" />
-                <span className="text-sm">Pull to refresh</span>
+                <span className="text-sm">{t('feeds.infiniteScroll.pull.hint')}</span>
               </div>
             )}
           </div>
@@ -197,7 +200,7 @@ export default function InfiniteScroll({
         <div className="absolute top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 py-4">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
-            <span className="ml-2 text-gray-500">Refreshing...</span>
+            <span className="ml-2 text-gray-500">{t('feeds.infiniteScroll.refreshing')}</span>
           </div>
         </div>
       )}
@@ -242,7 +245,7 @@ export default function InfiniteScroll({
         <button
           onClick={handleScrollToTop}
           className="fixed bottom-4 right-4 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-200 z-20"
-          aria-label="Scroll to top"
+          aria-label={t('feeds.infiniteScroll.scrollToTopAria')}
         >
           <ChevronUpIcon className="w-6 h-6" />
         </button>

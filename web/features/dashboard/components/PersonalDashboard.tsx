@@ -36,7 +36,9 @@ import React, {
   useState,
 } from 'react';
 
-import { RepresentativeCard } from '@/components/representative/RepresentativeCard';
+import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
+import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
+import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -177,6 +179,8 @@ export default function PersonalDashboard({ userId: fallbackUserId, className = 
     setPreferences(resolvedDashboardPreferences);
     preferencesRef.current = resolvedDashboardPreferences;
   }, [resolvedDashboardPreferences]);
+
+  const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
 
   useEffect(() => {
     if (!isAuthenticated || hasRequestedTrending.current) {
@@ -455,6 +459,39 @@ export default function PersonalDashboard({ userId: fallbackUserId, className = 
 
   const visibleRepresentatives = useMemo(() => representatives.slice(0, 3), [representatives]);
 
+  const representativeDivisionIds = useMemo(() => {
+    const divisions = new Set<string>();
+    representativeEntries.forEach((entry) => {
+      const candidate =
+        entry?.representative?.division_ids ??
+        entry?.representative?.ocdDivisionIds ??
+        [];
+      if (!Array.isArray(candidate)) {
+        return;
+      }
+      candidate.forEach((division) => {
+        if (typeof division === 'string') {
+          const value = division.trim();
+          if (value.length > 0) {
+            divisions.add(value);
+          }
+        }
+      });
+    });
+    return Array.from(divisions);
+  }, [representativeEntries]);
+
+  const {
+    elections: representativeElections,
+    nextElection: representativeNextElection,
+    daysUntilNextElection: representativeCountdown,
+    loading: representativeElectionsLoading,
+    error: representativeElectionsError,
+  } = useElectionCountdown(representativeDivisionIds, {
+    autoFetch: showElectedOfficials,
+    clearOnEmpty: true,
+  });
+
   if (!isAuthenticated && !isUserLoading) {
     return (
       <div className={`space-y-6 ${className}`}>
@@ -504,8 +541,6 @@ export default function PersonalDashboard({ userId: fallbackUserId, className = 
       </div>
     );
   }
-
-  const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
 
   return (
     <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
@@ -699,6 +734,25 @@ export default function PersonalDashboard({ userId: fallbackUserId, className = 
                     </CardDescription>
                   </CardHeader>
                   <CardContent className='space-y-4'>
+                    <div className='space-y-2'>
+                      {representativeDivisionIds.length === 0 ? (
+                        <div className='rounded-lg bg-purple-50 px-3 py-2 text-sm text-purple-700 dark:bg-purple-900/30 dark:text-purple-200'>
+                          Add your address to see district elections.
+                        </div>
+                      ) : (
+                        <ElectionCountdownCard
+                          title='Upcoming elections'
+                          description='Key dates tied to your saved divisions.'
+                          loading={representativeElectionsLoading}
+                          error={representativeElectionsError}
+                          elections={representativeElections}
+                          nextElection={representativeNextElection}
+                          daysUntilNextElection={representativeCountdown}
+                          totalUpcoming={representativeElections.length}
+                          ariaLabel='Upcoming elections for your representatives'
+                        />
+                      )}
+                    </div>
                     {representativeLoading && visibleRepresentatives.length === 0 ? (
                       <div className='space-y-3' data-testid='representatives-loading'>
                         <Skeleton className='h-20 w-full rounded-lg' />

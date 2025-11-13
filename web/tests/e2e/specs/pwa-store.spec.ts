@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import type { PWAStoreHarness } from '@/app/(app)/e2e/pwa-store/page';
 
+import { runAxeAudit } from '../helpers/accessibility';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
@@ -15,11 +16,15 @@ const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/pwa-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__pwaStoreHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.pwaStoreHarness === 'ready'
+  );
 };
 
 test.describe('PWA store harness', () => {
   test('drives install, offline queue, notifications, and reset flows', async ({ page }) => {
     await gotoHarness(page);
+    await runAxeAudit(page, 'pwa status harness initial');
 
     const installed = page.getByTestId('pwa-installed');
     const installable = page.getByTestId('pwa-installable');
@@ -48,6 +53,7 @@ test.describe('PWA store harness', () => {
 
     await expect(installable).toHaveText('true');
     await expect(installed).toHaveText('true');
+    await runAxeAudit(page, 'pwa status post-install');
 
     await page.evaluate(() => {
       window.__pwaStoreHarness?.setOfflineData({
@@ -77,6 +83,7 @@ test.describe('PWA store harness', () => {
     await expect(queueUpdated).not.toHaveText('never');
     await expect(online).toHaveText('false');
     await expect(syncing).toHaveText('true');
+    await runAxeAudit(page, 'pwa status offline queued actions');
 
     await page.evaluate(() => {
       window.__pwaStoreHarness?.updatePreferences({

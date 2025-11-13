@@ -100,6 +100,7 @@ jest.mock('next/server', () => ({
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
+    configurable: true,
     value: jest.fn().mockImplementation(query => ({
       matches: false,
       media: query,
@@ -115,10 +116,7 @@ if (typeof window !== 'undefined') {
   // Mock performance API
   let performanceStartTime = Date.now();
   const performanceMock = {
-    now: jest.fn(() => {
-      // Return a value that's always > 0 to ensure calculationTime is tracked
-      return Math.max(1, Date.now() - performanceStartTime);
-    }),
+    now: jest.fn(() => Math.max(1, Date.now() - performanceStartTime)),
     mark: jest.fn(),
     measure: jest.fn(),
     getEntriesByType: jest.fn(() => []),
@@ -129,28 +127,163 @@ if (typeof window !== 'undefined') {
     }
   };
 
-  // Mock for browser environment
   Object.defineProperty(window, 'performance', {
-    value: performanceMock
+    value: performanceMock,
+    configurable: true,
+    writable: true
   });
 
-  // Mock for Node.js environment
   Object.defineProperty(global, 'performance', {
-    value: performanceMock
+    value: performanceMock,
+    configurable: true,
+    writable: true
   });
 
-  // Mock navigator
-  Object.defineProperty(window, 'navigator', {
-    value: {
-      ...window.navigator,
-      connection: {
-        effectiveType: '4g',
-        downlink: 10,
-        rtt: 50
-      },
-      standalone: false,
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+  let navigatorValue = window.navigator;
+
+  const defineNavigatorAccessor = (key, resolveInitial) => {
+    let current = resolveInitial();
+    try {
+      Object.defineProperty(navigatorValue, key, {
+        configurable: true,
+        get: () => current,
+        set: (value) => {
+          current = value;
+        },
+      });
+    } catch {
+      try {
+        navigatorValue[key] = current;
+      } catch {
+        // ignore non-configurable properties
+      }
     }
+    return () => current;
+  };
+
+  defineNavigatorAccessor('connection', () => {
+    const existing = navigatorValue && navigatorValue.connection;
+    if (existing) {
+      return existing;
+    }
+    return {
+      effectiveType: '4g',
+      downlink: 10,
+      rtt: 50,
+      saveData: false,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+  });
+
+  defineNavigatorAccessor('standalone', () => {
+    const existing = navigatorValue && typeof navigatorValue.standalone === 'boolean'
+      ? navigatorValue.standalone
+      : undefined;
+    return typeof existing === 'boolean' ? existing : false;
+  });
+
+  defineNavigatorAccessor('onLine', () => {
+    const existing = navigatorValue && typeof navigatorValue.onLine === 'boolean'
+      ? navigatorValue.onLine
+      : undefined;
+    return typeof existing === 'boolean' ? existing : true;
+  });
+
+  defineNavigatorAccessor('language', () => {
+    const existing = navigatorValue.language;
+    return typeof existing === 'string' && existing.length > 0 ? existing : 'en-US';
+  });
+  defineNavigatorAccessor('platform', () => {
+    const existing = navigatorValue.platform;
+    return typeof existing === 'string' && existing.length > 0 ? existing : 'jest-test';
+  });
+
+  Object.defineProperty(window, 'navigator', {
+    configurable: true,
+    get() {
+      return navigatorValue;
+    },
+    set(value) {
+      navigatorValue = value;
+    },
+  });
+
+  Object.defineProperty(global, 'navigator', {
+    configurable: true,
+    get() {
+      return navigatorValue;
+    },
+    set(value) {
+      navigatorValue = value;
+    },
+  });
+
+  if (typeof window.PublicKeyCredential === 'undefined') {
+    class MockPublicKeyCredential {
+      constructor() {
+        this.id = 'mock-public-key';
+        this.rawId = new ArrayBuffer(16);
+        this.response = {
+          attestationObject: new ArrayBuffer(0),
+          clientDataJSON: new ArrayBuffer(0)
+        };
+      }
+
+      getClientExtensionResults() {
+        return {};
+      }
+
+      static isUserVerifyingPlatformAuthenticatorAvailable = jest
+        .fn()
+        .mockResolvedValue(true);
+    }
+
+    Object.defineProperty(window, 'PublicKeyCredential', {
+      value: MockPublicKeyCredential,
+      configurable: true,
+      writable: true
+    });
+
+    Object.defineProperty(global, 'PublicKeyCredential', {
+      value: MockPublicKeyCredential,
+      configurable: true,
+      writable: true
+    });
+  } else if (
+    typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== 'function'
+  ) {
+    window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = jest
+      .fn()
+      .mockResolvedValue(true);
+  }
+
+  defineNavigatorAccessor('credentials', () => {
+    const existing = navigatorValue && navigatorValue.credentials;
+    const container =
+      existing ??
+      {
+        create: jest.fn(async () => new window.PublicKeyCredential()),
+        get: jest.fn(async () => null),
+      };
+
+    if (typeof container.create !== 'function') {
+      container.create = jest.fn(async () => new window.PublicKeyCredential());
+    }
+    if (typeof container.get !== 'function') {
+      container.get = jest.fn(async () => null);
+    }
+    return container;
+  });
+
+  Object.defineProperty(global.navigator, 'credentials', {
+    configurable: true,
+    get() {
+      return navigatorValue.credentials;
+    },
+    set(value) {
+      navigatorValue.credentials = value;
+    },
   });
 }
 
@@ -223,3 +356,11 @@ jest.mock('@/lib/civics/privacy-utils', () => ({
 jest.mock('@/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn(),
 }));
+
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (fn, ...args) => setTimeout(fn, 0, ...args);
+}
+
+if (typeof global.clearImmediate === 'undefined') {
+  global.clearImmediate = (id) => clearTimeout(id);
+}

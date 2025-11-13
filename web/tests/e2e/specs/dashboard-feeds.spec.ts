@@ -17,7 +17,12 @@ declare global {
 const gotoFeedsHarness = async (page: Page) => {
   await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__feedsStoreHarness));
+  await page.waitForFunction(() => {
+    const isReady =
+      typeof document !== 'undefined' &&
+      document.documentElement.dataset.feedsStoreHarness === 'ready';
+    return isReady || Boolean(window.__feedsStoreHarness);
+  });
   await page.evaluate(() => {
     window.__feedsStoreHarness?.actions.resetFeedsState({
       preserveFilters: false,

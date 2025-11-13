@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PollRow } from '@/features/polls/types';
+import { useI18n } from '@/hooks/useI18n';
 
 type PollCardProps = {
   poll: PollRow;
@@ -30,55 +31,63 @@ const getStatusColor = (status: PollRow['status']) => {
   }
 };
 
-const getVotingMethodLabel = (method: string | null | undefined) => {
-  const normalized = method ?? 'single';
-  switch (normalized) {
-    case 'single':
-    case 'single-choice':
-      return 'Single Choice';
-    case 'approval':
-      return 'Approval';
-    case 'ranked':
-    case 'ranked-choice':
-      return 'Ranked Choice';
-    case 'quadratic':
-      return 'Quadratic';
-    case 'range':
-      return 'Range';
-    case 'multiple':
-    case 'multiple-choice':
-      return 'Multiple Choice';
-    default:
-      return 'Unknown';
-  }
-};
-
-const formatDate = (dateString: string | null | undefined) => {
-  if (!dateString) return '—';
-  const d = new Date(dateString);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const formatTime = (dateString: string | null | undefined) => {
-  if (!dateString) return '—';
-  const d = new Date(dateString);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className = '' }) => {
+  const { t, currentLanguage } = useI18n();
+
+  const votingMethodLabels: Record<string, string> = {
+    single: t('polls.card.votingMethod.single'),
+    'single-choice': t('polls.card.votingMethod.single'),
+    approval: t('polls.card.votingMethod.approval'),
+    ranked: t('polls.card.votingMethod.ranked'),
+    'ranked-choice': t('polls.card.votingMethod.ranked'),
+    quadratic: t('polls.card.votingMethod.quadratic'),
+    range: t('polls.card.votingMethod.range'),
+    multiple: t('polls.card.votingMethod.multiple'),
+    'multiple-choice': t('polls.card.votingMethod.multiple'),
+  };
+
+  const statusLabels: Record<string, string> = {
+    active: t('polls.card.status.active'),
+    closed: t('polls.card.status.closed'),
+    draft: t('polls.card.status.draft'),
+    archived: t('polls.card.status.archived'),
+  };
+
+  const getVotingMethodLabel = (method: string | null | undefined) => {
+    const normalized = (method ?? 'single').toLowerCase();
+    return votingMethodLabels[normalized] ?? t('polls.card.votingMethod.unknown');
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(d);
+  };
+
+  const formatTime = (dateString: string | null | undefined) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  };
+
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat(currentLanguage ?? undefined, {
+      maximumFractionDigits: 0,
+    }).format(value);
+
   const createdBy =
     (poll as PollRow & { created_by?: string | null; owner_name?: string | null }).created_by ??
     (poll as PollRow & { owner_name?: string | null }).owner_name ??
-    'Unknown';
+    null;
 
   const optionsArray = Array.isArray((poll as PollRow & { options?: string[] | null }).options)
     ? ((poll as PollRow & { options?: string[] | null }).options as string[])
@@ -99,7 +108,8 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
   const votingMethod = (poll as PollRow & { voting_method?: string | null }).voting_method ?? null;
 
   const status = poll.status ?? 'draft';
-  const displayTitle = poll.title ?? (poll as PollRow & { question?: string | null }).question ?? 'Untitled Poll';
+  const displayTitle =
+    poll.title ?? (poll as PollRow & { question?: string | null }).question ?? t('polls.card.untitled');
 
   const optionsPreview = optionsArray.slice(0, 3);
   const optionsCount = optionsArray.length;
@@ -114,7 +124,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{poll.description}</p>
             )}
           </div>
-          <Badge className={`ml-2 shrink-0 ${getStatusColor(status)}`}>{status}</Badge>
+          <Badge className={`ml-2 shrink-0 ${getStatusColor(status)}`}>{statusLabels[status] ?? status}</Badge>
         </div>
       </CardHeader>
 
@@ -122,20 +132,20 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
         <div className="space-y-2 mb-4">
           <div className="flex items-center text-sm text-gray-600">
             <User className="w-4 h-4 mr-2" />
-            <span>Created by {createdBy || 'Unknown'}</span>
+            <span>
+              {t('polls.card.createdBy', { name: createdBy ?? t('polls.card.unknownCreator') })}
+            </span>
           </div>
 
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="w-4 h-4 mr-2" />
-            <span>Created {formatDate(createdAt)}</span>
+            <span>{t('polls.card.createdOn', { date: formatDate(createdAt) })}</span>
           </div>
 
           {endTime && (
             <div className="flex items-center text-sm text-gray-600">
               <Clock className="w-4 h-4 mr-2" />
-              <span>
-                Ends {formatDate(endTime)} at {formatTime(endTime)}
-              </span>
+              <span>{t('polls.card.endsOn', { date: formatDate(endTime), time: formatTime(endTime) })}</span>
             </div>
           )}
 
@@ -146,15 +156,17 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
         </div>
 
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Options:</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">{t('polls.card.optionsHeading')}</h4>
           <div className="space-y-1">
             {optionsPreview.map((option, index) => (
               <div key={`option-${option}-${index}`} className="text-sm text-gray-600 truncate">
-                {index + 1}. {option}
+                {t('polls.card.optionItem', { index: index + 1, option })}
               </div>
             ))}
             {optionsCount > 3 && (
-              <div className="text-sm text-gray-500">+{optionsCount - 3} more options</div>
+              <div className="text-sm text-gray-500">
+                {t('polls.card.moreOptions', { count: optionsCount - 3 })}
+              </div>
             )}
           </div>
         </div>
@@ -162,11 +174,16 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
         <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1" />
-            <span>{totalVotes.toLocaleString()} votes</span>
+            <span>{t('polls.card.votes', { count: totalVotes, formattedCount: formatNumber(totalVotes) })}</span>
           </div>
           <div className="flex items-center">
             <BarChart3 className="w-4 h-4 mr-1" />
-            <span>{participation.toLocaleString()} participation</span>
+            <span>
+              {t('polls.card.participation', {
+                count: participation,
+                formattedCount: formatNumber(participation),
+              })}
+            </span>
           </div>
         </div>
 
@@ -175,13 +192,13 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
             <Button asChild variant="default" className="flex-1">
               <Link href={`/polls/${poll.id}`}>
                 <Eye className="w-4 h-4 mr-2" />
-                View Poll
+                {t('polls.card.actions.view')}
               </Link>
             </Button>
 
             {status === 'active' && (
               <Button asChild variant="outline" className="flex-1">
-                <Link href={`/polls/${poll.id}/vote`}>Vote Now</Link>
+                <Link href={`/polls/${poll.id}/vote`}>{t('polls.card.actions.vote')}</Link>
               </Button>
             )}
           </div>

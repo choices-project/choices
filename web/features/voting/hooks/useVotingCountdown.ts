@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { useVotingActions } from '@/lib/stores/votingStore';
+import { useVotingActions } from '@/features/voting/lib/store';
 
 const formatTimeRemaining = (endTime: Date): string => {
   const now = new Date();

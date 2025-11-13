@@ -10,7 +10,7 @@
  * Updated: December 19, 2024
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import type { AdminNotification } from '@/features/admin/types';
 import {
@@ -18,6 +18,7 @@ import {
   useNotificationAdminUnreadCount,
   useNotificationActions,
 } from '@/lib/stores';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 /**
  * Hook to use admin notification system
@@ -66,6 +67,9 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
     }
   };
 
+  const priority: 'assertive' | 'polite' =
+    notification.type === 'error' || notification.type === 'warning' ? 'assertive' : 'polite';
+
   const getIcon = () => {
     switch (notification.type) {
       case 'success':
@@ -110,6 +114,9 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
         notification.read ? 'opacity-75' : ''
       }`}
       onClick={handleClick}
+      role={priority === 'assertive' ? 'alert' : 'status'}
+      aria-live={priority}
+      aria-atomic="true"
     >
       <div className="flex items-start">
         <div className="flex-shrink-0">
@@ -135,8 +142,12 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
         </div>
         <div className="ml-4 flex-shrink-0">
           <button
-            onClick={handleDismiss}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDismiss();
+            }}
             className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+            aria-label="Dismiss notification"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -156,13 +167,32 @@ export function NotificationContainer() {
     notifications,
     actions: { clearAllNotifications, removeNotification, markAsRead }
   } = useAdminNotificationSystem();
+  const previousCountRef = useRef(0);
+
+  useEffect(() => {
+    if (notifications.length > previousCountRef.current) {
+      const newest = notifications[notifications.length - 1];
+      if (newest) {
+        const priority =
+          newest.type === 'error' || newest.type === 'warning' ? 'assertive' : 'polite';
+        const announcementParts = [newest.title, newest.message]
+          .filter(Boolean)
+          .map((part) => String(part));
+        ScreenReaderSupport.announce(announcementParts.join(': '), priority);
+      }
+    } else if (notifications.length === 0 && previousCountRef.current > 0) {
+      ScreenReaderSupport.announce('All notifications cleared.', 'polite');
+    }
+
+    previousCountRef.current = notifications.length;
+  }, [notifications]);
 
   if (notifications.length === 0) {
     return null;
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-96 max-w-sm">
+    <div className="fixed top-4 right-4 z-50 w-96 max-w-sm" role="region" aria-live="polite">
       <div className="space-y-2">
         {notifications.length > 1 && (
           <div className="flex justify-between items-center mb-2">

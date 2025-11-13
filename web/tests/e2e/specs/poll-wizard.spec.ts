@@ -14,6 +14,9 @@ const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/poll-wizard', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__pollWizardHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.pollWizardHarness === 'ready'
+  );
   await page.evaluate(() => {
     window.__pollWizardHarness?.actions.resetWizard();
     window.__pollWizardHarness?.actions.clearAllErrors();

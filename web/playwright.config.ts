@@ -55,5 +55,13 @@ export default defineConfig({
     port: 3000,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      ...process.env,
+      NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
+      NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
+        process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
+      NEXT_PUBLIC_ENABLE_E2E_HARNESS:
+        process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
+    },
   },
 })

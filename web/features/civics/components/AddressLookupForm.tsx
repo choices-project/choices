@@ -13,10 +13,15 @@
 
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { useUserActions, useUserAddressLoading } from '@/lib/stores';
+import {
+  useUserActions,
+  useUserAddressLoading,
+  useFetchElectionsForDivisions,
+  useUserDivisionIds
+} from '@/lib/stores';
 import {
   useFindByLocation,
   useRepresentativeGlobalLoading,
@@ -37,7 +42,7 @@ type AddressLookupFormProps = {
 
 /**
  * Address lookup form component for finding representatives by address
- * 
+ *
  * @param props - Component props
  * @returns JSX element or null if feature is disabled
  */
@@ -50,6 +55,8 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
   const representativeError = useRepresentativeError();
   const findByLocation = useFindByLocation();
   const clearRepresentativeError = useClearError();
+  const fetchElections = useFetchElectionsForDivisions();
+  const userDivisionIds = useUserDivisionIds();
 
   const isLoading = addressLoading || repLoading;
 
@@ -96,6 +103,11 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     }
   }, [address, clearRepresentativeError, findByLocation, handleAddressUpdate, onLookup]);
 
+  useEffect(() => {
+    if (userDivisionIds.length === 0) return;
+    void fetchElections(userDivisionIds);
+  }, [fetchElections, userDivisionIds]);
+
   return (
     <div className={`civics-address-lookup ${className}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,10 +126,10 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
             disabled={isLoading}
             maxLength={500}
           />
-          
+
           {/* Privacy messaging */}
           <p className="mt-2 text-xs text-gray-500">
-            <strong>Privacy first:</strong> We don&apos;t store your address. We keep a one-way fingerprint 
+            <strong>Privacy first:</strong> We don&apos;t store your address. We keep a one-way fingerprint
             and a rough map square so we can draw anonymous stats. No one can turn that back into your home.
           </p>
         </div>

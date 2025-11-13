@@ -18,7 +18,8 @@ type StepKey =
   | 'committees'
   | 'activity'
   | 'data-sources'
-  | 'google-civic';
+  | 'google-civic'
+  | 'google-elections';
 
 type CliOptions = {
   states?: string[];
@@ -36,6 +37,7 @@ const ALL_STEPS: Array<{ key: StepKey; label: string; file: string }> = [
   { key: 'activity', label: 'Activity', file: './sync-activity.js' },
   { key: 'data-sources', label: 'Data Sources', file: './sync-data-sources.js' },
   { key: 'google-civic', label: 'Google Civic', file: './sync-google-civic.js' },
+  { key: 'google-elections', label: 'Google Elections', file: './sync-google-elections.js' },
 ];
 
 function parseCliOptions(): CliOptions {

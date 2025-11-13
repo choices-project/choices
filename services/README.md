@@ -12,7 +12,7 @@ The `services/` directory hosts standalone tooling that powers the Choices civic
 
 3. **State enrichment** (`civics-backend/src/scripts/state/`)  
    - Refresh OpenStates API–derived contacts, committees, photos, activity, and provenance rows.  
-   - Pull supplemental contacts, social handles, and portraits from the Google Civic Information API.  
+   - Pull supplemental contacts, social handles, portraits, and election metadata from the Google Civic Information API.  
    - Use `state:refresh` to run the full stack (including Google Civic) or `state:sync:*` commands for targeted reruns.  
    - Commands accept `--states`, `--limit`, and `--dry-run` for scoped execution.
 

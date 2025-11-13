@@ -17,12 +17,13 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { shallow } from 'zustand/shallow';
 
-import type { ApiSuccessResponse } from '@/lib/api/types';
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+import { fetchFeedsFromApi, parseFeedSearchPayload } from './services/feedsService';
+import type { PrivacySettings } from '@/types/profile';
 import type {
   FeedCategory,
   FeedFilters,
@@ -36,20 +37,9 @@ import type {
   FeedsState,
   FeedsActions,
   ResetFeedsStateOptions,
+  FeedUpdateInput,
+  FeedInteractionPayload,
 } from './types/feeds';
-
-type FetchFeedsParams = {
-  category?: string | null;
-  district?: string | null;
-  limit?: number;
-  sort?: string | null;
-};
-
-type FeedSearchResponse = {
-  items: FeedItem[];
-  total: number;
-  suggestions?: string[];
-};
 
 const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => {
   switch (sortBy) {
@@ -66,25 +56,6 @@ const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => 
     default:
       return 'trending';
   }
-};
-
-const buildFeedsQueryString = (params: FetchFeedsParams = {}): string => {
-  const searchParams = new URLSearchParams();
-
-  if (params.limit != null) {
-    searchParams.set('limit', String(params.limit));
-  }
-  if (params.category && params.category !== 'all') {
-    searchParams.set('category', params.category);
-  }
-  if (params.district) {
-    searchParams.set('district', params.district);
-  }
-  if (params.sort) {
-    searchParams.set('sort', params.sort);
-  }
-
-  return searchParams.toString();
 };
 
 const filterFeeds = (feeds: FeedItem[], filters: FeedFilters): FeedItem[] => {
@@ -154,98 +125,6 @@ const mergeUniqueFeeds = (current: FeedItem[], incoming: FeedItem[]): FeedItem[]
   return next;
 };
 
-const parseFeedsPayload = (
-  raw: unknown,
-  fallback: Pick<FetchFeedsParams, 'category' | 'district' | 'sort'>
-): FeedsApiPayload => {
-  if (raw && typeof raw === 'object' && 'success' in raw) {
-    const successPayload = raw as ApiSuccessResponse<FeedsApiPayload>;
-    return successPayload.data;
-  }
-
-  if (raw && typeof raw === 'object' && 'feeds' in raw) {
-    const payload = raw as Partial<FeedsApiPayload>;
-    if (Array.isArray(payload.feeds)) {
-      return {
-        feeds: payload.feeds as FeedItem[],
-        count: typeof payload.count === 'number' ? payload.count : payload.feeds.length,
-        filters: {
-          category: payload.filters?.category ?? fallback.category ?? 'all',
-          district: payload.filters?.district ?? fallback.district ?? null,
-          sort: payload.filters?.sort ?? fallback.sort ?? 'trending',
-        },
-      };
-    }
-  }
-
-  if (Array.isArray(raw)) {
-    const feeds = raw as FeedItem[];
-    return {
-      feeds,
-      count: feeds.length,
-      filters: {
-        category: fallback.category ?? 'all',
-        district: fallback.district ?? null,
-        sort: fallback.sort ?? 'trending',
-      },
-    };
-  }
-
-  throw new Error('Invalid feeds response payload');
-};
-
-const fetchFeedsFromApi = async (params: FetchFeedsParams = {}): Promise<FeedsApiPayload> => {
-  const query = buildFeedsQueryString(params);
-  const endpoint = `/api/feeds${query ? `?${query}` : ''}`;
-
-  const response = await fetch(endpoint, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch feeds (status ${response.status})`);
-  }
-
-  const raw = await response.json();
-  return parseFeedsPayload(raw, {
-    category: params.category ?? 'all',
-    district: params.district ?? null,
-    sort: params.sort ?? 'trending',
-  });
-};
-
-const parseFeedSearchPayload = (raw: unknown): FeedSearchResponse => {
-  if (raw && typeof raw === 'object' && 'success' in raw) {
-    const successPayload = raw as ApiSuccessResponse<FeedSearchResponse>;
-    return successPayload.data;
-  }
-
-  if (raw && typeof raw === 'object' && 'items' in raw) {
-    const payload = raw as Partial<FeedSearchResponse>;
-    if (Array.isArray(payload.items) && typeof payload.total === 'number') {
-      return {
-        items: payload.items as FeedItem[],
-        total: payload.total,
-        suggestions: payload.suggestions ?? [],
-      };
-    }
-  }
-
-  if (Array.isArray(raw)) {
-    const items = raw as FeedItem[];
-    return {
-      items,
-      total: items.length,
-      suggestions: [],
-    };
-  }
-
-  throw new Error('Invalid feed search response payload');
-};
-
 // Default feed preferences
 const defaultPreferences: FeedPreferences = {
   defaultView: 'list',
@@ -302,7 +181,7 @@ const assignDefined = <T extends Record<string, unknown>>(
   return next as T;
 };
 
-const mergeFeed = (feed: FeedItem, updates: Partial<FeedItem>) =>
+const mergeFeed = (feed: FeedItem, updates: FeedUpdateInput) =>
   assignDefined(feed, updates);
 
 const mergeUserInteraction = (
@@ -367,6 +246,20 @@ const prependItem = <T>(items: T[], item: T): T[] => {
   const next = items.slice();
   next.unshift(item);
   return next;
+};
+
+const hasFeedActivityConsent = (settings: PrivacySettings | null): boolean =>
+  hasPrivacyConsent(settings, PrivacyDataType.FEED_ACTIVITY);
+
+const withFeedAnalyticsConsent = async <T>(
+  state: FeedsState,
+  handler: () => Promise<T> | T,
+): Promise<T | undefined> => {
+  if (!hasFeedActivityConsent(state.privacySettings)) {
+    logger.debug('Feed interaction not tracked - privacy consent missing.');
+    return undefined;
+  }
+  return handler();
 };
 
 type FeedsStoreCreator = StateCreator<
@@ -625,12 +518,8 @@ const createFeedsActions = (
       }),
     likeFeed: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
-      if (!canTrack) {
+      if (!hasFeedActivityConsent(currentState.privacySettings)) {
         logger.debug('Feed like not tracked - no user consent', { feedId: id });
       }
 
@@ -643,24 +532,20 @@ const createFeedsActions = (
             engagement: mergeEngagement(feed.engagement, {
               likes: feed.engagement.likes + 1,
             }),
-          })
+          }),
         );
       });
 
-      if (canTrack) {
-        try {
-          await get().saveUserInteraction(id, { liked: true });
-        } catch (error) {
-          logger.error('Failed to save like interaction', error);
-        }
+      try {
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { liked: true }),
+        );
+      } catch (error) {
+        logger.error('Failed to save like interaction', error);
       }
     },
     unlikeFeed: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
       setState((state) => {
         applyFeedMutation(state, id, (feed) =>
@@ -675,12 +560,12 @@ const createFeedsActions = (
         );
       });
 
-      if (canTrack) {
-        try {
-          await get().saveUserInteraction(id, { liked: false });
-        } catch (error) {
-          logger.error('Failed to persist unlike interaction', error);
-        }
+      try {
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { liked: false }),
+        );
+      } catch (error) {
+        logger.error('Failed to persist unlike interaction', error);
       }
     },
     shareFeed: (id) =>
@@ -698,10 +583,6 @@ const createFeedsActions = (
       }),
     bookmarkFeed: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
       setState((state) => {
         applyFeedMutation(state, id, (feed) =>
@@ -709,24 +590,20 @@ const createFeedsActions = (
             userInteraction: mergeUserInteraction(feed.userInteraction, {
               bookmarked: true,
             }),
-          })
+          }),
         );
       });
 
-      if (canTrack) {
-        try {
-          await get().saveUserInteraction(id, { bookmarked: true });
-        } catch (error) {
-          logger.error('Failed to save bookmark interaction', error);
-        }
+      try {
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { bookmarked: true }),
+        );
+      } catch (error) {
+        logger.error('Failed to save bookmark interaction', error);
       }
     },
     unbookmarkFeed: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
       setState((state) => {
         applyFeedMutation(state, id, (feed) =>
@@ -738,22 +615,18 @@ const createFeedsActions = (
         );
       });
 
-      if (canTrack) {
-        try {
-          await get().saveUserInteraction(id, { bookmarked: false });
-        } catch (error) {
-          logger.error('Failed to remove bookmark interaction', error);
-        }
+      try {
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { bookmarked: false }),
+        );
+      } catch (error) {
+        logger.error('Failed to remove bookmark interaction', error);
       }
     },
     markAsRead: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
-      if (!canTrack) {
+      if (!hasFeedActivityConsent(currentState.privacySettings)) {
         logger.debug('Feed read tracking skipped - no user consent', { feedId: id });
         return;
       }
@@ -772,17 +645,15 @@ const createFeedsActions = (
       });
 
       try {
-        await get().saveUserInteraction(id, { read: true, readAt });
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { read: true, readAt }),
+        );
       } catch (error) {
         logger.error('Failed to save read interaction', error);
       }
     },
     markAsUnread: async (id) => {
       const currentState = get();
-      const canTrack = hasPrivacyConsent(
-        currentState.privacySettings,
-        PrivacyDataType.FEED_ACTIVITY
-      );
 
       setState((state) => {
         applyFeedMutation(state, id, (feed) =>
@@ -795,12 +666,12 @@ const createFeedsActions = (
         );
       });
 
-      if (canTrack) {
-        try {
-          await get().saveUserInteraction(id, { read: false, readAt: null });
-        } catch (error) {
-          logger.error('Failed to persist unread interaction', error);
-        }
+      try {
+        await withFeedAnalyticsConsent(currentState, () =>
+          get().saveUserInteraction(id, { read: false, readAt: null }),
+        );
+      } catch (error) {
+        logger.error('Failed to persist unread interaction', error);
       }
     },
     setCategories: (categories) =>
@@ -885,11 +756,11 @@ const createFeedsActions = (
           headers: { Accept: 'application/json' },
         });
 
-        if (!response.ok) {
+        if (!response.success) {
           throw new Error('Failed to load categories');
         }
 
-        const raw = await response.json();
+        const raw = response.data;
         const categories = Array.isArray(raw)
           ? raw
           : Array.isArray(raw?.data)
@@ -933,7 +804,7 @@ const createFeedsActions = (
           body: JSON.stringify({ feedId, interaction }),
         });
 
-        if (!response.ok) {
+        if (!response.success) {
           throw new Error('Failed to save user interaction');
         }
 

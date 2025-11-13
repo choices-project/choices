@@ -1,69 +1,69 @@
-/**
- * Internationalization Hook (Stub Implementation)
- * 
- * Provides a minimal i18n interface for future internationalization support.
- * Currently returns keys as-is with simple parameter substitution.
- * 
- * @remarks
- * This is a stub implementation to support i18n-ready code patterns.
- * Full internationalization can be added by integrating a library like
- * next-i18next or react-intl and implementing the translation logic.
- * 
- * @example
- * ```typescript
- * const { t, changeLanguage, currentLanguage } = useI18n();
- * 
- * // Simple translation
- * const greeting = t('hello.world');
- * 
- * // Translation with parameters
- * const welcome = t('welcome.user', { name: 'Alice' });
- * ```
- */
+'use client';
 
-export type I18nConfig = {
-  locale: string;
-  fallbackLocale: string;
-  translations: Record<string, Record<string, string>>;
+import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { useCallback } from 'react';
+
+import { setLocaleCookie } from '@/lib/i18n/client';
+import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
+
+type TranslationParams = Record<string, string>;
+
+function fallbackTranslate(key: string, params?: TranslationParams) {
+  if (!params) {
+    return key;
+  }
+
+  return key.replace(/\{(\w+)\}/g, (match, param) => params[param] ?? match);
 }
 
 /**
- * Internationalization hook for translation and locale management
- * 
- * @returns Translation utilities and locale information
+ * Internationalization hook for translation and locale management.
+ *
+ * Wraps next-intl and preserves the legacy signature used across the app.
  */
 export const useI18n = () => {
-  /**
-   * Translate a key with optional parameter substitution
-   * 
-   * @param key - Translation key
-   * @param params - Optional parameters for interpolation
-   * @returns Translated string (currently returns key as-is)
-   */
-  const t = (key: string, params?: Record<string, string>): string => {
-    // Stub implementation: return key with parameter substitution
-    if (params) {
-      return key.replace(/\{(\w+)\}/g, (match, param) => params[param] || match);
-    }
-    return key;
-  };
+  const locale = useLocale();
+  const rawTranslate = useTranslations();
+  const router = useRouter();
 
-  /**
-   * Change the current language/locale
-   * 
-   * @param locale - Locale code (e.g., 'en', 'es', 'fr')
-   */
-  const changeLanguage = (_locale: string) => {
-    // Stub implementation: no-op (prefix with _ to indicate intentionally unused)
-    // Real implementation would update context/state and reload translations
-  };
+  const t = useCallback(
+    (key: string, params?: TranslationParams): string => {
+      try {
+        const safeParams = params
+          ? Object.fromEntries(
+              Object.entries(params).map(([paramKey, value]) => [paramKey, String(value)]),
+            )
+          : undefined;
 
-  const currentLanguage = 'en'; // Default to English
+        return rawTranslate(key, safeParams);
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(`[i18n] Missing translation for key "${key}"`, error);
+        }
+        return fallbackTranslate(key, params);
+      }
+    },
+    [rawTranslate],
+  );
+
+  const changeLanguage = useCallback(
+    async (nextLocale: string) => {
+      if (!isSupportedLocale(nextLocale) || nextLocale === locale) {
+        return;
+      }
+
+      setLocaleCookie(nextLocale as SupportedLocale);
+      // Refresh to pick up new messages during the next render pass
+      router.refresh();
+    },
+    [locale, router],
+  );
 
   return {
     t,
     changeLanguage,
-    currentLanguage,
+    currentLanguage: locale,
     isReady: true,
   };
 };

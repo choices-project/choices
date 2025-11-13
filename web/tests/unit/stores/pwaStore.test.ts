@@ -9,10 +9,6 @@ const createTestPWAStore = () => create<PWAStore>()(immer(pwaStoreCreator));
 describe('pwaStore', () => {
   afterEach(() => {
     jest.resetAllMocks();
-    delete (globalThis as unknown as { fetch?: unknown }).fetch;
-    delete (globalThis as unknown as { navigator?: unknown }).navigator;
-    delete (globalThis as unknown as { document?: unknown }).document;
-    delete (globalThis as unknown as { window?: unknown }).window;
   });
 
   it('initializes with expected defaults', () => {
@@ -97,29 +93,32 @@ describe('pwaStore', () => {
   });
 
   it('exportData generates downloadable payload via document API', async () => {
-    const revokeObjectURL = jest.fn();
-    const click = jest.fn();
+    const originalURL = window.URL;
     const createObjectURL = jest.fn().mockReturnValue('blob:export');
-
+    const revokeObjectURL = jest.fn();
+    Object.defineProperty(window, 'URL', {
+      value: {
+        createObjectURL,
+        revokeObjectURL,
+      },
+      configurable: true,
+    });
+    const click = jest.fn();
     const mockAnchor = { href: '', download: '', click } as unknown as HTMLAnchorElement;
-    const documentMock = {
-      createElement: jest.fn().mockReturnValue(mockAnchor),
-    } as unknown as Document;
-
-    const windowMock = {
-      URL: { createObjectURL, revokeObjectURL },
-    } as unknown as Window & typeof globalThis;
-
-    (globalThis as unknown as { document: Document }).document = documentMock;
-    (globalThis as unknown as { window: Window & typeof globalThis }).window = windowMock;
+    const createElement = jest
+      .spyOn(document, 'createElement')
+      .mockReturnValue(mockAnchor);
 
     const store = createTestPWAStore();
 
     await store.getState().exportData();
 
-    expect(documentMock.createElement).toHaveBeenCalledWith('a');
+    expect(createElement).toHaveBeenCalledWith('a');
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     expect(click).toHaveBeenCalledTimes(1);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
+
+    createElement.mockRestore();
+    Object.defineProperty(window, 'URL', { value: originalURL, configurable: true });
   });
 });

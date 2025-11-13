@@ -1,11 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Minimal Playwright configuration for the rebuilt E2E suite.
  * Expand projects as real scenarios come online.
  */
 const shouldStartServer = process.env.PLAYWRIGHT_NO_SERVER !== '1';
-const webServerCommand = process.env.PLAYWRIGHT_SERVE ?? 'npm run build && npm run start';
+const moduleDir = dirname(fileURLToPath(import.meta.url));
+const standaloneScript = join(moduleDir, 'scripts/start-standalone-server.cjs');
+const webServerCommand =
+  process.env.PLAYWRIGHT_SERVE ?? `npm run build && node ${standaloneScript}`;
 const targetBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
 const maybeWebServer = shouldStartServer

@@ -25,11 +25,21 @@ import type {
 } from '@/types/representative';
 import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
 
+import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
+
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
+
+const extractDivisionIds = (representative: Representative): string[] => {
+  return (
+    representative.ocdDivisionIds ??
+    representative.division_ids ??
+    getRepresentativeDivisionIds(representative)
+  );
+};
 
 export type RepresentativeFollowRecord = {
   id: string;
@@ -58,6 +68,8 @@ export type RepresentativeState = {
   lastSearchAt: number | null;
 
   locationRepresentatives: Representative[];
+  representativeDivisions: Record<number, string[]>;
+  userDivisionIds: string[];
 
   followedRepresentatives: number[];
   userRepresentatives: UserRepresentative[];
@@ -80,6 +92,7 @@ export type RepresentativeActions = Pick<BaseStore, 'setLoading' | 'setError' | 
   setSearchLoading: (loading: boolean) => void;
   setDetailLoading: (loading: boolean) => void;
   setFollowMutationLoading: (loading: boolean) => void;
+  setUserDivisionIds: (divisions: string[]) => void;
 
   searchRepresentatives: (query: RepresentativeSearchQuery) => Promise<RepresentativeListResponse | null>;
   findByLocation: (query: RepresentativeLocationQuery) => Promise<RepresentativeListResponse | null>;
@@ -116,6 +129,8 @@ export const createInitialRepresentativeState = (): RepresentativeState => ({
   lastSearchAt: null,
 
   locationRepresentatives: [],
+  representativeDivisions: {},
+  userDivisionIds: [],
 
   followedRepresentatives: [],
   userRepresentatives: [],
@@ -169,6 +184,8 @@ export const createRepresentativeActions = (
       state.detailCacheTimestamps[representative.id] = Date.now();
       state.currentRepresentative = representative;
       state.currentRepresentativeId = representative.id;
+      state.representativeDivisions[representative.id] =
+        extractDivisionIds(representative) ?? state.representativeDivisions[representative.id] ?? [];
     });
   };
 
@@ -195,6 +212,12 @@ export const createRepresentativeActions = (
             state.representatives = result.data.representatives;
             state.searchQuery = query;
             state.lastSearchAt = Date.now();
+            result.data.representatives.forEach((representative) => {
+              const divisions = getRepresentativeDivisionIds(representative);
+              state.representativeDivisions[representative.id] = divisions;
+              representative.ocdDivisionIds = divisions;
+              representative.division_ids = divisions;
+            });
           });
           return result;
         }
@@ -221,8 +244,20 @@ export const createRepresentativeActions = (
         const result = await representativeService.findByLocation(query);
 
         if (result.success && result.data) {
+          const divisionSet = new Set<string>();
+
           setState((state) => {
             state.locationRepresentatives = result.data.representatives;
+            result.data.representatives.forEach((representative) => {
+              const divisions = getRepresentativeDivisionIds(representative);
+              representative.ocdDivisionIds = divisions;
+              representative.division_ids = divisions;
+              state.representativeDivisions[representative.id] = divisions;
+              divisions.forEach((division) => divisionSet.add(division));
+            });
+            if (divisionSet.size > 0) {
+              state.userDivisionIds = Array.from(divisionSet);
+            }
           });
           return result;
         }
@@ -264,6 +299,12 @@ export const createRepresentativeActions = (
         if (response.success && response.data) {
           const representative = response.data as Representative;
           updateDetailCache(representative);
+          setState((state) => {
+            const divisions = getRepresentativeDivisionIds(representative);
+            representative.ocdDivisionIds = divisions;
+            representative.division_ids = divisions;
+            state.representativeDivisions[representative.id] = divisions;
+          });
           return representative;
         }
 
@@ -469,8 +510,15 @@ export const createRepresentativeActions = (
         state.searchQuery = null;
         state.representatives = [];
         state.lastSearchAt = null;
+        state.userDivisionIds = [];
       });
       clearError();
+    },
+
+    setUserDivisionIds: (divisions: string[]) => {
+      setState((state) => {
+        state.userDivisionIds = divisions;
+      });
     }
   };
 };
@@ -506,6 +554,8 @@ export const representativeSelectors = {
   userRepresentativeEntries: (state: RepresentativeStore) => state.userRepresentativeEntries,
   userRepresentativesTotal: (state: RepresentativeStore) => state.userRepresentativesTotal,
   userRepresentativesHasMore: (state: RepresentativeStore) => state.userRepresentativesHasMore,
+  representativeDivisions: (state: RepresentativeStore) => state.representativeDivisions,
+  userDivisionIds: (state: RepresentativeStore) => state.userDivisionIds,
 
   isLoading: (state: RepresentativeStore) => state.isLoading,
   searchLoading: (state: RepresentativeStore) => state.searchLoading,
@@ -589,3 +639,14 @@ export const useRepresentativeFilters = () =>
     query: state.searchQuery,
     lastSearchAt: state.lastSearchAt
   }));
+export const useRepresentativeDivisions = (representativeId: number | null) =>
+  useRepresentativeStore((state) => {
+    if (representativeId == null) {
+      return [];
+    }
+    return state.representativeDivisions[representativeId] ?? [];
+  });
+export const useUserDivisionIds = () =>
+  useRepresentativeStore(representativeSelectors.userDivisionIds);
+export const useSetUserDivisionIds = () =>
+  useRepresentativeStore((state) => state.setUserDivisionIds);

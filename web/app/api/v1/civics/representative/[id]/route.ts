@@ -14,6 +14,7 @@ type RepresentativeResponse = {
   jurisdiction: string;
   district?: string;
   party?: string;
+  division_ids?: string[];
   fec?: {
     total_receipts: number;
     cash_on_hand: number;
@@ -46,45 +47,70 @@ export async function GET(
   // Create Supabase client at request time (not module level) to avoid build-time errors
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     return NextResponse.json(
       { error: 'Supabase configuration missing' },
       { status: 500 }
     );
   }
-  
+
   const supabase = createClient(
     supabaseUrl,
     supabaseKey,
     { auth: { persistSession: false } }
   );
-  
+
   try {
     const { searchParams } = new URL(request.url);
     const fields = searchParams.get('fields')?.split(',') ?? [];
     const include = searchParams.get('include')?.split(',') ?? [];
-    
+    const includeDivisions = include.includes('divisions');
+
     const representativeId = params.id;
 
     // Get base representative data
+    type RepresentativeDivisionRow = {
+      division_id: string | null;
+    };
+
+    type RepresentativeRow = {
+      id: string;
+      name: string;
+      office: string;
+      level: 'federal' | 'state' | 'local';
+      jurisdiction: string;
+      district: string | null;
+      party: string | null;
+      last_updated: string;
+      person_id: string | null;
+      contact: string | Record<string, unknown> | null;
+      representative_divisions?: RepresentativeDivisionRow[] | null;
+    };
+
+    const selectFields = [
+      'id',
+      'name',
+      'office',
+      'level',
+      'jurisdiction',
+      'district',
+      'party',
+      'last_updated',
+      'person_id',
+      'contact'
+    ];
+
+    if (includeDivisions) {
+      selectFields.push('representative_divisions:representative_divisions(division_id)');
+    }
+
     const { data: rep, error: repError } = await supabase
       .from('civics_representatives')
-      .select(`
-        id,
-        name,
-        office,
-        level,
-        jurisdiction,
-        district,
-        party,
-        last_updated,
-        person_id,
-        contact
-      `)
+      .select(selectFields.join(','))
       .eq('id', representativeId)
       .eq('valid_to', 'infinity')
-      .single();
+      .maybeSingle();
 
     if (repError || !rep) {
       return NextResponse.json(
@@ -93,24 +119,41 @@ export async function GET(
       );
     }
 
+    const representativeRow = rep as unknown as RepresentativeRow;
+
     const response: RepresentativeResponse = {
-      id: rep.id,
-      name: rep.name,
-      office: rep.office,
-      level: rep.level,
-      jurisdiction: rep.jurisdiction,
-      district: rep.district,
-      party: rep.party,
+      id: representativeRow.id,
+      name: representativeRow.name,
+      office: representativeRow.office,
+      level: representativeRow.level,
+      jurisdiction: representativeRow.jurisdiction,
       attribution: {},
-      last_updated: rep.last_updated
+      last_updated: representativeRow.last_updated
     };
 
+    if (representativeRow.district) {
+      response.district = representativeRow.district;
+    }
+
+    if (representativeRow.party) {
+      response.party = representativeRow.party;
+    }
+
+    if (includeDivisions && Array.isArray(representativeRow.representative_divisions)) {
+      const divisions = representativeRow.representative_divisions
+        .map((entry: RepresentativeDivisionRow) => entry?.division_id)
+        .filter((value): value is string => Boolean(value));
+      if (divisions.length > 0) {
+        response.division_ids = divisions;
+      }
+    }
+
     // Include FEC data if requested
-    if (include.includes('fec') && rep.person_id) {
+    if (include.includes('fec') && representativeRow.person_id) {
       const { data: fecData, error: fecError } = await supabase
         .from('civics_fec_minimal')
         .select('total_receipts, cash_on_hand, election_cycle, last_updated')
-        .eq('person_id', rep.person_id)
+        .eq('person_id', representativeRow.person_id)
         .order('election_cycle', { ascending: false })
         .limit(1)
         .single();
@@ -127,11 +170,11 @@ export async function GET(
     }
 
     // Include voting data if requested
-    if (include.includes('votes') && rep.person_id) {
+    if (include.includes('votes') && representativeRow.person_id) {
       const { data: votesData, error: votesError } = await supabase
         .from('civics_votes_minimal')
         .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
-        .eq('person_id', rep.person_id)
+        .eq('person_id', representativeRow.person_id)
         .order('vote_date', { ascending: false })
         .limit(5);
 
@@ -143,7 +186,7 @@ export async function GET(
         response.votes = {
           last_5: votesData,
           party_alignment: Math.round(partyAlignment * 100) / 100,
-          last_updated: votesData[0]?.last_updated || rep.last_updated
+          last_updated: votesData[0]?.last_updated || representativeRow.last_updated
         };
         response.attribution.votes = 'GovTrack.us';
       }
@@ -152,29 +195,39 @@ export async function GET(
     // Include contact data if requested
     if (include.includes('contact')) {
       // For now, extract from existing contact field
-      if (rep.contact) {
-        const contact = typeof rep.contact === 'string' ? JSON.parse(rep.contact) : rep.contact;
-        response.contact = {
-          phone: contact.phone,
-          website: contact.website,
-          twitter_url: contact.twitter_url,
-          last_updated: rep.last_updated
-        };
-        response.attribution.contact = 'ProPublica Congress API';
+      if (representativeRow.contact) {
+        const contact =
+          typeof representativeRow.contact === 'string'
+            ? JSON.parse(representativeRow.contact)
+            : representativeRow.contact;
+        if (contact && typeof contact === 'object') {
+          const contactRecord = contact as Record<string, unknown>;
+          response.contact = {
+            ...(typeof contactRecord.phone === 'string' ? { phone: contactRecord.phone } : {}),
+            ...(typeof contactRecord.website === 'string'
+              ? { website: contactRecord.website }
+              : {}),
+            ...(typeof contactRecord.twitter_url === 'string'
+              ? { twitter_url: contactRecord.twitter_url }
+              : {}),
+            last_updated: representativeRow.last_updated
+          };
+          response.attribution.contact = 'ProPublica Congress API';
+        }
       }
     }
 
     // Filter fields if requested
     if (fields.length > 0) {
       const filteredResponse: Record<string, unknown> = {};
-      fields.forEach(field => {
+      fields.forEach((field) => {
         if (field in response) {
           filteredResponse[field] = response[field as keyof RepresentativeResponse];
         }
       });
       return NextResponse.json(filteredResponse, {
         headers: {
-          'ETag': `"${rep.id}-${rep.last_updated}"`,
+          'ETag': `"${representativeRow.id}-${representativeRow.last_updated}"`,
           'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
           'Content-Type': 'application/json'
         }
@@ -183,7 +236,7 @@ export async function GET(
 
     return NextResponse.json(response, {
       headers: {
-        'ETag': `"${rep.id}-${rep.last_updated}"`,
+        'ETag': `"${representativeRow.id}-${representativeRow.last_updated}"`,
         'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
         'Content-Type': 'application/json'
       }

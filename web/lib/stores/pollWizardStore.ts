@@ -9,6 +9,8 @@ import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
+import { shallow } from 'zustand/shallow';
 
 import { createPollRequest, type PollCreateRequestResult } from '@/lib/polls/api';
 import {
@@ -95,10 +97,7 @@ export type PollWizardActions = {
 
 export type PollWizardStore = PollWizardState & PollWizardActions;
 
-type PollWizardStoreCreator = StateCreator<
-  PollWizardStore,
-  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
->;
+type PollWizardStoreCreator = StateCreator<PollWizardStore>;
 
 export const createInitialPollWizardState = (): PollWizardState => ({
   currentStep: 0,
@@ -489,19 +488,26 @@ export const createPollWizardActions = (
 export const pollWizardStoreCreator: PollWizardStoreCreator = (set, get) =>
   Object.assign(createInitialPollWizardState(), createPollWizardActions(set, get));
 
+const withImmer = immer(pollWizardStoreCreator);
+
+const isHarnessEnv = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
+const createNoopStorage = () => ({
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+});
+
 export const usePollWizardStore = create<PollWizardStore>()(
   devtools(
-    persist(
-      immer(pollWizardStoreCreator),
-      {
-        name: 'poll-wizard-store',
-        storage: createSafeStorage(),
-        partialize: (state) => ({
-          currentStep: state.currentStep,
-          data: state.data,
-        }),
-      },
-    ),
+    persist(withImmer, {
+      name: 'poll-wizard-store',
+      storage: isHarnessEnv ? createNoopStorage() : createSafeStorage(),
+      partialize: (state) => ({
+        currentStep: state.currentStep,
+        data: state.data,
+      }),
+    }),
     { name: 'poll-wizard-store' },
   ),
 );
@@ -517,43 +523,47 @@ export const usePollWizardCanGoBack = () => usePollWizardStore((state) => state.
 export const usePollWizardIsComplete = () => usePollWizardStore((state) => state.isComplete);
 
 export const usePollWizardActions = () =>
-  usePollWizardStore((state) => ({
-    nextStep: state.nextStep,
-    prevStep: state.prevStep,
-    goToStep: state.goToStep,
-    resetWizard: state.resetWizard,
-    updateData: state.updateData,
-    updateSettings: state.updateSettings,
-    addOption: state.addOption,
-    removeOption: state.removeOption,
-    updateOption: state.updateOption,
-    addTag: state.addTag,
-    removeTag: state.removeTag,
-    updateTags: state.updateTags,
-    validateCurrentStep: state.validateCurrentStep,
-    setLoading: state.setLoading,
-    setFieldError: state.setFieldError,
-    clearFieldError: state.clearFieldError,
-    clearAllErrors: state.clearAllErrors,
-    getStepData: state.getStepData,
-    getProgress: state.getProgress,
-    canProceedToNextStep: state.canProceedToNextStep,
-    isStepValid: state.isStepValid,
-    getStepErrors: state.getStepErrors,
-    submitPoll: state.submitPoll,
-  }));
+  usePollWizardStore(
+    useShallow((state) => ({
+      nextStep: state.nextStep,
+      prevStep: state.prevStep,
+      goToStep: state.goToStep,
+      resetWizard: state.resetWizard,
+      updateData: state.updateData,
+      updateSettings: state.updateSettings,
+      addOption: state.addOption,
+      removeOption: state.removeOption,
+      updateOption: state.updateOption,
+      addTag: state.addTag,
+      removeTag: state.removeTag,
+      updateTags: state.updateTags,
+      validateCurrentStep: state.validateCurrentStep,
+      setLoading: state.setLoading,
+      setFieldError: state.setFieldError,
+      clearFieldError: state.clearFieldError,
+      clearAllErrors: state.clearAllErrors,
+      getStepData: state.getStepData,
+      getProgress: state.getProgress,
+      canProceedToNextStep: state.canProceedToNextStep,
+      isStepValid: state.isStepValid,
+      getStepErrors: state.getStepErrors,
+      submitPoll: state.submitPoll,
+    })),
+  );
 
 export const usePollWizardStats = () =>
-  usePollWizardStore((state) => ({
-    currentStep: state.currentStep,
-    totalSteps: state.totalSteps,
-    progress: state.progress,
-    canGoBack: state.canGoBack,
-    canProceed: state.canProceed,
-    isComplete: state.isComplete,
-    hasErrors: Object.keys(state.errors).length > 0,
-    errorCount: Object.keys(state.errors).length,
-  }));
+  usePollWizardStore(
+    useShallow((state) => ({
+      currentStep: state.currentStep,
+      totalSteps: state.totalSteps,
+      progress: state.progress,
+      canGoBack: state.canGoBack,
+      canProceed: state.canProceed,
+      isComplete: state.isComplete,
+      hasErrors: Object.keys(state.errors).length > 0,
+      errorCount: Object.keys(state.errors).length,
+    })),
+  );
 
 export const usePollWizardStepData = (step: number) =>
   usePollWizardStore((state) => state.getStepData(step));
@@ -562,11 +572,13 @@ export const usePollWizardStepErrors = (step: number) =>
   usePollWizardStore((state) => state.getStepErrors(step));
 
 export const usePollWizardStepValidation = (step: number) =>
-  usePollWizardStore((state) => ({
-    isValid: state.isStepValid(step),
-    errors: state.getStepErrors(step),
-    canProceed: state.canProceedToNextStep(step),
-  }));
+  usePollWizardStore(
+    useShallow((state) => ({
+      isValid: state.isStepValid(step),
+      errors: state.getStepErrors(step),
+      canProceed: state.canProceedToNextStep(step),
+    })),
+  );
 
 export const pollWizardStoreUtils = {
   getWizardSummary: () => {

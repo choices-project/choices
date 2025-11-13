@@ -19,6 +19,18 @@ async function main() {
   }
   console.log('Merge completed successfully.', data ?? '');
 
+  console.log('Refreshing representative_divisions from OpenStates roles...');
+  const { data: divisionsInserted, error: divisionError } = await client.rpc(
+    'refresh_divisions_from_openstates',
+  );
+  if (divisionError) {
+    console.error('Division refresh failed:', divisionError.message);
+    process.exit(1);
+  }
+  console.log(
+    `Division refresh complete. Rows inserted: ${typeof divisionsInserted === 'number' ? divisionsInserted : 0}.`,
+  );
+
   if (process.env.SKIP_ACTIVITY_SYNC === '1') {
     console.log('Skipping OpenStates activity sync (SKIP_ACTIVITY_SYNC=1).');
     return;

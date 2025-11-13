@@ -14,6 +14,9 @@ const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/polls-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__pollsStoreHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.pollsStoreHarness === 'ready'
+  );
   await page.evaluate(() => {
     window.__pollsStoreHarness?.actions.resetPollsState();
     window.__pollsStoreHarness?.actions.clearFilters();

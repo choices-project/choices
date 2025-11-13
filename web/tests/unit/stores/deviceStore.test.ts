@@ -15,10 +15,58 @@ const createMediaQueryList = (matches: boolean) => ({
 });
 
 describe('deviceStore', () => {
+  const originalWindow = {
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+    matchMedia: window.matchMedia,
+  };
+
+  const originalNavigator = {
+    userAgent: navigator.userAgent,
+    maxTouchPoints: navigator.maxTouchPoints,
+    onLine: navigator.onLine,
+    connection: (navigator as Navigator & { connection?: unknown }).connection,
+  };
+
   afterEach(() => {
     jest.resetAllMocks();
-    delete (globalThis as unknown as { window?: unknown }).window;
-    delete (globalThis as unknown as { navigator?: unknown }).navigator;
+    Object.defineProperty(window, 'innerWidth', {
+      value: originalWindow.innerWidth,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      value: originalWindow.innerHeight,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(window, 'devicePixelRatio', {
+      value: originalWindow.devicePixelRatio,
+      configurable: true,
+      writable: true,
+    });
+    window.matchMedia = originalWindow.matchMedia;
+    Object.defineProperty(navigator, 'userAgent', {
+      value: originalNavigator.userAgent,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'maxTouchPoints', {
+      value: originalNavigator.maxTouchPoints,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'onLine', {
+      value: originalNavigator.onLine,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'connection', {
+      value: originalNavigator.connection,
+      configurable: true,
+      writable: true,
+    });
   });
 
   it('initializes with default state', () => {
@@ -50,13 +98,27 @@ describe('deviceStore', () => {
       removeEventListener: jest.fn(),
     } as const;
 
-    const mockNavigator = {
-      userAgent:
+    Object.defineProperty(navigator, 'userAgent', {
+      value:
         'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Version/16.0 Mobile/15E148 Safari/604.1 iOS',
-      maxTouchPoints: 2,
-      onLine: false,
-      connection,
-    } as Navigator;
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'maxTouchPoints', {
+      value: 2,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(navigator, 'connection', {
+      value: connection,
+      configurable: true,
+      writable: true,
+    });
 
     const matchMedia = jest.fn((query: string) => {
       switch (query) {
@@ -73,17 +135,22 @@ describe('deviceStore', () => {
       }
     });
 
-    const mockWindow = {
-      innerWidth: 480,
-      innerHeight: 900,
-      devicePixelRatio: 3,
-      matchMedia,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    } as unknown as Window & typeof globalThis;
-
-    (globalThis as unknown as { window: Window & typeof globalThis }).window = mockWindow;
-    (globalThis as unknown as { navigator: Navigator }).navigator = mockNavigator;
+    Object.defineProperty(window, 'innerWidth', {
+      value: 480,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      value: 900,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(window, 'devicePixelRatio', {
+      value: 3,
+      configurable: true,
+      writable: true,
+    });
+    window.matchMedia = matchMedia;
 
     const store = createTestDeviceStore();
 

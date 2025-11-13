@@ -86,6 +86,8 @@ export type Ballot = {
     jurisdiction: string;
     district: string;
     pollingPlace?: string;
+    turnout?: number;
+    totalVoters?: number;
     earlyVoting?: {
       start: string;
       end: string;

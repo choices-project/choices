@@ -10,9 +10,15 @@ export type UserStoreHarness = {
   setUserAndAuth: UserStore['setUserAndAuth'];
   setSessionAndDerived: UserStore['setSessionAndDerived'];
   initializeAuth: UserStore['initializeAuth'];
+  signOut: UserStore['signOut'];
+  setUserError: UserStore['setUserError'];
+  clearUserError: UserStore['clearUserError'];
   setProfile: UserStore['setProfile'];
   updateProfileField: UserStore['updateProfileField'];
   updateArrayField: UserStore['updateArrayField'];
+  setProfileEditError: UserStore['setProfileEditError'];
+  clearProfileEditError: UserStore['clearProfileEditError'];
+  clearAllProfileEditErrors: UserStore['clearAllProfileEditErrors'];
   setCurrentAddress: UserStore['setCurrentAddress'];
   setRepresentatives: UserStore['setRepresentatives'];
   setBiometricSupported: UserStore['setBiometricSupported'];
@@ -46,10 +52,12 @@ export default function UserStoreHarnessPage() {
   const profile = useUserStore((state) => state.profile);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const profileEditData = useUserStore((state) => state.profileEditData);
+  const profileEditErrors = useUserStore((state) => state.profileEditErrors);
   const preferences = useUserStore((state) => state.profile?.privacy_settings ?? null);
   const currentAddress = useUserStore((state) => state.currentAddress);
   const representatives = useUserStore((state) => state.representatives);
   const biometric = useUserStore((state) => state.biometric);
+  const userError = useUserStore((state) => state.error);
 
   useEffect(() => {
     const api = useUserStore.getState();
@@ -59,9 +67,15 @@ export default function UserStoreHarnessPage() {
       setUserAndAuth: api.setUserAndAuth,
       setSessionAndDerived: api.setSessionAndDerived,
       initializeAuth: api.initializeAuth,
+      signOut: api.signOut,
+      setUserError: api.setUserError,
+      clearUserError: api.clearUserError,
       setProfile: api.setProfile,
       updateProfileField: api.updateProfileField,
       updateArrayField: api.updateArrayField,
+      setProfileEditError: api.setProfileEditError,
+      clearProfileEditError: api.clearProfileEditError,
+      clearAllProfileEditErrors: api.clearAllProfileEditErrors,
       setCurrentAddress: api.setCurrentAddress,
       setRepresentatives: api.setRepresentatives,
       setBiometricSupported: api.setBiometricSupported,
@@ -76,14 +90,48 @@ export default function UserStoreHarnessPage() {
     };
 
     window.__userStoreHarness = harness;
-    if (typeof document !== 'undefined') {
-      document.documentElement.dataset.userStoreHarness = 'ready';
-    }
+
     return () => {
       if (window.__userStoreHarness === harness) {
         delete window.__userStoreHarness;
       }
-      if (typeof document !== 'undefined' && document.documentElement.dataset.userStoreHarness === 'ready') {
+    };
+  }, []);
+
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.userStoreHarness = 'ready';
+      }
+    };
+
+    const persist = (useUserStore as typeof useUserStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
         delete document.documentElement.dataset.userStoreHarness;
       }
     };
@@ -128,6 +176,10 @@ export default function UserStoreHarnessPage() {
               <dt>Privacy settings</dt>
               <dd data-testid="user-profile-privacy">{toDisplayString(preferences)}</dd>
             </div>
+            <div className="flex justify-between gap-2">
+              <dt>Error</dt>
+              <dd data-testid="user-error">{toDisplayString(userError)}</dd>
+            </div>
           </dl>
         </div>
       </section>
@@ -140,6 +192,12 @@ export default function UserStoreHarnessPage() {
             className="mt-2 max-h-56 overflow-auto rounded bg-slate-50 p-3 text-xs text-slate-700"
           >
             {JSON.stringify(profileEditData ?? {}, null, 2)}
+          </pre>
+          <pre
+            data-testid="user-profile-edit-errors"
+            className="mt-2 max-h-56 overflow-auto rounded bg-rose-50 p-3 text-xs text-rose-700"
+          >
+            {JSON.stringify(profileEditErrors ?? {}, null, 2)}
           </pre>
         </div>
         <div>

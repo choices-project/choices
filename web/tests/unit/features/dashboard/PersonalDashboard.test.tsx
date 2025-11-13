@@ -10,6 +10,7 @@ import type * as ProfileHooksModule from '@/features/profile/hooks/use-profile';
 import type * as StoresModule from '@/lib/stores';
 import type * as ProfileStoreModule from '@/lib/stores/profileStore';
 import type * as RepresentativeStoreModule from '@/lib/stores/representativeStore';
+import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountdownUtils';
 import type { DashboardPreferences } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 
@@ -29,24 +30,32 @@ jest.mock('@/features/profile/hooks/use-profile', () => ({
   useProfileErrorStates: jest.fn(),
 }));
 
-jest.mock('@/lib/stores', () => ({
-  useIsAuthenticated: jest.fn(),
-  useUserLoading: jest.fn(),
-  usePolls: jest.fn(),
-  usePollsAnalytics: jest.fn(),
-  usePollsLoading: jest.fn(),
-  usePollsError: jest.fn(),
-  usePollsActions: jest.fn(),
-  usePollLastFetchedAt: jest.fn(),
-  useAnalyticsEvents: jest.fn(),
-  useAnalyticsBehavior: jest.fn(),
-  useAnalyticsError: jest.fn(),
-  useAnalyticsLoading: jest.fn(),
-  useTrendingHashtags: jest.fn(),
-  useHashtagActions: jest.fn(),
-  useHashtagLoading: jest.fn(),
-  useHashtagError: jest.fn(),
-}));
+jest.mock('@/lib/stores', () => {
+  const trackEventMock = jest.fn();
+  return {
+    useIsAuthenticated: jest.fn(),
+    useUserLoading: jest.fn(),
+    useProfile: jest.fn(),
+    useProfileLoadingStates: jest.fn(),
+    useProfileErrorStates: jest.fn(),
+    usePolls: jest.fn(),
+    usePollsAnalytics: jest.fn(),
+    usePollsLoading: jest.fn(),
+    usePollsError: jest.fn(),
+    usePollsActions: jest.fn(),
+    usePollLastFetchedAt: jest.fn(),
+    useAnalyticsEvents: jest.fn(),
+    useAnalyticsBehavior: jest.fn(),
+    useAnalyticsError: jest.fn(),
+    useAnalyticsLoading: jest.fn(),
+    useAnalyticsActions: jest.fn(() => ({ trackEvent: trackEventMock })),
+    useTrendingHashtags: jest.fn(),
+    useHashtagActions: jest.fn(),
+    useHashtagLoading: jest.fn(),
+    useHashtagError: jest.fn(),
+    useRepresentativeDivisions: jest.fn(() => []),
+  };
+});
 
 jest.mock('@/lib/stores/profileStore', () => ({
   useProfileStore: jest.fn(),
@@ -57,6 +66,21 @@ jest.mock('@/lib/stores/representativeStore', () => ({
   useUserRepresentativeEntries: jest.fn(),
   useRepresentativeGlobalLoading: jest.fn(),
   useRepresentativeError: jest.fn(),
+  useRepresentativeDivisions: jest.fn(() => []),
+}));
+
+jest.mock('@/features/civics/utils/civicsCountdownUtils', () => ({
+  useElectionCountdown: jest.fn(),
+  formatElectionDate: jest.fn((iso: string) => iso),
+}));
+
+jest.mock('@/hooks/useFollowRepresentative', () => ({
+  useFollowRepresentative: jest.fn().mockReturnValue({
+    following: false,
+    loading: false,
+    error: null,
+    toggle: jest.fn(),
+  }),
 }));
 
 type MockedProfileModule = {
@@ -79,11 +103,16 @@ type MockedRepresentativeStoreModule = {
   [K in keyof RepresentativeStoreModule]: jest.Mock;
 };
 
+type MockedCountdownUtilsModule = {
+  [K in keyof CountdownUtilsModule]: jest.Mock;
+};
+
 const mockedProfileHooks = jest.requireMock('@/features/profile/hooks/use-profile') as MockedProfileModule;
 const mockedStores = jest.requireMock('@/lib/stores') as MockedStoresModule;
 const mockedNavigation = jest.requireMock('next/navigation') as MockedNavigationModule;
 const mockedProfileStore = jest.requireMock('@/lib/stores/profileStore') as MockedProfileStoreModule;
 const mockedRepresentativeStore = jest.requireMock('@/lib/stores/representativeStore') as MockedRepresentativeStoreModule;
+const mockedCountdownUtils = jest.requireMock('@/features/civics/utils/civicsCountdownUtils') as MockedCountdownUtilsModule;
 
 const mockRouterReplace = jest.fn();
 const mockLoadPolls = jest.fn().mockResolvedValue(undefined);
@@ -220,6 +249,15 @@ function mockHooks(options: MockOptions = {}) {
   mockedRepresentativeStore.useRepresentativeGlobalLoading.mockReturnValue(false);
   mockedRepresentativeStore.useRepresentativeError.mockReturnValue(null);
   mockedRepresentativeStore.useGetUserRepresentatives.mockReturnValue(mockGetUserRepresentatives);
+
+  mockedCountdownUtils.useElectionCountdown.mockReturnValue({
+    divisionIds: [],
+    elections: [],
+    nextElection: null,
+    daysUntilNextElection: null,
+    loading: false,
+    error: null,
+  });
 }
 
 describe('PersonalDashboard', () => {
@@ -284,4 +322,56 @@ describe('PersonalDashboard', () => {
      expect(mockGetTrendingHashtags).toHaveBeenCalled();
      expect(mockGetUserRepresentatives).toHaveBeenCalled();
    });
+
+  it('renders election countdown card for representatives when data is available', () => {
+    const profile: ProfileValue = {
+      id: 'user-1',
+      display_name: 'Sam Civic',
+      dashboard_preferences: {
+        showElectedOfficials: true,
+        showQuickActions: false,
+        showRecentActivity: false,
+        showEngagementScore: false,
+      },
+    };
+
+    const representative: Representative = {
+      id: 101,
+      name: 'Alex Official',
+      party: 'Independent',
+      office: 'Mayor',
+      state: 'CA',
+      division_ids: ['ocd-division/country:us/state:ca'],
+    } as Representative;
+
+    mockHooks({
+      profileOverrides: profile,
+      representatives: [representative],
+    });
+
+    mockedCountdownUtils.useElectionCountdown.mockReturnValue({
+      divisionIds: ['ocd-division/country:us/state:ca'],
+      elections: [
+        {
+          election_id: '2026-ca-primary',
+          election_day: '2026-06-05',
+          name: 'California Primary',
+        },
+      ],
+      nextElection: {
+        election_id: '2026-ca-primary',
+        election_day: '2026-06-05',
+        name: 'California Primary',
+      },
+      daysUntilNextElection: 45,
+      loading: false,
+      error: null,
+    });
+
+    render(<PersonalDashboard />);
+
+    expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
+    expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+  });
 });

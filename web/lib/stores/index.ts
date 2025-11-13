@@ -1,4 +1,38 @@
 export {
+  useRepresentativeStore,
+  useRepresentatives,
+  useRepresentativeSearchResults,
+  useRepresentativeLoading,
+  useRepresentativeError,
+  useCurrentRepresentative,
+  useRepresentativeDetailLoading,
+  useRepresentativeFollowLoading,
+  useRepresentativeById,
+  useRepresentativeFilters,
+  useLocationRepresentatives,
+  useFollowedRepresentatives,
+  useRepresentativeDivisions,
+  useUserDivisionIds,
+  useSetUserDivisionIds,
+  useSearchRepresentatives,
+  useFindByLocation,
+  useGetRepresentativeById,
+  useFollowRepresentative,
+  useUnfollowRepresentative,
+  useGetUserRepresentatives,
+  useClearSearch,
+  useClearError,
+  useInvalidateRepresentativeDetail,
+  useResetRepresentativeState
+} from './representativeStore';
+export {
+  useElectionsForDivisions,
+  useElectionLoading,
+  useElectionError,
+  useFetchElectionsForDivisions,
+  useClearElections
+} from './electionStore';
+export {
   useUserStore,
   useUserCurrentAddress,
   useUserCurrentState,

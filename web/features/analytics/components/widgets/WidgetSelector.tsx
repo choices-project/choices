@@ -15,7 +15,7 @@
 'use client';
 
 import { Plus, Info } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import { createWidgetConfig, getWidget, listWidgets } from '../../lib/widgetRegistry';
 import { useWidgetStore } from '../../stores/widgetStore';
@@ -52,6 +53,8 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const addWidget = useWidgetStore((state) => state.addWidget);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstTabRef = useRef<HTMLButtonElement>(null);
 
   const handleAddWidget = (widgetType: WidgetType) => {
     const registryEntry = getWidget(widgetType);
@@ -81,6 +84,15 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
     )
   );
 
+  useAccessibleDialog({
+    isOpen: open,
+    dialogRef,
+    initialFocusRef: firstTabRef,
+    onClose: () => setOpen(false),
+    liveMessage: 'Widget selector dialog opened.',
+    ariaLabelId: 'widget-selector-title',
+  });
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -92,9 +104,12 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+      <DialogContent
+        ref={dialogRef}
+        className="max-w-4xl max-h-[80vh] overflow-auto"
+      >
         <DialogHeader>
-          <DialogTitle>Add Widget to Dashboard</DialogTitle>
+          <DialogTitle id="widget-selector-title">Add Widget to Dashboard</DialogTitle>
           <DialogDescription>
             Choose a widget to add to your analytics dashboard
           </DialogDescription>
@@ -102,7 +117,7 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
 
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger ref={firstTabRef} value="all">All</TabsTrigger>
             <TabsTrigger value="polls">Polls</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="districts">Districts</TabsTrigger>

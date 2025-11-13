@@ -3,12 +3,15 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
+
 /**
  * Root Landing Page
  * Redirects authenticated users to dashboard, unauthenticated users to auth page
  */
 export default function RootPage() {
   const router = useRouter();
+  const { t } = useI18n();
 
   useEffect(() => {
     // Check for user session
@@ -35,9 +38,8 @@ export default function RootPage() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-        <p className="text-gray-600">Loading Choices...</p>
+        <p className="text-gray-600">{t('accessibility.loading')}</p>
       </div>
     </div>
   );
 }
-

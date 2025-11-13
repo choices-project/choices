@@ -1,21 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
-import {
-  useFilteredPolls,
-  usePollFilters,
-  usePollPagination,
-  usePollSearch,
-  usePolls,
-  usePollsActions,
-  usePollsStats,
-  usePollsStore,
-  type PollsStore,
-} from '@/lib/stores/pollsStore';
-
-type PollsHarnessActions = ReturnType<typeof usePollsActions>;
+import { usePollsStore, type PollsStore } from '@/lib/stores/pollsStore';
+import { derivePollAnalytics } from '@/lib/polls/validation';
 
 export type PollsStoreHarness = {
   getSnapshot: () => PollsStore;
@@ -24,13 +13,14 @@ export type PollsStoreHarness = {
     addPoll: (poll: PollRow) => void;
     updatePoll: (id: string, updates: PollUpdate) => void;
     removePoll: (id: string) => void;
-    resetPollsState: PollsHarnessActions['resetPollsState'];
-    setFilters: PollsHarnessActions['setFilters'];
-    clearFilters: PollsHarnessActions['clearFilters'];
-    setTrendingOnly: PollsHarnessActions['setTrendingOnly'];
-    setSearchQuery: PollsHarnessActions['setSearchQuery'];
-    clearSearch: PollsHarnessActions['clearSearch'];
-    setCurrentPage: PollsHarnessActions['setCurrentPage'];
+    resetPollsState: PollsStore['resetPollsState'];
+    setFilters: PollsStore['setFilters'];
+    clearFilters: PollsStore['clearFilters'];
+    setTrendingOnly: PollsStore['setTrendingOnly'];
+    setSearchQuery: PollsStore['setSearchQuery'];
+    clearSearch: PollsStore['clearSearch'];
+    setCurrentPage: PollsStore['setCurrentPage'];
+    setLastFetchedAt: (timestamp: string | null) => void;
   };
 };
 
@@ -39,22 +29,91 @@ declare global {
 }
 
 export default function PollsStoreHarnessPage() {
-  const polls = usePolls();
-  const filteredPolls = useFilteredPolls();
-  const filters = usePollFilters();
-  const search = usePollSearch();
-  const pagination = usePollPagination();
-  const stats = usePollsStats();
+  const [pollsState, setPollsState] = useState<PollsStore>(() => usePollsStore.getState());
 
-  const {
-    resetPollsState,
-    setFilters,
-    clearFilters,
-    setTrendingOnly,
-    setSearchQuery,
-    clearSearch,
-    setCurrentPage,
-  } = usePollsActions();
+  useEffect(() => {
+    const unsubscribe = usePollsStore.subscribe((state) => {
+      setPollsState(state);
+    });
+    return unsubscribe;
+  }, []);
+
+  const { polls, filters, search, preferences } = pollsState;
+
+  const filteredPolls = useMemo(() => {
+    return polls.filter((poll) => {
+      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
+        return false;
+      }
+
+      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
+        return false;
+      }
+
+      if (filters.tags.length > 0 && poll.tags) {
+        const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
+        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
+          return false;
+        }
+      }
+
+      if (filters.trendingOnly) {
+        const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
+        if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [filters, polls]);
+
+  const analytics = useMemo(() => {
+    return derivePollAnalytics(
+      polls.map((poll) => {
+        const meta = poll as Record<string, unknown>;
+        const totalVotes =
+          typeof poll.total_votes === 'number'
+            ? poll.total_votes
+            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+        const trendingPosition =
+          typeof meta.trending_position === 'number'
+            ? (meta.trending_position as number)
+            : (typeof meta.trendingPosition === 'number'
+                ? (meta.trendingPosition as number)
+                : null);
+
+        return {
+          status: poll.status,
+          total_votes: totalVotes,
+          trending_position: trendingPosition,
+        };
+      }),
+    );
+  }, [polls]);
+
+  const stats = useMemo(
+    () => ({
+      total: analytics.total,
+      active: analytics.active,
+      closed: analytics.closed,
+      draft: analytics.draft,
+      archived: analytics.archived,
+      trending: analytics.trending,
+      totalVotes: analytics.totalVotes,
+    }),
+    [analytics],
+  );
+
+  const pagination = useMemo(
+    () => ({
+      currentPage: search.currentPage,
+      totalPages: search.totalPages,
+      totalResults: search.totalResults,
+      itemsPerPage: preferences.itemsPerPage,
+    }),
+    [preferences.itemsPerPage, search.currentPage, search.totalPages, search.totalResults],
+  );
 
   useEffect(() => {
     const harness: PollsStoreHarness = {
@@ -64,13 +123,17 @@ export default function PollsStoreHarnessPage() {
         addPoll: (poll) => usePollsStore.getState().addPoll(poll),
         updatePoll: (id, updates) => usePollsStore.getState().updatePoll(id, updates),
         removePoll: (id) => usePollsStore.getState().removePoll(id),
-        resetPollsState,
-        setFilters,
-        clearFilters,
-        setTrendingOnly,
-        setSearchQuery,
-        clearSearch,
-        setCurrentPage,
+        resetPollsState: () => usePollsStore.getState().resetPollsState(),
+        setFilters: (partial) => usePollsStore.getState().setFilters(partial),
+        clearFilters: () => usePollsStore.getState().clearFilters(),
+        setTrendingOnly: (value) => usePollsStore.getState().setTrendingOnly(value),
+        setSearchQuery: (value) => usePollsStore.getState().setSearchQuery(value),
+        clearSearch: () => usePollsStore.getState().clearSearch(),
+        setCurrentPage: (page) => usePollsStore.getState().setCurrentPage(page),
+        setLastFetchedAt: (timestamp) =>
+          usePollsStore.setState((state) => {
+            state.lastFetchedAt = timestamp;
+          }),
       },
     };
 
@@ -80,15 +143,46 @@ export default function PollsStoreHarnessPage() {
         delete window.__pollsStoreHarness;
       }
     };
-  }, [
-    clearFilters,
-    clearSearch,
-    resetPollsState,
-    setCurrentPage,
-    setFilters,
-    setSearchQuery,
-    setTrendingOnly,
-  ]);
+  }, []);
+
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.pollsStoreHarness = 'ready';
+      }
+    };
+
+    const persist = (usePollsStore as typeof usePollsStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.pollsStoreHarness;
+      }
+    };
+  }, []);
 
   return (
     <main

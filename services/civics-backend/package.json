@@ -21,6 +21,9 @@
     "state:sync:photos": "npm run build --silent && node build/scripts/state/sync-photos.js",
     "state:sync:data-sources": "npm run build --silent && node build/scripts/state/sync-data-sources.js",
     "state:sync:google-civic": "npm run build --silent && node build/scripts/state/sync-google-civic.js",
+    "state:sync:google-elections": "npm run build --silent && node build/scripts/state/sync-google-elections.js",
+    "state:sync:divisions": "npm run build --silent && node build/scripts/state/sync-divisions.js",
+    "state:sync:google-elections": "npm run build --silent && node build/scripts/state/sync-google-elections.js",
     "state:refresh": "npm run build --silent && node build/scripts/state/refresh-state.js",
     "openstates:coverage": "npm run build --silent && node build/run-openstates-coverage.js",
     "openstates:ingest": "npm run openstates:stage && npm run openstates:merge",
@@ -56,6 +59,8 @@
     "openstates:sync:photos": "npm run state:sync:photos",
     "openstates:sync:data-sources": "npm run state:sync:data-sources",
     "openstates:sync:google-civic": "npm run state:sync:google-civic",
+    "openstates:sync:google-elections": "npm run state:sync:google-elections",
+    "openstates:sync:divisions": "npm run state:sync:divisions",
     "sync:activity": "npm run state:sync:activity",
     "refresh:state": "npm run state:refresh",
     "sync:committees": "npm run state:sync:committees",
@@ -63,7 +68,9 @@
     "sync:social": "npm run state:sync:social",
     "sync:photos": "npm run state:sync:photos",
     "sync:data-sources": "npm run state:sync:data-sources",
-    "sync:google-civic": "npm run state:sync:google-civic"
+    "sync:google-civic": "npm run state:sync:google-civic",
+    "sync:google-elections": "npm run state:sync:google-elections",
+    "sync:divisions": "npm run state:sync:divisions"
   },
   "dependencies": {
     "@choices/civics-shared": "file:../civics-shared",

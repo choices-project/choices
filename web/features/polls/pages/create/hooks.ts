@@ -15,6 +15,12 @@ import {
 import { CATEGORIES, POLL_CREATION_STEPS, STEP_TIPS } from './constants';
 import type { PollWizardSubmissionResult } from './schema';
 
+type StepValidationSnapshot = {
+  isValid: boolean;
+  errors: Record<string, string>;
+  canProceed: boolean;
+};
+
 export const usePollCreateController = () => {
   const data = usePollWizardData();
   const errors = usePollWizardErrors();
@@ -23,7 +29,7 @@ export const usePollCreateController = () => {
   const canProceedFlag = usePollWizardCanProceed();
   const isLoading = usePollWizardLoading();
   const isComplete = usePollWizardIsComplete();
-  const stepValidation = usePollWizardStepValidation(currentStep);
+  const stepValidation = usePollWizardStepValidation(currentStep) as StepValidationSnapshot;
 
   const {
     nextStep,

@@ -31,6 +31,8 @@ export type ContactRepresentativeSummary = {
   party?: string | null;
   district?: string | null;
   photo?: string | null;
+  divisionIds: string[];
+  ocdDivisionIds?: string[] | null;
 };
 
 export type ContactThread = {
@@ -174,6 +176,21 @@ const normaliseRepresentative = (rep: any): ContactRepresentativeSummary | null 
   if (!rep) {
     return null;
   }
+
+  const rawDivisionIds =
+    rep.division_ids ??
+    rep.divisions ??
+    rep.representative_divisions ??
+    rep.ocdDivisionIds ??
+    rep.ocd_division_ids ??
+    [];
+
+  const divisionIds = Array.isArray(rawDivisionIds)
+    ? rawDivisionIds
+        .map((value) => (typeof value === 'string' ? value.trim() : null))
+        .filter((value): value is string => Boolean(value))
+    : [];
+
   return {
     id: typeof rep.id === 'string' ? Number.parseInt(rep.id, 10) : Number(rep.id ?? 0),
     name: rep.name ?? '',
@@ -181,6 +198,12 @@ const normaliseRepresentative = (rep: any): ContactRepresentativeSummary | null 
     party: rep.party ?? rep.party_affiliation ?? null,
     district: rep.district ?? rep.district_name ?? null,
     photo: rep.photo ?? rep.avatar ?? null,
+    divisionIds,
+    ocdDivisionIds: Array.isArray(rep.ocdDivisionIds)
+      ? rep.ocdDivisionIds
+      : Array.isArray(rep.ocd_division_ids)
+      ? rep.ocd_division_ids
+      : divisionIds,
   };
 };
 

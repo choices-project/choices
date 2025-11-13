@@ -1,25 +1,11 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
+import { runAxeAudit } from '../helpers/accessibility';
 
 const SAMPLE_TITLE = 'Playwright Created Poll';
 const SAMPLE_DESCRIPTION =
   'This poll is created by Playwright to verify the multi-step authoring experience end-to-end.';
-
-const runAxe = async (page: Page, context: string) => {
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa'])
-    .analyze();
-
-  if (results.violations.length > 0) {
-    console.error(`[axe] ${context} violations detected:`, results.violations);
-  } else {
-    console.info(`[axe] ${context} passed WCAG 2.0/2.1 A/AA checks`);
-  }
-
-  expect(results.violations, `${context} accessibility violations`).toEqual([]);
-};
 
 test.describe('Poll creation wizard', () => {
   test.beforeEach(({ page }) => {
@@ -92,7 +78,7 @@ test.describe('Poll creation wizard', () => {
     await page.fill('#poll-title-input', SAMPLE_TITLE);
     await page.fill('#poll-description-input', SAMPLE_DESCRIPTION);
 
-    await runAxe(page, 'poll details');
+    await runAxeAudit(page, 'poll details');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
@@ -101,7 +87,7 @@ test.describe('Poll creation wizard', () => {
     await optionInputs.nth(0).fill('Option A');
     await optionInputs.nth(1).fill('Option B');
 
-    await runAxe(page, 'options step');
+    await runAxeAudit(page, 'options step');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
@@ -114,12 +100,12 @@ test.describe('Poll creation wizard', () => {
     await page.getByLabel('Privacy level').selectOption('private');
     await page.getByLabel('Voting method').selectOption('ranked');
 
-    await runAxe(page, 'audience step');
+    await runAxeAudit(page, 'audience step');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
 
-    await runAxe(page, 'review step');
+    await runAxeAudit(page, 'review step');
 
     await expect(page.getByText(SAMPLE_TITLE)).toBeVisible();
     await expect(page.getByText('Option A')).toBeVisible();
@@ -128,7 +114,7 @@ test.describe('Poll creation wizard', () => {
     await page.getByRole('button', { name: 'Publish poll' }).click();
     await waitForPageReady(page);
 
-    await runAxe(page, 'share dialog');
+    await runAxeAudit(page, 'share dialog');
 
     await expect(page.getByRole('heading', { name: 'Share your poll' })).toBeVisible();
     await expect(page.getByText(/Visibility:\s*private/)).toBeVisible();
@@ -136,7 +122,7 @@ test.describe('Poll creation wizard', () => {
 
     await page.getByRole('button', { name: 'Close' }).click();
 
-    await runAxe(page, 'wizard reset');
+    await runAxeAudit(page, 'wizard reset');
 
     await expect(page.locator('#poll-title-input')).toHaveValue('');
   });

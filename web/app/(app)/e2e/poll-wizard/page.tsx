@@ -1,44 +1,30 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import {
-  usePollWizardActions,
-  usePollWizardCanGoBack,
-  usePollWizardCanProceed,
-  usePollWizardData,
-  usePollWizardErrors,
-  usePollWizardIsComplete,
-  usePollWizardProgress,
-  usePollWizardStats,
-  usePollWizardStep,
-  usePollWizardStore,
-  type PollWizardStore,
-} from '@/lib/stores/pollWizardStore';
-
-type PollWizardHarnessActions = ReturnType<typeof usePollWizardActions>;
+import { usePollWizardStore, type PollWizardStore } from '@/lib/stores/pollWizardStore';
 
 export type PollWizardHarness = {
   getSnapshot: () => PollWizardStore;
   actions: {
-    nextStep: PollWizardHarnessActions['nextStep'];
-    prevStep: PollWizardHarnessActions['prevStep'];
-    goToStep: PollWizardHarnessActions['goToStep'];
-    resetWizard: PollWizardHarnessActions['resetWizard'];
-    updateData: PollWizardHarnessActions['updateData'];
-    updateSettings: PollWizardHarnessActions['updateSettings'];
-    addOption: PollWizardHarnessActions['addOption'];
-    removeOption: PollWizardHarnessActions['removeOption'];
-    updateOption: PollWizardHarnessActions['updateOption'];
-    addTag: PollWizardHarnessActions['addTag'];
-    removeTag: PollWizardHarnessActions['removeTag'];
-    updateTags: PollWizardHarnessActions['updateTags'];
-    validateCurrentStep: PollWizardHarnessActions['validateCurrentStep'];
-    clearAllErrors: PollWizardHarnessActions['clearAllErrors'];
-    setFieldError: PollWizardHarnessActions['setFieldError'];
-    clearFieldError: PollWizardHarnessActions['clearFieldError'];
-    canProceedToNextStep: PollWizardHarnessActions['canProceedToNextStep'];
-    getStepErrors: PollWizardHarnessActions['getStepErrors'];
+    nextStep: PollWizardStore['nextStep'];
+    prevStep: PollWizardStore['prevStep'];
+    goToStep: PollWizardStore['goToStep'];
+    resetWizard: PollWizardStore['resetWizard'];
+    updateData: PollWizardStore['updateData'];
+    updateSettings: PollWizardStore['updateSettings'];
+    addOption: PollWizardStore['addOption'];
+    removeOption: PollWizardStore['removeOption'];
+    updateOption: PollWizardStore['updateOption'];
+    addTag: PollWizardStore['addTag'];
+    removeTag: PollWizardStore['removeTag'];
+    updateTags: PollWizardStore['updateTags'];
+    validateCurrentStep: PollWizardStore['validateCurrentStep'];
+    clearAllErrors: PollWizardStore['clearAllErrors'];
+    setFieldError: PollWizardStore['setFieldError'];
+    clearFieldError: PollWizardStore['clearFieldError'];
+    canProceedToNextStep: PollWizardStore['canProceedToNextStep'];
+    getStepErrors: PollWizardStore['getStepErrors'];
   };
 };
 
@@ -47,57 +33,48 @@ declare global {
 }
 
 export default function PollWizardStoreHarnessPage() {
-  const data = usePollWizardData();
-  const step = usePollWizardStep();
-  const progress = usePollWizardProgress();
-  const errors = usePollWizardErrors();
-  const canProceed = usePollWizardCanProceed();
-  const canGoBack = usePollWizardCanGoBack();
-  const isComplete = usePollWizardIsComplete();
-  const stats = usePollWizardStats();
+  const [wizardState, setWizardState] = useState<PollWizardStore>(() => usePollWizardStore.getState());
+
+  useEffect(() => {
+    const unsubscribe = usePollWizardStore.subscribe((state) => {
+      setWizardState(state);
+    });
+    return unsubscribe;
+  }, []);
+
   const {
-    nextStep,
-    prevStep,
-    goToStep,
-    resetWizard,
-    updateData,
-    updateSettings,
-    addOption,
-    removeOption,
-    updateOption,
-    addTag,
-    removeTag,
-    updateTags,
-    validateCurrentStep,
-    clearAllErrors,
-    setFieldError,
-    clearFieldError,
-    canProceedToNextStep,
-    getStepErrors,
-  } = usePollWizardActions();
+    data,
+    currentStep,
+    progress,
+    errors,
+    canProceed,
+    canGoBack,
+    isComplete,
+    totalSteps,
+  } = wizardState;
 
   useEffect(() => {
     const harness: PollWizardHarness = {
       getSnapshot: () => usePollWizardStore.getState(),
       actions: {
-        nextStep,
-        prevStep,
-        goToStep,
-        resetWizard,
-        updateData,
-        updateSettings,
-        addOption,
-        removeOption,
-        updateOption,
-        addTag,
-        removeTag,
-        updateTags,
-        validateCurrentStep,
-        clearAllErrors,
-        setFieldError,
-        clearFieldError,
-        canProceedToNextStep,
-        getStepErrors,
+        nextStep: () => usePollWizardStore.getState().nextStep(),
+        prevStep: () => usePollWizardStore.getState().prevStep(),
+        goToStep: (step) => usePollWizardStore.getState().goToStep(step),
+        resetWizard: () => usePollWizardStore.getState().resetWizard(),
+        updateData: (updates) => usePollWizardStore.getState().updateData(updates),
+        updateSettings: (settings) => usePollWizardStore.getState().updateSettings(settings),
+        addOption: () => usePollWizardStore.getState().addOption(),
+        removeOption: (index) => usePollWizardStore.getState().removeOption(index),
+        updateOption: (index, value) => usePollWizardStore.getState().updateOption(index, value),
+        addTag: (tag) => usePollWizardStore.getState().addTag(tag),
+        removeTag: (tag) => usePollWizardStore.getState().removeTag(tag),
+        updateTags: (tags) => usePollWizardStore.getState().updateTags(tags),
+        validateCurrentStep: () => usePollWizardStore.getState().validateCurrentStep(),
+        clearAllErrors: () => usePollWizardStore.getState().clearAllErrors(),
+        setFieldError: (field, error) => usePollWizardStore.getState().setFieldError(field, error),
+        clearFieldError: (field) => usePollWizardStore.getState().clearFieldError(field),
+        canProceedToNextStep: (step) => usePollWizardStore.getState().canProceedToNextStep(step),
+        getStepErrors: (step) => usePollWizardStore.getState().getStepErrors(step),
       },
     };
 
@@ -107,26 +84,46 @@ export default function PollWizardStoreHarnessPage() {
         delete window.__pollWizardHarness;
       }
     };
-  }, [
-    addOption,
-    addTag,
-    canProceedToNextStep,
-    clearAllErrors,
-    clearFieldError,
-    getStepErrors,
-    goToStep,
-    nextStep,
-    prevStep,
-    removeOption,
-    removeTag,
-    resetWizard,
-    setFieldError,
-    updateData,
-    updateOption,
-    updateSettings,
-    updateTags,
-    validateCurrentStep,
-  ]);
+  }, []);
+
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.pollWizardHarness = 'ready';
+      }
+    };
+
+    const persist = (usePollWizardStore as typeof usePollWizardStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.pollWizardHarness;
+      }
+    };
+  }, []);
 
   const errorEntries = Object.entries(errors);
 
@@ -148,11 +145,11 @@ export default function PollWizardStoreHarnessPage() {
           <dl className="mt-2 space-y-1 text-sm">
             <div className="flex justify-between gap-2">
               <dt>Current step</dt>
-              <dd data-testid="wizard-current-step">{String(step)}</dd>
+              <dd data-testid="wizard-current-step">{String(currentStep)}</dd>
             </div>
             <div className="flex justify-between gap-2">
               <dt>Total steps</dt>
-              <dd data-testid="wizard-total-steps">{String(stats.totalSteps)}</dd>
+              <dd data-testid="wizard-total-steps">{String(totalSteps)}</dd>
             </div>
             <div className="flex justify-between gap-2">
               <dt>Progress (%)</dt>

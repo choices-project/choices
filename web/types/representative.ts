@@ -1,9 +1,9 @@
 /**
  * Representative Types
- * 
+ *
  * TypeScript interfaces for representative data structures
  * Based on the civics backend database schema
- * 
+ *
  * Created: October 28, 2025
  * Status: ✅ FOUNDATION
  */
@@ -20,42 +20,44 @@ export type Representative = {
   level: 'federal' | 'state' | 'local';
   state: string;
   district?: string;
-  
+  division_ids?: string[];
+  ocdDivisionIds?: string[];
+
   // Contact Information
   primary_email?: string;
   primary_phone?: string;
   primary_website?: string;
-  
+
   // Social Media
   twitter_handle?: string;
   facebook_url?: string;
   instagram_handle?: string;
   linkedin_url?: string;
   youtube_channel?: string;
-  
+
   // External IDs
   bioguide_id?: string;
   openstates_id?: string;
   fec_id?: string;
   google_civic_id?: string;
   congress_gov_id?: string;
-  
+
   // Additional Info
   primary_photo_url?: string;
   term_start_date?: string;
   term_end_date?: string;
   next_election_date?: string;
-  
+
   // Data Quality
   data_quality_score: number;
   verification_status: 'verified' | 'pending' | 'failed';
   data_sources: string[];
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
   last_verified: string;
-  
+
   // Related Data (populated by service)
   photos?: RepresentativePhoto[];
   activities?: RepresentativeActivity[];

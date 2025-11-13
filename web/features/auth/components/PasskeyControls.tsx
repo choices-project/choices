@@ -6,6 +6,7 @@ import {
   useInitializeBiometricState,
   useUserActions,
 } from '../lib/store';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 export function PasskeyControls() {
   const [mode, setMode] = React.useState<
@@ -14,6 +15,18 @@ export function PasskeyControls() {
   const [credentials, setCredentials] = React.useState<Array<{ id: string; name: string }>>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+
+  const registerDialogRef = React.useRef<HTMLDivElement>(null);
+  const loginDialogRef = React.useRef<HTMLDivElement>(null);
+  const biometricDialogRef = React.useRef<HTMLDivElement>(null);
+  const crossDeviceDialogRef = React.useRef<HTMLDivElement>(null);
+  const credentialDialogRef = React.useRef<HTMLDivElement>(null);
+
+  const registerPrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
+  const loginPrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
+  const biometricPrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
+  const crossDevicePrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
+  const credentialPrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
 
   useInitializeBiometricState();
 
@@ -97,6 +110,56 @@ export function PasskeyControls() {
     updateError('server-error');
   }, [updateError]);
 
+  const handleCloseDialog = React.useCallback(() => {
+    setMode('idle');
+  }, []);
+
+  useAccessibleDialog({
+    isOpen: mode === 'register',
+    dialogRef: registerDialogRef,
+    ...(mode === 'register' ? { initialFocusRef: registerPrimaryButtonRef, ariaLabelId: 'passkey-register-title' } : {}),
+    onClose: handleCloseDialog,
+    liveMessage: 'Register a new passkey dialog opened.',
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'login',
+    dialogRef: loginDialogRef,
+    ...(mode === 'login' ? { initialFocusRef: loginPrimaryButtonRef, ariaLabelId: 'passkey-login-title' } : {}),
+    onClose: handleCloseDialog,
+    liveMessage: 'Authenticate with passkey dialog opened.',
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'biometric',
+    dialogRef: biometricDialogRef,
+    ...(mode === 'biometric'
+      ? { initialFocusRef: biometricPrimaryButtonRef, ariaLabelId: 'passkey-biometric-title' }
+      : {}),
+    onClose: handleCloseDialog,
+    liveMessage: 'Biometric authentication dialog opened.',
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'crossDevice',
+    dialogRef: crossDeviceDialogRef,
+    ...(mode === 'crossDevice'
+      ? { initialFocusRef: crossDevicePrimaryButtonRef, ariaLabelId: 'passkey-cross-device-title' }
+      : {}),
+    onClose: handleCloseDialog,
+    liveMessage: 'Cross-device authentication dialog opened.',
+  });
+
+  useAccessibleDialog({
+    isOpen: mode === 'viewing',
+    dialogRef: credentialDialogRef,
+    ...(mode === 'viewing'
+      ? { initialFocusRef: credentialPrimaryButtonRef, ariaLabelId: 'passkey-credential-title' }
+      : {}),
+    onClose: handleCloseDialog,
+    liveMessage: 'Manage passkey credentials dialog opened.',
+  });
+
   return (
     <div className="space-y-4">
       <div className="space-x-2">
@@ -124,35 +187,31 @@ export function PasskeyControls() {
 
       {mode === 'register' && (
         <div
-          data-testid="webauthn-prompt"
+          className="modal p-4 border rounded"
           role="dialog"
           aria-modal="true"
-          className="modal rounded border p-4"
+          aria-labelledby="passkey-register-title"
+          ref={registerDialogRef}
         >
-          <p>Registering passkey…</p>
-          <div className="mt-4 space-x-2">
-            <button
-              data-testid="webauthn-biometric-button"
-              className="btn"
-              onClick={handleBiometricAuth}
-            >
+          <p id="passkey-register-title" className="text-lg font-semibold">
+            Registering passkey…
+          </p>
+          <div className="space-x-2 mt-4">
+            <button data-testid="webauthn-biometric" className="btn" onClick={handleBiometricAuth}>
               Use biometrics
             </button>
-            <button
-              data-testid="webauthn-cross-device-button"
-              className="btn"
-              onClick={handleCrossDeviceAuth}
-            >
+            <button data-testid="webauthn-cross-device" className="btn" onClick={handleCrossDeviceAuth}>
               Use another device
             </button>
             <button
-              data-testid="complete-registration-button"
+              data-testid="complete-registration"
               className="btn"
               onClick={handleCompleteRegistration}
+              ref={registerPrimaryButtonRef}
             >
               Complete registration
             </button>
-            <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
+            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
               Cancel
             </button>
           </div>
@@ -162,28 +221,28 @@ export function PasskeyControls() {
 
       {mode === 'login' && (
         <div
-          data-testid="webauthn-auth-prompt"
+          className="modal p-4 border rounded"
           role="dialog"
           aria-modal="true"
-          className="modal rounded border p-4"
+          aria-labelledby="passkey-login-title"
+          ref={loginDialogRef}
         >
-          <p>Authenticate with passkey…</p>
-          <div className="mt-4 space-x-2">
-            <button
-              data-testid="webauthn-biometric-button"
-              className="btn"
-              onClick={handleBiometricAuth}
-            >
+          <p id="passkey-login-title" className="text-lg font-semibold">
+            Authenticate with passkey…
+          </p>
+          <div className="space-x-2 mt-4">
+            <button data-testid="webauthn-biometric" className="btn" onClick={handleBiometricAuth}>
               Use biometrics
             </button>
             <button
-              data-testid="complete-authentication-button"
+              data-testid="complete-authentication"
               className="btn"
               onClick={handleCompleteAuthentication}
+              ref={loginPrimaryButtonRef}
             >
               Complete authentication
             </button>
-            <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
+            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
               Cancel
             </button>
           </div>
@@ -192,21 +251,25 @@ export function PasskeyControls() {
 
       {mode === 'biometric' && (
         <div
-          data-testid="webauthn-biometric-prompt"
+          className="modal p-4 border rounded"
           role="dialog"
           aria-modal="true"
-          className="modal rounded border p-4"
+          aria-labelledby="passkey-biometric-title"
+          ref={biometricDialogRef}
         >
-          <p>Biometric authentication…</p>
-          <div className="mt-4 space-x-2">
+          <p id="passkey-biometric-title" className="text-lg font-semibold">
+            Biometric authentication…
+          </p>
+          <div className="space-x-2 mt-4">
             <button
-              data-testid="complete-biometric-auth-button"
+              data-testid="complete-biometric-auth"
               className="btn"
               onClick={handleCompleteAuthentication}
+              ref={biometricPrimaryButtonRef}
             >
               Complete biometric auth
             </button>
-            <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
+            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
               Cancel
             </button>
           </div>
@@ -214,21 +277,30 @@ export function PasskeyControls() {
       )}
 
       {mode === 'crossDevice' && (
-        <div className="modal rounded border p-4">
-          <p>Cross-device authentication…</p>
+        <div
+          className="modal p-4 border rounded"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="passkey-cross-device-title"
+          ref={crossDeviceDialogRef}
+        >
+          <p id="passkey-cross-device-title" className="text-lg font-semibold">
+            Cross-device authentication…
+          </p>
           <div data-testid="webauthn-qr" className="qr-placeholder mt-4 h-32 w-32 bg-gray-200" />
           <div className="mt-4 space-x-2">
-            <button data-testid="simulate-qr-scan-button" className="btn">
+            <button data-testid="simulate-qr-scan" className="btn">
               Simulate QR scan
             </button>
             <button
-              data-testid="complete-cross-device-auth-button"
+              data-testid="complete-cross-device-auth"
               className="btn"
               onClick={handleCompleteAuthentication}
+              ref={crossDevicePrimaryButtonRef}
             >
               Complete cross-device auth
             </button>
-            <button data-testid="cancel-webauthn-button" className="btn" onClick={handleCancel}>
+            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
               Cancel
             </button>
           </div>
@@ -239,7 +311,13 @@ export function PasskeyControls() {
       )}
 
       {mode === 'viewing' && (
-        <div className="modal rounded border p-4">
+        <div
+          className="modal p-4 border rounded"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="passkey-credential-title"
+          ref={credentialDialogRef}
+        >
           <h3>Manage Credentials</h3>
           <div data-testid="credential-list" className="mt-4">
             {credentials.map((cred) => (
@@ -250,17 +328,14 @@ export function PasskeyControls() {
             {credentials.length === 0 && <p>No credentials found</p>}
           </div>
           <div className="mt-4 space-x-2">
-            <button
-              data-testid="remove-credential-button"
-              className="btn"
-              onClick={handleRemoveCredential}
-            >
+            <button data-testid="remove-credential" className="btn" onClick={handleRemoveCredential}>
               Remove credential
             </button>
             <button
-              data-testid="confirm-removal-button"
+              data-testid="confirm-removal"
               className="btn"
               onClick={handleRemoveCredential}
+              ref={credentialPrimaryButtonRef}
             >
               Confirm removal
             </button>

@@ -21,6 +21,8 @@ import {
   getAllFeatureFlags as _getAllFeatureFlags
 } from '@/lib/core/feature-flags';
 
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
 export type UseFeatureFlagsReturn = {
   // Flag checking
   isEnabled: (flagId: string) => boolean;
@@ -60,6 +62,24 @@ export type UseFeatureFlagsReturn = {
 export function useFeatureFlags(): UseFeatureFlagsReturn {
   const [, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
   const [loading, setLoading] = useState(true);
+
+  if (IS_E2E_HARNESS) {
+    return {
+      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
+      isDisabled: (flagId: string) => !featureFlagManager.isEnabled(flagId),
+      enable: (flagId: string) => featureFlagManager.enable(flagId),
+      disable: (flagId: string) => featureFlagManager.disable(flagId),
+      toggle: (flagId: string) => featureFlagManager.toggle(flagId),
+      getFlag: (flagId: string) => featureFlagManager.getFlag(flagId) ?? undefined,
+      getAllFlags: () => featureFlagManager.getAllFlags(),
+      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
+      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
+      getFlagsByCategory: (category: 'core' | 'optional' | 'experimental') => featureFlagManager.getFlagsByCategory(category),
+      systemInfo: featureFlagManager.getSystemInfo(),
+      loading: false,
+      manager: featureFlagManager,
+    };
+  }
 
   // Initialize flags on mount
   useEffect(() => {

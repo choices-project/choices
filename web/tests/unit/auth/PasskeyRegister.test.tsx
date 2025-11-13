@@ -39,7 +39,8 @@ describe('PasskeyRegister', () => {
     render(<PasskeyRegister />);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Create Passkey/i }));
+    const createButton = await screen.findByRole('button', { name: /Create Passkey/i });
+    await user.click(createButton);
 
     await waitFor(() =>
       expect(screen.getByText(/Registration Successful!/i)).toBeInTheDocument(),
@@ -53,7 +54,8 @@ describe('PasskeyRegister', () => {
     render(<PasskeyRegister />);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Create Passkey/i }));
+    const createButton = await screen.findByRole('button', { name: /Create Passkey/i });
+    await user.click(createButton);
 
     await waitFor(() =>
       expect(screen.getByText(/Registration failed/i)).toBeInTheDocument(),
