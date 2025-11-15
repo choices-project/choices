@@ -248,9 +248,12 @@ export const createAppActions = (
     },
 
     toggleTheme: () => {
-      let nextTheme: ThemePreference = 'light';
+      let nextTheme: ThemePreference = 'dark';
       setState((state) => {
-        nextTheme = state.theme === 'light' ? 'dark' : 'light';
+        const currentTheme = state.theme;
+        const currentResolved = state.resolvedTheme;
+        const baseline = currentTheme === 'system' ? currentResolved : currentTheme;
+        nextTheme = baseline === 'dark' ? 'light' : 'dark';
         state.theme = nextTheme;
         state.resolvedTheme = resolveTheme(nextTheme, state.systemTheme);
       });

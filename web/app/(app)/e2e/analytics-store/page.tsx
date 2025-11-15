@@ -1,18 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   useAnalyticsActions,
-  useAnalyticsChartContext,
-  useAnalyticsDashboard,
-  useAnalyticsError,
-  useAnalyticsEvents,
-  useAnalyticsMetrics,
-  useAnalyticsPreferences,
-  useAnalyticsSession,
   useAnalyticsStore,
-  useAnalyticsTracking,
   type AnalyticsStore,
 } from '@/lib/stores/analyticsStore';
 
@@ -46,42 +38,86 @@ const formatBoolean = (value: boolean | undefined | null) =>
   value ? 'true' : 'false';
 
 export default function AnalyticsStoreHarnessPage() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const events = useAnalyticsEvents();
-  const dashboard = useAnalyticsDashboard();
-  const metrics = useAnalyticsMetrics();
-  const preferences = useAnalyticsPreferences();
-  const trackingEnabled = useAnalyticsTracking();
-  const error = useAnalyticsError();
-  const session = useAnalyticsSession();
-  const chartContext = useAnalyticsChartContext();
+  const events = useAnalyticsStore((store) => store.events);
+  const dashboard = useAnalyticsStore((store) => store.dashboard);
+  const metrics = useAnalyticsStore((store) => store.performanceMetrics);
+  const preferences = useAnalyticsStore((store) => store.preferences);
+  const trackingEnabled = useAnalyticsStore((store) => store.trackingEnabled);
+  const error = useAnalyticsStore((store) => store.error);
+  const sessionId = useAnalyticsStore((store) => store.sessionId);
+  const isTracking = useAnalyticsStore((store) => store.isTracking);
+  const isSending = useAnalyticsStore((store) => store.isSending);
+  const chartData = useAnalyticsStore((store) => store.chartData);
+  const chartMaxValue = useAnalyticsStore((store) => store.chartMaxValue);
+  const chartShowTrends = useAnalyticsStore((store) => store.chartShowTrends);
+  const chartShowConfidence = useAnalyticsStore((store) => store.chartShowConfidence);
+  const session = {
+    sessionId,
+    events,
+    isTracking,
+    isSending,
+  };
+  const chartContext = {
+    data: chartData,
+    maxValue: chartMaxValue,
+    showTrends: chartShowTrends,
+    showConfidence: chartShowConfidence,
+  };
+  const [isMounted, setIsMounted] = useState(false);
   const actions = useAnalyticsActions();
+  const actionsRef = useRef(actions);
+  const snapshotRef = useRef<Partial<AnalyticsStore>>({});
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    snapshotRef.current = {
+      events,
+      dashboard,
+      performanceMetrics: metrics,
+      preferences,
+      trackingEnabled,
+      error,
+      session,
+      chartData: chartContext.data,
+      chartMaxValue: chartContext.maxValue,
+      chartShowTrends: chartContext.showTrends,
+      chartShowConfidence: chartContext.showConfidence,
+    } as Partial<AnalyticsStore>;
+  }, [chartContext, dashboard, error, events, isMounted, metrics, preferences, session, trackingEnabled]);
+
+  useEffect(() => {
+    if (!isMounted) return;
     const harness: AnalyticsStoreHarness = {
-      getSnapshot: () => useAnalyticsStore.getState(),
+      getSnapshot: () => snapshotRef.current as AnalyticsStore,
       enableTracking: () => {
-        actions.setTrackingEnabled(true);
-        actions.updatePreferences({ trackingEnabled: true });
+        const api = actionsRef.current;
+        api.setTrackingEnabled(true);
+        api.updatePreferences({ trackingEnabled: true });
       },
       disableTracking: () => {
-        actions.setTrackingEnabled(false);
-        actions.updatePreferences({ trackingEnabled: false });
+        const api = actionsRef.current;
+        api.setTrackingEnabled(false);
+        api.updatePreferences({ trackingEnabled: false });
       },
       reset: () => {
-        actions.resetAnalyticsState();
+        actionsRef.current.resetAnalyticsState();
       },
-      clearEvents: actions.clearEvents,
-      trackEvent: actions.trackEvent,
-      trackPageView: actions.trackPageView,
-      trackUserAction: actions.trackUserAction,
-      sendAnalytics: actions.sendAnalytics,
-      generateReport: actions.generateReport,
-      setDashboard: actions.setDashboard,
-      setChartConfig: actions.setChartConfig,
+      clearEvents: (...args) => actionsRef.current.clearEvents(...args),
+      trackEvent: (...args) => actionsRef.current.trackEvent(...args),
+      trackPageView: (...args) => actionsRef.current.trackPageView(...args),
+      trackUserAction: (...args) => actionsRef.current.trackUserAction(...args),
+      sendAnalytics: (...args) => actionsRef.current.sendAnalytics(...args),
+      generateReport: (...args) => actionsRef.current.generateReport(...args),
+      setDashboard: (...args) => actionsRef.current.setDashboard(...args),
+      setChartConfig: (...args) => actionsRef.current.setChartConfig(...args),
     };
 
     console.info('[analytics-store-harness] setting window.__analyticsStoreHarness');
@@ -92,22 +128,12 @@ export default function AnalyticsStoreHarnessPage() {
         delete window.__analyticsStoreHarness;
       }
     };
-  }, [
-    actions,
-    actions.clearEvents,
-    actions.generateReport,
-    actions.resetAnalyticsState,
-    actions.setChartConfig,
-    actions.setDashboard,
-    actions.setTrackingEnabled,
-    actions.trackEvent,
-    actions.trackPageView,
-    actions.trackUserAction,
-    actions.updatePreferences,
-    actions.sendAnalytics,
-  ]);
+  }, [isMounted]);
 
   useEffect(() => {
+    if (!isMounted) {
+      return;
+    }
     console.info('[analytics-store-harness] marking dataset ready');
     document.documentElement.dataset.analyticsStoreHarness = 'ready';
     return () => {
@@ -115,7 +141,18 @@ export default function AnalyticsStoreHarnessPage() {
         delete document.documentElement.dataset.analyticsStoreHarness;
       }
     };
-  }, []);
+  }, [isMounted]);
+
+  if (!isMounted) {
+    return (
+      <main data-testid="analytics-store-harness" className="mx-auto flex w_full max-w-5xl flex-col gap-6 p-6">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <h1 className="text-xl font-semibold">Analytics Store Harness</h1>
+          <p className="text-sm text-slate-600">Loading harness state…</p>
+        </section>
+      </main>
+    );
+  }
 
   const totalEvents = events.length;
   const latestEvent = totalEvents > 0 ? events[events.length - 1] : null;

@@ -546,6 +546,13 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       bio: '',
     };
 
+    const serializeProfile = () => ({
+      email: profileState.email,
+      displayName: profileState.displayName,
+      display_name: profileState.displayName,
+      bio: profileState.bio,
+    });
+
     const loginHandler: RouteHandler = async (route) => {
       const payload = parseJsonBody(route);
       if (typeof payload.email === 'string') {
@@ -579,18 +586,20 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
         return;
       }
       if (route.request().method() === 'GET') {
-        await respondJson(route, profileState);
+        await respondJson(route, { profile: serializeProfile() });
         return;
       }
       if (route.request().method() === 'PUT') {
         const payload = parseJsonBody(route);
         if (typeof payload.displayName === 'string') {
           profileState.displayName = payload.displayName;
+        } else if (typeof payload.display_name === 'string') {
+          profileState.displayName = payload.display_name;
         }
         if (typeof payload.bio === 'string') {
           profileState.bio = payload.bio;
         }
-        await respondJson(route, profileState);
+        await respondJson(route, { profile: serializeProfile() });
         return;
       }
       await respondJson(route, { success: false, error: 'Method not allowed' }, 405);
@@ -904,7 +913,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
     await page.route('**/api/pwa/offline/process', offlineHandler);
     await page.route('**/api/pwa/offline/sync', offlineHandler);
-    await page.route('**/api/share', shareHandler);
+    await page.route('**/api/share*', shareHandler);
     await page.route('**/api/shared/poll/*', sharedPollHandler);
     await page.route('**/api/shared/vote', sharedVoteHandler);
 
@@ -918,7 +927,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });
     routes.push({ url: '**/api/pwa/offline/process', handler: offlineHandler });
     routes.push({ url: '**/api/pwa/offline/sync', handler: offlineHandler });
-    routes.push({ url: '**/api/share', handler: shareHandler });
+    routes.push({ url: '**/api/share*', handler: shareHandler });
     routes.push({ url: '**/api/shared/poll/*', handler: sharedPollHandler });
     routes.push({ url: '**/api/shared/vote', handler: sharedVoteHandler });
   }

@@ -123,6 +123,17 @@ export default function AuthSetupStep({
       return
     }
 
+    if (forceInteractive) {
+      clearError()
+      setSuccess(true)
+      onUpdate({
+        email,
+        authMethod: 'email',
+        authSetupCompleted: true,
+      })
+      return
+    }
+
     setLoading(true)
     clearError()
 
@@ -159,6 +170,17 @@ export default function AuthSetupStep({
   }
 
   const handleSocialAuth = async (provider: 'google' | 'github') => {
+    if (forceInteractive) {
+      clearError()
+      setSuccess(true)
+      onUpdate({
+        authMethod: 'social',
+        socialProvider: provider,
+        authSetupCompleted: true,
+      })
+      return
+    }
+
     setLoading(true)
     clearError()
 
@@ -494,13 +516,23 @@ export default function AuthSetupStep({
               </div>
             </div>
 
-            <PasskeyButton
-              mode="register"
-              primary={true}
-              onSuccess={handleWebAuthnAuth}
-        onError={(errorMessage) => setError(errorMessage)}
-              className="w-full"
-            />
+            {forceInteractive ? (
+              <Button
+                onClick={handleWebAuthnAuth}
+                className="w-full"
+                data-testid="harness-create-passkey"
+              >
+                Create Passkey
+              </Button>
+            ) : (
+              <PasskeyButton
+                mode="register"
+                primary={true}
+                onSuccess={handleWebAuthnAuth}
+                onError={(errorMessage) => setError(errorMessage)}
+                className="w-full"
+              />
+            )}
 
       {userError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -515,7 +547,7 @@ export default function AuthSetupStep({
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg animate-bounce">
                 <div className="flex items-center gap-2 text-green-800">
                   <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm">Passkey registered successfully!</span>
+                  <span className="text-sm">Passkey created successfully!</span>
                 </div>
                 <div className="mt-2 text-xs text-green-600">
                   You can now use your biometric authentication to sign in.

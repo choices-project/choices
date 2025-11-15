@@ -12,8 +12,10 @@ import { createInitialAdminState } from '../../../lib/stores/adminStore';
 const AUTHSPEC_TIMEOUT = 30_000;
 
 test.describe('@mocks dashboard auth experience', () => {
+  let cleanupMocks: (() => Promise<void>) | undefined;
+
   test.beforeEach(async ({ page }, testInfo) => {
-    const cleanupMocks = await setupExternalAPIMocks(page, {
+    cleanupMocks = await setupExternalAPIMocks(page, {
       auth: true,
       analytics: true,
       notifications: true,
@@ -21,17 +23,19 @@ test.describe('@mocks dashboard auth experience', () => {
       civics: true,
     });
 
-    testInfo.attachments.push({
-      name: 'cleanup-mocks',
+    await testInfo.attach('cleanup-mocks', {
       contentType: 'application/json',
       body: JSON.stringify({ attached: true }),
     });
 
-    testInfo.onTestFinished(async () => {
-      await cleanupMocks();
-    });
-
     await ensureLoggedOut(page);
+  });
+
+  test.afterEach(async () => {
+    if (cleanupMocks) {
+      await cleanupMocks();
+      cleanupMocks = undefined;
+    }
   });
 
   test('guest redirect and logout cascades profile/admin state', async ({ page }) => {

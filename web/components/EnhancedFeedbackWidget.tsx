@@ -143,8 +143,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const _isLoadingAnalytics = useAnalyticsLoading()
   const error = useAnalyticsError()
 
+  const isHarnessMode =
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
+
   const trackerOptions = useMemo<FeedbackTrackerOptions | undefined>(() => {
-    if (typeof navigator === 'undefined') {
+    if (typeof navigator === 'undefined' || isHarnessMode) {
       return undefined
     }
 
@@ -165,7 +168,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       maxTrackedNetworkRequests: 5,
       maxTrackedConsoleLogs: 50
     }
-  }, [])
+  }, [isHarnessMode])
 
   // Initialize feedback tracker on mount
   useEffect(() => {
@@ -213,14 +216,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
     }
   }, [isOpen, step])
 
-  const isHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
-  const isHarnessRoute = pathname?.startsWith('/e2e/') ?? false
-
-  if (isHarness || isHarnessRoute) {
-    return null
-  }
-
-  if (!isFeatureEnabled('FEEDBACK_WIDGET')) {
+  if (!isHarnessMode && !isFeatureEnabled('FEEDBACK_WIDGET')) {
     return null
   }
 
@@ -560,7 +556,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   type="button"
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  aria-label="Close feedback form"
+                  aria-label="Dismiss feedback form"
+                  aria-hidden={step === 'success'}
+                  tabIndex={step === 'success' ? -1 : 0}
+                  disabled={step === 'success'}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>

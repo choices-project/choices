@@ -89,6 +89,38 @@ const HARNESS_DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = withOptional
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const HARNESS_PREFERENCES_STORAGE_KEY = 'dashboard-harness-preferences';
+
+const loadHarnessPreferences = (): DashboardPreferences | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(HARNESS_PREFERENCES_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<DashboardPreferences>;
+    return withOptional(HARNESS_DEFAULT_DASHBOARD_PREFERENCES, parsed);
+  } catch (error) {
+    logger.warn('Failed to load dashboard harness preferences', error);
+    return null;
+  }
+};
+
+const persistHarnessPreferences = (preferences: DashboardPreferences | null) => {
+  if (typeof window === 'undefined' || !preferences) {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      HARNESS_PREFERENCES_STORAGE_KEY,
+      JSON.stringify(preferences),
+    );
+  } catch (error) {
+    logger.warn('Failed to persist dashboard harness preferences', error);
+  }
+};
 
 type PersonalDashboardProps = {
   userId?: string;
@@ -132,6 +164,21 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     (state) => state.profile?.display_name ?? state.profile?.username ?? null,
   );
 
+  useEffect(() => {
+    if (!IS_E2E_HARNESS) {
+      return;
+    }
+    const stored = loadHarnessPreferences();
+    if (stored) {
+      useProfileStore.setState((state) => {
+        const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
+        state.preferences = withOptional(currentPreferences, {
+          dashboard: stored,
+        }) as ProfilePreferences;
+      });
+    }
+  }, []);
+
   if (!isUserLoading && !isAuthenticated) {
     return (
       <div className={`space-y-6 ${className}`}>
@@ -155,16 +202,22 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const handlePreferenceToggle = (key: keyof DashboardPreferences) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const checked = event.target.checked;
+      let nextDashboardPrefs: DashboardPreferences | null = null;
       useProfileStore.setState((state) => {
         const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
         const nextDashboard = withOptional(
           currentPreferences.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
           { [key]: checked },
         );
-        state.preferences = withOptional(currentPreferences, {
+        const updated = withOptional(currentPreferences, {
           dashboard: nextDashboard,
         }) as ProfilePreferences;
+        state.preferences = updated;
+        nextDashboardPrefs = nextDashboard;
       });
+      if (IS_E2E_HARNESS) {
+        persistHarnessPreferences(nextDashboardPrefs);
+      }
     };
 
   return (
