@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 
 import { AdminLayout } from '../layout/AdminLayout';
+import { useAppActions } from '@/lib/stores/appStore';
 
 const PerformanceDashboard = dynamic(
   () => import('@/features/admin/components/PerformanceDashboard'),
@@ -18,6 +19,22 @@ const PerformanceDashboard = dynamic(
 );
 
 export default function PerformancePage() {
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/performance');
+    setSidebarActiveSection('admin-performance');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Performance', href: '/admin/performance' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
   return (
     <AdminLayout>
       <Suspense

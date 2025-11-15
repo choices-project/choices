@@ -24,6 +24,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 - **OpenStates ingest overhaul** — Parser/stager now capture biographies, aliases, extras, expanded office metadata, and identifier maps; downstream enrichers + preview tooling surface the full dataset.
 - **Notification store** migrated to the shared creator/selectors pattern with unit, RTL integration, and new Playwright harness coverage (`/e2e/notification-store`).
 - **Admin notification widget** updated to consume shared hooks, aligning admin toasts with global behaviour.
+- **Voter registration CTA shipped** — Address lookup now renders state-specific registration links, Vote.gov guidance, and status checks backed by the new Supabase table + modernized store.
 - **Documentation cleanup** underway: development guide refreshed, modernization guidelines captured, and outdated “perfect completion” docs queued for archival.
 
 ---

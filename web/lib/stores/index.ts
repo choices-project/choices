@@ -33,6 +33,12 @@ export {
   useClearElections
 } from './electionStore';
 export {
+  useVoterRegistration,
+  useVoterRegistrationLoading,
+  useVoterRegistrationError,
+  useFetchVoterRegistrationForState
+} from './voterRegistrationStore';
+export {
   useUserStore,
   useUserCurrentAddress,
   useUserCurrentState,
@@ -186,6 +192,7 @@ export {
 export {
   useNotificationStore,
   useNotifications,
+  useElectionNotifications,
   useUnreadCount,
   useNotificationSettings,
   useNotificationLoading,

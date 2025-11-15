@@ -9,7 +9,6 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
@@ -67,7 +66,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     if (chalErr) {
       logger.error('Challenge persist failed', { error: chalErr });
-      return NextResponse.json({ error: 'Challenge persist failed' }, { status: 500 });
+      return errorResponse('Challenge persist failed', 500, undefined, 'WEBAUTHN_CHALLENGE_PERSIST_FAILED');
     }
 
   logger.info('WebAuthn registration options generated (native)', { userId: user.id });

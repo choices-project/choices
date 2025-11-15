@@ -20,6 +20,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+import type { TrustTier } from '@/types/features/analytics';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 
@@ -170,7 +171,7 @@ export type CivicEngagementMetrics = {
   /** Community impact score */
   community_impact: number;
   /** User trust tier based on civic engagement */
-  trust_tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  trust_tier: TrustTier;
 }
 
 /**
@@ -524,12 +525,12 @@ export function calculateCommunityImpact(
 /**
  * Calculate trust tier based on civic score
  */
-export function calculateTrustTier(civicScore: number): 'bronze' | 'silver' | 'gold' | 'platinum' {
+export function calculateTrustTier(civicScore: number): TrustTier {
   assertCivicEngagementEnabled('calculateTrustTier');
-  if (civicScore >= 90) return 'platinum';
-  if (civicScore >= 75) return 'gold';
-  if (civicScore >= 50) return 'silver';
-  return 'bronze';
+  if (civicScore >= 90) return 'T3';
+  if (civicScore >= 75) return 'T2';
+  if (civicScore >= 50) return 'T1';
+  return 'T0';
 }
 
 /**
@@ -558,7 +559,7 @@ export function getCivicEngagementRecommendations(
     recommendations.push("Increase your civic engagement to build trust in your community");
   }
 
-  if (userMetrics.trust_tier === 'bronze') {
+  if (userMetrics.trust_tier === 'T0' || userMetrics.trust_tier === 'T1') {
     recommendations.push("Complete more civic actions to increase your trust tier");
   }
 

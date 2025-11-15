@@ -46,6 +46,10 @@ const formatBoolean = (value: boolean | undefined | null) =>
   value ? 'true' : 'false';
 
 export default function AnalyticsStoreHarnessPage() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   const events = useAnalyticsEvents();
   const dashboard = useAnalyticsDashboard();
   const metrics = useAnalyticsMetrics();
@@ -80,8 +84,10 @@ export default function AnalyticsStoreHarnessPage() {
       setChartConfig: actions.setChartConfig,
     };
 
+    console.info('[analytics-store-harness] setting window.__analyticsStoreHarness');
     window.__analyticsStoreHarness = harness;
     return () => {
+      console.info('[analytics-store-harness] cleaning window.__analyticsStoreHarness');
       if (window.__analyticsStoreHarness === harness) {
         delete window.__analyticsStoreHarness;
       }
@@ -100,6 +106,16 @@ export default function AnalyticsStoreHarnessPage() {
     actions.updatePreferences,
     actions.sendAnalytics,
   ]);
+
+  useEffect(() => {
+    console.info('[analytics-store-harness] marking dataset ready');
+    document.documentElement.dataset.analyticsStoreHarness = 'ready';
+    return () => {
+      if (document.documentElement.dataset.analyticsStoreHarness) {
+        delete document.documentElement.dataset.analyticsStoreHarness;
+      }
+    };
+  }, []);
 
   const totalEvents = events.length;
   const latestEvent = totalEvents > 0 ? events[events.length - 1] : null;

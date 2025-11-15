@@ -26,7 +26,7 @@ type ElectionStoreCreator = StateCreator<
   [['zustand/devtools', never], ['zustand/immer', never]]
 >;
 
-const createInitialElectionState = (): ElectionState => ({
+export const createInitialElectionState = (): ElectionState => ({
   electionsByKey: {},
   isLoading: false,
   error: null

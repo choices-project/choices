@@ -9,13 +9,26 @@ For the canonical Playwright/auth/onboarding guidance, see:
 - Tests should log in via explicit setup steps or seeded tokens—no hidden state.
 - Each spec must be runnable in isolation with `npx playwright test path/to/spec`.
 - `feedback-widget.spec.ts` exercises the floating widget end-to-end using mocked `/api/feedback` responses against the `/e2e/feedback` harness page.
-- `poll-create.spec.ts` runs exclusively on `/e2e/poll-create`, a pared-down wizard that mirrors the production flow without Supabase or analytics dependencies.
+- `poll-create.spec.ts` runs exclusively on `/e2e/poll-create`, a pared-down wizard that mirrors the production flow without Supabase or analytics dependencies. The page now publishes `window.__pollWizardHarness` so specs can tweak wizard settings/state directly (e.g., toggling privacy modes) without relying on brittle checkbox interactions.
 - `poll-create-validation.spec.ts` covers the guardrails on the same harness, checking that each step blocks progression until required fields are complete.
 - `feedback-widget.spec.ts` now also verifies that analytics events are emitted when the widget opens, via the `AnalyticsTestBridge` helper exposed on `/e2e/feedback`.
 - `poll-create.spec.ts` enables the same bridge and asserts that we emit `poll_created` and `poll_share_opened` events when the harness publishes a poll.
 - `poll-run.spec.ts` runs against `/e2e/poll-run/[id]`, a poll detail harness that exercises share, start-voting, and vote submission analytics via mocked API responses.
 - `poll-production.spec.ts` uses real Supabase auth (test credentials) to create a poll through `/api/polls` and walk the production voting experience end-to-end.
+- `locale-switch.spec.ts` mounts the global navigation harness (`/e2e/global-navigation`) so the language selector is available without Supabase auth. All locale persistence assertions (reloads, simulated navigation, UI label changes) stay within that harness by swapping query parameters, which keeps the suite deterministic and CI-friendly. Run this + the other nav/a11y specs locally with `npm run test:e2e:nav` before promoting CI gates.
+- `locale-switch.spec.ts` mounts the global navigation harness (`/e2e/global-navigation`) so the language selector is available without Supabase auth. All locale persistence assertions (reloads, simulated navigation, UI label changes) stay within that harness by swapping query parameters, which keeps the suite deterministic and CI-friendly.
+- `api-endpoints.spec.ts` drives the REST API harness. It boots `setupExternalAPIMocks(page, { api: true })`, which serves deterministic responses for `/api/auth/*`, `/api/polls`, `/api/dashboard`, `/api/v1/civics/*`, `/api/profile`, `/api/pwa/**`, etc. The spec authenticates once via the mocked `/api/auth/login`, then verifies creation/listing/voting flows, profile updates, WebAuthn routes, civics lookups, dashboard metrics, and PWA endpoints without touching live Supabase services. Update the helper mocks first whenever you add or change API routes so the suite remains offline-friendly.
 - The Playwright config automatically boots `npm run dev -- --turbo`. Override with `PLAYWRIGHT_SERVE` or disable with `PLAYWRIGHT_NO_SERVER=1` if you prefer to manage the server manually. Harness pages expose an `__playwrightAnalytics` bridge so specs can opt-in to analytics tracking without touching production flows.
+
+### MSW & Offline Harnesses
+- Specs default to offline mode via `PLAYWRIGHT_USE_MOCKS=1`; MSW handlers in `web/tests/msw/` must mirror production envelopes (`successResponse`, etc.) so contract tests and Playwright stay aligned.
+- To sanity-check mocks locally:
+  ```bash
+  cd web
+  PLAYWRIGHT_USE_MOCKS=1 npm run test:e2e -- --grep @api
+  ```
+- Shipping a new API route requires: (1) handler emits shared envelope, (2) add Jest contract test, (3) extend MSW handler + `setupExternalAPIMocks`, (4) update this README + `docs/TESTING/api-contract-plan.md` coverage matrix.
+- `[MSW] Warning: captured "GET /api/...` means the handler is missing—add it before debugging Playwright assertions.
 - **Feeds store harness (`/e2e/feeds-store`)**  
   - Exposes `window.__feedsStoreHarness` with:
     - `actions`: `loadFeeds`, `refreshFeeds`, `loadMoreFeeds`, `setFilters`, `clearFilters`, `bookmarkFeed`, `unbookmarkFeed`, `setSelectedCategory`, `resetFeedsState`.
@@ -40,7 +53,12 @@ For the canonical Playwright/auth/onboarding guidance, see:
   - Error path: simulate failed send to confirm optimistic rollback + error toast behaviour.  
   - Dependencies: expose analytics event log on `window.__representativeContactHarness`, seed representative/contact stores with mock elections + divisions, and reuse `useRepresentativeCtaAnalytics` to drive assertions.
 
-- **Dashboard journey harness (`/e2e/dashboard-journey`) – in progress**  
+- **Dashboard journey harness (`/e2e/dashboard-journey`)**  
   - Seeds user session, profile, polls, and feature flag state so we can rehearse the post-onboarding dashboard experience without hitting production APIs.
-  - The Playwright draft (`tests/e2e/specs/dashboard-journey.spec.ts`) asserts settings persistence, feed error notifications, and the transition to the full feed page. It is currently wrapped in `test.fixme` because `PersonalDashboard` emits a React “Maximum update depth exceeded / getSnapshot should be cached” warning under harness conditions. Resolve that recursion before re-enabling the spec and wiring it into CI.
+  - `tests/e2e/specs/dashboard-journey.spec.ts` asserts settings persistence, the transition to the feed page, and feed error notifications. The spec reads the persistent notification harness (`window.__notificationHarnessRef`) after forcing a refresh failure, so it no longer relies on the toast DOM and now runs green. Next step: add it to the Playwright CI matrix once traces are captured.
+
+### Troubleshooting
+- **Server never boots** → run `PLAYWRIGHT_NO_SERVER=1 npm run test:e2e <spec>` and start `npm run dev` manually (still export `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`).
+- **Announcements missing** → inspect `window.__announceLogs` to confirm `ScreenReaderSupport` instrumentation is wired before tweaking test expectations.
+- **Locale specs flaky** → `await page.waitForResponse('**/api/i18n/sync')` after `LanguageSelector` interactions so the MSW handler completes before asserting.
 

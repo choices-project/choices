@@ -156,7 +156,7 @@ export async function register(
           email: data.email.toLowerCase(),
           bio: '',
           is_active: true,
-          trust_tier: 'T0'
+          trust_tier: 'T1'
         });
 
       if (profileError) {
@@ -266,7 +266,7 @@ export async function register(
           email: data.email.toLowerCase(),
           bio: '',
           is_active: true,
-          trust_tier: 'T0'
+          trust_tier: 'T1'
         });
 
       if (profileError) {

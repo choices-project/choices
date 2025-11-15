@@ -1,6 +1,6 @@
 /**
  * Trending Hashtags System
- * 
+ *
  * Tracks hashtag-style interests and identifies trending content
  * for viral content discovery and user engagement
  */
@@ -62,10 +62,10 @@ export class TrendingHashtagsTracker {
     try {
       // Store locally (in production, this would go to database)
       this.hashtagUsage.push(usage);
-      
+
       // Update trending cache
       this.updateTrendingCache();
-      
+
       devLog('Hashtag usage tracked:', { usage });
     } catch (error) {
       devLog('Error tracking hashtag usage:', { error });
@@ -75,9 +75,14 @@ export class TrendingHashtagsTracker {
   /**
    * Track multiple hashtag usages (e.g., from onboarding)
    */
-  trackMultipleHashtags(hashtags: string[], userId: string, source: HashtagUsage['source']): void {
+  trackMultipleHashtags(
+    hashtags: string[],
+    userId: string,
+    source: HashtagUsage['source'],
+    metadata?: Record<string, any>
+  ): void {
     const timestamp = new Date().toISOString();
-    
+
     for (const hashtag of hashtags) {
       const usage: HashtagUsage = {
         hashtag: hashtag.toLowerCase().trim(),
@@ -86,7 +91,8 @@ export class TrendingHashtagsTracker {
         count: 1,
         lastUsed: new Date(),
         users: [userId],
-        ...(source ? { source } : {})
+        ...(source ? { source } : {}),
+        ...(metadata ? { metadata } : {})
       };
       this.trackHashtagUsage(usage);
     }
@@ -97,7 +103,7 @@ export class TrendingHashtagsTracker {
    */
   getTrendingHashtags(limit = 20): TrendingHashtag[] {
     // Return cached results if recent
-    if (this.trendingCache.length > 0 && 
+    if (this.trendingCache.length > 0 &&
         Date.now() - this.lastUpdate.getTime() < 5 * 60 * 1000) { // 5 minutes
       return this.trendingCache.slice(0, limit);
     }
@@ -115,7 +121,7 @@ export class TrendingHashtagsTracker {
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Filter recent usage
-    const recentUsage = this.hashtagUsage.filter(usage => 
+    const recentUsage = this.hashtagUsage.filter(usage =>
       usage.timestamp && new Date(usage.timestamp) > last24Hours
     );
 
@@ -183,11 +189,11 @@ export class TrendingHashtagsTracker {
    */
   getSuggestedHashtags(userInterests: string[], limit = 10): string[] {
     const analytics = this.getHashtagAnalytics();
-    
+
     // Find hashtags that are trending and related to user interests
     const relatedTrending = analytics.trendingHashtags?.filter((hashtag: any) => {
-      return userInterests.some(interest => 
-        hashtag.hashtag.includes(interest) || 
+      return userInterests.some(interest =>
+        hashtag.hashtag.includes(interest) ||
         interest.includes(hashtag.hashtag) ||
         this.calculateSimilarity(hashtag.hashtag, interest) > 0.3
       );
@@ -217,28 +223,28 @@ export class TrendingHashtagsTracker {
   } {
     const hashtagUsage = this.hashtagUsage.filter(u => u.hashtag === hashtag);
     const uniqueUsers = new Set(hashtagUsage.map(u => u.userId)).size;
-    
+
     // Calculate growth rate (last 7 days vs previous 7 days)
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const previous7Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    
+
     const recentUsage = hashtagUsage.filter(u => u.timestamp && new Date(u.timestamp) > last7Days).length;
     const previousUsage = hashtagUsage.filter(u => {
       if (!u.timestamp) return false;
       const date = new Date(u.timestamp);
       return date > previous7Days && date <= last7Days;
     }).length;
-    
+
     const growthRate = previousUsage > 0 ? ((recentUsage - previousUsage) / previousUsage) * 100 : 0;
-    
+
     // Top categories
     const categoryCount: Record<string, number> = {};
     hashtagUsage.forEach(usage => {
       const category = usage.metadata?.category ?? 'general';
       categoryCount[category] = (categoryCount[category] ?? 0) + 1;
     });
-    
+
     const topCategories = Object.entries(categoryCount)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
@@ -266,7 +272,7 @@ export class TrendingHashtagsTracker {
       return usage.timestamp && new Date(usage.timestamp) > last48Hours;
     });
 
-    const recentUsage = this.hashtagUsage.filter(usage => 
+    const recentUsage = this.hashtagUsage.filter(usage =>
       usage.timestamp && new Date(usage.timestamp) > last24Hours
     );
 
@@ -294,7 +300,7 @@ export class TrendingHashtagsTracker {
           previousCount: 0
         };
       }
-      
+
       const stats = hashtagStats[usage.hashtag];
       if (stats) {
         stats.usageCount++;
@@ -314,7 +320,7 @@ export class TrendingHashtagsTracker {
     const now = new Date();
     const last48Hours = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     const previousUsage = this.hashtagUsage.filter(usage => {
       if (!usage.timestamp) return false;
       const date = new Date(usage.timestamp);
@@ -330,8 +336,8 @@ export class TrendingHashtagsTracker {
 
     // Convert to TrendingHashtag objects
     const trendingHashtags: TrendingHashtag[] = Object.entries(hashtagStats).map(([hashtag, stats]) => {
-      const growthRate = stats.previousCount > 0 
-        ? ((stats.usageCount - stats.previousCount) / stats.previousCount) * 100 
+      const growthRate = stats.previousCount > 0
+        ? ((stats.usageCount - stats.previousCount) / stats.previousCount) * 100
         : stats.usageCount > 0 ? 100 : 0;
 
       // Calculate trending score (usage count + growth rate + unique users)

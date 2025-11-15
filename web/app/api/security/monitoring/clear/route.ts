@@ -24,7 +24,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const ok = await upstashRateLimiter.clearRateLimit(ip, endpoint);
   logger.info('Rate limit clear executed', { ip, endpoint, ok });
 
-  return successResponse({ success: ok });
+  return successResponse(
+    { cleared: ok },
+    {
+      ip,
+      endpoint,
+    }
+  );
 });
 
 

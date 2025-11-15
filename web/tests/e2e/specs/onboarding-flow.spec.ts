@@ -14,7 +14,7 @@ const gotoHarness = async (page: Page) => {
   );
 };
 
-test.describe('Onboarding flow harness', () => {
+test.describe('@axe Onboarding flow harness', () => {
   test.beforeEach(async ({ page }) => {
     await setupExternalAPIMocks(page, { analytics: true, notifications: true, civics: false });
   });

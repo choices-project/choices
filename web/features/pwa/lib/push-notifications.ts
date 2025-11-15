@@ -160,17 +160,20 @@ export async function subscribeToPushNotifications(): Promise<PushSubscription |
     
     // Convert VAPID public key from base64 to Uint8Array
     const vapidPublicKey = PUSH_CONFIG.vapidPublicKey;
-    
+
     if (!vapidPublicKey) {
-      throw new Error('VAPID public key not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY environment variable.');
+      throw new Error(
+        'VAPID public key not configured. Set NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY environment variable.'
+      );
     }
     
     const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
+    const applicationServerKey: BufferSource = convertedKey;
     
     // Subscribe to push notifications
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: convertedKey,
+      applicationServerKey,
     });
     
     logger.info('Subscribed to push notifications');

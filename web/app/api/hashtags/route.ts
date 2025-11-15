@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
@@ -12,7 +11,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const action = url.searchParams.get('action');
 
   const supabase = await getSupabaseServerClient();
-          
+
   if (!supabase) {
     return errorResponse('Supabase not configured', 500);
   }
@@ -30,14 +29,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return errorResponse('Failed to fetch moderation queue', 500);
     }
 
-    return successResponse({
-        success: true,
-        data: flags,
-        metadata: {
-          count: flags?.length ?? 0,
-          timestamp: new Date().toISOString()
-        }
-      });
+    return successResponse(
+      {
+        flags,
+        count: flags?.length ?? 0
+      },
+      {
+        timestamp: new Date().toISOString()
+      }
+    );
     }
 
   return validationError({ action: 'Invalid action' });
@@ -45,12 +45,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 /**
  * Handle hashtag actions (flag, approve, reject)
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {string} [request.searchParams.action] - Action type (flag, approve, reject)
  * @param {string} [request.searchParams.flagId] - Flag ID for approve/reject actions
  * @returns {Promise<NextResponse>} Action result
- * 
+ *
  * @example
  * POST /api/hashtags?action=flag
  * POST /api/hashtags?action=approve&flagId=123
@@ -61,7 +61,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const flagId = url.searchParams.get('flagId');
 
   const supabase = await getSupabaseServerClient();
-          
+
   if (!supabase) {
     return errorResponse('Supabase not configured', 500);
   }
@@ -69,7 +69,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Flag a hashtag
     if (action === 'flag') {
       const body = await request.json();
-      
+
       const { data, error } = await supabase
         .from('hashtag_flags')
         .insert([{
@@ -83,17 +83,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
       if (error) {
         logger.error('Failed to create hashtag flag', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to create hashtag flag' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to create hashtag flag', 500, undefined, 'HASHTAG_FLAG_CREATE_FAILED');
       }
 
-      return NextResponse.json({
-        success: true,
-        data: data[0],
+      return successResponse({
+        flag: data[0],
         message: 'Hashtag flagged successfully'
-      });
+      }, undefined, 201);
     }
 
     // Approve a flag
@@ -106,15 +102,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
       if (error) {
         logger.error('Failed to approve hashtag flag', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to approve hashtag flag' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to approve hashtag flag', 500, undefined, 'HASHTAG_FLAG_APPROVE_FAILED');
       }
 
-      return NextResponse.json({
-        success: true,
-        data: data[0],
+      return successResponse({
+        flag: data[0],
         message: 'Hashtag flag approved'
       });
     }
@@ -129,14 +121,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
       if (error) {
         logger.error('Failed to reject hashtag flag', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to reject hashtag flag' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to reject hashtag flag', 500, undefined, 'HASHTAG_FLAG_REJECT_FAILED');
       }
 
       return successResponse({
-        data: data[0],
+        flag: data[0],
         message: 'Hashtag flag rejected'
       });
     }

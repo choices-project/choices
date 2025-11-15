@@ -6,6 +6,7 @@ import React, { Suspense, useEffect } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { useProfile } from '@/features/profile/hooks/use-profile';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 // Use PersonalDashboard as the main dashboard component
@@ -21,6 +22,21 @@ const PersonalDashboard = dynamic(() => import('@/features/dashboard').then(mod 
 export default function DashboardPage() {
   const router = useRouter();
   const { profile, isLoading, error } = useProfile();
+  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/dashboard');
+    setSidebarActiveSection('dashboard');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!isLoading && !profile) {

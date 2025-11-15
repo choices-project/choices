@@ -30,6 +30,7 @@ import { useI18n } from '@/hooks/useI18n';
 import {
   useUser,
   useUserLoading,
+  useUserActions,
   useOnboardingStep,
   useOnboardingData,
   useOnboardingActions,
@@ -988,6 +989,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     restartOnboarding,
     clearAllData,
   } = useOnboardingActions();
+  const { signOut: resetUserState } = useUserActions();
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
@@ -1054,6 +1056,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleSkip = () => {
+    resetUserState();
     skipOnboarding();
     goToStep(5);
   };

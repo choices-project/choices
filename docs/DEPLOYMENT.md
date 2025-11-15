@@ -90,4 +90,16 @@ If you need to revert or disable a subsystem:
 - **Supabase**: Check query logs for slow queries introduced by the release.
 - **Status page / comms**: Post a release note or status update if the rollout affects user-visible behaviour.
 
+---
+
+## 7. Release Checklist (Governance & Rollout)
+Use this list **before** calling a release done. Link back to the relevant evidence (Playwright runs, docs, issues).
+
+- [ ] **Inclusive UI / A11y** — Automation (`npm run test:e2e -- --grep @axe`, navigation + analytics SR specs) green; manual NVDA/VoiceOver smoke logged in `scratch/gpt5-codex/archive/inclusive-platform/manual-a11y-smoke-*.md`.
+- [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/technical/i18n-workflow.md`.
+- [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes documented in `docs/TESTING/api-contract-plan.md`; MSW fixtures updated.
+- [ ] **Documentation** — Architecture/API docs reflect new selectors, middleware, or response envelopes (`docs/ARCHITECTURE/stores.md`, `docs/API/contracts.md`, etc.).
+- [ ] **Release Notes & Comms** — `docs/archive/release-notes/CHANGELOG.md` (or relevant release note) updated; support + partner teams notified of API schema or analytics changes.
+- [ ] **Audit Scheduling** — Upcoming SR + locale audit owners/date confirmed in `scratch/gpt5-codex/archive/inclusive-platform/issues.md`.
+
 Keep this document up to date as the deployment workflow evolves. When processes change, update both the commands above and any linked runbooks.

@@ -12,8 +12,12 @@ import {
   AlertTriangle,
   CalendarClock,
 } from 'lucide-react';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
+import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
+import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
+import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
+import { useI18n } from '@/hooks/useI18n';
 import {
   useUserCurrentAddress,
   useUserRepresentatives,
@@ -26,9 +30,6 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
-import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
-import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
-import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
 
 type CivicsLureProps = {
   userLocation?: string;
@@ -66,19 +67,6 @@ const getScoreIcon = (score: number) => {
   return <AlertTriangle className="w-4 h-4" />;
 };
 
-const formatVerificationStatus = (status: string) => {
-  switch (status) {
-    case 'verified':
-      return 'Verified record';
-    case 'pending':
-      return 'Awaiting verification';
-    case 'failed':
-      return 'Verification issues';
-    default:
-      return 'Status unknown';
-  }
-};
-
 const getVerificationBadgeColor = (status: string) => {
   switch (status) {
     case 'verified':
@@ -91,6 +79,7 @@ const getVerificationBadgeColor = (status: string) => {
 };
 
 export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) {
+  const { t, currentLanguage } = useI18n();
   const storedAddress = useUserCurrentAddress();
   const locationRepresentatives = useLocationRepresentatives();
   const representativeError = useRepresentativeError();
@@ -98,6 +87,41 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
   const findByLocation = useFindByLocation();
   const followedRepresentatives = useUserRepresentatives();
   const { trackEvent } = useAnalyticsActions();
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    [currentLanguage],
+  );
+  const formatVerificationStatus = useCallback(
+    (status: string) => {
+      switch (status) {
+        case 'verified':
+          return t('civics.lure.candidates.verification.verified');
+        case 'failed':
+          return t('civics.lure.candidates.verification.failed');
+        case 'pending':
+        default:
+          return t('civics.lure.candidates.verification.pending');
+      }
+    },
+    [t],
+  );
+  const formatDataQuality = useCallback(
+    (score: number) =>
+      t('civics.lure.candidates.dataQualityBadge', {
+        value: numberFormatter.format(score),
+      }),
+    [numberFormatter, t],
+  );
 
   const locationLabel = userLocation ?? storedAddress;
 
@@ -136,7 +160,15 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
     daysUntilNextElection,
     loading: electionLoading,
     error: electionError,
-  } = useElectionCountdown(divisionIds);
+  } = useElectionCountdown(divisionIds, {
+    analytics: {
+      surface: 'civics_lure',
+      metadata: {
+        representativeCount: locationRepresentatives.length,
+        hasLocation: Boolean(locationLabel),
+      },
+    },
+  });
 
   const candidateSummaries = useMemo<CandidateSummary[]>(() => {
     if (!locationRepresentatives.length) {
@@ -150,26 +182,39 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         .filter((value): value is string => value.trim().length > 0)
         .slice(0, 3);
 
+      const firstActivity = activities[0];
+      let formattedActivityDate: string | null = null;
+      if (firstActivity?.date) {
+        const parsed = new Date(firstActivity.date);
+        if (!Number.isNaN(parsed.getTime())) {
+          formattedActivityDate = dateFormatter.format(parsed);
+        }
+      }
+
+      const levelName = representative.level
+        ? `${representative.level.charAt(0).toUpperCase()}${representative.level.slice(1)}`
+        : t('civics.lure.candidates.level.unknown');
+
       return {
         id: String(representative.id),
         name: representative.name,
         office:
           representative.office ??
-          `${representative.level?.charAt(0).toUpperCase()}${representative.level?.slice(1)} district`,
-        party: representative.party ?? 'Independent',
+          t('civics.lure.candidates.officeFallback', { level: levelName }),
+        party: representative.party ?? t('civics.lure.candidates.partyIndependent'),
         dataQualityScore: clampScore(representative.data_quality_score),
         verificationStatus: representative.verification_status ?? 'pending',
         keyIssues,
         mostRecentActivity:
-          activities[0]?.title ??
-          activities[0]?.description ??
-          (activities[0]?.date
-            ? `Last update on ${new Date(activities[0].date).toLocaleDateString()}`
-            : 'No recent civic activity recorded'),
-        isIncumbent: representative.verification_status === 'verified'
+          firstActivity?.title ??
+          firstActivity?.description ??
+          (formattedActivityDate
+            ? t('civics.lure.candidates.activity.lastUpdate', { date: formattedActivityDate })
+            : t('civics.lure.candidates.activity.none')),
+        isIncumbent: representative.verification_status === 'verified',
       };
     });
-  }, [locationRepresentatives]);
+  }, [dateFormatter, locationRepresentatives, t]);
 
   const totalLocalRepresentatives = locationRepresentatives.length;
   const totalActivities = useMemo(
@@ -190,34 +235,26 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
     () => candidateSummaries.find((candidate) => candidate.dataQualityScore < 60),
     [candidateSummaries]
   );
-
-  const trendingMetric = useMemo(() => {
-    if (!locationRepresentatives.length) {
-      return null;
+  const didYouKnowMessage = useMemo(() => {
+    if (!highQualityCandidate) {
+      return t('civics.lure.engagement.didYouKnow.fallback');
     }
 
-    const averageScore =
-      locationRepresentatives.reduce(
-        (sum, representative) => sum + clampScore(representative.data_quality_score),
-        0
-      ) / locationRepresentatives.length;
-
-    if (averageScore >= 75) {
-      return {
-        direction: 'up' as const,
-        change: Math.round(Math.min(50, averageScore - 50))
-      };
+    return t('civics.lure.engagement.didYouKnow.highlight', {
+      name: highQualityCandidate.name,
+      score: numberFormatter.format(highQualityCandidate.dataQualityScore),
+    });
+  }, [highQualityCandidate, numberFormatter, t]);
+  const dataQualityWatchMessage = useMemo(() => {
+    if (!lowQualityCandidate) {
+      return t('civics.lure.engagement.dataQualityWatch.fallback');
     }
 
-    if (averageScore <= 45) {
-      return {
-        direction: 'down' as const,
-        change: Math.round(Math.min(40, 50 - averageScore))
-      };
-    }
-
-    return null;
-  }, [locationRepresentatives]);
+    return t('civics.lure.engagement.dataQualityWatch.highlight', {
+      name: lowQualityCandidate.name,
+      score: numberFormatter.format(lowQualityCandidate.dataQualityScore),
+    });
+  }, [lowQualityCandidate, numberFormatter, t]);
 
   const handleEngage = () => {
     trackEvent?.({
@@ -249,10 +286,10 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           </div>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Ready to vote on something that actually matters? 🗳️
+          {t('civics.lure.header.title')}
         </h2>
         <p className="text-gray-600">
-          While you&apos;re here voting on Drag Race, check out who&apos;s running in your area and see who&apos;s really representing you!
+          {t('civics.lure.header.subtitle')}
         </p>
       </div>
 
@@ -261,11 +298,13 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
           <div className="flex items-center space-x-2 text-sm">
             <MapPin className="w-5 h-5 text-blue-600" />
-            <span className="font-medium text-gray-900">Your Area:</span>
+            <span className="font-medium text-gray-900">
+              {t('civics.lure.location.label')}
+            </span>
             <span className="text-gray-600">{locationLabel}</span>
             {isLoading && (
               <span className="ml-auto text-xs text-gray-400">
-                Updating…
+                {t('civics.lure.location.updating')}
               </span>
             )}
           </div>
@@ -283,50 +322,61 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-gray-900">Local Candidates</span>
+            <span className="font-semibold text-gray-900">
+              {t('civics.lure.stats.candidates.title')}
+            </span>
           </div>
           <div className="text-2xl font-bold text-blue-600">
-            {isLoading ? '—' : totalLocalRepresentatives}
+            {isLoading ? '—' : numberFormatter.format(totalLocalRepresentatives)}
           </div>
           <div className="text-sm text-gray-500">
-            {totalLocalRepresentatives === 1 ? 'Representative connected' : 'Representatives connected'}
+            {t('civics.lure.stats.candidates.caption', {
+              count: totalLocalRepresentatives,
+              formattedCount: numberFormatter.format(totalLocalRepresentatives),
+            })}
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center space-x-2 mb-2">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-gray-900">Active Issues</span>
+            <span className="font-semibold text-gray-900">
+              {t('civics.lure.stats.activities.title')}
+            </span>
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {isLoading ? '—' : totalActivities}
+            {isLoading ? '—' : numberFormatter.format(totalActivities)}
           </div>
           <div className="text-sm text-gray-500">
-            Civic updates logged for your district
+            {t('civics.lure.stats.activities.caption')}
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center space-x-2 mb-2">
             <Heart className="w-5 h-5 text-red-600" />
-            <span className="font-semibold text-gray-900">Your Voice</span>
+            <span className="font-semibold text-gray-900">
+              {t('civics.lure.stats.following.title')}
+            </span>
           </div>
           <div className="text-2xl font-bold text-red-600">
-            {followedCount}
+            {numberFormatter.format(followedCount)}
           </div>
           <div className="text-sm text-gray-500">
-            Representatives you’re tracking
+            {t('civics.lure.stats.following.caption')}
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center space-x-2 mb-2">
             <CalendarClock className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900">Next Election</span>
+            <span className="font-semibold text-gray-900">
+              {t('civics.lure.stats.election.title')}
+            </span>
           </div>
           {divisionIds.length === 0 ? (
             <div className="text-sm text-gray-500">
-              Add your address to see district elections.
+              {t('civics.lure.stats.election.addAddress')}
             </div>
           ) : (
             <div className="space-y-2">
@@ -337,13 +387,16 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                 nextElection={nextElection ?? null}
                 daysUntil={daysUntilNextElection}
                 totalUpcoming={upcomingElections.length}
-                emptyMessage="No elections recorded for your divisions."
-                loadingMessage="Checking…"
-                errorMessage="Election data unavailable"
+                emptyMessage={t('civics.lure.stats.election.badge.empty')}
+                loadingMessage={t('civics.lure.stats.election.badge.loading')}
+                errorMessage={t('civics.lure.stats.election.badge.error')}
               />
               {daysUntilNextElection != null && daysUntilNextElection > 90 && (
                 <p className="text-xs text-gray-500">
-                  Next election is more than 90 days away.
+                  {t('civics.lure.stats.election.future', {
+                    count: daysUntilNextElection,
+                    formattedCount: numberFormatter.format(daysUntilNextElection),
+                  })}
                 </p>
               )}
             </div>
@@ -354,36 +407,38 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       {divisionIds.length > 0 && (
         <ElectionCountdownCard
           className="mb-6"
-          title="Election calendar"
-          description="Key dates across your divisions."
+          title={t('civics.lure.electionCard.title')}
+          description={t('civics.lure.electionCard.description')}
           loading={electionLoading}
           error={electionError}
           elections={upcomingElections}
           nextElection={nextElection}
           daysUntilNextElection={daysUntilNextElection}
           totalUpcoming={upcomingElections.length}
-          ariaLabel="Upcoming elections for your divisions"
+          ariaLabel={t('civics.lure.electionCard.ariaLabel')}
         />
       )}
 
       {/* Candidate Preview */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 mb-2">Your Local Candidates</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">
+            {t('civics.lure.candidates.section.title')}
+          </h3>
           <p className="text-sm text-gray-600">
-            Explore the people representing you right now. Data quality and verification are refreshed in real-time.
+            {t('civics.lure.candidates.section.subtitle')}
           </p>
         </div>
 
         <div className="p-4 space-y-4">
           {isLoading && candidateSummaries.length === 0 && (
             <div className="py-6 text-center text-sm text-gray-500">
-              Loading your local representatives…
+              {t('civics.lure.candidates.loading')}
             </div>
           )}
           {!isLoading && candidateSummaries.length === 0 && (
             <div className="py-6 text-center text-sm text-gray-500">
-              We&apos;re still syncing your local representative data. Try refreshing in a minute.
+              {t('civics.lure.candidates.empty')}
             </div>
           )}
           {candidateSummaries.map((candidate) => (
@@ -399,7 +454,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                   <h4 className="font-semibold text-gray-900">{candidate.name}</h4>
                   {!candidate.isIncumbent && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                      Challenger
+                      {t('civics.lure.candidates.challengerBadge')}
                     </span>
                   )}
                 </div>
@@ -410,18 +465,24 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                 <div className="flex flex-wrap items-center gap-3">
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(candidate.dataQualityScore)}`}>
                     {getScoreIcon(candidate.dataQualityScore)}
-                    <span className="ml-1">{candidate.dataQualityScore}% data quality</span>
+                    <span className="ml-1">
+                      {formatDataQuality(candidate.dataQualityScore)}
+                    </span>
                   </div>
 
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getVerificationBadgeColor(candidate.verificationStatus)}`}>
                     <Shield className="w-3 h-3" />
-                    <span className="ml-1">{formatVerificationStatus(candidate.verificationStatus)}</span>
+                    <span className="ml-1">
+                      {formatVerificationStatus(candidate.verificationStatus)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-sm text-gray-500 mb-1">Key Issues:</div>
+                <div className="text-sm text-gray-500 mb-1">
+                  {t('civics.lure.candidates.keyIssues')}
+                </div>
                 <div className="flex flex-wrap gap-1">
                   {candidate.keyIssues.length > 0 ? (
                     candidate.keyIssues.map((issue) => (
@@ -431,7 +492,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                     ))
                   ) : (
                     <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                      Awaiting updates
+                      {t('civics.lure.candidates.keyIssuesFallback')}
                     </span>
                   )}
                 </div>
@@ -450,12 +511,10 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <div className="flex items-start space-x-3">
             <Star className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-yellow-900 mb-1">Did you know?</h4>
-              <p className="text-sm text-yellow-800">
-                {highQualityCandidate
-                  ? `${highQualityCandidate.name} has one of the strongest data quality scores locally (${highQualityCandidate.dataQualityScore}%). Verified records mean you get trustworthy updates.`
-                  : 'We highlight the most responsive and transparent representatives in your area as soon as verification completes.'}
-              </p>
+              <h4 className="font-semibold text-yellow-900 mb-1">
+                {t('civics.lure.engagement.didYouKnow.title')}
+              </h4>
+              <p className="text-sm text-yellow-800">{didYouKnowMessage}</p>
             </div>
           </div>
         </div>
@@ -464,12 +523,10 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-red-900 mb-1">Data Quality Watch</h4>
-              <p className="text-sm text-red-800">
-                {lowQualityCandidate
-                  ? `${lowQualityCandidate.name} still has limited verification (${lowQualityCandidate.dataQualityScore}% data quality). Tap through to request more information or flag issues.`
-                  : 'All of your local representative records look solid. We will alert you if anything needs your attention.'}
-              </p>
+              <h4 className="font-semibold text-red-900 mb-1">
+                {t('civics.lure.engagement.dataQualityWatch.title')}
+              </h4>
+              <p className="text-sm text-red-800">{dataQualityWatchMessage}</p>
             </div>
           </div>
         </div>
@@ -480,12 +537,14 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         <button
           onClick={handleEngage}
           className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center mx-auto"
+          type="button"
+          aria-label={t('civics.lure.cta.button')}
         >
-          <span>See All My Local Candidates</span>
+          <span>{t('civics.lure.cta.button')}</span>
           <ArrowRight className="w-5 h-5 ml-2" />
         </button>
         <p className="text-sm text-gray-500 mt-2">
-          Ask questions, see who&apos;s funding whom, and make your voice heard
+          {t('civics.lure.cta.caption')}
         </p>
       </div>
 
@@ -494,15 +553,15 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1" />
-            <span>10,000+ voters</span>
+            <span>{t('civics.lure.social.voters')}</span>
           </div>
           <div className="flex items-center">
             <Shield className="w-4 h-4 mr-1" />
-            <span>100% private</span>
+            <span>{t('civics.lure.social.privacy')}</span>
           </div>
           <div className="flex items-center">
             <Heart className="w-4 h-4 mr-1" />
-            <span>Equal access</span>
+            <span>{t('civics.lure.social.access')}</span>
           </div>
         </div>
       </div>

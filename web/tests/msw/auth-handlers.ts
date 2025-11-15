@@ -59,7 +59,6 @@ const defaultAuthenticationOptions = {
 };
 
 const registrationSuccess = {
-  success: true,
   credentialId: 'test-credential',
   publicKey: 'BASE64_PUBLIC_KEY',
   counter: 0,
@@ -67,57 +66,76 @@ const registrationSuccess = {
 };
 
 const authenticationSuccess = {
-  success: true,
   credentialId: 'test-credential',
   newCounter: 1,
 };
 
+const successEnvelope = (data: unknown, metadata?: Record<string, unknown>) => ({
+  success: true as const,
+  data,
+  metadata: {
+    timestamp: new Date().toISOString(),
+    ...(metadata ?? {}),
+  },
+});
+
+const errorEnvelope = (error: string, metadata?: Record<string, unknown>) => ({
+  success: false as const,
+  error,
+  metadata: {
+    timestamp: new Date().toISOString(),
+    ...(metadata ?? {}),
+  },
+});
+
 export const authHandlers = [
   http.post('/api/v1/auth/webauthn/native/register/options', async () => {
-    return HttpResponse.json(defaultRegistrationOptions);
+    return HttpResponse.json(successEnvelope(defaultRegistrationOptions));
   }),
   http.post('/api/v1/auth/webauthn/native/register/verify', async () => {
-    return HttpResponse.json(registrationSuccess);
+    return HttpResponse.json(successEnvelope(registrationSuccess));
   }),
   http.post('/api/v1/auth/webauthn/native/authenticate/options', async () => {
-    return HttpResponse.json(defaultAuthenticationOptions);
+    return HttpResponse.json(successEnvelope(defaultAuthenticationOptions));
   }),
   http.post('/api/v1/auth/webauthn/native/authenticate/verify', async ({ request }) => {
     const body = (await request.json()) as CredentialsPayload | undefined;
     if (!body?.credential) {
-      return HttpResponse.json(
-        { success: false, error: 'Missing credential payload' },
-        { status: 400 },
-      );
+      return HttpResponse.json(errorEnvelope('Missing credential payload'), { status: 400 });
     }
-    return HttpResponse.json(authenticationSuccess);
+    return HttpResponse.json(successEnvelope(authenticationSuccess));
   }),
   http.post('/api/auth/login', async () => {
-    return HttpResponse.json({
-      token: 'mock-auth-token',
-      user: {
-        id: 'test-user',
-        email: userEmail,
-      },
-    });
+    return HttpResponse.json(
+      successEnvelope({
+        token: 'mock-auth-token',
+        user: {
+          id: 'test-user',
+          email: userEmail,
+        },
+      }),
+    );
   }),
   http.post('/api/auth/register', async () => {
-    return HttpResponse.json({
-      success: true,
-      user: {
-        id: 'test-user',
-        email: userEmail,
-      },
-    });
+    return HttpResponse.json(
+      successEnvelope({
+        user: {
+          id: 'test-user',
+          email: userEmail,
+        },
+      }),
+    );
   }),
   http.get('/api/profile', async () => {
-    return HttpResponse.json({
-      profile: {
-        id: 'test-profile',
-        user_id: 'test-user',
-        username: 'testuser',
-      },
-    });
+    return HttpResponse.json(
+      successEnvelope({
+        profile: {
+          id: 'test-profile',
+          user_id: 'test-user',
+          username: 'testuser',
+        },
+      }),
+    );
   }),
 ];
 

@@ -9,31 +9,30 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
+import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
-  try {
+export const POST = withErrorHandling(async (req: NextRequest) => {
     // Disable during build time
     if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-      return NextResponse.json({ error: 'WebAuthn routes disabled during build' }, { status: 503 });
+      return errorResponse('WebAuthn routes disabled during build', 503);
     }
 
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
     if (!enabled) {
-      return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
+      return validationError({ enabled: 'Passkeys disabled on preview' });
     }
 
     const supabase = await getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return authError('Authentication required');
     }
 
     const body = await req.json();
@@ -49,17 +48,17 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (!chalRows?.length) {
-      return NextResponse.json({ error: 'No challenge found' }, { status: 400 });
+      return validationError({ challenge: 'No challenge found' });
     }
 
     const chal = chalRows[0];
     if (!chal) {
-      return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
+      return validationError({ challenge: 'Challenge not found' });
     }
 
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Challenge expired' }, { status: 400 });
+      return validationError({ challenge: 'Challenge expired' });
     }
 
     // Get current request origin
@@ -73,7 +72,7 @@ export async function POST(req: NextRequest) {
         allowedOrigins,
         userId: user.id
       });
-      return NextResponse.json({ error: 'Unauthorized origin' }, { status: 403 });
+      return forbiddenError('Unauthorized origin');
     }
 
     // Lookup credential
@@ -87,12 +86,12 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (credsErr || !creds?.length) {
-      return NextResponse.json({ error: 'Unknown credential' }, { status: 400 });
+      return validationError({ credential: 'Unknown credential' });
     }
 
     const cred = creds[0];
     if (!cred) {
-      return NextResponse.json({ error: 'Credential not found' }, { status: 400 });
+      return validationError({ credential: 'Credential not found' });
     }
 
     // Verify authentication using native implementation
@@ -114,10 +113,14 @@ export async function POST(req: NextRequest) {
     );
 
     if (!verificationResult.verified) {
-      return NextResponse.json({ 
-        error: 'Verification failed', 
-        details: verificationResult.error 
-      }, { status: 400 });
+      const errorMessage = verificationResult.error 
+        ? typeof verificationResult.error === 'string' 
+          ? verificationResult.error 
+          : String(verificationResult.error)
+        : 'Verification failed';
+      return validationError({ 
+        verification: errorMessage
+      });
     }
 
     const newCounter = verificationResult.newCounter ?? 0;
@@ -129,7 +132,7 @@ export async function POST(req: NextRequest) {
         oldCounter: cred.counter,
         newCounter
       });
-      return NextResponse.json({ error: 'Counter anomaly detected' }, { status: 400 });
+      return validationError({ counter: 'Counter anomaly detected' });
     }
 
     // Update counter
@@ -146,17 +149,12 @@ export async function POST(req: NextRequest) {
 
     logger.info('WebAuthn authentication verified (native)', { userId: user.id });
 
-    return NextResponse.json({
+    return successResponse({
       verified: true,
       credential: {
         id: cred.credential_id,
         counter: newCounter
       }
     });
-
-  } catch (error) {
-    logger.error('Native authentication verify error', { error });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+});
 

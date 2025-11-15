@@ -30,6 +30,7 @@ import {
 } from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
 import { useProfileStore } from '@/lib/stores/profileStore';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 import type { PrivacySettings } from '@/types/profile';
@@ -43,6 +44,7 @@ export default function PrivacyPage() {
   const isUpdating = useProfileStore((state) => state.isUpdating);
   const draft = useProfileDraft();
   const { mergeDraft, setProfileEditing } = useProfileDraftActions();
+  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
   const privacySettings = useMemo<PrivacySettings>(() => {
     const existing =
@@ -51,6 +53,21 @@ export default function PrivacyPage() {
       (profile?.privacy_settings as PrivacySettings | null | undefined);
     return existing ?? getDefaultPrivacySettings();
   }, [draft?.privacy_settings, privacySettingsFromStore, profile?.privacy_settings]);
+
+  useEffect(() => {
+    setCurrentRoute('/account/privacy');
+    setSidebarActiveSection('privacy');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Privacy & Data', href: '/account/privacy' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (privacySettings) {

@@ -66,6 +66,18 @@ export const useNotificationActions = () => { /* memoized action hook */ };
 - When a feature owns multiple surfaces (web + PWA + harness), add a thin façade under `features/<feature>/lib/store.ts` that re-exports only the selectors/actions that surface needs. This keeps feature code from depending on the entire store module and matches the pattern now used by `features/voting/lib/store.ts`.
 - Feature-level hook bundles should wrap store selectors/actions rather than duplicating state locally. The profile feature (`features/profile/hooks/use-profile.ts`) now mirrors this approach—components such as `ProfileEdit`, `ProfileAvatar`, and `MyDataDashboard` consume only the selectors/actions exposed by the hooks, keeping store usage consistent across the UI.
 
+### Cross-Store Cascades
+
+When a user logs out or transitions to an unauthenticated state, related stores should reset to prevent stale data from persisting. The `userStore` orchestrates this cascade:
+
+- **User store actions that trigger cascade**: `setAuthenticated(false)`, `setUserAndAuth(..., false)`, `setSessionAndDerived(null)`, `initializeAuth(..., false)`, and `signOut()` all reset the user store and then call `useProfileStore.getState().resetProfile()` and `useAdminStore.getState().resetAdminState()`.
+- **Why this matters**: Without the cascade, profile preferences, admin notifications, and other user-specific state can persist after logout, causing confusion when a new user signs in or when testing auth flows.
+- **Testing**: The cascade is covered by `web/tests/unit/stores/authCascade.test.ts` and end-to-end in `web/tests/e2e/specs/dashboard-auth.spec.ts`. When adding new stores that depend on user authentication, ensure they either:
+  1. Subscribe to `userStoreSubscriptions.onAuthChange()` and reset when `isAuthenticated` becomes `false`, or
+  2. Are explicitly reset by the user store's logout/sign-out actions if they contain user-specific data.
+
+**Example**: If you add a `preferencesStore` that stores user-specific UI preferences, add `usePreferencesStore.getState().resetPreferences()` to the user store's `signOut()` action (or subscribe to auth changes).
+
 ### Consent & Analytics Tracking
 
 - Maintain both store-level (`trackingEnabled`) and preference-level (`preferences.trackingEnabled`) toggles. Always gate tracking actions (`trackEvent`, `trackPageView`, etc.) behind a shared guard to respect user consent.
@@ -82,7 +94,7 @@ export const useNotificationActions = () => { /* memoized action hook */ };
 | RTL Integration | `tests/unit/stores/<store>.integration.test.tsx` | Render a lightweight harness component; drive state through hooks/actions; rely on fake timers where needed. |
 | Playwright Harness | `app/(app)/e2e/<store>/page.tsx` + `tests/e2e/specs/<store>.spec.ts` | Expose a `window.__<store>Harness` facade. Verify UI-facing behaviour (auto-dismiss, admin flows, etc.). |
 
-Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-access`, `feeds-store`, `feedback`, `notification-store`, `onboarding-store`, `onboarding-flow`, `poll-create`, `poll-run/[id]`, `poll-wizard`, `polls-store`, `profile-store`, `pwa-analytics`, `pwa-store`, `user-store`, and `voting-store`. Use these as blueprints when modernizing the remaining stores.
+Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-access`, `feeds-store`, `feedback`, `notification-store`, `onboarding-store`, `onboarding-flow`, `poll-create`, `poll-run/[id]`, `poll-wizard`, `polls-store`, `profile-store`, `pwa-analytics`, `pwa-store`, `user-store`, and `voting-store`. Use these as blueprints when modernizing the remaining stores. (🆕 `voterRegistrationStore` follows the standards with unit coverage; add a harness once we start tracking CTA analytics.)
 
 ---
 
@@ -93,12 +105,14 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 3. **Update consumers** — migrate components/tests to the new hooks; avoid `getState()` in React components.
 4. **Testing** — add/refresh unit + integration suites; build Playwright harness if the store drives UI interactions.
 5. **Docs & checklist** — mark progress in the corresponding `scratch/gpt5-codex/store-roadmaps/*` file and update this guide if new patterns emerge.
+6. **Election alerts** — civics features that surface countdowns should call `useElectionCountdown` with `notify`, `notificationSource`, and threshold metadata so the hook can dedupe per election/division and dispatch through `notificationStoreUtils.createElectionNotification`.
 
 ---
 
 ## References
 
-- Notification store modernization PRs — see `web/lib/stores/notificationStore.ts` and the associated tests/harness.
+- Notification store modernization PRs — see `web/lib/stores/notificationStore.ts`, `web/features/civics/utils/civicsCountdownUtils.ts` (election notification hook), and tests covering analytics + countdown notifications (`web/tests/unit/stores/notification.integration.test.tsx`, `web/tests/unit/features/civics/useElectionCountdown.test.ts`).
+- Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
 - Development setup & testing commands — `docs/DEVELOPMENT.md`, `docs/TESTING.md`.
 - Technical backlog — `docs/ROADMAP.md`.
 

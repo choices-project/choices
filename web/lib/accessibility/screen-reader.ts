@@ -444,6 +444,34 @@ export class ScreenReaderSupport {
     liveRegion.textContent = announcement.message;
     const duration = announcement.duration ?? 1000;
     
+    if (typeof window !== 'undefined') {
+      const hook = (window as typeof window & {
+        __onScreenReaderAnnounce?: (data: {
+          message: string;
+          priority: 'polite' | 'assertive';
+          id?: string;
+          duration?: number;
+          timestamp: number;
+        }) => void;
+      }).__onScreenReaderAnnounce;
+      hook?.({
+        message: announcement.message,
+        priority: announcement.priority,
+        id: announcement.id,
+        duration,
+        timestamp: Date.now(),
+      });
+    }
+
+    if (typeof console !== 'undefined' && typeof console.info === 'function') {
+      console.info('[WidgetRenderer][announce]', {
+        key: 'screen-reader-support',
+        message: announcement.message,
+        priority: announcement.priority,
+        id: announcement.id,
+      });
+    }
+    
     // Clear after announcement
     setTimeout(() => {
       liveRegion.textContent = '';

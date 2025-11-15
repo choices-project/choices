@@ -24,6 +24,7 @@ import { useIsAuthenticated, useUser, useUserActions, useUserLoading } from '@/l
 import { T } from '@/lib/testing/testIds'
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+import { useAppActions } from '@/lib/stores/appStore';
 
 
 type AdminStats = {
@@ -44,6 +45,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
   const loadAdminStats = useCallback(async () => {
     try {
@@ -125,6 +127,19 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }, [isAuthenticated, user, loadAdminStats])
+
+  useEffect(() => {
+    setCurrentRoute('/admin');
+    setSidebarActiveSection('admin-dashboard');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!isUserLoading && isAuthenticated && user) {

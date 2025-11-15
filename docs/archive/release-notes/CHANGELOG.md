@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - Phase C Governance & Rollout
+
+### Added
+- **Governance Artifacts:** Published `docs/ARCHITECTURE/stores.md`, `docs/API/contracts.md`, and updated testing playbooks/contract plans so downstream teams can align on selectors, middleware, and response envelopes.
+- **Inclusive Release Gates:** Updated PR template + deployment guide with inclusive UI/i18n checklists, SR + locale audit scheduling, and MSW/contract parity requirements.
+
+### Changed
+- **API Documentation:** Contract plan now includes a coverage matrix + MSW alignment steps; API handlers reference the shared `{ success, data, metadata }` envelope consistently.
+- **Automation Guidance:** Playwright README + harness playbooks capture MSW troubleshooting, offline expectations, and locale-debug tips.
+
+### Upcoming
+- **Analytics & API Release Notes:** Prepare partner-facing callouts covering analytics cache metadata, WebAuthn parity, and contract test enforcement before the next tagged release.
+
+---
+
 ## [0.97.0] - 2025-11-05 (Night) - Cache Integration Complete
 
 ### Added

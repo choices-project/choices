@@ -19,7 +19,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
-import { useIsMobile } from '@/lib/stores/appStore';
+import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
@@ -54,6 +54,7 @@ export default function Civics2Page() {
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
   const isMobile = useIsMobile();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {
@@ -84,6 +85,20 @@ export default function Civics2Page() {
   useEffect(() => {
     loadRepresentatives();
   }, [loadRepresentatives]);
+
+  useEffect(() => {
+    setCurrentRoute('/civics');
+    setSidebarActiveSection('civics');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Civics', href: '/civics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   // Initialize client-side state
   useEffect(() => {

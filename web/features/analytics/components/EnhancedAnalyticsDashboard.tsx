@@ -1,26 +1,26 @@
 /**
  * Enhanced Analytics Dashboard Component
- * 
+ *
  * Comprehensive analytics dashboard combining:
  * - System monitoring (real-time, health)
  * - Business intelligence (trends, demographics, heatmaps)
  * - Trust tier analysis
  * - Geographic engagement
- * 
+ *
  * Created: 2025-10-27
  * Enhanced: 2025-11-05 - Added visualization charts, access control, privacy filters
  */
 
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  Info, 
-  Loader2, 
-  RefreshCw, 
-  TrendingUp, 
-  Users, 
-  Activity, 
-  HeartPulse, 
+import {
+  AlertCircle,
+  CheckCircle,
+  Info,
+  Loader2,
+  RefreshCw,
+  TrendingUp,
+  Users,
+  Activity,
+  HeartPulse,
   Bell,
   Shield,
   Zap,
@@ -29,12 +29,22 @@ import {
   Flame,
   Clock
 } from 'lucide-react';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/hooks/useI18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
@@ -54,6 +64,8 @@ import TrustTierComparisonChart from './TrustTierComparisonChart';
 type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
 type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
 
+type AnalyticsTab = 'overview' | 'trends' | 'heatmaps' | 'demographics' | 'temporal' | 'trust';
+
 
 type EnhancedAnalyticsDashboardProps = {
   pollId?: string;
@@ -62,6 +74,7 @@ type EnhancedAnalyticsDashboardProps = {
   enableRealTime?: boolean;
   enableNewSchema?: boolean;
   className?: string;
+  skipAccessGuard?: boolean;
 }
 
 export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProps> = ({
@@ -70,16 +83,23 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   sessionId,
   enableRealTime = true,
   enableNewSchema = true,
-  className = ''
+  className = '',
+  skipAccessGuard = false,
 }) => {
+  const { t, currentLanguage } = useI18n();
+  const headingId = useId();
+  const regionRef = useRef<HTMLElement | null>(null);
+  const hasAnnouncedTab = useRef(false);
+  const isInitialUpdate = useRef(true);
+
   // Responsive hooks
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  
+
   // Access Control - Admin Only
   const currentUser = useUser();
   const hasAccess = canAccessAnalytics(currentUser, false);
-  
+
   // Log access attempt
   useEffect(() => {
     logAnalyticsAccess(currentUser, 'enhanced-analytics-dashboard', hasAccess);
@@ -107,7 +127,9 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const [systemHealth, setSystemHealth] = useState<SystemHealthRow[]>([]);
   const [siteMessages, setSiteMessages] = useState<SiteMessageRow[]>([]);
   const [showDetails, setShowDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Load additional data
   useEffect(() => {
@@ -136,34 +158,142 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     });
   }, [trackFeatureUsage, pollId, userId, enableNewSchema]);
 
+  const tabLabels = useMemo(
+    () => ({
+      overview: t('analytics.tabs.overview'),
+      trends: t('analytics.tabs.trends'),
+      heatmaps: t('analytics.tabs.heatmaps'),
+      demographics: t('analytics.tabs.demographics'),
+      temporal: t('analytics.tabs.temporal'),
+      trust: t('analytics.tabs.trust'),
+    }),
+    [t],
+  );
+
+  const formatTime = useCallback(
+    (date?: Date | null) => {
+      if (!date) return '';
+      try {
+        return new Intl.DateTimeFormat(currentLanguage, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }).format(date);
+      } catch (error) {
+        logger.warn('Failed to format analytics timestamp', { error });
+        return date.toLocaleTimeString();
+      }
+    },
+    [currentLanguage],
+  );
+
+  useEffect(() => {
+    if (!lastUpdated) {
+      return;
+    }
+
+    const formattedTime = formatTime(lastUpdated);
+    if (!formattedTime) {
+      return;
+    }
+
+    const message = t('analytics.live.refreshed', { time: formattedTime });
+    setStatusMessage(message);
+
+    if (isInitialUpdate.current) {
+      isInitialUpdate.current = false;
+      return;
+    }
+
+    ScreenReaderSupport.announce(message, 'polite');
+  }, [formatTime, lastUpdated, t]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    const refreshingMessage = t('analytics.live.refreshing');
+    setStatusMessage(refreshingMessage);
+    ScreenReaderSupport.announce(refreshingMessage, 'polite');
+
+    try {
+      await refresh();
+    } catch (error) {
+      const errorMessage = t('analytics.status.errorLabel');
+      setStatusMessage(errorMessage);
+      ScreenReaderSupport.announce(errorMessage, 'assertive');
+      logger.error('Failed to refresh analytics dashboard', { error });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refresh, t]);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    if (!regionRef.current) {
+      return;
+    }
+
+    if (!hasAnnouncedTab.current) {
+      hasAnnouncedTab.current = true;
+      return;
+    }
+
+    ScreenReaderSupport.setFocus(regionRef.current, {
+      preventScroll: true,
+      announce: t('analytics.a11y.tabChanged', { tab: tabLabels[activeTab] }),
+    });
+  }, [activeTab, data, tabLabels, t]);
+
   // Block unauthorized users
-  if (!hasAccess) {
+  if (!skipAccessGuard && !hasAccess) {
     return <UnauthorizedAccess />;
   }
 
   if (loading && !data) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${className}`}>
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading Enhanced Analytics...</span>
-      </div>
+      <section
+        className={`flex items-center justify-center min-h-screen ${className}`}
+        aria-labelledby={headingId}
+        role="status"
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+        <span className="ml-2 text-lg">{t('analytics.status.loading')}</span>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className={`p-4 text-red-600 bg-red-100 border border-red-400 rounded-md ${className}`}>
-        <AlertCircle className="inline-block mr-2" />
-        Error: {error}
-        <Button onClick={refresh} className="ml-4">
-          <RefreshCw className="h-4 w-4 mr-2" /> Retry
+      <div
+        className={`p-4 text-red-600 bg-red-100 border border-red-400 rounded-md ${className}`}
+        role="alert"
+        aria-live="assertive"
+      >
+        <AlertCircle className="inline-block mr-2" aria-hidden="true" />
+        <span className="font-semibold">{t('analytics.status.errorLabel')}:</span>{' '}
+        <span>{error}</span>
+        <Button onClick={handleRefresh} className="ml-4">
+          <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" /> {t('analytics.status.retry')}
         </Button>
       </div>
     );
   }
 
   if (!data) {
-    return null;
+    return (
+      <div
+        className={`p-4 text-gray-600 bg-gray-100 border border-gray-400 rounded-md ${className}`}
+        role="status"
+        aria-live="polite"
+      >
+        <Info className="inline-block mr-2" aria-hidden="true" />
+        {t('analytics.status.noData')}
+        <Button onClick={handleRefresh} className="ml-4">
+          <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" /> {t('analytics.status.loadData')}
+        </Button>
+      </div>
+    );
   }
 
   const enhancedInsights = data.enhancedInsights;
@@ -171,54 +301,62 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const trustTierDistribution = enhancedInsights?.trustTierDistribution;
   const platformMetricsSummary = enhancedInsights?.platformMetrics ?? [];
 
-  if (!data) {
-    return null;
-  }
-
-  if (!data) {
     return (
-      <div className={`p-4 text-gray-600 bg-gray-100 border border-gray-400 rounded-md ${className}`}>
-        <Info className="inline-block mr-2" />
-        No analytics data available.
-        <Button onClick={refresh} className="ml-4">
-          <RefreshCw className="h-4 w-4 mr-2" /> Load Data
-        </Button>
+    <section
+      ref={regionRef}
+      id="main-content"
+      aria-labelledby={headingId}
+      tabIndex={-1}
+      className={`space-y-4 md:space-y-6 p-4 md:p-6 ${className}`}
+    >
+      <div aria-live="polite" role="status" className="sr-only">
+        {statusMessage}
       </div>
-    );
-  }
-
-  return (
-    <div className={`space-y-4 md:space-y-6 p-4 md:p-6 ${className}`}>
       {/* Header - Mobile Optimized */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold">Analytics Dashboard</h1>
+          <h1 id={headingId} className="text-2xl md:text-3xl font-bold">
+            {t('analytics.heading.title')}
+          </h1>
           <p className="text-sm md:text-base text-muted-foreground">
             {isMobile ? (
-              <>Monitoring & Insights{lastUpdated && ` • ${lastUpdated.toLocaleTimeString()}`}</>
+              <>
+                {t('analytics.heading.mobile')}
+                {lastUpdated && (
+                  <> {t('analytics.heading.lastUpdatedShort', { time: formatTime(lastUpdated) })}</>
+                )}
+              </>
             ) : (
-              <>System monitoring • Business intelligence • User insights
-              {lastUpdated && ` • Updated: ${lastUpdated.toLocaleTimeString()}`}</>
+              <>
+                {t('analytics.heading.desktop')}
+                {lastUpdated && (
+                  <> {t('analytics.heading.lastUpdatedFull', { time: formatTime(lastUpdated) })}</>
+                )}
+              </>
             )}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap md:flex-nowrap">
-          <Button 
+          <Button
             onClick={() => setShowDetails(!showDetails)}
             variant="outline"
-            size={isMobile ? "sm" : "default"}
+            size={isMobile ? 'sm' : 'default'}
             className="flex-1 md:flex-none"
           >
-            {showDetails ? 'Hide' : 'Show'} Details
+            {showDetails ? t('analytics.buttons.hideDetails') : t('analytics.buttons.showDetails')}
           </Button>
-          <Button 
-            onClick={refresh} 
-            disabled={loading}
-            size={isMobile ? "sm" : "default"}
+          <Button
+            onClick={handleRefresh}
+            disabled={loading || isRefreshing}
+            size={isMobile ? 'sm' : 'default'}
             className="flex-1 md:flex-none"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Refresh
+            {loading || isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
+            )}
+            {isRefreshing ? t('analytics.buttons.refreshing') : t('analytics.buttons.refresh')}
           </Button>
         </div>
       </div>
@@ -226,61 +364,65 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
       {/* Status Badges */}
       <div className="flex gap-2 flex-wrap">
         <Badge variant="default" className="bg-green-100 text-green-800">
-          <Shield className="h-3 w-3 mr-1" />
-          Admin Access
+          <Shield className="h-3 w-3 mr-1" aria-hidden="true" />
+          {t('analytics.badges.adminAccess')}
         </Badge>
         {enableNewSchema && (
           <Badge variant="default" className="bg-green-100 text-green-800">
-            <DatabaseIcon className="h-3 w-3 mr-1" />
-            New Schema Enabled
+            <DatabaseIcon className="h-3 w-3 mr-1" aria-hidden="true" />
+            {t('analytics.badges.newSchema')}
           </Badge>
         )}
         {enableRealTime && (
           <Badge variant="default" className="bg-blue-100 text-blue-800">
-            <Zap className="h-3 w-3 mr-1" />
-            Real-time Updates
+            <Zap className="h-3 w-3 mr-1" aria-hidden="true" />
+            {t('analytics.badges.realTime')}
           </Badge>
         )}
         {data.enhancedInsights && (
           <Badge variant="default" className="bg-purple-100 text-purple-800">
-            <BarChart3 className="h-3 w-3 mr-1" />
-            Enhanced Insights
+            <BarChart3 className="h-3 w-3 mr-1" aria-hidden="true" />
+            {t('analytics.badges.enhancedInsights')}
           </Badge>
         )}
       </div>
 
       {/* Tabbed Interface - Mobile Optimized */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 md:mt-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as AnalyticsTab)}
+        className="mt-4 md:mt-6"
+      >
         <TabsList className={`grid w-full ${
-          isMobile 
-            ? 'grid-cols-2 gap-1' 
-            : isTablet 
-              ? 'grid-cols-3' 
+          isMobile
+            ? 'grid-cols-2 gap-1'
+            : isTablet
+              ? 'grid-cols-3'
               : 'grid-cols-6'
         }`}>
-          <TabsTrigger value="overview" className={isMobile ? "text-xs" : ""}>
-            <Activity className="h-4 w-4 mr-1 md:mr-2" />
-            {isMobile ? 'Over.' : 'Overview'}
+          <TabsTrigger value="overview" className={isMobile ? 'text-xs' : ''}>
+            <Activity className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {isMobile ? t('analytics.tabs.overviewShort') : tabLabels.overview}
           </TabsTrigger>
-          <TabsTrigger value="trends" className={isMobile ? "text-xs" : ""}>
-            <TrendingUp className="h-4 w-4 mr-1 md:mr-2" />
-            Trends
+          <TabsTrigger value="trends" className={isMobile ? 'text-xs' : ''}>
+            <TrendingUp className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {tabLabels.trends}
           </TabsTrigger>
-          <TabsTrigger value="heatmaps" className={isMobile ? "text-xs" : ""}>
-            <Flame className="h-4 w-4 mr-1 md:mr-2" />
-            {isMobile ? 'Heat' : 'Heatmaps'}
+          <TabsTrigger value="heatmaps" className={isMobile ? 'text-xs' : ''}>
+            <Flame className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {isMobile ? t('analytics.tabs.heatmapsShort') : tabLabels.heatmaps}
           </TabsTrigger>
-          <TabsTrigger value="demographics" className={isMobile ? "text-xs" : ""}>
-            <Users className="h-4 w-4 mr-1 md:mr-2" />
-            {isMobile ? 'Demo' : 'Demographics'}
+          <TabsTrigger value="demographics" className={isMobile ? 'text-xs' : ''}>
+            <Users className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {isMobile ? t('analytics.tabs.demographicsShort') : tabLabels.demographics}
           </TabsTrigger>
-          <TabsTrigger value="temporal" className={isMobile ? "text-xs" : ""}>
-            <Clock className="h-4 w-4 mr-1 md:mr-2" />
-            {isMobile ? 'Time' : 'Temporal'}
+          <TabsTrigger value="temporal" className={isMobile ? 'text-xs' : ''}>
+            <Clock className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {isMobile ? t('analytics.tabs.temporalShort') : tabLabels.temporal}
           </TabsTrigger>
-          <TabsTrigger value="trust" className={isMobile ? "text-xs" : ""}>
-            <Shield className="h-4 w-4 mr-1 md:mr-2" />
-            Trust
+          <TabsTrigger value="trust" className={isMobile ? 'text-xs' : ''}>
+            <Shield className="h-4 w-4 mr-1 md:mr-2" aria-hidden="true" />
+            {tabLabels.trust}
           </TabsTrigger>
         </TabsList>
 
@@ -451,7 +593,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
               {systemHealth.map((check, index) => (
                 <div key={index} className="flex items-center justify-between p-2 border rounded">
                   <span className="font-medium">{check.service_name}</span>
-                    <Badge 
+                    <Badge
                     variant={check.health_status === 'ok' ? 'default' : check.health_status === 'warning' ? 'secondary' : 'destructive'}
                     className={
                       check.health_status === 'ok' ? 'bg-green-100 text-green-800' :
@@ -550,7 +692,7 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
           </Suspense>
         </TabsContent>
       </Tabs>
-    </div>
+    </section>
   );
 };
 

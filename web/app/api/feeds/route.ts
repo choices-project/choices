@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, rateLimitError, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
-import { devLog } from '@/lib/utils/logger';
+import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -148,6 +148,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .limit(10); // Include up to 10 civic actions
 
     if (civicActionsError) {
+      logger.warn('Error fetching civic actions for feeds', { error: civicActionsError });
       devLog('Error fetching civic actions:', { error: civicActionsError });
       // Don't fail the entire request if civic actions fail
     }

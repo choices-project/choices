@@ -34,6 +34,7 @@ This command:
 - Check the snapshot diff into Git alongside feature work so reviewers can see which strings need translation.
 - Merge new keys into `messages/en.json` and `messages/es.json` as part of the same pull request.
 - Treat the snapshot as a safety net: it should reflect *all* keys that exist in code after your change.
+- Group feature copy under scoped namespaces (e.g. `dashboard.personal.*`, `feeds.provider.*`) so dashboards, feeds, and harness variants stay aligned and reviewers can diff changes easily.
 
 ## Lint Guard Rails
 
@@ -54,7 +55,7 @@ If you see new warnings:
 
 ## Adding New Strings
 
-1. Pick or create an appropriate namespace (e.g. `auth`, `onboarding`, `polls`, `common`).
+1. Pick or create an appropriate namespace (e.g. `auth`, `onboarding`, `polls`, `dashboard.personal`, `feeds.provider`, `common`).
 2. Add entries to `messages/en.json` and `messages/es.json`; use ICU placeholders where dynamic values are required.
 3. Call `t('namespace.key', { placeholder })` in code.
 4. Run `npm run i18n:extract` and verify the snapshot.

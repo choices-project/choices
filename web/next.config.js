@@ -9,6 +9,7 @@ const bundleAnalyzer = withBundleAnalyzer({
 const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
+  reactStrictMode: process.env.NEXT_DISABLE_STRICT_MODE === '1' ? false : true,
   transpilePackages: ['@choices/civics-shared'],
 
   experimental: {

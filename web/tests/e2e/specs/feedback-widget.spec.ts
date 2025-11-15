@@ -66,7 +66,17 @@ test.describe('Feedback Widget', () => {
       await route.fulfill({
         status: 200,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ success: true, message: 'Feedback submitted successfully!' }),
+        body: JSON.stringify({
+          success: true,
+          data: {
+            message: 'Feedback submitted successfully!',
+            feedbackId: `feedback-${Date.now()}`,
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            source: 'playwright-mock',
+          },
+        }),
       });
     });
 
@@ -136,7 +146,13 @@ test.describe('Feedback Widget', () => {
       await route.fulfill({
         status: 500,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ success: false, error: 'Service unavailable' }),
+        body: JSON.stringify({
+          success: false,
+          error: 'Service unavailable',
+          metadata: {
+            timestamp: new Date().toISOString(),
+          },
+        }),
       });
     });
 

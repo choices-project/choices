@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAppActions } from '@/lib/stores/appStore';
+import { AdminLayout } from '../layout/AdminLayout';
 
 /**
  * Admin Security Dashboard
@@ -53,6 +55,21 @@ export default function AdminSecurityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/security');
+    setSidebarActiveSection('admin-security');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Security', href: '/admin/security' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   const fetchData = async () => {
     try {
@@ -102,40 +119,45 @@ export default function AdminSecurityPage() {
 
   if (loading && !data) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <RefreshCw className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading security data...</span>
+      <AdminLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <RefreshCw className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading security data...</span>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load security data: {error}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2"
-              onClick={() => void fetchData()}
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
+      <AdminLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load security data: {error}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2"
+                onClick={() => void fetchData()}
+              >
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </AdminLayout>
     );
   }
 
   if (!data) return null;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <AdminLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -348,5 +370,6 @@ export default function AdminSecurityPage() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

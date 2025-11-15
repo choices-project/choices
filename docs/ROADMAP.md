@@ -23,7 +23,7 @@ This roadmap captures the technical debt and follow-up work surfaced during the 
 - **Playwright/Jest setup hygiene:** Remove unused arguments, stale `eslint-disable` directives, and empty blocks in archived E2E suites.
 
 ## 3. Store Modernization (Medium Priority)
-- **Completed:** Notification store (selectors/actions, integration + Playwright coverage).
+- **Completed:** Notification store (selectors/actions, integration + Playwright coverage, civics election notification dedupe + analytics tests, monitoring widget/API); voter registration store (creator pattern, safe storage, unit suite).
 - **In progress:** Profile and user stores (wrap up recursion fixes, port consumers to action hooks).
 - **Recent hardening:** Analytics store now shares base loading/error helpers, exports selector bundles via `@/lib/stores`, sports a dedicated harness + unit/RTL coverage, and feeds the new Playwright spec; polls store continues to supply validation helpers for dashboard widgets.
 - **Next up:** App, admin, and feeds consumer alignment—apply the standards doc (creator export, memoized selectors, strict persistence payloads) and add per-store harness pages.

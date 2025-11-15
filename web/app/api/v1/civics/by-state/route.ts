@@ -91,7 +91,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const { data: reps, error } = await query;
 
     if (error) {
-      throw error;
+      return errorResponse('Failed to load representatives', 502, { reason: error.message });
     }
 
     const rows: RepresentativeRow[] = Array.isArray(reps)
@@ -200,16 +200,23 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       });
     }
 
-  const response = successResponse({
-    ok: true,
-    count: finalResponse.length,
-    data: finalResponse,
-    attribution: {
-      fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
-      votes: include.includes('votes') ? 'GovTrack.us' : undefined,
-      contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
+  const response = successResponse(
+    {
+      state: state ?? 'US',
+      level: level ?? undefined,
+      representatives: finalResponse,
+      count: finalResponse.length,
+      attribution: {
+        fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
+        votes: include.includes('votes') ? 'GovTrack.us' : undefined,
+        contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
+      }
+    },
+    {
+      include: include.length > 0 ? include : undefined,
+      fields: fields.length > 0 ? fields : undefined
     }
-  });
+  );
 
   response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
   response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');

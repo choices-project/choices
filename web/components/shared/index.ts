@@ -5,3 +5,4 @@ export { DeviceList } from './DeviceList';
 export { default as BurgerMenu } from './BurgerMenu';
 export { default as LanguageSelector } from './LanguageSelector';
 export { default as SiteMessages } from './SiteMessages';
+export { AppShell } from './AppShell';

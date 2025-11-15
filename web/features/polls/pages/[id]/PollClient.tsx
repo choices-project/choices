@@ -18,6 +18,7 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationActions, useAnalyticsStore } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
@@ -94,6 +95,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const { addNotification } = useNotificationActions();
   const trackEvent = useAnalyticsStore((state) => state.trackEvent);
   const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const {
     setBallots,
     setSelectedBallot,
@@ -126,6 +128,24 @@ export default function PollClient({ poll }: PollClientProps) {
   const [error, setError] = useState<string | null>(null);
 
   const pollId = poll.id;
+
+  useEffect(() => {
+    const pollPath = `/polls/${poll.id}`;
+
+    setCurrentRoute(pollPath);
+    setSidebarActiveSection('polls');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
+      { label: poll.title ?? 'Poll Detail', href: pollPath },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   const pollDetailsForBallot = useMemo(() => {
     const totalVotes =

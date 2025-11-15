@@ -25,7 +25,7 @@ import {
   RefreshCw,
   Award
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -46,7 +46,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import { useAnalyticsActions, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
 
 type TierMetrics = {
   tier: string;
@@ -83,12 +91,25 @@ export default function TrustTierComparisonChart({
   className = '',
   defaultTab = 'participation'
 }: TrustTierComparisonChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchTrustTierComparison } = useAnalyticsActions();
   const trustTiers = useAnalyticsTrustTiers();
   const data = trustTiers.data;
   const isLoading = trustTiers.loading;
   const error = trustTiers.error;
+
+  const tabLabels = useMemo(
+    () => ({
+      participation: 'Participation and completion view',
+      engagement: 'Engagement and bot risk view',
+      radar: 'Multi-metric overview',
+    }),
+    [],
+  );
 
   const loadTrustTiers = useCallback(async () => {
     await fetchTrustTierComparison({
@@ -96,11 +117,161 @@ export default function TrustTierComparisonChart({
     });
   }, [fetchTrustTierComparison]);
 
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const tableColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'tier', label: t('analytics.tables.columns.tier') },
+      { key: 'users', label: t('analytics.tables.columns.users'), isNumeric: true },
+      {
+        key: 'participationRate',
+        label: t('analytics.tables.columns.participationRate'),
+        isNumeric: true,
+      },
+      {
+        key: 'completionRate',
+        label: t('analytics.tables.columns.completionRate'),
+        isNumeric: true,
+      },
+      {
+        key: 'avgEngagement',
+        label: t('analytics.tables.columns.avgEngagement'),
+        isNumeric: true,
+      },
+      {
+        key: 'botLikelihood',
+        label: t('analytics.tables.columns.botLikelihood'),
+        isNumeric: true,
+      },
+      {
+        key: 'avgPollsVoted',
+        label: t('analytics.tables.columns.avgPollsVoted'),
+        isNumeric: true,
+      },
+      {
+        key: 'avgTimeOnSite',
+        label: t('analytics.tables.columns.avgTimeOnSite'),
+        isNumeric: true,
+      },
+    ],
+    [t],
+  );
+
+  const tableRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.tiers.map((tier) => ({
+            id: tier.tier,
+            cells: {
+              tier: `${tier.tier} — ${tier.tierName}`,
+              users: formatNumber(tier.userCount),
+              participationRate: formatPercent(tier.participationRate),
+              completionRate: formatPercent(tier.completionRate),
+              avgEngagement: formatNumber(tier.avgEngagement),
+              botLikelihood: formatPercent(tier.botLikelihood),
+              avgPollsVoted: formatNumber(tier.avgPollsVoted),
+              avgTimeOnSite: formatNumber(tier.avgTimeOnSite),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const highestEngagementTier = useMemo(() => {
+    if (!data || data.tiers.length === 0) {
+      return null;
+    }
+
+    return data.tiers.reduce<TierMetrics | null>((best, tier) => {
+      if (!best || tier.avgEngagement > best.avgEngagement) {
+        return tier;
+      }
+      return best;
+    }, null);
+  }, [data]);
+
+  const summaryIntro = useMemo(
+    () =>
+      data && highestEngagementTier
+        ? t('analytics.trust.summaryIntro', {
+            totalUsers: formatNumber(data.totalUsers),
+            strongestTier: `${highestEngagementTier.tierName} (${highestEngagementTier.tier})`,
+            engagement: formatNumber(highestEngagementTier.avgEngagement),
+            participation: formatPercent(highestEngagementTier.participationRate),
+          })
+        : data
+          ? t('analytics.trust.summaryFallback', {
+              totalUsers: formatNumber(data.totalUsers),
+            })
+          : '',
+    [data, formatNumber, formatPercent, highestEngagementTier, t],
+  );
+
   useEffect(() => {
     void fetchTrustTierComparison({
       fallback: generateMockData,
     });
   }, [fetchTrustTierComparison]);
+
+  const handleTabChange = useCallback(
+    (value: typeof activeTab) => {
+      setActiveTab(value);
+      ScreenReaderSupport.announce(`Viewing ${tabLabels[value] ?? value}.`, 'polite');
+    },
+    [tabLabels],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce('Refreshing trust tier comparison data.', 'polite');
+    void loadTrustTiers();
+  }, [loadTrustTiers]);
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(`Trust tier data may be incomplete. ${error}`, 'assertive');
+    previousErrorRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -264,10 +435,15 @@ export default function TrustTierComparisonChart({
                   {tier.tier}
                 </Badge>
               </div>
-              <p className="text-2xl font-bold" style={{ color: TIER_COLORS[tier.tier as keyof typeof TIER_COLORS] }}>
-                {tier.userCount}
+              <p
+                className="text-2xl font-bold"
+                style={{ color: TIER_COLORS[tier.tier as keyof typeof TIER_COLORS] }}
+              >
+                {formatNumber(tier.userCount)}
               </p>
-              <p className="text-xs text-gray-600">{tier.tierName} users</p>
+              <p className="text-xs text-gray-600">
+                {tier.tierName} {t('analytics.trust.usersSuffix')}
+              </p>
             </div>
           ))}
         </div>
@@ -291,7 +467,7 @@ export default function TrustTierComparisonChart({
         )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as typeof activeTab)}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="participation">Participation</TabsTrigger>
             <TabsTrigger value="engagement">Engagement</TabsTrigger>
@@ -326,13 +502,20 @@ export default function TrustTierComparisonChart({
                           </p>
                           <div className="space-y-1">
                             <p className="text-sm text-blue-600">
-                              Participation: <span className="font-medium">{tier.participationRate}%</span>
+                              Participation:{' '}
+                              <span className="font-medium">
+                                {formatPercent(tier.participationRate)}
+                              </span>
                             </p>
                             <p className="text-sm text-green-600">
-                              Completion: <span className="font-medium">{tier.completionRate}%</span>
+                              Completion:{' '}
+                              <span className="font-medium">
+                                {formatPercent(tier.completionRate)}
+                              </span>
                             </p>
                             <p className="text-sm text-gray-600">
-                              Users: <span className="font-medium">{tier.userCount}</span>
+                              Users:{' '}
+                              <span className="font-medium">{formatNumber(tier.userCount)}</span>
                             </p>
                           </div>
                         </div>
@@ -364,12 +547,14 @@ export default function TrustTierComparisonChart({
                       </Badge>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{tier.tierName}</p>
-                        <p className="text-xs text-gray-500">{tier.userCount} users</p>
+                        <p className="text-xs text-gray-500">
+                          {formatNumber(tier.userCount)} {t('analytics.trust.usersSuffix')}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">
-                        {tier.participationRate}% / {tier.completionRate}%
+                        {formatPercent(tier.participationRate)} / {formatPercent(tier.completionRate)}
                       </p>
                       <p className="text-xs text-gray-500">Participation / Completion</p>
                     </div>
@@ -407,13 +592,20 @@ export default function TrustTierComparisonChart({
                           </p>
                           <div className="space-y-1">
                             <p className="text-sm text-purple-600">
-                              Engagement: <span className="font-medium">{tier.avgEngagement}/100</span>
+                              Engagement:{' '}
+                              <span className="font-medium">
+                                {formatNumber(tier.avgEngagement)}/100
+                              </span>
                             </p>
                             <p className="text-sm text-red-600">
-                              Bot Risk: <span className="font-medium">{tier.botLikelihood}%</span>
+                              Bot Risk:{' '}
+                              <span className="font-medium">
+                                {formatPercent(tier.botLikelihood)}
+                              </span>
                             </p>
                             <p className="text-sm text-gray-600">
-                              Polls Voted: <span className="font-medium">{tier.avgPollsVoted}</span>
+                              Polls Voted:{' '}
+                              <span className="font-medium">{formatNumber(tier.avgPollsVoted)}</span>
                             </p>
                           </div>
                         </div>
@@ -464,11 +656,21 @@ export default function TrustTierComparisonChart({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left p-2 font-semibold text-gray-900">Tier</th>
-                    <th className="text-right p-2 font-semibold text-gray-900">Users</th>
-                    <th className="text-right p-2 font-semibold text-gray-900">Participation</th>
-                    <th className="text-right p-2 font-semibold text-gray-900">Engagement</th>
-                    <th className="text-right p-2 font-semibold text-gray-900">Bot Risk</th>
+                    <th className="text-left p-2 font-semibold text-gray-900">
+                      {t('analytics.tables.columns.tier')}
+                    </th>
+                    <th className="text-right p-2 font-semibold text-gray-900">
+                      {t('analytics.tables.columns.users')}
+                    </th>
+                    <th className="text-right p-2 font-semibold text-gray-900">
+                      {t('analytics.tables.columns.participationRate')}
+                    </th>
+                    <th className="text-right p-2 font-semibold text-gray-900">
+                      {t('analytics.tables.columns.avgEngagement')}
+                    </th>
+                    <th className="text-right p-2 font-semibold text-gray-900">
+                      {t('analytics.tables.columns.botLikelihood')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -482,12 +684,22 @@ export default function TrustTierComparisonChart({
                           {tier.tier} - {tier.tierName}
                         </Badge>
                       </td>
-                      <td className="text-right p-2 text-gray-900">{tier.userCount}</td>
-                      <td className="text-right p-2 text-gray-900">{tier.participationRate}%</td>
-                      <td className="text-right p-2 text-gray-900">{tier.avgEngagement}/100</td>
+                      <td className="text-right p-2 text-gray-900">
+                        {formatNumber(tier.userCount)}
+                      </td>
+                      <td className="text-right p-2 text-gray-900">
+                        {formatPercent(tier.participationRate)}
+                      </td>
+                      <td className="text-right p-2 text-gray-900">
+                        {formatNumber(tier.avgEngagement)}/100
+                      </td>
                       <td className="text-right p-2">
-                        <span className={tier.botLikelihood > 50 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                          {tier.botLikelihood}%
+                        <span
+                          className={
+                            tier.botLikelihood > 50 ? 'text-red-600 font-medium' : 'text-green-600'
+                          }
+                        >
+                          {formatPercent(tier.botLikelihood)}
                         </span>
                       </td>
                     </tr>
@@ -498,12 +710,42 @@ export default function TrustTierComparisonChart({
           </TabsContent>
         </Tabs>
 
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          {summaryIntro ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-foreground"
+            >
+              {summaryIntro}
+            </p>
+          ) : null}
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-trust`}
+            title={t('analytics.trust.table.title')}
+            description={t('analytics.trust.table.description')}
+            columns={tableColumns}
+            rows={tableRows}
+          />
+        </section>
+
         {/* Refresh Button */}
         <div className="mt-6 flex justify-center">
           <Button
-            onClick={() => {
-              void loadTrustTiers();
-            }}
+            onClick={handleRefresh}
             size="sm"
             variant="outline"
           >

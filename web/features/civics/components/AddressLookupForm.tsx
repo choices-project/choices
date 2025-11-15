@@ -20,7 +20,12 @@ import {
   useUserActions,
   useUserAddressLoading,
   useFetchElectionsForDivisions,
-  useUserDivisionIds
+  useUserDivisionIds,
+  useFetchVoterRegistrationForState,
+  useVoterRegistration,
+  useVoterRegistrationLoading,
+  useVoterRegistrationError,
+  useUserCurrentState
 } from '@/lib/stores';
 import {
   useFindByLocation,
@@ -29,6 +34,8 @@ import {
   useClearError
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
+import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
+import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
 
 /**
  * Props for the AddressLookupForm component
@@ -57,6 +64,13 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
   const clearRepresentativeError = useClearError();
   const fetchElections = useFetchElectionsForDivisions();
   const userDivisionIds = useUserDivisionIds();
+  const fetchVoterRegistration = useFetchVoterRegistrationForState();
+  const voterRegistrationLoading = useVoterRegistrationLoading();
+  const voterRegistrationError = useVoterRegistrationError();
+  const userCurrentState = useUserCurrentState();
+
+  const [registrationStateCode, setRegistrationStateCode] = useState('');
+  const voterRegistrationResource = useVoterRegistration(registrationStateCode);
 
   const isLoading = addressLoading || repLoading;
 
@@ -107,6 +121,22 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     if (userDivisionIds.length === 0) return;
     void fetchElections(userDivisionIds);
   }, [fetchElections, userDivisionIds]);
+
+  useEffect(() => {
+    if (userDivisionIds.length === 0) return;
+    const detectedState = getStateCodeFromDivisions(userDivisionIds);
+    if (!detectedState) return;
+    setRegistrationStateCode((previous) => (previous === detectedState ? previous : detectedState));
+    void fetchVoterRegistration(detectedState);
+  }, [userDivisionIds, fetchVoterRegistration]);
+
+  useEffect(() => {
+    if (userDivisionIds.length > 0) return;
+    const normalizedState = userCurrentState?.trim().toUpperCase() ?? '';
+    if (!normalizedState) return;
+    setRegistrationStateCode((previous) => (previous === normalizedState ? previous : normalizedState));
+    void fetchVoterRegistration(normalizedState);
+  }, [userDivisionIds.length, userCurrentState, fetchVoterRegistration]);
 
   return (
     <div className={`civics-address-lookup ${className}`}>
@@ -182,6 +212,13 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           Privacy Protected
         </div>
       </div>
+
+      <VoterRegistrationCTA
+        stateCode={registrationStateCode}
+        resource={voterRegistrationResource}
+        isLoading={voterRegistrationLoading}
+        error={voterRegistrationError}
+      />
     </div>
   );
 }

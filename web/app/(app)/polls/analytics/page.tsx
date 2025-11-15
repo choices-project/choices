@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useUser } from '@/lib/stores'
 import { cn } from '@/lib/utils'
 import { logger } from '@/lib/utils/logger'
+import { useAppActions } from '@/lib/stores/appStore';
 
 // UI Components
 
@@ -56,6 +57,7 @@ type AnalyticsFilters = {
 export default function PollAnalyticsPage() {
   const router = useRouter()
   const user = useUser()
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   
   const [analytics, setAnalytics] = useState<PollAnalytics[]>([])
   const [selectedPoll, setSelectedPoll] = useState<string>('')
@@ -147,6 +149,22 @@ export default function PollAnalyticsPage() {
     if (score >= 40) return 'Fair'
     return 'Poor'
   }, [])
+
+  useEffect(() => {
+    setCurrentRoute('/polls/analytics');
+    setSidebarActiveSection('polls');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
+      { label: 'Analytics', href: '/polls/analytics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     loadAnalytics()

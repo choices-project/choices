@@ -1,10 +1,10 @@
 /**
  * @fileoverview Profile Management API
- * 
+ *
  * Comprehensive profile management API providing user profile CRUD operations,
  * preferences management, interests tracking, and onboarding progress handling.
  * Supports avatar uploads, privacy settings, and complete user data management.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -12,9 +12,10 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
+import { createProfilePayload } from '@/lib/api/response-builders';
 import { undefinedToNull } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -25,7 +26,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 const profileSchema = z.object({
   // Required fields for database
   email: z.string().email(),
-  
+
   // Optional profile fields that match database schema
   avatar_url: z.string().url().optional().or(z.literal('')),
   bio: z.string().max(500).optional(),
@@ -45,6 +46,8 @@ const profileSchema = z.object({
   location_data: z.any().optional(),
   privacy_settings: z.any().optional(),
 });
+
+type ProfileRecord = Record<string, unknown> | null;
 
 const preferencesSchema = z.object({
   email_notifications: z.boolean().optional(),
@@ -70,30 +73,29 @@ const onboardingSchema = z.object({
 
 /**
  * Get user profile with preferences, interests, and onboarding data
- * 
+ *
  * Fetches the authenticated user's profile from user_profiles table,
  * along with privacy_settings as preferences, interests, and onboarding progress.
- * 
+ *
  * @param {NextRequest} request - Request object
  * @returns {Promise<NextResponse>} Object containing profile, preferences, interests, and onboarding data
- * 
+ *
  * @example
  * GET /api/profile
  * // Returns: { profile: {...}, preferences: {...}, interests: {...}, onboarding: {...} }
  */
-export async function GET(_request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-    }
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Database connection not available', 500);
+  }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated or auth error', authError);
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    logger.warn('User not authenticated or auth error', authErr);
+    return authError('Authentication required');
+  }
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase
@@ -104,60 +106,25 @@ export async function GET(_request: NextRequest) {
 
     if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
       logger.error('Error fetching profile', profileError);
-      return NextResponse.json({ error: 'Error fetching profile' }, { status: 500 });
+      return errorResponse('Error fetching profile', 500, undefined, 'PROFILE_FETCH_FAILED');
     }
 
-    // Fetch preferences from user_profiles.privacy_settings (new schema)
-    let preferences = null;
-    if (profile?.privacy_settings) {
-      preferences = profile.privacy_settings;
-    }
+    const responseData = createProfilePayload(profile);
 
-    // Fetch interests - FUNCTIONALITY MERGED INTO user_profiles
-    const interests = {
-      categories: profile?.primary_concerns ?? [],
-      keywords: profile?.community_focus ?? [],
-      topics: [] // primary_hashtags not in schema
-    };
-
-    // Fetch onboarding progress - determined by presence of key fields
-    const isOnboardingCompleted = !!(
-      profile?.demographics && 
-      profile?.primary_concerns && 
-      profile?.community_focus &&
-      profile?.participation_style
-    );
-    const onboarding = {
-      completed: isOnboardingCompleted,
-      data: profile?.demographics ?? {}
-    };
-
-    const responseData = {
-      profile: profile ?? null,
-      preferences: preferences ?? null,
-      interests: interests ?? null,
-      onboarding: onboarding ?? null,
-    };
-
-    logger.info('Profile data fetched successfully', { userId: user.id });
-    return NextResponse.json(responseData, { status: 200 });
-
-  } catch (error) {
-    logger.error('GET /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  logger.info('Profile data fetched successfully', { userId: user.id });
+  return successResponse(responseData);
+});
 
 /**
  * Handle profile, preferences, interests, and onboarding updates
- * 
+ *
  * Processes different types of updates based on request body:
  * - profile: Updates user_profiles table fields
  * - preferences: Updates privacy_settings in user_profiles
  * - interests: Updates interests in user_profiles
  * - onboarding: Updates onboarding progress and demographics
  * - avatar: Handles avatar upload to storage
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {Object} [request.body.profile] - Profile data to update
  * @param {Object} [request.body.preferences] - Privacy preferences to update
@@ -165,7 +132,7 @@ export async function GET(_request: NextRequest) {
  * @param {Object} [request.body.onboarding] - Onboarding progress to update
  * @param {File} [request.body.avatar] - Avatar file to upload
  * @returns {Promise<NextResponse>} Update result for the specific action taken
- * 
+ *
  * @example
  * POST /api/profile
  * {
@@ -173,29 +140,65 @@ export async function GET(_request: NextRequest) {
  *   "preferences": { "notifications": true, "dataSharing": false }
  * }
  */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Database connection not available', 500);
+  }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated or auth error', authError);
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
-    const body = await request.json();
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    logger.warn('User not authenticated or auth error', authErr);
+    return authError('Authentication required');
+  }
+  const contentType = request.headers.get('content-type') ?? '';
+  const isMultipart = contentType.includes('multipart/form-data');
+  let body: any = {};
 
-    let response = NextResponse.json({ message: 'No specific action taken' }, { status: 200 });
+  if (!isMultipart) {
+    const parsedBody = await parseBody<Record<string, unknown>>(request);
+    if (!parsedBody.success) {
+      return parsedBody.error;
+    }
+    body = parsedBody.data ?? {};
+  }
+
+  const { data: existingProfile, error: profileFetchError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (profileFetchError && profileFetchError.code !== 'PGRST116') {
+    logger.error('Error fetching profile before update', profileFetchError);
+    return errorResponse('Error fetching profile data', 500, undefined, 'PROFILE_FETCH_FAILED');
+  }
+
+  let currentProfile: ProfileRecord = (existingProfile ?? null) as ProfileRecord;
+  const captureProfileUpdate = (candidate: unknown) => {
+    const nextRecord =
+      Array.isArray(candidate) && candidate.length > 0
+        ? candidate[0]
+        : candidate && typeof candidate === 'object'
+          ? candidate
+          : null;
+    if (nextRecord) {
+      currentProfile = nextRecord as ProfileRecord;
+    }
+  };
+  const actionMessages: string[] = [];
 
     // Handle profile updates
     if (body.profile) {
       const parsedProfile = profileSchema.safeParse(body.profile);
       if (!parsedProfile.success) {
         logger.warn('Invalid profile data', parsedProfile.error.issues);
-        return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
+        const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+          acc[issue.path.join('.')] = issue.message;
+          return acc;
+        }, {} as Record<string, string>);
+        return validationError(errorDetails, 'Invalid profile data');
       }
     const { data, error } = await supabase
       .from('user_profiles')
@@ -204,10 +207,11 @@ export async function POST(request: NextRequest) {
       .select();
     if (error) {
         logger.error('Error upserting profile', error);
-        return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
+        return errorResponse('Error updating profile', 500);
       }
       logger.info('Profile updated successfully', { userId: user.id, profile: data });
-      response = NextResponse.json({ message: 'Profile updated successfully', profile: data }, { status: 200 });
+      captureProfileUpdate(data);
+      actionMessages.push('Profile updated successfully');
     }
 
     // Handle preferences updates - now stored in user_profiles.privacy_settings
@@ -215,25 +219,30 @@ export async function POST(request: NextRequest) {
       const parsedPreferences = preferencesSchema.safeParse(body.preferences);
       if (!parsedPreferences.success) {
         logger.warn('Invalid preferences data', parsedPreferences.error.issues);
-        return NextResponse.json({ error: 'Invalid preferences data', details: parsedPreferences.error.issues }, { status: 400 });
+        const errorDetails = parsedPreferences.error.issues.reduce((acc, issue) => {
+          acc[issue.path.join('.')] = issue.message;
+          return acc;
+        }, {} as Record<string, string>);
+        return validationError(errorDetails, 'Invalid preferences data');
       }
-      
+
       // Update privacy_settings in user_profiles table
       const { data, error } = await supabase
         .from('user_profiles')
-        .update({ 
+        .update({
           privacy_settings: parsedPreferences.data,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
         .select();
-        
+
       if (error) {
         logger.error('Error updating preferences', error);
-        return NextResponse.json({ error: 'Error updating preferences' }, { status: 500 });
+        return errorResponse('Error updating preferences', 500);
       }
       logger.info('Preferences updated successfully', { userId: user.id, preferences: data });
-      response = NextResponse.json({ message: 'Preferences updated successfully', preferences: data }, { status: 200 });
+      captureProfileUpdate(data);
+      actionMessages.push('Preferences updated successfully');
     }
 
     // Handle interests updates
@@ -241,7 +250,11 @@ export async function POST(request: NextRequest) {
       const parsedInterests = interestsSchema.safeParse(body.interests);
       if (!parsedInterests.success) {
         logger.warn('Invalid interests data', parsedInterests.error.issues);
-        return NextResponse.json({ error: 'Invalid interests data', details: parsedInterests.error.issues }, { status: 400 });
+        const errorDetails = parsedInterests.error.issues.reduce((acc, issue) => {
+          acc[issue.path.join('.')] = issue.message;
+          return acc;
+        }, {} as Record<string, string>);
+        return validationError(errorDetails, 'Invalid interests data');
       }
       // FUNCTIONALITY MERGED INTO user_profiles - update profile with interests
       const updateData: Record<string, unknown> = {};
@@ -258,10 +271,11 @@ export async function POST(request: NextRequest) {
         .select();
       if (error) {
         logger.error('Error upserting interests', error);
-        return NextResponse.json({ error: 'Error updating interests' }, { status: 500 });
+        return errorResponse('Error updating interests', 500);
       }
       logger.info('Interests updated successfully', { userId: user.id, interests: data });
-      response = NextResponse.json({ message: 'Interests updated successfully', interests: data }, { status: 200 });
+      captureProfileUpdate(data);
+      actionMessages.push('Interests updated successfully');
     }
 
     // Handle onboarding progress updates
@@ -269,14 +283,18 @@ export async function POST(request: NextRequest) {
       const parsedOnboarding = onboardingSchema.safeParse(body.onboarding);
       if (!parsedOnboarding.success) {
         logger.warn('Invalid onboarding data', parsedOnboarding.error.issues);
-        return NextResponse.json({ error: 'Invalid onboarding data', details: parsedOnboarding.error.issues }, { status: 400 });
+        const errorDetails = parsedOnboarding.error.issues.reduce((acc, issue) => {
+          acc[issue.path.join('.')] = issue.message;
+          return acc;
+        }, {} as Record<string, string>);
+        return validationError(errorDetails, 'Invalid onboarding data');
       }
     // Update profile with onboarding data - no separate onboarding_completed field
     const { data, error } = await supabase
       .from('user_profiles')
       .update({
         demographics: parsedOnboarding.data,
-        trust_tier: 'bronze', // Start with bronze trust tier
+        trust_tier: 'T1', // Promote to canonical trust tier after onboarding
         participation_style: 'balanced',
         primary_concerns: [],
         community_focus: [],
@@ -286,15 +304,15 @@ export async function POST(request: NextRequest) {
       .select();
     if (error) {
         logger.error('Error upserting onboarding progress', error);
-        return NextResponse.json({ error: 'Error updating onboarding progress' }, { status: 500 });
+        return errorResponse('Error updating onboarding progress', 500);
       }
       logger.info('Onboarding progress updated successfully', { userId: user.id, onboarding: data });
-      response = NextResponse.json({ message: 'Onboarding progress updated successfully', onboarding: data }, { status: 200 });
+      captureProfileUpdate(data);
+      actionMessages.push('Onboarding progress updated successfully');
     }
 
     // Handle avatar upload (if file is present in form data)
-    const contentType = request.headers.get('content-type');
-    if (contentType?.includes('multipart/form-data')) {
+    if (isMultipart) {
       const formData = await request.formData();
       const file = formData.get('avatar') as File;
 
@@ -309,41 +327,43 @@ export async function POST(request: NextRequest) {
 
         if (uploadError) {
           logger.error('Avatar upload error', uploadError);
-          return NextResponse.json({ error: 'Error uploading avatar' }, { status: 500 });
+          return errorResponse('Error uploading avatar', 500, undefined, 'PROFILE_AVATAR_UPLOAD_FAILED');
         }
 
         const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
         const avatarUrl = publicUrlData.publicUrl;
 
-        const { error: updateProfileError } = await supabase
+        const { data: avatarProfile, error: updateProfileError } = await supabase
           .from('user_profiles')
           .update({ avatar_url: avatarUrl })
-          .eq('id', user.id);
+          .eq('user_id', user.id)
+          .select('*')
+          .single();
 
         if (updateProfileError) {
           logger.error('Error updating profile with avatar URL', updateProfileError);
-          return NextResponse.json({ error: 'Error updating profile with avatar URL' }, { status: 500 });
+          return errorResponse('Error updating profile with avatar URL', 500, undefined, 'PROFILE_AVATAR_UPDATE_FAILED');
         }
         logger.info('Avatar uploaded and profile updated successfully', { userId: user.id, avatarUrl });
-        response = NextResponse.json({ message: 'Avatar uploaded successfully', avatar_url: avatarUrl }, { status: 200 });
+        captureProfileUpdate(avatarProfile);
+        actionMessages.push('Avatar uploaded successfully');
       }
     }
 
-    return response;
-
-  } catch (error) {
-    logger.error('POST /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+  const message = actionMessages.length ? actionMessages.join(' | ') : 'No profile changes applied';
+  return successResponse({
+    ...createProfilePayload(currentProfile),
+    message,
+  });
+});
 
 /**
  * Update user profile (full replacement)
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {Object} request.body - Complete profile data
  * @returns {Promise<NextResponse>} Profile update result
- * 
+ *
  * @example
  * PUT /api/profile
  * {
@@ -351,157 +371,165 @@ export async function POST(request: NextRequest) {
  *   "bio": "Updated bio"
  * }
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated or auth error', authError);
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
-    const body = await request.json();
-
-    const parsedProfile = profileSchema.safeParse(body);
-    if (!parsedProfile.success) {
-      logger.warn('Invalid profile data for PUT', parsedProfile.error.issues);
-      return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
-    }
-
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
-      .eq('id', user.id)
-      .select();
-
-    if (error) {
-      logger.error('Error updating profile via PUT', error);
-      return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
-    }
-
-    if (data?.length === 0) {
-      return NextResponse.json({ error: 'Profile not found or no changes made' }, { status: 404 });
-    }
-
-    logger.info('Profile updated successfully via PUT', { userId: user.id, profile: data[0] });
-    return NextResponse.json({ message: 'Profile updated successfully', profile: data[0] }, { status: 200 });
-
-  } catch (error) {
-    logger.error('PUT /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Supabase not configured', 500);
   }
-}
+
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    logger.warn('User not authenticated or auth error', authErr);
+    return authError('User not authenticated');
+  }
+
+  const parsedBody = await parseBody<Record<string, unknown>>(request);
+  if (!parsedBody.success) {
+    return parsedBody.error;
+  }
+
+  const parsedProfile = profileSchema.safeParse(parsedBody.data);
+  if (!parsedProfile.success) {
+    logger.warn('Invalid profile data for PUT', parsedProfile.error.issues);
+    const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+      acc[issue.path.join('.')] = issue.message;
+      return acc;
+    }, {} as Record<string, string>);
+    return validationError(errorDetails, 'Invalid profile data');
+  }
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
+    .eq('user_id', user.id)
+    .select();
+
+  if (error) {
+    logger.error('Error updating profile via PUT', error);
+    return errorResponse('Error updating profile', 500, undefined, 'PROFILE_UPDATE_FAILED');
+  }
+
+  if (!data?.length) {
+    return errorResponse('Profile not found or no changes made', 404, undefined, 'PROFILE_NOT_FOUND');
+  }
+
+  const updatedProfile = (data[0] ?? null) as ProfileRecord;
+  logger.info('Profile updated successfully via PUT', { userId: user.id, profile: updatedProfile });
+  return successResponse({
+    ...createProfilePayload(updatedProfile),
+    message: 'Profile updated successfully',
+  });
+});
 
 /**
  * Delete user profile
- * 
+ *
  * @param {NextRequest} request - Request object
  * @returns {Promise<NextResponse>} Profile deletion result
- * 
+ *
  * @example
  * DELETE /api/profile
  */
-export async function DELETE(_request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated or auth error', authError);
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
-
-    // Delete all related data using new schema
-    const deletePromises = [
-      supabase.from('user_profiles').delete().eq('user_id', user.id),
-      supabase.from('votes').delete().eq('user_id', user.id),
-      supabase.from('polls').delete().eq('created_by', user.id),
-      supabase.from('analytics_events').delete().eq('user_id', user.id),
-      supabase.from('user_hashtags').delete().eq('user_id', user.id),
-      supabase.from('feedback').delete().eq('user_id', user.id),
-    ];
-
-    const results = await Promise.allSettled(deletePromises);
-    
-    // Check for errors
-    const errors = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && result.value.error));
-    if (errors.length > 0) {
-      logger.error('Error deleting profile data', errors);
-      return NextResponse.json({ error: 'Error deleting profile data' }, { status: 500 });
-    }
-
-    logger.info('Profile deleted successfully', { userId: user.id });
-    return NextResponse.json({ message: 'Profile deleted successfully' }, { status: 200 });
-
-  } catch (error) {
-    logger.error('DELETE /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+export const DELETE = withErrorHandling(async (_request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Supabase not configured', 500);
   }
-}
+
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    logger.warn('User not authenticated or auth error', authErr);
+    return authError('User not authenticated');
+  }
+
+  const deletePromises = [
+    supabase.from('user_profiles').delete().eq('user_id', user.id),
+    supabase.from('votes').delete().eq('user_id', user.id),
+    supabase.from('polls').delete().eq('created_by', user.id),
+    supabase.from('analytics_events').delete().eq('user_id', user.id),
+    supabase.from('user_hashtags').delete().eq('user_id', user.id),
+    supabase.from('feedback').delete().eq('user_id', user.id),
+  ];
+
+  const results = await Promise.allSettled(deletePromises);
+  const errors = results.filter((result) => {
+    if (result.status === 'rejected') {
+      return true;
+    }
+    return Boolean((result.value as { error?: unknown }).error);
+  });
+
+  if (errors.length > 0) {
+    logger.error('Error deleting profile data', errors);
+    return errorResponse('Error deleting profile data', 500, undefined, 'PROFILE_DELETE_FAILED');
+  }
+
+  logger.info('Profile deleted successfully', { userId: user.id });
+  return successResponse({ message: 'Profile deleted successfully' });
+});
 
 /**
  * Partial update of user profile
- * 
+ *
  * @param {NextRequest} request - Request object
  * @param {Object} request.body - Partial profile data to update
  * @returns {Promise<NextResponse>} Profile update result
- * 
+ *
  * @example
  * PATCH /api/profile
  * {
  *   "bio": "Updated bio only"
  * }
  */
-export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Supabase not configured');
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      logger.warn('User not authenticated or auth error', authError);
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
-    const body = await request.json();
-
-    // Validate partial profile data
-    const parsedProfile = profileSchema.partial().safeParse(body);
-    if (!parsedProfile.success) {
-      logger.warn('Invalid profile data for PATCH', parsedProfile.error.issues);
-      return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
-    }
-
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update(undefinedToNull({ ...parsedProfile.data, updated_at: new Date().toISOString() }) as Record<string, unknown>)
-      .eq('id', user.id)
-      .select();
-
-    if (error) {
-      logger.error('Error updating profile via PATCH', error);
-      return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
-    }
-
-    if (data?.length === 0) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    logger.info('Profile updated successfully via PATCH', { userId: user.id, profile: data[0] });
-    return NextResponse.json({ message: 'Profile updated successfully', profile: data[0] }, { status: 200 });
-
-  } catch (error) {
-    logger.error('PATCH /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured');
+    return errorResponse('Supabase not configured', 500);
   }
-}
+
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    logger.warn('User not authenticated or auth error', authErr);
+    return authError('User not authenticated');
+  }
+
+  const parsedBody = await parseBody<Record<string, unknown>>(request);
+  if (!parsedBody.success) {
+    return parsedBody.error;
+  }
+
+  const parsedProfile = profileSchema.partial().safeParse(parsedBody.data);
+  if (!parsedProfile.success) {
+    logger.warn('Invalid profile data for PATCH', parsedProfile.error.issues);
+    const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+      acc[issue.path.join('.')] = issue.message;
+      return acc;
+    }, {} as Record<string, string>);
+    return validationError(errorDetails, 'Invalid profile data');
+  }
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(undefinedToNull({ ...parsedProfile.data, updated_at: new Date().toISOString() }) as Record<string, unknown>)
+    .eq('user_id', user.id)
+    .select();
+
+  if (error) {
+    logger.error('Error updating profile via PATCH', error);
+    return errorResponse('Error updating profile', 500, undefined, 'PROFILE_UPDATE_FAILED');
+  }
+
+  if (!data?.length) {
+    return errorResponse('Profile not found', 404, undefined, 'PROFILE_NOT_FOUND');
+  }
+
+  const updatedProfile = (data[0] ?? null) as ProfileRecord;
+  logger.info('Profile updated successfully via PATCH', { userId: user.id, profile: updatedProfile });
+  return successResponse({
+    ...createProfilePayload(updatedProfile),
+    message: 'Profile updated successfully',
+  });
+});

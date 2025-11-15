@@ -26,6 +26,8 @@ import type { Database } from '@/types/supabase';
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
+import { useProfileStore } from './profileStore';
+import { useAdminStore } from './adminStore';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
@@ -66,6 +68,20 @@ const assignDefined = <T extends object>(
       record[key] = value as unknown;
     }
   });
+};
+
+const cascadeDependentStoreReset = () => {
+  try {
+    useProfileStore.getState().resetProfile();
+  } catch (error) {
+    logger.warn('Failed to reset profile store during auth cascade', error);
+  }
+
+  try {
+    useAdminStore.getState().resetAdminState();
+  } catch (error) {
+    logger.warn('Failed to reset admin store during auth cascade', error);
+  }
 };
 
 // User store state interface
@@ -264,28 +280,47 @@ export const createUserActions = (
       }
     }),
 
-    setAuthenticated: (authenticated: boolean) => setState((state) => {
-      if (state.isAuthenticated === authenticated) {
-        return;
+    setAuthenticated: (authenticated: boolean) => {
+      let shouldCascade = false;
+      setState((state) => {
+        if (state.isAuthenticated === authenticated) {
+          return;
+        }
+        if (!authenticated) {
+          resetUserState(state);
+          shouldCascade = true;
+          return;
+        }
+        state.isAuthenticated = true;
+      });
+      if (shouldCascade) {
+        cascadeDependentStoreReset();
       }
-      if (!authenticated) {
-        resetUserState(state);
-        return;
-      }
-      state.isAuthenticated = true;
-    }),
+    },
 
-    setUserAndAuth: (user: User | null, authenticated: boolean) => setState((state) => {
-      if (!authenticated) {
-        resetUserState(state);
-        return;
+    setUserAndAuth: (user: User | null, authenticated: boolean) => {
+      let shouldCascade = false;
+      setState((state) => {
+        if (!authenticated) {
+          resetUserState(state);
+          shouldCascade = true;
+          return;
+        }
+        state.user = user;
+        state.isAuthenticated = true;
+      });
+      if (shouldCascade) {
+        cascadeDependentStoreReset();
       }
-      state.user = user;
-      state.isAuthenticated = true;
-    }),
+    },
 
-    setSessionAndDerived: (session: Session | null) => setState((state) => {
-      if (state.session !== session) {
+    setSessionAndDerived: (session: Session | null) => {
+      let shouldCascade = false;
+      setState((state) => {
+        if (state.session === session) {
+          return;
+        }
+
         state.session = session;
 
         const newUser = session?.user ?? null;
@@ -298,23 +333,37 @@ export const createUserActions = (
           state.isAuthenticated = true;
         } else {
           resetUserState(state);
+          shouldCascade = true;
         }
+      });
+      if (shouldCascade) {
+        cascadeDependentStoreReset();
       }
-    }),
+    },
 
-    initializeAuth: (user: User | null, session: Session | null, authenticated: boolean) => setState((state) => {
-      if (!authenticated) {
+    initializeAuth: (user: User | null, session: Session | null, authenticated: boolean) => {
+      let shouldCascade = false;
+      setState((state) => {
+        if (!authenticated) {
+          resetUserState(state);
+          shouldCascade = true;
+          return;
+        }
+        state.user = user;
+        state.session = session;
+        state.isAuthenticated = true;
+      });
+      if (shouldCascade) {
+        cascadeDependentStoreReset();
+      }
+    },
+
+    signOut: () => {
+      setState((state) => {
         resetUserState(state);
-        return;
-      }
-      state.user = user;
-      state.session = session;
-      state.isAuthenticated = true;
-    }),
-
-    signOut: () => setState((state) => {
-      resetUserState(state);
-    }),
+      });
+      cascadeDependentStoreReset();
+    },
 
     clearUser: () => setState((state) => {
       resetUserState(state);
@@ -488,12 +537,38 @@ export const createUserActions = (
     }),
 
     lookupAddress: async (address: string) => {
-      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(address)}`);
+      const response = await fetch('/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address })
+      });
+
       if (!response.ok) {
         throw new Error('Address lookup failed');
       }
+
       const result = await response.json();
-      return result.data ?? [];
+      if (result?.success !== true) {
+        throw new Error(result?.error ?? 'Address lookup failed');
+      }
+
+      const jurisdiction = result?.data?.jurisdiction ?? result?.jurisdiction ?? {};
+      const stateCode = typeof jurisdiction.state === 'string' ? jurisdiction.state : null;
+
+      if (!stateCode) {
+        return [];
+      }
+
+      const repsResponse = await fetch(
+        `/api/v1/civics/by-state?state=${encodeURIComponent(stateCode)}&level=federal&limit=20`
+      );
+
+      if (!repsResponse.ok) {
+        throw new Error('Failed to load representatives');
+      }
+
+      const repsResult = await repsResponse.json();
+      return Array.isArray(repsResult?.data?.representatives) ? repsResult.data.representatives : [];
     },
 
     handleAddressUpdate: async (address: string, temporary = false) => {

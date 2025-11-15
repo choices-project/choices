@@ -215,7 +215,7 @@ export class PWAAuth {
         // Subscribe to push notifications
         if ('serviceWorker' in navigator && 'PushManager' in window) {
           const registration = await navigator.serviceWorker.ready;
-          const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
+          const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
           if (!vapidKey) {
             devLog('PWA: VAPID public key not configured');
             return false;

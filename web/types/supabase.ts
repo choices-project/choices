@@ -3493,6 +3493,51 @@ export type Database = {
           },
         ]
       }
+      voter_registration_resources: {
+        Row: {
+          created_at: string
+          election_office_name: string | null
+          last_verified: string
+          mail_form_url: string | null
+          mailing_address: string | null
+          metadata: Json | null
+          online_url: string | null
+          sources: string[]
+          special_instructions: string | null
+          state_code: string
+          status_check_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          election_office_name?: string | null
+          last_verified?: string
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[]
+          special_instructions?: string | null
+          state_code: string
+          status_check_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          election_office_name?: string | null
+          last_verified?: string
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[]
+          special_instructions?: string | null
+          state_code?: string
+          status_check_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           created_at: string | null
@@ -3770,6 +3815,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voter_registration_resources_view: {
+        Row: {
+          election_office_name: string | null
+          last_verified: string | null
+          mail_form_url: string | null
+          mailing_address: string | null
+          metadata: Json | null
+          online_url: string | null
+          sources: string[] | null
+          special_instructions: string | null
+          state_code: string | null
+          status_check_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          election_office_name?: string | null
+          last_verified?: string | null
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[] | null
+          special_instructions?: string | null
+          state_code?: string | null
+          status_check_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          election_office_name?: string | null
+          last_verified?: string | null
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[] | null
+          special_instructions?: string | null
+          state_code?: string | null
+          status_check_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

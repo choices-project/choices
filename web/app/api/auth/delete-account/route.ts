@@ -6,12 +6,17 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
+type CleanupWarning = {
+  step: string;
+  message: string;
+};
+
 export const DELETE = withErrorHandling(async (_request: NextRequest) => {
   // Get Supabase client
   const supabase = await getSupabaseServerClient()
   
   if (!supabase) {
-    return errorResponse('Supabase not configured', 500);
+    return errorResponse('Database connection not available', 500);
   }
 
   // Get current user from Supabase native session
@@ -22,6 +27,8 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
   }
     
     const user = session.user
+
+  const warnings: CleanupWarning[] = []
 
   // Delete user profile
   const { error: profileError } = await supabase
@@ -42,7 +49,10 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
 
     if (votesError) {
       devLog('Votes deletion error:', { error: votesError })
-      // Continue - this is not critical
+      warnings.push({
+        step: 'votes',
+        message: votesError.message ?? 'Unknown error deleting votes',
+      })
     }
 
     // Delete user polls
@@ -53,7 +63,10 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
 
     if (pollsError) {
       devLog('Polls deletion error:', { error: pollsError })
-      // Continue - this is not critical
+      warnings.push({
+        step: 'polls',
+        message: pollsError.message ?? 'Unknown error deleting polls',
+      })
     }
 
     // Delete WebAuthn credentials
@@ -64,7 +77,10 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
 
     if (credentialsError) {
       devLog('Credentials deletion error:', { error: credentialsError })
-      // Continue - this is not critical
+      warnings.push({
+        step: 'webauthn_credentials',
+        message: credentialsError.message ?? 'Unknown error deleting credentials',
+      })
     }
 
   // Delete user from Supabase Auth
@@ -75,7 +91,26 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
     return errorResponse('Failed to delete user account', 500);
   }
 
-  return successResponse({
-    message: 'Account deleted successfully'
-  });
+  const response = successResponse({
+    message: 'Account deleted successfully',
+    warnings: warnings.length > 0 ? warnings : undefined,
+  })
+
+  response.cookies.set('sb-access-token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
+
+  response.cookies.set('sb-refresh-token', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
+
+  return response;
 });

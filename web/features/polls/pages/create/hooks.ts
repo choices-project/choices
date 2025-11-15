@@ -9,11 +9,11 @@ import {
   usePollWizardIsComplete,
   usePollWizardLoading,
   usePollWizardStep,
-  usePollWizardStepValidation,
 } from '@/lib/stores';
 
 import { CATEGORIES, POLL_CREATION_STEPS, STEP_TIPS } from './constants';
 import type { PollWizardSubmissionResult } from './schema';
+import { validatePollWizardStep } from '@/lib/polls/validation';
 
 type StepValidationSnapshot = {
   isValid: boolean;
@@ -29,7 +29,16 @@ export const usePollCreateController = () => {
   const canProceedFlag = usePollWizardCanProceed();
   const isLoading = usePollWizardLoading();
   const isComplete = usePollWizardIsComplete();
-  const stepValidation = usePollWizardStepValidation(currentStep) as StepValidationSnapshot;
+  const stepValidation = useMemo<StepValidationSnapshot>(() => {
+    const errorsForStep = validatePollWizardStep(currentStep, data);
+    const isValid = Object.keys(errorsForStep).length === 0;
+
+    return {
+      isValid,
+      errors: errorsForStep,
+      canProceed: isValid,
+    };
+  }, [currentStep, data]);
 
   const {
     nextStep,
@@ -79,7 +88,11 @@ export const usePollCreateController = () => {
 
   const activeTip = STEP_TIPS[Math.min(currentStep, STEP_TIPS.length - 1)];
 
-  const canProceed = canProceedFlag ?? stepValidation.canProceed;
+  const totalSteps = POLL_CREATION_STEPS.length;
+  const canProceed =
+    currentStep === totalSteps - 1
+      ? stepValidation.isValid
+      : (canProceedFlag ?? stepValidation.canProceed);
 
   const goToNextStep = useCallback(() => {
     validateCurrentStep();

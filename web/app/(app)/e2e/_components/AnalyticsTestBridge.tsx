@@ -31,6 +31,7 @@ export function AnalyticsTestBridge() {
       },
     };
 
+    console.info('[analytics-test-bridge] initialising');
     bridgeRef.current = api;
     globalThis.__playwrightAnalytics = api;
 

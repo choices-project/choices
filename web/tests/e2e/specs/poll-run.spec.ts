@@ -15,7 +15,7 @@ const getEventCount = async (page: Page, action: string) => {
   }, action);
 };
 
-test.describe('Poll viewer harness', () => {
+test.describe('@axe Poll viewer harness', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'clipboard', {
@@ -74,7 +74,7 @@ test.describe('Poll viewer harness', () => {
   });
 
   test('emits analytics for viewing, sharing, and voting', async ({ page }) => {
-    await page.goto(`/e2e/poll-run/${POLL_ID}`);
+    await page.goto(`/e2e/poll-run/${POLL_ID}`, { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
     await runAxeAudit(page, 'poll run initial state');

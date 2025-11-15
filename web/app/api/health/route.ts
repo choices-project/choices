@@ -16,10 +16,9 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
-import { withErrorHandling, rateLimitError } from '@/lib/api';
+import { withErrorHandling, rateLimitError, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -39,163 +38,107 @@ type HealthResult = {
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const url = new URL(request.url);
   const type = url.searchParams.get('type') ?? 'basic';
-  
+
+  const timestamp = new Date().toISOString();
+  const environment = process.env.NODE_ENV ?? 'development';
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0';
+
   if (type === 'database' || type === 'all') {
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const userAgent = request.headers.get('user-agent');
-    const rateLimitOptions: any = {};
-    if (userAgent) rateLimitOptions.userAgent = userAgent;
-    const rateLimitResult = await apiRateLimiter.checkLimit(
-      ip,
-      '/api/health',
-      rateLimitOptions
-    );
+    const userAgent = request.headers.get('user-agent') ?? undefined;
+    const rateLimitOptions: Record<string, string> = {};
+    if (userAgent) {
+      rateLimitOptions.userAgent = userAgent;
+    }
+
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/health', rateLimitOptions);
     if (!rateLimitResult.allowed) {
       return rateLimitError('Rate limit exceeded');
     }
   }
 
-    const timestamp = new Date().toISOString();
-    const environment = process.env.NODE_ENV ?? 'development';
+  if (type === 'basic') {
+    return successResponse({
+      status: 'ok',
+      timestamp,
+      environment,
+      maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
+      version: appVersion
+    });
+  }
 
-    // Basic health check (default)
-    if (type === 'basic') {
-      return NextResponse.json({
-        status: 'ok',
-        timestamp,
-        environment,
-        maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
-        version: '1.0.0'
-      });
-    }
+  if (type === 'database') {
+    try {
+      const queryOptimizer = await getQueryOptimizer();
+      const healthData = typeof (queryOptimizer as any).getMetrics === 'function'
+        ? await (queryOptimizer as any).getMetrics()
+        : {
+            status: 'healthy',
+            averageResponseTime: 0,
+            cacheHitRate: 1,
+            timestamp
+          };
 
-    // Database health check
-    if (type === 'database') {
-      try {
-        // Use optimized health check
-        const queryOptimizer = await getQueryOptimizer();
-        const healthData = typeof (queryOptimizer as any).getMetrics === 'function'
-          ? await (queryOptimizer as any).getMetrics()
-          : {
-              status: 'healthy',
-              averageResponseTime: 0,
-              cacheHitRate: 1,
-              timestamp
-            };
+      const poolHealth = { status: 'healthy', connections: 0, utilizationRate: 0.5 };
+      const poolMetrics = { activeConnections: 0, totalConnections: 0 };
+      const queryStats = { totalQueries: 0, averageTime: 0 };
+      const slowQueries: any[] = [];
 
-        // Get basic health data
-        const poolHealth = { status: 'healthy', connections: 0, utilizationRate: 0.5 };
-        const poolMetrics = { activeConnections: 0, totalConnections: 0 };
-
-        // Get query performance statistics
-        const queryStats = { totalQueries: 0, averageTime: 0 };
-        const slowQueries: any[] = [];
-
-        const response = {
-          ...healthData,
-          connectionPool: {
-            status: poolHealth.status,
-            utilizationRate: poolHealth.utilizationRate,
-            metrics: poolMetrics
-          },
-          performance: {
-            queryStats,
-            slowQueries: slowQueries.slice(0, 5), // Top 5 slow queries
-            optimizationEnabled: true,
-            cacheEnabled: true
-          },
-          environment: {
-            nodeEnv: environment,
-            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
-            databaseUrl: process.env.DATABASE_URL ? 'configured' : 'missing'
-          }
-        };
-
-        // Basic health response without admin info
-
-        // Determine status based on metrics
-        const isHealthy = healthData.averageResponseTime < 1000 && healthData.cacheHitRate > 0.5;
-        const statusCode = isHealthy ? 200 : 503;
-
-        return NextResponse.json(response, { status: statusCode });
-
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        logger.error('Database health check error:', err);
-        
-        return NextResponse.json({
-          status: 'unhealthy',
-          healthPercentage: 0,
-          responseTime: 'N/A',
-          timestamp,
-          tests: [],
-          metrics: { users: 'unknown', polls: 'unknown', votes: 'unknown' },
-          recentErrors: [],
-          error: 'Health check failed',
-          connectionPool: {
-            status: 'unknown',
-            utilizationRate: 0,
-            metrics: { totalConnections: 0, activeConnections: 0, idleConnections: 0, waitingConnections: 0 }
-          },
-          performance: {
-            queryStats: { totalQueries: 0, averageQueryTime: 0, slowQueries: 0, topSlowQueries: [] },
-            slowQueries: [],
-            optimizationEnabled: false,
-            cacheEnabled: false
-          },
-          environment: {
-            nodeEnv: environment,
-            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
-            databaseUrl: process.env.DATABASE_URL ? 'configured' : 'missing'
-          }
-        }, { status: 503 });
-      }
-    }
-
-    // Supabase status check
-    if (type === 'supabase') {
-      try {
-        const supabase = await getSupabaseServerClient();
-        
-        // Check if Supabase is configured
-        const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
-        
-        if (!supabase) {
-          return NextResponse.json({
-            status: {
-              environment,
-              databaseType: 'mock',
-              databaseEnabled: false,
-              supabaseConfigured,
-              connectionSuccess: false
-            },
-            connectionTest: {
-              success: false,
-              error: 'Supabase client not available - using mock data'
-            },
-            timestamp,
-            environment: {
-              NODE_ENV: environment,
-              SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
-              SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
-            }
-          });
+      const payload = {
+        ...healthData,
+        connectionPool: {
+          status: poolHealth.status,
+          utilizationRate: poolHealth.utilizationRate,
+          metrics: poolMetrics
+        },
+        performance: {
+          queryStats,
+          slowQueries: slowQueries.slice(0, 5),
+          optimizationEnabled: true,
+          cacheEnabled: true
+        },
+        environment: {
+          nodeEnv: environment,
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
+          databaseUrl: process.env.DATABASE_URL ? 'configured' : 'missing'
         }
-        
-        // Test the connection
-        const { error } = await supabase.from('user_profiles').select('count').limit(1);
-        
-        return NextResponse.json({
+      };
+
+      const isHealthy = (healthData as any).averageResponseTime < 1000 && (healthData as any).cacheHitRate > 0.5;
+      return successResponse(payload, undefined, isHealthy ? 200 : 503);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Database health check error:', err);
+      return errorResponse(
+        'Health check failed',
+        503,
+        {
+          status: 'unhealthy',
+          environment,
+          timestamp,
+          details: err.message
+        }
+      );
+    }
+  }
+
+  if (type === 'supabase') {
+    try {
+      const supabase = await getSupabaseServerClient();
+      const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+
+      if (!supabase) {
+        return successResponse({
           status: {
             environment,
-            databaseType: 'supabase',
-            databaseEnabled: true,
-            supabaseConfigured: true,
-            connectionSuccess: !error
+            databaseType: 'mock',
+            databaseEnabled: false,
+            supabaseConfigured,
+            connectionSuccess: false
           },
           connectionTest: {
-            success: !error,
-            error: error?.message ?? null
+            success: false,
+            error: 'Supabase client not available - using mock data'
           },
           timestamp,
           environment: {
@@ -203,11 +146,37 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
             SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
             SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
           }
-        });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error ?? 'Unknown error');
-        const appError = { message: errorMessage };
-        return NextResponse.json({
+        }, undefined, 200);
+      }
+
+      const { error } = await supabase.from('user_profiles').select('count').limit(1);
+      const payload = {
+        status: {
+          environment,
+          databaseType: 'supabase',
+          databaseEnabled: true,
+          supabaseConfigured: true,
+          connectionSuccess: !error
+        },
+        connectionTest: {
+          success: !error,
+          error: error?.message ?? null
+        },
+        timestamp,
+        environment: {
+          NODE_ENV: environment,
+          SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
+          SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
+        }
+      };
+
+      return successResponse(payload, undefined, error ? 503 : 200);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+      return errorResponse(
+        'Supabase health check failed',
+        500,
+        {
           status: {
             environment,
             databaseType: 'unknown',
@@ -217,7 +186,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           },
           connectionTest: {
             success: false,
-            error: appError.message
+            error: errorMessage
           },
           timestamp,
           environment: {
@@ -225,279 +194,240 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
             SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
             SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
           }
-        }, { status: 500 });
-      }
+        }
+      );
     }
+  }
 
-    // Civics system status check
-    if (type === 'civics') {
-      try {
-        const issues: string[] = [];
-        let status = 'healthy';
+  if (type === 'civics') {
+    try {
+      const issues: string[] = [];
+      let status: HealthStatus = 'healthy';
+      const featureEnabled = isCivicsEnabled();
 
-        const isEnabled = isCivicsEnabled();
-        
-        // Check feature flag
-        if (!isEnabled) {
-          return NextResponse.json({ 
-            status: 'disabled', 
-            message: 'Civics feature is disabled.',
-            issues: ['Feature flag disabled']
-          }, { status: 200 });
-        }
-
-        // Check PRIVACY_PEPPER_DEV (for development/test)
-        if (environment === 'development' || environment === 'test') {
-          if (!process.env.PRIVACY_PEPPER_DEV) {
-            issues.push('PRIVACY_PEPPER_DEV is not set');
-            status = 'warning';
-          }
-        } else {
-          // Production environment checks
-          if (!process.env.PRIVACY_PEPPER_CURRENT) {
-            issues.push('PRIVACY_PEPPER_CURRENT is not set');
-            status = 'error';
-          }
-        }
-
-        // Check Google Civic API key
-        if (!process.env.GOOGLE_CIVIC_API_KEY) {
-          issues.push('GOOGLE_CIVIC_API_KEY is not set');
-          status = 'warning';
-        }
-
-        // Database connectivity checks
-        let databaseStatus = 'disabled';
-        let databaseDetails: any = {};
-        
-        if (isEnabled) {
-          try {
-            const supabase = await getSupabaseServerClient();
-            const { error } = await supabase.from('representatives_core').select('id').limit(1);
-            
-            if (error) {
-              databaseStatus = 'error';
-              databaseDetails = { error: error.message };
-            } else {
-              databaseStatus = 'healthy';
-              databaseDetails = { connected: true };
-            }
-          } catch (error) {
-            databaseStatus = 'error';
-            databaseDetails = { error: error instanceof Error ? error.message : 'Unknown error' };
-          }
-        }
-
-        // Privacy compliance checks
-        let privacyStatus = 'healthy';
-        let privacyDetails: any = {};
-        
-        if (environment === 'production') {
-          if (!process.env.PRIVACY_PEPPER_CURRENT) {
-            privacyStatus = 'error';
-            privacyDetails = { error: 'PRIVACY_PEPPER_CURRENT not set in production' };
-          }
-        }
-
-        // External APIs checks
-        let externalApisStatus = 'healthy';
-        let externalApisDetails: any = {};
-        
-        if (!process.env.GOOGLE_CIVIC_API_KEY) {
-          externalApisStatus = 'warning';
-          externalApisDetails = { warning: 'Google Civic API key not configured' };
-        }
-
-        const systemChecks = [databaseStatus, privacyStatus, externalApisStatus];
-        const hasErrors = systemChecks.includes('error') || issues.some(issue => issue.includes('error'));
-        const hasWarnings = systemChecks.includes('warning') || issues.some(issue => issue.includes('warning'));
-        
-        if (hasErrors) {
-          status = 'error';
-        } else if (hasWarnings) {
-          status = 'warning';
-        } else {
-          status = 'healthy';
-        }
-        
-        const healthStatus = {
-          feature_enabled: isEnabled,
-          status,
-          message: status === 'healthy' ? 'Civics system is healthy' : 
-                   (status === 'warning' ? 'Civics system has warnings' : 'Civics system has issues'),
+      if (!featureEnabled) {
+        return successResponse({
+          feature_enabled: false,
+          status: 'disabled',
+          message: 'Civics feature is disabled.',
           timestamp,
-          issues: issues.length > 0 ? issues : undefined,
-          checks: {
-            feature_flag: isEnabled,
-            environment_variables: {
-              PRIVACY_PEPPER_DEV: !!process.env.PRIVACY_PEPPER_DEV,
-              PRIVACY_PEPPER_CURRENT: !!process.env.PRIVACY_PEPPER_CURRENT,
-              GOOGLE_CIVIC_API_KEY: !!process.env.GOOGLE_CIVIC_API_KEY
-            },
-            database: {
-              status: databaseStatus,
-              details: databaseDetails
-            },
-            privacy_compliance: {
-              status: privacyStatus,
-              details: privacyDetails
-            },
-            external_apis: {
-              status: externalApisStatus,
-              details: externalApisDetails
-            }
-          }
-        };
-
-        const statusCode = status === 'error' ? 500 : status === 'warning' ? 200 : 200;
-        
-        return NextResponse.json(healthStatus, { status: statusCode });
-
-      } catch (error) {
-        logger.error('Civics health check error', { error });
-        return NextResponse.json(
-          { 
-            feature_enabled: false,
-            status: 'error',
-            error: 'Health check failed',
-            timestamp,
-            issues: ['Health check failed']
-          }, 
-          { status: 500 }
-        );
+          issues: ['Feature flag disabled']
+        });
       }
-    }
 
-    // All health checks
-    if (type === 'all') {
-      const results: {
-        basic: HealthResult | null;
-        database: HealthResult | null;
-        supabase: HealthResult | null;
-        civics: HealthResult | null;
-      } = {
-        basic: null,
-        database: null,
-        supabase: null,
-        civics: null
+      if (environment === 'development' || environment === 'test') {
+        if (!process.env.PRIVACY_PEPPER_DEV) {
+          issues.push('PRIVACY_PEPPER_DEV is not set');
+          status = 'warning';
+        }
+      } else if (!process.env.PRIVACY_PEPPER_CURRENT) {
+        issues.push('PRIVACY_PEPPER_CURRENT is not set');
+        status = 'error';
+      }
+
+      if (!process.env.GOOGLE_CIVIC_API_KEY) {
+        issues.push('GOOGLE_CIVIC_API_KEY is not set');
+        status = status === 'error' ? 'error' : 'warning';
+      }
+
+      let databaseStatus: HealthStatus = 'disabled';
+      let databaseDetails: Record<string, any> = {};
+
+      try {
+        const supabase = await getSupabaseServerClient();
+        const { error } = await supabase.from('representatives_core').select('id').limit(1);
+        if (error) {
+          databaseStatus = 'error';
+          databaseDetails = { error: error.message };
+        } else {
+          databaseStatus = 'healthy';
+          databaseDetails = { connected: true };
+        }
+      } catch (error) {
+        databaseStatus = 'error';
+        databaseDetails = { error: error instanceof Error ? error.message : 'Unknown error' };
+      }
+
+      let privacyStatus: HealthStatus = 'healthy';
+      let privacyDetails: Record<string, any> = {};
+      if (environment === 'production' && !process.env.PRIVACY_PEPPER_CURRENT) {
+        privacyStatus = 'error';
+        privacyDetails = { error: 'PRIVACY_PEPPER_CURRENT not set in production' };
+      }
+
+      let externalApisStatus: HealthStatus = 'healthy';
+      let externalApisDetails: Record<string, any> = {};
+      if (!process.env.GOOGLE_CIVIC_API_KEY) {
+        externalApisStatus = 'warning';
+        externalApisDetails = { warning: 'Google Civic API key not configured' };
+      }
+
+      const systemChecks = [databaseStatus, privacyStatus, externalApisStatus];
+      const hasErrors = systemChecks.includes('error') || issues.some(issue => issue.toLowerCase().includes('error'));
+      const hasWarnings = systemChecks.includes('warning') || issues.some(issue => issue.toLowerCase().includes('warning'));
+
+      if (hasErrors) {
+        status = 'error';
+      } else if (hasWarnings && status !== 'error') {
+        status = 'warning';
+      }
+
+      const payload = {
+        feature_enabled: featureEnabled,
+        status,
+        message: status === 'healthy'
+          ? 'Civics system is healthy'
+          : status === 'warning'
+            ? 'Civics system has warnings'
+            : 'Civics system has issues',
+        timestamp,
+        issues: issues.length > 0 ? issues : undefined,
+        checks: {
+          feature_flag: featureEnabled,
+          environment_variables: {
+            PRIVACY_PEPPER_DEV: !!process.env.PRIVACY_PEPPER_DEV,
+            PRIVACY_PEPPER_CURRENT: !!process.env.PRIVACY_PEPPER_CURRENT,
+            GOOGLE_CIVIC_API_KEY: !!process.env.GOOGLE_CIVIC_API_KEY
+          },
+          database: {
+            status: databaseStatus,
+            details: databaseDetails
+          },
+          privacy_compliance: {
+            status: privacyStatus,
+            details: privacyDetails
+          },
+          external_apis: {
+            status: externalApisStatus,
+            details: externalApisDetails
+          }
+        }
       };
 
-      try {
-        // Run all health checks in parallel
-        const [basicResult, databaseResult, supabaseResult, civicsResult] = await Promise.allSettled([
-          // Basic health check
-          Promise.resolve({
-            status: 'ok',
-            timestamp,
-            environment,
-            maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
-            version: '1.0.0'
-          }),
-          // Database health check (simplified)
-          (async () => {
-            try {
-              const queryOptimizer = await getQueryOptimizer();
-              const healthData = typeof (queryOptimizer as any).getMetrics === 'function'
-                ? await (queryOptimizer as any).getMetrics()
-                : { status: 'healthy', averageResponseTime: 0, cacheHitRate: 1 };
-              return { ...healthData, type: 'database' };
-            } catch (error) {
-              return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error', type: 'database' };
-            }
-          })(),
-          // Supabase status check (simplified)
-          (async () => {
-            try {
-              const supabase = await getSupabaseServerClient();
-              const { error } = await supabase.from('user_profiles').select('count').limit(1);
-              return {
-                status: error ? 'unhealthy' : 'healthy',
-                connectionSuccess: !error,
-                ...(error?.message ? { error: error.message } : {}),
-                type: 'supabase'
-              };
-            } catch (error) {
-              return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error', type: 'supabase' };
-            }
-          })(),
-          // Civics status check (simplified)
-          (async () => {
-            try {
-              const isEnabled = isCivicsEnabled();
-              return {
-                feature_enabled: isEnabled,
-                status: isEnabled ? 'healthy' : 'disabled',
-                type: 'civics'
-              };
-            } catch (error) {
-              return { status: 'error', error: error instanceof Error ? error.message : 'Unknown error', type: 'civics' };
-            }
-          })()
-        ]);
-
-        results.basic = basicResult.status === 'fulfilled' ? { ...basicResult.value, status: basicResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Basic check failed' };
-        results.database = databaseResult.status === 'fulfilled' ? { ...databaseResult.value, status: databaseResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Database check failed' };
-        
-        // Handle supabase result - only include error if it exists
-        const supabaseValue = supabaseResult.status === 'fulfilled' ? supabaseResult.value : null;
-        results.supabase = supabaseValue 
-          ? { 
-              ...supabaseValue, 
-              status: supabaseValue.status as HealthStatus,
-              ...(supabaseValue.error && typeof supabaseValue.error === 'string' ? { error: supabaseValue.error } : {})
-            }
-          : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
-        
-        results.civics = civicsResult.status === 'fulfilled' ? { ...civicsResult.value, status: civicsResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Civics check failed' };
-
-        // Determine overall status
-        const allStatuses: HealthStatus[] = [
-          results.basic?.status ?? 'unknown',
-          results.database?.status ?? 'unknown', 
-          results.supabase?.status ?? 'unknown',
-          results.civics?.status ?? 'unknown'
-        ];
-        const hasErrors = allStatuses.includes('error') || allStatuses.includes('unhealthy');
-        const hasWarnings = allStatuses.includes('warning') || allStatuses.includes('degraded');
-        
-        const overallStatus = hasErrors ? 'error' : hasWarnings ? 'warning' : 'healthy';
-        const statusCode = hasErrors ? 500 : 200;
-
-        return NextResponse.json({
-          status: overallStatus,
-          timestamp,
-          environment,
-          checks: results,
-          summary: {
-            total: 4,
-            healthy: allStatuses.filter(s => s === 'healthy').length,
-            warnings: allStatuses.filter(s => s === 'warning' || s === 'degraded').length,
-            errors: allStatuses.filter(s => s === 'error' || s === 'unhealthy').length
-          }
-        }, { status: statusCode });
-
-      } catch (error) {
-        return NextResponse.json({
-          status: 'error',
-          timestamp,
-          environment,
-          error: error instanceof Error ? error.message : 'Health check aggregation failed',
-          checks: results
-        }, { status: 500 });
-      }
+      return successResponse(payload, undefined, status === 'error' ? 500 : 200);
+    } catch (error) {
+      logger.error('Civics health check error', { error });
+      return errorResponse('Health check failed', 500, {
+        feature_enabled: false,
+        status: 'error',
+        timestamp
+      });
     }
+  }
 
-    // Invalid type parameter
-  return NextResponse.json({
-    type: 'Invalid type parameter. Valid types: basic, database, supabase, civics, all'
-  }, { status: 400 });
+  if (type === 'all') {
+    const results: {
+      basic: HealthResult | null;
+      database: HealthResult | null;
+      supabase: HealthResult | null;
+      civics: HealthResult | null;
+    } = {
+      basic: null,
+      database: null,
+      supabase: null,
+      civics: null
+    };
+
+    try {
+      const [basicResult, databaseResult, supabaseResult, civicsResult] = await Promise.allSettled([
+        Promise.resolve({
+          status: 'ok',
+          timestamp,
+          environment,
+          maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
+          version: appVersion
+        }),
+        (async () => {
+          try {
+            const queryOptimizer = await getQueryOptimizer();
+            const healthData = typeof (queryOptimizer as any).getMetrics === 'function'
+              ? await (queryOptimizer as any).getMetrics()
+              : { status: 'healthy', averageResponseTime: 0, cacheHitRate: 1 };
+            return { ...healthData, type: 'database' };
+          } catch (error) {
+            return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error', type: 'database' };
+          }
+        })(),
+        (async () => {
+          try {
+            const supabase = await getSupabaseServerClient();
+            const { error } = await supabase.from('user_profiles').select('count').limit(1);
+            return {
+              status: error ? 'unhealthy' : 'healthy',
+              connectionSuccess: !error,
+              ...(error?.message ? { error: error.message } : {}),
+              type: 'supabase'
+            };
+          } catch (error) {
+            return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error', type: 'supabase' };
+          }
+        })(),
+        (async () => {
+          try {
+            const featureEnabled = isCivicsEnabled();
+            return {
+              feature_enabled: featureEnabled,
+              status: featureEnabled ? 'healthy' : 'disabled',
+              type: 'civics'
+            };
+          } catch (error) {
+            return { status: 'error', error: error instanceof Error ? error.message : 'Unknown error', type: 'civics' };
+          }
+        })()
+      ]);
+
+      results.basic = basicResult.status === 'fulfilled' ? { ...basicResult.value, status: basicResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Basic check failed' };
+      results.database = databaseResult.status === 'fulfilled' ? { ...databaseResult.value, status: databaseResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Database check failed' };
+
+      const supabaseValue = supabaseResult.status === 'fulfilled' ? supabaseResult.value : null;
+      results.supabase = supabaseValue
+        ? {
+            ...supabaseValue,
+            status: supabaseValue.status as HealthStatus,
+            ...(supabaseValue.error && typeof supabaseValue.error === 'string' ? { error: supabaseValue.error } : {})
+          }
+        : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
+
+      results.civics = civicsResult.status === 'fulfilled' ? { ...civicsResult.value, status: civicsResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Civics check failed' };
+
+      const allStatuses: HealthStatus[] = [
+        results.basic?.status ?? 'unknown',
+        results.database?.status ?? 'unknown',
+        results.supabase?.status ?? 'unknown',
+        results.civics?.status ?? 'unknown'
+      ];
+
+      const hasErrors = allStatuses.includes('error') || allStatuses.includes('unhealthy');
+      const hasWarnings = allStatuses.includes('warning') || allStatuses.includes('degraded');
+      const overallStatus = hasErrors ? 'error' : hasWarnings ? 'warning' : 'healthy';
+
+      return successResponse({
+        status: overallStatus,
+        timestamp,
+        environment,
+        checks: results,
+        summary: {
+          total: 4,
+          healthy: allStatuses.filter(s => s === 'healthy').length,
+          warnings: allStatuses.filter(s => s === 'warning' || s === 'degraded').length,
+          errors: allStatuses.filter(s => s === 'error' || s === 'unhealthy').length
+        }
+      }, undefined, hasErrors ? 500 : 200);
+    } catch (error) {
+      return errorResponse(
+        'Health check aggregation failed',
+        500,
+        {
+          timestamp,
+          environment,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          checks: results
+        }
+      );
+    }
+  }
+
+  return validationError({ type: 'Invalid type parameter. Valid: basic, database, supabase, civics, all' }, 'Invalid type parameter');
 });
 
-// Handle unsupported methods
-export function POST() {
-  return NextResponse.json({
-    status: 'error',
-    error: 'Method not allowed. Use GET for health checks.',
-    timestamp: new Date().toISOString()
-  }, { status: 405 });
-}
+export const POST = withErrorHandling(async () => methodNotAllowed(['GET']));

@@ -104,7 +104,15 @@ export default function BulkContactModal({
     loading: electionLoading,
     error: electionError,
     daysUntilNextElection,
-  } = useElectionCountdown(divisionIds, { autoFetch: isOpen });
+  } = useElectionCountdown(divisionIds, {
+    autoFetch: isOpen,
+    analytics: {
+      surface: 'contact_bulk_modal',
+      metadata: {
+        representativeCount: representatives.length,
+      },
+    },
+  });
 
   const { trackEvent } = useAnalyticsActions();
   const openTrackedRef = useRef(false);

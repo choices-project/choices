@@ -56,11 +56,12 @@
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  */
 
-import { NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 import { assertPepperConfig } from '@/lib/civics/env-guard';
 import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
+import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -209,53 +210,46 @@ function extractOCDDivisionId(divisions: Record<string, any>): string | null {
   return keys.length > 0 ? (keys[0] ?? null) : null;
 }
 
-export async function POST(req: Request) {
-  // Assert pepper configuration at runtime (not build time)
+export const POST = withErrorHandling(async (request: NextRequest) => {
   assertPepperConfig();
-  
+
+  const body = await request.json().catch(() => null);
+  const address = body?.address;
+
+  if (!address || typeof address !== 'string') {
+    return validationError({ address: 'Address is required' });
+  }
+
+  const addrH = generateAddressHMAC(address);
+  void addrH;
+
   try {
-    const { address } = await req.json();
-    if (!address || typeof address !== 'string') {
-      return NextResponse.json({ error: 'address required' }, { status: 400 });
-    }
+    const jurisdiction = await lookupJurisdictionFromExternalAPI(address);
 
-    // Privacy: compute HMAC (not stored here; useful if you key caches by HMAC)
-    const addrH = generateAddressHMAC(address);
-    void addrH; // use for cache keys if needed
-
-    // This is the ONLY external API call in the web application
-    // See file header for detailed explanation of why this exception exists
-    const juris = await lookupJurisdictionFromExternalAPI(address);
-
-    // Extract only the fields setJurisdictionCookie expects
-    const cookieData: any = {
-      state: juris.state
+    const cookieData: Record<string, string> = {
+      state: jurisdiction.state
     };
-    if (juris.district) cookieData.district = juris.district;
-    if (juris.county) cookieData.county = juris.county;
+    if (jurisdiction.district) cookieData.district = jurisdiction.district;
+    if (jurisdiction.county) cookieData.county = jurisdiction.county;
     await setJurisdictionCookie(cookieData);
-    return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
+
+    return successResponse(
+      {
+        jurisdiction
+      },
+      {
+        fallback: jurisdiction.fallback ?? false,
+        integration: 'google-civic'
+      }
+    );
   } catch (error) {
     logger.error('Address lookup error', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Failed to resolve address jurisdiction' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to resolve address jurisdiction', 502, {
+      reason: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-}
+});
 
-// Handle unsupported methods
-export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed. Use POST with address in body.' }, 
-    { status: 405 }
-  );
-}
-
-export async function PUT() {
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
-}
-
-export async function DELETE() {
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
-}
+export const GET = withErrorHandling(async () => methodNotAllowed(['POST']));
+export const PUT = withErrorHandling(async () => methodNotAllowed(['POST']));
+export const DELETE = withErrorHandling(async () => methodNotAllowed(['POST']));

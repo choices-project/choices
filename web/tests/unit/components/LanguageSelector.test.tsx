@@ -15,14 +15,12 @@ jest.mock('@/lib/stores/appStore', () => ({
 }));
 
 type I18nModule = typeof import('@/hooks/useI18n');
-type AppStoreModule = typeof import('@/lib/stores/appStore');
-
 const mockedI18n = jest.requireMock('@/hooks/useI18n') as {
   [K in keyof I18nModule]: jest.Mock;
 };
 
 const mockedAppStore = jest.requireMock('@/lib/stores/appStore') as {
-  [K in keyof AppStoreModule]: jest.Mock;
+  useAppActions: jest.Mock;
 };
 
 describe('LanguageSelector', () => {
@@ -50,7 +48,7 @@ describe('LanguageSelector', () => {
     fireEvent.click(screen.getByRole('button', { name: /english/i }));
 
     // Choose Spanish (es)
-    const spanishOption = screen.getByRole('button', { name: /español/i });
+    const spanishOption = screen.getByRole('option', { name: /español/i });
     fireEvent.click(spanishOption);
 
     await waitFor(() => {

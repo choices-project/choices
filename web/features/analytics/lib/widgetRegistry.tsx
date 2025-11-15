@@ -30,6 +30,7 @@ const DemographicsChart = lazy(() => import('../components/DemographicsChart'));
 const TemporalAnalysisChart = lazy(() => import('../components/TemporalAnalysisChart'));
 const TrustTierComparisonChart = lazy(() => import('../components/TrustTierComparisonChart'));
 const PWAOfflineQueueWidget = lazy(() => import('../components/widgets/PWAOfflineQueueWidget'));
+const ElectionNotificationWidget = lazy(() => import('../components/widgets/ElectionNotificationWidget'));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -154,6 +155,7 @@ const DemographicsChartWidget: FC<WidgetProps> = () => <DemographicsChart />;
 const TemporalAnalysisWidget: FC<WidgetProps> = () => <TemporalAnalysisChart />;
 const TrustTierComparisonWidget: FC<WidgetProps> = () => <TrustTierComparisonChart />;
 const PWAOfflineQueueAnalyticsWidget: FC<WidgetProps> = (props) => <PWAOfflineQueueWidget {...props} />;
+const ElectionNotificationAnalyticsWidget: FC<WidgetProps> = (props) => <ElectionNotificationWidget {...props} />;
 
 // ---------------------------------------------------------------------------
 // Widget registry entries
@@ -189,7 +191,6 @@ const registryEntries: WidgetRegistryEntry[] = [
       position: { x: 0, y: 0 },
       size: { w: 6, h: 4 },
       minSize: { w: 4, h: 3 },
-      maxSize: { w: 8, h: 6 },
       settings: {
         refreshInterval: 300_000,
         filters: {
@@ -228,7 +229,6 @@ const registryEntries: WidgetRegistryEntry[] = [
       position: { x: 0, y: 0 },
       size: { w: 6, h: 4 },
       minSize: { w: 4, h: 3 },
-      maxSize: { w: 8, h: 6 },
       settings: {
         refreshInterval: 300_000,
         filters: {
@@ -474,6 +474,41 @@ const registryEntries: WidgetRegistryEntry[] = [
       size: { w: 4, h: 3 },
       settings: {
         refreshInterval: 30_000,
+      },
+    }
+  ),
+  createWidgetEntry(
+    {
+      type: 'election-notifications',
+      name: 'Election Notification Engagement',
+      description: 'Delivered vs opened election alerts across civics surfaces.',
+      icon: '🗳️',
+      category: 'engagement',
+      defaultSize: { w: 6, h: 4 },
+      minSize: { w: 4, h: 3 },
+      maxSize: { w: 8, h: 6 },
+      capabilities: {
+        resizable: true,
+        draggable: true,
+        configurable: true,
+        exportable: false,
+      },
+      dataSource: '/api/analytics/election-notifications',
+      tags: ['notifications', 'civics', 'engagement'],
+      requiredPermission: 'admin',
+      dataRequirements: {
+        adminOnly: true,
+        permissions: ['admin'],
+        features: ['ANALYTICS'],
+      },
+    },
+    ElectionNotificationAnalyticsWidget,
+    {
+      position: { x: 0, y: 0 },
+      size: { w: 6, h: 4 },
+      minSize: { w: 4, h: 3 },
+      settings: {
+        refreshInterval: 300,
       },
     }
   ),

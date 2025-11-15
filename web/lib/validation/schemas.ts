@@ -8,6 +8,7 @@
 import { z } from 'zod';
 
 import type { Json } from '@/types/database';
+import { LEGACY_TRUST_TIER_ALIASES, TRUST_TIERS, normalizeTrustTier } from '@/lib/trust/trust-tiers';
 
 const JsonValueSchema: z.ZodType<Json> = z.lazy(() =>
   z.union([
@@ -28,7 +29,14 @@ const UUIDSchema = z.string().uuid();
 /** Valid email address validation */
 const EmailSchema = z.string().email();
 /** Trust tier enumeration validation */
-const TrustTierSchema = z.enum(['bronze', 'silver', 'gold', 'platinum', 'admin']);
+const TrustTierInputSchema = z.union([
+  z.enum(TRUST_TIERS),
+  z.enum(LEGACY_TRUST_TIER_ALIASES),
+  z.string().regex(/^tier[_-]?[0-3]$/i),
+  z.number().int().min(0).max(3),
+]);
+
+const TrustTierSchema = TrustTierInputSchema.transform((value) => normalizeTrustTier(value));
 
 /**
  * User Profile Schema

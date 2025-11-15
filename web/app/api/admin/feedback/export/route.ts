@@ -1,32 +1,30 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { authError, errorResponse, forbiddenError, withErrorHandling } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
+
     const supabase = getSupabaseServerClient();
     
     // Get Supabase client
     const supabaseClient = await supabase;
     
     if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
+      return errorResponse('Supabase client not available', 500);
     }
 
     // Check authentication
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return authError('Authentication required');
     }
 
     // Check admin permissions - only admins can access feedback data
@@ -38,17 +36,11 @@ export async function GET(request: NextRequest) {
 
     if (profileError) {
       devLog('Error fetching user profile:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to verify user permissions' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to verify user permissions', 500);
     }
 
     if (!userProfile.is_admin) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
+      return forbiddenError('Admin access required');
     }
 
     // Get query parameters for filtering
@@ -120,10 +112,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       devLog('Error fetching feedback for export:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch feedback' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to fetch feedback', 500);
     }
 
     // Convert to CSV
@@ -135,15 +124,7 @@ export async function GET(request: NextRequest) {
     response.headers.set('Content-Disposition', `attachment; filename="feedback-export-${new Date().toISOString().split('T')[0]}.csv"`);
 
     return response;
-
-  } catch (error) {
-    devLog('Error in feedback export API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 function convertToCSV(data: any[]): string {
   if (data.length === 0) {

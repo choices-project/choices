@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 import { usePollWizardStore } from '@/lib/stores/pollWizardStore';
+import type { PollWizardStore } from '@/lib/stores/pollWizardStore';
 
 import { AnalyticsTestBridge } from '../_components/AnalyticsTestBridge';
+import type { PollWizardHarness } from '../poll-wizard/page';
 
 const AccessiblePollWizard = dynamic(
   () =>
@@ -29,6 +31,41 @@ export default function PollCreateHarnessPage() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    const harness: PollWizardHarness = {
+      getSnapshot: () => usePollWizardStore.getState(),
+      actions: {
+        nextStep: () => usePollWizardStore.getState().nextStep(),
+        prevStep: () => usePollWizardStore.getState().prevStep(),
+        goToStep: (step) => usePollWizardStore.getState().goToStep(step),
+        resetWizard: () => usePollWizardStore.getState().resetWizard(),
+        updateData: (updates) => usePollWizardStore.getState().updateData(updates),
+        updateSettings: (settings) => usePollWizardStore.getState().updateSettings(settings),
+        addOption: () => usePollWizardStore.getState().addOption(),
+        removeOption: (index) => usePollWizardStore.getState().removeOption(index),
+        updateOption: (index, value) => usePollWizardStore.getState().updateOption(index, value),
+        addTag: (tag) => usePollWizardStore.getState().addTag(tag),
+        removeTag: (tag) => usePollWizardStore.getState().removeTag(tag),
+        updateTags: (tags) => usePollWizardStore.getState().updateTags(tags),
+        validateCurrentStep: () => usePollWizardStore.getState().validateCurrentStep(),
+        clearAllErrors: () => usePollWizardStore.getState().clearAllErrors(),
+        setFieldError: (field, error) => usePollWizardStore.getState().setFieldError(field, error),
+        clearFieldError: (field) => usePollWizardStore.getState().clearFieldError(field),
+        canProceedToNextStep: (step) => usePollWizardStore.getState().canProceedToNextStep(step),
+        getStepErrors: (step) => usePollWizardStore.getState().getStepErrors(step),
+      },
+    };
+
+    (window as typeof window & { __pollWizardHarness?: PollWizardHarness }).__pollWizardHarness = harness;
+
+    return () => {
+      const current = (window as typeof window & { __pollWizardHarness?: PollWizardHarness }).__pollWizardHarness;
+      if (current === harness) {
+        delete (window as typeof window & { __pollWizardHarness?: PollWizardHarness }).__pollWizardHarness;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const persist = (usePollWizardStore as typeof usePollWizardStore & {
       persist?: {
         hasHydrated?: () => boolean;
@@ -37,6 +74,10 @@ export default function PollCreateHarnessPage() {
     }).persist;
 
     let unsubscribe: (() => void) | void;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[E2E] Poll wizard persist helpers available?', Boolean(persist));
+    }
 
     if (persist?.hasHydrated?.()) {
       setHydrated(true);

@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, forbiddenError } from '@/lib/api';
+import { successResponse, withErrorHandling, forbiddenError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export const dynamic = 'force-dynamic';
@@ -132,33 +131,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     };
 
-    // Set appropriate content type
-    const headers = new Headers();
-    headers.set('Content-Type', 'application/manifest+json');
-    headers.set('Cache-Control', 'public, max-age=3600');
-    
-    // Always return wrapped response for consistency
-    const responseObj = NextResponse.json({
-      success: true,
+    const responseObj = successResponse({
       manifest,
+      format,
       timestamp: new Date().toISOString()
     });
     
-    // Add CORS headers
     responseObj.headers.set('Access-Control-Allow-Origin', '*');
     responseObj.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    
-    // Add manifest-specific headers
-    responseObj.headers.set('Content-Type', 'application/manifest+json');
-    responseObj.headers.set('Cache-Control', 'public, max-age=3600');
     responseObj.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    // Set appropriate content type based on format
-    if (format === 'json') {
-      responseObj.headers.set('Content-Type', 'application/manifest+json');
-    } else {
-      responseObj.headers.set('Content-Type', 'application/json');
-  }
+    responseObj.headers.set('Cache-Control', 'public, max-age=3600');
+    responseObj.headers.set(
+      'Content-Type',
+      format === 'json' ? 'application/manifest+json' : 'application/json'
+    );
   
   return responseObj;
 });

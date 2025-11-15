@@ -16,10 +16,10 @@
  * Status: ✅ Production-ready
  */
 
-import { NextResponse, type NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
-import { withErrorHandling, forbiddenError } from '@/lib/api';
+import { withErrorHandling, forbiddenError, successResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
@@ -153,7 +153,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     });
 
         return {
-          ok: true,
           heatmap,
           k_anonymity: minCount,
           generated_at: new Date().toISOString()
@@ -161,13 +160,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     );
 
-    // Return with cache metadata
-    return NextResponse.json({
-      ...result,
-      _cache: {
-        hit: fromCache,
-        ttl: CACHE_TTL.DISTRICT_HEATMAP,
-        key: cacheKey
+    return successResponse(
+      {
+        heatmap: result?.heatmap ?? [],
+        kAnonymity: result?.k_anonymity ?? minCount,
+        generatedAt: result?.generated_at ?? new Date().toISOString()
+      },
+      {
+        cache: {
+          hit: fromCache,
+          ttl: CACHE_TTL.DISTRICT_HEATMAP,
+          key: cacheKey
+        }
       }
-    });
+    );
 });

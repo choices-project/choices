@@ -50,9 +50,12 @@ type HeatmapEntry = {
 };
 
 type HeatmapData = {
-  ok: boolean;
-  heatmap: HeatmapEntry[];
-  k_anonymity: number;
+  success: boolean;
+  data?: {
+    heatmap: HeatmapEntry[];
+    kAnonymity: number;
+    generatedAt?: string;
+  };
 };
 
 type DistrictHeatmapProps = {
@@ -142,14 +145,12 @@ export default function DistrictHeatmap({
 
       const result: HeatmapData = await response.json();
 
-      if (!result.ok) {
-        throw new Error(result && typeof result === 'object' && 'message' in result
-          ? String((result as any).message)
-          : 'The heatmap service returned an unexpected response.');
+      if (!result.success || !result.data) {
+        throw new Error('The heatmap service returned an unexpected response.');
       }
 
-      setData(result.heatmap);
-      setKAnonymity(result.k_anonymity);
+      setData(result.data.heatmap ?? []);
+      setKAnonymity(result.data.kAnonymity ?? minCount);
     } catch (err) {
       logger.error('Failed to fetch heatmap data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load heatmap data');

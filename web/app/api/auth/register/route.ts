@@ -6,6 +6,7 @@ import {
   rateLimitError,
   validationError,
   errorResponse,
+  parseBody,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { withOptional } from '@/lib/util/objects'
@@ -16,6 +17,13 @@ import {
   validateCsrfProtection,
   createCsrfErrorResponse
 } from '../_shared'
+
+type RegisterRequestBody = {
+  email?: string;
+  password?: string;
+  username?: string;
+  display_name?: string;
+};
 
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -38,31 +46,48 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Validate request
-    const body = await request.json()
-    const { email, password, username, display_name } = body
+    const parsedBody = await parseBody<RegisterRequestBody>(request)
+    if (!parsedBody.success) {
+      return parsedBody.error
+    }
+    const { email, password, username, display_name } = parsedBody.data
 
     // Validate required fields
-    if (!email || !password || !username) {
-      return validationError({
-        email: !email ? 'Email is required' : '',
-        password: !password ? 'Password is required' : '',
-        username: !username ? 'Username is required' : ''
-      }, 'Email, password, and username are required');
+    const missingFields: Record<string, string> = {}
+    if (!email) {
+      missingFields.email = 'Email is required'
+    }
+    if (!password) {
+      missingFields.password = 'Password is required'
+    }
+    if (!username) {
+      missingFields.username = 'Username is required'
+    }
+    if (Object.keys(missingFields).length > 0) {
+      return validationError(missingFields, 'Email, password, and username are required')
     }
 
+    const ensuredEmail = email!;
+    const ensuredPassword = password!;
+    const ensuredUsername = username!;
+
     // Validate username format
-    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(ensuredUsername)) {
       return validationError({
         username: 'Username must be 3-20 characters, letters, numbers, hyphens, and underscores only'
       });
     }
 
     // Validate password strength
-    if (password.length < 8) {
+    if (ensuredPassword.length < 8) {
       return validationError({
         password: 'Password must be at least 8 characters long'
       });
     }
+
+    const normalizedEmail = ensuredEmail.toLowerCase().trim()
+    const normalizedUsername = ensuredUsername.trim()
+    const displayName = (display_name ?? ensuredUsername).trim()
 
     // Use Supabase Auth for registration
     const supabaseClient = await getSupabaseServerClient()
@@ -71,25 +96,25 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Sign up with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-      email: email.toLowerCase().trim(),
-      password,
+      email: normalizedEmail,
+      password: ensuredPassword,
       options: {
         data: {
-          username,
-          display_name: display_name ?? username
+          username: normalizedUsername,
+          display_name: displayName
         }
       }
     })
 
     if (authError || !authData.user) {
-      logger.warn('Registration failed', { email, username, error: authError?.message })
+      logger.warn('Registration failed', { email: normalizedEmail, username: normalizedUsername, error: authError?.message })
 
       // Handle specific Supabase errors
       if (authError?.message.includes('already registered')) {
         return errorResponse(
           'An account with this email already exists',
           409,
-          { email: email.toLowerCase().trim() },
+          { email: normalizedEmail },
           'EMAIL_EXISTS'
         );
       }
@@ -109,10 +134,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .from('user_profiles')
       .insert({
         user_id: authData.user.id,
-        username,
-        email: email.toLowerCase().trim(),
-        display_name: display_name ?? username,
-        trust_tier: 'T0',
+        username: normalizedUsername,
+        email: normalizedEmail,
+        display_name: displayName,
+        trust_tier: 'T1',
         is_active: true
       })
       .select()
@@ -137,7 +162,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     logger.info('User registered successfully', {
       userId: authData.user.id,
       email: authData.user.email,
-      username
+      username: normalizedUsername
     })
 
     return successResponse({

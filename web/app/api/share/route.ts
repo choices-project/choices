@@ -118,19 +118,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     });
 
     const topPolls = Object.entries(pollShares)
-      .map(([poll_id, shares]) => ({ poll_id, shares }))
+      .map(([pollId, shares]) => ({ pollId, shares }))
       .sort((a, b) => b.shares - a.shares)
       .slice(0, 10);
 
     return successResponse({
-      total_shares: shareEvents?.length || 0,
-      platform_breakdown: platformBreakdown,
-      top_polls: topPolls,
-      period_days: days,
-      filters: {
-        platform: platform || 'all',
-        poll_id: pollId || 'all'
-      },
-      generated_at: new Date().toISOString()
+      analytics: {
+        totalShares: shareEvents?.length || 0,
+        platformBreakdown,
+        topPolls,
+        periodDays: days,
+        filters: {
+          platform: platform ?? 'all',
+          pollId: pollId ?? 'all'
+        }
+      }
     });
 });

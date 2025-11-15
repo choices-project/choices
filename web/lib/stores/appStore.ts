@@ -6,11 +6,11 @@
  * Modernized to align with the 2025 Zustand store standards (typed creator, helpers, tests).
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -503,8 +503,10 @@ export const useAppLoading = () => useAppStore((state) => state.isLoading);
 export const useAppError = () => useAppStore((state) => state.error);
 
 export const useAppActions = () =>
-  useAppStore(
-    (state) => ({
+  useMemo(() => {
+    const state = useAppStore.getState();
+
+    return {
       setLoading: state.setLoading,
       setError: state.setError,
       clearError: state.clearError,
@@ -538,9 +540,8 @@ export const useAppActions = () =>
       setInitializing: state.setInitializing,
       setUpdating: state.setUpdating,
       resetAppState: state.resetAppState,
-    }),
-    shallow,
-  );
+    };
+  }, []);
 
 export const appSelectors = {
   theme: (state: AppStore) => state.theme,

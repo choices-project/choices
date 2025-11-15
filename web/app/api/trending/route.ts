@@ -14,11 +14,10 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
-import { withErrorHandling, validationError } from '@/lib/api';
-import { logger , devLog } from '@/lib/utils/logger';
+import { withErrorHandling, validationError, successResponse, errorResponse } from '@/lib/api';
+import { logger, devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -117,11 +116,16 @@ async function getTrendingPolls(limit: number) {
 
     if (error) {
       logger.error('Error fetching trending polls:', error);
-      return NextResponse.json({ polls: [] }, { status: 500 });
+      return errorResponse('Failed to fetch trending polls', 500, { reason: error.message });
     }
 
     if (!polls) {
-      return NextResponse.json({ polls: [] }, { status: 500 });
+      return successResponse({
+        polls: [],
+        type: 'polls',
+        limit,
+        generatedAt: new Date().toISOString()
+      });
     }
 
     // Transform data for frontend
@@ -148,9 +152,8 @@ async function getTrendingPolls(limit: number) {
       };
     }).filter(poll => poll !== null);
 
-    return NextResponse.json({
-      success: true,
-      data: transformedPolls,
+    return successResponse({
+      polls: transformedPolls,
       type: 'polls',
       limit,
       generatedAt: new Date().toISOString()
@@ -158,7 +161,7 @@ async function getTrendingPolls(limit: number) {
 
   } catch (error) {
     logger.error('Error in trending polls API', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json({ polls: [] }, { status: 500 });
+    return errorResponse('Failed to fetch trending polls', 500);
   }
 }
 
@@ -177,15 +180,11 @@ async function getTrendingHashtags(request: NextRequest, limit: number) {
         result = await trendingHashtagsTracker.getHashtagAnalytics();
         break;
       default:
-        return NextResponse.json(
-          { error: 'Invalid hashtagType. Use "trending" or "analytics"' },
-          { status: 400 }
-        );
+        return validationError({ hashtagType: 'Invalid hashtagType. Use "trending" or "analytics"' });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: result,
+    return successResponse({
+      hashtags: result,
       type: 'hashtags',
       hashtagType,
       limit,
@@ -194,10 +193,7 @@ async function getTrendingHashtags(request: NextRequest, limit: number) {
 
   } catch (error) {
     devLog('Error fetching trending hashtags:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to fetch trending hashtags', 500);
   }
 }
 
@@ -277,9 +273,8 @@ async function getTrendingTopics(limit: number) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      data: trendingPolls,
+    return successResponse({
+      polls: trendingPolls,
       type: 'topics',
       limit,
       generatedAt: new Date().toISOString()
@@ -287,10 +282,7 @@ async function getTrendingTopics(limit: number) {
 
   } catch (error) {
     devLog('Error in trending topics API:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to fetch trending topics', 500);
   }
 }
 
@@ -301,23 +293,23 @@ async function trackHashtags(request: NextRequest) {
 
     // Validate input
     if (!hashtags || !Array.isArray(hashtags) || !userId) {
-      return NextResponse.json(
-        { error: 'Invalid input. hashtags array and userId are required.' },
-        { status: 400 }
-      );
+      return validationError({
+        hashtags: 'hashtags array is required',
+        userId: 'userId is required'
+      }, 'Invalid input. hashtags array and userId are required.');
     }
 
     // Track multiple hashtags
     await trendingHashtagsTracker.trackMultipleHashtags(
       hashtags,
       userId,
-      source ?? 'custom'
+      source ?? 'custom',
+      metadata
     );
 
     devLog('Hashtags tracked:', { hashtags, userId, source, metadata });
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       message: 'Hashtags tracked successfully',
       count: hashtags.length,
       type: 'hashtags',
@@ -326,10 +318,7 @@ async function trackHashtags(request: NextRequest) {
 
   } catch (error) {
     devLog('Error tracking hashtags:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to track hashtags', 500);
   }
 }
 

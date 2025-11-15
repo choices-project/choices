@@ -205,11 +205,11 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       });
 
       const result = await response.json();
-      if (!response.ok || result?.ok !== true) {
+      if (!response.ok || result?.success !== true) {
         throw new Error(result?.error ?? 'Address lookup failed');
       }
 
-      const jurisdiction = normalizeJurisdiction(result.jurisdiction);
+      const jurisdiction = normalizeJurisdiction(result?.data?.jurisdiction ?? result?.jurisdiction);
       const resolvedState = jurisdiction?.state ?? null;
       if (!resolvedState) {
         goToStep(1);

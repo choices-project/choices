@@ -90,8 +90,9 @@ export function FilingGuideWizard({
         if (state) params.append('state', state)
         const response = await fetch(`/api/filing/requirements?${params.toString()}`)
         const data = await response.json()
-        if (data.found) {
-          setRequirements(data.requirement)
+        const payload = data?.data ?? data
+        if (payload?.found) {
+          setRequirements(payload.requirement)
         }
       } catch {
         // Ignore errors

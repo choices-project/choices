@@ -17,7 +17,8 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { usePathname } from 'next/navigation'
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
@@ -125,6 +126,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [feedbackTracker, setFeedbackTracker] = useState<ReturnType<typeof getFeedbackTracker> | null>(null)
 
+  const pathname = usePathname()
+  const dialogId = useId()
+  const dialogTitleId = useId()
+  const dialogDescriptionId = useId()
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const typeButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const descriptionInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const sentimentButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const titleFieldId = useId()
+  const descriptionFieldId = useId()
+
   // Get analytics store state and actions with proper memoization
   const { trackEvent, trackUserAction, setLoading: _setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
   const _isLoadingAnalytics = useAnalyticsLoading()
@@ -180,6 +193,32 @@ const EnhancedFeedbackWidget: React.FC = () => {
       return prev
     })
   }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const focusNextFrame = (element: HTMLElement | null | undefined) => {
+      if (!element) return
+      requestAnimationFrame(() => element.focus())
+    }
+
+    if (step === 'type') {
+      focusNextFrame(typeButtonRefs.current[0])
+    } else if (step === 'details') {
+      focusNextFrame(titleInputRef.current)
+    } else if (step === 'sentiment') {
+      focusNextFrame(sentimentButtonRefs.current[0])
+    }
+  }, [isOpen, step])
+
+  const isHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
+  const isHarnessRoute = pathname?.startsWith('/e2e/') ?? false
+
+  if (isHarness || isHarnessRoute) {
+    return null
+  }
 
   if (!isFeatureEnabled('FEEDBACK_WIDGET')) {
     return null
@@ -249,6 +288,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       sentiment: 'neutral',
       userJourney: createDefaultUserJourney()
     })
+    triggerRef.current?.focus()
   }
 
   const handleTypeSelect = (type: FeedbackData['type']) => {
@@ -465,10 +505,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
     <>
       {/* Floating Feedback Button */}
       <motion.button
+        ref={triggerRef}
+        type="button"
         onClick={handleOpen}
         className="fixed bottom-6 right-6 z-40 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
         data-testid="feedback-widget-button"
         aria-label="Open feedback"
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? dialogId : undefined}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0, y: 20 }}
@@ -489,6 +534,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
             onClick={handleClose}
           >
             <motion.div
+              id={dialogId}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={dialogTitleId}
+              aria-describedby={dialogDescriptionId}
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -502,13 +552,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     <MessageCircle className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Enhanced Feedback</h3>
-                    <p className="text-sm text-gray-500">Help us improve with detailed context</p>
+                    <h3 id={dialogTitleId} className="text-lg font-semibold text-gray-900">Enhanced Feedback</h3>
+                    <p id={dialogDescriptionId} className="text-sm text-gray-500">Help us improve with detailed context</p>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close feedback form"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -527,11 +579,16 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">What type of feedback?</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }) => (
+                        {feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
                             key={key}
+                            type="button"
+                            ref={(el) => {
+                              typeButtonRefs.current[index] = el
+                            }}
                             onClick={() => handleTypeSelect(key as FeedbackData['type'])}
                             className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all ${bgColor}`}
+                            aria-pressed={feedback.type === key}
                           >
                             <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
                             <span className="text-sm font-medium text-gray-700">{label}</span>
@@ -551,23 +608,36 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">Tell us more</h4>
                       <div className="space-y-3">
+                        <label htmlFor={titleFieldId} className="text-sm font-medium text-gray-700">
+                          Brief title
+                        </label>
                         <input
+                          id={titleFieldId}
+                          ref={titleInputRef}
                           type="text"
                           placeholder="Brief title"
                           value={feedback.title}
                           onChange={(e) => setFeedback(prev => ({ ...prev, title: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          aria-required="true"
                         />
+                        <label htmlFor={descriptionFieldId} className="text-sm font-medium text-gray-700">
+                          Detailed description
+                        </label>
                         <textarea
+                          id={descriptionFieldId}
+                          ref={descriptionInputRef}
                           placeholder="Detailed description..."
                           value={feedback.description}
                           onChange={(e) => setFeedback(prev => ({ ...prev, description: e.target.value }))}
                           rows={4}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          aria-required="true"
                         />
                       </div>
                       <div className="flex justify-end">
                         <button
+                          type="button"
                           onClick={() => setStep('sentiment')}
                           disabled={!feedback.title.trim() || !feedback.description.trim()}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -588,11 +658,16 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">How do you feel?</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {sentimentOptions.map(({ key, label, icon: Icon, color, bgColor }) => (
+                        {sentimentOptions.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
                             key={key}
+                            type="button"
+                            ref={(el) => {
+                              sentimentButtonRefs.current[index] = el
+                            }}
                             onClick={() => handleSentimentSelect(key as FeedbackData['sentiment'])}
                             className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all ${bgColor}`}
+                            aria-pressed={feedback.sentiment === key}
                           >
                             <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
                             <span className="text-sm font-medium text-gray-700">{label}</span>
@@ -601,6 +676,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </div>
                       <div className="flex justify-end space-x-3">
                         <button
+                          type="button"
                           onClick={handleSubmit}
                           disabled={isSubmitting}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -608,6 +684,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => setStep('screenshot')}
                           className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
                         >
@@ -630,6 +707,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
 
                       <div className="space-y-3">
                         <button
+                          type="button"
                           onClick={handleScreenshotCapture}
                           disabled={capturingScreenshot}
                           className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
@@ -641,6 +719,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         </button>
 
                         <button
+                          type="button"
                           onClick={handleFileUpload}
                           className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
                         >
@@ -657,6 +736,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         />
 
                         <button
+                          type="button"
                           onClick={handleSubmit}
                           disabled={isSubmitting}
                           className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
@@ -676,6 +756,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       {showSuccess && (
                         <motion.div
+                          role="status"
+                          aria-live="polite"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
@@ -712,6 +794,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </p>
 
                       <button
+                        type="button"
                         onClick={handleClose}
                         className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                       >

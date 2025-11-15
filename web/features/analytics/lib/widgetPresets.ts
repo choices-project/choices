@@ -115,6 +115,10 @@ const detailedAnalytics: LayoutPreset = {
       createWidget('pwa-offline-queue', 'Offline Queue Health', 8, 7, 4, 3, {
         refreshInterval: 30,
       }),
+
+      createWidget('election-notifications', 'Election Notifications', 0, 10, 6, 4, {
+        refreshInterval: 300,
+      }),
     ],
     isDefault: false,
     isPreset: true,
@@ -189,6 +193,10 @@ const engagementFocus: LayoutPreset = {
       // Trends at bottom
       createWidget('trends', 'Engagement Trends', 0, 8, 12, 3, {
         filters: { chartType: 'line', dateRange: '14d' },
+      }),
+
+      createWidget('election-notifications', 'Election Notifications', 0, 11, 12, 3, {
+        refreshInterval: 300,
       }),
     ],
     isDefault: false,

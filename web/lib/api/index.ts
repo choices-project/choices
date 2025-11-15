@@ -16,6 +16,9 @@ export * from './types';
 // Response utilities (server-side)
 export * from './response-utils';
 
+// Response builders
+export * from './response-builders';
+
 // Client utilities (client-side)
 export {
   apiClient,
