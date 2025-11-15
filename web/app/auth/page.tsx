@@ -240,7 +240,7 @@ export default function AuthPage() {
               {/* Error Summary */}
               <div data-testid="error-summary" className="bg-red-50 border border-red-200 rounded-md p-4 hidden" role="alert">
                 <p className="text-sm text-red-700">{t('auth.form.errorSummaryTitle')}</p>
-                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: 3 })}</div>
+                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
               </div>
 
               {/* Rate Limit Message */}

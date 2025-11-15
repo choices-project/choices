@@ -250,8 +250,8 @@ export const GET = withErrorHandling(async (
     }
     
     // Check authentication for non-public analytics
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
+    if (authFetchError || !user) {
       return authError('Authentication required for analytics');
     }
     

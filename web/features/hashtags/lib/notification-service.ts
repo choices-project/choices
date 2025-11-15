@@ -104,11 +104,20 @@ export async function shouldNotifyHashtagTrending(
     const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
 
     // Check if already notified about this hashtag in last 24 hours
-    const recentNotification = payload.notifications?.find((n) => 
-      n.notification_type === 'hashtag_trending' &&
-      n.metadata?.hashtag_id === hashtagId &&
-      new Date(n.created_at).getTime() > twentyFourHoursAgo
-    );
+    const recentNotification = payload.notifications?.find((n) => {
+      if (n.notification_type !== 'hashtag_trending') {
+        return false;
+      }
+      if (n.metadata?.hashtag_id !== hashtagId) {
+        return false;
+      }
+      if (!n.created_at) {
+        return false;
+      }
+
+      const createdAtMs = new Date(n.created_at).getTime();
+      return Number.isFinite(createdAtMs) && createdAtMs > twentyFourHoursAgo;
+    });
 
     return !recentNotification;  // Notify if no recent notification
 

@@ -343,15 +343,28 @@ export const createNotificationActions = (
 
           if (existingIndex !== -1) {
             const existing = state.notifications[existingIndex];
+          if (!existing) {
+            return;
+          }
             existing.title = notification.title;
             existing.message = notification.message;
             existing.timestamp = notification.timestamp;
             existing.read = false;
-            existing.duration = notification.duration;
-            existing.persistent = notification.persistent;
-            existing.actions = notification.actions;
-            existing.context = notification.context;
-            existing.metadata = notification.metadata;
+            if (typeof notification.duration === 'number') {
+              existing.duration = notification.duration;
+            }
+            if (typeof notification.persistent === 'boolean') {
+              existing.persistent = notification.persistent;
+            }
+            if (notification.actions) {
+              existing.actions = notification.actions;
+            }
+            if (notification.context) {
+              existing.context = notification.context;
+            }
+            if (notification.metadata) {
+              existing.metadata = notification.metadata;
+            }
             existing.source = notification.source ?? existing.source ?? 'civics';
             analyticsTargetId = existing.id;
             state.unreadCount = calculateUnread(state.notifications);
@@ -811,7 +824,7 @@ export const notificationStoreUtils = {
             : defaultNotificationSettings.duration,
       persistent: shouldPersist,
       source: 'civics',
-      metadata,
+      metadata: metadata ?? {},
       context: {
         kind: 'election',
         electionId,
@@ -821,7 +834,7 @@ export const notificationStoreUtils = {
         countdownLabel,
         representativeNames,
         source,
-        metadata
+        metadata: metadata ?? {}
       }
     });
   },

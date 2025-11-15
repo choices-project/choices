@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next'
+import type { AbstractIntlMessages } from 'next-intl';
 import { cookies, headers } from 'next/headers'
 import React from 'react'
 
@@ -35,7 +36,7 @@ export const viewport = {
   themeColor: '#3b82f6',
 }
 
-type IntlMessages = Record<string, unknown>;
+type IntlMessages = AbstractIntlMessages;
 
 async function loadMessages(locale: SupportedLocale): Promise<IntlMessages> {
   switch (locale) {

@@ -454,13 +454,24 @@ export class ScreenReaderSupport {
           timestamp: number;
         }) => void;
       }).__onScreenReaderAnnounce;
-      hook?.({
+      const payload: {
+        message: string;
+        priority: 'polite' | 'assertive';
+        id?: string;
+        duration?: number;
+        timestamp: number;
+      } = {
         message: announcement.message,
         priority: announcement.priority,
-        id: announcement.id,
         duration,
         timestamp: Date.now(),
-      });
+      };
+
+      if (announcement.id) {
+        payload.id = announcement.id;
+      }
+
+      hook?.(payload);
     }
 
     if (typeof console !== 'undefined' && typeof console.info === 'function') {

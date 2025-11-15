@@ -65,13 +65,21 @@ import { withErrorHandling, successResponse, validationError, errorResponse, met
 
 export const dynamic = 'force-dynamic';
 
+type Jurisdiction = {
+  state: string;
+  district: string | null;
+  county: string | null;
+  ocd_division_id: string | null;
+  fallback?: boolean;
+};
+
 /**
  * Look up jurisdiction information for an address using Google Civic API
  * 
  * This is the ONLY external API call in the web application.
  * See file header documentation for why this exception exists.
  */
-async function lookupJurisdictionFromExternalAPI(address: string) {
+async function lookupJurisdictionFromExternalAPI(address: string): Promise<Jurisdiction> {
   // IMPORTANT: Address lookup requires external API calls because:
   // 1. We can't store every possible address in our database
   // 2. Addresses change (new developments, redistricting)
@@ -112,11 +120,12 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
     const data = await response.json();
     
     // Extract jurisdiction information from the response
-    const jurisdiction = {
+    const jurisdiction: Jurisdiction = {
       state: data.normalizedInput?.state || extractStateFromAddress(address),
       district: extractDistrict(data.divisions || {}),
       county: extractCounty(data.divisions || {}),
-      ocd_division_id: extractOCDDivisionId(data.divisions || {})
+      ocd_division_id: extractOCDDivisionId(data.divisions || {}),
+      fallback: false
     };
     
     logger.info('Jurisdiction resolved successfully', {

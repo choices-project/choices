@@ -26,7 +26,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 
 // Define health check result types
-type HealthStatus = 'healthy' | 'warning' | 'error' | 'unhealthy' | 'degraded' | 'unknown';
+type HealthStatus = 'healthy' | 'warning' | 'error' | 'unhealthy' | 'degraded' | 'unknown' | 'disabled';
 type HealthResult = {
   status: HealthStatus;
   error?: string;

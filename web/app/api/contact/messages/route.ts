@@ -99,8 +99,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
+    if (authFetchError || !user) {
       logger.warn('Unauthenticated message creation attempt');
       return authError('Authentication required');
     }

@@ -41,11 +41,9 @@ export const useRepresentativeCtaAnalytics = (
     autoFetch,
     analytics: {
       surface: source,
-      metadata: representativeId
-        ? {
-            representativeId,
-          }
-        : undefined,
+      ...(representativeId
+        ? { metadata: { representativeId } as Record<string, unknown> }
+        : {}),
     },
   });
 

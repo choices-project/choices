@@ -108,9 +108,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // Check for user authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authFetchError || !user) {
           return authError('Authentication required for analytics summary');
         }
 
@@ -139,9 +139,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authFetchError || !user) {
           return authError('Authentication required for poll analytics');
         }
 
@@ -187,9 +187,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authFetchError || !user) {
           return authError('Authentication required for user analytics');
         }
 
@@ -231,9 +231,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // SECURITY: Always require real authentication - no bypass
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authFetchError || !user) {
           return authError('Authentication required for general analytics');
         }
 

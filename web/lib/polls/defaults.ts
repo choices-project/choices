@@ -30,6 +30,7 @@ export const createDefaultPollWizardSettings = (): PollWizardSettings => ({
   allowWriteIns: false,
   allowComments: true,
   enableNotifications: true,
+  preventDuplicateVotes: true,
   maxSelections: 1,
   votingMethod: 'single',
   privacyLevel: 'public',

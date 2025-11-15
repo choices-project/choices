@@ -49,11 +49,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     case 'comment': {
       const { rfcId: commentRfcId, author, content, parentId } = data;
       if (!commentRfcId || !author || !content) {
-        return validationError({
-          rfcId: commentRfcId ? undefined : 'rfcId is required',
-          author: author ? undefined : 'author is required',
-          content: content ? undefined : 'content is required'
-        });
+        const errors: Record<string, string> = {};
+        if (!commentRfcId) errors.rfcId = 'rfcId is required';
+        if (!author) errors.author = 'author is required';
+        if (!content) errors.content = 'content is required';
+        return validationError(errors);
       }
 
       const commentId = await RFCManager.addComment(commentRfcId, author, content, parentId);
@@ -67,11 +67,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     case 'vote': {
       const { rfcId: voteRfcId, voter, vote, reasoning } = data;
       if (!voteRfcId || !voter || !vote) {
-        return validationError({
-          rfcId: voteRfcId ? undefined : 'rfcId is required',
-          voter: voter ? undefined : 'voter is required',
-          vote: vote ? undefined : 'vote is required'
-        });
+        const errors: Record<string, string> = {};
+        if (!voteRfcId) errors.rfcId = 'rfcId is required';
+        if (!voter) errors.voter = 'voter is required';
+        if (!vote) errors.vote = 'vote is required';
+        return validationError(errors);
       }
 
       const voteId = await RFCManager.castVote(voteRfcId, voter, vote, reasoning);

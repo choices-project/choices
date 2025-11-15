@@ -331,7 +331,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           </div>
           <div className="text-sm text-gray-500">
             {t('civics.lure.stats.candidates.caption', {
-              count: totalLocalRepresentatives,
+              count: String(totalLocalRepresentatives),
               formattedCount: numberFormatter.format(totalLocalRepresentatives),
             })}
           </div>
@@ -394,7 +394,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
               {daysUntilNextElection != null && daysUntilNextElection > 90 && (
                 <p className="text-xs text-gray-500">
                   {t('civics.lure.stats.election.future', {
-                    count: daysUntilNextElection,
+                    count: String(daysUntilNextElection),
                     formattedCount: numberFormatter.format(daysUntilNextElection),
                   })}
                 </p>

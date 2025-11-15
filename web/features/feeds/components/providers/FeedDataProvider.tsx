@@ -208,31 +208,28 @@ function HarnessFeedDataProvider({
     }
   }, [loadMoreFeeds, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
-  return (
-    <>
-      {children({
-        feeds,
-        isLoading,
-        error,
-        onLike: handleLike,
-        onBookmark: handleBookmark,
-        onShare: handleShare,
-        onRefresh: handleRefresh,
-        selectedHashtags,
-        onHashtagAdd: handleHashtagAdd,
-        onHashtagRemove: handleHashtagRemove,
-        trendingHashtags,
-        districtFilterEnabled,
-        onDistrictFilterToggle: handleDistrictToggle,
-        onLoadMore: showLoadMore ? handleLoadMore : undefined,
-        hasMore: showLoadMore,
-      })}
-    </>
-  );
+  const childProps = {
+    feeds,
+    isLoading,
+    error,
+    onLike: handleLike,
+    onBookmark: handleBookmark,
+    onShare: handleShare,
+    onRefresh: handleRefresh,
+    selectedHashtags,
+    onHashtagAdd: handleHashtagAdd,
+    onHashtagRemove: handleHashtagRemove,
+    trendingHashtags,
+    districtFilterEnabled,
+    onDistrictFilterToggle: handleDistrictToggle,
+    hasMore: showLoadMore,
+  };
+
+  return <>{children(showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps)}</>;
 }
 
 type FeedDataProviderProps = {
-  userId?: string;
+  userId?: string | null | undefined;
   userDistrict?: string | null;
   enableInfiniteScroll?: boolean;
   maxItems?: number;

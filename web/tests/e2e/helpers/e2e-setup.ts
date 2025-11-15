@@ -352,6 +352,13 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     return typeof headers['authorization'] === 'string' && headers['authorization'].startsWith('Bearer ');
   };
 
+  const unauthorizedResponse = () => ({
+    success: false,
+    error: 'Admin authentication required',
+    code: 'AUTH_ERROR',
+    metadata: { timestamp: new Date().toISOString() },
+  });
+
   const options: ExternalMockOptions = {
     civics: overrides.civics ?? true,
     analytics: overrides.analytics ?? true,
@@ -565,13 +572,6 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
         data: { user: { id: 'test-user', email: currentAuthEmail } },
       }, 201);
     };
-
-    const unauthorizedResponse = () => ({
-      success: false,
-      error: 'Admin authentication required',
-      code: 'AUTH_ERROR',
-      metadata: { timestamp: new Date().toISOString() },
-    });
 
     const profileHandler: RouteHandler = async (route) => {
       if (!hasAuthHeader(route)) {

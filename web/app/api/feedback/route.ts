@@ -10,6 +10,7 @@ import {
 } from '@/lib/api';
 import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { Json } from '@/types/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +225,24 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
   }
 
+  const metadataPayload: Json = {
+    feedbackContext: (feedbackContext ?? {}) as Json,
+    userAgent: userJourney?.userAgent ?? null,
+    deviceInfo: userJourney?.deviceInfo ?? null,
+    performanceMetrics: userJourney?.performanceMetrics ?? null,
+    errors: (userJourney?.errors ?? []) as Json,
+    sessionInfo: {
+      sessionId: userJourney?.sessionId ?? null,
+      sessionStartTime: userJourney?.sessionStartTime ?? null,
+      totalPageViews: userJourney?.totalPageViews ?? null,
+    },
+    security: {
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+      userAgent: request.headers.get('user-agent') ?? 'unknown',
+      timestamp: new Date().toISOString(),
+    },
+  };
+
   const feedbackData = {
     user_id: user?.id ?? null,
     feedback_type: type,
@@ -231,28 +250,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     description: description.trim(),
     sentiment,
     screenshot: screenshot ?? null,
-    user_journey: userJourney || {},
+    user_journey: (userJourney ?? {}) as Json,
     status: 'open',
     priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
     tags: generateTags(type, title, description, sentiment),
-    ai_analysis: feedbackContext?.aiAnalysis || {},
-    metadata: {
-      feedbackContext: feedbackContext || {},
-      userAgent: userJourney?.userAgent,
-      deviceInfo: userJourney?.deviceInfo,
-      performanceMetrics: userJourney?.performanceMetrics,
-      errors: userJourney?.errors || [],
-      sessionInfo: {
-        sessionId: userJourney?.sessionId,
-        sessionStartTime: userJourney?.sessionStartTime,
-        totalPageViews: userJourney?.totalPageViews,
-      },
-      security: {
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
-        userAgent: request.headers.get('user-agent') ?? 'unknown',
-        timestamp: new Date().toISOString(),
-      },
-    },
+    ai_analysis: (feedbackContext?.aiAnalysis ?? {}) as Json,
+    metadata: metadataPayload,
   };
 
   devLog('Inserting enhanced feedback data:', {

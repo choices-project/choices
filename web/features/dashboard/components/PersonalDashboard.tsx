@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { shallow } from 'zustand/shallow';
 
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
@@ -128,7 +127,6 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const isUserLoading = useUserLoading();
   const dashboardPreferences = useProfileStore(
     (state) => state.preferences?.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
-    shallow,
   );
   const profileName = useProfileStore(
     (state) => state.profile?.display_name ?? state.profile?.username ?? null,

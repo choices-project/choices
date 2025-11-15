@@ -12,6 +12,7 @@ import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/schema';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import type { PollWizardSettings } from '@/lib/polls/types';
 import { useNotificationActions } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
@@ -27,6 +28,25 @@ type ShareInfo = {
   status: number;
   durationMs?: number;
 };
+
+type BooleanSettingKey = Extract<
+  keyof PollWizardSettings,
+  | 'allowMultipleVotes'
+  | 'allowAnonymousVotes'
+  | 'showResults'
+  | 'allowComments'
+  | 'requireAuthentication'
+  | 'preventDuplicateVotes'
+>;
+
+const BOOLEAN_SETTING_CONFIGS: Array<{ key: BooleanSettingKey; label: string }> = [
+  { key: 'allowMultipleVotes', label: 'Allow multiple votes' },
+  { key: 'allowAnonymousVotes', label: 'Allow anonymous votes' },
+  { key: 'showResults', label: 'Show results before close' },
+  { key: 'allowComments', label: 'Allow comments' },
+  { key: 'requireAuthentication', label: 'Require authentication' },
+  { key: 'preventDuplicateVotes', label: 'Prevent duplicate votes' },
+];
 
 export function AccessiblePollWizard() {
   const {
@@ -882,14 +902,7 @@ export function AccessiblePollWizard() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {([
-            { key: 'allowMultipleVotes', label: 'Allow multiple votes' },
-            { key: 'allowAnonymousVotes', label: 'Allow anonymous votes' },
-            { key: 'showResults', label: 'Show results before close' },
-            { key: 'allowComments', label: 'Allow comments' },
-            { key: 'requireAuthentication', label: 'Require authentication' },
-            { key: 'preventDuplicateVotes', label: 'Prevent duplicate votes' },
-          ] as const).map(({ key, label }) => {
+          {BOOLEAN_SETTING_CONFIGS.map(({ key, label }) => {
             const inputId = `poll-setting-${key}`;
             return (
               <label
@@ -901,7 +914,7 @@ export function AccessiblePollWizard() {
                 <input
                   id={inputId}
                   type="checkbox"
-                  checked={Boolean((data.settings as Record<string, boolean>)[key])}
+                  checked={Boolean(data.settings[key])}
                   onChange={(event) =>
                     handleBooleanSettingChange(key, event.target.checked)
                   }

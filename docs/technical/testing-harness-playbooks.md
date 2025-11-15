@@ -36,6 +36,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 - **Contract suite fails but Playwright passes**: verify the real handler returns `successResponse`/`errorResponse`. MSW might still serve the legacy shape, masking the regression. Fix the handler first, then regenerate fixtures.
 - **Hanging dev server**: clear `.next`, run `PLAYWRIGHT_NO_SERVER=1 npm run test:e2e -- --grep <spec>` and start `npm run dev` manually. Ensure `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` is set so harness pages expose bridges.
 - Always type fixtures via `ApiSuccessResponse<T>` to get TypeScript failures when payloads drift.
+- **Feeds engagement shape drift**: `FeedEngagement` now requires `bookmarks` in addition to `likes/shares/comments/views`. Update `web/tests/msw/feeds-handlers.ts` (and any ad-hoc fixtures) whenever the type changes so Playwright + contract suites fail fast instead of silently shipping mismatched payloads.
 
 ### Contract Coverage Quick Checks
 - `npm run test:contracts -- --listTests` surfaces every suite wired into CI. Compare against the coverage matrix in `docs/TESTING/api-contract-plan.md` before declaring parity.
@@ -69,6 +70,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 
 - Set `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` when running harness pages locally.
 - If the widget dashboard harness refuses to reflect keyboard updates, verify you are instantiating the store via `createWidgetStore` (post-2025-11-14 change mutates widgets in place). Clearing `.next` can recover from ENOSPC build artefacts when Playwright boots dev servers. When debugging keyboard specs, inspect `window.__announceLogs` in the browser console to confirm `[WidgetRenderer][announce]` messages are firing, and lean on the shared announcement helpers instead of inlining ad-hoc waiters.
+- Install `installScreenReaderCapture(page)` **before** your spec triggers navigation so console + direct `ScreenReaderSupport.announce` calls land in `window.__announceLogs`; the helper now registers its bookkeeping on `window` once and subsequent overwrites will wipe the harness signal.
 - Prefer `findBy*` queries in RTL tests to allow harness hydration.
 - Keep MSW handlers in sync with Supabase schema changes to avoid brittle mocks.
 - When adding or updating dashboard specs, cross-check table summaries against `AnalyticsSummaryTable.tsx` and ensure widget interactions align with the widget checklist linked above. Run baseline specs outside `--debug` mode to avoid harness console spam (Playwright clears the listener by default).

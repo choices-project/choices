@@ -54,7 +54,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     : featureFlagManager.disable(flagId);
 
   if (!updated) {
-    logger.warn({ flagId, enabled }, 'Failed to update feature flag');
+    logger.warn('Failed to update feature flag', { flagId, enabled });
     return errorResponse(`Failed to update feature flag: ${flagId}`, 400);
   }
 

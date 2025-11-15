@@ -11,6 +11,8 @@ type WaitForAnnouncementOptions = {
   timeout?: number;
 };
 
+type WindowWithRecord<T> = typeof window & Record<string, T | undefined>;
+
 const ANNOUNCE_LOG_KEY = '__announceLogs';
 const ANNOUNCE_HOOK_KEY = '__onScreenReaderAnnounce';
 const SR_HOOK_STATUS_KEY = '__srHookStatus';
@@ -33,7 +35,7 @@ export const installScreenReaderCapture = async (page: Page): Promise<void> => {
       const announceLogs: AnnouncementLog[] = [];
       const originalInfo = window.console.info.bind(window.console);
 
-      Object.assign(window as typeof window & { [announceLogKey]?: AnnouncementLog[] }, {
+      Object.assign(window as WindowWithRecord<AnnouncementLog[]>, {
         [announceLogKey]: announceLogs,
       });
 
@@ -68,18 +70,15 @@ export const installScreenReaderCapture = async (page: Page): Promise<void> => {
         originalInfo(...(args as Parameters<typeof console.info>));
       };
 
-      Object.assign(
-        window as typeof window & { [hookStatusKey]?: string },
-        { [hookStatusKey]: 'console-capture' },
-      );
+      Object.assign(window as WindowWithRecord<string>, { [hookStatusKey]: 'console-capture' });
 
-      const existingHook = (window as typeof window & {
-        [hookKey]?: (data: { message: string; priority: 'polite' | 'assertive'; timestamp: number }) => void;
-      })[hookKey];
+      const existingHook = (window as WindowWithRecord<
+        (data: { message: string; priority: 'polite' | 'assertive'; timestamp: number }) => void
+      >)[hookKey];
 
-      (window as typeof window & {
-        [hookKey]?: (data: { message: string; priority: 'polite' | 'assertive'; timestamp: number }) => void;
-      })[hookKey] = (data) => {
+      (window as WindowWithRecord<
+        (data: { message: string; priority: 'polite' | 'assertive'; timestamp: number }) => void
+      >)[hookKey] = (data) => {
         announceLogs.push({
           message: `[WidgetRenderer][announce] ${JSON.stringify({
             key: 'direct',
@@ -111,8 +110,7 @@ export const waitForAnnouncement = async (
 ): Promise<void> => {
   await page.waitForFunction(
     ({ announceLogKey, priority, textFragment }) => {
-      const logs =
-        (window as typeof window & { [announceLogKey]?: AnnouncementLog[] })[announceLogKey] ?? [];
+      const logs = (window as WindowWithRecord<AnnouncementLog[]>)[announceLogKey] ?? [];
 
       const normalizedFragment = textFragment.toLowerCase();
 
@@ -165,9 +163,7 @@ export const waitForAnnouncement = async (
 export const hasAnnouncementCapture = async (page: Page): Promise<boolean> => {
   return page.evaluate(
     ({ announceLogKey }) =>
-      Array.isArray(
-        (window as typeof window & { [announceLogKey]?: unknown[] })[announceLogKey],
-      ),
+      Array.isArray((window as WindowWithRecord<unknown[]>)[announceLogKey]),
     { announceLogKey: ANNOUNCE_LOG_KEY },
   );
 };

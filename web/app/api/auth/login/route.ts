@@ -57,7 +57,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return validationError(missingFields, 'Email and password are required')
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedEmail = (email ?? '').toLowerCase().trim()
+
+    const normalizedPassword = password ?? ''
 
     // Use Supabase Auth for authentication
     const supabaseClient = await getSupabaseServerClient()
@@ -67,7 +69,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Sign in with Supabase Auth
     const { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: normalizedEmail,
-      password
+      password: normalizedPassword
     })
 
     if (signInError || !authData.user) {

@@ -145,9 +145,9 @@ export const useElectionCountdown = (
         divisionId: election.ocd_division_id,
         electionDate: election.election_day,
         daysUntil,
-        representativeNames,
         source: notificationSource,
         notificationType,
+        ...(representativeNames ? { representativeNames } : {}),
       });
 
       deliveredNotificationsRef.current.add(notificationKey);
@@ -184,6 +184,7 @@ export const useElectionCountdown = (
       action: 'election_countdown_view',
       value: 1,
       created_at: new Date().toISOString(),
+      session_id: '',
       event_data: {
         surface: analytics.surface,
         division_ids: divisionIds,

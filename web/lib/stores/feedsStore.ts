@@ -756,17 +756,29 @@ const createFeedsActions = (
           headers: { Accept: 'application/json' },
         });
 
-        if (!response.success) {
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              data?: unknown;
+              categories?: unknown;
+            }
+          | null;
+
+        if (!response.ok || payload?.success === false) {
           throw new Error('Failed to load categories');
         }
 
-        const raw = response.data;
+        const raw = payload?.data ?? payload?.categories ?? payload;
+        const rawObject =
+          raw && typeof raw === 'object'
+            ? (raw as { data?: unknown; categories?: unknown })
+            : undefined;
         const categories = Array.isArray(raw)
           ? raw
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : Array.isArray(raw?.categories)
-              ? raw.categories
+          : Array.isArray(rawObject?.data)
+            ? rawObject?.data
+            : Array.isArray(rawObject?.categories)
+              ? rawObject?.categories
               : [];
 
         if (!Array.isArray(categories)) {
@@ -804,7 +816,9 @@ const createFeedsActions = (
           body: JSON.stringify({ feedId, interaction }),
         });
 
-        if (!response.success) {
+        const payload = (await response.json().catch(() => null)) as { success?: boolean } | null;
+
+        if (!response.ok || payload?.success === false) {
           throw new Error('Failed to save user interaction');
         }
 

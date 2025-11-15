@@ -279,7 +279,7 @@ export default function DemographicsChart({
             total: formatNumber(data.totalUsers),
             optedIn: formatNumber(optedInCount),
             optedOut: formatNumber(data.privacyOptOuts),
-            threshold: data.k_anonymity,
+            threshold: formatNumber(data.k_anonymity),
           })
         : '',
     [data, formatNumber, optedInCount, t],

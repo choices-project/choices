@@ -38,6 +38,7 @@ Establish a lightweight Jest contract suite that hits `web/app/api/**` handlers 
    - ✅ `/api/feeds` success + rate-limit + Supabase failure paths, plus rate limiter invocation and civic-action failure warning coverage.  
    - ✅ `/api/trending` polls/hashtags/topics + POST tracking validation, including hashtag tracker metadata plumbing + failure envelope.  
    - ✅ `/api/polls/trending` pagination metadata (hasMore/totalPages) asserted for constrained `limit`.
+   - MSW + contract fixtures for feeds now include the `bookmarks` metric so they stay aligned with the updated `FeedEngagement` type—update `web/tests/msw/feeds-handlers.ts` whenever engagement fields change.
 8. **Onboarding & Profile**  
    - ✅ `/api/user/complete-onboarding` auth + invalid payload + update failure.  
    - ✅ `/api/profile` onboarding POST validation coverage.
