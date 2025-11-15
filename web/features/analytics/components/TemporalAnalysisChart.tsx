@@ -23,7 +23,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -41,7 +41,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import { useAnalyticsActions, useAnalyticsTemporal } from '@/lib/stores/analyticsStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
 
 type HourlyData = {
   hour: number;
@@ -70,10 +78,12 @@ type TemporalData = {
   avgActivity: number;
 };
 
+type DateRange = '7d' | '30d' | '90d';
+
 type TemporalAnalysisChartProps = {
   className?: string;
   defaultTab?: 'hourly' | 'daily' | 'velocity';
-  defaultDateRange?: '7d' | '30d' | '90d';
+  defaultDateRange?: DateRange;
 };
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -108,26 +118,224 @@ export default function TemporalAnalysisChart({
   defaultTab = 'hourly',
   defaultDateRange = '30d'
 }: TemporalAnalysisChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchTemporal } = useAnalyticsActions();
   const temporal = useAnalyticsTemporal();
   const data = temporal.data;
   const isLoading = temporal.loading;
   const error = temporal.error;
-  const dateRange = (temporal.meta.range as typeof defaultDateRange) ?? defaultDateRange;
+  const dateRange = (temporal.meta.range as DateRange) ?? defaultDateRange;
 
-  const loadTemporal = useCallback(async (range?: typeof defaultDateRange) => {
+  const loadTemporal = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultDateRange;
     await fetchTemporal(targetRange, {
-      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+      fallback: (r) => generateMockData(r as DateRange),
     });
   }, [dateRange, defaultDateRange, fetchTemporal]);
 
+  const rangeLabels: Record<DateRange, string> = useMemo(
+    () => ({
+      '7d': 'Last 7 days',
+      '30d': 'Last 30 days',
+      '90d': 'Last 90 days',
+    }),
+    [],
+  );
+
+  const tabLabels = useMemo(
+    () => ({
+      hourly: 'Hourly heatmap view',
+      daily: 'Day-of-week activity view',
+      velocity: 'Activity velocity trend view',
+    }),
+    [],
+  );
+
+  const handleRangeChange = useCallback(
+    (range: DateRange) => {
+      ScreenReaderSupport.announce(
+        `Date range updated to ${rangeLabels[range] ?? range}.`,
+        'polite',
+      );
+      void loadTemporal(range);
+    },
+    [loadTemporal, rangeLabels],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: typeof activeTab) => {
+      setActiveTab(tab);
+      ScreenReaderSupport.announce(
+        `Viewing ${tabLabels[tab] ?? tab}.`,
+        'polite',
+      );
+    },
+    [tabLabels],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce('Refreshing temporal analysis data.', 'polite');
+    void loadTemporal();
+  }, [loadTemporal]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const hourlyColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'hour', label: t('analytics.tables.columns.hour') },
+      { key: 'activity', label: t('analytics.tables.columns.activity'), isNumeric: true },
+      { key: 'percentageOfPeak', label: t('analytics.tables.columns.percentOfPeak'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const dailyColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'day', label: t('analytics.tables.columns.day') },
+      { key: 'activity', label: t('analytics.tables.columns.activity'), isNumeric: true },
+      { key: 'percentageOfPeak', label: t('analytics.tables.columns.percentOfPeak'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const velocityColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'timestamp', label: t('analytics.tables.columns.timestamp') },
+      { key: 'velocity', label: t('analytics.tables.columns.velocity'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const maxHourlyActivity = useMemo(
+    () => (data ? Math.max(...data.hourly.map((h) => h.activity), 0) : 0),
+    [data],
+  );
+  const maxDailyActivity = useMemo(
+    () => (data ? Math.max(...data.daily.map((d) => d.activity), 0) : 0),
+    [data],
+  );
+
+  const hourlyRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.hourly.map((hour) => ({
+            id: hour.label,
+            cells: {
+              hour: hour.label,
+              activity: formatNumber(hour.activity),
+              percentageOfPeak:
+                maxHourlyActivity > 0
+                  ? formatPercent((hour.activity / maxHourlyActivity) * 100)
+                  : formatPercent(0),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent, maxHourlyActivity],
+  );
+
+  const dailyRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.daily.map((day) => ({
+            id: day.day,
+            cells: {
+              day: day.day,
+              activity: formatNumber(day.activity),
+              percentageOfPeak:
+                maxDailyActivity > 0
+                  ? formatPercent((day.activity / maxDailyActivity) * 100)
+                  : formatPercent(0),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent, maxDailyActivity],
+  );
+
+  const velocityRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.velocity.map((entry, index) => ({
+            id: `${entry.timestamp}-${index}`,
+            cells: {
+              timestamp: entry.timestamp,
+              velocity: formatNumber(entry.velocity),
+            },
+          }))
+        : [],
+    [data, formatNumber],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      data
+        ? t('analytics.temporal.summaryIntro', {
+            peakHour: formatHour(data.peakHour),
+            peakDay: data.peakDay,
+            avgActivity: formatNumber(data.avgActivity),
+          })
+        : '',
+    [data, formatNumber, t],
+  );
+
   useEffect(() => {
     void fetchTemporal(defaultDateRange, {
-      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+      fallback: (r) => generateMockData(r as DateRange),
     });
   }, [defaultDateRange, fetchTemporal]);
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Temporal analysis data may be incomplete. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -205,9 +413,6 @@ export default function TemporalAnalysisChart({
     );
   }
 
-  const maxHourlyActivity = Math.max(...data.hourly.map(h => h.activity), 0);
-  const maxDailyActivity = Math.max(...data.daily.map(d => d.activity), 0);
-
   return (
     <Card className={className}>
       <CardHeader>
@@ -225,8 +430,8 @@ export default function TemporalAnalysisChart({
             <select
               value={dateRange}
               onChange={(e) => {
-                const range = e.target.value as typeof dateRange;
-                void loadTemporal(range);
+                const range = e.target.value as DateRange;
+                handleRangeChange(range);
               }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -234,6 +439,14 @@ export default function TemporalAnalysisChart({
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
             </select>
+            <Button
+              onClick={handleRefresh}
+              size="sm"
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
             <Button
               onClick={handleExport}
               size="sm"
@@ -276,7 +489,7 @@ export default function TemporalAnalysisChart({
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as typeof activeTab)}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="hourly">Hourly Pattern</TabsTrigger>
             <TabsTrigger value="daily">Daily Pattern</TabsTrigger>
@@ -502,6 +715,52 @@ export default function TemporalAnalysisChart({
             Refresh Data
           </Button>
         </div>
+
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          {summaryIntro ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-foreground"
+            >
+              {summaryIntro}
+            </p>
+          ) : null}
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-hourly`}
+            title={t('analytics.temporal.tables.hourly.title')}
+            description={t('analytics.temporal.tables.hourly.description')}
+            columns={hourlyColumns}
+            rows={hourlyRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-daily`}
+            title={t('analytics.temporal.tables.daily.title')}
+            description={t('analytics.temporal.tables.daily.description')}
+            columns={dailyColumns}
+            rows={dailyRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-velocity`}
+            title={t('analytics.temporal.tables.velocity.title')}
+            description={t('analytics.temporal.tables.velocity.description')}
+            columns={velocityColumns}
+            rows={velocityRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );

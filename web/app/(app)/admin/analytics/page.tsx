@@ -24,6 +24,7 @@ import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetD
 import { useUser, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import { useAppActions } from '@/lib/stores/appStore';
 
 type DashboardMode = 'classic' | 'widget';
 
@@ -32,6 +33,21 @@ export default function AnalyticsPage() {
   const isUserLoading = useUserLoading();
   const [mode, setMode] = useState<DashboardMode>('classic');
   const [isLoading, setIsLoading] = useState(true);
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/analytics');
+    setSidebarActiveSection('admin-analytics');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Analytics', href: '/admin/analytics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     const loadPreferences = async () => {

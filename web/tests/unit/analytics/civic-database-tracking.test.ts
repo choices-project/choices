@@ -103,7 +103,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
 
       // Mock trust tier calculation
       jest.spyOn(analyticsService as any, 'calculateTrustTierScore').mockResolvedValue({
-        trust_tier: 'tier_2',
+        trust_tier: 'T2',
         score: 0.75,
         factors: {
           biometric_verified: true,
@@ -150,7 +150,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
 
       // Mock dependencies
       jest.spyOn(analyticsService as any, 'calculateTrustTierScore').mockResolvedValue({
-        trust_tier: 'tier_1',
+        trust_tier: 'T1',
         score: 0.5,
         factors: { biometric_verified: false, phone_verified: true, identity_verified: false }
       });
@@ -162,7 +162,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
         expect.objectContaining({
           stable_user_id: 'new-user',
           user_hash: 'hash_new',
-          current_trust_tier: 'tier_1'
+          current_trust_tier: 'T1'
         })
       );
     });
@@ -170,9 +170,9 @@ describe('AnalyticsService - Civic Database Tracking', () => {
     it('tracks trust tier history when tier changes', async () => {
       const existingEntry = {
         id: 'entry-1',
-        current_trust_tier: 'tier_1',
+        current_trust_tier: 'T1',
         trust_tier_history: [{
-          trust_tier: 'tier_1',
+          trust_tier: 'T1',
           upgrade_date: '2025-01-01T00:00:00Z',
           reason: 'Initial',
           verification_methods: []
@@ -191,7 +191,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
 
       // Mock upgraded trust tier
       jest.spyOn(analyticsService as any, 'calculateTrustTierScore').mockResolvedValue({
-        trust_tier: 'tier_2', // Upgraded!
+        trust_tier: 'T2', // Upgraded!
         score: 0.75,
         factors: { biometric_verified: true, phone_verified: true, identity_verified: true }
       });
@@ -202,10 +202,10 @@ describe('AnalyticsService - Civic Database Tracking', () => {
       // Should have added new history entry
       expect(mockFrom.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          current_trust_tier: 'tier_2',
+          current_trust_tier: 'T2',
           trust_tier_history: expect.arrayContaining([
             expect.objectContaining({
-              trust_tier: 'tier_2',
+              trust_tier: 'T2',
               reason: 'Analytics update'
             })
           ])
@@ -224,7 +224,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
       mockSupabase.from.mockReturnValue(mockFrom);
 
       jest.spyOn(analyticsService as any, 'calculateTrustTierScore').mockResolvedValue({
-        trust_tier: 'tier_3',
+        trust_tier: 'T3',
         score: 0.9,
         factors: {
           biometric_verified: true,
@@ -258,7 +258,7 @@ describe('AnalyticsService - Civic Database Tracking', () => {
       mockSupabase.from.mockReturnValue(mockFrom);
 
       jest.spyOn(analyticsService as any, 'calculateTrustTierScore').mockResolvedValue({
-        trust_tier: 'tier_1',
+        trust_tier: 'T1',
         score: 0.5,
         factors: {}
       });

@@ -37,7 +37,17 @@ export const useRepresentativeCtaAnalytics = (
     daysUntilNextElection,
     loading,
     error,
-  } = useElectionCountdown(divisionIds, { autoFetch });
+  } = useElectionCountdown(divisionIds, {
+    autoFetch,
+    analytics: {
+      surface: source,
+      metadata: representativeId
+        ? {
+            representativeId,
+          }
+        : undefined,
+    },
+  });
 
   const baseEventData = useMemo<CivicsRepresentativeEventBase>(
     () => ({

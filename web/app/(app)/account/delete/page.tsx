@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+import { useAppActions } from '@/lib/stores/appStore';
 import { useUser, useUserLoading, useUserActions } from '@/lib/stores/userStore';
 import { devLog } from '@/lib/utils/logger';
 
@@ -51,6 +52,7 @@ type DeletionStep = {
 
 export default function AccountDeletionPage() {
   const router = useRouter()
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions()
   const user = useUser()
   const isUserLoading = useUserLoading()
   const { signOut } = useUserActions()
@@ -115,6 +117,21 @@ export default function AccountDeletionPage() {
       setIsLoading(false)
     }
   }, [user])
+
+  useEffect(() => {
+    setCurrentRoute('/account/delete');
+    setSidebarActiveSection('account');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Account', href: '/account' },
+      { label: 'Delete Account', href: '/account/delete' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   // Load user data on component mount
   useEffect(() => {

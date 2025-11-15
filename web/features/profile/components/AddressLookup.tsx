@@ -74,11 +74,12 @@ export function AddressLookup({
 
       const data = await response.json();
 
-      if (data.ok && data.jurisdiction) {
+      if (data?.success && (data?.data?.jurisdiction || data?.jurisdiction)) {
+        const jurisdiction = data?.data?.jurisdiction ?? data?.jurisdiction;
         const districtData: District = {
-          state: data.jurisdiction.state,
-          district: data.jurisdiction.district,
-          county: data.jurisdiction.county,
+          state: jurisdiction.state,
+          district: jurisdiction.district,
+          county: jurisdiction.county,
         };
 
         setDistrict(districtData);

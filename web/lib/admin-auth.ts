@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 
 import logger from '@/lib/utils/logger';
+import { authError } from '@/lib/api';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function isAdmin(): Promise<boolean> {
@@ -74,6 +75,6 @@ export async function requireAdminOr401(): Promise<NextResponse | null> {
     await requireAdminUser();
     return null;
   } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return authError('Admin authentication required');
   }
 }

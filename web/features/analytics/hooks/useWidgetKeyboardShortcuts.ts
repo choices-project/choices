@@ -13,7 +13,7 @@
 
 import { useEffect } from 'react';
 
-import { useWidgetStore } from '../stores/widgetStore';
+import { useWidgetStoreScoped } from '@/lib/stores/widgetStore';
 
 // ============================================================================
 // KEYBOARD SHORTCUTS HOOK
@@ -24,7 +24,10 @@ export function useWidgetKeyboardShortcuts(
   onSave?: () => void,
   onCancel?: () => void
 ) {
-  const { undo, redo, canUndo, canRedo } = useWidgetStore();
+  const undo = useWidgetStoreScoped((state) => state.undo);
+  const redo = useWidgetStoreScoped((state) => state.redo);
+  const canUndo = useWidgetStoreScoped((state) => state.canUndo);
+  const canRedo = useWidgetStoreScoped((state) => state.canRedo);
 
   useEffect(() => {
     if (!isEditing) return;

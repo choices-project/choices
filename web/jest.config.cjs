@@ -17,6 +17,8 @@ module.exports = {
       testMatch: [
         '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.spec.{js,jsx,ts,tsx}',
       ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
@@ -100,6 +102,26 @@ module.exports = {
         '!**/tests.disabled/**',
         '!**/scripts.disabled/**',
         '!**/archive/**'
+      ],
+    }
+    ,
+    {
+      displayName: 'contracts',
+      testEnvironment: 'node',
+      testTimeout: 20000,
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      testMatch: [
+        '<rootDir>/tests/contracts/**/*.test.{ts,tsx,js,jsx}',
+      ],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+      },
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/\\.next/',
+        '/out/',
+        '/build/',
+        '/dist/',
       ],
     }
   ],

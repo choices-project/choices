@@ -9,11 +9,11 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyRegistrationResponse } from '@/features/auth/lib/webauthn/native/server';
-import { withErrorHandling, authError, forbiddenError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
+import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -48,17 +48,17 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .limit(1);
 
     if (!chalRows?.length) {
-      return NextResponse.json({ error: 'No challenge found' }, { status: 400 });
+      return validationError({ challenge: 'No challenge found' });
     }
 
     const chal = chalRows[0];
     if (!chal) {
-      return NextResponse.json({ error: 'Challenge not found' }, { status: 400 });
+      return validationError({ challenge: 'Challenge not found' });
     }
 
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
-      return NextResponse.json({ error: 'Challenge expired' }, { status: 400 });
+      return validationError({ challenge: 'Challenge expired' });
     }
 
     // Get current request origin
@@ -72,7 +72,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         allowedOrigins,
         userId: user.id
       });
-      return NextResponse.json({ error: 'Unauthorized origin' }, { status: 403 });
+      return forbiddenError('Unauthorized origin');
     }
 
     // Verify registration using native implementation
@@ -84,10 +84,14 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     );
 
     if (!verificationResult.verified) {
-      return NextResponse.json({ 
-        error: 'Verification failed', 
-        details: verificationResult.error 
-      }, { status: 400 });
+      const errorMessage = verificationResult.error 
+        ? typeof verificationResult.error === 'string' 
+          ? verificationResult.error 
+          : String(verificationResult.error)
+        : 'Verification failed';
+      return validationError({ 
+        verification: errorMessage
+      });
     }
 
     // Use credential data from verification result
@@ -112,7 +116,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     if (credErr) {
       logger.error('Failed to store credential', { error: credErr });
-      return NextResponse.json({ error: 'Failed to store credential' }, { status: 500 });
+      return errorResponse('Failed to store credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_STORE_FAILED');
     }
 
     // Mark challenge as used
@@ -123,14 +127,35 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         .eq('id', chal.id);
     }
 
+    // Upgrade trust tier to T2 (proof-of-personhood) if applicable
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('trust_tier')
+      .eq('user_id', user.id)
+      .single();
+
+    const currentTier = normalizeTrustTier(profile?.trust_tier ?? 'T0');
+    const tierRank: Record<string, number> = { T0: 0, T1: 1, T2: 2, T3: 3 };
+    const targetRank = tierRank['T2'] ?? 2;
+    if (profile && tierRank[currentTier] !== undefined && tierRank[currentTier] < targetRank) {
+      await supabase
+        .from('user_profiles')
+        .update({
+          trust_tier: 'T2',
+          trust_tier_upgrade_date: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+    }
+
     logger.info('WebAuthn registration verified (native)', { userId: user.id });
 
-    return NextResponse.json({
+    return successResponse({
       verified: true,
       credential: {
         id: credentialId,
         publicKey: publicKeyBase64
-      }
+      },
+      trustTier: 'T2'
     });
 });
 

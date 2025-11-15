@@ -726,32 +726,33 @@ export function AccessiblePollWizard() {
       <p id="poll-category-help" className="text-xs text-gray-500">
         Pick the option that best describes your topic. Only one category can be active at a time.
       </p>
-      <div className="grid gap-3 sm:grid-cols-2" role="list" aria-label="Poll categories" aria-describedby="poll-category-help">
+      <ul className="grid gap-3 sm:grid-cols-2" aria-describedby="poll-category-help">
         {categories.map((category) => {
           const isSelected = data.category === category.id;
           return (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => handleCategorySelect(category.id)}
-              className={`rounded-lg border p-4 text-left transition ${
-                isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-              aria-pressed={isSelected}
-              aria-label={`Category ${category.name}`}
-              aria-describedby={`category-${category.id}-description`}
-            >
-              <div className="text-2xl" aria-hidden="true">
-                {category.icon}
-              </div>
-              <div className="mt-2 font-medium text-gray-900">{category.name}</div>
-              <p id={`category-${category.id}-description`} className="text-sm text-gray-600">
-                {category.description}
-              </p>
-            </button>
+            <li key={category.id}>
+              <button
+                type="button"
+                onClick={() => handleCategorySelect(category.id)}
+                className={`w-full rounded-lg border p-4 text-left transition ${
+                  isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                }`}
+                aria-pressed={isSelected}
+                aria-label={`Category ${category.name}`}
+                aria-describedby={`category-${category.id}-description`}
+              >
+                <div className="text-2xl" aria-hidden="true">
+                  {category.icon}
+                </div>
+                <div className="mt-2 font-medium text-gray-900">{category.name}</div>
+                <p id={`category-${category.id}-description`} className="text-sm text-gray-600">
+                  {category.description}
+                </p>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
       <div aria-labelledby="poll-tags-label">
         <div className="mb-2 flex items-center justify-between">
@@ -881,60 +882,34 @@ export function AccessiblePollWizard() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow multiple votes</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowMultipleVotes}
-              onChange={(event) => handleBooleanSettingChange('allowMultipleVotes', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow anonymous votes</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowAnonymousVotes}
-              onChange={(event) => handleBooleanSettingChange('allowAnonymousVotes', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Show results before close</span>
-            <input
-              type="checkbox"
-              checked={data.settings.showResults}
-              onChange={(event) => handleBooleanSettingChange('showResults', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow comments</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowComments}
-              onChange={(event) => handleBooleanSettingChange('allowComments', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Require authentication</span>
-            <input
-              type="checkbox"
-              checked={data.settings.requireAuthentication}
-              onChange={(event) => handleBooleanSettingChange('requireAuthentication', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Enable notifications</span>
-            <input
-              type="checkbox"
-              checked={data.settings.enableNotifications}
-              onChange={(event) => handleBooleanSettingChange('enableNotifications', event.target.checked)}
-              className="rounded"
-            />
-          </label>
+          {([
+            { key: 'allowMultipleVotes', label: 'Allow multiple votes' },
+            { key: 'allowAnonymousVotes', label: 'Allow anonymous votes' },
+            { key: 'showResults', label: 'Show results before close' },
+            { key: 'allowComments', label: 'Allow comments' },
+            { key: 'requireAuthentication', label: 'Require authentication' },
+            { key: 'preventDuplicateVotes', label: 'Prevent duplicate votes' },
+          ] as const).map(({ key, label }) => {
+            const inputId = `poll-setting-${key}`;
+            return (
+              <label
+                key={key}
+                htmlFor={inputId}
+                className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm"
+              >
+                <span>{label}</span>
+                <input
+                  id={inputId}
+                  type="checkbox"
+                  checked={Boolean((data.settings as Record<string, boolean>)[key])}
+                  onChange={(event) =>
+                    handleBooleanSettingChange(key, event.target.checked)
+                  }
+                  className="rounded"
+                />
+              </label>
+            );
+          })}
         </div>
       </section>
 
@@ -1047,6 +1022,7 @@ export function AccessiblePollWizard() {
               <div
                 className="h-full rounded-full bg-blue-500 transition-all"
                 role="progressbar"
+                aria-labelledby="poll-progress-heading"
                 aria-valuenow={progressPercent}
                 aria-valuemin={0}
                 aria-valuemax={100}

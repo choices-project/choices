@@ -1,15 +1,38 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError, notFoundError, rateLimitError } from '@/lib/api';
 import { 
   sendCandidateJourneyEmail,
   type EmailType 
 } from '@/lib/services/email/candidate-journey-emails'
 import { withOptional } from '@/lib/util/objects'
+import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-export const POST = withErrorHandling(async (request: NextRequest) => {
+const journeyEmailLimiter = createRateLimiter({
+  interval: 60 * 1000, // 1 minute window
+  uniqueTokenPerInterval: 5,
+  maxBurst: 2
+});
+
+type JourneyEmailOptions = {
+  skipRateLimit?: boolean;
+};
+
+async function handleJourneyEmailRequest(
+  request: Request,
+  options?: JourneyEmailOptions
+) {
+  if (!options?.skipRateLimit) {
+    const rateLimitResult = await rateLimitMiddleware(request, journeyEmailLimiter);
+    if (!rateLimitResult.allowed) {
+      return rateLimitError(
+        'Rate limit exceeded for candidate journey emails',
+        rateLimitResult.retryAfter ?? undefined
+      );
+    }
+  }
+
   const supabase = await getSupabaseServerClient()
   if (!supabase) {
     return errorResponse('Database connection not available', 500);
@@ -46,30 +69,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .eq('id', platformId)
       .single()
 
-    if (platformError || !platform) {
-      return NextResponse.json(
-        { error: 'Platform not found' },
-        { status: 404 }
-      )
-    }
+  if (platformError || !platform) {
+    return notFoundError('Platform not found');
+  }
 
     // Verify ownership (unless cron job)
-    if (!skipAuth && (!authUser || platform.user_id !== authUser.id)) {
-      return NextResponse.json(
-        { error: 'Not authorized' },
-        { status: 403 }
-      )
-    }
+  if (!skipAuth && (!authUser || platform.user_id !== authUser.id)) {
+    return forbiddenError('Not authorized');
+  }
 
     // Get user email
     const userProfiles = platform.user_profiles as { email?: string } | null | undefined;
     const email = to ?? userProfiles?.email;
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email address not found' },
-        { status: 400 }
-      )
-    }
+  if (!email) {
+    return validationError({ email: 'Email address not found' }, 'Email address not found');
+  }
 
     // Prepare email data
     const baseEmailData = {
@@ -95,12 +109,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Send email
     const result = await sendCandidateJourneyEmail(type as EmailType, emailData as typeof baseEmailData & { filingDeadline?: Date; daysUntilDeadline?: number })
 
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error ?? 'Failed to send email' },
-        { status: 500 }
-      )
-    }
+  if (!result.success) {
+    return errorResponse(result.error ?? 'Failed to send email', 500);
+  }
 
     // Update last reminder sent timestamp
     await supabase
@@ -112,6 +123,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     message: 'Email sent successfully',
     emailType: type
   }, undefined, 201);
+}
+
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  return handleJourneyEmailRequest(request);
 });
 
 /**
@@ -127,10 +142,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return validationError({ platformId: 'Platform ID required' });
   }
 
-  const mockRequest = {
-    json: async () => ({ platformId, type, skipAuth: true })
-  } as NextRequest
+  const mockRequest = new Request(request.url, {
+    method: 'POST',
+    headers: new Headers({
+      'content-type': 'application/json',
+      'x-forwarded-for': request.headers.get('x-forwarded-for') ?? '',
+      'user-agent': request.headers.get('user-agent') ?? ''
+    }),
+    body: JSON.stringify({ platformId, type, skipAuth: true })
+  });
 
-  return await POST(mockRequest)
+  return handleJourneyEmailRequest(mockRequest, { skipRateLimit: true });
 });
 

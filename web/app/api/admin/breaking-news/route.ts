@@ -1,8 +1,9 @@
 import type { NextRequest} from 'next/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, authError, validationError } from '@/lib/api';
 import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
+import { createAuditLogService } from '@/lib/services/audit-log-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Supabase client not available', 500);
   }
 
-  const body = await request.json();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
+
+  const body = await request.json().catch(() => null);
   const {
     headline,
     summary,
@@ -72,7 +82,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   } = body;
 
   if (!headline || !summary || !sourceName) {
-    return errorResponse('Headline, summary, and source name are required', 400);
+    return validationError({
+      headline: headline ? '' : 'Headline is required',
+      summary: summary ? '' : 'Summary is required',
+      sourceName: sourceName ? '' : 'Source name is required'
+    });
+  }
+
+  if (!Array.isArray(category) || !Array.isArray(entities)) {
+    return validationError({
+      category: Array.isArray(category) ? '' : 'Category must be an array',
+      entities: Array.isArray(entities) ? '' : 'Entities must be an array'
+    }, 'Invalid payload shape');
   }
 
   const service = new RealTimeNewsService();
@@ -93,6 +114,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!story) {
     return errorResponse('Failed to create breaking news story', 500);
   }
+
+  const auditLog = createAuditLogService(supabaseClient);
+  await auditLog.logAdminAction(user.id, 'breaking_news:create', '/api/admin/breaking-news', {
+    ipAddress: request.headers.get('x-forwarded-for') || undefined,
+    userAgent: request.headers.get('user-agent') || undefined,
+    metadata: {
+      headline,
+      urgency,
+      categories: category,
+      storyId: story.id ?? null
+    }
+  });
 
   return successResponse({
     story,

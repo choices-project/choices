@@ -83,6 +83,314 @@
           "yesterday": "Ayer"
         }
       }
+    },
+    "provider": {
+      "notifications": {
+        "error": {
+          "title": "Error al actualizar el feed"
+        }
+      },
+      "errors": {
+        "loadFeeds": {
+          "short": "No se pudieron cargar los feeds",
+          "message": "No pudimos cargar tus feeds. Inténtalo de nuevo.",
+          "withReason": "No se pudieron cargar los feeds: {error}"
+        },
+        "likeFeed": {
+          "short": "No se pudo registrar el me gusta",
+          "message": "No pudimos actualizar tu reacción. Inténtalo de nuevo."
+        },
+        "bookmarkFeed": {
+          "short": "No se pudo guardar en marcadores",
+          "message": "No pudimos actualizar tus marcadores. Inténtalo de nuevo."
+        },
+        "refreshFeeds": {
+          "short": "No se pudieron actualizar los feeds",
+          "message": "No pudimos actualizar tus feeds. Inténtalo de nuevo.",
+          "withReason": "No se pudieron actualizar los feeds: {error}"
+        },
+        "loadMoreFeeds": {
+          "short": "No se pudieron cargar más feeds",
+          "message": "No pudimos cargar más elementos. Inténtalo de nuevo.",
+          "withReason": "No se pudieron cargar más feeds: {error}"
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "personal": {
+      "signIn": {
+        "title": "Inicia sesión en tu cuenta",
+        "description": "Debes iniciar sesión para acceder a tu panel personal.",
+        "button": "Ir a Iniciar sesión"
+      },
+      "harness": {
+        "signIn": {
+          "title": "Inicia sesión en tu cuenta",
+          "description": "Debes iniciar sesión para acceder a tu panel personal.",
+          "button": "Ir a Iniciar sesión"
+        },
+        "header": {
+          "titleWithName": "Bienvenido de nuevo, {name}",
+          "titleFallback": "Tu panel",
+          "subtitle": "Modo harness: renderizado simplificado del panel para Playwright.",
+          "trendingButton": "Ver feed en tendencia",
+          "badge": "Harness"
+        },
+        "analytics": {
+          "title": "Analítica personal (Harness)",
+          "description": "Instantánea estática de analítica para verificación en harness."
+        },
+        "representatives": {
+          "title": "Tus representantes (Harness)",
+          "description": "Marcador simplificado que solo se muestra cuando la preferencia está activada.",
+          "empty": "Modo harness: detalles de representantes omitidos."
+        },
+        "settings": {
+          "title": "Configuración del panel",
+          "description": "Activa o desactiva módulos del panel.",
+          "fields": {
+            "quickActions": "Mostrar acciones rápidas",
+            "electedOfficials": "Mostrar representantes",
+            "recentActivity": "Mostrar actividad reciente",
+            "engagementScore": "Mostrar nivel de participación"
+          }
+        }
+      },
+      "header": {
+        "titleWithName": "Bienvenido de nuevo, {name}",
+        "titleFallback": "Tu panel",
+        "subtitleWithBio": "Aquí tienes un resumen de tu actividad cívica.",
+        "subtitleDefault": "Tu centro personal de participación cívica",
+        "refreshing": "Actualizando…",
+        "engagementBadge": "{score} nivel de participación"
+      },
+      "common": {
+        "refresh": "Actualizar"
+      },
+      "errors": {
+        "title": "Error al cargar el panel",
+        "generic": "Ocurrió un problema al cargar tu panel.",
+        "retry": "Intentar de nuevo"
+      },
+      "tabs": {
+        "overview": "Resumen",
+        "analytics": "Analítica"
+      },
+      "metrics": {
+        "totalVotes": "Votos totales",
+        "pollsCreated": "Encuestas creadas",
+        "activePolls": "Encuestas activas",
+        "pollVotes": "Votos en tus encuestas"
+      },
+      "quickActions": {
+        "title": "Acciones rápidas",
+        "description": "Tareas y accesos directos frecuentes",
+        "createPoll": {
+          "label": "Crear encuesta",
+          "description": "Inicia una encuesta nueva"
+        },
+        "updateProfile": {
+          "label": "Actualizar perfil",
+          "description": "Edita tu perfil"
+        },
+        "privacy": {
+          "label": "Privacidad y datos",
+          "description": "Administra tu privacidad"
+        },
+        "location": {
+          "label": "Configurar ubicación",
+          "description": "Actualiza tu ubicación"
+        },
+        "export": {
+          "label": "Exportar datos",
+          "description": "Descarga tus datos"
+        }
+      },
+      "engagement": {
+        "title": "Nivel de participación",
+        "description": "Tu participación cívica general",
+        "participationLevel": "Nivel de participación",
+        "participationValue": "{score}/100",
+        "context": "Según tu actividad de voto, creación de encuestas y participación"
+      },
+      "trending": {
+        "title": "Temas en tendencia",
+        "description": "Lo que la comunidad comenta en este momento",
+        "error": "{message}",
+        "empty": "Aún no hay temas en tendencia. Vuelve más tarde o explora el feed para descubrir nuevas conversaciones.",
+        "viewFeed": "Ver feed en tendencia"
+      },
+      "representatives": {
+        "title": "Tus representantes",
+        "description": "Actualizaciones de los funcionarios asociados a tu dirección",
+        "addAddress": "Agrega tu dirección para ver las elecciones de tu distrito.",
+        "countdown": {
+          "title": "Próximas elecciones",
+          "description": "Fechas clave vinculadas a tus divisiones guardadas.",
+          "ariaLabel": "Próximas elecciones para tus representantes"
+        },
+        "viewAll": "Ver todos los representantes",
+        "empty": "No se encontraron representantes para tu dirección guardada.",
+        "updateAddress": "Actualiza tu dirección"
+      },
+      "personalized": {
+        "title": "Contenido personalizado",
+        "description": "Contenido adaptado a tu ubicación y demografía",
+        "message": "¡El filtrado demográfico está activo! Personalizamos el contenido según tu ubicación e intereses.",
+        "updatePreferences": "Actualiza tus preferencias"
+      },
+      "settings": {
+        "title": "Configuración del panel",
+        "description": "Personaliza lo que quieres ver en tu panel",
+        "fields": {
+          "quickActions": {
+            "label": "Mostrar acciones rápidas",
+            "help": "Muestra accesos directos"
+          },
+          "electedOfficials": {
+            "label": "Mostrar representantes",
+            "help": "Muestra a tus representantes"
+          },
+          "recentActivity": {
+            "label": "Mostrar actividad reciente",
+            "help": "Muestra tus acciones recientes"
+          },
+          "engagementScore": {
+            "label": "Mostrar nivel de participación",
+            "help": "Muestra tu nivel de participación"
+          }
+        }
+      },
+      "analytics": {
+        "title": "Analítica personal",
+        "description": "Tus métricas y actividad cívica",
+        "details": {
+          "title": "Analítica detallada",
+          "description": "Análisis e información completos",
+          "votesOnPolls": "Votos en tus encuestas"
+        }
+      },
+      "recentActivity": {
+        "title": "Actividad reciente",
+        "description": "Tus acciones cívicas más recientes",
+        "items": {
+          "vote": "Votaste en una encuesta",
+          "poll": "Creaste: {title}"
+        },
+        "pollSummary": "{votes} votos • {date}"
+      },
+      "polls": {
+        "untitled": "Encuesta sin título"
+      }
+    }
+  },
+  "civics": {
+    "lure": {
+      "header": {
+        "title": "¿Listo para votar sobre algo que realmente importa? 🗳️",
+        "subtitle": "Mientras votas por Drag Race, descubre quién se postula en tu zona y quién realmente te representa."
+      },
+      "location": {
+        "label": "Tu zona:",
+        "updating": "Actualizando…"
+      },
+      "stats": {
+        "candidates": {
+          "title": "Candidaturas locales",
+          "caption": "{formattedCount} {count, plural, one {representante conectado} other {representantes conectados}}"
+        },
+        "activities": {
+          "title": "Temas activos",
+          "caption": "Actualizaciones cívicas registradas para tu distrito"
+        },
+        "following": {
+          "title": "Tu voz",
+          "caption": "Representantes que sigues"
+        },
+        "election": {
+          "title": "Próxima elección",
+          "addAddress": "Agrega tu dirección para ver las elecciones de tu distrito.",
+          "badge": {
+            "empty": "No hay elecciones registradas para tus divisiones.",
+            "loading": "Comprobando…",
+            "error": "Datos de elecciones no disponibles"
+          },
+          "future": "La próxima elección es en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "electionCard": {
+        "title": "Calendario electoral",
+        "description": "Fechas clave en tus divisiones.",
+        "ariaLabel": "Próximas elecciones para tus divisiones"
+      },
+      "candidates": {
+        "section": {
+          "title": "Tus candidaturas locales",
+          "subtitle": "Conoce a quienes te representan ahora mismo. La calidad de los datos y la verificación se actualizan en tiempo real."
+        },
+        "loading": "Cargando a tus representantes locales…",
+        "empty": "Seguimos sincronizando los datos de tus representantes locales. Intenta actualizar en un minuto.",
+        "challengerBadge": "Aspirante",
+        "dataQualityBadge": "{value}% calidad de datos",
+        "verification": {
+          "verified": "Registro verificado",
+          "pending": "En espera de verificación",
+          "failed": "Problemas de verificación"
+        },
+        "keyIssues": "Temas clave:",
+        "keyIssuesFallback": "En espera de actualizaciones",
+        "level": {
+          "unknown": "Distrito"
+        },
+        "officeFallback": "Distrito {level}",
+        "partyIndependent": "Independiente",
+        "activity": {
+          "lastUpdate": "Última actualización el {date}",
+          "none": "No hay actividad cívica reciente registrada"
+        }
+      },
+      "engagement": {
+        "didYouKnow": {
+          "title": "¿Sabías que…?",
+          "fallback": "Destacamos a los representantes más receptivos y transparentes de tu zona en cuanto se completa la verificación.",
+          "highlight": "{name} tiene una de las mejores calificaciones de calidad de datos en tu zona ({score}%). Los registros verificados significan actualizaciones confiables."
+        },
+        "dataQualityWatch": {
+          "title": "Alerta de calidad de datos",
+          "fallback": "Todos los registros de tus representantes locales se ven sólidos. Te avisaremos si algo requiere tu atención.",
+          "highlight": "{name} aún tiene verificación limitada ({score}% de calidad de datos). Entra para solicitar más información o señalar problemas."
+        }
+      },
+      "cta": {
+        "button": "Ver todas mis candidaturas locales",
+        "caption": "Haz preguntas, descubre quién financia a quién y haz oír tu voz"
+      },
+      "social": {
+        "voters": "Más de 10.000 votantes",
+        "privacy": "100% privado",
+        "access": "Acceso equitativo"
+      }
+    },
+    "engagement": {
+      "aria": {
+        "like": "Marcar me gusta en este contenido",
+        "unlike": "Quitar me gusta de este contenido",
+        "comment": "Comentar este contenido",
+        "share": "Compartir este contenido",
+        "addBookmark": "Agregar este contenido a marcadores",
+        "removeBookmark": "Quitar este contenido de marcadores"
+      },
+      "analytics": {
+        "views": "Vistas",
+        "engagement": "Interacción",
+        "notAvailable": "No disponible"
+      },
+      "trending": {
+        "up": "Tendencia al alza {change}%",
+        "down": "Tendencia a la baja {change}%"
+      },
+      "lastUpdated": "Actualizado {time}"
     }
   },
   "common": {
@@ -97,6 +405,217 @@
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
     "register": "Crear cuenta"
+  },
+  "analytics": {
+    "heading": {
+      "title": "Tablero de análisis",
+      "mobile": "Monitoreo e información",
+      "desktop": "Monitoreo del sistema • Inteligencia empresarial • Información de usuarios",
+      "lastUpdatedFull": "Actualizado: {time}",
+      "lastUpdatedShort": "• {time}"
+    },
+    "buttons": {
+      "showDetails": "Mostrar detalles",
+      "hideDetails": "Ocultar detalles",
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…"
+    },
+    "status": {
+      "loading": "Cargando análisis avanzados…",
+      "errorLabel": "Error",
+      "retry": "Reintentar",
+      "noData": "No hay datos de análisis disponibles.",
+      "loadData": "Cargar datos"
+    },
+    "badges": {
+      "adminAccess": "Acceso de administrador",
+      "newSchema": "Nuevo esquema habilitado",
+      "realTime": "Actualizaciones en tiempo real",
+      "enhancedInsights": "Información mejorada"
+    },
+    "tabs": {
+      "overview": "Resumen",
+      "overviewShort": "Resumen",
+      "trends": "Tendencias",
+      "heatmaps": "Mapas de calor",
+      "heatmapsShort": "Mapas de calor",
+      "demographics": "Demografía",
+      "demographicsShort": "Demografía",
+      "temporal": "Temporal",
+      "temporalShort": "Temporal",
+      "trust": "Niveles de confianza"
+    },
+    "live": {
+      "refreshing": "Actualizando datos de análisis",
+      "refreshed": "Análisis actualizados a las {time}"
+    },
+    "a11y": {
+      "tabChanged": "Contenido de la pestaña {tab} enfocado"
+    },
+    "tables": {
+      "heading": "Resumen accesible de datos",
+      "description": "Utiliza las tablas para revisar los datos de las gráficas con tecnología de asistencia.",
+      "columns": {
+        "tier": "Nivel",
+        "count": "Cantidad",
+        "percentage": "Porcentaje",
+        "ageGroup": "Grupo de edad",
+        "district": "Distrito",
+        "education": "Nivel educativo",
+        "date": "Fecha",
+        "votes": "Votos",
+        "participation": "Participación",
+        "velocity": "Velocidad",
+        "hour": "Hora",
+        "activity": "Actividad",
+        "percentOfPeak": "Porcentaje del pico",
+        "day": "Día",
+        "timestamp": "Hora",
+        "poll": "Encuesta",
+        "category": "Categoría",
+        "engagementScore": "Puntuación de participación",
+        "uniqueVoters": "Votantes únicos",
+        "status": "Estado",
+        "users": "Usuarios",
+        "participationRate": "Tasa de participación",
+        "completionRate": "Tasa de finalización",
+        "avgEngagement": "Prom. participación",
+        "botLikelihood": "Probabilidad de bot",
+        "avgPollsVoted": "Prom. encuestas votadas",
+        "avgTimeOnSite": "Prom. tiempo en el sitio (min)"
+      },
+      "statuses": {
+        "active": "Activa",
+        "closed": "Cerrada"
+      }
+    },
+    "demographics": {
+      "summaryIntro": "Mostrando {total} usuarios totales con {optedIn} con consentimiento y {optedOut} sin consentimiento. Las categorías ocultan grupos menores a {threshold} usuarios.",
+      "tables": {
+        "trust": {
+          "title": "Distribución por nivel de confianza",
+          "description": "Cantidad y porcentaje de usuarios por nivel de confianza."
+        },
+        "age": {
+          "title": "Distribución por edad",
+          "description": "Desglose por grupo de edad de los usuarios con consentimiento."
+        },
+        "district": {
+          "title": "Distritos principales",
+          "description": "Distritos principales por participación (máximo 10)."
+        },
+        "education": {
+          "title": "Niveles educativos",
+          "description": "Distribución del nivel educativo de los usuarios con consentimiento."
+        }
+      }
+    },
+    "trends": {
+      "summaryIntro": "Se registraron {totalVotes} votos en total. La participación promedio es {avgParticipation} con una velocidad promedio de {avgVelocity}.",
+      "table": {
+        "title": "Datos de tendencia por día",
+        "description": "Totales diarios de votos, participación y velocidad."
+      }
+    },
+    "temporal": {
+      "summaryIntro": "La mayor actividad ocurre a las {peakHour} del {peakDay}. La actividad promedio por franja horaria es {avgActivity}.",
+      "tables": {
+        "hourly": {
+          "title": "Actividad por hora",
+          "description": "Cantidad de actividad y porcentaje relativo a la hora pico."
+        },
+        "daily": {
+          "title": "Actividad por día",
+          "description": "Totales diarios y porcentaje relativo al día pico."
+        },
+        "velocity": {
+          "title": "Velocidad de participación",
+          "description": "Mediciones recientes de velocidad en actividades por hora."
+        }
+      }
+    },
+    "heatmap": {
+      "summaryIntro": "{total} votos totales en {active} encuestas activas. {topPoll} lidera con una puntuación de {engagement}.",
+      "summaryFallback": "{total} votos totales en {active} encuestas activas.",
+      "table": {
+        "title": "Detalles de participación por encuesta",
+        "description": "Encuestas ordenadas por puntuación de participación con métricas adicionales."
+      },
+      "topPolls": {
+        "votesLabel": "votos"
+      }
+    },
+    "trust": {
+      "summaryIntro": "{totalUsers} usuarios en total. {strongestTier} muestra la mayor participación ({engagement}) con una tasa de {participation}.",
+      "summaryFallback": "{totalUsers} usuarios en total entre todos los niveles de confianza.",
+      "table": {
+        "title": "Métricas por nivel de confianza",
+        "description": "Principales métricas por nivel de confianza, incluyendo participación, finalización y probabilidad de bots."
+      },
+      "usersSuffix": "usuarios",
+      "usersLabel": "Usuarios"
+    },
+    "widgets": {
+      "moveButton": "Mover",
+      "resizeButton": "Redimensionar",
+      "addWidget": "Agregar widget",
+      "defaultInstructions": "Pon el foco en este widget y usa los botones Mover o Redimensionar para ajustarlo con el teclado.",
+      "moveModeOn": "Modo de movimiento activado para {title}. Usa las flechas para cambiar de posición. Pulsa Enter para confirmar o Escape para cancelar.",
+      "moveModeOff": "Modo de movimiento desactivado.",
+      "moveModeInstructions": "Modo de movimiento activo. Usa las flechas para reposicionar el widget. Pulsa Enter para confirmar o Escape para cancelar.",
+      "resizeModeOn": "Modo de redimensionado activado para {title}. Usa las flechas para cambiar el tamaño. Pulsa Enter para confirmar o Escape para cancelar.",
+      "resizeModeOff": "Modo de redimensionado desactivado.",
+      "resizeModeInstructions": "Modo de redimensionado activo. Usa las flechas para cambiar el tamaño del widget. Pulsa Enter para confirmar o Escape para cancelar.",
+      "positionUpdate": "Widget movido a la columna {column}, fila {row}.",
+      "sizeUpdate": "El widget ahora mide {width} columnas por {height} filas.",
+      "editModeOn": "Modo de edición activado. Usa los botones Mover o Redimensionar en cada widget para ajustar el diseño con el teclado.",
+      "editModeOff": "Modo de edición desactivado.",
+      "overlayMoveHint": "Enfoca un widget y presiona M o usa el botón Mover para reposicionarlo con las flechas.",
+      "overlayResizeHint": "Presiona R o usa el botón Redimensionar para ajustar ancho y alto con las flechas.",
+      "shortcutDialog": {
+        "button": "Ayuda de teclado",
+        "title": "Atajos de teclado",
+        "intro": "Usa estos comandos para editar la cuadrícula de widgets rápidamente. Todos los atajos funcionan con modificadores de Mac (⌘) o Windows/Linux (Ctrl), a menos que se indique lo contrario.",
+        "items": {
+          "toggleEdit": {
+            "shortcut": "⌘/Ctrl + E",
+            "description": "Activa o desactiva el modo edición."
+          },
+          "toggleMove": {
+            "shortcut": "M (con el foco en un widget)",
+            "description": "Activa el modo mover para recolocar el widget seleccionado."
+          },
+          "toggleResize": {
+            "shortcut": "R (con el foco en un widget)",
+            "description": "Activa el modo redimensionar para ajustar el widget seleccionado."
+          },
+          "arrowMove": {
+            "shortcut": "Flechas (modo mover)",
+            "description": "Recoloca el widget. Mantén Shift para moverte dos columnas o filas."
+          },
+          "arrowResize": {
+            "shortcut": "Flechas (modo redimensionar)",
+            "description": "Ajusta el tamaño del widget. Mantén Shift para pasos más grandes."
+          },
+          "undo": {
+            "shortcut": "⌘/Ctrl + Z",
+            "description": "Deshace el último cambio."
+          },
+          "redo": {
+            "shortcut": "⌘/Ctrl + Shift + Z o Ctrl + Y",
+            "description": "Rehace el cambio deshecho anteriormente."
+          },
+          "save": {
+            "shortcut": "⌘/Ctrl + S",
+            "description": "Guarda el diseño actual."
+          },
+          "cancel": {
+            "shortcut": "Esc",
+            "description": "Sale de los modos mover/redimensionar o cancela acciones del modo edición."
+          }
+        }
+      }
+    }
   },
   "accessibility": {
     "loading": "Cargando Choices..."

@@ -256,6 +256,9 @@ const normaliseMessage = (message: any, fallbackThreadId: string): ContactMessag
   };
 };
 
+const extractPayload = <T = Record<string, unknown>>(raw: any): T =>
+  ((raw && typeof raw === 'object' && 'data' in raw ? raw.data : raw) ?? {}) as T;
+
 const sortThreadsByRecency = (threads: ContactThread[]): void => {
   threads.sort((a, b) => {
     const getTimestamp = (thread: ContactThread) => {
@@ -388,13 +391,14 @@ const createContactActions = (
       const query = buildThreadsQuery(restOptions);
       const response = await fetch(`/api/contact/threads${query}`);
       const data = await response.json();
+      const payload = extractPayload<{ threads?: any[]; pagination?: ContactPagination }>(data);
 
-      if (!response.ok || !data?.success) {
+      if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact threads');
       }
 
-      const normalisedThreads = Array.isArray(data.threads)
-        ? (data.threads as any[]).map(normaliseThread)
+      const normalisedThreads = Array.isArray(payload.threads)
+        ? (payload.threads as any[]).map(normaliseThread)
         : [];
 
       setState((draft) => {
@@ -439,11 +443,15 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
+      const payload = extractPayload<{ thread?: any; threadId?: string; existingThreadId?: string }>(data);
 
       if (response.status === 409) {
         await fetchThreads({ force: true });
         const existingThreadId: string | undefined =
-          data?.existingThreadId ?? data?.threadId ?? data?.thread?.id;
+          data?.details?.existingThreadId ??
+          payload.existingThreadId ??
+          payload.threadId ??
+          payload.thread?.id;
         const existingThread =
           (existingThreadId ? get().threadsById[existingThreadId] : undefined) ??
           get().threads.find(
@@ -463,11 +471,11 @@ const createContactActions = (
         };
       }
 
-      if (!response.ok || !data?.success || !data?.thread) {
+      if (!response.ok || data?.success !== true || !payload.thread) {
         throw new Error(data?.error ?? 'Failed to create thread');
       }
 
-      const thread = normaliseThread(data.thread);
+      const thread = normaliseThread(payload.thread);
       upsertThreads([thread]);
       baseActions.clearError();
 
@@ -505,23 +513,24 @@ const createContactActions = (
       const query = buildMessagesQuery(threadId, restOptions);
       const response = await fetch(`/api/contact/messages${query}`);
       const data = await response.json();
+      const payload = extractPayload<{ messages?: any[]; pagination?: ContactPagination }>(data);
 
-      if (!response.ok || !data?.success) {
+      if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact messages');
       }
 
-      const normalisedMessages = Array.isArray(data.messages)
-        ? (data.messages as any[]).map((message) => normaliseMessage(message, threadId))
+      const normalisedMessages = Array.isArray(payload.messages)
+        ? (payload.messages as any[]).map((message) => normaliseMessage(message, threadId))
         : [];
 
       setState((draft) => {
         const existingMessages = draft.messagesByThreadId[threadId] ?? [];
         draft.messagesByThreadId[threadId] = mergeMessages(existingMessages, normalisedMessages, append);
         draft.messagesMetaByThreadId[threadId] = {
-          total: data.pagination?.total ?? normalisedMessages.length,
-          limit: data.pagination?.limit ?? restOptions.limit ?? 50,
-          offset: data.pagination?.offset ?? restOptions.offset ?? 0,
-          hasMore: Boolean(data.pagination?.hasMore),
+          total: payload.pagination?.total ?? normalisedMessages.length,
+          limit: payload.pagination?.limit ?? restOptions.limit ?? 50,
+          offset: payload.pagination?.offset ?? restOptions.offset ?? 0,
+          hasMore: Boolean(payload.pagination?.hasMore),
           lastFetchedAt: Date.now(),
         };
       });
@@ -567,12 +576,16 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
+      const payload = extractPayload<{ message?: any; threadId?: string }>(data);
 
-      if (!response.ok || !data?.success || !data?.message) {
+      if (!response.ok || data?.success !== true || !payload.message) {
         throw new Error(data?.error ?? 'Failed to send contact message');
       }
 
-      const normalisedMessage = normaliseMessage(data.message, data.threadId ?? input.threadId);
+      const normalisedMessage = normaliseMessage(
+        payload.message,
+        payload.threadId ?? input.threadId
+      );
 
       setState((draft) => {
         const threadId = normalisedMessage.threadId;

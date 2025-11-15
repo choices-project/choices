@@ -1,14 +1,24 @@
 'use client'
 
-import { Shield, Mail, Key, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Smartphone } from 'lucide-react'
-import React, { useEffect, useState } from 'react';
+import {
+  Shield,
+  Mail,
+  Key,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle,
+  Smartphone,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
-import { useUserActions, useUserError, useUserLoading } from '@/lib/stores';
+import { useUserActions, useUserError, useUserLoading, useUserStore } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import type { AuthSetupStepProps, AuthMethod } from '../types';
@@ -60,12 +70,32 @@ export default function AuthSetupStep({
 
   const userError = useUserError();
   const isLoading = useUserLoading();
-  const { setLoading, setError, clearError } = useUserActions();
+  const { setLoading, setError, clearError, signOut } = useUserActions();
+  const initializeAuth = useUserStore((state) => state.initializeAuth);
+  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
   useEffect(() => {
     clearError();
     setSuccess(false);
   }, [authMethod, clearError]);
+
+  const syncSupabaseSession = React.useCallback(async () => {
+    try {
+      const supabase = await getSupabaseBrowserClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        initializeAuth(session.user, session, true);
+        setSessionAndDerived(session);
+      } else {
+        initializeAuth(null, null, false);
+      }
+    } catch (error) {
+      logger.error('Auth setup failed to synchronize Supabase session', error);
+    }
+  }, [initializeAuth, setSessionAndDerived]);
 
   // E2E bypass: If we're in test environment, render a simple version
   if (
@@ -114,6 +144,7 @@ export default function AuthSetupStep({
         throw error;
       }
 
+      await syncSupabaseSession();
       setSuccess(true);
       onUpdate({
         email,
@@ -148,6 +179,7 @@ export default function AuthSetupStep({
       if (error) {
         throw error;
       }
+      await syncSupabaseSession();
     } catch (err: unknown) {
       setError(toErrorMessage(err) || `Failed to sign in with ${provider}`);
     } finally {
@@ -155,13 +187,14 @@ export default function AuthSetupStep({
     }
   }
 
-  const handleWebAuthnAuth = () => {
+  const handleWebAuthnAuth = async () => {
     onUpdate({
       authMethod: 'webauthn',
       authSetupCompleted: true
     })
     clearError();
     setSuccess(true)
+    await syncSupabaseSession();
   }
 
   const handleAnonymousAuth = () => {
@@ -171,20 +204,126 @@ export default function AuthSetupStep({
     })
     clearError();
     setSuccess(true)
+    initializeAuth(null, null, false)
   }
 
 
 
   const handleNext = () => {
-    if (success || authMethod === 'skip') {
-      onNext()
-    } else {
-      setCurrentSection('setup')
+    if (authMethod === 'anonymous') {
+      handleAnonymousAuth();
+      onNext();
+      return;
     }
-  }
+
+    if (authMethod === 'skip') {
+      onUpdate({
+        authMethod: 'skip',
+        authSetupCompleted: true,
+      });
+      setSuccess(true);
+      onNext();
+      return;
+    }
+
+    if (success) {
+      onNext();
+    } else {
+      setCurrentSection('setup');
+    }
+  };
+
+  const authOptions = useMemo(
+    () => [
+      {
+        method: 'email' as AuthMethod,
+        title: 'Email',
+        description: 'Secure login with email verification',
+        icon: Mail,
+        iconBg: 'bg-blue-100',
+        iconColor: 'text-blue-600',
+        bullets: ['No password needed', 'Magic link login', 'Secure verification'],
+      },
+      {
+        method: 'social' as AuthMethod,
+        title: 'Social Login',
+        description: 'Sign in with Google or GitHub',
+        icon: Shield,
+        iconBg: 'bg-green-100',
+        iconColor: 'text-green-600',
+        bullets: ['One-click login', 'Trusted providers', 'Enhanced security'],
+      },
+      {
+        method: 'webauthn' as AuthMethod,
+        title: 'Passkey',
+        description: 'Secure biometric authentication',
+        icon: Smartphone,
+        iconBg: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        bullets: ['Fingerprint/Face ID', 'No passwords', 'Maximum security'],
+      },
+      {
+        method: 'anonymous' as AuthMethod,
+        title: 'Anonymous',
+        description: 'Vote without creating an account',
+        icon: Key,
+        iconBg: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        bullets: ['No personal info', 'Maximum privacy', 'Limited features'],
+      },
+      {
+        method: 'skip' as AuthMethod,
+        title: 'Skip for Now',
+        description: 'Set up authentication later',
+        icon: ArrowRight,
+        iconBg: 'bg-gray-100',
+        iconColor: 'text-gray-600',
+        bullets: ['Continue onboarding', 'Setup later', 'Limited access'],
+      },
+    ],
+    [],
+  );
+
+  const renderOptionButton = (option: (typeof authOptions)[number]) => {
+    const Icon = option.icon;
+    const isSelected = authMethod === option.method;
+    return (
+      <button
+        key={option.method}
+        type="button"
+        className={`rounded-lg border bg-card text-card-foreground shadow-sm text-left transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 hover:shadow-lg ${
+          isSelected ? 'border-blue-300 ring-1 ring-blue-200' : ''
+        }`}
+        onClick={() => setAuthMethod(option.method)}
+        aria-pressed={isSelected}
+        aria-label={`Select ${option.title} authentication method`}
+        data-testid={`auth-option-${option.method}`}
+      >
+        <div className="flex flex-col space-y-1.5 p-6 text-center">
+          <div
+            className={`w-12 h-12 ${option.iconBg} rounded-lg flex items-center justify-center mx-auto mb-2`}
+          >
+            <Icon className={`h-6 w-6 ${option.iconColor}`} />
+          </div>
+          <h3 className="font-semibold tracking-tight text-lg">{option.title}</h3>
+        </div>
+        <div className="p-6 pt-0">
+          <p className="text-sm text-gray-600 mb-3">{option.description}</p>
+          <div className="space-y-2 text-left">
+            {option.bullets.map((bullet) => (
+              <div className="flex items-center gap-2 text-xs" key={bullet}>
+                <CheckCircle className="h-3 w-3 text-green-600" />
+                <span>{bullet}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </button>
+    );
+  };
 
   const renderOverview = () => (
-    <div className="space-y-8" >
+    <div className="space-y-8">
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Secure Your Account</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -193,144 +332,11 @@ export default function AuthSetupStep({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setAuthMethod('email')}>
-          <CardHeader>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Mail className="h-6 w-6 text-blue-600" />
-            </div>
-            <CardTitle className="text-lg">Email</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">Secure login with email verification</p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>No password needed</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Magic link login</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Secure verification</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setAuthMethod('social')}>
-          <CardHeader>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Shield className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle className="text-lg">Social Login</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">Sign in with Google or GitHub</p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>One-click login</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Trusted providers</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Enhanced security</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setAuthMethod('webauthn')}>
-          <CardHeader>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Smartphone className="h-6 w-6 text-purple-600" />
-            </div>
-            <CardTitle className="text-lg">Passkey</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">Secure biometric authentication</p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Fingerprint/Face ID</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>No passwords</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Maximum security</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setAuthMethod('anonymous')}>
-          <CardHeader>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Key className="h-6 w-6 text-purple-600" />
-            </div>
-            <CardTitle className="text-lg">Anonymous</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">Vote without creating an account</p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>No personal info</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Maximum privacy</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Limited features</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setAuthMethod('skip')}>
-          <CardHeader>
-            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <ArrowRight className="h-6 w-6 text-gray-600" />
-            </div>
-            <CardTitle className="text-lg">Skip for Now</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">Set up authentication later</p>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Continue onboarding</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Setup later</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span>Limited access</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {authOptions.map(renderOptionButton)}
       </div>
 
       <div className="text-center">
-        <Button onClick={handleNext} size="lg" >
+        <Button onClick={handleNext} size="lg" data-testid="auth-continue">
           Continue with {authMethod === 'email' ? 'Email' :
                          authMethod === 'social' ? 'Social Login' :
                          authMethod === 'webauthn' ? 'Passkey' :

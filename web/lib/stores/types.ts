@@ -1,9 +1,9 @@
 /**
  * Zustand Store Types
- * 
+ *
  * Base types and interfaces for all Zustand stores in the application.
  * Provides consistent patterns and type safety across all stores.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -13,7 +13,7 @@ export type BaseStore = {
   // Common loading states
   isLoading: boolean;
   error: string | null;
-  
+
   // Common actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -77,6 +77,25 @@ export type AppSettings = {
 }
 
 // Notification types
+export type ElectionNotificationContext = {
+  kind: 'election';
+  electionId: string;
+  divisionId: string;
+  electionDate: string;
+  daysUntil: number;
+  countdownLabel: string;
+  representativeNames?: string[];
+  source?: 'dashboard' | 'lure' | 'contact' | 'notification-center' | 'automation' | 'pwa';
+  metadata?: Record<string, unknown>;
+};
+
+export type CustomNotificationContext = {
+  kind: string;
+  [key: string]: unknown;
+};
+
+export type NotificationContext = ElectionNotificationContext | CustomNotificationContext;
+
 export type Notification = {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
@@ -90,6 +109,9 @@ export type Notification = {
   timestamp: string;
   read: boolean;
   persistent?: boolean;
+  context?: NotificationContext;
+  source?: 'system' | 'user' | 'integration' | 'civics';
+  metadata?: Record<string, unknown>;
 }
 
 // Navigation types

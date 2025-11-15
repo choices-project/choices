@@ -15,7 +15,17 @@ declare global {
 }
 
 const gotoFeedsHarness = async (page: Page) => {
-  await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded' });
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.removeItem('feeds-store');
+    } catch (error) {
+      console.warn('[E2E] unable to clear feeds-store from localStorage', error);
+    }
+  });
+  await page.goto('/e2e/feeds-store', {
+    waitUntil: 'domcontentloaded',
+    timeout: 45_000,
+  });
   await waitForPageReady(page);
   await page.waitForFunction(() => {
     const isReady =
@@ -31,6 +41,9 @@ const gotoFeedsHarness = async (page: Page) => {
     });
     window.__feedsStoreHarness?.actions.clearFilters();
     window.__feedsStoreHarness?.actions.setSelectedCategory(null);
+    window.__feedsStoreHarness?.actions.updatePreferences({
+      itemsPerPage: 2,
+    });
   });
 };
 
@@ -59,8 +72,8 @@ test.describe('Dashboard feeds harness', () => {
         page.evaluate(() => window.__feedsStoreHarness?.actions.loadFeeds()),
       ]);
 
-      await expect(page.getByTestId('feeds-total-count')).toHaveText('3');
-      await expect(page.getByTestId('feeds-filtered-count')).toHaveText('3');
+      await expect(page.getByTestId('feeds-total-count')).toHaveText('2');
+      await expect(page.getByTestId('feeds-filtered-count')).toHaveText('2');
       await expect(page.getByTestId('feeds-has-more')).toHaveText('true');
 
       const filteredList = page.getByTestId('feeds-filtered-list');
@@ -79,10 +92,16 @@ test.describe('Dashboard feeds harness', () => {
         page.evaluate(() => window.__feedsStoreHarness?.actions.loadMoreFeeds()),
       ]);
 
+      await expect(page.getByTestId('feeds-total-count')).toHaveText('3');
+      await expect(page.getByTestId('feeds-filtered-count')).toHaveText('1');
       await expect(page.getByTestId('feeds-has-more')).toHaveText('false');
-      await expect(page.getByTestId('feed-item-feed-3-title')).toHaveText(
-        'Youth Civic Summit',
+
+      await page.evaluate(() =>
+        window.__feedsStoreHarness?.actions.clearFilters(),
       );
+      await expect(page.getByTestId('feeds-filters-tags')).toHaveText('none');
+      await expect(filteredList).toContainText('Community Garden Expansion');
+      await expect(filteredList).toContainText('Youth Civic Summit');
 
       await page.evaluate(() =>
         window.__feedsStoreHarness?.actions.bookmarkFeed('feed-1'),
@@ -91,11 +110,6 @@ test.describe('Dashboard feeds harness', () => {
         page.getByTestId('feed-item-feed-1-bookmarked'),
       ).toHaveText('bookmarked: true');
 
-      await page.evaluate(() =>
-        window.__feedsStoreHarness?.actions.clearFilters(),
-      );
-      await expect(page.getByTestId('feeds-filters-tags')).toHaveText('none');
-      await expect(filteredList).toContainText('Community Garden Expansion');
     } finally {
       await cleanupMocks();
     }
@@ -119,7 +133,7 @@ test.describe('Dashboard feeds harness', () => {
 
       await expect(page.getByTestId('feeds-refreshing')).toHaveText('false');
       await expect(page.getByTestId('feeds-error')).toHaveText('none');
-      await expect(page.getByTestId('feeds-total-count')).toHaveText('3');
+      await expect(page.getByTestId('feeds-total-count')).toHaveText('2');
     } finally {
       await cleanupMocks();
     }

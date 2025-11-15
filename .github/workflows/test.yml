@@ -150,7 +150,18 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --reporter=html,junit
+        run: >-
+          npx playwright test
+          --project=${{ matrix.browser }}
+          --reporter=html,junit
+          tests/e2e/specs/dashboard-feeds.spec.ts
+          tests/e2e/specs/dashboard-journey.spec.ts
+          tests/e2e/specs/navigation-shell.spec.ts
+          tests/e2e/specs/global-navigation.spec.ts
+          tests/e2e/specs/admin-navigation.spec.ts
+          tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts
+          tests/e2e/specs/analytics-dashboard-axe.spec.ts
+          tests/e2e/specs/locale-switch.spec.ts
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
@@ -168,6 +179,79 @@ jobs:
         if: always()
         with:
           name: playwright-results-${{ matrix.browser }}
+          path: web/test-results/
+          retention-days: 7
+
+  nav-accessibility-tests:
+    name: Nav & Locale Accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: e2e-tests
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
+      SUPABASE_SECRET_KEY: dev-only-secret
+      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      PLAYWRIGHT_USE_MOCKS: '1'
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Setup gtimeout compatibility (Linux uses 'timeout')
+        run: |
+          if ! command -v gtimeout &> /dev/null; then
+            sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+            export PATH="/usr/local/bin:$PATH"
+          fi
+          which gtimeout || which timeout
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run nav/accessibility Playwright suite
+        run: npm run test:e2e:nav
+        env:
+          CI: true
+          BASE_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+
+      - name: Upload nav test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-nav
+          path: web/playwright-report/
+          retention-days: 7
+
+      - name: Upload nav test results (JUnit)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results-nav
           path: web/test-results/
           retention-days: 7
 

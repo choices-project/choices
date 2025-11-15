@@ -20,14 +20,20 @@ import {
   RefreshCw, 
   Maximize2, 
   AlertCircle,
-  GripVertical
+  GripVertical,
+  Move,
+  Expand,
 } from 'lucide-react';
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
+import { useWidgetStoreScoped, selectKeyboardMode } from '@/lib/stores/widgetStore';
 import type { WidgetConfig } from '../../types/widget';
 
 
@@ -132,14 +138,319 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onFullscreen,
   className = '',
 }) => {
+  const { t } = useI18n();
   const [showConfig, setShowConfig] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const selectedWidgetId = useWidgetStoreScoped((state) => state.selectedWidgetId);
+  const keyboardMode = useWidgetStoreScoped(selectKeyboardMode);
+  const setSelectedWidget = useWidgetStoreScoped((state) => state.setSelectedWidget);
+  const setKeyboardMode = useWidgetStoreScoped((state) => state.setKeyboardMode);
+  const nudgeWidgetPosition = useWidgetStoreScoped((state) => state.nudgeWidgetPosition);
+  const nudgeWidgetSize = useWidgetStoreScoped((state) => state.nudgeWidgetSize);
+  const widgetState = useWidgetStoreScoped((state) => state.widgets.get(config.id));
+
+  const activeWidget = widgetState ?? config;
+  const isSelected = selectedWidgetId === config.id;
+  const isMoveMode = isSelected && keyboardMode === 'move';
+  const isResizeMode = isSelected && keyboardMode === 'resize';
+  const instructionsId = `${config.id}-keyboard-instructions`;
 
   const handleError = (widgetError: Error) => {
     logger.error('Widget rendering error:', { widgetId: config.id, error: widgetError });
   };
 
+  const focusCard = useCallback(() => {
+    requestAnimationFrame(() => {
+      cardRef.current?.focus();
+    });
+  }, []);
+
+  const announce = useCallback(
+    (
+      key: string,
+      params?: Record<string, string | number>,
+      priority: 'polite' | 'assertive' = 'polite',
+    ) => {
+      const message = t(key as never, params as never);
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[WidgetRenderer][announce]', {
+          key,
+          message,
+          priority,
+        });
+      }
+      ScreenReaderSupport.announce(message, priority);
+    },
+    [t],
+  );
+
+  const exitKeyboardMode = useCallback(
+    (messageKey?: string) => {
+      setKeyboardMode('idle');
+      if (messageKey) {
+        announce(messageKey);
+      }
+    },
+    [announce, setKeyboardMode],
+  );
+
+  const handleToggleMove = useCallback(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    if (isMoveMode) {
+      exitKeyboardMode('analytics.widgets.moveModeOff');
+      return;
+    }
+
+    setSelectedWidget(config.id);
+    setKeyboardMode('move');
+    focusCard();
+    announce('analytics.widgets.moveModeOn', { title: activeWidget.title }, 'assertive');
+  }, [
+    activeWidget.title,
+    announce,
+    config.id,
+    exitKeyboardMode,
+    focusCard,
+    isEditing,
+    isMoveMode,
+    setKeyboardMode,
+    setSelectedWidget,
+  ]);
+
+  const handleToggleResize = useCallback(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    if (isResizeMode) {
+      exitKeyboardMode('analytics.widgets.resizeModeOff');
+      return;
+    }
+
+    setSelectedWidget(config.id);
+    setKeyboardMode('resize');
+    focusCard();
+    announce('analytics.widgets.resizeModeOn', { title: activeWidget.title }, 'assertive');
+  }, [
+    activeWidget.title,
+    announce,
+    config.id,
+    exitKeyboardMode,
+    focusCard,
+    isEditing,
+    isResizeMode,
+    setKeyboardMode,
+    setSelectedWidget,
+  ]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      if (keyboardMode !== 'idle') {
+        setKeyboardMode('idle');
+      }
+      return;
+    }
+
+    if ((isMoveMode || isResizeMode) && cardRef.current) {
+      focusCard();
+    }
+  }, [focusCard, isEditing, isMoveMode, isResizeMode, keyboardMode, setKeyboardMode]);
+
+  const handleFocus = useCallback(() => {
+    if (!isEditing) {
+      return;
+    }
+    if (!isSelected) {
+      setSelectedWidget(config.id);
+    }
+  }, [config.id, isEditing, isSelected, setSelectedWidget]);
+
+  const handleBlur = useCallback(
+    (event: React.FocusEvent<HTMLDivElement>) => {
+      if (!cardRef.current) {
+        return;
+      }
+
+      const related = event.relatedTarget as Node | null;
+      if (!related || !cardRef.current.contains(related)) {
+        setKeyboardMode('idle');
+        setSelectedWidget(null);
+      }
+    },
+    [setKeyboardMode, setSelectedWidget],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!isEditing || !isSelected) {
+        return;
+      }
+
+      if (keyboardMode === 'idle') {
+        if (event.key.toLowerCase() === 'm') {
+          event.preventDefault();
+          handleToggleMove();
+        }
+        if (event.key.toLowerCase() === 'r') {
+          event.preventDefault();
+          handleToggleResize();
+        }
+        return;
+      }
+
+      const step = event.shiftKey ? 2 : 1;
+
+      const handlePositionAnnouncement = (position: { x: number; y: number }) => {
+        announce('analytics.widgets.positionUpdate', {
+          column: position.x + 1,
+          row: position.y + 1,
+        });
+      };
+
+      const handleSizeAnnouncement = (size: { w: number; h: number }) => {
+        announce('analytics.widgets.sizeUpdate', {
+          width: size.w,
+          height: size.h,
+        });
+      };
+
+      if (keyboardMode === 'move') {
+        switch (event.key) {
+          case 'ArrowUp': {
+            event.preventDefault();
+            const next = nudgeWidgetPosition(config.id, 0, -step);
+            if (next) handlePositionAnnouncement(next);
+            return;
+          }
+          case 'ArrowDown': {
+            event.preventDefault();
+            const next = nudgeWidgetPosition(config.id, 0, step);
+            if (next) handlePositionAnnouncement(next);
+            return;
+          }
+          case 'ArrowLeft': {
+            event.preventDefault();
+            const next = nudgeWidgetPosition(config.id, -step, 0);
+            if (next) handlePositionAnnouncement(next);
+            return;
+          }
+          case 'ArrowRight': {
+            event.preventDefault();
+            const next = nudgeWidgetPosition(config.id, step, 0);
+            if (next) handlePositionAnnouncement(next);
+            return;
+          }
+          default:
+            break;
+        }
+      }
+
+      if (keyboardMode === 'resize') {
+        switch (event.key) {
+          case 'ArrowUp': {
+            event.preventDefault();
+            const next = nudgeWidgetSize(config.id, 0, -step);
+            if (next) handleSizeAnnouncement(next);
+            return;
+          }
+          case 'ArrowDown': {
+            event.preventDefault();
+            const next = nudgeWidgetSize(config.id, 0, step);
+            if (next) handleSizeAnnouncement(next);
+            return;
+          }
+          case 'ArrowLeft': {
+            event.preventDefault();
+            const next = nudgeWidgetSize(config.id, -step, 0);
+            if (next) handleSizeAnnouncement(next);
+            return;
+          }
+          case 'ArrowRight': {
+            event.preventDefault();
+            const next = nudgeWidgetSize(config.id, step, 0);
+            if (next) handleSizeAnnouncement(next);
+            return;
+          }
+          default:
+            break;
+        }
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        exitKeyboardMode(
+          keyboardMode === 'move'
+            ? 'analytics.widgets.moveModeOff'
+            : 'analytics.widgets.resizeModeOff',
+        );
+        return;
+      }
+
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        exitKeyboardMode(
+          keyboardMode === 'move'
+            ? 'analytics.widgets.moveModeOff'
+            : 'analytics.widgets.resizeModeOff',
+        );
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        setKeyboardMode('idle');
+      }
+    },
+    [
+      announce,
+      config.id,
+      exitKeyboardMode,
+      handleToggleMove,
+      handleToggleResize,
+      isEditing,
+      isSelected,
+      keyboardMode,
+      nudgeWidgetPosition,
+      nudgeWidgetSize,
+      setKeyboardMode,
+    ],
+  );
+
+  const cardClassName = useMemo(
+    () =>
+      cn(
+        'h-full flex flex-col relative group focus:outline-none',
+        isSelected ? 'ring-2 ring-offset-2 ring-primary' : '',
+        className,
+      ),
+    [className, isSelected],
+  );
+
   return (
-    <Card className={`h-full flex flex-col relative group ${className}`}>
+    <Card
+      ref={cardRef}
+      className={cardClassName}
+      tabIndex={isEditing ? 0 : undefined}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      aria-describedby={isEditing ? instructionsId : undefined}
+      data-widget-id={config.id}
+    >
+      {isEditing && (
+        <p id={instructionsId} className="sr-only">
+          {isMoveMode || isResizeMode
+            ? t(
+                isMoveMode
+                  ? ('analytics.widgets.moveModeInstructions' as never)
+                  : ('analytics.widgets.resizeModeInstructions' as never),
+              )
+            : t('analytics.widgets.defaultInstructions' as never)}
+        </p>
+      )}
       {/* Drag Handle (only in edit mode) */}
       {isEditing && (
         <div className="absolute top-2 left-2 cursor-move z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -162,6 +473,31 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
         {/* Widget Actions */}
         <div className="flex items-center space-x-2">
+          {isEditing && (
+            <>
+              <Button
+                variant={isMoveMode ? 'default' : 'outline'}
+                size="icon"
+                onClick={handleToggleMove}
+                aria-pressed={isMoveMode}
+                className="h-8 w-8"
+                title={t('analytics.widgets.moveButton' as never)}
+              >
+                <Move className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={isResizeMode ? 'default' : 'outline'}
+                size="icon"
+                onClick={handleToggleResize}
+                aria-pressed={isResizeMode}
+                className="h-8 w-8"
+                title={t('analytics.widgets.resizeButton' as never)}
+              >
+                <Expand className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+
           {onRefresh && (
             <Button
               variant="ghost"

@@ -14,6 +14,10 @@ import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountd
 import type { DashboardPreferences } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 
+jest.mock('@/hooks/useI18n', () => ({
+  useI18n: jest.fn(),
+}));
+
 jest.mock('@/components/shared/FeatureWrapper', () => ({
   FeatureWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   FeatureWrapperBatch: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -54,6 +58,7 @@ jest.mock('@/lib/stores', () => {
     useHashtagLoading: jest.fn(),
     useHashtagError: jest.fn(),
     useRepresentativeDivisions: jest.fn(() => []),
+    useUserActions: jest.fn(),
   };
 });
 
@@ -107,17 +112,43 @@ type MockedCountdownUtilsModule = {
   [K in keyof CountdownUtilsModule]: jest.Mock;
 };
 
+type MockedI18nModule = {
+  useI18n: jest.Mock;
+};
+
 const mockedProfileHooks = jest.requireMock('@/features/profile/hooks/use-profile') as MockedProfileModule;
 const mockedStores = jest.requireMock('@/lib/stores') as MockedStoresModule;
 const mockedNavigation = jest.requireMock('next/navigation') as MockedNavigationModule;
 const mockedProfileStore = jest.requireMock('@/lib/stores/profileStore') as MockedProfileStoreModule;
 const mockedRepresentativeStore = jest.requireMock('@/lib/stores/representativeStore') as MockedRepresentativeStoreModule;
 const mockedCountdownUtils = jest.requireMock('@/features/civics/utils/civicsCountdownUtils') as MockedCountdownUtilsModule;
+const mockedI18n = jest.requireMock('@/hooks/useI18n') as MockedI18nModule;
+
+const translationMap: Record<string, string> = {
+  'dashboard.personal.signIn.title': 'Sign in to your account',
+  'dashboard.personal.signIn.description': 'You need to be signed in to access your personal dashboard.',
+  'dashboard.personal.signIn.button': 'Go to Sign In',
+  'dashboard.personal.header.titleWithName': 'Welcome back, {name}',
+  'dashboard.personal.header.subtitleDefault': 'Here’s what’s happening today',
+  'dashboard.personal.common.refresh': 'Refresh',
+  'dashboard.personal.header.engagementBadge': 'Harness',
+  'dashboard.personal.tabs.overview': 'Overview',
+  'dashboard.personal.tabs.analytics': 'Analytics',
+  'dashboard.personal.metrics.totalVotes': 'Total votes',
+  'dashboard.personal.metrics.pollsCreated': 'Polls created',
+  'dashboard.personal.metrics.activePolls': 'Active polls',
+  'dashboard.personal.metrics.pollVotes': 'Votes on polls',
+  'dashboard.personal.representatives.title': 'Upcoming elections',
+  'dashboard.personal.representatives.description': 'Track key election dates and contacts in your area.',
+  'dashboard.personal.representatives.countdown.description': 'In {days} days',
+  'dashboard.personal.trending.title': 'Trending topics',
+};
 
 const mockRouterReplace = jest.fn();
 const mockLoadPolls = jest.fn().mockResolvedValue(undefined);
 const mockGetTrendingHashtags = jest.fn().mockResolvedValue(undefined);
 const mockGetUserRepresentatives = jest.fn().mockResolvedValue([]);
+const mockSignOut = jest.fn();
 
 const hashtagActionsState = {
   getTrendingHashtags: (...args: Parameters<typeof mockGetTrendingHashtags>) =>
@@ -215,6 +246,7 @@ function mockHooks(options: MockOptions = {}) {
   mockedStores.useHashtagActions.mockReturnValue(hashtagActionsState);
   mockedStores.useHashtagLoading.mockReturnValue(hashtagLoadingState);
   mockedStores.useHashtagError.mockReturnValue(hashtagErrorState);
+  mockedStores.useUserActions.mockReturnValue({ signOut: mockSignOut });
  
    mockedNavigation.useRouter.mockReturnValue({
      replace: mockRouterReplace,
@@ -272,6 +304,24 @@ describe('PersonalDashboard', () => {
     mockGetUserRepresentatives.mockReset();
     mockGetUserRepresentatives.mockResolvedValue([]);
     profileStoreState.updatePreferences.mockClear();
+    mockSignOut.mockReset();
+    mockedI18n.useI18n.mockReturnValue({
+      t: (key: string, params?: Record<string, string | number>) => {
+        const template = translationMap[key];
+        if (!template) {
+          return key;
+        }
+        if (!params) {
+          return template;
+        }
+        return template.replace(/\{(\w+)\}/g, (match, param) =>
+          params[param] !== undefined ? String(params[param]) : match,
+        );
+      },
+      currentLanguage: 'en',
+      changeLanguage: jest.fn(),
+      isReady: true,
+    });
   });
 
   it('redirects unauthenticated users to the auth page and shows sign-in prompt', () => {
@@ -281,6 +331,7 @@ describe('PersonalDashboard', () => {
 
     expect(mockRouterReplace).toHaveBeenCalledWith('/auth?redirectTo=/dashboard');
     expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
+    expect(mockSignOut).toHaveBeenCalled();
   });
 
   it('shows loading skeleton while auth/profile are loading', () => {

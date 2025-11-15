@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
@@ -37,10 +36,7 @@ export const GET = withErrorHandling(async (): Promise<any> => {
 
     if (credentialsError) {
       logger.error('Failed to fetch WebAuthn credentials:', credentialsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch credentials' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to fetch credentials', 500, undefined, 'WEBAUTHN_CREDENTIALS_FETCH_FAILED');
     }
 
     logger.info('WebAuthn credentials fetched successfully', {
@@ -80,10 +76,7 @@ export const DELETE2 = withErrorHandling(async (request: NextRequest) => {
 
     if (deleteError) {
       logger.error('Failed to delete WebAuthn credential:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete credential' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to delete credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_DELETE_FAILED');
     }
 
     logger.info('WebAuthn credential deleted successfully', {

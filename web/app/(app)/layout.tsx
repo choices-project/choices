@@ -11,6 +11,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
+import { AppShell } from '@/components/shared/AppShell';
 
 const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
@@ -72,20 +73,14 @@ export default function AppLayout({
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserStoreProvider>
-            {/* Service Worker Provider - Handles PWA functionality with update banner and offline indicator */}
             <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
-              {/* Global Navigation */}
-              <GlobalNavigation />
-
-              {/* Site Messages - Display below navigation */}
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-                <SiteMessages />
-              </div>
-
-              {children}
-
-              {/* Enhanced Feedback Widget - Fixed infinite loop issue */}
-              {!DISABLE_FEEDBACK_WIDGET && <EnhancedFeedbackWidget />}
+              <AppShell
+                navigation={<GlobalNavigation />}
+                siteMessages={<SiteMessages />}
+                feedback={!DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null}
+              >
+                {children}
+              </AppShell>
             </ServiceWorkerProvider>
           </UserStoreProvider>
         </AuthProvider>

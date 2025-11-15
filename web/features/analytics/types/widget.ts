@@ -30,7 +30,8 @@ export type WidgetType =
   | 'kpi-card'
   | 'custom-table'
   | 'custom-query'
-  | 'pwa-offline-queue';
+  | 'pwa-offline-queue'
+  | 'election-notifications';
 
 export type WidgetSize = {
   w: number; // Width in grid units (12-column grid)
@@ -221,12 +222,14 @@ export type WidgetAction =
 export type WidgetState = {
   layouts: DashboardLayout[];
   currentLayout: DashboardLayout | null;
+  currentLayoutChecksum: string | null;
   widgets: Map<string, WidgetConfig>;
 
   // UI state
   isEditing: boolean;
   selectedWidgetId: string | null;
   isDragging: boolean;
+  keyboardMode: 'idle' | 'move' | 'resize';
 
   // History for undo/redo
   history: DashboardLayout[];

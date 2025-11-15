@@ -19,6 +19,6 @@ export const GET = withErrorHandling(async (
   const userAnalytics = await analyticsService.getUserAnalytics(userId)
 
   return successResponse({
-    data: userAnalytics
+    user: userAnalytics
   });
 });

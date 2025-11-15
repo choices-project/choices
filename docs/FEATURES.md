@@ -12,12 +12,15 @@ The table below reflects the current maturity of the major product surfaces. Row
 | Admin dashboard | 🚧 Needs attention | Feature flag UI uses modern hooks, but analytics widgets still reference mocked data and legacy store patterns. Admin store refactor and Supabase-backed analytics endpoints are on the roadmap. |
 | Analytics & reporting | 🚧 Needs attention | UI components exist (charts, heatmaps), yet the backing APIs remain partially mocked and Redis caching is experimental. Privacy filter enforcement and end-to-end validation are outstanding. |
 | Civic data (representatives, actions) | ✅ Stable foundation | Core queries and UI flows function, but we lack modern integration tests. Future iterations should align these modules with the refreshed store standards. |
+| Voter registration CTA | ✅ New | Address lookup now surfaces state-specific registration links, status checks, and Vote.gov “Learn More” guidance using the new Supabase-backed voter registration store. Follow-up: add analytics + Playwright coverage. |
 | PWA & offline features | 🔄 In progress | Service worker, push notifications, and background sync now ship with a dedicated harness (`/e2e/pwa-store`) and Playwright coverage, but broader device permutations still need validation before we claim full offline guarantees. |
+| Enhanced feedback widget | ✅ Ready | Floating widget has hardened accessibility (dialog labelling, focus return), analytics hooks, screenshot capture, and auto-dismiss. Suppresses itself in `/e2e/*` harness routes to keep CI accessible while remaining live for production users. |
 
 ---
 
 ## Recent Changes
 
+- Enhanced feedback widget now exposes full accessibility metadata, restores launcher focus on close, and respects harness environments without affecting production users.
 - Notification store refactor landed with jest + RTL + Playwright coverage.
 - Admin notification widget now consumes shared hooks reducing bespoke logic.
 - Documentation and roadmap are being refreshed to remove outdated “perfect completion” claims.

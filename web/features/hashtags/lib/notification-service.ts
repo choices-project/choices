@@ -47,9 +47,13 @@ export async function notifyHashtagTrending(
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error ?? 'Failed to create notification');
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result?.success !== true) {
+      const message =
+        (result?.error ?? result?.details ?? result?.message) ??
+        'Failed to create notification';
+      throw new Error(message);
     }
 
     logger.info(`Sent trending notification for #${hashtagName} to user ${userId}`);
@@ -83,11 +87,24 @@ export async function shouldNotifyHashtagTrending(
       return true;  // If can't check, allow notification
     }
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || data?.success !== true) {
+      return true;  // If can't check, allow notification
+    }
+
+    const payload = (data.data ?? {}) as {
+      notifications?: Array<{
+        notification_type?: string;
+        metadata?: Record<string, unknown>;
+        created_at?: string;
+      }>;
+    };
+
     const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
 
     // Check if already notified about this hashtag in last 24 hours
-    const recentNotification = data.notifications?.find((n: any) => 
+    const recentNotification = payload.notifications?.find((n) => 
       n.notification_type === 'hashtag_trending' &&
       n.metadata?.hashtag_id === hashtagId &&
       new Date(n.created_at).getTime() > twentyFourHoursAgo

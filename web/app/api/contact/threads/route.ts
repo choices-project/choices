@@ -9,8 +9,16 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import {
+  authError,
+  errorResponse,
+  notFoundError,
+  successResponse,
+  validationError,
+  withErrorHandling,
+  parseBody,
+} from '@/lib/api';
 import {
   sanitizeSubject,
   sanitizeMessageContent,
@@ -57,24 +65,17 @@ type _ThreadResponse = {
 // GET - Retrieve User Threads
 // ============================================================================
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withErrorHandling(async (request: NextRequest) => {
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 500 }
-      );
+      return errorResponse('Database connection not available', 500);
     }
 
     // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+    const { data: { user }, error: userFetchError } = await supabase.auth.getUser();
+    if (userFetchError || !user) {
+      return authError('Authentication required');
     }
 
     // Parse query parameters
@@ -128,10 +129,7 @@ export async function GET(request: NextRequest) {
 
     if (threadsError) {
       logger.error('Failed to fetch threads', new Error(threadsError?.message ?? 'Unknown error'), { error: threadsError });
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch threads' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to fetch threads', 500);
     }
 
     // Get total count for pagination with same filters
@@ -150,7 +148,11 @@ export async function GET(request: NextRequest) {
       countQuery = countQuery.eq('representative_id', parseInt(representativeId));
     }
 
-    const { count: totalCount } = await countQuery;
+    const { count: totalCount, error: countError } = await countQuery;
+    if (countError) {
+      logger.error('Failed to count threads', new Error(countError?.message ?? 'Unknown error'), { error: countError });
+      return errorResponse('Failed to fetch threads', 500);
+    }
 
     // Transform response data with full thread information
     const transformedThreads = (threads ?? []).map((thread: any) => ({
@@ -172,8 +174,7 @@ export async function GET(request: NextRequest) {
       } : null
     }));
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       threads: transformedThreads,
       pagination: {
         total: totalCount ?? 0,
@@ -182,43 +183,31 @@ export async function GET(request: NextRequest) {
         hasMore: (totalCount ?? 0) > offset + limit
       }
     });
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error fetching threads:', err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 // ============================================================================
 // POST - Create New Thread
 // ============================================================================
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withErrorHandling(async (request: NextRequest) => {
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 500 }
-      );
+      return errorResponse('Database connection not available', 500);
     }
 
     // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+    const { data: { user }, error: userFetchError } = await supabase.auth.getUser();
+    if (userFetchError || !user) {
+      return authError('Authentication required');
     }
 
     // Parse request body
-    const body: CreateThreadRequest = await request.json();
+    const parsedBody = await parseBody<CreateThreadRequest>(request);
+    if (!parsedBody.success) {
+      return parsedBody.error;
+    }
+    const body = parsedBody.data;
     const {
       representativeId,
       subject,
@@ -228,48 +217,36 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!representativeId || !subject) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Representative ID and subject are required' 
-        },
-        { status: 400 }
-      );
+      const missingFields: Record<string, string> = {};
+      if (!representativeId) missingFields.representativeId = 'Representative ID is required';
+      if (!subject) missingFields.subject = 'Subject is required';
+      return validationError(missingFields, 'Representative ID and subject are required');
     }
 
     // Validate and sanitize representative ID
     const repIdValidation = validateRepresentativeId(representativeId);
     if (!repIdValidation.isValid) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: repIdValidation.error ?? 'Invalid representative ID' 
-        },
-        { status: 400 }
+      return validationError(
+        { representativeId: repIdValidation.error ?? 'Invalid representative ID' },
+        'Invalid representative ID'
       );
     }
 
     // Sanitize and validate subject
     const subjectValidation = sanitizeSubject(subject, 255);
     if (!subjectValidation.isValid) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: subjectValidation.error ?? 'Invalid subject' 
-        },
-        { status: 400 }
+      return validationError(
+        { subject: subjectValidation.error ?? 'Invalid subject' },
+        'Invalid subject'
       );
     }
 
     // Validate priority
     const priorityValidation = validatePriority(priority);
     if (!priorityValidation.isValid) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: priorityValidation.error ?? 'Invalid priority' 
-        },
-        { status: 400 }
+      return validationError(
+        { priority: priorityValidation.error ?? 'Invalid priority' },
+        'Invalid priority'
       );
     }
 
@@ -287,10 +264,7 @@ export async function POST(request: NextRequest) {
 
     if (repError || !representative) {
       logger.warn('Invalid representative ID', { representativeId, error: repError });
-      return NextResponse.json(
-        { success: false, error: 'Representative not found' },
-        { status: 404 }
-      );
+      return notFoundError('Representative not found');
     }
 
     // Check for existing active thread with same representative
@@ -303,13 +277,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingThread) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Active thread already exists with this representative',
-          existingThreadId: existingThread.id
-        },
-        { status: 409 }
+      return errorResponse(
+        'Active thread already exists with this representative',
+        409,
+        { existingThreadId: existingThread.id },
+        'THREAD_EXISTS'
       );
     }
 
@@ -339,10 +311,7 @@ export async function POST(request: NextRequest) {
 
     if (threadError || !thread) {
       logger.error('Failed to create thread', new Error(threadError?.message ?? 'Unknown error'), { error: threadError });
-      return NextResponse.json(
-        { success: false, error: 'Failed to create thread' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to create thread', 500);
     }
 
     // Create initial message if provided (with sanitization)
@@ -377,8 +346,7 @@ export async function POST(request: NextRequest) {
       subject: sanitizedSubject
     });
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       thread: {
         id: thread.id,
         userId: thread.user_id,
@@ -398,120 +366,78 @@ export async function POST(request: NextRequest) {
         }
       }
     });
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error creating thread:', err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 // ============================================================================
 // PUT - Update Thread Status
 // ============================================================================
 
-export async function PUT(request: NextRequest) {
-  try {
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
-
-    // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Parse request body
-    const body = await request.json();
-    const { threadId, status, priority } = body;
-
-    if (!threadId) {
-      return NextResponse.json(
-        { success: false, error: 'Thread ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify thread ownership
-    const { data: thread, error: threadError } = await supabase
-      .from('contact_threads')
-      .select('id, user_id, status')
-      .eq('id', threadId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (threadError || !thread) {
-      return NextResponse.json(
-        { success: false, error: 'Thread not found or access denied' },
-        { status: 404 }
-      );
-    }
-
-    // Build update object
-    const updateData: any = {};
-    if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No valid updates provided' },
-        { status: 400 }
-      );
-    }
-
-    // Update thread
-    const { data: updatedThread, error: updateError } = await supabase
-      .from('contact_threads')
-      .update(updateData)
-      .eq('id', threadId)
-      .select(`
-        id,
-        user_id,
-        representative_id,
-        subject,
-        status,
-        priority,
-        updated_at
-      `)
-      .single();
-
-    if (updateError || !updatedThread) {
-      logger.error('Failed to update thread', new Error(updateError?.message ?? 'Unknown error'), { error: updateError });
-      return NextResponse.json(
-        { success: false, error: 'Failed to update thread' },
-        { status: 500 }
-      );
-    }
-
-    logger.info('Thread updated successfully', {
-      threadId,
-      userId: user.id,
-      updates: updateData
-    });
-
-    return NextResponse.json({
-      success: true,
-      thread: updatedThread
-    });
-
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Error updating thread:', err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
   }
-}
+
+  const { data: { user }, error: userFetchError } = await supabase.auth.getUser();
+  if (userFetchError || !user) {
+    return authError('Authentication required');
+  }
+
+  const body = await request.json().catch(() => null);
+  const threadId = body?.threadId as string | undefined;
+  const status = body?.status as string | undefined;
+  const priority = body?.priority as string | undefined;
+
+  if (!threadId) {
+    return validationError({ threadId: 'Thread ID is required' });
+  }
+
+  const { data: thread, error: threadError } = await supabase
+    .from('contact_threads')
+    .select('id, user_id, status')
+    .eq('id', threadId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (threadError || !thread) {
+    return notFoundError('Thread not found or access denied');
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (status) updateData.status = status;
+  if (priority) updateData.priority = priority;
+
+  if (Object.keys(updateData).length === 0) {
+    return validationError({ updates: 'No valid updates provided' });
+  }
+
+  const { data: updatedThread, error: updateError } = await supabase
+    .from('contact_threads')
+    .update(updateData)
+    .eq('id', threadId)
+    .select(`
+      id,
+      user_id,
+      representative_id,
+      subject,
+      status,
+      priority,
+      updated_at
+    `)
+    .single();
+
+  if (updateError || !updatedThread) {
+    logger.error('Failed to update thread', new Error(updateError?.message ?? 'Unknown error'), { error: updateError });
+    return errorResponse('Failed to update thread', 500);
+  }
+
+  logger.info('Thread updated successfully', {
+    threadId,
+    userId: user.id,
+    updates: updateData
+  });
+
+  return successResponse({
+    thread: updatedThread
+  });
+});

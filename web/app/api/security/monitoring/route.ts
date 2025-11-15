@@ -10,7 +10,7 @@
 
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, authError } from '@/lib/api';
+import { authError, successResponse, withErrorHandling } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -42,7 +42,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       (v: any) => v.timestamp > last24Hours
     );
 
-    const response = {
+    const monitoringPayload = {
       timestamp: new Date().toISOString(),
       rateLimiting: {
         enabled: securityConfig.rateLimit.enabled,
@@ -60,7 +60,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       recentViolations: recentViolations24h.slice(0, 50).map((v: any) => ({
         ip: v.ip,
         endpoint: v.endpoint,
-        timestamp: new Date(v.timestamp),
+        timestamp: new Date(v.timestamp).toISOString(),
         count: v.count,
         maxRequests: v.maxRequests,
         userAgent: v.userAgent
@@ -72,7 +72,5 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       violationsLastHour: metrics.violationsLastHour
     });
 
-  return successResponse({
-    data: response
-  });
+  return successResponse(monitoringPayload);
 });

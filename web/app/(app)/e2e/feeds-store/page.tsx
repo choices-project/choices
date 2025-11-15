@@ -8,7 +8,6 @@ import {
   useFeedPreferences,
   useFeedCategories,
   useFeeds,
-  useFeedsActions,
   useFeedsError,
   useFeedsLoading,
   useFeedsPagination,
@@ -33,6 +32,7 @@ export type FeedsStoreHarness = {
     unbookmarkFeed: FeedsStore['unbookmarkFeed'];
     setSelectedCategory: FeedsStore['setSelectedCategory'];
     resetFeedsState: FeedsStore['resetFeedsState'];
+    updatePreferences: FeedsStore['updatePreferences'];
   };
   selectors: {
     getState: () => FeedsStore;
@@ -61,17 +61,16 @@ function FeedsStoreHarnessView() {
   const categories = useFeedCategories();
   const pagination = useFeedsPagination();
 
-  const {
-    loadFeeds,
-    refreshFeeds,
-    loadMoreFeeds,
-    setFilters,
-    clearFilters,
-    bookmarkFeed,
-    unbookmarkFeed,
-    setSelectedCategory,
-    resetFeedsState,
-  } = useFeedsActions();
+  const loadFeeds = useFeedsStore((state) => state.loadFeeds);
+  const refreshFeeds = useFeedsStore((state) => state.refreshFeeds);
+  const loadMoreFeeds = useFeedsStore((state) => state.loadMoreFeeds);
+  const setFilters = useFeedsStore((state) => state.setFilters);
+  const clearFilters = useFeedsStore((state) => state.clearFilters);
+  const bookmarkFeed = useFeedsStore((state) => state.bookmarkFeed);
+  const unbookmarkFeed = useFeedsStore((state) => state.unbookmarkFeed);
+  const setSelectedCategory = useFeedsStore((state) => state.setSelectedCategory);
+  const resetFeedsState = useFeedsStore((state) => state.resetFeedsState);
+  const updatePreferences = useFeedsStore((state) => state.updatePreferences);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
@@ -90,6 +89,7 @@ function FeedsStoreHarnessView() {
         unbookmarkFeed,
         setSelectedCategory,
         resetFeedsState,
+        updatePreferences,
       },
       selectors: {
         getState: () => useFeedsStore.getState(),

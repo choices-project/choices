@@ -10,10 +10,12 @@ import {
   useUserError,
   useUserLoading,
   useUserActions,
+  useUserStore,
 } from '@/features/auth/lib/store';
 import { useI18n } from '@/hooks/useI18n';
 import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
@@ -42,6 +44,8 @@ export default function AuthPage() {
     setError: setAuthError,
     clearError: clearAuthError,
   } = useUserActions();
+  const initializeAuth = useUserStore((state) => state.initializeAuth);
+  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
 
   // Form state
@@ -76,6 +80,24 @@ export default function AuthPage() {
     setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
     logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
   };
+
+  const syncSupabaseSession = React.useCallback(async () => {
+    try {
+      const supabase = await getSupabaseBrowserClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        initializeAuth(session.user, session, true);
+        setSessionAndDerived(session);
+      } else {
+        initializeAuth(null, null, false);
+      }
+    } catch (error) {
+      logger.error('Auth page failed to synchronize Supabase session', error);
+    }
+  }, [initializeAuth, setSessionAndDerived]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,6 +143,7 @@ export default function AuthPage() {
           context,
         });
         if (result.ok) {
+          await syncSupabaseSession();
           setMessage(t('auth.success.accountCreated'));
           setTimeout(() => {
             router.push('/onboarding');
@@ -135,6 +158,7 @@ export default function AuthPage() {
             email: formData.email,
             password: formData.password,
           });
+          await syncSupabaseSession();
           // If we reach here, loginAction did not throw an error,
           // but it also handles redirection internally.
           // We might not see this message if redirection happens immediately.

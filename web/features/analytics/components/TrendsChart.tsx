@@ -23,7 +23,7 @@ import {
   RefreshCw,
   Activity
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -39,8 +39,16 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/hooks/useI18n';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 import { useAnalyticsActions, useAnalyticsTrends } from '@/lib/stores/analyticsStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
 
 type TrendDataPoint = {
   date: string;
@@ -63,8 +71,12 @@ export default function TrendsChart({
   defaultRange = '7d',
   defaultChartType = 'area'
 }: TrendsChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
   const isMobile = useIsMobile();
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchTrends } = useAnalyticsActions();
   const trends = useAnalyticsTrends();
   const data = trends.data;
@@ -78,6 +90,105 @@ export default function TrendsChart({
       fallback: (r) => generateMockData(r as DateRange),
     });
   }, [dateRange, defaultRange, fetchTrends]);
+
+  const rangeLabels: Record<DateRange, string> = useMemo(
+    () => ({
+      '7d': 'Last 7 days',
+      '30d': 'Last 30 days',
+      '90d': 'Last 90 days',
+    }),
+    [],
+  );
+
+  const chartTypeLabels: Record<ChartType, string> = useMemo(
+    () => ({
+      line: 'Line chart',
+      area: 'Area chart',
+    }),
+    [],
+  );
+
+  const handleRangeChange = useCallback(
+    (range: DateRange) => {
+      ScreenReaderSupport.announce(
+        `Date range updated to ${rangeLabels[range] ?? range}.`,
+        'polite',
+      );
+      void loadTrends(range);
+    },
+    [loadTrends, rangeLabels],
+  );
+
+  const handleChartTypeChange = useCallback(
+    (type: ChartType) => {
+      setChartType(type);
+      ScreenReaderSupport.announce(
+        `Chart view switched to ${chartTypeLabels[type] ?? type}.`,
+        'polite',
+      );
+    },
+    [chartTypeLabels],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce('Refreshing activity trends data.', 'polite');
+    void loadTrends();
+  }, [loadTrends]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const trendsColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'date', label: t('analytics.tables.columns.date') },
+      { key: 'votes', label: t('analytics.tables.columns.votes'), isNumeric: true },
+      {
+        key: 'participation',
+        label: t('analytics.tables.columns.participation'),
+        isNumeric: true,
+      },
+      {
+        key: 'velocity',
+        label: t('analytics.tables.columns.velocity'),
+        isNumeric: true,
+      },
+    ],
+    [t],
+  );
+
+  const trendsRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data.map((point) => ({
+        id: point.date,
+        cells: {
+          date: point.date,
+          votes: formatNumber(point.votes),
+          participation: formatPercent(point.participation),
+          velocity: formatNumber(point.velocity),
+        },
+      })),
+    [data, formatNumber, formatPercent],
+  );
 
   useEffect(() => {
     void fetchTrends(defaultRange, {
@@ -133,6 +244,50 @@ export default function TrendsChart({
     if (first === undefined || last === undefined || first === 0) return 0;
     return ((last - first) / first) * 100;
   };
+
+  const formatTrendValue = useCallback(
+    (value: number) => percentFormatter.format(Math.abs(value)),
+    [percentFormatter],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      t('analytics.trends.summaryIntro', {
+        totalVotes: formatNumber(totalVotes),
+        avgParticipation: formatPercent(avgParticipation),
+        avgVelocity: formatNumber(avgVelocity),
+      }),
+    [avgParticipation, avgVelocity, formatNumber, formatPercent, t, totalVotes],
+  );
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Activity trends data could not be fetched. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   // Loading state
   if (isLoading) {
@@ -192,7 +347,7 @@ export default function TrendsChart({
               value={dateRange}
               onChange={(e) => {
                 const range = e.target.value as DateRange;
-                void loadTrends(range);
+                handleRangeChange(range);
               }}
               className="flex-1 sm:flex-none px-3 py-2 md:py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             >
@@ -206,7 +361,7 @@ export default function TrendsChart({
             <Activity className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <select
               value={chartType}
-              onChange={(e) => setChartType(e.target.value as ChartType)}
+              onChange={(e) => handleChartTypeChange(e.target.value as ChartType)}
               className="flex-1 sm:flex-none px-3 py-2 md:py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             >
               <option value="line">Line Chart</option>
@@ -215,9 +370,7 @@ export default function TrendsChart({
           </div>
 
           <Button
-            onClick={() => {
-              void loadTrends();
-            }}
+            onClick={handleRefresh}
             size={isMobile ? "default" : "sm"}
             variant="outline"
             className="min-h-[44px] flex-1 sm:flex-none"
@@ -241,36 +394,52 @@ export default function TrendsChart({
         <div className="mb-4 md:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <div className="text-center p-3 md:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
             <p className="text-xs md:text-sm text-gray-600">Total Votes</p>
-            <p className="text-xl md:text-2xl font-bold text-blue-700">{totalVotes.toLocaleString()}</p>
+            <p className="text-xl md:text-2xl font-bold text-blue-700">{formatNumber(totalVotes)}</p>
             <div className="mt-1 flex items-center justify-center gap-1 text-xs">
               {getTrend('votes') >= 0 ? (
-                <span className="text-green-600">↑ {getTrend('votes').toFixed(1)}%</span>
+                <span className="text-green-600">
+                  ↑ {formatTrendValue(getTrend('votes'))}
+                </span>
               ) : (
-                <span className="text-red-600">↓ {Math.abs(getTrend('votes')).toFixed(1)}%</span>
+                <span className="text-red-600">
+                  ↓ {formatTrendValue(getTrend('votes'))}
+                </span>
               )}
             </div>
           </div>
 
           <div className="text-center p-3 md:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
             <p className="text-xs md:text-sm text-gray-600">Avg Participation</p>
-            <p className="text-xl md:text-2xl font-bold text-green-700">{avgParticipation.toFixed(1)}%</p>
+            <p className="text-xl md:text-2xl font-bold text-green-700">
+              {formatPercent(avgParticipation)}
+            </p>
             <div className="mt-1 flex items-center justify-center gap-1 text-xs">
               {getTrend('participation') >= 0 ? (
-                <span className="text-green-600">↑ {getTrend('participation').toFixed(1)}%</span>
+                <span className="text-green-600">
+                  ↑ {formatTrendValue(getTrend('participation'))}
+                </span>
               ) : (
-                <span className="text-red-600">↓ {Math.abs(getTrend('participation')).toFixed(1)}%</span>
+                <span className="text-red-600">
+                  ↓ {formatTrendValue(getTrend('participation'))}
+                </span>
               )}
             </div>
           </div>
 
           <div className="text-center p-3 md:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
             <p className="text-xs md:text-sm text-gray-600">Avg Velocity</p>
-            <p className="text-xl md:text-2xl font-bold text-purple-700">{avgVelocity.toFixed(1)}</p>
+            <p className="text-xl md:text-2xl font-bold text-purple-700">
+              {formatNumber(avgVelocity)}
+            </p>
             <div className="mt-1 flex items-center justify-center gap-1 text-xs">
               {getTrend('velocity') >= 0 ? (
-                <span className="text-green-600">↑ {getTrend('velocity').toFixed(1)}%</span>
+                <span className="text-green-600">
+                  ↑ {formatTrendValue(getTrend('velocity'))}
+                </span>
               ) : (
-                <span className="text-red-600">↓ {Math.abs(getTrend('velocity')).toFixed(1)}%</span>
+                <span className="text-red-600">
+                  ↓ {formatTrendValue(getTrend('velocity'))}
+                </span>
               )}
             </div>
           </div>
@@ -432,6 +601,35 @@ export default function TrendsChart({
             </ResponsiveContainer>
           </div>
         )}
+
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-sm text-foreground"
+          >
+            {summaryIntro}
+          </p>
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-trends`}
+            title={t('analytics.trends.table.title')}
+            description={t('analytics.trends.table.description')}
+            columns={trendsColumns}
+            rows={trendsRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );

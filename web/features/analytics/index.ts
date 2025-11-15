@@ -64,7 +64,13 @@ export {
 } from './lib/widgetPresets';
 
 // Widget Store
-export { useWidgetStore, selectIsEditing, selectCurrentLayout, selectAllWidgets, selectSelectedWidget } from './stores/widgetStore';
+export {
+  useWidgetStore,
+  selectIsEditing,
+  selectCurrentLayout,
+  selectAllWidgets,
+  selectSelectedWidget,
+} from '@/lib/stores/widgetStore';
 
 // Widget Hooks
 export { useWidgetKeyboardShortcuts } from './hooks/useWidgetKeyboardShortcuts';

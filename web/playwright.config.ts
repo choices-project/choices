@@ -62,6 +62,7 @@ export default defineConfig({
         process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
       NEXT_PUBLIC_ENABLE_E2E_HARNESS:
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
+      NEXT_DISABLE_STRICT_MODE: '1',
     },
   },
 })

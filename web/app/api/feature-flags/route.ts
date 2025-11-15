@@ -10,9 +10,8 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
@@ -25,62 +24,43 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
   // Get system info
   const systemInfo = featureFlagManager.getSystemInfo();
   
-  return successResponse({
-    flags: allFlags,
-    enabledFlags,
-    disabledFlags,
-    systemInfo
-  });
+  return successResponse(
+    {
+      flags: allFlags,
+      enabledFlags,
+      disabledFlags,
+      systemInfo
+    },
+    {
+      enabledCount: enabledFlags.length,
+      disabledCount: disabledFlags.length
+    }
+  );
 });
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { flagId, enabled } = body;
-    
-    if (!flagId || typeof enabled !== 'boolean') {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid request body. Expected { flagId: string, enabled: boolean }',
-          timestamp: new Date().toISOString()
-        },
-        { status: 400 }
-      );
-    }
-    
-    // Update the feature flag using the feature flag manager
-    const success = enabled 
-      ? featureFlagManager.enable(flagId)
-      : featureFlagManager.disable(flagId);
-    
-    if (!success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: `Failed to update feature flag: ${flagId}`,
-          timestamp: new Date().toISOString()
-        },
-        { status: 400 }
-      );
-    }
-    
-    return NextResponse.json({
-      success: true,
-      message: `Feature flag ${flagId} updated to ${enabled}`,
-      flagId,
-      enabled,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error updating feature flag:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to update feature flag',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  const body = await request.json();
+  const { flagId, enabled } = body ?? {};
+
+  if (!flagId || typeof flagId !== 'string' || typeof enabled !== 'boolean') {
+    return validationError({
+      flagId: !flagId ? 'flagId is required' : '',
+      enabled: typeof enabled !== 'boolean' ? 'enabled must be a boolean' : ''
+    }, 'Invalid request body. Expected { flagId: string, enabled: boolean }');
   }
-}
+
+  const updated = enabled
+    ? featureFlagManager.enable(flagId)
+    : featureFlagManager.disable(flagId);
+
+  if (!updated) {
+    logger.warn({ flagId, enabled }, 'Failed to update feature flag');
+    return errorResponse(`Failed to update feature flag: ${flagId}`, 400);
+  }
+
+  return successResponse({
+    flagId,
+    enabled,
+    flags: featureFlagManager.getAllFlags()
+  });
+});

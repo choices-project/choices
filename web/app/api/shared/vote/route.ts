@@ -73,8 +73,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Failed to record vote', 500);
   }
 
-  return successResponse({
-    vote_id: vote.id,
-    message: 'Vote recorded successfully'
-  }, undefined, 201);
+  return successResponse(
+    {
+      voteId: vote.id,
+      message: 'Vote recorded successfully',
+    },
+    undefined,
+    201
+  );
 });

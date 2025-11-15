@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 
 import { AdminLayout } from '../layout/AdminLayout';
+import { useAppActions } from '@/lib/stores/appStore';
 
 const SystemSettings = dynamic(() => import('@/features/admin/components/SystemSettings'), {
   loading: () => (
@@ -15,6 +16,22 @@ const SystemSettings = dynamic(() => import('@/features/admin/components/SystemS
 });
 
 export default function SystemSettingsPage() {
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/system');
+    setSidebarActiveSection('admin-system');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'System Settings', href: '/admin/system' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
   return (
     <AdminLayout>
       <Suspense

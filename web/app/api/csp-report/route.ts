@@ -12,9 +12,8 @@
  */
 
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, corsPreflightResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -39,7 +38,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const violation = report['csp-report'];
   
   if (!violation) {
-    return successResponse({ status: 'invalid' });
+    return validationError({ 'csp-report': 'Missing CSP violation payload' });
   }
 
     // Extract metadata
@@ -86,7 +85,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       });
     }
     
-  return successResponse({ status: 'received' });
+  return successResponse({ acknowledged: true });
 });
 
 /**
@@ -115,13 +114,6 @@ function getSeverity(violation: CSPViolation): 'critical' | 'high' | 'medium' | 
 }
 
 // Handle preflight requests for CORS
-export async function OPTIONS(_request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export function OPTIONS() {
+  return corsPreflightResponse(['POST']);
 }

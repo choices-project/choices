@@ -24,7 +24,7 @@ import {
   Shield,
   Filter
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   PieChart,
   Pie,
@@ -42,8 +42,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 import { useAnalyticsActions, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
 
 type TrustTierData = {
   tier: string;
@@ -96,8 +104,12 @@ export default function DemographicsChart({
   className = '',
   defaultTab = 'trust'
 }: DemographicsChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchDemographics } = useAnalyticsActions();
   const demographics = useAnalyticsDemographics();
   const data = demographics.data;
@@ -110,9 +122,201 @@ export default function DemographicsChart({
     });
   }, [fetchDemographics]);
 
+  const tabLabels = useMemo(
+    () => ({
+      trust: 'Trust tier distribution view',
+      age: 'Age group distribution view',
+      district: 'District distribution view',
+      education: 'Education level distribution view',
+    }),
+    [],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: typeof activeTab) => {
+      setActiveTab(tab);
+      ScreenReaderSupport.announce(
+        `Viewing ${tabLabels[tab] ?? tab}.`,
+        'polite',
+      );
+    },
+    [tabLabels],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce('Refreshing demographics data.', 'polite');
+    void refreshDemographics();
+  }, [refreshDemographics]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const trustColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'tier', label: t('analytics.tables.columns.tier') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const ageColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'ageGroup', label: t('analytics.tables.columns.ageGroup') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const districtColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'district', label: t('analytics.tables.columns.district') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const educationColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'education', label: t('analytics.tables.columns.education') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const trustRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.trustTiers.map((tier) => ({
+            id: tier.tier,
+            cells: {
+              tier: tier.tier,
+              count: formatNumber(tier.count),
+              percentage: formatPercent(tier.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const ageRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.ageGroups.map((group) => ({
+            id: group.ageGroup,
+            cells: {
+              ageGroup: group.ageGroup,
+              count: formatNumber(group.count),
+              percentage: formatPercent(group.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const districtRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.districts.map((district) => ({
+            id: district.district,
+            cells: {
+              district: district.district,
+              count: formatNumber(district.count),
+              percentage: formatPercent(district.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const educationRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.education.map((edu) => ({
+            id: edu.level,
+            cells: {
+              education: edu.level,
+              count: formatNumber(edu.count),
+              percentage: formatPercent(edu.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const optedInCount = useMemo(
+    () => (data ? data.totalUsers - data.privacyOptOuts : 0),
+    [data],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      data
+        ? t('analytics.demographics.summaryIntro', {
+            total: formatNumber(data.totalUsers),
+            optedIn: formatNumber(optedInCount),
+            optedOut: formatNumber(data.privacyOptOuts),
+            threshold: data.k_anonymity,
+          })
+        : '',
+    [data, formatNumber, optedInCount, t],
+  );
+
   useEffect(() => {
     void refreshDemographics();
   }, [refreshDemographics]);
+
+  useEffect(() => {
+    if (!summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Demographics data may be limited. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -213,16 +417,27 @@ export default function DemographicsChart({
               {isMobile ? `K-anonymity: ${data.k_anonymity}` : `User demographics with privacy protections (K-anonymity: ${data.k_anonymity})`}
             </p>
           </div>
-          <Button
-            onClick={handleExport}
-            disabled={!data}
-            size={isMobile ? "sm" : "default"}
-            variant="outline"
-            className="min-h-[44px]"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleRefresh}
+              size={isMobile ? "sm" : "default"}
+              variant="outline"
+              className="min-h-[44px]"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={!data}
+              size={isMobile ? "sm" : "default"}
+              variant="outline"
+              className="min-h-[44px]"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -262,7 +477,7 @@ export default function DemographicsChart({
         </div>
 
         {/* Tabs - Responsive Layout */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as typeof activeTab)}>
           <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4'}`}>
             <TabsTrigger value="trust" className={isMobile ? "text-xs" : ""}>
               {isMobile ? 'Trust' : 'Trust Tiers'}
@@ -482,6 +697,59 @@ export default function DemographicsChart({
             Refresh Data
           </Button>
         </div>
+
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          {summaryIntro ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-foreground"
+            >
+              {summaryIntro}
+            </p>
+          ) : null}
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-trust`}
+            title={t('analytics.demographics.tables.trust.title')}
+            description={t('analytics.demographics.tables.trust.description')}
+            columns={trustColumns}
+            rows={trustRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-age`}
+            title={t('analytics.demographics.tables.age.title')}
+            description={t('analytics.demographics.tables.age.description')}
+            columns={ageColumns}
+            rows={ageRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-districts`}
+            title={t('analytics.demographics.tables.district.title')}
+            description={t('analytics.demographics.tables.district.description')}
+            columns={districtColumns}
+            rows={districtRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-education`}
+            title={t('analytics.demographics.tables.education.title')}
+            description={t('analytics.demographics.tables.education.description')}
+            columns={educationColumns}
+            rows={educationRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );

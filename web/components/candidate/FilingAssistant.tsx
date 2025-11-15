@@ -100,7 +100,8 @@ export function FilingAssistant({
 
         const response = await fetch(`/api/filing/requirements?${params.toString()}`)
         const data = await response.json()
-        setRequirements(data)
+        const payload = (data?.data ?? data) as FilingRequirement
+        setRequirements(payload)
       } catch (error) {
         logger.error('Failed to fetch filing requirements:', error)
       } finally {

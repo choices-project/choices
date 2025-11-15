@@ -102,6 +102,11 @@ Object.defineProperty(global, 'crypto', {
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
+// Silence unimplemented audio playback warnings in jsdom
+if (typeof window !== 'undefined' && window.HTMLMediaElement) {
+  window.HTMLMediaElement.prototype.play = async () => undefined;
+}
+
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
     if (typeof args[0] === 'string' && args[0].includes('Warning: ReactDOM.render is deprecated')) {

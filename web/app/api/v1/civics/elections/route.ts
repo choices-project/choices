@@ -31,16 +31,21 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   });
 
   if (error) {
-    throw error;
+    return errorResponse('Failed to load upcoming elections', 502, { reason: error.message });
   }
 
   const elections = data ?? [];
 
-  return successResponse({
-    ok: true,
-    count: elections.length,
-    data: elections
-  });
+  return successResponse(
+    {
+      elections,
+      count: elections.length
+    },
+    {
+      source: 'supabase',
+      filters: divisions ? { divisions } : undefined
+    }
+  );
 });
 
 

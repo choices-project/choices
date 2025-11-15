@@ -21,7 +21,7 @@ const gotoHarness = async (page: Page) => {
   );
 };
 
-test.describe('PWA store harness', () => {
+test.describe('@axe PWA store harness', () => {
   test('drives install, offline queue, notifications, and reset flows', async ({ page }) => {
     await gotoHarness(page);
     await runAxeAudit(page, 'pwa status harness initial');

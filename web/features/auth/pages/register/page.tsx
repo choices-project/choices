@@ -6,6 +6,9 @@ import * as React from 'react'
 
 import { register as serverRegister } from '@/app/actions/register'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+import { useUserStore } from '@/features/auth/lib/store'
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 
 export default function RegisterPage() {
@@ -14,6 +17,26 @@ export default function RegisterPage() {
   const [success, setSuccess] = React.useState(false)
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>('passkey')
   const [hydrated, setHydrated] = React.useState(false)
+  const initializeAuth = useUserStore((state) => state.initializeAuth)
+  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived)
+
+  const syncSupabaseSession = React.useCallback(async () => {
+    try {
+      const supabase = await getSupabaseBrowserClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        initializeAuth(session.user, session, true)
+        setSessionAndDerived(session)
+      } else {
+        initializeAuth(null, null, false)
+      }
+    } catch (syncError) {
+      logger.error('Register page failed to synchronize Supabase session', syncError)
+    }
+  }, [initializeAuth, setSessionAndDerived])
 
   React.useEffect(() => setHydrated(true), [])
 
@@ -43,16 +66,18 @@ export default function RegisterPage() {
       return
     }
 
+    await syncSupabaseSession()
     router.replace('/onboarding?step=welcome') // redirect on success
   }
 
-  const handlePasskeySuccess = () => {
+  const handlePasskeySuccess = React.useCallback(async () => {
     setSuccess(true)
+    await syncSupabaseSession()
     // Redirect to onboarding after a brief delay
     setTimeout(() => {
       router.push('/onboarding')
     }, 1500)
-  }
+  }, [router, syncSupabaseSession])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

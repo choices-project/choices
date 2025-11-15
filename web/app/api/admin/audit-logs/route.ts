@@ -16,9 +16,8 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError, errorResponse, forbiddenError, successResponse } from '@/lib/api';
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -59,10 +58,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         }
       );
 
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
+      return forbiddenError('Admin access required');
     }
 
     // Log successful access
@@ -97,8 +93,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
       const stats = await auditLog.getStats(startDate, endDate);
 
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         stats,
         period: {
           start: startDate.toISOString(),
@@ -144,8 +139,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Apply offset manually (Supabase search doesn't support offset in RPC)
     const paginatedLogs = logs.slice(offset, offset + limit);
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       logs: paginatedLogs,
       pagination: {
         limit,

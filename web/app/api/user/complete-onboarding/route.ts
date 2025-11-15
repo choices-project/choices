@@ -1,70 +1,79 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, authError } from '@/lib/api';
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withErrorHandling, authError, successResponse, errorResponse } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const supabaseClient = await getSupabaseServerClient();
 
-  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseClient.auth.getUser();
 
   if (userError || !user) {
-    logger.warn('User not authenticated for onboarding completion')
+    logger.warn('User not authenticated for onboarding completion');
     return authError('Authentication required');
   }
 
-    // Handle both form data and JSON requests
-    const contentType = req.headers.get('content-type')
-    let preferences = {}
+  const contentType = req.headers.get('content-type');
+  let preferences: Record<string, unknown> = {};
 
-    if (contentType?.includes('application/json')) {
-      const body = await req.json()
-      preferences = body.preferences ?? {}
-    } else {
-      // Handle form data
-      const formData = await req.formData()
-      // Extract preferences from form data if needed
-      preferences = {
-        notifications: formData.get('notifications') === 'true',
-        dataSharing: formData.get('dataSharing') === 'true',
-        theme: formData.get('theme') ?? 'system'
-      }
+  if (contentType?.includes('application/json')) {
+    try {
+      const body = await req.json();
+      const parsedPreferences =
+        typeof body?.preferences === 'object' && body?.preferences !== null ? body.preferences : {};
+      preferences = parsedPreferences as Record<string, unknown>;
+    } catch (parseError) {
+      logger.warn('Invalid JSON supplied to onboarding completion route', { error: parseError });
+      return errorResponse('Invalid request payload', 400, undefined, 'ONBOARDING_INVALID_PAYLOAD');
     }
+  } else {
+    const formData = await req.formData();
+    preferences = {
+      notifications: formData.get('notifications') === 'true',
+      dataSharing: formData.get('dataSharing') === 'true',
+      theme: formData.get('theme') ?? 'system',
+    };
+  }
 
-    // Update user profile to mark onboarding as completed
-    const { error: updateError } = await supabaseClient
-      .from('user_profiles')
-      .update({
-        onboarding_completed: true,
-        preferences: preferences,
-        updated_at: new Date().toISOString()
-      } as any)
-      .eq('user_id', user.id)
+  const { error: updateError } = await supabaseClient
+    .from('user_profiles')
+    .update({
+      onboarding_completed: true,
+      preferences,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('user_id', user.id);
 
-    if (updateError) {
-      logger.error('Failed to complete onboarding', updateError)
-      return NextResponse.json({ error: 'Failed to complete onboarding' }, { status: 500 })
-    }
+  if (updateError) {
+    logger.error('Failed to complete onboarding', updateError);
+    return errorResponse(
+      'Failed to complete onboarding',
+      500,
+      { message: updateError.message },
+      'ONBOARDING_UPDATE_FAILED'
+    );
+  }
 
-    // Create response with explicit redirect
-    const dest = new URL('/dashboard', req.url).toString() // absolute
+  const destination = new URL('/dashboard', req.url).toString();
 
-    // Use 302 for WebKit/Safari, 303 for others (WebKit redirect quirk workaround)
-    const userAgent = req.headers.get('user-agent') ?? ''
-    const isWebKit = userAgent.includes('WebKit') && !userAgent.includes('Chrome')
-    const status = isWebKit ? 302 : 303
+  logger.info('Onboarding completed successfully', { userId: user.id });
 
-    const response = NextResponse.redirect(dest, { status })
+  const response = successResponse({
+    message: 'Onboarding completed successfully',
+    redirectTo: destination,
+    onboarding: {
+      completed: true,
+      preferences,
+    },
+  });
 
-    // Add explicit headers for WebKit compatibility
-    response.headers.set('Cache-Control', 'no-store')
-    response.headers.set('Content-Length', '0') // help some UA edge cases
+  response.headers.set('Cache-Control', 'no-store');
 
-    logger.info('Onboarding completed successfully', { userId: user.id })
-
-  return response
+  return response;
 });

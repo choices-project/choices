@@ -23,7 +23,7 @@ import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
-import { extractRepresentatives } from '../lib/representatives';
+import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
 import type { UserProfileProps } from '../types';
 
 /**
@@ -74,10 +74,27 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   const handleAddressUpdateLocal = async () => {
     setAddressLoading(true);
     try {
-      const response = await fetch(`/api/v1/civics/address-lookup?address=${encodeURIComponent(newAddress)}`);
-      if (!response.ok) throw new Error('Address lookup failed');
-      const result = await response.json();
-      const normalizedRepresentatives = extractRepresentatives(result);
+      const lookupResponse = await fetch('/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: newAddress })
+      });
+      if (!lookupResponse.ok) throw new Error('Address lookup failed');
+      const lookupResult = await lookupResponse.json();
+      if (lookupResult?.success !== true) {
+        throw new Error(lookupResult?.error ?? 'Address lookup failed');
+      }
+
+      const jurisdiction = normalizeJurisdiction(lookupResult?.data?.jurisdiction ?? lookupResult?.jurisdiction);
+      const stateFromAddress = jurisdiction?.state;
+      if (!stateFromAddress) {
+        throw new Error('Could not determine state from address');
+      }
+
+      const repsResponse = await fetch(`/api/v1/civics/by-state?state=${stateFromAddress}&level=federal&limit=20`);
+      if (!repsResponse.ok) throw new Error('Failed to load representatives');
+      const repsResult = await repsResponse.json();
+      const normalizedRepresentatives = extractRepresentatives(repsResult);
       
       // Update state
       setCurrentAddress(newAddress);

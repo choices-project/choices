@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 
 import { AdminLayout } from '../layout/AdminLayout';
+import { useAppActions } from '@/lib/stores/appStore';
 
 // Dynamically import the ComprehensiveAdminDashboard component with optimizations
 const ComprehensiveAdminDashboard = dynamic(() => import('@/features/admin').then(mod => ({ default: mod.ComprehensiveAdminDashboard })), {
@@ -16,6 +17,22 @@ const ComprehensiveAdminDashboard = dynamic(() => import('@/features/admin').the
 });
 
 export default function AdminDashboardPage() {
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/dashboard');
+    setSidebarActiveSection('admin-dashboard');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Dashboard', href: '/admin/dashboard' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
   return (
     <AdminLayout>
       <Suspense fallback={

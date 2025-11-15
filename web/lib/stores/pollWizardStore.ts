@@ -5,6 +5,7 @@
  * persistence, and selector helpers for the creation flow.
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -523,8 +524,10 @@ export const usePollWizardCanGoBack = () => usePollWizardStore((state) => state.
 export const usePollWizardIsComplete = () => usePollWizardStore((state) => state.isComplete);
 
 export const usePollWizardActions = () =>
-  usePollWizardStore(
-    useShallow((state) => ({
+  useMemo(() => {
+    const state = usePollWizardStore.getState();
+
+    return {
       nextStep: state.nextStep,
       prevStep: state.prevStep,
       goToStep: state.goToStep,
@@ -548,8 +551,8 @@ export const usePollWizardActions = () =>
       isStepValid: state.isStepValid,
       getStepErrors: state.getStepErrors,
       submitPoll: state.submitPoll,
-    })),
-  );
+    };
+  }, []);
 
 export const usePollWizardStats = () =>
   usePollWizardStore(
@@ -571,14 +574,22 @@ export const usePollWizardStepData = (step: number) =>
 export const usePollWizardStepErrors = (step: number) =>
   usePollWizardStore((state) => state.getStepErrors(step));
 
-export const usePollWizardStepValidation = (step: number) =>
-  usePollWizardStore(
-    useShallow((state) => ({
-      isValid: state.isStepValid(step),
-      errors: state.getStepErrors(step),
-      canProceed: state.canProceedToNextStep(step),
-    })),
+export const usePollWizardStepValidation = (step: number) => {
+  const data = usePollWizardStore((state) => state.data);
+  const canProceed = usePollWizardStore((state) => state.canProceedToNextStep(step));
+
+  const stepErrors = useMemo(() => validatePollWizardStep(step, data), [step, data]);
+  const isValid = useMemo(() => Object.keys(stepErrors).length === 0, [stepErrors]);
+
+  return useMemo(
+    () => ({
+      isValid,
+      errors: stepErrors,
+      canProceed,
+    }),
+    [isValid, stepErrors, canProceed],
   );
+};
 
 export const pollWizardStoreUtils = {
   getWizardSummary: () => {

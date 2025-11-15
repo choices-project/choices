@@ -1,3 +1,4 @@
+import { normalizeTrustTier } from '@/lib/trust/trust-tiers'
 import { devLog } from '@/lib/utils/logger'
 import type { Database } from '@/types/database'
 import type {
@@ -142,7 +143,11 @@ const parseTrustTierAnalyticsRow = (value: unknown): TrustTierAnalyticsRecord | 
   }
 
   const record = value as Record<string, unknown>;
-  const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : null;
+  const trustTierValue = record.trust_tier;
+  const trustTier =
+    typeof trustTierValue === 'string' || typeof trustTierValue === 'number'
+      ? normalizeTrustTier(trustTierValue)
+      : null;
   const userId = typeof record.user_id === 'string' ? record.user_id : null;
 
   if (!trustTier || !userId) {
@@ -172,7 +177,11 @@ const parseTrustTierHistory = (value: unknown): TrustTierHistoryEntry[] => {
     }
 
     const record = candidate as Record<string, unknown>;
-    const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : undefined;
+    const trustTierValue = record.trust_tier;
+    const trustTier =
+      typeof trustTierValue === 'string' || typeof trustTierValue === 'number'
+        ? normalizeTrustTier(trustTierValue)
+        : undefined;
     const upgradeDate = typeof record.upgrade_date === 'string' ? record.upgrade_date : undefined;
     const reason = typeof record.reason === 'string' ? record.reason : undefined;
     const verificationMethods = toStringArray(record.verification_methods) ?? [];
@@ -199,7 +208,10 @@ const parseCivicDatabaseEntry = (value: unknown): CivicDatabaseEntrySnapshot | n
 
   return {
     id: typeof record.id === 'string' ? record.id : 'unknown',
-    current_trust_tier: typeof record.current_trust_tier === 'string' ? (record.current_trust_tier as TrustTier) : null,
+    current_trust_tier:
+      typeof record.current_trust_tier === 'string' || typeof record.current_trust_tier === 'number'
+        ? normalizeTrustTier(record.current_trust_tier)
+        : null,
     trust_tier_history: parseTrustTierHistory(record.trust_tier_history),
     trust_tier_upgrade_date: typeof record.trust_tier_upgrade_date === 'string' ? record.trust_tier_upgrade_date : null
   };
@@ -262,8 +274,10 @@ export class AnalyticsService {
 
       // Calculate verification factors
       const biometric_verified = (biometricCreds?.length ?? 0) > 0
-      const phone_verified = user && 'trust_tier' in user ? (user.trust_tier === 'T2' || user.trust_tier === 'T3') : false
-      const identity_verified = user && 'trust_tier' in user ? user.trust_tier === 'T3' : false
+      const currentTrustTier =
+        user && 'trust_tier' in user ? normalizeTrustTier(user.trust_tier) : 'T0'
+      const phone_verified = currentTrustTier === 'T2' || currentTrustTier === 'T3'
+      const identity_verified = currentTrustTier === 'T3'
       const voting_history_count = votingHistory ?? 0
 
       // Calculate score using database function
@@ -284,7 +298,10 @@ export class AnalyticsService {
         throw new Error('Failed to determine trust tier')
       }
 
-      const trust_tier = Array.isArray(tierResult) && tierResult.length > 0 ? tierResult[0] as TrustTier : 'T1' as TrustTier
+      const trust_tier =
+        Array.isArray(tierResult) && tierResult.length > 0
+          ? normalizeTrustTier(tierResult[0])
+          : currentTrustTier
 
       return {
         score,

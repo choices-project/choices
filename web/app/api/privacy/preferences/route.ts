@@ -1,11 +1,39 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
+
+const VALID_PROFILE_VISIBILITY = ['public', 'private', 'friends_only', 'anonymous'] as const;
+const VALID_DATA_SHARING = ['none', 'analytics_only', 'research', 'full'] as const;
+const VALID_DATA_RETENTION = ['30_days', '90_days', '1_year', 'indefinite'] as const;
+
+type PrivacyPreferencePayload = {
+  profile_visibility?: typeof VALID_PROFILE_VISIBILITY[number];
+  data_sharing_level?: typeof VALID_DATA_SHARING[number];
+  data_retention_preference?: typeof VALID_DATA_RETENTION[number];
+  allow_contact?: boolean;
+  allow_research?: boolean;
+  allow_marketing?: boolean;
+  allow_analytics?: boolean;
+  notification_preferences?: Record<string, boolean>;
+};
+
+const buildDefaultPreferences = (userId: string) => ({
+  user_id: userId,
+  profile_visibility: 'public',
+  data_sharing_level: 'analytics_only',
+  allow_contact: false,
+  allow_research: false,
+  allow_marketing: false,
+  allow_analytics: true,
+  notification_preferences: { email: true, push: true, sms: false },
+  data_retention_preference: '90_days',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+});
 
 export const GET = withErrorHandling(async () => {
   const supabase = await getSupabaseServerClient()
@@ -32,129 +60,149 @@ export const GET = withErrorHandling(async () => {
     return errorResponse('Failed to fetch preferences', 500);
   }
 
-    // Return default preferences if none exist
-    const defaultPreferences = {
-      user_id: user.id,
-      profile_visibility: 'public',
-      data_sharing_level: 'analytics_only',
-      allow_contact: false,
-      allow_research: false,
-      allow_marketing: false,
-      allow_analytics: true,
-      notification_preferences: { email: true, push: true, sms: false },
-      data_retention_preference: '90_days',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
+    const defaultPreferences = buildDefaultPreferences(String(user.id));
 
   return successResponse({
     preferences: preferences ?? defaultPreferences
   });
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+
+  if (!supabase) {
+    return errorResponse('Database connection failed', 500);
+  }
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return authError('User not authenticated');
+  }
+
+  let body: PrivacyPreferencePayload;
   try {
-    const supabase = await getSupabaseServerClient()
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+    body = await request.json();
+  } catch {
+    return validationError({ _error: 'Invalid JSON body' });
+  }
+
+  const {
+    profile_visibility,
+    data_sharing_level,
+    allow_contact,
+    allow_research,
+    allow_marketing,
+    allow_analytics,
+    notification_preferences,
+    data_retention_preference
+  } = body;
+
+  const errors: Record<string, string> = {};
+
+  if (profile_visibility && !VALID_PROFILE_VISIBILITY.includes(profile_visibility)) {
+    errors.profile_visibility = 'Invalid profile visibility selection';
+  }
+
+  if (data_sharing_level && !VALID_DATA_SHARING.includes(data_sharing_level)) {
+    errors.data_sharing_level = 'Invalid data sharing level';
+  }
+
+  if (data_retention_preference && !VALID_DATA_RETENTION.includes(data_retention_preference)) {
+    errors.data_retention_preference = 'Invalid data retention preference';
+  }
+
+  const booleanFields: Array<[keyof PrivacyPreferencePayload, boolean | undefined]> = [
+    ['allow_contact', allow_contact],
+    ['allow_research', allow_research],
+    ['allow_marketing', allow_marketing],
+    ['allow_analytics', allow_analytics],
+  ];
+
+  for (const [field, value] of booleanFields) {
+    if (value !== undefined && typeof value !== 'boolean') {
+      errors[field] = 'Must be a boolean';
     }
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  }
 
-    const body = await request.json()
-    const {
-      profile_visibility,
-      data_sharing_level,
-      allow_contact,
-      allow_research,
-      allow_marketing,
-      allow_analytics,
-      notification_preferences,
-      data_retention_preference
-    } = body
+  if (
+    notification_preferences !== undefined &&
+    (typeof notification_preferences !== 'object' || Array.isArray(notification_preferences))
+  ) {
+    errors.notification_preferences = 'Notification preferences must be an object';
+  }
 
-    // Validate input
-    const validProfileVisibility = ['public', 'private', 'friends_only', 'anonymous']
-    const validDataSharingLevel = ['none', 'analytics_only', 'research', 'full']
-    const validDataRetention = ['30_days', '90_days', '1_year', 'indefinite']
+  if (Object.keys(errors).length > 0) {
+    return validationError(errors);
+  }
 
-    if (profile_visibility && !validProfileVisibility.includes(profile_visibility)) {
-      return NextResponse.json({ error: 'Invalid profile visibility' }, { status: 400 })
-    }
+  const preferencePayload: Record<string, any> = {
+    user_id: String(user.id),
+    updated_at: new Date().toISOString(),
+  };
 
-    if (data_sharing_level && !validDataSharingLevel.includes(data_sharing_level)) {
-      return NextResponse.json({ error: 'Invalid data sharing level' }, { status: 400 })
-    }
+  if (profile_visibility) preferencePayload.profile_visibility = profile_visibility;
+  if (data_sharing_level) preferencePayload.data_sharing_level = data_sharing_level;
+  if (typeof allow_contact === 'boolean') preferencePayload.allow_contact = allow_contact;
+  if (typeof allow_research === 'boolean') preferencePayload.allow_research = allow_research;
+  if (typeof allow_marketing === 'boolean') preferencePayload.allow_marketing = allow_marketing;
+  if (typeof allow_analytics === 'boolean') preferencePayload.allow_analytics = allow_analytics;
+  if (notification_preferences && !Array.isArray(notification_preferences)) {
+    preferencePayload.notification_preferences = notification_preferences;
+  }
+  if (data_retention_preference) {
+    preferencePayload.data_retention_preference = data_retention_preference;
+  }
 
-    if (data_retention_preference && !validDataRetention.includes(data_retention_preference)) {
-      return NextResponse.json({ error: 'Invalid data retention preference' }, { status: 400 })
-    }
+  const { data: updatedPreferences, error: upsertError } = await (supabase as any)
+    .from('user_privacy_preferences')
+    .upsert(preferencePayload, { onConflict: 'user_id' })
+    .select('*')
+    .eq('user_id', String(user.id))
+    .single();
 
-    // Update privacy preferences (using direct table operation)
-    const result = await (supabase as any)
-      .from('user_privacy_preferences')
-      .upsert({
-        user_id: String(user.id),
-        profile_visibility: profile_visibility ?? undefined,
-        data_sharing_level: data_sharing_level ?? undefined,
-        allow_contact: allow_contact ?? undefined,
-        allow_research: allow_research ?? undefined,
-        allow_marketing: allow_marketing ?? undefined,
-        allow_analytics: allow_analytics ?? undefined,
-        notification_preferences: notification_preferences ?? undefined,
-        data_retention_preference: data_retention_preference ?? undefined
-      })
+  if (upsertError) {
+    devLog('Error updating privacy preferences:', upsertError);
+    return errorResponse('Failed to update preferences', 500);
+  }
 
-    if (result.error) {
-      devLog('Error updating privacy preferences:', result.error)
-      return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 })
-    }
+  const profileUpdates: Record<string, any> = {};
+  if (profile_visibility) {
+    profileUpdates.profile_visibility = profile_visibility;
+  }
 
-    // Also update user_profiles table for backward compatibility
-    const profileUpdates: any = {}
-    if (profile_visibility) profileUpdates.profile_visibility = profile_visibility
-    if (data_sharing_level) profileUpdates.data_sharing_preferences = { 
+  if (data_sharing_level) {
+    const dataSharingPreferences: Record<string, boolean> = {
       analytics: data_sharing_level !== 'none',
       research: data_sharing_level === 'research' || data_sharing_level === 'full',
-      contact: allow_contact,
-      marketing: allow_marketing
+    };
+
+    if (typeof allow_contact === 'boolean') {
+      dataSharingPreferences.contact = allow_contact;
     }
 
-    if (Object.keys(profileUpdates).length > 0) {
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update(profileUpdates)
-        .eq('user_id', String(user.id) as any)
-
-      if (profileError) {
-        devLog('Error updating user profile:', profileError)
-      }
+    if (typeof allow_marketing === 'boolean') {
+      dataSharingPreferences.marketing = allow_marketing;
     }
 
-    // Get updated preferences
-    const { data: updatedPreferences, error: fetchError } = await (supabase as any)
-      .from('user_privacy_preferences')
-      .select('*')
-      .eq('user_id', String(user.id))
-      .single()
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      devLog('Error fetching updated preferences:', fetchError)
-    }
-
-    return NextResponse.json({
-      success: true,
-      preferences: updatedPreferences,
-      message: 'Privacy preferences updated successfully'
-    })
-  } catch (error) {
-    devLog('Error in privacy preferences POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    profileUpdates.data_sharing_preferences = dataSharingPreferences;
   }
-}
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .update(profileUpdates)
+      .eq('user_id', String(user.id));
+
+    if (profileError) {
+      devLog('Error updating user profile:', profileError);
+    }
+  }
+
+  const effectivePreferences = updatedPreferences ?? buildDefaultPreferences(String(user.id));
+
+  return successResponse({
+    message: 'Privacy preferences updated successfully',
+    preferences: effectivePreferences,
+  });
+});
 

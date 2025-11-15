@@ -24,20 +24,34 @@ import {
   Plus,
   Undo,
   Redo,
-  Settings
+  Settings,
+  Info,
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useId, useMemo } from 'react';
 import type { Layout as GridLayout } from 'react-grid-layout';
+import type { StoreApi } from 'zustand';
+import { shallow } from 'zustand/shallow';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import type { WidgetStore } from '@/lib/stores/widgetStore';
+import {
+  widgetStore,
+  WidgetStoreProvider,
+  useWidgetStoreApi,
+  useWidgetStoreScoped,
+  selectIsEditing,
+  selectAllWidgets,
+  useWidgetStoreActions,
+} from '@/lib/stores/widgetStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
 import { getPreset, getAllPresets } from '../../lib/widgetPresets';
 import { getWidget } from '../../lib/widgetRegistry';
-import { useWidgetStore, selectIsEditing, selectAllWidgets } from '../../stores/widgetStore';
-import type { WidgetConfig } from '../../types/widget';
+import type { DashboardLayout, WidgetConfig, WidgetState } from '../../types/widget';
 
 import { WidgetGrid } from './WidgetGrid';
 import { WidgetRenderer } from './WidgetRenderer';
@@ -50,49 +64,200 @@ export type WidgetDashboardProps = {
   userId: string;
   isAdmin?: boolean;
   className?: string;
-}
+  initialLayout?: DashboardLayout;
+  startInEditMode?: boolean;
+  initialSelectedWidgetId?: string | null;
+  initialKeyboardMode?: 'idle' | 'move' | 'resize';
+  store?: StoreApi<WidgetStore>;
+};
 
 // ============================================================================
 // WIDGET DASHBOARD COMPONENT
 // ============================================================================
 
-export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
+const cloneLayout = (layout: DashboardLayout): DashboardLayout =>
+  JSON.parse(JSON.stringify(layout)) as DashboardLayout;
+
+type WidgetDashboardInnerProps = Omit<WidgetDashboardProps, 'store'>;
+
+export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({ store, ...rest }) => {
+  const storeApi = useMemo(() => store ?? widgetStore, [store]);
+
+  return (
+    <WidgetStoreProvider store={storeApi}>
+      <WidgetDashboardInner {...rest} />
+    </WidgetStoreProvider>
+  );
+};
+
+const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   userId,
   isAdmin = false,
   className = '',
+  initialLayout,
+  startInEditMode = false,
+  initialSelectedWidgetId,
+  initialKeyboardMode,
 }) => {
-  // Store state
-  const isEditing = useWidgetStore(selectIsEditing);
-  const widgets = useWidgetStore(selectAllWidgets);
-  const setEditing = useWidgetStore((state) => state.setEditing);
-  const loadLayout = useWidgetStore((state) => state.loadLayout);
-  const saveLayout = useWidgetStore((state) => state.saveLayout);
-  const undo = useWidgetStore((state) => state.undo);
-  const redo = useWidgetStore((state) => state.redo);
-  const canUndo = useWidgetStore((state) => state.canUndo);
-  const canRedo = useWidgetStore((state) => state.canRedo);
+  const { t } = useI18n();
+  const storeApi = useWidgetStoreApi();
+  const isEditing = useWidgetStoreScoped(selectIsEditing);
+  const widgets = useWidgetStoreScoped(selectAllWidgets, shallow);
+  const canUndo = useWidgetStoreScoped((state) => state.canUndo);
+  const canRedo = useWidgetStoreScoped((state) => state.canRedo);
+  const {
+    setEditing,
+    setSelectedWidget,
+    setKeyboardMode,
+    loadLayout,
+    initializeLayout,
+    saveLayout,
+    undo,
+    redo,
+  } = useWidgetStoreActions(storeApi);
+  const hasBootstrappedRef = useRef(false);
+
+  const setSelectedWidgetIfChanged = useCallback(
+    (widgetId: string | null) => {
+      if (storeApi.getState().selectedWidgetId !== widgetId) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[WidgetDashboard] setSelectedWidgetIfChanged', {
+            from: storeApi.getState().selectedWidgetId,
+            to: widgetId,
+          });
+        }
+        setSelectedWidget(widgetId);
+      }
+    },
+    [setSelectedWidget, storeApi],
+  );
+
+  const setKeyboardModeIfChanged = useCallback(
+    (mode: WidgetState['keyboardMode']) => {
+      if (storeApi.getState().keyboardMode !== mode) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[WidgetDashboard] setKeyboardModeIfChanged', {
+            from: storeApi.getState().keyboardMode,
+            to: mode,
+          });
+        }
+        setKeyboardMode(mode);
+      }
+    },
+    [setKeyboardMode, storeApi],
+  );
+
+  const setEditingIfChanged = useCallback(
+    (value: boolean) => {
+      if (storeApi.getState().isEditing !== value) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[WidgetDashboard] setEditingIfChanged', {
+            from: storeApi.getState().isEditing,
+            to: value,
+          });
+        }
+        setEditing(value);
+      }
+    },
+    [setEditing, storeApi],
+  );
 
   // Local state
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const shortcutHelpId = useId();
 
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
 
   useEffect(() => {
-    // Load user's saved layout or default preset
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[WidgetDashboard] bootstrap effect start', {
+        hasBootstrapped: hasBootstrappedRef.current,
+        currentLayoutChecksum: storeApi.getState().currentLayoutChecksum,
+        widgetsSize: storeApi.getState().widgets.size,
+      });
+    }
+
+    if (hasBootstrappedRef.current) {
+      return;
+    }
+
+    hasBootstrappedRef.current = true;
+    let isActive = true;
+
+    const schedule = (fn: () => void) => {
+      Promise.resolve().then(() => {
+        if (isActive) {
+          fn();
+        }
+      });
+    };
+
+    const existingLayout = storeApi.getState().currentLayout;
+    if (existingLayout) {
+      const defaultWidgetId =
+        initialSelectedWidgetId ?? existingLayout.widgets[0]?.id ?? null;
+      schedule(() => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[WidgetDashboard] bootstrap using existing layout', {
+            layoutId: existingLayout.id,
+            selectedWidgetId: defaultWidgetId,
+          });
+        }
+        setSelectedWidgetIfChanged(defaultWidgetId);
+        setKeyboardModeIfChanged(initialKeyboardMode ?? 'idle');
+        if (startInEditMode) {
+          setEditingIfChanged(true);
+        }
+      });
+      return () => {
+        isActive = false;
+      };
+    }
+
+    if (initialLayout) {
+      const clonedLayout = cloneLayout(initialLayout);
+      schedule(() => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[WidgetDashboard] bootstrap applying initialLayout prop', {
+            layoutId: clonedLayout.id,
+          });
+        }
+        initializeLayout(clonedLayout, {
+          selectedWidgetId: initialSelectedWidgetId ?? clonedLayout.widgets[0]?.id ?? null,
+          startInEditMode,
+          keyboardMode: initialKeyboardMode ?? 'idle',
+        });
+      });
+      return;
+    }
+
     const loadUserLayout = async () => {
       try {
         const response = await fetch(`/api/analytics/dashboard/layout?userId=${userId}`);
         
         if (response.ok) {
           const layout = await response.json();
-          loadLayout(layout);
+          schedule(() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[WidgetDashboard] bootstrap fetched user layout', {
+                layoutId: layout.id,
+              });
+            }
+            initializeLayout(layout, {
+              selectedWidgetId: initialSelectedWidgetId ?? layout.widgets?.[0]?.id ?? null,
+              startInEditMode,
+              keyboardMode: initialKeyboardMode ?? 'idle',
+            });
+          });
           logger.info('User layout loaded', { userId, widgetCount: layout.widgets?.length });
-        } else {
-          // No saved layout, load default preset
+          return;
+        }
+
           const defaultPreset = getPreset('default');
           if (defaultPreset) {
             const layout = {
@@ -102,13 +267,32 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
               createdAt: new Date(),
               updatedAt: new Date(),
             };
-            loadLayout(layout);
+          schedule(() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[WidgetDashboard] bootstrap applying default preset layout', {
+                layoutId: layout.id,
+              });
+            }
+            initializeLayout(layout, {
+              selectedWidgetId: layout.widgets?.[0]?.id ?? null,
+              startInEditMode,
+              keyboardMode: initialKeyboardMode ?? 'idle',
+            });
+          });
             logger.info('Default preset loaded', { userId });
+        } else {
+          schedule(() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[WidgetDashboard] bootstrap falling back to empty layout');
           }
+            initializeLayout(null, {
+              startInEditMode,
+              keyboardMode: initialKeyboardMode ?? 'idle',
+            });
+          });
         }
       } catch (error) {
         logger.error('Failed to load user layout', { error, userId });
-        // Load default preset as fallback
         const defaultPreset = getPreset('default');
         if (defaultPreset) {
           const layout = {
@@ -118,13 +302,41 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          loadLayout(layout);
+          schedule(() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[WidgetDashboard] bootstrap applying preset after error', {
+                layoutId: layout.id,
+              });
+            }
+            initializeLayout(layout, {
+              selectedWidgetId: layout.widgets?.[0]?.id ?? null,
+              startInEditMode,
+              keyboardMode: initialKeyboardMode ?? 'idle',
+            });
+          });
+        } else {
+          schedule(() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[WidgetDashboard] bootstrap clearing layout after error');
+            }
+            initializeLayout(null, {
+              startInEditMode,
+              keyboardMode: initialKeyboardMode ?? 'idle',
+            });
+          });
         }
       }
     };
 
-    loadUserLayout();
-  }, [userId, loadLayout]);
+    void loadUserLayout();
+
+    return () => {
+      isActive = false;
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[WidgetDashboard] bootstrap cleanup');
+      }
+    };
+  }, [initialKeyboardMode, initialLayout, initialSelectedWidgetId, initializeLayout, startInEditMode, userId]);
 
   // ============================================================================
   // EVENT HANDLERS
@@ -139,7 +351,7 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
       logger.info('Layout saved successfully', { userId });
       
       // Exit edit mode after saving
-      setEditing(false);
+      setEditingIfChanged(false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save layout';
       setSaveError(errorMessage);
@@ -147,12 +359,12 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [userId, saveLayout, setEditing]);
+  }, [userId, saveLayout, setEditingIfChanged]);
 
   const handleCancelEdit = useCallback(() => {
-    setEditing(false);
+    setEditingIfChanged(false);
     setSaveError(null);
-  }, [setEditing]);
+  }, [setEditingIfChanged]);
 
   // Keyboard shortcuts (after handlers are defined)
   useWidgetKeyboardShortcuts(isEditing, handleSaveLayout, handleCancelEdit);
@@ -217,6 +429,17 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
   // RENDER
   // ============================================================================
 
+  useEffect(() => {
+    if (isEditing) {
+      ScreenReaderSupport.announce(
+        t('analytics.widgets.editModeOn' as never),
+        'assertive',
+      );
+    } else {
+      ScreenReaderSupport.announce(t('analytics.widgets.editModeOff' as never));
+    }
+  }, [isEditing, t]);
+
   return (
     <div className={`widget-dashboard ${className}`}>
       {/* Toolbar */}
@@ -269,10 +492,21 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
                   trigger={
                     <Button variant="outline" size="sm">
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Widget
+                      {t('analytics.widgets.addWidget')}
                     </Button>
                   }
                 />
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowShortcutHelp((prev) => !prev)}
+                  aria-expanded={showShortcutHelp}
+                  aria-controls={shortcutHelpId}
+                >
+                  <Info className="w-4 h-4 mr-2" />
+                  {t('analytics.widgets.shortcutDialog.button')}
+                </Button>
 
                 {/* Save */}
                 <Button
@@ -312,7 +546,7 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => setEditing(true)}
+                  onClick={() => setEditingIfChanged(true)}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Layout
@@ -322,6 +556,47 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
             )}
           </div>
         </div>
+
+      {showShortcutHelp && (
+        <section
+          id={shortcutHelpId}
+          aria-live="polite"
+          className="mx-4 mt-4 rounded-md border border-dashed border-muted-foreground/20 bg-muted/30 p-4 text-sm md:mx-6"
+        >
+          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <Info className="h-4 w-4" />
+            {t('analytics.widgets.shortcutDialog.title')}
+          </h3>
+          <p className="mt-2 text-muted-foreground">
+            {t('analytics.widgets.shortcutDialog.intro')}
+          </p>
+          <dl className="mt-4 grid gap-3 md:grid-cols-2">
+            {[
+              'toggleEdit',
+              'toggleMove',
+              'toggleResize',
+              'arrowMove',
+              'arrowResize',
+              'undo',
+              'redo',
+              'save',
+              'cancel',
+            ].map((key) => (
+              <div
+                key={key}
+                className="rounded border border-muted-foreground/10 bg-background/80 p-3 shadow-sm"
+              >
+                <dt className="font-medium">
+                  {t(`analytics.widgets.shortcutDialog.items.${key}.shortcut` as const)}
+                </dt>
+                <dd className="mt-1 text-muted-foreground">
+                  {t(`analytics.widgets.shortcutDialog.items.${key}.description` as const)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
         {/* Preset Selector */}
         {showPresets && isEditing && (
@@ -367,7 +642,7 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
               Add widgets to create your custom analytics dashboard
             </p>
             {isAdmin && (
-              <Button onClick={() => setEditing(true)}>
+              <Button onClick={() => setEditingIfChanged(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Start Editing
               </Button>
@@ -384,6 +659,8 @@ export const WidgetDashboard: React.FC<WidgetDashboardProps> = ({
           <div><kbd>Cmd/Ctrl + Shift + Z</kbd> - Redo</div>
           <div><kbd>Cmd/Ctrl + S</kbd> - Save layout</div>
           <div><kbd>Esc</kbd> - Cancel editing</div>
+          <div>{t('analytics.widgets.overlayMoveHint' as never)}</div>
+          <div>{t('analytics.widgets.overlayResizeHint' as never)}</div>
         </div>
       )}
     </div>

@@ -38,14 +38,20 @@ export const GET = withErrorHandling(async () => {
     return notFoundError('User profile not found');
   }
 
-  return successResponse({
-    id: session.user.id,
-    email: session.user.email,
-    username: profile.username,
-    trust_tier: profile.trust_tier,
-    display_name: profile.display_name,
-    avatar_url: profile.avatar_url,
-    bio: profile.bio,
-    is_active: profile.is_active
+  const response = successResponse({
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      username: profile.username,
+      trust_tier: profile.trust_tier,
+      display_name: profile.display_name,
+      avatar_url: profile.avatar_url,
+      bio: profile.bio,
+      is_active: profile.is_active
+    }
   });
+
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+
+  return response;
 });

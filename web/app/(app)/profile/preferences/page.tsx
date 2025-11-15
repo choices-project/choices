@@ -7,6 +7,7 @@ import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
 
 type StatusMessage = {
@@ -29,6 +30,7 @@ export default function ProfilePreferencesPage() {
   const user = useUser();
   const { profile, isLoading: profileLoading, error: profileError } = useProfile();
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
+  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
   const initialInterests = useMemo<string[]>(() => {
     return profile?.primary_concerns ?? [];
@@ -36,6 +38,22 @@ export default function ProfilePreferencesPage() {
 
   const [userInterests, setUserInterests] = useState<string[]>(initialInterests);
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+
+  useEffect(() => {
+    setCurrentRoute('/profile/preferences');
+    setSidebarActiveSection('preferences');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Profile', href: '/profile' },
+      { label: 'Preferences', href: '/profile/preferences' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!arraysAreEqual(userInterests, initialInterests)) {

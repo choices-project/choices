@@ -1,6 +1,6 @@
 # Accessibility & I18n QA Playbook
 
-Last updated: 2025-11-13  
+Last updated: 2025-11-15  
 Status: Draft (QA + Product buy-in required)
 
 ---
@@ -28,7 +28,9 @@ Status: Draft (QA + Product buy-in required)
 
 ## 4. Automated Checklist
 - `npm run lint` (watch for `formatjs/no-literal-string-in-jsx` warnings; treat as blockers once legacy copy removed).
-- `npm run test:e2e -- --grep @axe` for key journeys.
+- `npm run test:e2e:axe` for axe-tagged smoke journeys.
+- `npm run test:e2e:nav` to exercise navigation/admin/locale/analytics harness specs (`navigation-shell`, `global-navigation`, `admin-navigation`, analytics SR + axe, locale-switch`) before promoting CI gates. CI job **Nav & Locale Accessibility** runs the same command (Chromium, harness mode) on every PR.
+- `npx playwright test widget-dashboard-keyboard` (keyboard move/resize workflow regression).
 - `npm run i18n:extract` – ensure `messages/en.snapshot.json` has no unexpected diff (CI enforces this).
 - Optional: `npm run types:ci` to catch type regressions in i18n plumbing.
 
@@ -48,9 +50,14 @@ Status: Draft (QA + Product buy-in required)
 5. **Feed infinite scroll**
    - Pull-to-refresh/loading/end-of-feed messages are translated; refresh state is announced when triggered.
    - Scroll-to-top control is keyboard accessible with descriptive aria-label.
-6. **Admin & Analytics**
-   - Sidebar landmarks, focus management, chart accessibility (when instrumentation completes).
-7. **PWA Surfaces**
+   - Feed error/refresh toasts (including harness provider) surface translated titles/messages and fire `aria-live` announcements.
+6. **Personal dashboard**
+   - Overview metrics, quick actions, trending topics, and representatives panels use translated copy and locale-aware numbers/dates.
+   - Harness mode mirrors production semantics (same aria labels, announcements, and translated strings).
+7. **Admin & Analytics**
+   - Sidebar landmarks, focus management, chart accessibility (verify localized summaries/tables + live status announcements).
+   - Widget dashboard edit mode exposes keyboard instructions, arrow-key move/resize remains operable, and announcements fire via `ScreenReaderSupport`.
+8. **PWA Surfaces**
    - Offline/offline announcements, service worker updates, translation coverage.
 
 Document each session in the smoke log with:

@@ -30,8 +30,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
+import { useWidgetStoreScoped } from '@/lib/stores/widgetStore';
+
 import { createWidgetConfig, getWidget, listWidgets } from '../../lib/widgetRegistry';
-import { useWidgetStore } from '../../stores/widgetStore';
 import type { WidgetCategory, WidgetType } from '../../types/widget';
 
 // ============================================================================
@@ -52,7 +53,7 @@ export const WidgetSelector: React.FC<WidgetSelectorProps> = ({
   onWidgetAdd,
 }) => {
   const [open, setOpen] = useState(false);
-  const addWidget = useWidgetStore((state) => state.addWidget);
+  const addWidget = useWidgetStoreScoped((state) => state.addWidget);
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstTabRef = useRef<HTMLButtonElement>(null);
 

@@ -1,8 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
-import { withErrorHandling } from '@/lib/api';
+import { successResponse, errorResponse, withErrorHandling } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
@@ -11,8 +10,8 @@ export const runtime = 'nodejs';
 export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const authGate = await requireAdminOr401()
-  if (authGate) return authGate
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
   
   const adminUser = await getAdminUser()
     
@@ -88,10 +87,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     if (error) {
       devLog('Error fetching feedback:', { error });
-      return NextResponse.json(
-        { error: 'Failed to fetch feedback' },
-        { status: 500 }
-      );
+      return errorResponse('Failed to fetch feedback', 500);
     }
 
     // Apply additional search filtering if needed (for fields not in the database)
@@ -107,9 +103,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: filteredFeedback,
+    return successResponse({
+      feedback: filteredFeedback,
       total: filteredFeedback.length,
       admin: {
         id: adminUser?.id,

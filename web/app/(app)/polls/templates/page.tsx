@@ -3,7 +3,7 @@
 
 import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
 import { devLog } from '@/lib/utils/logger';
+import { useAppActions } from '@/lib/stores/appStore';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },
@@ -250,6 +251,23 @@ export default function PollTemplatesPage() {
   const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'rating' | 'name'>('popular');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [templates, _setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/polls/templates');
+    setSidebarActiveSection('polls');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
+      { label: 'Templates', href: '/polls/templates' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

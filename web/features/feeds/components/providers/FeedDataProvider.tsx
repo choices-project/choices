@@ -2,16 +2,16 @@
 
 /**
  * FeedDataProvider Component
- * 
+ *
  * Handles data fetching and state management for feeds.
  * Integrates with Zustand stores and provides data to child components.
- * 
+ *
  * This component handles:
  * - Store subscriptions (isolated)
  * - Data loading
  * - Hashtag filtering
  * - User interactions
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Architectural refactor
  */
@@ -19,6 +19,7 @@
 import type React from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   useUser,
   useFilteredFeeds,
@@ -30,8 +31,205 @@ import {
   useTrendingHashtags,
   useNotificationActions,
 } from '@/lib/stores';
+import { useFeedsStore } from '@/lib/stores/feedsStore';
 import type { FeedItem } from '@/lib/stores/feedsStore';
 import logger from '@/lib/utils/logger';
+
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
+function HarnessFeedDataProvider({
+  userId,
+  enableInfiniteScroll = true,
+  maxItems = 50,
+  children,
+}: FeedDataProviderProps) {
+  const { t } = useI18n();
+  const user = useUser();
+  const { addNotification } = useNotificationActions();
+  const { getTrendingHashtags } = useHashtagActions();
+  const loadFeeds = useFeedsStore((state) => state.loadFeeds);
+  const refreshFeeds = useFeedsStore((state) => state.refreshFeeds);
+  const likeFeedAction = useFeedsStore((state) => state.likeFeed);
+  const bookmarkFeedAction = useFeedsStore((state) => state.bookmarkFeed);
+  const loadMoreFeeds = useFeedsStore((state) => state.loadMoreFeeds);
+  const setErrorAction = useFeedsStore((state) => state.setError);
+  const clearErrorAction = useFeedsStore((state) => state.clearError);
+  const feeds = useFeedsStore((state) => state.filteredFeeds);
+  const isLoading = useFeedsStore((state) => state.isLoading);
+  const error = useFeedsStore((state) => state.error);
+  const hasMore = useFeedsStore((state) => state.hasMoreFeeds);
+  const totalAvailable = useFeedsStore((state) => state.totalAvailableFeeds);
+  const trendingHashtags = useTrendingHashtags()
+    .map((h) => {
+      if (typeof h === 'string') return h;
+      return (
+        (h as { hashtag_name?: string }).hashtag_name ??
+        (h as { name?: string }).name ??
+        ''
+      );
+    })
+    .filter((name) => name.length > 0);
+
+  const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
+  const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
+  const initialLoadRef = useRef(false);
+
+  const notifyFeedError = useCallback(
+    (message: string) => {
+      addNotification({
+        type: 'error',
+        title: t('feeds.provider.notifications.error.title'),
+        message,
+      });
+    },
+    [addNotification, t],
+  );
+
+  const surfaceStoreError = useCallback(
+    (buildMessage: (error: string) => string) => {
+      const latestError = useFeedsStore.getState().error;
+      if (latestError) {
+        notifyFeedError(buildMessage(latestError));
+      }
+    },
+    [notifyFeedError],
+  );
+
+  useEffect(() => {
+    if (!userId && !user?.id) return;
+    if (initialLoadRef.current) return;
+
+    let active = true;
+    clearErrorAction();
+
+    void (async () => {
+      try {
+        await loadFeeds();
+        surfaceStoreError((error) =>
+          t('feeds.provider.errors.loadFeeds.withReason', { error }),
+        );
+      } catch (err) {
+        if (!active) return;
+        logger.error('[HarnessFeedDataProvider] Failed to load feeds:', err);
+        const shortMessage = t('feeds.provider.errors.loadFeeds.short');
+        setErrorAction(shortMessage);
+        notifyFeedError(shortMessage);
+      } finally {
+        initialLoadRef.current = true;
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        await getTrendingHashtags();
+      } catch (err) {
+        logger.warn('[HarnessFeedDataProvider] Failed to load trending hashtags:', err);
+      }
+    })();
+  }, [getTrendingHashtags, t]);
+
+  const handleLike = useCallback(async (itemId: string) => {
+    clearErrorAction();
+    try {
+      await likeFeedAction(itemId);
+    } catch (err) {
+      logger.error('[HarnessFeedDataProvider] Failed to like feed:', err);
+      const shortMessage = t('feeds.provider.errors.likeFeed.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(t('feeds.provider.errors.likeFeed.message'));
+    }
+  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+
+  const handleBookmark = useCallback(async (itemId: string) => {
+    clearErrorAction();
+    try {
+      await bookmarkFeedAction(itemId);
+    } catch (err) {
+      logger.error('[HarnessFeedDataProvider] Failed to bookmark feed:', err);
+      const shortMessage = t('feeds.provider.errors.bookmarkFeed.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(t('feeds.provider.errors.bookmarkFeed.message'));
+    }
+  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+
+  const handleShare = useCallback((itemId: string) => {
+    logger.info('[HarnessFeedDataProvider] Sharing feed:', itemId);
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    clearErrorAction();
+    try {
+      await refreshFeeds();
+      surfaceStoreError((error) =>
+        t('feeds.provider.errors.refreshFeeds.withReason', { error }),
+      );
+    } catch (err) {
+      logger.error('[HarnessFeedDataProvider] Failed to refresh feeds:', err);
+      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(shortMessage);
+    }
+  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+
+  const handleHashtagAdd = useCallback((tag: string) => {
+    if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
+      setSelectedHashtags((prev) => [...prev, tag]);
+    }
+  }, [selectedHashtags]);
+
+  const handleHashtagRemove = useCallback((tag: string) => {
+    setSelectedHashtags((prev) => prev.filter((current) => current !== tag));
+  }, []);
+
+  const handleDistrictToggle = useCallback(() => {
+    setDistrictFilterEnabled((prev) => !prev);
+  }, []);
+
+  const effectiveLimit = totalAvailable > 0 ? Math.min(maxItems, totalAvailable) : maxItems;
+  const showLoadMore = enableInfiniteScroll && hasMore && feeds.length < effectiveLimit;
+
+  const handleLoadMore = useCallback(async () => {
+    try {
+      await loadMoreFeeds();
+      surfaceStoreError((error) =>
+        t('feeds.provider.errors.loadMoreFeeds.withReason', { error }),
+      );
+    } catch (err) {
+      logger.error('[HarnessFeedDataProvider] Failed to load more feeds:', err);
+      const shortMessage = t('feeds.provider.errors.loadMoreFeeds.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(shortMessage);
+    }
+  }, [loadMoreFeeds, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+
+  return (
+    <>
+      {children({
+        feeds,
+        isLoading,
+        error,
+        onLike: handleLike,
+        onBookmark: handleBookmark,
+        onShare: handleShare,
+        onRefresh: handleRefresh,
+        selectedHashtags,
+        onHashtagAdd: handleHashtagAdd,
+        onHashtagRemove: handleHashtagRemove,
+        trendingHashtags,
+        districtFilterEnabled,
+        onDistrictFilterToggle: handleDistrictToggle,
+        onLoadMore: showLoadMore ? handleLoadMore : undefined,
+        hasMore: showLoadMore,
+      })}
+    </>
+  );
+}
 
 type FeedDataProviderProps = {
   userId?: string;
@@ -60,16 +258,17 @@ type FeedDataProviderProps = {
 /**
  * Provider component that handles all data logic
  * Passes data down as render props to avoid re-render issues
- * 
+ *
  * Enhanced: November 5, 2025 - Added district filtering support
  */
-export default function FeedDataProvider({ 
+function StandardFeedDataProvider({
   userId,
   userDistrict,
   enableInfiniteScroll = true,
   maxItems = 50,
-  children 
+  children,
 }: FeedDataProviderProps) {
+  const { t } = useI18n();
   // Get ONLY data from store selectors (not full state)
   const feeds = useFilteredFeeds();
   const isLoading = useFeedsLoading();
@@ -97,7 +296,7 @@ export default function FeedDataProvider({
   } = useFeedsActions();
   const user = useUser();
   const { addNotification } = useNotificationActions();
-  
+
   // Local state for hashtag filtering and district filtering
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
@@ -106,11 +305,21 @@ export default function FeedDataProvider({
     (message: string) => {
       addNotification({
         type: 'error',
-        title: 'Feed update failed',
+        title: t('feeds.provider.notifications.error.title'),
         message,
       });
     },
-    [addNotification],
+    [addNotification, t],
+  );
+
+  const surfaceStoreError = useCallback(
+    (buildMessage: (error: string) => string) => {
+      const latestError = useFeedsStore.getState().error;
+      if (latestError) {
+        notifyFeedError(buildMessage(latestError));
+      }
+    },
+    [notifyFeedError],
   );
 
   const initialLoadRef = useRef(false);
@@ -127,11 +336,15 @@ export default function FeedDataProvider({
     void (async () => {
       try {
         await loadFeeds();
+        surfaceStoreError((error) =>
+          t('feeds.provider.errors.loadFeeds.withReason', { error }),
+        );
       } catch (err) {
         if (!active) return;
         logger.error('Failed to load feeds:', err);
-        setErrorAction('Failed to load feeds');
-        notifyFeedError('We couldn’t load your feeds. Please try again.');
+        const shortMessage = t('feeds.provider.errors.loadFeeds.short');
+        setErrorAction(shortMessage);
+        notifyFeedError(shortMessage);
       } finally {
         initialLoadRef.current = true;
       }
@@ -140,7 +353,7 @@ export default function FeedDataProvider({
     return () => {
       active = false;
     };
-  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError]);
+  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
   // Load trending hashtags on mount - ONCE
   useEffect(() => {
@@ -151,7 +364,7 @@ export default function FeedDataProvider({
         logger.error('Failed to load trending hashtags:', err);
       }
     })();
-  }, [getTrendingHashtags]); // Only on mount
+  }, [getTrendingHashtags, t]); // Only on mount
 
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
@@ -160,10 +373,11 @@ export default function FeedDataProvider({
       await likeFeedAction(itemId);
     } catch (err) {
       logger.error('Failed to like feed:', err);
-      setErrorAction('Failed to like feed');
-      notifyFeedError('We couldn’t update your reaction. Please try again.');
+      const shortMessage = t('feeds.provider.errors.likeFeed.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(t('feeds.provider.errors.likeFeed.message'));
     }
-  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError]);
+  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
     clearErrorAction();
@@ -171,10 +385,11 @@ export default function FeedDataProvider({
       await bookmarkFeedAction(itemId);
     } catch (err) {
       logger.error('Failed to bookmark feed:', err);
-      setErrorAction('Failed to bookmark feed');
-      notifyFeedError('We couldn’t update your bookmarks. Please try again.');
+      const shortMessage = t('feeds.provider.errors.bookmarkFeed.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(t('feeds.provider.errors.bookmarkFeed.message'));
     }
-  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError]);
+  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
 
   const handleShare = useCallback((itemId: string) => {
     // Social sharing logic here
@@ -185,12 +400,16 @@ export default function FeedDataProvider({
     clearErrorAction();
     try {
       await refreshFeeds();
+      surfaceStoreError((error) =>
+        t('feeds.provider.errors.refreshFeeds.withReason', { error }),
+      );
     } catch (err) {
       logger.error('Failed to refresh feeds:', err);
-      setErrorAction('Failed to refresh feeds');
-      notifyFeedError('We couldn’t refresh your feeds. Please try again.');
+      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(shortMessage);
     }
-  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError]);
+  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
   const handleHashtagAdd = useCallback((tag: string) => {
     if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
@@ -216,10 +435,19 @@ export default function FeedDataProvider({
     // Refresh feeds with new filter
     refreshFeeds().catch((err) => {
       logger.error('Failed to refresh feeds with district filter:', err);
-      setErrorAction('Failed to refresh feeds');
-      notifyFeedError('We couldn’t refresh your feeds. Please try again.');
+      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(shortMessage);
     });
-  }, [districtFilterEnabled, userDistrict, setFiltersAction, refreshFeeds, setErrorAction, notifyFeedError]);
+  }, [
+    districtFilterEnabled,
+    userDistrict,
+    setFiltersAction,
+    refreshFeeds,
+    setErrorAction,
+    notifyFeedError,
+    t,
+  ]);
 
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
@@ -229,10 +457,14 @@ export default function FeedDataProvider({
     clearErrorAction();
     try {
       await loadMoreFeeds();
+      surfaceStoreError((error) =>
+        t('feeds.provider.errors.loadMoreFeeds.withReason', { error }),
+      );
     } catch (err) {
       logger.error('Failed to load more feeds:', err);
-      setErrorAction('Failed to load more feeds');
-      notifyFeedError('We couldn’t load more items. Please try again.');
+      const shortMessage = t('feeds.provider.errors.loadMoreFeeds.short');
+      setErrorAction(shortMessage);
+      notifyFeedError(shortMessage);
     }
   }, [
     enableInfiniteScroll,
@@ -243,11 +475,13 @@ export default function FeedDataProvider({
     clearErrorAction,
     setErrorAction,
     notifyFeedError,
+    surfaceStoreError,
+    t,
   ]);
 
   // Filter feeds by selected hashtags
   const filteredFeeds = selectedHashtags.length > 0
-    ? feeds.filter(feed => 
+    ? feeds.filter(feed =>
         feed.tags.some(tag => selectedHashtags.includes(tag))
       )
     : feeds;
@@ -272,5 +506,28 @@ export default function FeedDataProvider({
     ...(enableInfiniteScroll ? { onLoadMore: handleLoadMore } : {}),
     ...(enableInfiniteScroll ? { hasMore } : {})
   });
+}
+
+export default function FeedDataProvider(props: FeedDataProviderProps) {
+  if (IS_E2E_HARNESS) {
+    const {
+      userId,
+      enableInfiniteScroll = true,
+      maxItems = 50,
+      children,
+    } = props;
+
+    return (
+      <HarnessFeedDataProvider
+        userId={userId}
+        enableInfiniteScroll={enableInfiniteScroll}
+        maxItems={maxItems}
+      >
+        {children}
+      </HarnessFeedDataProvider>
+    );
+  }
+
+  return <StandardFeedDataProvider {...props} />;
 }
 

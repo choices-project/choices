@@ -100,7 +100,14 @@ export default function ContactRepresentativesSection({
     loading: electionLoading,
     error: electionError,
     daysUntilNextElection,
-  } = useElectionCountdown(divisionIds);
+  } = useElectionCountdown(divisionIds, {
+    analytics: {
+      surface: 'contact_section',
+      metadata: {
+        representativeCount: representatives.length,
+      },
+    },
+  });
 
   useEffect(() => {
     if (!user) {

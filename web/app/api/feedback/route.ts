@@ -1,10 +1,43 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import {
+  withErrorHandling,
+  successResponse,
+  validationError,
+  errorResponse,
+  rateLimitError,
+  parseBody,
+} from '@/lib/api';
 import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
+
+const FEEDBACK_TYPES = [
+  'bug',
+  'feature',
+  'general',
+  'performance',
+  'accessibility',
+  'security',
+  'csp-violation',
+] as const;
+
+const SENTIMENT_VALUES = ['positive', 'negative', 'neutral', 'mixed'] as const;
+
+type FeedbackRequestBody = {
+  type: string;
+  title: string;
+  description: string;
+  sentiment: string;
+  screenshot?: string | null;
+  userJourney?: Record<string, any> | null;
+  feedbackContext?: {
+    aiAnalysis?: Record<string, any>;
+    [key: string]: unknown;
+  } | null;
+  ['csp-report']?: Record<string, any>;
+};
 
 // Security configuration for feedback API
 const securityConfig = {
@@ -43,383 +76,371 @@ function validateRequestSize(request: NextRequest): { valid: boolean; reason?: s
   return { valid: true }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    // Request size validation
-    const sizeValidation = validateRequestSize(request)
-    if (!sizeValidation.valid) {
-      return NextResponse.json(
-        { error: sizeValidation.reason },
-        { status: 413 }
-      )
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const sizeValidation = validateRequestSize(request);
+  if (!sizeValidation.valid) {
+    return errorResponse(
+      sizeValidation.reason ?? 'Request too large',
+      413,
+      undefined,
+      'PAYLOAD_TOO_LARGE'
+    );
+  }
 
-    const body = await request.json()
-    const { 
-      type, 
-      title, 
-      description, 
-      sentiment, 
-      screenshot, 
-      userJourney,
-      feedbackContext 
-    } = body
+  const parsedBody = await parseBody<FeedbackRequestBody>(request);
+  if (!parsedBody.success) {
+    return parsedBody.error;
+  }
 
-    // Validate required fields
-    if (!type || !title || !description || !sentiment) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+  const {
+    type,
+    title,
+    description,
+    sentiment,
+    screenshot,
+    userJourney,
+    feedbackContext,
+  } = parsedBody.data;
 
-    // Enhanced content validation
-    const titleValidation = validateContent(title, 'title')
-    if (!titleValidation.valid) {
-      return NextResponse.json(
-        { error: titleValidation.reason },
-        { status: 400 }
-      )
-    }
+  const missingFields: Record<string, string> = {};
+  if (!type) missingFields.type = 'Type is required';
+  if (!title) missingFields.title = 'Title is required';
+  if (!description) missingFields.description = 'Description is required';
+  if (!sentiment) missingFields.sentiment = 'Sentiment is required';
 
-    const descriptionValidation = validateContent(description, 'description')
-    if (!descriptionValidation.valid) {
-      return NextResponse.json(
-        { error: descriptionValidation.reason },
-        { status: 400 }
-      )
-    }
+  if (Object.keys(missingFields).length > 0) {
+    return validationError(missingFields, 'Missing required fields');
+  }
 
-    // Validate feedback type
-    if (!['bug', 'feature', 'general', 'performance', 'accessibility', 'security', 'csp-violation'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid feedback type' },
-        { status: 400 }
-      )
-    }
+  if (!FEEDBACK_TYPES.includes(type as (typeof FEEDBACK_TYPES)[number])) {
+    return validationError({ type: 'Invalid feedback type' });
+  }
 
-    // Validate sentiment
-    if (!['positive', 'negative', 'neutral', 'mixed'].includes(sentiment)) {
-      return NextResponse.json(
-        { error: 'Invalid sentiment value' },
-        { status: 400 }
-      )
-    }
+  if (!SENTIMENT_VALUES.includes(sentiment as (typeof SENTIMENT_VALUES)[number])) {
+    return validationError({ sentiment: 'Invalid sentiment value' });
+  }
 
-    // Get Supabase client
-    const supabase = getSupabaseServerClient()
-    
-    if (!supabase) {
-      devLog('Supabase not configured - using mock response')
-      return NextResponse.json({
-        success: true,
-        message: 'Feedback submitted successfully (mock)',
-        feedback_id: `mock-${  Date.now()}`
-      })
-    }
+  const titleValidation = validateContent(title, 'title');
+  if (!titleValidation.valid) {
+    return validationError({ title: titleValidation.reason ?? 'Invalid title' });
+  }
 
-    const supabaseClient = await supabase;
-            
-    // Get current user (if authenticated)
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    
-    if (userError) {
-      devLog('Could not get user, proceeding with anonymous feedback:', { error: userError.message })
-    }
+  const descriptionValidation = validateContent(description, 'description');
+  if (!descriptionValidation.valid) {
+    return validationError({
+      description: descriptionValidation.reason ?? 'Invalid description',
+    });
+  }
 
-    // Check daily feedback limit for authenticated users
-    if (user?.id) {
-      const today = new Date().toISOString().split('T')[0]
+  const supabasePromise = getSupabaseServerClient();
+  if (!supabasePromise) {
+    devLog('Supabase not configured - using mock response');
+    return successResponse(
+      buildFeedbackResponse(`mock-${Date.now()}`, userJourney),
+      { source: 'mock', mode: 'degraded' }
+    );
+  }
+
+  const supabaseClient = await supabasePromise;
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseClient.auth.getUser();
+
+  if (userError) {
+    devLog('Could not get user, proceeding with anonymous feedback:', {
+      error: userError.message,
+    });
+  }
+
+  if (user?.id) {
+    const today = new Date().toISOString().split('T')[0];
     const { count } = await supabaseClient
       .from('feedback')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', String(user.id))
-      .gte('created_at', today)
-      
-      if (count && count >= 10) {
-        return NextResponse.json(
-          { error: 'Daily feedback limit exceeded (10 per day)' },
-          { status: 429 }
-        )
-      }
-    }
+      .gte('created_at', today);
 
-    // Special handling for CSP violations
-    if (type === 'csp-violation') {
-      // CSP violations are always anonymous and high priority
-      const cspData = {
-        user_id: null, // Always anonymous
-        feedback_type: 'csp-violation', // Changed from 'type' to 'feedback_type'
-        title: 'CSP Violation Report',
-        description: `CSP Violation: ${description}`,
-        sentiment: 'negative',
-        screenshot: null,
-        user_journey: {},
-        status: 'open',
-        priority: 'urgent',
-        tags: ['security', 'csp', 'violation'],
-        ai_analysis: {},
-        metadata: {
-          cspReport: body['csp-report'] ?? {},
-          userAgent: request.headers.get('user-agent') ?? 'unknown',
-          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
-          timestamp: new Date().toISOString(),
-          security: {
-            ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
-            userAgent: request.headers.get('user-agent') ?? 'unknown',
-            timestamp: new Date().toISOString()
-          }
-        }
-      };
-      
-      devLog('Processing CSP violation report:', cspData);
-      
-      const { data: cspResult, error: cspError } = await supabaseClient
-        .from('feedback')
-        .insert(cspData)
-        .select()
-        .single();
-        
-      if (cspError) {
-        logger.error('Error storing CSP violation:', cspError);
-        return NextResponse.json(
-          { error: 'Failed to store CSP violation report' },
-          { status: 500 }
-        );
-      }
-      
-      logger.warn('CSP Violation Report', {
-        'csp-report': body['csp-report'],
-        feedbackId: cspResult.id,
-        timestamp: new Date().toISOString(),
-        userAgent: request.headers.get('user-agent'),
-        ip: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
-      });
-      
-      return NextResponse.json({
-        success: true,
-        message: 'CSP violation report received',
-        feedback_id: cspResult.id
-      });
+    if (typeof count === 'number' && count >= 10) {
+      return rateLimitError('Daily feedback limit exceeded (10 per day)', 86400);
     }
+  }
 
-    // Prepare enhanced feedback data
-    const feedbackData = {
-      user_id: user?.id ?? null,
-      feedback_type: type, // Changed from 'type' to 'feedback_type'
-      title: title.trim(),
-      description: description.trim(),
-      sentiment,
-      screenshot: screenshot ?? null,
-      user_journey: userJourney || {},
+  if (type === 'csp-violation') {
+    const cspData = {
+      user_id: null,
+      feedback_type: 'csp-violation',
+      title: 'CSP Violation Report',
+      description: `CSP Violation: ${description}`,
+      sentiment: 'negative',
+      screenshot: null,
+      user_journey: {},
       status: 'open',
-      priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
-      tags: generateTags(type, title, description, sentiment),
-      ai_analysis: feedbackContext?.aiAnalysis || {},
+      priority: 'urgent',
+      tags: ['security', 'csp', 'violation'],
+      ai_analysis: {},
       metadata: {
-        feedbackContext: feedbackContext || {},
-        userAgent: userJourney?.userAgent,
-        deviceInfo: userJourney?.deviceInfo,
-        performanceMetrics: userJourney?.performanceMetrics,
-        errors: userJourney?.errors || [],
-        sessionInfo: {
-          sessionId: userJourney?.sessionId,
-          sessionStartTime: userJourney?.sessionStartTime,
-          totalPageViews: userJourney?.totalPageViews
-        },
+        cspReport: parsedBody.data['csp-report'] ?? {},
+        userAgent: request.headers.get('user-agent') ?? 'unknown',
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+        timestamp: new Date().toISOString(),
         security: {
           ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
           userAgent: request.headers.get('user-agent') ?? 'unknown',
-          timestamp: new Date().toISOString()
-        }
-      }
-    }
-
-    devLog('Inserting enhanced feedback data:', {
-      user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
-      type: feedbackData.feedback_type,
-      sentiment: feedbackData.sentiment,
-      sessionId: userJourney?.sessionId,
-      currentPage: userJourney?.currentPage,
-      deviceType: userJourney?.deviceInfo?.type
-    })
-
-    // Insert feedback into database
-    const { data, error } = await supabaseClient
-      .from('feedback')
-      .insert([feedbackData])
-      .select()
-
-    if (error) {
-      devLog('Database error:', { error })
-      // If table doesn't exist or schema cache issue, use mock response for testing
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      if (errorMessage.includes('relation "feedback" does not exist') || 
-          errorMessage.includes('does not exist') ||
-          errorMessage.includes('schema cache')) {
-        devLog('Schema cache issue or table not ready - using mock response')
-        return NextResponse.json({
-          success: true,
-          message: 'Feedback submitted successfully (mock - schema cache issue)',
-          feedback_id: `mock-${  Date.now()}`,
-          context: {
-            sessionId: userJourney?.sessionId,
-            deviceInfo: userJourney?.deviceInfo,
-            performanceMetrics: userJourney?.performanceMetrics
-          }
-        })
-      }
-      return NextResponse.json(
-        { error: 'Failed to save feedback', details: error instanceof Error ? error.message : "Unknown error" },
-        { status: 500 }
-      )
-    }
-
-    // Log comprehensive feedback submission for analytics
-    devLog('Enhanced feedback submitted:', {
-      type,
-      sentiment,
-      page: userJourney?.currentPage,
-      device: userJourney?.deviceInfo?.type,
-      browser: userJourney?.deviceInfo?.browser,
-      os: userJourney?.deviceInfo?.os,
-      sessionId: userJourney?.sessionId,
-      timestamp: new Date().toISOString(),
-      user_id: user?.id ? 'authenticated' : 'anonymous',
-      performance: {
-        pageLoadTime: userJourney?.pageLoadTime,
-        timeOnPage: userJourney?.timeOnPage
+          timestamp: new Date().toISOString(),
+        },
       },
-      errors: userJourney?.errors?.length ?? 0
-    })
+    };
 
-    return NextResponse.json({
-      success: true,
-      message: 'Enhanced feedback submitted successfully',
-      feedback_id: data && !('error' in data) && data[0] && 'id' in data[0] ? data[0].id : null,
-      context: {
-        sessionId: userJourney?.sessionId,
-        deviceInfo: userJourney?.deviceInfo,
-        performanceMetrics: userJourney?.performanceMetrics
-      }
-    })
+    devLog('Processing CSP violation report:', cspData);
 
-  } catch (error) {
-    devLog('Enhanced feedback API error:', { error })
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    // This endpoint is for admin use - you might want to add authentication
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const type = searchParams.get('type')
-    const sentiment = searchParams.get('sentiment')
-    const limit = parseInt(searchParams.get('limit') ?? '50')
-    const offset = parseInt(searchParams.get('offset') ?? '0')
-
-    // Get Supabase client
-    const supabase = getSupabaseServerClient()
-
-    if (!supabase) {
-      devLog('Supabase not configured - using mock response')
-      return NextResponse.json({
-        success: true,
-        feedback: [],
-        count: 0
-      })
-    }
-
-    const supabaseClient = await supabase;
-    
-    let query = supabaseClient
+    const { data: cspResult, error: cspError } = await supabaseClient
       .from('feedback')
-      .select('id, user_id, type, title, description, sentiment, created_at, updated_at, user_journey, metadata, ai_analysis')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .insert(cspData)
+      .select()
+      .single();
 
-    if (status) {
-      query = query.eq('status', status)
+    if (cspError) {
+      logger.error('Error storing CSP violation:', cspError);
+      return errorResponse('Failed to store CSP violation report');
     }
 
-    if (type) {
-      query = query.eq('type', type)
+    logger.warn('CSP Violation Report', {
+      'csp-report': parsedBody.data['csp-report'],
+      feedbackId: cspResult.id,
+      timestamp: new Date().toISOString(),
+      userAgent: request.headers.get('user-agent'),
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+    });
+
+    return successResponse(
+      buildFeedbackResponse(
+        cspResult.id,
+        undefined,
+        'CSP violation report received'
+      ),
+      { action: 'csp-violation' }
+    );
+  }
+
+  const feedbackData = {
+    user_id: user?.id ?? null,
+    feedback_type: type,
+    title: title.trim(),
+    description: description.trim(),
+    sentiment,
+    screenshot: screenshot ?? null,
+    user_journey: userJourney || {},
+    status: 'open',
+    priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
+    tags: generateTags(type, title, description, sentiment),
+    ai_analysis: feedbackContext?.aiAnalysis || {},
+    metadata: {
+      feedbackContext: feedbackContext || {},
+      userAgent: userJourney?.userAgent,
+      deviceInfo: userJourney?.deviceInfo,
+      performanceMetrics: userJourney?.performanceMetrics,
+      errors: userJourney?.errors || [],
+      sessionInfo: {
+        sessionId: userJourney?.sessionId,
+        sessionStartTime: userJourney?.sessionStartTime,
+        totalPageViews: userJourney?.totalPageViews,
+      },
+      security: {
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown',
+        userAgent: request.headers.get('user-agent') ?? 'unknown',
+        timestamp: new Date().toISOString(),
+      },
+    },
+  };
+
+  devLog('Inserting enhanced feedback data:', {
+    user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
+    type: feedbackData.feedback_type,
+    sentiment: feedbackData.sentiment,
+    sessionId: userJourney?.sessionId,
+    currentPage: userJourney?.currentPage,
+    deviceType: userJourney?.deviceInfo?.type,
+  });
+
+  const { data, error } = await supabaseClient.from('feedback').insert([feedbackData]).select();
+
+  if (error) {
+    devLog('Database error:', { error });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (
+      errorMessage.includes('relation "feedback" does not exist') ||
+      errorMessage.includes('does not exist') ||
+      errorMessage.includes('schema cache')
+    ) {
+      devLog('Schema cache issue or table not ready - using mock response');
+      return successResponse(
+        buildFeedbackResponse(
+          `mock-${Date.now()}`,
+          userJourney,
+          'Feedback submitted successfully (mock - schema cache issue)'
+        ),
+        { source: 'mock', fallback: 'schema-cache' }
+      );
     }
 
-    if (sentiment) {
-      query = query.eq('sentiment', sentiment)
-    }
+    return errorResponse(
+      'Failed to save feedback',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+  }
 
-    const { data, error } = await query
+  const insertedRecord =
+    data && !('error' in data) && Array.isArray(data) && data[0] && 'id' in data[0]
+      ? (data[0] as { id: string }).id
+      : null;
 
-    if (error) {
-      devLog('Database error:', { error })
-      // If table doesn't exist or schema cache issue, return empty mock response
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      if (errorMessage.includes('relation "feedback" does not exist') || 
-          errorMessage.includes('does not exist') ||
-          errorMessage.includes('schema cache')) {
-        devLog('Schema cache issue or table not ready - using mock response')
-        return NextResponse.json({
-          success: true,
+  devLog('Enhanced feedback submitted:', {
+    type,
+    sentiment,
+    page: userJourney?.currentPage,
+    device: userJourney?.deviceInfo?.type,
+    browser: userJourney?.deviceInfo?.browser,
+    os: userJourney?.deviceInfo?.os,
+    sessionId: userJourney?.sessionId,
+    timestamp: new Date().toISOString(),
+    user_id: user?.id ? 'authenticated' : 'anonymous',
+    performance: {
+      pageLoadTime: userJourney?.pageLoadTime,
+      timeOnPage: userJourney?.timeOnPage,
+    },
+    errors: userJourney?.errors?.length ?? 0,
+  });
+
+  return successResponse(buildFeedbackResponse(insertedRecord, userJourney));
+});
+
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get('status') ?? undefined;
+  const type = searchParams.get('type') ?? undefined;
+  const sentiment = searchParams.get('sentiment') ?? undefined;
+  const limit = Number(searchParams.get('limit') ?? '50');
+  const offset = Number(searchParams.get('offset') ?? '0');
+
+  if (Number.isNaN(limit) || limit <= 0 || limit > 200) {
+    return validationError({ limit: 'Limit must be between 1 and 200' });
+  }
+
+  if (Number.isNaN(offset) || offset < 0) {
+    return validationError({ offset: 'Offset must be zero or greater' });
+  }
+
+  const supabasePromise = getSupabaseServerClient();
+  if (!supabasePromise) {
+    devLog('Supabase not configured - using mock response');
+    return successResponse(
+      {
+        feedback: [],
+        count: 0,
+        analytics: generateAnalytics([]),
+      },
+      { source: 'mock', mode: 'degraded' }
+    );
+  }
+
+  const supabaseClient = await supabasePromise;
+
+  let query = supabaseClient
+    .from('feedback')
+    .select(
+      'id, user_id, feedback_type, title, description, sentiment, status, created_at, updated_at, user_journey, metadata, ai_analysis, tags'
+    )
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  if (type) {
+    query = query.eq('feedback_type', type);
+  }
+
+  if (sentiment) {
+    query = query.eq('sentiment', sentiment);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    devLog('Database error:', { error });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (
+      errorMessage.includes('relation "feedback" does not exist') ||
+      errorMessage.includes('does not exist') ||
+      errorMessage.includes('schema cache')
+    ) {
+      devLog('Schema cache issue or table not ready - using mock response');
+      return successResponse(
+        {
           feedback: [],
           count: 0,
-          analytics: {
-            total: 0,
-            byType: {},
-            bySentiment: {},
-            byStatus: {}
-          }
-        })
-      }
-      return NextResponse.json(
-        { error: 'Failed to fetch feedback' },
-        { status: 500 }
-      )
+          analytics: generateAnalytics([]),
+        },
+        { source: 'mock', fallback: 'schema-cache' }
+      );
     }
 
-    // Process feedback data for better display
-    const processedFeedback = data && !('error' in data) ? data.map((item: any) => ({
-      id: item.id,
-      user_id: item.user_id,
-      type: item.type,
-      content: (item.description ?? item.title) ?? '',
-      status: item.status ?? 'open',
-      sentiment: item.sentiment,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      userJourney: item.user_journey,
-      metadata: item.metadata,
-      aiAnalysis: item.ai_analysis,
-      // Extract key metrics for easy access
-      deviceType: item.user_journey?.deviceInfo?.type,
-      browser: item.user_journey?.deviceInfo?.browser,
-      os: item.user_journey?.deviceInfo?.os,
-      pageLoadTime: item.user_journey?.pageLoadTime,
-      timeOnPage: item.user_journey?.timeOnPage,
-      errorCount: item.user_journey?.errors?.length ?? 0,
-      sessionId: item.user_journey?.sessionId
-    })) : []
-
-    return NextResponse.json({
-      success: true,
-      feedback: processedFeedback,
-      count: processedFeedback.length,
-      analytics: generateAnalytics(processedFeedback)
-    })
-
-  } catch (error) {
-    devLog('Feedback API error:', { error })
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return errorResponse('Failed to fetch feedback', 500, errorMessage);
   }
+
+  const processedFeedback =
+    data && !('error' in data)
+      ? data.map((item: any) => {
+          const journey = item.user_journey ?? {};
+          return {
+            id: item.id,
+            userId: item.user_id,
+            type: item.feedback_type ?? item.type,
+            content: item.description ?? item.title ?? '',
+            status: item.status ?? 'open',
+            sentiment: item.sentiment,
+            createdAt: item.created_at,
+            updatedAt: item.updated_at,
+            userJourney: journey,
+            metadata: item.metadata,
+            aiAnalysis: item.ai_analysis,
+            tags: item.tags ?? [],
+            deviceType: journey?.deviceInfo?.type,
+            browser: journey?.deviceInfo?.browser,
+            os: journey?.deviceInfo?.os,
+            pageLoadTime: journey?.pageLoadTime,
+            timeOnPage: journey?.timeOnPage,
+            errorCount: journey?.errors?.length ?? 0,
+            sessionId: journey?.sessionId,
+          };
+        })
+      : [];
+
+  return successResponse({
+    feedback: processedFeedback,
+    count: processedFeedback.length,
+    analytics: generateAnalytics(processedFeedback),
+  });
+});
+
+function buildFeedbackResponse(
+  feedbackId: string | null,
+  userJourney?: Record<string, any> | null,
+  message: string = 'Enhanced feedback submitted successfully'
+) {
+  return {
+    message,
+    feedbackId,
+    context: {
+      sessionId: userJourney?.sessionId,
+      deviceInfo: userJourney?.deviceInfo,
+      performanceMetrics: userJourney?.performanceMetrics,
+    },
+  };
 }
 
 // Helper functions

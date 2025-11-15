@@ -649,15 +649,39 @@ export const createPollsActions = (
         throw new Error('Failed to load polls');
       }
 
-      const payload = (await response.json()) as PollRow[];
-      setPolls(payload);
+      const payload = (await response.json()) as {
+        success?: boolean;
+        data?: { polls?: PollRow[] };
+        metadata?: {
+          pagination?: {
+            total?: number;
+            totalPages?: number;
+            page?: number;
+          };
+        };
+      };
+
+      const polls = payload?.data?.polls ?? [];
+      const paginationMeta = payload?.metadata?.pagination;
+
+      if (!Array.isArray(polls)) {
+        throw new Error('Malformed polls response');
+      }
+
+      setPolls(polls);
       setState((state) => {
-        state.search.totalResults = payload.length;
-        state.search.totalPages = Math.max(
-          1,
-          Math.ceil(payload.length / Math.max(1, state.preferences.itemsPerPage)),
-        );
-        state.search.currentPage = page;
+        const totalResults =
+          typeof paginationMeta?.total === 'number'
+            ? paginationMeta.total
+            : polls.length;
+        const totalPages =
+          typeof paginationMeta?.totalPages === 'number'
+            ? paginationMeta.totalPages
+            : Math.max(1, Math.ceil(totalResults / Math.max(1, state.preferences.itemsPerPage)));
+
+        state.search.totalResults = totalResults;
+        state.search.totalPages = totalPages;
+        state.search.currentPage = paginationMeta?.page ?? page;
         if (options?.search !== undefined) {
           state.search.query = searchQuery;
         }
@@ -678,7 +702,7 @@ export const createPollsActions = (
         search: searchQuery,
         sortBy,
         trendingOnly,
-        count: payload.length,
+        count: polls.length,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -700,7 +724,12 @@ export const createPollsActions = (
         throw new Error('Failed to load poll');
       }
 
-      const poll = (await response.json()) as PollRow;
+      const payload = (await response.json()) as { success?: boolean; data?: PollRow };
+      const poll = payload?.data;
+
+      if (!poll) {
+        throw new Error('Malformed poll response');
+      }
 
       setState((state) => {
         const existing = state.polls.findIndex((item) => item.id === id);

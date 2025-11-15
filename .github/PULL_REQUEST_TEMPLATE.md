@@ -1,93 +1,35 @@
-# Production Stability Upgrade
+# PR Title
+<!-- Example: feat(analytics): add cache metadata to dashboard API -->
 
 ## 🎯 Summary
-Upgrade project infrastructure to latest LTS with production-safe versioning strategy.
-
-## ✅ Changes Made
-
-### Infrastructure
-- ✅ Node.js: 22.19.0 → 24.11.0 LTS (Krypton)
-- ✅ npm: 10.9.3 → 11.6.1
-
-### Version Strategy
-- ✅ ALL 123 packages → Tilde (~) prefix
-- ✅ Automatic security patches enabled
-- ✅ Breaking changes blocked
-
-### Package Updates
-- ✅ @supabase/supabase-js: 2.55.0 → 2.79.0
-- ✅ @supabase/ssr: 0.6.1 → 0.7.0
-- ✅ @tanstack/react-query: 5.59.0 → 5.90.6
-- ✅ zustand: 5.0.2 → 5.0.8
-- ✅ lucide-react: 0.539.0 → 0.552.0
-
-### TypeScript Fixes
-- ✅ admin/monitoring/page.tsx
-- ✅ candidate/platform/[id]/edit/page.tsx
-- ✅ civics-2-0/page-fixed.tsx
-- ✅ polls/create/page.tsx
-- ✅ ssr-polyfills.ts
-
-## 🔒 Security
-- ✅ 0 vulnerabilities
-- ✅ Clean dependency tree
-- ✅ Fresh install verified
-
-## 📚 Documentation
-- ✅ UPGRADE_SUMMARY.md
-- ✅ STABILITY_UPGRADE_COMPLETE.md
-- ✅ PWA_DEPLOYMENT_COMPLETE.md
+- What changed and why?
+- Link to roadmap/issue/ADR if applicable.
 
 ## ✅ Testing
-- ✅ Clean npm install
-- ✅ Server starts successfully
-- ✅ No broken imports
-- ✅ TypeScript compiles (upgrade-related errors fixed)
+- [ ] `npm run lint`
+- [ ] `npm run type-check`
+- [ ] `npm run test`
+- [ ] `npm run test:contracts`
+- [ ] `npm run test:e2e` (or targeted spec: `npx playwright test tests/e2e/specs/...`)
+- [ ] Not applicable (explain why)
 
-## 🎓 Rationale
+## ♿ Inclusive UI & 🌐 i18n Checklist
+Confirm the surfaces touched in this PR meet the governance standards:
+- [ ] Followed `docs/inclusive-ui-guidelines.md` (landmarks, focus, announcements, SR helpers).
+- [ ] Translatable copy routed through `useI18n` and snapshots updated via `npm run i18n:extract` (see `docs/technical/i18n-workflow.md`).
+- [ ] Locale + accessibility automation updated or reviewed (`tests/e2e/specs/*@axe`, locale-switch specs, harness bridges).
+- [ ] Manual SR / locale follow-ups captured in `scratch/gpt5-codex/archive/inclusive-platform/manual-*.md` if required.
 
-### Why Tilde (~)?
-- Automatic security patches (1.2.3 → 1.2.4)
-- Blocks feature changes (1.2.x ↛ 1.3.0)
-- Industry standard for production
+## 🔐 API & Contract Alignment
+- [ ] API responses use shared helpers from `@/lib/api/response-utils` and types from `@/lib/api/types`.
+- [ ] Contract tests (`web/tests/contracts`) updated to cover new/changed routes.
+- [ ] MSW fixtures + Playwright harness mocks updated (`web/tests/msw`, `setupExternalAPIMocks`).
+- [ ] Release notes updated (see `docs/archive/release-notes/CHANGELOG.md`) if changes impact partners/clients.
 
-### Why NOT Next.js 15 / React 19?
-- React 19 has breaking changes
-- Not ideal for new developers
-- Current stack is stable and proven
-- Can upgrade later when ready
+## 📚 Docs & Release Checklist
+- [ ] Impacted docs updated (architecture, governance, runbooks, README, etc.).
+- [ ] Release checklist in `docs/DEPLOYMENT.md#release-checklist` reviewed; call out any boxes that cannot be checked.
+- [ ] Support/partner comms noted if behaviour changes (link to draft or ticket).
 
-## 🚀 Post-Merge Actions
-
-1. **Switch to Node 24:**
-   ```bash
-   nvm use 24
-   ```
-
-2. **Verify installation:**
-   ```bash
-   cd web
-   npm install
-   npm run dev
-   ```
-
-3. **Deploy:**
-   ```bash
-   npm run build
-   npm start
-   ```
-
-## ⚠️ Notes
-
-**Pre-existing TypeScript Errors**: 620 errors in 139 files exist from before this upgrade and should be addressed separately. This PR only fixes errors introduced by or related to the upgrade.
-
-## ✅ Checklist
-
-- [x] Node.js upgraded to 24.11.0 LTS
-- [x] All packages use tilde (~) prefix
-- [x] Safe package updates applied
-- [x] TypeScript errors fixed
-- [x] Documentation created
-- [x] Clean install verified
-- [x] 0 security vulnerabilities
-- [x] Changes committed and pushed
+## 📝 Notes for Reviewers
+- Risks, rollbacks, feature flags, or manual validation pointers.

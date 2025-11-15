@@ -19,6 +19,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+import '@/styles/accessibility.css';
+
 import screenReaderSupport from '../../lib/accessibility/screen-reader';
 
 // ============================================================================
@@ -250,7 +252,7 @@ export function AccessibleResultsChart({
     <div 
       ref={chartRef}
       className={`accessible-results-chart ${className}`}
-      role="img"
+      role="group"
       aria-label={ariaLabel}
     >
       {/* Chart Title */}
@@ -298,7 +300,7 @@ export function AccessibleResultsChart({
       </table>
       
       {/* Visual Chart */}
-      <div className="chart-container" aria-hidden="true">
+      <div className="chart-container">
         <div className="chart-bars">
           {chartData.map((item, index) => (
             <div
