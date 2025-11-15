@@ -9,6 +9,8 @@ import {
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 const EVENT_TYPES = ['notifications.election.delivered', 'notifications.election.opened'] as const;
 type ElectionEventType = (typeof EVENT_TYPES)[number];
 
@@ -65,7 +67,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   const supabase = await getSupabaseServerClient();
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const windowDays = parseWindowDays(searchParams.get('windowDays'));
 
   const since = new Date();
