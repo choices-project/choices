@@ -240,16 +240,19 @@ export default function TrendsChart({
     if (!data.length) {
       return null;
     }
-    return data.reduce((peak, point) => (point.votes > peak.votes ? point : peak), data[0]);
+    return data.reduce<TrendDataPoint>(
+      (peak, point) => (point.votes > peak.votes ? point : peak),
+      data[0] as TrendDataPoint
+    );
   }, [data]);
 
   const peakParticipationPoint = useMemo(() => {
     if (!data.length) {
       return null;
     }
-    return data.reduce(
+    return data.reduce<TrendDataPoint>(
       (peak, point) => (point.participation > peak.participation ? point : peak),
-      data[0],
+      data[0] as TrendDataPoint,
     );
   }, [data]);
 
@@ -262,10 +265,10 @@ export default function TrendsChart({
       voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
 
     return t('analytics.trends.chart.summary', {
-      peakVotesDate: formatDate(peakVotesPoint.date),
-      peakVotes: formatNumber(peakVotesPoint.votes),
-      peakParticipationDate: formatDate(peakParticipationPoint.date),
-      peakParticipation: formatPercent(peakParticipationPoint.participation),
+      peakVotesDate: formatDate(peakVotesPoint!.date),
+      peakVotes: formatNumber(peakVotesPoint!.votes),
+      peakParticipationDate: formatDate(peakParticipationPoint!.date),
+      peakParticipation: formatPercent(peakParticipationPoint!.participation),
       trendDirection: t(`analytics.trends.trendDirections.${trendDirectionKey}`),
       range: currentRangeLabel,
     });

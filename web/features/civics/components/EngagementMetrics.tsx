@@ -101,18 +101,21 @@ export default function EngagementMetrics({
       return;
     }
 
-    setMetrics((previous) =>
-      ({
-        ...previous,
-        likes: storeFeed.engagement.likes ?? previous.likes,
-        shares: storeFeed.engagement.shares ?? previous.shares,
-        comments: storeFeed.engagement.comments ?? previous.comments,
-        bookmarks: storeFeed.engagement.bookmarks ?? previous.bookmarks,
-        views: storeFeed.engagement.views ?? previous.views,
-        engagementRate: storeFeed.engagement.engagementRate ?? previous.engagementRate,
-        lastUpdated: new Date(storeFeed.updatedAt ?? storeFeed.publishedAt ?? previous.lastUpdated),
-      }),
-    );
+    setMetrics((previous) => ({
+      ...previous,
+      likes: storeFeed.engagement.likes ?? previous.likes,
+      shares: storeFeed.engagement.shares ?? previous.shares,
+      comments: storeFeed.engagement.comments ?? previous.comments,
+      bookmarks: storeFeed.engagement.bookmarks ?? previous.bookmarks,
+      views: storeFeed.engagement.views ?? previous.views,
+      engagementRate:
+        storeFeed.engagement.engagementRate ??
+        previous.engagementRate ??
+        0,
+      lastUpdated: new Date(
+        storeFeed.updatedAt ?? storeFeed.publishedAt ?? previous.lastUpdated,
+      ),
+    }));
 
     const totalEngagement =
       storeFeed.engagement.likes + storeFeed.engagement.comments + storeFeed.engagement.shares;

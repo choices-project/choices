@@ -50,7 +50,7 @@ export default function PWAInstaller() {
         type,
         title,
         message,
-        duration: type === 'error' ? 0 : undefined,
+        duration: type === 'error' ? 0 : 5000,
         source: 'system',
         context: {
           kind: 'pwa',

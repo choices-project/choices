@@ -125,8 +125,7 @@ export default function TemporalAnalysisChart({
   const hourlyRegionId = useId();
   const dailyRegionId = useId();
   const velocityRegionId = useId();
-  const cardHeadingId = useId();
-  const cardDescriptionId = useId();
+  // removed duplicate declarations
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);

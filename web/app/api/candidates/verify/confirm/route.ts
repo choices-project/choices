@@ -49,7 +49,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .ilike('primary_email', `%@${userDomain}`)
       .limit(10);
     if (Array.isArray(repDomain) && repDomain.length === 1) {
-      representativeId = repDomain[0].id;
+      const only = repDomain[0];
+      if (only?.id) {
+        representativeId = only.id;
+      }
     } else {
       const { data: fastTrack } = await supabase
         .from('official_email_fast_track')

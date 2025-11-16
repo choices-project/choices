@@ -76,7 +76,7 @@ function HarnessFeedDataProvider({
 
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
-  const { trackItemShare } = useFeedAnalytics({ feedId: 'harness-feed', userId: user?.id ?? userId });
+  const { trackItemShare } = useFeedAnalytics({ feedId: 'harness-feed', userId: user?.id ?? (userId ?? '') });
   const trackItemShareRef = useRef(trackItemShare);
   useEffect(() => {
     trackItemShareRef.current = trackItemShare;
@@ -362,7 +362,7 @@ function StandardFeedDataProvider({
   } = useFeedsActions();
   const user = useUser();
   const { addNotification } = useNotificationActions();
-  const { trackItemShare } = useFeedAnalytics({ feedId: 'primary-feed', userId: user?.id ?? userId });
+  const { trackItemShare } = useFeedAnalytics({ feedId: 'primary-feed', userId: user?.id ?? (userId ?? '') });
   const trackItemShareRef = useRef(trackItemShare);
   useEffect(() => {
     trackItemShareRef.current = trackItemShare;
