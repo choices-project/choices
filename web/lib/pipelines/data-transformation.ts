@@ -370,7 +370,45 @@ export class DataTransformationPipeline {
     if (billType.toLowerCase().includes('hr') || billType.toLowerCase().includes('s')) {
       return 'federal';
     }
-    return 'federal'; // Default for federal bills
+    if (billType.toLowerCase().includes('state') || billType.toLowerCase().includes('assembly') || billType.toLowerCase().includes('senate')) {
+      return 'state';
+    }
+    return 'local'; // Default for local bills
+  }
+
+  /**
+   * Transform bill data (if bills are processed)
+   */
+  transformBill(bill: any): NormalizedBill | null {
+    if (!bill || !bill.id || !bill.title) {
+      return null;
+    }
+    
+    const billType = bill.billType || bill.type || '';
+    const level = this.determineBillLevel(billType);
+    
+    const normalized: NormalizedBill = {
+      id: bill.id,
+      title: bill.title,
+      billNumber: bill.billNumber || bill.number || '',
+      billType,
+      level,
+      jurisdiction: bill.jurisdiction || bill.state || 'US',
+      introducedDate: bill.introducedDate || bill.date || new Date().toISOString(),
+      sources: [bill.source || 'unknown'],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    if (bill.shortTitle) normalized.shortTitle = bill.shortTitle;
+    if (bill.congress) normalized.congress = bill.congress;
+    if (bill.session) normalized.session = bill.session;
+    
+    // Validate the transformed bill
+    if (!this.validateBill(normalized)) {
+      return null;
+    }
+    
+    return normalized;
   }
 
   /**

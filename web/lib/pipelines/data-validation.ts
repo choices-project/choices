@@ -211,6 +211,24 @@ export class DataValidationPipeline {
     const warnings: ValidationWarning[] = [];
     const fixes: ValidationFix[] = [];
 
+    // Check for duplicate records using seenRecords
+    const recordKey = `representative:${rep.id}:${rep.jurisdiction}`;
+    if (!this.seenRecords.has('representative')) {
+      this.seenRecords.set('representative', new Set());
+    }
+    const seenSet = this.seenRecords.get('representative')!;
+    
+    if (seenSet.has(recordKey)) {
+      warnings.push({
+        field: 'id',
+        message: 'Duplicate representative record detected',
+        value: rep.id,
+        suggestion: 'This representative has already been processed'
+      });
+    } else {
+      seenSet.add(recordKey);
+    }
+
     // Run all validation rules
     for (const [ruleName, rule] of this.rules) {
       if (ruleName.startsWith('representative-')) {
@@ -272,6 +290,24 @@ export class DataValidationPipeline {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
     const fixes: ValidationFix[] = [];
+
+    // Check for duplicate records using seenRecords
+    const recordKey = `bill:${bill.id}:${bill.jurisdiction}`;
+    if (!this.seenRecords.has('bill')) {
+      this.seenRecords.set('bill', new Set());
+    }
+    const seenSet = this.seenRecords.get('bill')!;
+    
+    if (seenSet.has(recordKey)) {
+      warnings.push({
+        field: 'id',
+        message: 'Duplicate bill record detected',
+        value: bill.id,
+        suggestion: 'This bill has already been processed'
+      });
+    } else {
+      seenSet.add(recordKey);
+    }
 
     // Run all validation rules
     for (const [ruleName, rule] of this.rules) {

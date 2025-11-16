@@ -1,6 +1,6 @@
 /**
  * Integration Monitoring System
- * 
+ *
  * Comprehensive monitoring system for external API integrations with
  * performance tracking, error monitoring, and alerting capabilities.
  */
@@ -124,7 +124,7 @@ export class IntegrationMonitor {
       if (!this.errorCounts.has(apiName)) {
         this.errorCounts.set(apiName, new Map());
       }
-      
+
       const errorMap = this.errorCounts.get(apiName);
       if (errorMap) {
         if (errorType) {
@@ -138,7 +138,7 @@ export class IntegrationMonitor {
 
     // Update metrics
     this.updateMetrics(apiName, success, responseTime, errorType, statusCode);
-    
+
     // Check alert rules
     this.checkAlertRules(apiName);
   }
@@ -185,7 +185,7 @@ export class IntegrationMonitor {
     try {
       const isHealthy = await healthCheckFn();
       const responseTime = Date.now() - startTime;
-      
+
       if (!isHealthy) {
         status = 'unhealthy';
       } else if (responseTime > 5000) { // 5 seconds
@@ -215,7 +215,7 @@ export class IntegrationMonitor {
       };
 
       this.healthChecks.set(apiName, healthCheck);
-      
+
       logger.debug('Health check completed', { apiName, status, responseTime });
       return healthCheck;
     } catch (error) {
@@ -238,7 +238,7 @@ export class IntegrationMonitor {
       };
 
       this.healthChecks.set(apiName, healthCheck);
-      
+
       logger.error('Health check failed', { apiName, error: lastError, responseTime });
       return healthCheck;
     }
@@ -258,7 +258,7 @@ export class IntegrationMonitor {
   getRecentMetrics(apiName: string, hours: number = 24): IntegrationMetrics[] {
     const metricsList = this.metrics.get(apiName) ?? [];
     const cutoff = Date.now() - (hours * 60 * 60 * 1000);
-    
+
     return metricsList.filter(metrics => metrics.timestamp.getTime() > cutoff);
   }
 
@@ -358,14 +358,14 @@ export class IntegrationMonitor {
 
     const metricsList = this.metrics.get(apiName);
     if (!metricsList) return;
-    
+
     let currentMetrics = metricsList[metricsList.length - 1];
 
     // Create new metrics entry if none exists or if it's been more than 1 hour
     if (!currentMetrics || Date.now() - currentMetrics.timestamp.getTime() > 60 * 60 * 1000) {
       currentMetrics = this.createNewMetrics(apiName);
       metricsList.push(currentMetrics);
-      
+
       // Keep only last 168 entries (1 week of hourly metrics)
       if (metricsList.length > 168) {
         metricsList.splice(0, metricsList.length - 168);
@@ -385,7 +385,7 @@ export class IntegrationMonitor {
         currentMetrics.responseTime.min = responseTime;
       }
     }
-    
+
     if (success) {
       currentMetrics.requests.successful++;
     } else {
@@ -409,7 +409,7 @@ export class IntegrationMonitor {
       const p95Index = Math.floor(sorted.length * 0.95);
       const p99Index = Math.floor(sorted.length * 0.99);
       const maxIndex = sorted.length - 1;
-      
+
       currentMetrics.performance = {
         averageResponseTime: responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length,
         p95ResponseTime: sorted[p95Index] ?? 0,
@@ -493,7 +493,7 @@ export class IntegrationMonitor {
       if (value === null) continue;
 
       const shouldAlert = this.evaluateCondition(value, rule.operator, rule.threshold);
-      
+
       if (shouldAlert) {
         this.createAlert(rule, value);
         rule.lastTriggered = new Date();
@@ -507,12 +507,12 @@ export class IntegrationMonitor {
   private getMetricValue(metrics: IntegrationMetrics, metric: string): number | null {
     const parts = metric.split('.');
     let value: unknown = metrics;
-    
+
     for (const part of parts) {
       value = (value as Record<string, unknown>)[part];
       if (value === undefined) return null;
     }
-    
+
     return typeof value === 'number' ? value : null;
   }
 
@@ -548,7 +548,7 @@ export class IntegrationMonitor {
     };
 
     this.alerts.push(alert);
-    
+
     logger.warn('Alert triggered', {
       alertId: alert.id,
       apiName: alert.apiName,

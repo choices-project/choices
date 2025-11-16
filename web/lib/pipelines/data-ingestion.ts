@@ -382,6 +382,23 @@ export class DataIngestionPipeline {
             jobHash: Math.abs(jobHash)
           });
         }
+        // Transform and validate the result using pipelines
+        if (result?.representatives) {
+          // Transform using transformation pipeline
+          const transformed = this.transformationPipeline.transformGoogleCivicData(result, 'federal');
+          
+          // Validate using validation pipeline
+          const validationResults = this.validationPipeline.validate(transformed.recordsTransformed > 0 ? transformed : null, 'representative');
+          
+          if (validationResults && validationResults.length > 0) {
+            logger.debug('Validation results', {
+              address,
+              validCount: validationResults.filter(r => r.valid).length,
+              invalidCount: validationResults.filter(r => !r.valid).length
+            });
+          }
+        }
+        
         // await this.storeAddressLookupResult(result);
         
         recordsProcessed++;
@@ -395,6 +412,11 @@ export class DataIngestionPipeline {
         // Check quota warnings periodically
         if (recordsProcessed % 10 === 0) {
           apiUsageMonitor.checkQuotaWarnings();
+        }
+        
+        // Add delay between requests to respect rate limits (sleep utility)
+        if (recordsProcessed < recordsTotal) {
+          await this.sleep(100); // 100ms delay between requests
         }
         
       } catch (error) {
