@@ -735,6 +735,44 @@ export class FinalizePollManager {
     
     return root;
   }
+
+  /**
+   * Verify Merkle root by recomputing from leaves
+   * Uses computeMerkleRoot for verification purposes
+   */
+  async verifyMerkleRoot(pollId: string, expectedRoot: string): Promise<boolean> {
+    try {
+      const merkleTree = await this.createMerkleTree(pollId);
+      const actualRoot = merkleTree.getRoot();
+      
+      // Also compute manually for verification
+      const ballots = await this.getOfficialBallots(pollId);
+      const leaves = ballots.map(ballot => {
+        const commitment = this.ballotVerifier.createTree(pollId);
+        commitment.addBallot(ballot.id, ballot);
+        return commitment.getRoot();
+      });
+      
+      const computedRoot = this.computeMerkleRoot(leaves);
+      
+      // Verify both methods produce the same root
+      const isValid = actualRoot === expectedRoot && computedRoot === expectedRoot;
+      
+      if (!isValid) {
+        logger.warn('Merkle root verification failed', {
+          pollId,
+          expectedRoot,
+          actualRoot,
+          computedRoot
+        });
+      }
+      
+      return isValid;
+    } catch (error) {
+      logger.error('Error verifying Merkle root', { pollId, error });
+      return false;
+    }
+  }
 }
 
 // ============================================================================
