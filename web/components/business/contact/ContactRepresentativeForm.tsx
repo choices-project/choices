@@ -161,14 +161,25 @@ export function ContactRepresentativeForm({
     setErrorMessage(null);
 
     try {
-      // Prepare attachments data
-      const _attachmentsData = formData.attachments.map(file => ({
+      // Prepare attachments data for logging and potential future use
+      const attachmentsData = formData.attachments.map(file => ({
         name: file.name,
         size: file.size,
         type: file.type
       }));
 
+      // Log attachments for audit trail
+      if (attachmentsData.length > 0) {
+        logger.debug('Message includes attachments', {
+          representativeId,
+          attachmentCount: attachmentsData.length,
+          totalSize: attachmentsData.reduce((sum, att) => sum + att.size, 0)
+        });
+      }
+
       // Send minimal message compatible with service type
+      // Note: Attachments are logged but not currently sent via the messaging service
+      // This can be extended when the service supports file attachments
       const sent = await contactMessagingService.sendMessage({
         content: formData.content.trim(),
         senderId: 'current-user',

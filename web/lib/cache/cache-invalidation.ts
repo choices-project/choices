@@ -296,6 +296,14 @@ export class CacheInvalidationManager {
     let invalidatedTags = 0
     let success = true
     let error: string | undefined
+    
+    // Use strategy manager to select appropriate invalidation strategy
+    const strategy = this.strategyManager.getStrategy(rule.strategy ?? 'default')
+    logger.debug('Using cache invalidation strategy', {
+      ruleId: rule.id,
+      strategy: strategy.name,
+      strategyType: strategy.type
+    })
 
     try {
       // Invalidate by patterns

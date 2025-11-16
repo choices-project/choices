@@ -105,7 +105,6 @@ export class AdvancedQueryOptimizer {
     const startTime = Date.now()
     const cacheKey = this.generateCacheKey(query, options)
     let fromCache = false
-    let _cacheHit = false
 
     try {
       // Check cache first

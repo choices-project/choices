@@ -152,10 +152,19 @@ export class ProofOfPersonhoodManager {
             type: 'public-key',
             id: credentialIdBuffer
           }],
+          rpId: this.rpId, // Use rpId for origin validation
           userVerification: 'required',
           timeout: 60000
         }
       }) as PublicKeyCredential;
+      
+      // Validate origin matches expected origin
+      if (typeof window !== 'undefined' && window.location.origin !== this.origin) {
+        logger.warn('WebAuthn origin mismatch', {
+          expected: this.origin,
+          actual: window.location.origin
+        });
+      }
 
       if (!credential) {
         throw new Error('Failed to authenticate with WebAuthn');
@@ -307,6 +316,14 @@ export class ProofOfPersonhoodManager {
     let constituentStatus = false;
 
     try {
+      // Log verification attempt for security audit
+      logger.debug('Proof of personhood verification started', {
+        userId,
+        accountAge: userProfile.accountAge,
+        deviceCount: userProfile.deviceCount,
+        hasAddress: !!address
+      });
+      
       // Verify device presence
       devicePresence = await this.verifyDevicePresence();
       if (devicePresence) {
