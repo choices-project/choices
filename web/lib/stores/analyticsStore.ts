@@ -21,7 +21,6 @@ import type {
   TrendDataPoint,
   TrustTierComparisonData,
 } from '@/features/analytics/types/analytics';
-import { logger } from '@/lib/utils/logger';
 import {
   fetchAnalyticsDemographics,
   fetchAnalyticsPollHeatmap,
@@ -31,6 +30,7 @@ import {
   generateAnalyticsReport,
   sendAnalyticsEvents,
 } from '@/lib/analytics/services/analyticsService';
+import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -619,6 +619,17 @@ export const createAnalyticsActions = (
     },
 
     sendAnalytics: async () => {
+      if (!shouldTrack()) {
+        logger.info('Analytics send skipped - tracking disabled by user consent settings');
+        return;
+      }
+
+      const pendingEvents = get().events;
+      if (pendingEvents.length === 0) {
+        logger.debug('Analytics send skipped - no events queued');
+        return;
+      }
+
       setState((draft) => {
         draft.isSending = true;
         draft.error = null;

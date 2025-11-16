@@ -2,8 +2,8 @@
 // Versioned API endpoint for single representative with FEC and voting data
 import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 type RepresentativeResponse = {
@@ -40,19 +40,16 @@ type RepresentativeResponse = {
   last_updated: string;
 }
 
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   // Create Supabase client at request time (not module level) to avoid build-time errors
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json(
-      { error: 'Supabase configuration missing' },
-      { status: 500 }
-    );
+    return errorResponse('Supabase configuration missing', 500);
   }
 
   const supabase = createClient(
@@ -67,7 +64,10 @@ export async function GET(
     const include = searchParams.get('include')?.split(',') ?? [];
     const includeDivisions = include.includes('divisions');
 
-    const representativeId = params.id;
+    const representativeId = params.id?.trim();
+    if (!representativeId) {
+      return validationError({ id: 'Representative ID is required' });
+    }
 
     // Get base representative data
     type RepresentativeDivisionRow = {
@@ -112,11 +112,12 @@ export async function GET(
       .eq('valid_to', 'infinity')
       .maybeSingle();
 
-    if (repError || !rep) {
-      return NextResponse.json(
-        { error: 'Representative not found' },
-        { status: 404 }
-      );
+    if (repError) {
+      return errorResponse('Failed to load representative', 502, { reason: repError.message });
+    }
+
+    if (!rep) {
+      return notFoundError('Representative not found');
     }
 
     const representativeRow = rep as unknown as RepresentativeRow;
@@ -225,28 +226,34 @@ export async function GET(
           filteredResponse[field] = response[field as keyof RepresentativeResponse];
         }
       });
-      return NextResponse.json(filteredResponse, {
-        headers: {
-          'ETag': `"${representativeRow.id}-${representativeRow.last_updated}"`,
-          'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
-          'Content-Type': 'application/json'
+      const responsePayload = successResponse(
+        { representative: filteredResponse },
+        {
+          include: include.length > 0 ? include : undefined,
+          fields: fields.length > 0 ? fields : undefined
         }
-      });
+      );
+
+      responsePayload.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
+      responsePayload.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+
+      return responsePayload;
     }
 
-    return NextResponse.json(response, {
-      headers: {
-        'ETag': `"${representativeRow.id}-${representativeRow.last_updated}"`,
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
-        'Content-Type': 'application/json'
+    const apiResponse = successResponse(
+      { representative: response },
+      {
+        include: include.length > 0 ? include : undefined
       }
-    });
+    );
+
+    apiResponse.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
+    apiResponse.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+
+    return apiResponse;
 
   } catch (error) {
     logger.error('Error fetching representative:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to fetch representative', 500);
   }
-}
+});

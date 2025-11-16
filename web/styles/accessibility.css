@@ -2,10 +2,10 @@
    PHASE 3: ACCESSIBILITY STYLES
    ============================================================================
    Agent A3 - UX/Accessibility Specialist
-   
+
    This stylesheet provides comprehensive accessibility styles for the
    Ranked Choice Democracy Revolution platform.
-   
+
    Features:
    - WCAG 2.2 AA compliant color contrast
    - Focus management and visual indicators
@@ -13,7 +13,7 @@
    - High contrast mode support
    - Screen reader only content
    - Responsive design
-   
+
    Created: January 15, 2025
    Status: Phase 3 Implementation
    ============================================================================ */
@@ -39,7 +39,7 @@
   --color-warning: #ff7f0e;
   --color-warning-dark: #cc5f0b;
   --color-warning-light: #ff9f3e;
-  
+
   /* Neutral Colors */
   --color-white: #ffffff;
   --color-black: #000000;
@@ -53,11 +53,11 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
-  
+
   /* Typography */
   --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -65,23 +65,23 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border Radius */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms ease-in-out;
   --transition-slow: 350ms ease-in-out;
-  
+
   /* Focus Styles */
   --focus-ring: 0 0 0 3px rgba(31, 119, 180, 0.5);
   --focus-ring-offset: 2px;
@@ -116,7 +116,7 @@
     --transition-normal: 0ms;
     --transition-slow: 0ms;
   }
-  
+
   *,
   *::before,
   *::after {
@@ -436,20 +436,22 @@ a:focus,
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-gray-900);
-  color: var(--color-white);
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   white-space: nowrap;
   margin-bottom: var(--spacing-xs);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
+  opacity: 1;
+  visibility: visible;
+  display: block;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }
 
-.chart-bar:hover .bar-content,
-.chart-bar.focused .bar-content {
-  opacity: 1;
+.chart-bar .bar-label,
+.chart-bar .bar-value {
+  color: inherit;
 }
 
 .bar-label {
@@ -1128,24 +1130,24 @@ a:focus,
   .progressive-ranking {
     padding: var(--spacing-md);
   }
-  
+
   .candidates-list {
     gap: var(--spacing-sm);
   }
-  
+
   .candidate-card {
     padding: var(--spacing-md);
   }
-  
+
   .chart-bars {
     height: 200px;
     gap: var(--spacing-xs);
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .submit-button,
   .clear-button {
     width: 100%;
@@ -1157,15 +1159,15 @@ a:focus,
   .progressive-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .candidate-name {
     font-size: 1.125rem;
   }
-  
+
   .chart-bars {
     height: 150px;
   }
-  
+
   .bar-content {
     font-size: 0.625rem;
   }
@@ -1185,19 +1187,19 @@ a:focus,
   .sms-toggle-button {
     display: none;
   }
-  
+
   .accessible-ranking-interface,
   .low-bandwidth-ranking-form,
   .progressive-ranking {
     box-shadow: none;
     border: 1px solid var(--color-gray-300);
   }
-  
+
   .candidate-card {
     break-inside: avoid;
     border: 1px solid var(--color-gray-300);
   }
-  
+
   .chart-bars {
     height: 200px;
   }

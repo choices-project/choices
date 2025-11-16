@@ -5,7 +5,7 @@ import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
 export {};
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface Window {
     __playwrightAnalytics?: PlaywrightAnalyticsBridge;
     __pwaQueueHarness?: {
@@ -25,7 +25,7 @@ declare global {
     notificationClicked?: boolean;
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface ServiceWorkerRegistration {
     sync?: {
       register: (tag: string) => Promise<void>;

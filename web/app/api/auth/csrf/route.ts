@@ -21,7 +21,7 @@ export const GET = withErrorHandling(async () => {
   // Get or create CSRF token
   const csrfToken = await getOrSetCsrfCookie();
   
-  // Create response
+  // Create response with token nested under data.token
   const response = successResponse({
     csrfToken,
     message: 'CSRF token retrieved successfully'

@@ -1,7 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+
+import { useAppActions } from '@/lib/stores/appStore';
 
 import { AdminLayout } from '../layout/AdminLayout';
 
@@ -18,6 +20,22 @@ const UserManagement = dynamic(
 );
 
 export default function AdminUsersPage() {
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/users');
+    setSidebarActiveSection('admin-users');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Users', href: '/admin/users' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
   return (
     <AdminLayout>
       <Suspense

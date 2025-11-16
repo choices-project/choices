@@ -35,7 +35,12 @@ export const POST = withErrorHandling(async () => {
 
     if (checkError && checkError.code !== 'PGRST116') {
       devLog('Error checking existing user:', checkError)
-      throw new Error('Database error')
+      return errorResponse(
+        'Failed to verify existing user record',
+        500,
+        { message: checkError.message },
+        'SYNC_PROFILE_LOOKUP_FAILED'
+      )
     }
 
   if (existingUser && !('error' in existingUser)) {
@@ -57,14 +62,19 @@ export const POST = withErrorHandling(async () => {
       .insert({
         user_id: user.id,
         email: user.email ?? undefined,
-        trust_tier: 'T0'
+        trust_tier: 'T1'
       })
       .select()
       .single()
 
   if (createError) {
     devLog('Error creating user in user_profiles:', createError)
-    return errorResponse('Failed to create user record', 500);
+    return errorResponse(
+      'Failed to create user record',
+      500,
+      { message: createError.message },
+      'SYNC_PROFILE_CREATE_FAILED'
+    );
   }
 
   devLog('Successfully created user in user_profiles table:', newUser)

@@ -6,7 +6,6 @@
  * development, staging, and production environments.
  */
 
-import { withOptional } from '@/lib/util/objects';
 import { devLog } from '@/lib/utils/logger';
 
 export type OriginConfig = {
@@ -37,7 +36,13 @@ export function validateOrigin(
   request: Request,
   config: Partial<OriginConfig> = {}
 ): { valid: boolean; reason?: string; origin?: string } {
-  const finalConfig = withOptional(DEFAULT_ORIGIN_CONFIG, config);
+  const filteredConfig = Object.fromEntries(
+    Object.entries(config).filter(([, value]) => value !== undefined)
+  ) as Partial<OriginConfig>;
+  const finalConfig: OriginConfig = {
+    ...DEFAULT_ORIGIN_CONFIG,
+    ...filteredConfig,
+  };
   const origin = request.headers.get('origin');
   const host = request.headers.get('host');
   const referer = request.headers.get('referer');

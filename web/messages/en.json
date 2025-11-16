@@ -13,7 +13,566 @@
     "settings": "Settings",
     "logout": "Sign out",
     "login": "Log in",
-    "register": "Create account"
+    "register": "Create account",
+    "languageSelector": {
+      "live": {
+        "changed": "Language set to {language}.",
+        "error": "Unable to change language. Please try again."
+      }
+    }
+  },
+  "analytics": {
+    "heading": {
+      "title": "Analytics dashboard",
+      "mobile": "Monitoring & insights",
+      "desktop": "System monitoring • Business intelligence • User insights",
+      "lastUpdatedFull": "Updated: {time}",
+      "lastUpdatedShort": "• {time}"
+    },
+    "buttons": {
+      "showDetails": "Show details",
+      "hideDetails": "Hide details",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "export": "Export data"
+    },
+    "status": {
+      "loading": "Loading enhanced analytics…",
+      "errorLabel": "Error",
+      "retry": "Retry",
+      "noData": "No analytics data available.",
+      "loadData": "Load data"
+    },
+    "badges": {
+      "adminAccess": "Admin access",
+      "newSchema": "New schema enabled",
+      "realTime": "Real-time updates",
+      "enhancedInsights": "Enhanced insights"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "overviewShort": "Overview",
+      "trends": "Trends",
+      "heatmaps": "Heatmaps",
+      "heatmapsShort": "Heatmaps",
+      "demographics": "Demographics",
+      "demographicsShort": "Demographics",
+      "temporal": "Temporal",
+      "temporalShort": "Temporal",
+      "trust": "Trust tiers"
+    },
+    "tabDescriptions": {
+      "overview": "Overview tab highlights total users, polls, votes, engagement score, system health checks, and active site messages.",
+      "trends": "Trends tab shows interactive charts and summary tables for votes, participation, and velocity across the selected date range.",
+      "heatmaps": "Heatmaps tab renders district and poll heatmaps with keyboard-friendly controls and text summaries for geographic engagement.",
+      "demographics": "Demographics tab lists trust tiers, ages, districts, and education levels using accessible summary tables.",
+      "temporal": "Temporal tab charts hourly and daily activity plus velocity metrics with matching textual tables.",
+      "trust": "Trust tiers tab compares trust tier performance with summaries for engagement, participation, and bot likelihood."
+    },
+    "live": {
+      "refreshing": "Refreshing analytics data",
+      "refreshed": "Analytics updated at {time}"
+    },
+    "summaries": {
+      "overview": "{totalUsers} total users with {activeUsers} active. {totalPolls} total polls ({newPolls} new this period) and {totalVotes} total votes ({newVotes} new). Engagement score {engagementScore} with trust score {trustScore}."
+    },
+    "a11y": {
+      "tabChanged": "{tab} tab content focused"
+    },
+    "tables": {
+      "heading": "Accessible data summary",
+      "description": "Use the tables below to review chart data with assistive technology.",
+      "columns": {
+        "tier": "Tier",
+        "count": "Count",
+        "percentage": "Percentage",
+        "ageGroup": "Age group",
+        "district": "District",
+        "education": "Education level",
+        "date": "Date",
+        "votes": "Votes",
+        "participation": "Participation",
+        "velocity": "Velocity",
+        "hour": "Hour",
+        "activity": "Activity",
+        "percentOfPeak": "Percent of peak",
+        "day": "Day",
+        "timestamp": "Timestamp",
+        "poll": "Poll",
+        "category": "Category",
+        "engagementScore": "Engagement score",
+        "uniqueVoters": "Unique voters",
+        "status": "Status",
+        "users": "Users",
+        "participationRate": "Participation rate",
+        "completionRate": "Completion rate",
+        "avgEngagement": "Avg. engagement",
+        "botLikelihood": "Bot likelihood",
+        "avgPollsVoted": "Avg. polls voted",
+        "avgTimeOnSite": "Avg. time on site (min)",
+        "state": "State",
+        "level": "Level",
+        "engagementCount": "Engagement count",
+        "representatives": "Representatives"
+      },
+      "statuses": {
+        "active": "Active",
+        "closed": "Closed"
+      }
+    },
+    "demographics": {
+      "cardTitle": "Demographics breakdown",
+      "cardDescriptionMobile": "K-anonymity: {threshold}",
+      "cardDescriptionDesktop": "User demographics with privacy protections (K-anonymity: {threshold})",
+      "tabsGroupLabel": "Demographics data tabs",
+      "tabsLabels": {
+        "trust": "Trust tiers",
+        "age": "Age groups",
+        "district": "Districts",
+        "education": "Education"
+      },
+      "tabsShort": {
+        "trust": "Trust",
+        "age": "Age",
+        "district": "Districts",
+        "education": "Edu"
+      },
+      "tabAnnouncements": {
+        "trust": "Viewing trust tier distribution.",
+        "age": "Viewing age group distribution.",
+        "district": "Viewing district participation.",
+        "education": "Viewing education level distribution."
+      },
+      "privacy": {
+        "title": "Privacy protected data",
+        "line1": "Only users who opted in to analytics collection are included.",
+        "line2": "Categories under {threshold} users are hidden to maintain anonymity.",
+        "line3": "{optedOut} users opted out and are excluded."
+      },
+      "summaryCards": {
+        "totalUsers": "Total users",
+        "optedIn": "Opted in",
+        "optedOut": "Opted out",
+        "privacyLevel": "Privacy level",
+        "privacyValue": "K-{threshold}",
+        "sr": {
+          "totalUsers": "{total} total users included.",
+          "optedIn": "{count} users opted in.",
+          "optedOut": "{count} users opted out.",
+          "privacyLevel": "Privacy level K-{threshold}."
+        }
+      },
+      "summaryIntro": "Showing {total} total users with {optedIn} opted in and {optedOut} opted out. Categories below hide groups smaller than {threshold} users.",
+      "tables": {
+        "trust": {
+          "title": "Trust tier distribution",
+          "description": "Counts and percentages of users by trust tier."
+        },
+        "age": {
+          "title": "Age group distribution",
+          "description": "Age group breakdown of opted-in users."
+        },
+        "district": {
+          "title": "Top districts",
+          "description": "Top districts by user engagement (limited to 10)."
+        },
+        "education": {
+          "title": "Education levels",
+          "description": "Education level distribution for opted-in users."
+        }
+      }
+    },
+    "trends": {
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "chartTypes": {
+        "line": "Line chart",
+        "area": "Area chart"
+      },
+      "chart": {
+        "title": "Activity trends",
+        "description": "Shows votes, participation, and velocity for {range} using a {chartType} view.",
+        "axes": {
+          "votes": "Votes / Velocity",
+          "participation": "Participation rate (%)"
+        },
+        "summary": "Highest votes occurred on {peakVotesDate} with {peakVotes} votes. Participation peaked on {peakParticipationDate} at {peakParticipation}. Vote trend is {trendDirection} over {range}."
+      },
+      "filters": {
+        "dateRange": "Select date range",
+        "chartType": "Select chart type"
+      },
+      "announcements": {
+        "rangeChanged": "Date range updated to {range}.",
+        "chartTypeChanged": "Chart view switched to {chartType}.",
+        "refresh": "Refreshing activity trends data."
+      },
+      "trendDirections": {
+        "increasing": "increasing",
+        "decreasing": "decreasing",
+        "steady": "steady"
+      },
+      "summaryIntro": "{totalVotes} total votes recorded. Average participation sits at {avgParticipation} with average velocity of {avgVelocity}.",
+      "table": {
+        "title": "Trend data by day",
+        "description": "Daily totals for votes, participation, and velocity."
+      }
+    },
+    "temporal": {
+      "cardTitle": "Temporal analysis",
+      "cardDescription": "User activity patterns by time of day and day of week.",
+      "errors": {
+        "noData": "No temporal data available."
+      },
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "filters": {
+        "dateRange": "Select date range"
+      },
+      "announcements": {
+        "rangeChanged": "Temporal range updated to {range}.",
+        "refresh": "Refreshing temporal analysis data."
+      },
+      "tabsGroupLabel": "Temporal analysis views",
+      "tabsLabels": {
+        "hourly": "Hourly pattern",
+        "daily": "Daily pattern",
+        "velocity": "Engagement velocity"
+      },
+      "tabAnnouncements": {
+        "hourly": "Viewing hourly heatmap.",
+        "daily": "Viewing day-of-week activity.",
+        "velocity": "Viewing engagement velocity trends."
+      },
+      "tabSummaries": {
+        "hourly": "Peak activity occurs around {peakHour}. Average activity per slot is {avgActivity}.",
+        "daily": "Peak engagement day is {peakDay}. Average activity per slot is {avgActivity}.",
+        "velocity": "{trendDirection} velocity trend. Latest reading at {lastTimestamp} is {lastVelocity}."
+      },
+      "velocityTrend": {
+        "increasing": "an increasing",
+        "decreasing": "a decreasing",
+        "steady": "a steady"
+      },
+      "summaryIntro": "Peak engagement occurs at {peakHour} on {peakDay}. Average activity across time slots is {avgActivity}.",
+      "summaryCards": {
+        "peakHour": {
+          "label": "Peak hour",
+          "subtitle": "Most active time",
+          "sr": "Peak hour {value}."
+        },
+        "peakDay": {
+          "label": "Peak day",
+          "subtitle": "Most active day",
+          "sr": "Peak day {value}."
+        },
+        "avgActivity": {
+          "label": "Average activity",
+          "subtitle": "Per time slot",
+          "sr": "Average activity {value} per slot."
+        }
+      },
+      "sections": {
+        "hourly": {
+          "title": "24-hour activity pattern",
+          "description": "Displays engagement across the full day (0 = midnight, 12 = noon).",
+          "heatmapLabel": "Hourly heatmap showing activity intensity by hour.",
+          "legendLow": "Low",
+          "legendHigh": "High"
+        },
+        "daily": {
+          "title": "Day-of-week pattern",
+          "description": "Displays engagement across each day of the week.",
+          "listTitle": "Engagement by day",
+          "percentOfPeak": "{value}% of peak activity"
+        },
+        "velocity": {
+          "title": "Engagement velocity",
+          "description": "Rate of change in user engagement over time."
+        }
+      },
+      "axes": {
+        "activityCount": "Activity count",
+        "velocity": "Velocity (activities/hour)"
+      },
+      "notes": {
+        "mockData": "Using mock data for demonstration. {error}"
+      },
+      "tables": {
+        "hourly": {
+          "title": "Hourly activity",
+          "description": "Activity counts and share of the peak hour."
+        },
+        "daily": {
+          "title": "Day-of-week activity",
+          "description": "Daily totals and share of peak day activity."
+        },
+        "velocity": {
+          "title": "Engagement velocity",
+          "description": "Recent velocity readings in activities per hour."
+        }
+      }
+    },
+    "heatmap": {
+      "cardTitle": "Poll engagement heatmap",
+      "cardDescription": "Visualizes poll engagement intensity across categories.",
+      "filters": {
+        "category": "Select category",
+        "limit": "Show",
+        "topCount": "Top {count}"
+      },
+      "announcements": {
+        "categoryChanged": "Category filter set to {category}.",
+        "limitChanged": "Showing top {count} polls.",
+        "refresh": "Refreshing poll engagement heatmap data."
+      },
+      "summaryCards": {
+        "totalVotes": {
+          "label": "Total votes",
+          "subtitle": "All selected polls",
+          "sr": "{value} total votes across selected polls."
+        },
+        "avgEngagement": {
+          "label": "Avg engagement",
+          "subtitle": "Average score",
+          "sr": "Average engagement score {value}."
+        },
+        "activePolls": {
+          "label": "Active polls",
+          "subtitle": "Currently running",
+          "sr": "{value} polls currently active."
+        },
+        "topPoll": {
+          "label": "Top poll",
+          "subtitle": "Highest engagement",
+          "sr": "Top poll {title} with engagement score {engagement}."
+        }
+      },
+      "chart": {
+        "title": "Poll engagement chart",
+        "summary": "Showing {count} polls sorted by engagement score. Highest engagement is {topTitle} with score {topEngagement}."
+      },
+      "summaryIntro": "{total} total votes across {active} active polls. {topPoll} leads engagement with a score of {engagement}.",
+      "summaryFallback": "{total} total votes across {active} active polls.",
+      "table": {
+        "title": "Poll engagement details",
+        "description": "Polls ranked by engagement score with supporting metrics."
+      },
+      "topPolls": {
+        "votesLabel": "votes"
+      }
+    },
+    "districts": {
+      "summaryIntro": "{totalDistricts} districts meet privacy safeguards with {totalEngagement} total engagements. {topDistrict} ({topState}) leads with {topEngagement} interactions.",
+      "summaryFallback": "{totalDistricts} districts meet privacy safeguards in this view.",
+      "table": {
+        "title": "District engagement details",
+        "description": "Districts listed with state, level, engagement counts, and representative coverage."
+      }
+    },
+    "trust": {
+      "cardTitle": "Trust tier comparison",
+      "cardDescription": "Compare behavior and engagement metrics across trust tiers (T0-T3).",
+      "tabsGroupLabel": "Trust tier visualization tabs",
+      "tabsLabels": {
+        "participation": "Participation",
+        "engagement": "Engagement",
+        "radar": "Radar"
+      },
+      "tabAnnouncements": {
+        "participation": "Viewing participation and completion rates by trust tier.",
+        "engagement": "Viewing engagement scores and bot likelihood by trust tier.",
+        "radar": "Viewing multi-metric radar comparison across trust tiers."
+      },
+      "sections": {
+        "participation": {
+          "title": "Participation & Completion Rates",
+          "description": "Percentage of users participating and completing polls by trust tier.",
+          "chartLabel": "Bar chart showing participation and completion rates for each trust tier. X-axis shows tier levels (T0-T3), Y-axis shows percentage.",
+          "detailedMetrics": "Detailed Metrics",
+          "rateLabels": "Participation / Completion"
+        },
+        "engagement": {
+          "title": "Engagement & Bot Detection",
+          "description": "Average engagement scores and bot likelihood indicators by trust tier.",
+          "chartLabel": "Bar chart showing average engagement scores and bot likelihood percentages for each trust tier. X-axis shows tier levels (T0-T3), Y-axis shows score values."
+        },
+        "radar": {
+          "title": "Multi-Metric Overview",
+          "description": "Comparative radar view across participation, completion, engagement, and trust score metrics.",
+          "chartLabel": "Radar chart comparing participation, completion, engagement, and trust scores across all trust tiers. Each tier is represented by a different colored polygon."
+        }
+      },
+      "axes": {
+        "percentage": "Percentage (%)",
+        "score": "Score"
+      },
+      "errors": {
+        "noData": "No trust tier data available"
+      },
+      "summaryCards": {
+        "totalUsers": {
+          "label": "Total users",
+          "subtitle": "Across all trust tiers",
+          "sr": "{value} total users across all trust tiers."
+        },
+        "strongestTier": {
+          "label": "Strongest tier",
+          "subtitle": "Highest engagement",
+          "sr": "{tier} shows the strongest engagement ({engagement}) with participation at {participation}."
+        }
+      },
+      "summaryIntro": "{totalUsers} users total. {strongestTier} shows the strongest engagement ({engagement}) with participation at {participation}.",
+      "summaryFallback": "{totalUsers} users total across all trust tiers.",
+      "table": {
+        "title": "Trust tier metrics",
+        "description": "Key metrics for each trust tier including engagement, participation, and bot likelihood."
+      },
+      "usersSuffix": "users",
+      "usersLabel": "Users",
+      "refreshAnnouncement": "Refreshing trust tier comparison data.",
+      "errorAnnouncement": "Trust tier data may be incomplete. {error}"
+    },
+    "overview": {
+      "metrics": {
+        "totalUsers": {
+          "title": "Total users",
+          "subtitle": "{active} active users",
+          "sr": "{total} total users with {active} active."
+        },
+        "totalPolls": {
+          "title": "Total polls",
+          "subtitle": "{newPolls} new this period",
+          "sr": "{total} total polls with {newPolls} created this period."
+        },
+        "totalVotes": {
+          "title": "Total votes",
+          "subtitle": "{newVotes} new this period",
+          "sr": "{total} total votes with {newVotes} recorded this period."
+        },
+        "engagement": {
+          "title": "Engagement score",
+          "subtitle": "Trust score: {trustScore}",
+          "sr": "Engagement score {engagement} with trust score {trustScore}."
+        }
+      }
+    },
+    "overviewSections": {
+      "enhancedInsights": {
+        "title": "Enhanced insights",
+        "description": "Advanced analytics powered by the new schema."
+      },
+      "sessionAnalytics": {
+        "title": "Session analytics",
+        "description": "Real-time session tracking and user behavior."
+      },
+      "systemHealth": {
+        "title": "System health",
+        "description": "Live service checks and incident statuses."
+      },
+      "siteMessages": {
+        "title": "Active site messages",
+        "description": "Announcements currently shown to users."
+      }
+    },
+    "widgets": {
+      "moveButton": "Move",
+      "moveButtonAria": "Toggle keyboard move mode for this widget",
+      "resizeButton": "Resize",
+      "resizeButtonAria": "Toggle keyboard resize mode for this widget",
+      "addWidget": "Add Widget",
+      "defaultInstructions": "Focus this widget and use the Move or Resize buttons to adjust it with the keyboard.",
+      "moveModeOn": "Move mode enabled for {title}. Use arrow keys to reposition. Press Enter to confirm or Escape to cancel.",
+      "moveModeOff": "Move mode exited.",
+      "moveModeInstructions": "Move mode active. Use arrow keys to reposition the widget. Press Enter to confirm or Escape to cancel.",
+      "resizeModeOn": "Resize mode enabled for {title}. Use arrow keys to resize. Press Enter to confirm or Escape to cancel.",
+      "resizeModeOff": "Resize mode exited.",
+      "resizeModeInstructions": "Resize mode active. Use arrow keys to resize the widget. Press Enter to confirm or Escape to cancel.",
+      "positionUpdate": "Widget moved to column {column}, row {row}.",
+      "sizeUpdate": "Widget size is now {width} columns by {height} rows.",
+      "editModeOn": "Edit mode enabled. Use the move or resize buttons on each widget to adjust layouts with the keyboard.",
+      "editModeOff": "Edit mode exited.",
+      "overlayMoveHint": "Focus a widget and press M or use the Move button to reposition with arrow keys.",
+      "overlayResizeHint": "Press R or use the Resize button to adjust width and height with arrow keys.",
+      "shortcutDialog": {
+        "button": "Keyboard help",
+        "title": "Keyboard shortcuts",
+        "intro": "Use these commands to edit the widget grid quickly. All shortcuts work with either Mac (⌘) or Windows/Linux (Ctrl) modifiers unless noted.",
+        "items": {
+          "toggleEdit": {
+            "shortcut": "⌘/Ctrl + E",
+            "description": "Toggle edit mode on or off."
+          },
+          "toggleMove": {
+            "shortcut": "M (while focused on a widget)",
+            "description": "Toggle move mode to reposition the selected widget."
+          },
+          "toggleResize": {
+            "shortcut": "R (while focused on a widget)",
+            "description": "Toggle resize mode to adjust the selected widget."
+          },
+          "arrowMove": {
+            "shortcut": "Arrow keys (move mode)",
+            "description": "Reposition the widget. Hold Shift to move by two columns/rows."
+          },
+          "arrowResize": {
+            "shortcut": "Arrow keys (resize mode)",
+            "description": "Resize the widget. Hold Shift to resize in larger steps."
+          },
+          "undo": {
+            "shortcut": "⌘/Ctrl + Z",
+            "description": "Undo the last change."
+          },
+          "redo": {
+            "shortcut": "⌘/Ctrl + Shift + Z or Ctrl + Y",
+            "description": "Redo the previously undone change."
+          },
+          "save": {
+            "shortcut": "⌘/Ctrl + S",
+            "description": "Save the current layout."
+          },
+          "cancel": {
+            "shortcut": "Esc",
+            "description": "Exit move/resize mode or cancel edit mode actions."
+          }
+        }
+      }
+    }
+  },
+  "share": {
+    "dialog": {
+      "feedTitle": "Share this update",
+      "description": "Help others engage with “{title}” by copying the link or sharing it directly.",
+      "urlLabel": "Share link",
+      "urlDescription": "Copy and paste this link anywhere you want to share it.",
+      "copy": "Copy link",
+      "copied": "Copied!",
+      "systemShare": "Share via system",
+      "emailShare": "Share by email",
+      "openSource": "View source",
+      "actionsHeading": "Share options",
+      "metadataHeading": "Highlights",
+      "emailSubject": "Check out this civic update: {title}",
+      "metadata": {
+        "source": "Source",
+        "author": "Author",
+        "category": "Category",
+        "district": "District",
+        "updated": "Last updated",
+        "tags": "Related tags"
+      },
+      "live": {
+        "opened": "Share dialog opened for {title}.",
+        "copied": "Share link copied to clipboard.",
+        "copyError": "Unable to copy the share link. Copy manually instead."
+      }
+    }
   },
   "accessibility": {
     "loading": "Loading Choices..."
@@ -29,7 +588,12 @@
       "complete": "Complete"
     },
     "progress": {
-      "valueText": "Step {current} of {total}: {label}"
+      "valueText": "Step {current} of {total}: {label}",
+      "live": {
+        "step": "Step {current} of {total}: {label}",
+        "completed": "Onboarding complete. You’re ready to explore Choices.",
+        "error": "Onboarding error: {message}"
+      }
     },
     "welcome": {
       "title": "Welcome to Choices",
@@ -221,6 +785,16 @@
         "previous": "Previous",
         "next": "Next",
         "pageLabel": "Page {current} of {total}"
+      },
+      "results": {
+        "heading": "Results",
+        "refreshing": "Refreshing poll results.",
+        "refresh": "Refresh Results",
+        "refreshLabel": "Refresh poll results",
+        "summary": "{totalVotes} total votes. {topOption} leads with {topVotes} votes ({topPercentage}%).",
+        "optionVotes": "{votes} votes ({percentage}%)",
+        "optionSummary": "{option}: {votes} votes ({percentage}%), {uniqueVoters} unique voters.",
+        "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}"
       }
     }
   },
@@ -237,6 +811,10 @@
       },
       "refreshing": "Refreshing...",
       "scrollToTopAria": "Scroll to top"
+    },
+    "live": {
+      "initialLoad": "{count, plural, one {Feed loaded with # update.} other {Feed loaded with # updates.}}",
+      "newItems": "{count, plural, one {# new update available in the feed.} other {# new updates available in the feed.}}"
     },
     "hashtagPolls": {
       "error": {
@@ -305,6 +883,322 @@
           "yesterday": "Yesterday"
         }
       }
+    },
+    "provider": {
+      "notifications": {
+        "error": {
+          "title": "Feed update failed"
+        }
+      },
+      "errors": {
+        "loadFeeds": {
+          "short": "Failed to load feeds",
+          "message": "We couldn’t load your feeds. Please try again.",
+          "withReason": "Failed to load feeds: {error}"
+        },
+        "likeFeed": {
+          "short": "Failed to like feed",
+          "message": "We couldn’t update your reaction. Please try again."
+        },
+        "bookmarkFeed": {
+          "short": "Failed to bookmark feed",
+          "message": "We couldn’t update your bookmarks. Please try again."
+        },
+        "refreshFeeds": {
+          "short": "Failed to refresh feeds",
+          "message": "We couldn’t refresh your feeds. Please try again.",
+          "withReason": "Failed to refresh feeds: {error}"
+        },
+        "loadMoreFeeds": {
+          "short": "Failed to load more feeds",
+          "message": "We couldn’t load more items. Please try again.",
+          "withReason": "Failed to load more feeds: {error}"
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "personal": {
+      "signIn": {
+        "title": "Sign in to your account",
+        "description": "You need to be signed in to access your personal dashboard.",
+        "button": "Go to Sign In"
+      },
+      "harness": {
+        "signIn": {
+          "title": "Sign in to your account",
+          "description": "You need to be signed in to access your personal dashboard.",
+          "button": "Go to Sign In"
+        },
+        "header": {
+          "titleWithName": "Welcome back, {name}",
+          "titleFallback": "Your Dashboard",
+          "subtitle": "Harness mode — simplified dashboard rendering for Playwright.",
+          "trendingButton": "View Trending Feed",
+          "badge": "Harness"
+        },
+        "analytics": {
+          "title": "Personal Analytics (Harness)",
+          "description": "Static analytics snapshot for harness verification."
+        },
+        "representatives": {
+          "title": "Your Representatives (Harness)",
+          "description": "Simplified placeholder rendered only when the preference is enabled.",
+          "empty": "Harness mode: representative details omitted."
+        },
+        "settings": {
+          "title": "Dashboard Settings",
+          "description": "Toggle visibility of dashboard modules.",
+          "fields": {
+            "quickActions": "Show Quick Actions",
+            "electedOfficials": "Show Elected Officials",
+            "recentActivity": "Show Recent Activity",
+            "engagementScore": "Show Engagement Score"
+          }
+        }
+      },
+      "header": {
+        "titleWithName": "Welcome back, {name}",
+        "titleFallback": "Your Dashboard",
+        "subtitleWithBio": "Here's a snapshot of your civic activity.",
+        "subtitleDefault": "Your personal civic engagement hub",
+        "refreshing": "Refreshing…",
+        "engagementBadge": "{score} Engagement Score"
+      },
+      "common": {
+        "refresh": "Refresh"
+      },
+      "errors": {
+        "title": "Error Loading Dashboard",
+        "generic": "Something went wrong while loading your dashboard.",
+        "retry": "Try Again"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "analytics": "Analytics"
+      },
+      "metrics": {
+        "totalVotes": "Total Votes",
+        "pollsCreated": "Polls Created",
+        "activePolls": "Active Polls",
+        "pollVotes": "Poll Votes"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "description": "Common tasks and shortcuts",
+        "createPoll": {
+          "label": "Create Poll",
+          "description": "Start a new poll"
+        },
+        "updateProfile": {
+          "label": "Update Profile",
+          "description": "Edit your profile"
+        },
+        "privacy": {
+          "label": "Privacy & Data",
+          "description": "Manage your privacy"
+        },
+        "location": {
+          "label": "Set Location",
+          "description": "Update your location"
+        },
+        "export": {
+          "label": "Export Data",
+          "description": "Download your data"
+        }
+      },
+      "engagement": {
+        "title": "Engagement Score",
+        "description": "Your overall civic participation level",
+        "participationLevel": "Participation Level",
+        "participationValue": "{score}/100",
+        "context": "Based on your voting activity, poll creation, and engagement"
+      },
+      "trending": {
+        "title": "Trending Topics",
+        "description": "What the community is discussing right now",
+        "error": "{message}",
+        "empty": "No trending topics yet. Check back soon or explore the feed to discover new conversations.",
+        "viewFeed": "View Trending Feed"
+      },
+      "representatives": {
+        "title": "Your Representatives",
+        "description": "Updates from officials connected to your address",
+        "addAddress": "Add your address to see district elections.",
+        "countdown": {
+          "title": "Upcoming elections",
+          "description": "Key dates tied to your saved divisions.",
+          "ariaLabel": "Upcoming elections for your representatives"
+        },
+        "viewAll": "View all representatives",
+        "empty": "No representatives found for your saved address.",
+        "updateAddress": "Update your address"
+      },
+      "personalized": {
+        "title": "Personalized Content",
+        "description": "Content tailored to your location and demographics",
+        "message": "Demographic filtering is enabled! Your content will be personalized based on your location and interests.",
+        "updatePreferences": "Update Your Preferences"
+      },
+      "settings": {
+        "title": "Dashboard Settings",
+        "description": "Customize what you see on your dashboard",
+        "fields": {
+          "quickActions": {
+            "label": "Show Quick Actions",
+            "help": "Display quick action buttons"
+          },
+          "electedOfficials": {
+            "label": "Show Elected Officials",
+            "help": "Display your representatives"
+          },
+          "recentActivity": {
+            "label": "Show Recent Activity",
+            "help": "Display your recent actions"
+          },
+          "engagementScore": {
+            "label": "Show Engagement Score",
+            "help": "Display your participation level"
+          }
+        }
+      },
+      "analytics": {
+        "title": "Personal Analytics",
+        "description": "Your civic engagement metrics and activity",
+        "details": {
+          "title": "Detailed Analytics",
+          "description": "Comprehensive analytics and insights",
+          "votesOnPolls": "Votes on Your Polls"
+        }
+      },
+      "recentActivity": {
+        "title": "Recent Activity",
+        "description": "Your latest civic engagement actions",
+        "items": {
+          "vote": "Voted on a poll",
+          "poll": "Created: {title}"
+        },
+        "pollSummary": "{votes} votes • {date}"
+      },
+      "polls": {
+        "untitled": "Untitled poll"
+      }
+    }
+  },
+  "civics": {
+    "lure": {
+      "header": {
+        "title": "Ready to vote on something that actually matters? 🗳️",
+        "subtitle": "While you’re here voting on Drag Race, check out who’s running in your area and see who’s really representing you!"
+      },
+      "location": {
+        "label": "Your Area:",
+        "updating": "Updating…"
+      },
+      "stats": {
+        "candidates": {
+          "title": "Local Candidates",
+          "caption": "{formattedCount} {count, plural, one {representative connected} other {representatives connected}}"
+        },
+        "activities": {
+          "title": "Active Issues",
+          "caption": "Civic updates logged for your district"
+        },
+        "following": {
+          "title": "Your Voice",
+          "caption": "Representatives you’re tracking"
+        },
+        "election": {
+          "title": "Next Election",
+          "addAddress": "Add your address to see district elections.",
+          "badge": {
+            "empty": "No elections recorded for your divisions.",
+            "loading": "Checking…",
+            "error": "Election data unavailable"
+          },
+          "future": "Next election is in {formattedCount} {count, plural, one {day} other {days}}."
+        }
+      },
+      "electionCard": {
+        "title": "Election calendar",
+        "description": "Key dates across your divisions.",
+        "ariaLabel": "Upcoming elections for your divisions"
+      },
+      "candidates": {
+        "section": {
+          "title": "Your Local Candidates",
+          "subtitle": "Explore the people representing you right now. Data quality and verification are refreshed in real-time."
+        },
+        "loading": "Loading your local representatives…",
+        "empty": "We’re still syncing your local representative data. Try refreshing in a minute.",
+        "challengerBadge": "Challenger",
+        "dataQualityBadge": "{value}% data quality",
+        "verification": {
+          "verified": "Verified record",
+          "pending": "Awaiting verification",
+          "failed": "Verification issues"
+        },
+        "keyIssues": "Key Issues:",
+        "keyIssuesFallback": "Awaiting updates",
+        "level": {
+          "unknown": "Local"
+        },
+        "officeFallback": "{level} district",
+        "partyIndependent": "Independent",
+        "activity": {
+          "lastUpdate": "Last update on {date}",
+          "none": "No recent civic activity recorded"
+        }
+      },
+      "engagement": {
+        "didYouKnow": {
+          "title": "Did you know?",
+          "fallback": "We highlight the most responsive and transparent representatives in your area as soon as verification completes.",
+          "highlight": "{name} has one of the strongest data quality scores locally ({score}%). Verified records mean you get trustworthy updates."
+        },
+        "dataQualityWatch": {
+          "title": "Data Quality Watch",
+          "fallback": "All of your local representative records look solid. We’ll alert you if anything needs your attention.",
+          "highlight": "{name} still has limited verification ({score}% data quality). Tap through to request more information or flag issues."
+        }
+      },
+      "cta": {
+        "button": "See All My Local Candidates",
+        "caption": "Ask questions, see who’s funding whom, and make your voice heard"
+      },
+      "social": {
+        "voters": "10,000+ voters",
+        "privacy": "100% private",
+        "access": "Equal access"
+      },
+      "live": {
+        "locationUpdated": "Civic insights updated for {location}.",
+        "representativesLoaded": "{count, plural, one {# local representative synced.} other {# local representatives synced.}}",
+        "nextElection": "Next election {name} in {count, plural, =0 {today.} one {# day.} other {# days.}}",
+        "nextElectionToday": "Election {name} is today.",
+        "unnamedElection": "your next election",
+        "error": "We couldn’t update civic insights. {message}"
+      }
+    },
+    "engagement": {
+      "aria": {
+        "like": "Like this item",
+        "unlike": "Unlike this item",
+        "comment": "Comment on this item",
+        "share": "Share this item",
+        "addBookmark": "Add this item to bookmarks",
+        "removeBookmark": "Remove this item from bookmarks"
+      },
+      "analytics": {
+        "views": "Views",
+        "engagement": "Engagement",
+        "notAvailable": "Not available"
+      },
+      "trending": {
+        "up": "Trending up {change}%",
+        "down": "Trending down {change}%"
+      },
+      "lastUpdated": "Updated {time}"
     }
   },
   "auth": {
@@ -364,6 +1258,56 @@
         "signIn": "Sign In"
       },
       "altSignInDivider": "Or continue with"
+    }
+  },
+  "pwa": {
+    "installer": {
+      "prompt": {
+        "title": "Install Choices",
+        "subtitle": "Get the app for a faster, offline-ready experience.",
+        "dismiss": "Later",
+        "install": "Install",
+        "installAria": "Install the Choices application"
+      },
+      "benefits": {
+        "homeScreen": "Access Choices directly from your home screen",
+        "performance": "Enjoy faster loading and smoother performance",
+        "offline": "Vote offline — your actions sync when you reconnect",
+        "notifications": "Get notified about new polls and results",
+        "native": "Experience app-like navigation and controls"
+      },
+      "offlineStatus": {
+        "titleOnline": "Votes ready to sync",
+        "titleOffline": "Offline votes stored",
+        "description": "{count, plural, one {# vote waiting to be submitted} other {# votes waiting to be submitted}}",
+        "syncButton": "Sync now"
+      },
+      "offlineBanner": "You’re offline. Votes will be stored and synced when you’re back online.",
+      "live": {
+        "installPrompt": "Install Choices prompt available.",
+        "installSuccess": "Choices installed successfully. You can now use it offline.",
+        "installError": "Installation failed. Please try again later.",
+        "offlineVotesPending": "{count, plural, one {# offline vote pending.} other {# offline votes pending.}}",
+        "offline": "You are offline. Votes will sync once you reconnect."
+      },
+      "notifications": {
+        "syncSuccess": {
+          "title": "Votes synced! 📤",
+          "message": "{count, plural, one {# offline vote was submitted.} other {# offline votes were submitted.}}"
+        },
+        "syncError": {
+          "title": "Sync failed",
+          "message": "Please try again when you have a stable connection."
+        },
+        "installSuccess": {
+          "title": "Choices installed successfully! 🎉",
+          "message": "You can now use Choices offline and receive poll notifications."
+        },
+        "installError": {
+          "title": "Installation failed",
+          "message": "Try installing again later or check your connection."
+        }
+      }
     }
   },
   "harness": {

@@ -150,7 +150,7 @@ export type ParticipationOption = {
 export type AuthSetupStepData = {
   authMethod?: AuthMethod;
   email?: string;
-  oauthProvider?: 'google' | 'github';
+  socialProvider?: 'google' | 'github';
   authSetupCompleted?: boolean;
 };
 

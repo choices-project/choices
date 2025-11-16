@@ -93,8 +93,8 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(200);
     }
-    expect(payload.ok).toBe(true);
-    expect(payload.jurisdiction).toMatchObject({ state: 'CA' });
+    expect(payload.success).toBe(true);
+    expect(payload.data?.jurisdiction).toMatchObject({ state: 'CA' });
     expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'CA' }));
     expect(generateAddressHMAC).toHaveBeenCalledWith('123 Market St, San Francisco, CA');
     expect(assertPepperConfig).toHaveBeenCalled();
@@ -109,7 +109,11 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(400);
     }
-    expect(payload.error).toBe('address required');
+    // validationError envelope with details
+    expect(payload.success).toBe(false);
+    if (payload.details) {
+      expect(payload.details.address).toBe('Address is required');
+    }
     expect(global.fetch).not.toHaveBeenCalled();
     expect(setJurisdictionCookie).not.toHaveBeenCalled();
   });
@@ -124,7 +128,7 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(200);
     }
-    expect(payload.jurisdiction).toMatchObject({ state: 'TX', fallback: true });
+    expect(payload.data?.jurisdiction).toMatchObject({ state: 'TX', fallback: true });
     expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'TX' }));
   });
 });
@@ -138,7 +142,7 @@ describe('GET /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(405);
     }
-    expect(payload.error).toBe('Method not allowed. Use POST with address in body.');
+    expect(payload.error).toBe('Method not allowed. Allowed methods: POST');
   });
 });
 

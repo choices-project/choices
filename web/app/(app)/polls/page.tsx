@@ -6,6 +6,8 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
+import { useI18n } from '@/hooks/useI18n';
+import { useAppActions } from '@/lib/stores/appStore';
 import {
   useFilteredPollCards,
   usePollFilters,
@@ -15,10 +17,10 @@ import {
   usePollsError,
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
-import { useI18n } from '@/hooks/useI18n';
 
 export default function PollsPage() {
   const { t, currentLanguage } = useI18n();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
   const error = usePollsError();
@@ -57,7 +59,7 @@ export default function PollsPage() {
   const formatVoteCount = useCallback(
     (value: number) =>
       t('polls.page.metadata.votes', {
-        count: value,
+        count: String(value),
         formattedCount: numberFormatter.format(value),
       }),
     [numberFormatter, t],
@@ -96,6 +98,21 @@ export default function PollsPage() {
       }),
     [numberFormatter, pagination.currentPage, pagination.totalPages, t],
   );
+
+  useEffect(() => {
+    setCurrentRoute('/polls');
+    setSidebarActiveSection('polls');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -258,7 +275,7 @@ export default function PollsPage() {
                 {typeof poll.trendingPosition === 'number' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                     <Flame className="h-3 w-3 mr-1" />
-                    {t('polls.page.trendingBadge', { position: poll.trendingPosition })}
+                    {t('polls.page.trendingBadge', { position: String(poll.trendingPosition) })}
                   </span>
                 )}
               </div>

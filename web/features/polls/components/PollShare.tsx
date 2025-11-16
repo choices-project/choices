@@ -51,6 +51,23 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const pollTitle = poll?.title ?? 'Check out this poll!'
   const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING_POLLS')
 
+  const trackShare = async (platform: string, placement: string) => {
+    try {
+      await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform,
+          poll_id: pollId,
+          placement,
+          content_type: 'poll'
+        })
+      });
+    } catch (error) {
+      devLog('Failed to track share event', { error, platform, placement });
+    }
+  }
+
   const handleCopyLink = async () => {
     try {
       const { safeNavigator } = await import('@/lib/utils/ssr-safe');
@@ -60,6 +77,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       }
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+      void trackShare('copy', 'poll_share_direct_link');
     } catch (error) {
       devLog('Failed to copy link:', { error })
     }
@@ -95,6 +113,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           text: 'Check out this poll!',
           url: pollUrl
         })
+        void trackShare('system', 'poll_share_native');
       } catch (error) {
         devLog('Error sharing:', { error })
       }
@@ -125,6 +144,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     
     if (shareUrl) {
       window.open(shareUrl, 'blank', 'width=600,height=400')
+      void trackShare(platform, 'poll_share_social');
     }
   }
 

@@ -1,22 +1,28 @@
 /**
  * Validation Error Classes
- * 
+ *
  * Errors related to input validation, data format validation, and business rule validation.
  */
 
-import { withOptional } from '@/lib/util/objects';
-
 import { ApplicationError, type ErrorDetails } from './base';
 
+function mergeDetailsDefined(base: ErrorDetails = {}, extras?: Partial<ErrorDetails>): ErrorDetails {
+  const result: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  if (extras) {
+    for (const [k, v] of Object.entries(extras)) {
+      if (v !== undefined) {
+        result[k] = v;
+      }
+    }
+  }
+  return result as ErrorDetails;
+}
+
 const EMPTY_DETAILS: ErrorDetails = {};
-
-function sanitizeDetails(details?: ErrorDetails): ErrorDetails {
-  return details ? withOptional(details) : EMPTY_DETAILS;
-}
-
-function mergeDetails(details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails {
-  return withOptional(sanitizeDetails(details), extras);
-}
+const sanitizeDetails = (details?: ErrorDetails): ErrorDetails =>
+  details ? mergeDetailsDefined(details) : EMPTY_DETAILS;
+const mergeDetails = (details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails =>
+  mergeDetailsDefined(sanitizeDetails(details), extras);
 
 export class ValidationError extends ApplicationError {
   constructor(message: string = 'Validation failed', details?: ErrorDetails) {
@@ -57,12 +63,12 @@ export class InvalidFormatError extends ApplicationError {
 
 export class OutOfRangeError extends ApplicationError {
   constructor(field: string, min?: number, max?: number, details?: ErrorDetails) {
-    const range = min !== undefined && max !== undefined 
+    const range = min !== undefined && max !== undefined
       ? `between ${min} and ${max}`
-      : min !== undefined 
+      : min !== undefined
         ? `greater than or equal to ${min}`
         : `less than or equal to ${max}`;
-    
+
     super(
       `Field '${field}' must be ${range}`,
       400,

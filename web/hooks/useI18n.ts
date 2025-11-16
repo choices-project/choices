@@ -7,14 +7,21 @@ import { useCallback } from 'react';
 import { setLocaleCookie } from '@/lib/i18n/client';
 import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
 
-type TranslationParams = Record<string, string>;
+type TranslationParamValue = string | number | boolean | null | undefined;
+type TranslationParams = Record<string, TranslationParamValue>;
 
 function fallbackTranslate(key: string, params?: TranslationParams) {
   if (!params) {
     return key;
   }
 
-  return key.replace(/\{(\w+)\}/g, (match, param) => params[param] ?? match);
+  return key.replace(/\{(\w+)\}/g, (match, param) => {
+    const value = params[param];
+    if (value === undefined || value === null) {
+      return match;
+    }
+    return typeof value === 'string' ? value : String(value);
+  });
 }
 
 /**
@@ -32,7 +39,7 @@ export const useI18n = () => {
       try {
         const safeParams = params
           ? Object.fromEntries(
-              Object.entries(params).map(([paramKey, value]) => [paramKey, String(value)]),
+              Object.entries(params).map(([paramKey, value]) => [paramKey, String(value ?? '')]),
             )
           : undefined;
 

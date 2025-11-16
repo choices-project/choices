@@ -18,7 +18,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { type Layout as GridLayoutType, Responsive, WidthProvider } from 'react-grid-layout';
 
-import { withOptional } from '@/lib/util/objects';
 
 import type { WidgetConfig, Breakpoint } from '../../types/widget';
 
@@ -113,27 +112,24 @@ const generateResponsiveLayouts = (
 
   return {
     lg: baseLayout,
-    md: baseLayout.map(item =>
-      withOptional(item, {
-        // Adjust for medium screens
-        w: Math.min(item.w, GRID_CONFIG.cols.md),
-        x: item.x % GRID_CONFIG.cols.md,
-      })
-    ),
-    sm: baseLayout.map(item =>
-      withOptional(item, {
-        // Adjust for small screens - stack widgets
-        w: GRID_CONFIG.cols.sm,
-        x: 0,
-      })
-    ),
-    xs: baseLayout.map(item =>
-      withOptional(item, {
-        // Full width on mobile
-        w: GRID_CONFIG.cols.xs,
-        x: 0,
-      })
-    ),
+    md: baseLayout.map(item => ({
+      ...item,
+      // Adjust for medium screens
+      w: Math.min(item.w, GRID_CONFIG.cols.md),
+      x: item.x % GRID_CONFIG.cols.md,
+    })),
+    sm: baseLayout.map(item => ({
+      ...item,
+      // Adjust for small screens - stack widgets
+      w: GRID_CONFIG.cols.sm,
+      x: 0,
+    })),
+    xs: baseLayout.map(item => ({
+      ...item,
+      // Full width on mobile
+      w: GRID_CONFIG.cols.xs,
+      x: 0,
+    })),
   } as Record<Breakpoint, GridLayoutType[]>;
 };
 

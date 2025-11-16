@@ -13,10 +13,12 @@ import {
   Sparkles,
   Target,
   Award,
-  Flame,
 } from 'lucide-react';
 import React, { Suspense, useEffect, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 import { createLazyComponent } from '@/lib/performance/lazy-loading';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import {
@@ -29,17 +31,11 @@ import {
   useAdminNotifications,
   useTrendingTopics,
   useRecentActivity,
-} from '@/lib/stores';
-import {
+
   useHashtagActions,
   useHashtagError,
   useHashtagLoading,
-  useTrendingHashtags,
-} from '@/lib/stores';
-import { useFeedsActions, useFeeds, useFeedsLoading, useFeedsError } from '@/lib/stores/feedsStore';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+  useTrendingHashtags} from '@/lib/stores';
 
 
 // Lazy load heavy admin components
@@ -109,7 +105,6 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
   const totalUsers = stats?.totalUsers ?? 0;
   const activePollsCount = stats?.activePolls ?? 0;
-  const totalVotesCount = stats?.totalVotes ?? 0;
   const pollsCreatedLast7Days = stats?.pollsCreatedLast7Days ?? 0;
   const pollsCreatedToday = stats?.pollsCreatedToday ?? 0;
   const milestoneAlertsLast7Days = stats?.milestoneAlertsLast7Days ?? 0;

@@ -3,10 +3,11 @@ import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import type { CivicElection } from '@/types/civic';
+
 import { createBaseStoreActions } from './baseStoreActions';
 import type { BaseStore } from './types';
 
-import type { CivicElection } from '@/types/civic';
 
 type ElectionState = {
   electionsByKey: Record<string, CivicElection[]>;
@@ -26,7 +27,7 @@ type ElectionStoreCreator = StateCreator<
   [['zustand/devtools', never], ['zustand/immer', never]]
 >;
 
-const createInitialElectionState = (): ElectionState => ({
+export const createInitialElectionState = (): ElectionState => ({
   electionsByKey: {},
   isLoading: false,
   error: null

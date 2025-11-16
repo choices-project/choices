@@ -1,11 +1,11 @@
 /**
  * Zero Knowledge Proofs Module
- * 
+ *
  * This module provides zero knowledge proof functionality for privacy-preserving operations.
  * It replaces the old @/shared/core/privacy/lib/zero-knowledge-proofs imports.
  */
 
-import { withOptional } from '@/lib/util/objects';
+
 
 export type ZKProof = {
   proof: string;
@@ -78,7 +78,7 @@ export class ZeroKnowledgeProofManager {
   ): Promise<ZKProof> {
     const privateInputs = [vote, userId];
     const publicInputs = [pollId];
-    
+
     return this.generateProof(privateInputs, publicInputs, 'voting_circuit');
   }
 
@@ -86,10 +86,18 @@ export class ZeroKnowledgeProofManager {
    * Verify a voting proof
    */
   async verifyVotingProof(proof: ZKProof, pollId: string): Promise<boolean> {
-    if (!proof.publicInputs.includes(pollId)) {
+    const hasPoll = proof.publicInputs.some((p) => {
+      try {
+        const parsed = JSON.parse(p);
+        return parsed === pollId;
+      } catch {
+        return typeof p === 'string' && p.includes(pollId);
+      }
+    });
+    if (!hasPoll) {
       return false;
     }
-    
+
     return this.verifyProof(proof);
   }
 
@@ -124,7 +132,12 @@ export class ZeroKnowledgeProofManager {
    * Update configuration
    */
   updateConfig(newConfig: Partial<ZKProofConfig>): void {
-    this.config = withOptional(this.config, newConfig);
+    this.config = {
+      ...this.config,
+      ...(newConfig.curve ? { curve: newConfig.curve } : {}),
+      ...(newConfig.hashFunction ? { hashFunction: newConfig.hashFunction } : {}),
+      ...(newConfig.circuitSize !== undefined ? { circuitSize: newConfig.circuitSize } : {}),
+    };
   }
 }
 

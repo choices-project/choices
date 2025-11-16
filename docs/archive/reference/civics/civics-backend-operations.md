@@ -61,10 +61,11 @@ npm run ingest:qa                  # schema check, duplicate audit, 5-record pre
 | `state:sync:activity` | Latest bill activity derived from OpenStates | `representative_activity` | Deletes existing OpenStates-sourced rows per rep, then inserts bill summaries (also runs automatically after the merge) |
 | `state:sync:data-sources` | Canonical `sources` list | `representative_data_sources` | Delete existing rows for rep, insert provenance entries |
 | `state:sync:google-civic` | Supplemental contacts/social/photo links | `representative_contacts` (`source = google_civic`), `representative_social_media`, `representative_photos`, `representative_data_sources` | Requires `GOOGLE_CIVIC_API_KEY`; only inserts rows missing from OpenStates |
+| `notifications:send:elections`* | Upcoming elections + user division snapshots | `notification_log`, push payload queue | Generates in-app/push election alerts; supports `--dry-run`, `--window-days`, `--limit`, `--source` |
 | `federal:enrich:finance` | FEC totals/top contributors | `representative_campaign_finance` + `representatives_core.data_quality_score` | Writes missing rows by default; supports stale refresh + explicit cycle overrides |
 | `federal:enrich:congress` | Congress.gov/GovInfo identifiers | `representatives_core` (`congress_gov_id`, `govinfo_id`) + provenance entries | Populates official IDs from Congress.gov export (uses GovInfo API when available) |
 
-All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid Cloudflare 414 responses.
+*All commands chunk Supabase `.in()` queries (40–50 IDs per request) to avoid Cloudflare 414 responses.
 
 ### 2.3 CLI options
 
@@ -157,7 +158,66 @@ Output lists each representative-facing table along with exact types, lengths an
 | Finance script aborts with `OVER_RATE_LIMIT` | FEC rate limit reached | Increase `FEC_THROTTLE_MS`, rerun with `--limit` batches |
 | Contacts/social duplicates | Multiple runs without source purge | Scripts already delete `openstates_yaml` rows; verify Supabase triggers or manual inserts aren’t reintroducing duplicates |
 
-## 6. Related resources
+## 6. Election notification automation playbook
+
+> Status: planning complete, implementation pending. Reference `docs/analytics/election-notifications.md` for workflow details.
+
+### 6.1 CLI & environment
+- Draft command: `npm run notifications:send:elections -- --window-days=7 --limit=500 --source=scheduler_push`
+- Flags:
+  - `--dry-run` — log audience, skip delivery
+  - `--window-days=<n>` — days ahead to target (default 7, cap 14)
+  - `--limit=<n>` — cap number of queued notifications
+  - `--source=<label>` — analytics/delivery source (e.g. `scheduler_push`)
+- Required secrets (`.env.local`):
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `GOOGLE_CIVIC_API_KEY`
+  - `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT`
+- Feature flags:
+  - `CIVICS_ELECTION_ALERTS` — enables UI countdown/analytics
+  - `CIVICS_ELECTION_ALERTS_CRON` — gates scheduler/automation
+  - `PUSH_NOTIFICATIONS` — must remain enabled for PWA delivery
+
+### 6.2 Data prerequisites
+1. `civic_elections` populated via `state:sync:google-elections`
+2. `representative_divisions` refreshed via `state:sync:divisions`
+3. `user_civic_divisions` snapshot table (planned) storing `{ user_id, division_id, source, captured_at }`
+4. `push_subscriptions` records with election alerts preference enabled (`preferences->>'election_alerts' = true`)
+
+### 6.3 Dry-run checklist
+1. Refresh elections/divisions in staging.
+2. Seed `user_civic_divisions` (address lookup flow or manual insert).
+3. Execute `npm run notifications:send:elections -- --dry-run --window-days=7 --limit=50`.
+4. Verify CLI summary (total/queued/skipped) and `notification_log` entries with `status = 'dry_run'`.
+5. Hit `/api/analytics/election-notifications` to confirm dry-run events do not affect aggregates.
+6. Confirm countdown UI still raises in-app notifications (`useElectionCountdown` with `notify: true`).
+
+### 6.4 Production rollout
+1. **Flag gating**  
+   - Enable `CIVICS_ELECTION_ALERTS` in staging; QA UI surfaces.  
+   - Enable `CIVICS_ELECTION_ALERTS_CRON` in staging; run CLI dry-run and review logs/analytics.  
+   - Canary production cohort (10%) via feature flag manager export/import.
+2. **Cron scheduling**  
+   - Supabase or Vercel cron: `Mon/Thu 15:00 UTC`.  
+   - Target endpoint: `POST /api/internal/civics/election-alerts/run` (invokes CLI).  
+   - Support `?dryRun=true` for smoke tests.
+3. **Monitoring & alerting**  
+   - Dashboard: `/api/analytics/election-notifications` widget segmented by `source`.  
+   - Alerts: conversion rate <20%, delivery spikes >2× baseline, push error rate >5%, CLI failures.  
+   - Logs: `notification_log`, scheduler job log (`jobs_run_log`), `notification_store` analytics stream.
+4. **Rollback plan**  
+   - Disable `CIVICS_ELECTION_ALERTS_CRON`, then `CIVICS_ELECTION_ALERTS`.  
+   - Remove or pause cron schedule.  
+   - Purge queued notifications (`status = 'queued'`) if necessary.  
+   - Run dry-run to ensure pipeline is idle before re-enabling.
+
+### 6.5 Documentation & support
+- Keep this runbook and the analytics doc updated alongside implementation changes.
+- Add Support macros for election-alert opt-out messaging once scheduler is live.
+- After each production run (initial rollout), post metrics + anomalies in the civics ops channel for two weeks.
+
+## 7. Related resources
 
 - `docs/civics-ingest-supabase-plan.md` — Status per Supabase table.
 - `docs/product-quality-roadmap.md` — Platform-wide remediation priorities.

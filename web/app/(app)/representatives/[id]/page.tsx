@@ -30,6 +30,18 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { Badge } from '@/components/ui/badge';
+import {
+  trackCivicsRepresentativeEvent,
+  type CivicsRepresentativeEventBase
+} from '@/features/civics/analytics/civicsAnalyticsEvents';
+import {
+  useElectionsForDivisions,
+  useFetchElectionsForDivisions,
+  useElectionLoading,
+  useElectionError,
+  useAnalyticsActions,
+} from '@/lib/stores';
 import {
   useRepresentativeById,
   useGetRepresentativeById,
@@ -42,19 +54,7 @@ import {
   useRepresentativeFollowLoading,
   useGetUserRepresentatives
 } from '@/lib/stores/representativeStore';
-import {
-  useElectionsForDivisions,
-  useFetchElectionsForDivisions,
-  useElectionLoading,
-  useElectionError,
-  useAnalyticsActions,
-} from '@/lib/stores';
-import { Badge } from '@/components/ui/badge';
 import { logger } from '@/lib/utils/logger';
-import {
-  trackCivicsRepresentativeEvent,
-  type CivicsRepresentativeEventBase
-} from '@/features/civics/analytics/civicsAnalyticsEvents';
 
 const formatElectionDate = (isoDate: string | undefined) => {
   if (!isoDate) {

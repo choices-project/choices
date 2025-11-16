@@ -1,7 +1,7 @@
 /**
  * Centralized Session Cookie Management
  * Implements __Host-session pattern for enhanced security
- * 
+ *
  * Security Features:
  * - __Host- prefix for domain binding
  * - Secure, HttpOnly, SameSite=Lax
@@ -12,7 +12,6 @@
 import * as jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 export type SessionPayload = {
@@ -96,7 +95,7 @@ export function verifySessionToken(token: string): SessionPayload | null {
  */
 export function setSessionCookie(token: string, options: SessionOptions = {}): void {
   const cookieOptions = Object.assign({}, DEFAULT_SESSION_OPTIONS, options)
-  
+
   cookies().set({
     name: '__Host-session',
     value: token,
@@ -111,7 +110,7 @@ export function setSessionCookie(token: string, options: SessionOptions = {}): v
     // - Path=/ (handled above)
   })
 
-  logger.info('Session cookie set', { 
+  logger.info('Session cookie set', {
     secure: cookieOptions.secure,
     sameSite: cookieOptions.sameSite,
     maxAge: cookieOptions.maxAge
@@ -132,7 +131,7 @@ export function getSessionToken(): string | null {
 export function getCurrentSession(): SessionPayload | null {
   const token = getSessionToken()
   if (!token) return null
-  
+
   return verifySessionToken(token)
 }
 
@@ -148,16 +147,16 @@ export function clearSessionCookie(): void {
  * Rotate session token (for security events)
  */
 export function rotateSessionToken(userId: string, role?: string, stableId?: string): string {
-  const newToken = generateSessionToken(withOptional({
-    sub: userId
-  }, {
-    role,
-    stableId
-  }))
+  const payload: Omit<SessionPayload, 'iat' | 'exp'> = {
+    sub: userId,
+    ...(role !== undefined ? { role } : {}),
+    ...(stableId !== undefined ? { stableId } : {}),
+  }
+  const newToken = generateSessionToken(payload)
 
   setSessionCookie(newToken)
-  
-  logger.info('Session token rotated', { 
+
+  logger.info('Session token rotated', {
     userId,
     role,
     hasStableId: !!stableId
@@ -173,12 +172,11 @@ export function validateSession(): { userId: string; role?: string; stableId?: s
   const session = getCurrentSession()
   if (!session) return null
 
-  return withOptional({
-    userId: session.sub
-  }, {
-    role: session.role,
-    stableId: session.stableId
-  })
+  return {
+    userId: session.sub,
+    ...(session.role !== undefined ? { role: session.role } : {}),
+    ...(session.stableId !== undefined ? { stableId: session.stableId } : {}),
+  }
 }
 
 /**
@@ -190,7 +188,7 @@ export function isSessionExpiringSoon(): boolean {
 
   const now = Math.floor(Date.now() / 1000)
   const oneHour = 60 * 60
-  
+
   return (session.exp - now) < oneHour
 }
 

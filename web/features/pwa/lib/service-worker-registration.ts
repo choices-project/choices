@@ -1,4 +1,3 @@
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 /**
  * @fileoverview Service Worker Registration and Lifecycle Management
@@ -304,7 +303,7 @@ export async function unregister(): Promise<boolean> {
  * @returns {RegistrationState} Current state
  */
 export function getState(): Readonly<RegistrationState> {
-  return withOptional(state) as Readonly<RegistrationState>;
+  return { ...state } as Readonly<RegistrationState>;
 }
 
 /**

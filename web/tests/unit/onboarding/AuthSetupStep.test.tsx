@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 
 import AuthSetupStep from '@/features/onboarding/components/AuthSetupStep';
 import { createInitialUserState, useUserStore } from '@/lib/stores/userStore';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 jest.mock('@/utils/supabase/client', () => ({
   getSupabaseBrowserClient: jest.fn(),
@@ -27,10 +28,6 @@ jest.mock('@/features/auth/components/PasskeyButton', () => ({
     </button>
   ),
 }));
-
-const { getSupabaseBrowserClient } = require('@/utils/supabase/client') as {
-  getSupabaseBrowserClient: jest.Mock;
-};
 
 const resetUserStore = () => {
   useUserStore.setState(createInitialUserState());

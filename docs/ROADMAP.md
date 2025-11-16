@@ -1,4 +1,9 @@
-# Choices Platform Roadmap
+# [ARCHIVED] Choices Platform Roadmap
+
+> Authoritative roadmap: `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items here. Keep that file as the single source of truth, and archive superseded docs under `docs/archive/`.
+
+This document is retained for historical context. The authoritative, up-to-date roadmap is:
+- `docs/ROADMAP_SINGLE_SOURCE.md`
 
 _Last updated: November 9, 2025_
 
@@ -17,13 +22,15 @@ This roadmap captures the technical debt and follow-up work surfaced during the 
 
 ## 2. Linting & Code Quality (High Priority)
 - **Import order cleanup:** Standardize ordering across admin analytics components, PWA modules, Next API routes, and Supabase clients.
-- **`withOptional` adoption:** Replace direct `undefined` spreads with `withOptional()/stripUndefinedDeep` in admin store, analytics services, PWA modules, civics components, and shared hooks.
+- **`withOptional` deprecation:** Completed. All usages replaced with explicit builders/conditional spreads. Follow-ups:
+  - Enforce “no `withOptional` import” in lint rules.
+  - Prefer purpose-specific merge helpers (e.g., `mergeDefined`, explicit RequestInit merges).
 - **Accessibility fixes:** Address `jsx-a11y` violations (non-interactive click handlers, stray `tabIndex`, `autoFocus`) in navigation, onboarding, analytics widgets, and admin dashboards.
 - **React hook hygiene:** Add missing dependencies to `useEffect/useCallback` hooks in analytics dashboards, contact flows, onboarding steps, and PWA components.
 - **Playwright/Jest setup hygiene:** Remove unused arguments, stale `eslint-disable` directives, and empty blocks in archived E2E suites.
 
 ## 3. Store Modernization (Medium Priority)
-- **Completed:** Notification store (selectors/actions, integration + Playwright coverage).
+- **Completed:** Notification store (selectors/actions, integration + Playwright coverage, civics election notification dedupe + analytics tests, monitoring widget/API); voter registration store (creator pattern, safe storage, unit suite).
 - **In progress:** Profile and user stores (wrap up recursion fixes, port consumers to action hooks).
 - **Recent hardening:** Analytics store now shares base loading/error helpers, exports selector bundles via `@/lib/stores`, sports a dedicated harness + unit/RTL coverage, and feeds the new Playwright spec; polls store continues to supply validation helpers for dashboard widgets.
 - **Next up:** App, admin, and feeds consumer alignment—apply the standards doc (creator export, memoized selectors, strict persistence payloads) and add per-store harness pages.

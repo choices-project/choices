@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, rateLimitError, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
-import { devLog } from '@/lib/utils/logger';
+import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -52,7 +52,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') ?? '20');
+    const limitParam = Number.parseInt(searchParams.get('limit') ?? '20', 10);
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 20;
+    const offsetParam = Number.parseInt(searchParams.get('offset') ?? '0', 10);
+    if (Number.isNaN(offsetParam) || offsetParam < 0) {
+      return errorResponse('Invalid offset parameter', 400);
+    }
+    const offset = offsetParam;
     const category = searchParams.get('category') ?? 'all';
     const district = searchParams.get('district');
     const sort = searchParams.get('sort') ?? 'trending';
@@ -113,7 +119,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         pollsQuery = pollsQuery.order('trending_score', { ascending: false, nullsFirst: false });
     }
 
-    const { data: polls, error: pollsError} = await pollsQuery.limit(limit);
+    const { data: polls, error: pollsError} = await pollsQuery.limit(limit + offset);
 
   if (pollsError) {
     devLog('Error fetching polls:', { error: pollsError });
@@ -145,9 +151,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     const { data: civicActions, error: civicActionsError } = await civicActionsQuery
       .order('created_at', { ascending: false })
-      .limit(10); // Include up to 10 civic actions
+      .limit(limit + offset); // ensure pagination can include civic actions
 
     if (civicActionsError) {
+      logger.warn('Error fetching civic actions for feeds', { error: civicActionsError });
       devLog('Error fetching civic actions:', { error: civicActionsError });
       // Don't fail the entire request if civic actions fail
     }
@@ -253,6 +260,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const feedItems = [...pollFeedItems, ...civicActionFeedItems]
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
+    const paginatedFeedItems = feedItems.slice(offset, offset + limit);
+    const totalFeeds = feedItems.length;
+    const hasMore = offset + paginatedFeedItems.length < totalFeeds;
+
     devLog('Feed items loaded:', {
       polls: pollFeedItems.length,
       civicActions: civicActionFeedItems.length,
@@ -261,12 +272,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     });
 
   return successResponse({
-    feeds: feedItems,
-    count: feedItems.length,
+    feeds: paginatedFeedItems,
+    count: totalFeeds,
     filters: {
       category: category || 'all',
       district: district ?? null,
       sort
+    },
+    pagination: {
+      total: totalFeeds,
+      limit,
+      offset,
+      hasMore
     }
   });
 });

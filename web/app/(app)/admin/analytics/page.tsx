@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { EnhancedAnalyticsDashboard } from '@/features/analytics';
 import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetDashboard';
 import { useUser, useUserLoading } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -32,6 +33,21 @@ export default function AnalyticsPage() {
   const isUserLoading = useUserLoading();
   const [mode, setMode] = useState<DashboardMode>('classic');
   const [isLoading, setIsLoading] = useState(true);
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/admin/analytics');
+    setSidebarActiveSection('admin-analytics');
+    setBreadcrumbs([
+      { label: 'Admin', href: '/admin' },
+      { label: 'Analytics', href: '/admin/analytics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     const loadPreferences = async () => {

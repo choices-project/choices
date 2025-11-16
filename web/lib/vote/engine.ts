@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 
 import { ApprovalStrategy } from './strategies/approval';
 import { QuadraticStrategy } from './strategies/quadratic';
@@ -166,17 +165,15 @@ export class VoteEngine {
       // Validate the vote first
       const validation = await this.validateVote(request, poll);
       if (!validation.isValid) {
-        return withOptional(
-          {
-            success: false,
-            message: validation.error ?? 'Vote validation failed',
-            pollId: request.pollId,
-            responseTime: Date.now() - startTime
-          },
-          {
-            privacyLevel: request.privacyLevel
-          }
-        );
+        const base = {
+          success: false as const,
+          message: validation.error ?? 'Vote validation failed',
+          pollId: request.pollId,
+          responseTime: Date.now() - startTime,
+        };
+        return request.privacyLevel !== undefined
+          ? { ...base, privacyLevel: request.privacyLevel }
+          : base;
       }
 
       // Get the appropriate strategy and process the vote
@@ -197,17 +194,15 @@ export class VoteEngine {
 
     } catch (error) {
       devLog('Vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: Date.now() - startTime
-        },
-        {
-          privacyLevel: request.privacyLevel
-        }
-      );
+      const base = {
+        success: false as const,
+        message: error instanceof Error ? error.message : 'Vote processing failed',
+        pollId: request.pollId,
+        responseTime: Date.now() - startTime,
+      };
+      return request.privacyLevel !== undefined
+        ? { ...base, privacyLevel: request.privacyLevel }
+        : base;
     }
   }
 

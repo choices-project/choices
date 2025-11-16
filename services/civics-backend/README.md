@@ -84,6 +84,7 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 | `npm run state:sync:activity` | Rebuild bill activity (only needed if you skipped the auto-sync) | Honors `OPENSTATES_ACTIVITY_LIMIT` |
 | `npm run state:sync:google-civic` | Pull supplemental contacts/social/photos from Google Civic | Requires `GOOGLE_CIVIC_API_KEY`; writes to `representative_contacts` (`source = google_civic`) |
 | `npm run state:sync:google-elections` | Upsert upcoming elections from Google Civic into Supabase | Requires `GOOGLE_CIVIC_API_KEY`; writes to `civic_elections` |
+| `npm run state:sync:voter-registration` | Refresh state voter registration resources | Loads curated JSON (local or remote), supports `--dry-run`; populates `voter_registration_resources` |
 | `npm run state:sync:divisions` | Rebuild `representative_divisions` from OpenStates roles | Invokes `refresh_divisions_from_openstates()` RPC |
 | `npm run state:refresh` | Sequentially run contacts → social → photos → committees → activity → data sources → Google Civic → Google elections | Accepts `--states`, `--limit`, `--dry-run`, `--only`, `--skip` |
 | `npm run tools:report:gaps` | Show remaining finance/contact/identifier gaps | Helps prioritise follow-up runs |

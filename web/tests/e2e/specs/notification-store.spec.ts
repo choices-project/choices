@@ -5,9 +5,11 @@ import type { NotificationStoreHarness } from '@/app/(app)/e2e/notification-stor
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __notificationStoreHarness?: NotificationStoreHarness;
   }
+   
 }
 
 const gotoHarness = async (page: Page) => {

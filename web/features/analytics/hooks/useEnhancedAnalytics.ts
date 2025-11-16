@@ -13,6 +13,8 @@ import type { Database, Json } from '@/types/database';
 
 import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics-service';
 
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
 
 type _SupabaseClient = ReturnType<typeof createClient<Database>>;
 
@@ -512,7 +514,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       let analyticsData: EnhancedAnalyticsData;
       let rawAnalytics: unknown;
 
-      if (pollId) {
+      if (IS_E2E_HARNESS) {
+        rawAnalytics = cloneAnalyticsData(HARNESS_ANALYTICS_DATA);
+      } else if (pollId) {
         // Get poll-specific analytics
         const response = await fetch(`/api/analytics/unified/${pollId}?methods=comprehensive`);
         const result = await response.json();
@@ -535,7 +539,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       analyticsData = normalizeAnalyticsData(rawAnalytics);
 
       // Enhance with session data if sessionId provided
-      if (sessionId && enableNewSchema) {
+      if (!IS_E2E_HARNESS && sessionId && enableNewSchema) {
         const sessionEnhanced = await enhancedAnalytics.enhanceAnalyticsStore(
           analyticsData as unknown as Record<string, unknown>,
           sessionId
@@ -544,7 +548,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       }
 
       // Enhance with user data if userId provided
-      if (userId && enableNewSchema) {
+      if (!IS_E2E_HARNESS && userId && enableNewSchema) {
         const userEnhanced = await enhancedAnalytics.enhanceAnalyticsHook(
           analyticsData as unknown as Record<string, unknown>,
           userId
@@ -622,6 +626,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
     context: Record<string, unknown> = {}
   ) => {
     try {
+      if (IS_E2E_HARNESS) {
+        return;
+      }
       const extras: Record<string, unknown> = {
         action,
         context,
@@ -643,6 +650,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackSessionActivity = useCallback(
     async (action: string, page: string, metadata: SessionMetadata = {}) => {
       try {
+      if (IS_E2E_HARNESS) {
+        return;
+      }
         if (!sessionId) return;
 
         const payload: Parameters<EnhancedAnalyticsService['trackUserSession']>[0] = {
@@ -677,6 +687,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackAuthEvent = useCallback(
     async (authEvent: AuthEventPayload) => {
       try {
+      if (IS_E2E_HARNESS) {
+        return;
+      }
         if (!sessionId) return;
 
         await enhancedAnalytics.enhanceAuthAnalytics(authEvent, sessionId);
@@ -706,6 +719,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   // Get system health status
   const getSystemHealth = useCallback(async () => {
     try {
+      if (IS_E2E_HARNESS) {
+        return HARNESS_SYSTEM_HEALTH.map((entry) => ({ ...entry }));
+      }
       const { data: healthData, error } = await supabase
         .from('system_health')
         .select('*')
@@ -723,6 +739,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   // Get active site messages
   const getActiveSiteMessages = useCallback(async (targetAudience: string = 'all') => {
     try {
+      if (IS_E2E_HARNESS) {
+        return HARNESS_SITE_MESSAGES.map((entry) => ({ ...entry }));
+      }
       const { data: messages, error } = await supabase
         .from('site_messages')
         .select('*')
@@ -763,6 +782,233 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
 }
 
 // Helper function for general analytics
+const HARNESS_SYSTEM_HEALTH: SystemHealthRow[] = [
+  {
+    id: 'analytics-health-api',
+    component: 'api',
+    status: 'operational',
+    status_text: 'All systems nominal',
+    last_check: '2025-11-13T12:00:00.000Z',
+    response_time_ms: 180,
+    region: 'us-east-1',
+    created_at: '2025-11-01T00:00:00.000Z',
+    updated_at: '2025-11-13T12:00:00.000Z',
+    metadata: {
+      source: 'e2e-harness',
+    },
+  } as unknown as SystemHealthRow,
+  {
+    id: 'analytics-health-realtime',
+    component: 'realtime',
+    status: 'degraded',
+    status_text: 'Recovering from spike',
+    last_check: '2025-11-13T11:55:00.000Z',
+    response_time_ms: 420,
+    region: 'us-west-2',
+    created_at: '2025-10-28T00:00:00.000Z',
+    updated_at: '2025-11-13T11:55:00.000Z',
+    metadata: {
+      source: 'e2e-harness',
+    },
+  } as unknown as SystemHealthRow,
+];
+
+const HARNESS_SITE_MESSAGES: SiteMessageRow[] = [
+  {
+    id: 'analytics-message-maintenance',
+    title: 'Scheduled maintenance',
+    body: 'Analytics refresh will pause Saturday 01:00–02:00 UTC.',
+    is_active: true,
+    start_date: '2025-11-14T00:00:00.000Z',
+    end_date: '2025-11-15T02:00:00.000Z',
+    target_audience: 'all',
+    priority: 10,
+    created_at: '2025-11-10T09:00:00.000Z',
+    updated_at: '2025-11-12T17:30:00.000Z',
+    dismissible: true,
+    metadata: {
+      source: 'e2e-harness',
+    },
+  } as unknown as SiteMessageRow,
+  {
+    id: 'analytics-message-digest',
+    title: 'Weekly insight digest',
+    body: 'Engagement up 12% week-over-week. Review highlights in the summary table.',
+    is_active: true,
+    start_date: '2025-11-11T00:00:00.000Z',
+    end_date: '2025-11-18T00:00:00.000Z',
+    target_audience: 'admin',
+    priority: 5,
+    created_at: '2025-11-11T08:15:00.000Z',
+    updated_at: '2025-11-13T08:15:00.000Z',
+    dismissible: false,
+    metadata: {
+      source: 'e2e-harness',
+    },
+  } as unknown as SiteMessageRow,
+];
+
+const HARNESS_ANALYTICS_DATA: EnhancedAnalyticsData = (() => {
+  const data = createDefaultAnalyticsData();
+
+  data.period = 'Last 30 days';
+  data.summary = {
+    totalUsers: 1450,
+    totalPolls: 58,
+    totalVotes: 9820,
+    activeUsers: 910,
+    newPolls: 18,
+    newVotes: 1830,
+    engagementScore: 74,
+    trustScore: 82,
+    participationRate: 62,
+    conversionRate: 39,
+    bounceRate: 19,
+    sessionDuration: 312,
+  };
+
+  data.trends.userGrowth = [
+    { date: '2025-11-07', count: 140 },
+    { date: '2025-11-08', count: 155 },
+    { date: '2025-11-09', count: 160 },
+    { date: '2025-11-10', count: 172 },
+    { date: '2025-11-11', count: 180 },
+    { date: '2025-11-12', count: 188 },
+    { date: '2025-11-13', count: 194 },
+  ];
+  data.trends.pollActivity = [
+    { date: '2025-11-07', count: 12 },
+    { date: '2025-11-08', count: 9 },
+    { date: '2025-11-09', count: 10 },
+    { date: '2025-11-10', count: 15 },
+    { date: '2025-11-11', count: 14 },
+    { date: '2025-11-12', count: 13 },
+    { date: '2025-11-13', count: 16 },
+  ];
+  data.trends.voteActivity = [
+    { date: '2025-11-07', count: 420 },
+    { date: '2025-11-08', count: 460 },
+    { date: '2025-11-09', count: 510 },
+    { date: '2025-11-10', count: 540 },
+    { date: '2025-11-11', count: 560 },
+    { date: '2025-11-12', count: 590 },
+    { date: '2025-11-13', count: 620 },
+  ];
+  data.trends.engagementTrends = [
+    { date: '2025-11-07', score: 68 },
+    { date: '2025-11-08', score: 70 },
+    { date: '2025-11-09', score: 71 },
+    { date: '2025-11-10', score: 73 },
+    { date: '2025-11-11', score: 74 },
+    { date: '2025-11-12', score: 75 },
+    { date: '2025-11-13', score: 76 },
+  ];
+  data.trends.trustTrends = [
+    { date: '2025-11-07', score: 79 },
+    { date: '2025-11-08', score: 80 },
+    { date: '2025-11-09', score: 81 },
+    { date: '2025-11-10', score: 82 },
+    { date: '2025-11-11', score: 82 },
+    { date: '2025-11-12', score: 83 },
+    { date: '2025-11-13', score: 84 },
+  ];
+  data.trends.civicEngagement = [
+    { date: '2025-11-07', actions: 210 },
+    { date: '2025-11-08', actions: 195 },
+    { date: '2025-11-09', actions: 205 },
+    { date: '2025-11-10', actions: 230 },
+    { date: '2025-11-11', actions: 240 },
+    { date: '2025-11-12', actions: 250 },
+    { date: '2025-11-13', actions: 265 },
+  ];
+
+  data.events = {
+    pollCreated: 24,
+    pollVoted: 740,
+    civicActionCreated: 88,
+    notificationSent: 1120,
+    userEngagement: 540,
+  };
+
+  data.civicEngagement = {
+    totalActions: 2470,
+    activePetitions: 34,
+    completedActions: 980,
+    engagementRate: 64,
+  };
+
+  data.enhancedInsights = {
+    comprehensiveAnalysis: {
+      summary: 'Engagement trending upward with strong trust-signal correlations.',
+      focus: ['resiliency', 'retention', 'moderation'],
+    },
+    trustTierDistribution: [
+      { tier: 'T0', count: 420, percentage: 29 },
+      { tier: 'T1', count: 360, percentage: 25 },
+      { tier: 'T2', count: 310, percentage: 21 },
+      { tier: 'T3', count: 260, percentage: 18 },
+      { tier: 'Flagged', count: 100, percentage: 7 },
+    ],
+    botDetectionResults: {
+      riskScore: 0.22,
+      confidence: 0.78,
+      suspiciousPatterns: [
+        { type: 'velocity', description: '17 accounts exceeded normal vote velocity.' },
+        { type: 'geo', description: '5 accounts show unexpected geo drift.' },
+      ],
+    },
+    platformMetrics: [
+      {
+        id: 'metric-1',
+        metric_name: 'avg_response_ms',
+        metric_value: 245,
+        captured_at: '2025-11-13T11:50:00.000Z',
+      },
+      {
+        id: 'metric-2',
+        metric_name: 'error_rate',
+        metric_value: 0.014,
+        captured_at: '2025-11-13T11:50:00.000Z',
+      },
+    ] as unknown as PlatformMetricRow[],
+  };
+
+  data.sessionInsights = {
+    sessionData: null,
+    featureUsage: [],
+    sessionMetrics: {
+      totalActions: 184,
+      sessionDuration: 42,
+      deviceType: 'desktop',
+      pageViews: 68,
+    },
+  };
+
+  data.userInsights = {
+    sessions: [],
+    featureUsage: [],
+    platformMetrics: [],
+    trustTierProgression: null,
+  };
+
+  data.systemHealth = HARNESS_SYSTEM_HEALTH;
+  data.realTimeCapabilities = {
+    sessionTracking: true,
+    featureUsageTracking: true,
+    platformMetricsTracking: false,
+    systemHealthMonitoring: true,
+  };
+  data.metadata = {
+    source: 'e2e-harness',
+    seededAt: '2025-11-13T12:05:00.000Z',
+  };
+
+  return data;
+})();
+
 async function getGeneralAnalytics(): Promise<EnhancedAnalyticsData> {
+  if (IS_E2E_HARNESS) {
+    return cloneAnalyticsData(HARNESS_ANALYTICS_DATA);
+  }
   return createDefaultAnalyticsData();
 }

@@ -303,6 +303,82 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_email_challenges: {
+        Row: {
+          candidate_id: string
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          candidate_id: string
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          candidate_id?: string
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_email_challenges_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_onboarding: {
+        Row: {
+          candidate_id: string
+          completed: boolean
+          id: string
+          started_at: string
+          step: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          completed?: boolean
+          id?: string
+          started_at?: string
+          step: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          completed?: boolean
+          id?: string
+          started_at?: string
+          step?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_onboarding_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_platforms: {
         Row: {
           ballot_access_confirmed: boolean | null
@@ -413,6 +489,147 @@ export type Database = {
           visibility?: string | null
         }
         Relationships: []
+      }
+      candidate_profile_audit: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          field: string
+          id: string
+          ip: string | null
+          new_value: Json | null
+          old_value: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          field: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          field?: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_profile_audit_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_name: string
+          filing_status: string
+          id: string
+          is_public: boolean
+          jurisdiction: string | null
+          office: string | null
+          party: string | null
+          representative_id: number | null
+          slug: string
+          social: Json | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          filing_status?: string
+          id?: string
+          is_public?: boolean
+          jurisdiction?: string | null
+          office?: string | null
+          party?: string | null
+          representative_id?: number | null
+          slug: string
+          social?: Json | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          filing_status?: string
+          id?: string
+          is_public?: boolean
+          jurisdiction?: string | null
+          office?: string | null
+          party?: string | null
+          representative_id?: number | null
+          slug?: string
+          social?: Json | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_profiles_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_verifications: {
+        Row: {
+          candidate_id: string
+          evidence: Json | null
+          id: string
+          method: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          evidence?: Json | null
+          id?: string
+          method: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          evidence?: Json | null
+          id?: string
+          method?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_verifications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       civic_action_metadata: {
         Row: {
@@ -1350,6 +1567,41 @@ export type Database = {
           },
         ]
       }
+      official_email_fast_track: {
+        Row: {
+          domain: string | null
+          email: string | null
+          id: string
+          last_attempt_at: string | null
+          representative_id: number
+          verified: boolean
+        }
+        Insert: {
+          domain?: string | null
+          email?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          representative_id: number
+          verified?: boolean
+        }
+        Update: {
+          domain?: string | null
+          email?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          representative_id?: number
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_email_fast_track_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       openstates_people_contacts: {
         Row: {
           contact_type: string
@@ -1769,6 +2021,60 @@ export type Database = {
           source?: string | null
           subcategory?: string | null
           timestamp?: string | null
+        }
+        Relationships: []
+      }
+      poll_demographic_insights: {
+        Row: {
+          age_group_breakdown: Json
+          average_confidence_level: number
+          created_at: string
+          data_quality_distribution: Json
+          demographic_by_trust_tier: Json
+          education_breakdown: Json
+          geographic_breakdown: Json
+          income_breakdown: Json
+          political_breakdown: Json
+          poll_id: string
+          total_responses: number
+          trust_tier_breakdown: Json
+          trust_tier_by_demographic: Json
+          updated_at: string
+          verification_method_distribution: Json
+        }
+        Insert: {
+          age_group_breakdown?: Json
+          average_confidence_level?: number
+          created_at?: string
+          data_quality_distribution?: Json
+          demographic_by_trust_tier?: Json
+          education_breakdown?: Json
+          geographic_breakdown?: Json
+          income_breakdown?: Json
+          political_breakdown?: Json
+          poll_id: string
+          total_responses?: number
+          trust_tier_breakdown?: Json
+          trust_tier_by_demographic?: Json
+          updated_at?: string
+          verification_method_distribution?: Json
+        }
+        Update: {
+          age_group_breakdown?: Json
+          average_confidence_level?: number
+          created_at?: string
+          data_quality_distribution?: Json
+          demographic_by_trust_tier?: Json
+          education_breakdown?: Json
+          geographic_breakdown?: Json
+          income_breakdown?: Json
+          political_breakdown?: Json
+          poll_id?: string
+          total_responses?: number
+          trust_tier_breakdown?: Json
+          trust_tier_by_demographic?: Json
+          updated_at?: string
+          verification_method_distribution?: Json
         }
         Relationships: []
       }
@@ -2697,6 +3003,144 @@ export type Database = {
           },
         ]
       }
+      representative_follows: {
+        Row: {
+          created_at: string
+          notes: string | null
+          notify_on_committee_activity: boolean
+          notify_on_events: boolean
+          notify_on_public_statements: boolean
+          notify_on_votes: boolean
+          representative_id: number
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          notes?: string | null
+          notify_on_committee_activity?: boolean
+          notify_on_events?: boolean
+          notify_on_public_statements?: boolean
+          notify_on_votes?: boolean
+          representative_id: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          notes?: string | null
+          notify_on_committee_activity?: boolean
+          notify_on_events?: boolean
+          notify_on_public_statements?: boolean
+          notify_on_votes?: boolean
+          representative_id?: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_follows_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_overrides: {
+        Row: {
+          campaign_website: string | null
+          created_at: string
+          id: string
+          press_contact: string | null
+          profile_photo_url: string | null
+          representative_id: number
+          short_bio: string | null
+          socials: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_website?: string | null
+          created_at?: string
+          id?: string
+          press_contact?: string | null
+          profile_photo_url?: string | null
+          representative_id: number
+          short_bio?: string | null
+          socials?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_website?: string | null
+          created_at?: string
+          id?: string
+          press_contact?: string | null
+          profile_photo_url?: string | null
+          representative_id?: number
+          short_bio?: string | null
+          socials?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_overrides_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: true
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_overrides_audit: {
+        Row: {
+          created_at: string
+          field: string
+          id: string
+          ip: string | null
+          new_value: Json | null
+          old_value: Json | null
+          representative_id: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          representative_id: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          representative_id?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_overrides_audit_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       representative_photos: {
         Row: {
           alt_text: string | null
@@ -3493,6 +3937,51 @@ export type Database = {
           },
         ]
       }
+      voter_registration_resources: {
+        Row: {
+          created_at: string
+          election_office_name: string | null
+          last_verified: string
+          mail_form_url: string | null
+          mailing_address: string | null
+          metadata: Json | null
+          online_url: string | null
+          sources: string[]
+          special_instructions: string | null
+          state_code: string
+          status_check_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          election_office_name?: string | null
+          last_verified?: string
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[]
+          special_instructions?: string | null
+          state_code: string
+          status_check_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          election_office_name?: string | null
+          last_verified?: string
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[]
+          special_instructions?: string | null
+          state_code?: string
+          status_check_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           created_at: string | null
@@ -3770,6 +4259,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voter_registration_resources_view: {
+        Row: {
+          election_office_name: string | null
+          last_verified: string | null
+          mail_form_url: string | null
+          mailing_address: string | null
+          metadata: Json | null
+          online_url: string | null
+          sources: string[] | null
+          special_instructions: string | null
+          state_code: string | null
+          status_check_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          election_office_name?: string | null
+          last_verified?: string | null
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[] | null
+          special_instructions?: string | null
+          state_code?: string | null
+          status_check_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          election_office_name?: string | null
+          last_verified?: string | null
+          mail_form_url?: string | null
+          mailing_address?: string | null
+          metadata?: Json | null
+          online_url?: string | null
+          sources?: string[] | null
+          special_instructions?: string | null
+          state_code?: string | null
+          status_check_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

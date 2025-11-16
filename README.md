@@ -37,6 +37,9 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 - ✅ **WebAuthn** - Passwordless biometric authentication
 - ✅ **Trust Tiers** - T0-T3 verification (analytics only)
 - ✅ **Feed System** - Personalized content with district filtering
+- ✅ **Candidate Onboarding & Verification** - Owner edit + publish, official email fast‑track (code flow)
+- ✅ **Representative Overrides** - Public-facing fields only; official records remain immutable
+- ✅ **Auditing & Admin Revert** - Field-level audit logs and one‑click revert endpoints
 
 ---
 
@@ -48,6 +51,10 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 - **[docs/CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current status
 - **[docs/WIDGET_SYSTEM.md](./docs/WIDGET_SYSTEM.md)** - Widget dashboard docs
 - **[docs/API_CHANGES.md](./docs/API_CHANGES.md)** - API consolidation
+ - **Single Source Roadmap**: [docs/ROADMAP_SINGLE_SOURCE.md](./docs/ROADMAP_SINGLE_SOURCE.md)
+ - **Operations**:
+   - Email & Verification (freemium/domain): [docs/OPERATIONS/email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md)
+   - LLC & Compliance Checklist: [docs/OPERATIONS/llc-and-compliance-checklist.md](./docs/OPERATIONS/llc-and-compliance-checklist.md)
 
 ### For Developers
 - **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Setup and development
@@ -58,6 +65,7 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 - **[docs/PRIVACY_POLICY.md](./docs/PRIVACY_POLICY.md)** - Privacy policy
 - **[docs/SECURITY.md](./docs/SECURITY.md)** - Security practices
 - **[docs/VOTING_INTEGRITY_POLICY.md](./docs/VOTING_INTEGRITY_POLICY.md)** - Voting integrity
+ - **Security Reporting**: See [SECURITY.md](./SECURITY.md)
 
 ---
 
@@ -86,6 +94,36 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 - **Caching**: Upstash Redis
 - **Monitoring**: Sentry
 - **Analytics**: Privacy-preserving
+
+---
+
+## 🔐 Environment & Email (Quick)
+
+Set the following in your hosting environment:
+
+- `NEXT_PUBLIC_APP_URL` – e.g., `https://choices-app.com`
+- `EMAIL_FROM` – e.g., `verify@choices-app.com`
+- `RESEND_API_KEY` – Resend production key
+- `ADMIN_MONITORING_KEY` – strong random string (for admin endpoints)
+- (Optional) `CRON_SECRET` – if you trigger job endpoints
+
+If you don’t have a domain yet, see the freemium/sandbox guidance in [email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md).
+
+Admin endpoints:
+- `GET /api/admin/candidates/stats`
+- `GET /api/admin/audit/candidates`
+- `GET /api/admin/audit/representatives`
+- `POST /api/admin/audit/revert`
+
+Email webhook:
+- `POST /api/webhooks/resend` (configure in Resend dashboard; optional signing supported with a small code addition)
+
+Candidate verification:
+- `POST /api/candidates/verify/request` – issue code via email
+- `POST /api/candidates/verify/confirm` – confirm code and link representative if eligible
+
+Representative overrides (fast‑track only):
+- `POST|PATCH /api/representatives/self/overrides` – limited public-facing fields only
 
 ---
 
@@ -127,8 +165,11 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 
 ## 🏛️ Governance
 
-- **License**: See [LICENSE](./LICENSE)
-- **Code of Conduct**: Open-source, bias-free
+- **License**: MIT — see [LICENSE](./LICENSE)
+- **Contributing**: DCO-based — see [CONTRIBUTING.md](./CONTRIBUTING.md)
+- **Code of Conduct**: See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- **Security**: Responsible disclosure — see [SECURITY.md](./SECURITY.md)
+- **Trademarks**: See [TRADEMARKS.md](./TRADEMARKS.md)
 - **Voting Integrity**: "A vote is a vote. Period."
 - **Privacy**: GDPR/CCPA compliant
 
@@ -144,6 +185,12 @@ This platform is built with care for democracy and transparency.
 3. **Open Source** - Transparent and auditable
 4. **Accessibility** - Inclusive design
 5. **Performance** - Fast and reliable
+
+### Before Opening a PR
+- Run `npm run lint`, `npm run type-check`, `npm run test`, and any relevant Playwright specs.
+- Run `npm run governance:check` to ensure store or API changes include the required roadmap/doc/changelog updates (CI also enforces this).
+- Fill out the checklist in `.github/PULL_REQUEST_TEMPLATE.md`, including the accessibility/i18n section and release-note entry.
+- Sign your commits with DCO: `git commit -s -m "feat: ..."` (see CONTRIBUTING.md).
 
 ---
 

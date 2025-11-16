@@ -63,28 +63,14 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
   const [, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
   const [loading, setLoading] = useState(true);
 
-  if (IS_E2E_HARNESS) {
-    return {
-      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
-      isDisabled: (flagId: string) => !featureFlagManager.isEnabled(flagId),
-      enable: (flagId: string) => featureFlagManager.enable(flagId),
-      disable: (flagId: string) => featureFlagManager.disable(flagId),
-      toggle: (flagId: string) => featureFlagManager.toggle(flagId),
-      getFlag: (flagId: string) => featureFlagManager.getFlag(flagId) ?? undefined,
-      getAllFlags: () => featureFlagManager.getAllFlags(),
-      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
-      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
-      getFlagsByCategory: (category: 'core' | 'optional' | 'experimental') => featureFlagManager.getFlagsByCategory(category),
-      systemInfo: featureFlagManager.getSystemInfo(),
-      loading: false,
-      manager: featureFlagManager,
-    };
-  }
-
   // Initialize flags on mount
   useEffect(() => {
-    setFlags(featureFlagManager.getAllFlags());
-    setLoading(false);
+    if (IS_E2E_HARNESS) {
+      // Keep hooks ordering consistent while keeping harness behaviour lightweight
+      setFlags(featureFlagManager.getAllFlags());
+      setLoading(false);
+      return;
+    }
 
     // Subscribe to flag changes
     const subscription = featureFlagManager.subscribe((newFlags) => {
@@ -156,7 +142,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
     getDisabledFlags,
     getFlagsByCategory,
     systemInfo,
-    loading,
+    loading: IS_E2E_HARNESS ? false : loading,
     manager: featureFlagManager
   };
 }

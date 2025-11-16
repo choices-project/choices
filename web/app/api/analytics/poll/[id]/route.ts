@@ -1,6 +1,7 @@
 import type { NextRequest} from 'next/server';
 
-import { withErrorHandling, successResponse, validationError } from '@/lib/api';
+import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
+import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { AnalyticsService } from '@/lib/core/services/analytics'
 
 export const dynamic = 'force-dynamic'
@@ -15,10 +16,26 @@ export const GET = withErrorHandling(async (
     return validationError({ pollId: 'Poll ID is required' });
   }
 
-  const analyticsService = AnalyticsService.getInstance()
-  const pollAnalytics = await analyticsService.getPollAnalytics(pollId)
+  try {
+    const analyticsService = AnalyticsService.getInstance()
+    const pollAnalytics = await analyticsService.getPollAnalytics(pollId)
 
-  return successResponse({
-    data: pollAnalytics
-  });
+    const response = successResponse({
+      poll: pollAnalytics
+    });
+
+    return applyAnalyticsCacheHeaders(response, {
+      cacheKey: `analytics:poll:${pollId}`,
+      etagSeed: `${pollId}:${pollAnalytics?.demographic_insights?.updated_at ?? pollAnalytics?.poll_id ?? 'poll'}`,
+      ttlSeconds: 180,
+      scope: 'private',
+    });
+  } catch (error) {
+    return errorResponse(
+      'Failed to load poll analytics',
+      500,
+      error instanceof Error ? { message: error.message } : undefined,
+      'ANALYTICS_POLL_FAILED'
+    );
+  }
 });

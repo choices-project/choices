@@ -84,6 +84,10 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   }
 
   const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured for poll voting');
+    return errorResponse('Database not available', 500);
+  }
 
   const user = await getUser().catch((error) => {
     logger.warn('Vote submission authentication lookup failed', error);
@@ -439,7 +443,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   );
 });
 
-export async function HEAD(request: NextRequest, { params }: { params: { id: string } }) {
+export const HEAD = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
 
   if (!pollId) {
@@ -447,6 +451,11 @@ export async function HEAD(request: NextRequest, { params }: { params: { id: str
   }
 
   const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured for poll voting');
+    return new NextResponse(null, { status: 503 });
+  }
+
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
 
@@ -493,7 +502,7 @@ export async function HEAD(request: NextRequest, { params }: { params: { id: str
   }
 
   return new NextResponse(null, { status: count && count > 0 ? 200 : 204 });
-}
+});
 
 export const GET = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
@@ -503,6 +512,10 @@ export const GET = withErrorHandling(async (request: NextRequest, { params }: { 
   }
 
   const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    logger.error('Supabase not configured for poll voting');
+    return errorResponse('Database not available', 500);
+  }
   const user = await getUser().catch(() => null);
 
   if (!user) {

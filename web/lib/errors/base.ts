@@ -5,7 +5,6 @@
  * error handling and proper HTTP status code mapping.
  */
 
-import { withOptional } from '../util/objects';
 
 export type ErrorResponse = {
   error: string;
@@ -63,16 +62,14 @@ export abstract class ApplicationError extends Error {
    * Convert error to JSON response format
    */
   toJSON(): ErrorResponse {
-    return withOptional(
-      {
-        error: this.name,
-        message: this.message,
-        statusCode: this.statusCode,
-        errorCode: this.errorCode,
-        timestamp: this.timestamp
-      },
-      { details: this.details }
-    );
+    return {
+      error: this.name,
+      message: this.message,
+      statusCode: this.statusCode,
+      errorCode: this.errorCode,
+      timestamp: this.timestamp,
+      ...(this.details ? { details: this.details } : {}),
+    };
   }
 
   /**

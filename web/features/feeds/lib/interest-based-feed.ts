@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { hashtagPollsIntegrationService } from './hashtag-polls-integration';
 
 // Force dynamic rendering

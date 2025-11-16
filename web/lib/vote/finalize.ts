@@ -25,7 +25,6 @@ import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
-import { withOptional } from '../util/objects';
 
 import { IRVCalculator } from './irv-calculator';
 import type { UserRanking } from './irv-calculator';
@@ -235,22 +234,25 @@ export class FinalizePollManager {
       }
 
       const pollData = result.data as SupabasePollData;
-      return withOptional(
-        {
-          id: pollData.id,
-          title: pollData.title,
-          candidates: pollData.options ?? [],
-          allowPostclose: pollData.allow_postclose ?? false,
-          status: pollData.status as 'draft' | 'active' | 'closed' | 'archived',
-          createdAt: new Date(pollData.created_at),
-          updatedAt: new Date(pollData.updated_at)
-        },
-        {
-          description: pollData.description,
-          closeAt: pollData.close_at ? new Date(pollData.close_at) : undefined,
-          lockedAt: pollData.locked_at ? new Date(pollData.locked_at) : undefined
-        }
-      );
+      const basePoll: Poll = {
+        id: pollData.id,
+        title: pollData.title,
+        candidates: pollData.options ?? [],
+        allowPostclose: pollData.allow_postclose ?? false,
+        status: pollData.status as 'draft' | 'active' | 'closed' | 'archived',
+        createdAt: new Date(pollData.created_at),
+        updatedAt: new Date(pollData.updated_at)
+      };
+      if (pollData.description !== undefined) {
+        (basePoll as Record<string, unknown>).description = pollData.description;
+      }
+      if (pollData.close_at) {
+        (basePoll as Record<string, unknown>).closeAt = new Date(pollData.close_at);
+      }
+      if (pollData.locked_at) {
+        (basePoll as Record<string, unknown>).lockedAt = new Date(pollData.locked_at);
+      }
+      return basePoll;
     } catch (error) {
       logger.error('Error in getPoll:', error);
       return null;
@@ -364,16 +366,20 @@ export class FinalizePollManager {
           percentages[candidate] = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
         }
         
-        return withOptional(
-          {
-            round: round.round,
-            votes: round.votes,
-            percentages
-          },
-          {
-            eliminated: round.eliminated
-          }
-        );
+        const out: {
+          round: number;
+          votes: Record<string, number>;
+          percentages: Record<string, number>;
+          eliminated?: string;
+        } = {
+          round: round.round,
+          votes: round.votes,
+          percentages
+        };
+        if (round.eliminated !== undefined) {
+          out.eliminated = round.eliminated;
+        }
+        return out;
       });
 
       // Calculate breakdown (final vote distribution)
@@ -488,20 +494,16 @@ export class FinalizePollManager {
       }
 
       const snapshotResult = result.data as SupabaseSnapshotData;
-      return withOptional(
-        {
-          id: snapshotResult.id,
-          pollId: snapshotResult.poll_id,
-          takenAt: new Date(snapshotResult.taken_at),
-          results: snapshotResult.results as typeof snapshotData.results,
-          totalBallots: snapshotResult.total_ballots,
-          checksum: snapshotResult.checksum,
-          createdAt: new Date(snapshotResult.created_at)
-        },
-        {
-          merkleRoot: snapshotResult.merkle_root
-        }
-      );
+      return {
+        id: snapshotResult.id,
+        pollId: snapshotResult.poll_id,
+        takenAt: new Date(snapshotResult.taken_at),
+        results: snapshotResult.results as typeof snapshotData.results,
+        totalBallots: snapshotResult.total_ballots,
+        checksum: snapshotResult.checksum,
+        createdAt: new Date(snapshotResult.created_at),
+        ...(snapshotResult.merkle_root ? { merkleRoot: snapshotResult.merkle_root } : {}),
+      };
     } catch (error) {
       logger.error('Error creating snapshot:', error);
       throw error;
@@ -640,17 +642,13 @@ export class FinalizePollManager {
       }
 
       const snapshotData = data as SupabaseSnapshotData;
-      return withOptional(
-        {
-          isFinalized: true,
-          snapshotId: snapshotData.id,
-          finalizedAt: new Date(snapshotData.taken_at),
-          checksum: snapshotData.checksum
-        },
-        {
-          merkleRoot: snapshotData.merkle_root
-        }
-      );
+      return {
+        isFinalized: true,
+        snapshotId: snapshotData.id,
+        finalizedAt: new Date(snapshotData.taken_at),
+        checksum: snapshotData.checksum,
+        ...(snapshotData.merkle_root ? { merkleRoot: snapshotData.merkle_root } : {}),
+      };
     } catch (error) {
       logger.error('Error getting finalization status:', error);
       return { isFinalized: false };
@@ -735,7 +733,7 @@ export async function finalizePoll(pollId: string, options?: Partial<FinalizeOpt
   // This would be called from an API endpoint or background job
   const supabase = await getSupabaseServerClient();
   const manager = new FinalizePollManager(supabase);
-  const finalOptions = withOptional(getDefaultFinalizeOptions(), options ?? {});
+  const finalOptions = { ...getDefaultFinalizeOptions(), ...(options ?? {}) };
   return manager.finalizePoll(pollId, finalOptions);
 }
 

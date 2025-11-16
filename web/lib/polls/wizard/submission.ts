@@ -240,8 +240,25 @@ export const mapValidationErrors = (error: z.ZodError<SanitizedWizardData>): Rec
 
 export type PollWizardSubmissionSuccess = {
   success: true;
+  /**
+   * Structured payload for consumers.
+   */
+  data: {
+    pollId: string;
+    title: string;
+    status: number;
+  };
+  /**
+   * @deprecated Use `data.pollId`.
+   */
   pollId: string;
+  /**
+   * @deprecated Use `data.title`.
+   */
   title: string;
+  /**
+   * @deprecated Use `data.status`.
+   */
   status: number;
   message?: string;
   durationMs?: number;
@@ -251,6 +268,7 @@ export type PollWizardSubmissionError = {
   success: false;
   status: number;
   message: string;
+  error: string;
   fieldErrors?: Record<string, string>;
   durationMs?: number;
   reason:

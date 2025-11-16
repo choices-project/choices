@@ -5,6 +5,7 @@
  * Modernized to align with the 2025 Zustand store standards (typed creator, helper factories, immer).
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -1758,36 +1759,48 @@ export const useAdminSelectedUsers = () =>
 export const useAdminShowBulkActions = () =>
   useAdminStore((state) => state.userFilters.showBulkActions);
 export const useAdminUserActions = () =>
-  useAdminStore((state) => ({
-  setUserFilters: state.setUserFilters,
-  selectUser: state.selectUser,
-  deselectUser: state.deselectUser,
-  selectAllUsers: state.selectAllUsers,
-  deselectAllUsers: state.deselectAllUsers,
-  updateUserRole: state.updateUserRole,
-  updateUserStatus: state.updateUserStatus,
-  deleteUser: state.deleteUser,
-}));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      setUserFilters: state.setUserFilters,
+      selectUser: state.selectUser,
+      deselectUser: state.deselectUser,
+      selectAllUsers: state.selectAllUsers,
+      deselectAllUsers: state.deselectAllUsers,
+      updateUserRole: state.updateUserRole,
+      updateUserStatus: state.updateUserStatus,
+      deleteUser: state.deleteUser,
+    };
+  }, []);
 
 export const useAdminActiveTab = () => useAdminStore((state) => state.activeTab);
 export const useAdminDashboardStats = () => useAdminStore((state) => state.dashboardStats);
 export const useAdminDashboardActions = () =>
-  useAdminStore((state) => ({
-  setActiveTab: state.setActiveTab,
-  loadDashboardStats: state.loadDashboardStats,
-}));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      setActiveTab: state.setActiveTab,
+      loadDashboardStats: state.loadDashboardStats,
+    };
+  }, []);
 
 export const useAdminSystemSettings = () => useAdminStore((state) => state.systemSettings);
 export const useAdminSettingsTab = () => useAdminStore((state) => state.settingsTab);
 export const useAdminIsSavingSettings = () => useAdminStore((state) => state.isSavingSettings);
 export const useAdminSystemSettingsActions = () =>
-  useAdminStore((state) => ({
-  setSystemSettings: state.setSystemSettings,
-  updateSystemSetting: state.updateSystemSetting,
-  setSettingsTab: state.setSettingsTab,
-  saveSystemSettings: state.saveSystemSettings,
-  loadSystemSettings: state.loadSystemSettings,
-}));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      setSystemSettings: state.setSystemSettings,
+      updateSystemSetting: state.updateSystemSetting,
+      setSettingsTab: state.setSettingsTab,
+      saveSystemSettings: state.saveSystemSettings,
+      loadSystemSettings: state.loadSystemSettings,
+    };
+  }, []);
 
 export const useAdminReimportProgress = () =>
   useAdminStore((state) => state.reimportProgress);
@@ -1795,54 +1808,66 @@ export const useAdminReimportLogs = () => useAdminStore((state) => state.reimpor
 export const useAdminIsReimportRunning = () =>
   useAdminStore((state) => state.isReimportRunning);
 export const useAdminReimportActions = () =>
-  useAdminStore((state) => ({
-  setReimportProgress: state.setReimportProgress,
-  addReimportLog: state.addReimportLog,
-  clearReimportLogs: state.clearReimportLogs,
-  setIsReimportRunning: state.setIsReimportRunning,
-  startReimport: state.startReimport,
-}));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      setReimportProgress: state.setReimportProgress,
+      addReimportLog: state.addReimportLog,
+      clearReimportLogs: state.clearReimportLogs,
+      setIsReimportRunning: state.setIsReimportRunning,
+      startReimport: state.startReimport,
+    };
+  }, []);
 
 export const useAdminActions = () =>
-  useAdminStore((state) => ({
-    addNotification: state.addNotification,
-    toggleSidebar: state.toggleSidebar,
-  loadUsers: state.loadUsers,
-  loadDashboardStats: state.loadDashboardStats,
-  loadSystemSettings: state.loadSystemSettings,
-    setTrendingTopics: state.setTrendingTopics,
-    setGeneratedPolls: state.setGeneratedPolls,
-    setSystemMetrics: state.setSystemMetrics,
-    updateActivityFeed: state.updateActivityFeed,
-  addActivityItem: state.addActivityItem,
-  clearActivityItems: state.clearActivityItems,
-  addAdminNotification: state.addAdminNotification,
-  clearAdminNotifications: state.clearAdminNotifications,
-  markNotificationAsRead: state.markNotificationAsRead,
-    markNotificationRead: state.markNotificationRead,
-  setLoading: state.setLoading,
-  setUpdating: state.setUpdating,
-  setError: state.setError,
-  clearError: state.clearError,
-  refreshData: state.refreshData,
-  syncData: state.syncData,
-    resetAdminState: state.resetAdminState,
-  }));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      addNotification: state.addNotification,
+      toggleSidebar: state.toggleSidebar,
+      loadUsers: state.loadUsers,
+      loadDashboardStats: state.loadDashboardStats,
+      loadSystemSettings: state.loadSystemSettings,
+      setTrendingTopics: state.setTrendingTopics,
+      setGeneratedPolls: state.setGeneratedPolls,
+      setSystemMetrics: state.setSystemMetrics,
+      updateActivityFeed: state.updateActivityFeed,
+      addActivityItem: state.addActivityItem,
+      clearActivityItems: state.clearActivityItems,
+      addAdminNotification: state.addAdminNotification,
+      clearAdminNotifications: state.clearAdminNotifications,
+      markNotificationAsRead: state.markNotificationAsRead,
+      markNotificationRead: state.markNotificationRead,
+      setLoading: state.setLoading,
+      setUpdating: state.setUpdating,
+      setError: state.setError,
+      clearError: state.clearError,
+      refreshData: state.refreshData,
+      syncData: state.syncData,
+      resetAdminState: state.resetAdminState,
+    };
+  }, []);
 
 export const useAdminFeatureFlagActions = () =>
-  useAdminStore((state) => ({
-    enableFeatureFlag: state.enableFeatureFlag,
-    disableFeatureFlag: state.disableFeatureFlag,
-    toggleFeatureFlag: state.toggleFeatureFlag,
-    isFeatureFlagEnabled: state.isFeatureFlagEnabled,
-    getFeatureFlag: state.getFeatureFlag,
-    getAllFeatureFlags: state.getAllFeatureFlags,
-    exportFeatureFlagConfig: state.exportFeatureFlagConfig,
-    importFeatureFlagConfig: state.importFeatureFlagConfig,
-    resetFeatureFlags: state.resetFeatureFlags,
-    setFeatureFlagLoading: state.setFeatureFlagLoading,
-    setFeatureFlagError: state.setFeatureFlagError,
-  }));
+  useMemo(() => {
+    const state = useAdminStore.getState();
+
+    return {
+      enableFeatureFlag: state.enableFeatureFlag,
+      disableFeatureFlag: state.disableFeatureFlag,
+      toggleFeatureFlag: state.toggleFeatureFlag,
+      isFeatureFlagEnabled: state.isFeatureFlagEnabled,
+      getFeatureFlag: state.getFeatureFlag,
+      getAllFeatureFlags: state.getAllFeatureFlags,
+      exportFeatureFlagConfig: state.exportFeatureFlagConfig,
+      importFeatureFlagConfig: state.importFeatureFlagConfig,
+      resetFeatureFlags: state.resetFeatureFlags,
+      setFeatureFlagLoading: state.setFeatureFlagLoading,
+      setFeatureFlagError: state.setFeatureFlagError,
+    };
+  }, []);
 
 export const useAdminStats = () =>
   useAdminStore((state) => ({

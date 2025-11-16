@@ -13,12 +13,12 @@
 import React, { useEffect, useRef } from 'react';
 
 import type { AdminNotification } from '@/features/admin/types';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useNotificationAdminNotifications,
   useNotificationAdminUnreadCount,
   useNotificationActions,
 } from '@/lib/stores';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 /**
  * Hook to use admin notification system

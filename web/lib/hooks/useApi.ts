@@ -24,7 +24,18 @@ import {
   type TrendingHashtag,
   type TrendingPoll,
 } from '@/lib/api';
-import { withOptional } from '@/lib/util/objects';
+
+function mergeDefined<T extends object, U extends object>(base: T, extras?: U): T & Partial<U> {
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  if (extras) {
+    for (const [k, v] of Object.entries(extras as Record<string, unknown>)) {
+      if (v !== undefined) {
+        out[k] = v;
+      }
+    }
+  }
+  return out as T & Partial<U>;
+}
 
 // ============================================================================
 // QUERY KEYS
@@ -77,7 +88,7 @@ export const queryKeys = {
 export function useProfile(options?: Omit<UseQueryOptions<UserProfile>, 'queryKey' | 'queryFn'>) {
   const router = useRouter();
 
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: queryKeys.profile,
       queryFn: async () => {
@@ -85,18 +96,18 @@ export function useProfile(options?: Omit<UseQueryOptions<UserProfile>, 'queryKe
         return data.profile;
       },
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<UserProfile>;
 
-  queryOptions.meta = withOptional(
+  queryOptions.meta = mergeDefined(
     {
       onError: (error: ApiError) => {
         if (error.isAuthError()) {
           router.push('/login');
         }
       },
-    } as Record<string, unknown>,
-    options?.meta as Record<string, unknown> | undefined
+    },
+    options?.meta as any
   ) as any;
 
   return useQuery(queryOptions);
@@ -114,8 +125,8 @@ export function useUpdateProfile(
 ) {
   const queryClient = useQueryClient();
 
-  const mutationOptions = withOptional(
-    (options ?? {}) as Record<string, unknown>,
+  const mutationOptions = mergeDefined(
+    (options ?? {}) as any,
     {
       mutationFn: async (data: Partial<UserProfile>) => {
         return await patch<UserProfile>('/api/profile', data);
@@ -142,8 +153,8 @@ export function useDeleteProfile(
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const mutationOptions = withOptional(
-    (options ?? {}) as Record<string, unknown>,
+  const mutationOptions = mergeDefined(
+    (options ?? {}) as any,
     {
       mutationFn: async () => {
         await del('/api/profile');
@@ -172,7 +183,7 @@ export function useDashboard(
   useCache: boolean = true,
   options?: Omit<UseQueryOptions<DashboardData>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: queryKeys.dashboard,
       queryFn: async () => {
@@ -180,7 +191,7 @@ export function useDashboard(
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<DashboardData>;
 
   return useQuery(queryOptions);
@@ -200,7 +211,7 @@ export function usePolls(
   filters?: { status?: string; limit?: number },
   options?: Omit<UseQueryOptions<Poll[]>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: [...queryKeys.polls, filters] as const,
       queryFn: async () => {
@@ -211,7 +222,7 @@ export function usePolls(
         return await get<Poll[]>(`/api/polls?${params}`);
       },
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<Poll[]>;
 
   return useQuery(queryOptions);
@@ -227,14 +238,14 @@ export function usePoll(
   id: string,
   options?: Omit<UseQueryOptions<Poll>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: queryKeys.poll(id),
       queryFn: async () => {
         return await get<Poll>(`/api/polls/${id}`);
       },
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<Poll>;
 
   return useQuery(queryOptions);
@@ -252,8 +263,8 @@ export function useVote(
 ) {
   const queryClient = useQueryClient();
 
-  const mutationOptions = withOptional(
-    (options ?? {}) as Record<string, unknown>,
+  const mutationOptions = mergeDefined(
+    (options ?? {}) as any,
     {
       mutationFn: async ({ pollId, optionId }: { pollId: string; optionId: string }) => {
         await post(`/api/polls/${pollId}/vote`, { option_id: optionId });
@@ -282,7 +293,7 @@ export function useTrendingPolls(
   limit: number = 10,
   options?: Omit<UseQueryOptions<TrendingPoll[]>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: [...queryKeys.trendingPolls, limit] as const,
       queryFn: async () => {
@@ -291,7 +302,7 @@ export function useTrendingPolls(
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<TrendingPoll[]>;
 
   return useQuery(queryOptions);
@@ -307,7 +318,7 @@ export function useTrendingHashtags(
   limit: number = 20,
   options?: Omit<UseQueryOptions<TrendingHashtag[]>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: [...queryKeys.trendingHashtags, limit] as const,
       queryFn: async () => {
@@ -316,7 +327,7 @@ export function useTrendingHashtags(
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<TrendingHashtag[]>;
 
   return useQuery(queryOptions);
@@ -338,8 +349,8 @@ export function useSubmitFeedback(
 ) {
   const queryClient = useQueryClient();
 
-  const mutationOptions = withOptional(
-    (options ?? {}) as Record<string, unknown>,
+  const mutationOptions = mergeDefined(
+    (options ?? {}) as any,
     {
       mutationFn: async (feedback: Partial<Feedback>) => {
         return await post<Feedback>('/api/feedback', feedback);
@@ -363,7 +374,7 @@ export function useFeedbackList(
   filters?: Record<string, string>,
   options?: Omit<UseQueryOptions<Feedback[]>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: queryKeys.feedbackList(filters),
       queryFn: async () => {
@@ -372,7 +383,7 @@ export function useFeedbackList(
         return response.feedback;
       },
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<Feedback[]>;
 
   return useQuery(queryOptions);
@@ -392,7 +403,7 @@ export function useHealth(
   type: 'basic' | 'database' | 'extended' | 'all' = 'basic',
   options?: Omit<UseQueryOptions<any>, 'queryKey' | 'queryFn'>
 ) {
-  const queryOptions = withOptional(
+  const queryOptions = mergeDefined(
     {
       queryKey: [...queryKeys.health, type] as const,
       queryFn: async () => {
@@ -404,7 +415,7 @@ export function useHealth(
         return get(url);
       },
     },
-    options as Record<string, unknown> | undefined
+    options as any
   ) as UseQueryOptions<any>;
 
   if (type === 'database') {

@@ -17,10 +17,9 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
-import { withErrorHandling, forbiddenError } from '@/lib/api';
+import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
@@ -41,6 +40,7 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
 
   logAnalyticsAccess(user, 'poll-heatmap-api', true);
 
+  try {
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
@@ -57,88 +57,73 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
-    // Get all polls
-    let pollsQuery = supabase
-      .from('polls')
-      .select('id, title, hashtags, created_at, status, total_votes');
+        // Get all polls
+        let pollsQuery = supabase
+          .from('polls')
+          .select('id, title, hashtags, created_at, status, total_votes');
 
-    // Apply category filter
-    if (category && category !== 'All Categories') {
-      pollsQuery = pollsQuery.eq('category', category);
-    }
+        // Apply category filter
+        if (category && category !== 'All Categories') {
+          pollsQuery = pollsQuery.eq('category', category);
+        }
 
-    const { data: polls, error: pollsError } = await pollsQuery;
+        const { data: polls, error: pollsError } = await pollsQuery;
 
-    if (pollsError) {
-      logger.error('Failed to fetch polls for heatmap', { error: pollsError });
-      throw new Error('Failed to fetch polls');
-    }
+        if (pollsError) {
+          logger.error('Failed to fetch polls for heatmap', { error: pollsError });
+          throw new Error('Failed to fetch polls');
+        }
 
-    if (!polls || polls.length === 0) {
-      return NextResponse.json({
-        ok: true,
-        polls: [],
-        categories: []
-      });
-    }
+        if (!polls || polls.length === 0) {
+          return {
+            polls: [],
+            categories: []
+          };
+        }
 
-    // Get votes for these polls (from opted-in users only)
-    const pollIds = polls.map(p => p.id);
+        // Get votes for these polls (from opted-in users only)
+        const pollIds = polls.map(p => p.id);
 
-    const votesQueryResult = await queryBuilder.getVoteAnalytics({});
-    const { data: allVotes, error: votesError } = votesQueryResult;
+        const votesQueryResult = await queryBuilder.getVoteAnalytics({});
+        const { data: allVotes, error: votesError } = votesQueryResult;
 
-    if (votesError) {
-      logger.error('Failed to fetch votes for poll heatmap', { error: votesError });
-      throw new Error('Failed to fetch votes');
-    }
+        if (votesError) {
+          logger.error('Failed to fetch votes for poll heatmap', { error: votesError });
+          throw new Error('Failed to fetch votes');
+        }
 
-    // Filter votes for our polls only
-    const relevantVotes = (allVotes || []).filter((v: any) => pollIds.includes(v.poll_id));
+        // Filter votes for our polls only
+        const relevantVotes = (allVotes || []).filter((v: any) => pollIds.includes(v.poll_id));
 
-    // Calculate engagement metrics per poll
-    const pollMetrics = polls.map(poll => {
-      const pollVotes = relevantVotes.filter(v => v.poll_id === poll.id);
-      const totalVotes = pollVotes.length;
-      const uniqueVoters = new Set(pollVotes.map(v => v.user_id)).size;
+        // Calculate engagement metrics per poll
+        const pollMetrics = polls.map(poll => {
+          const pollVotes = relevantVotes.filter(v => v.poll_id === poll.id);
+          const totalVotes = pollVotes.length;
+          const uniqueVoters = new Set(pollVotes.map(v => v.user_id)).size;
 
-      // ==========================================
-      // ANALYTICS DISPLAY RANKING ONLY
-      // ==========================================
-      // This "engagement score" is ONLY used for ranking polls in the admin analytics dashboard.
-      // It shows which polls are "hot" right now for analytics purposes.
-      //
-      // CRITICAL: This does NOT affect poll results or vote counting in any way!
-      // - Poll results ALWAYS show exact vote counts (1 vote = 1 vote)
-      // - This ranking helps admins see which polls have high engagement
-      // - Formula considers both total votes and unique participants
-      //
-      // This is open-source and bias-free. Actual votes are NEVER weighted.
-      // ==========================================
-      const engagementScore = (totalVotes * 0.4) + (uniqueVoters * 0.6);
+          const engagementScore = (totalVotes * 0.4) + (uniqueVoters * 0.6);
 
-      // Check if poll is currently active
-      const isActive = poll.status === 'active';
+          const isActive = poll.status === 'active';
 
-      return {
-        poll_id: poll.id,
-        title: poll.title,
-        category: poll.hashtags?.[0] ?? 'general',
-        total_votes: totalVotes,
-        unique_voters: uniqueVoters,
-        engagement_score: engagementScore,
-        created_at: poll.created_at,
-        is_active: isActive
-      };
-    });
+          return {
+            poll_id: poll.id,
+            title: poll.title,
+            category: poll.hashtags?.[0] ?? 'general',
+            total_votes: totalVotes,
+            unique_voters: uniqueVoters,
+            engagement_score: engagementScore,
+            created_at: poll.created_at,
+            is_active: isActive
+          };
+        });
 
-    // Sort by engagement score (highest first) and apply limit
-    const sortedPolls = pollMetrics
-      .sort((a, b) => b.engagement_score - a.engagement_score)
-      .slice(0, limit);
+        // Sort by engagement score (highest first) and apply limit
+        const sortedPolls = pollMetrics
+          .sort((a, b) => b.engagement_score - a.engagement_score)
+          .slice(0, limit);
 
-    // Get unique categories (from hashtags)
-    const categories = Array.from(new Set(pollMetrics.map(p => p.category))).sort();
+        // Get unique categories (from hashtags)
+        const categories = Array.from(new Set(pollMetrics.map(p => p.category))).sort();
 
         logger.info('Poll heatmap data generated', {
           category: category ?? 'all',
@@ -148,7 +133,6 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
         });
 
         return {
-          ok: true,
           polls: sortedPolls,
           categories
         };
@@ -157,12 +141,17 @@ export const GET = withErrorHandling(async (request: NextRequest): Promise<any> 
 
     logger.info('Poll heatmap data served', { fromCache });
 
-    return NextResponse.json({
-      ...result,
-      _cache: {
+    return successResponse({
+      polls: result.polls,
+      categories: result.categories,
+      cache: {
         hit: fromCache,
         ttl: CACHE_TTL.POLL_HEATMAP
       }
     });
+  } catch (error) {
+    logger.error('Poll heatmap analytics error', error instanceof Error ? error : new Error(String(error)));
+    return errorResponse('Failed to load poll heatmap analytics', 500);
+  }
 });
 

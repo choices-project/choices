@@ -16,12 +16,12 @@
  * Enhanced: November 5, 2025 - Added district filtering UI
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 import { useUser } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
+import { useAppActions } from '@/lib/stores/appStore';
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
@@ -29,15 +29,31 @@ export const dynamic = 'force-dynamic';
 export default function FeedPage() {
   const user = useUser();
   const userDistrict = useFormattedDistrict();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/feed');
+    setSidebarActiveSection('feed');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Feed', href: '/feed' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <UnifiedFeedRefactored
-        {...withOptional({
+        {...{
           enableAnalytics: true,
           maxItems: 50,
           userDistrict,
-        }, user?.id ? { userId: user.id } : undefined)}
+          ...(user?.id ? { userId: user.id } : {}),
+        }}
       />
     </div>
   );

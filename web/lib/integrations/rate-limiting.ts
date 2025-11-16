@@ -7,7 +7,6 @@
 
 import { logger } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 
 export type RateLimitConfig = {
   requestsPerSecond: number;
@@ -234,15 +233,11 @@ export class RateLimiter {
     const nextHourReset = 3600000 - (now % 3600000);
     const nextDayReset = this.usageMetrics.nextResetTime.getTime() - now;
 
-    return withOptional(
-      {
-        remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
-        resetTime: Math.min(nextHourReset, nextDayReset)
-      },
-      {
-        retryAfter: this.usageMetrics.quotaExceeded ? nextHourReset : undefined
-      }
-    );
+    return {
+      remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
+      resetTime: Math.min(nextHourReset, nextDayReset),
+      ...(this.usageMetrics.quotaExceeded ? { retryAfter: nextHourReset } : {}),
+    };
   }
 
   /**

@@ -8,7 +8,7 @@
  * Status: ✅ PRODUCTION
  */
 
-import { withOptional } from '@/lib/util/objects';
+// withOptional removed in favor of explicit merge
 
 export type MessageTemplate = {
   id: string;
@@ -272,11 +272,12 @@ export function fillTemplate(
   let body = template.body;
 
   // Merge user info into values
-  const allValues = withOptional(values, {
+  const allValues = {
+    ...values,
     ...(userInfo?.name ? { userName: userInfo.name } : {}),
     ...(userInfo?.email ? { userEmail: userInfo.email } : {}),
     ...(userInfo?.address ? { userAddress: userInfo.address } : {}),
-  });
+  };
 
   // Replace placeholders
   Object.entries(allValues).forEach(([key, value]) => {

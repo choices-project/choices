@@ -39,20 +39,26 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     const allGood = Object.values(privacyProtections).every(Boolean);
     const someGood = Object.values(privacyProtections).some(Boolean);
     
-  return successResponse({
-    status: allGood ? 'active' : someGood ? 'partial' : 'inactive',
-    protections: privacyProtections,
-    badge: {
-      color: allGood ? 'green' : someGood ? 'yellow' : 'red',
-      label: allGood ? 'Privacy protections: ON' : 
-             someGood ? 'Privacy protections: PARTIAL' : 
-             'Privacy protections: CHECK SETTINGS'
+  return successResponse(
+    {
+      status: allGood ? 'active' : someGood ? 'partial' : 'inactive',
+      protections: privacyProtections,
+      badge: {
+        color: allGood ? 'green' : someGood ? 'yellow' : 'red',
+        label: allGood ? 'Privacy protections: ON' : 
+               someGood ? 'Privacy protections: PARTIAL' : 
+               'Privacy protections: CHECK SETTINGS'
+      },
+      details: {
+        webauthnEnabled: enabled,
+        rpId: rpID,
+        allowedOrigins: allowedOrigins,
+        tablesExist: webauthnTablesExist
+      }
     },
-    details: {
-      webauthnEnabled: enabled,
-      rpId: rpID,
-      allowedOrigins: allowedOrigins,
-      tablesExist: webauthnTablesExist
+    {
+      surface: 'privacy-status',
+      checks: Object.keys(privacyProtections)
     }
-  });
+  );
 });

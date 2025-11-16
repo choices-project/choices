@@ -39,6 +39,21 @@ export function formatEngagementRate(rate: number): string {
 }
 
 /**
+ * Format a Date or ISO string as YYYY-MM-DD (ISO date only)
+ */
+export function formatISODateOnly(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Return current timestamp as ISO string
+ */
+export function nowISO(): string {
+  return new Date().toISOString();
+}
+
+/**
  * Format growth rate as percentage with sign
  */
 export function formatGrowthRate(rate: number): string {

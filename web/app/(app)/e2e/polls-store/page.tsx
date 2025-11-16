@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
-import { usePollsStore, type PollsStore } from '@/lib/stores/pollsStore';
 import { derivePollAnalytics } from '@/lib/polls/validation';
+import { usePollsStore, type PollsStore } from '@/lib/stores/pollsStore';
 
 export type PollsStoreHarness = {
   getSnapshot: () => PollsStore;

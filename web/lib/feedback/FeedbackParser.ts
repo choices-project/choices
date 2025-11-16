@@ -10,7 +10,7 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
+// withOptional removed in favor of explicit object construction
 
 export type ParsedFeedback = {
   id: string;
@@ -91,7 +91,7 @@ export class FeedbackParser {
     // AI analysis (simplified for now)
     const aiAnalysis = await this.performAIAnalysis(cleanedText, type);
     
-    const parsed: ParsedFeedback = withOptional({
+    const parsed: ParsedFeedback = {
       id: this.generateId(),
       type: type === 'interest' ? 'interest_suggestion' : 'demographic_suggestion',
       category: type,
@@ -100,19 +100,14 @@ export class FeedbackParser {
       sentiment,
       priority,
       tags: keywords,
-      metadata: withOptional(
-        {
-          source: 'onboarding' as const,
-          timestamp,
-          originalText: text
-        },
-        {
-          userId
-        }
-      )
-    }, {
-      aiAnalysis
-    });
+      metadata: {
+        source: 'onboarding' as const,
+        timestamp,
+        originalText: text,
+        ...(userId ? { userId } : {}),
+      },
+      ...(aiAnalysis ? { aiAnalysis } : {}),
+    };
 
     devLog('Parsed interest suggestion:', parsed);
     return parsed;
@@ -132,7 +127,7 @@ export class FeedbackParser {
     
     const aiAnalysis = await this.performAIAnalysis(cleanedDescription, 'poll');
     
-    const parsed: ParsedFeedback = withOptional({
+    const parsed: ParsedFeedback = {
       id: this.generateId(),
       type: 'poll_suggestion',
       category: 'poll',
@@ -147,9 +142,7 @@ export class FeedbackParser {
         timestamp: createdAt,
         originalText: `${title} - ${description}`
       }
-    }, {
-      aiAnalysis
-    });
+    , ...(aiAnalysis ? { aiAnalysis } : {})};
 
     devLog('Parsed poll suggestion:', parsed);
     return parsed;
@@ -174,7 +167,7 @@ export class FeedbackParser {
     
     const aiAnalysis = await this.performAIAnalysis(cleanedText, feedbackType);
     
-    const parsed: ParsedFeedback = withOptional({
+    const parsed: ParsedFeedback = {
       id: this.generateId(),
       type: feedbackType,
       category: this.mapTypeToCategory(feedbackType),
@@ -183,16 +176,14 @@ export class FeedbackParser {
       sentiment,
       priority,
       tags: keywords,
-      metadata: withOptional({
+      metadata: {
         source: 'feedback_widget',
         timestamp,
-        originalText: text
-      }, {
-        userId
-      })
-    }, {
-      aiAnalysis
-    });
+        originalText: text,
+        ...(userId ? { userId } : {}),
+      },
+      ...(aiAnalysis ? { aiAnalysis } : {}),
+    };
 
     devLog('Parsed general feedback:', parsed);
     return parsed;
@@ -210,14 +201,12 @@ export class FeedbackParser {
         
         if (item.type && (item.type === 'interest' || item.type === 'demographic')) {
           // Convert RawFeedbackItem to InterestSuggestion format
-          const interestSuggestion: InterestSuggestion = withOptional(
-            {
-              type: item.type,
-              text: item.text ?? '',
-              timestamp: item.timestamp ?? new Date().toISOString()
-            },
-            { userId: item.userId }
-          );
+          const interestSuggestion: InterestSuggestion = {
+            type: item.type,
+            text: item.text ?? '',
+            timestamp: item.timestamp ?? new Date().toISOString(),
+            ...(item.userId ? { userId: item.userId } : {}),
+          };
           parsed = await this.parseInterestSuggestion(interestSuggestion);
         } else if (item.category && item.title && item.description) {
           // Convert RawFeedbackItem to PollSuggestion format
@@ -233,13 +222,12 @@ export class FeedbackParser {
           parsed = await this.parsePollSuggestion(pollSuggestion);
         } else if (item.text) {
           // Convert RawFeedbackItem to general feedback format
-          const generalFeedback = withOptional({
+          const generalFeedback = {
             text: item.text,
-            timestamp: item.timestamp ?? new Date().toISOString()
-          }, {
-            type: item.type,
-            userId: item.userId
-          });
+            timestamp: item.timestamp ?? new Date().toISOString(),
+            ...(item.type ? { type: item.type } : {}),
+            ...(item.userId ? { userId: item.userId } : {}),
+          };
           parsed = await this.parseGeneralFeedback(generalFeedback);
         }
         

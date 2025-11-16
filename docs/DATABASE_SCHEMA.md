@@ -1,16 +1,14 @@
 # Choices Platform - Database Schema Documentation
 
-**Last Updated**: November 9, 2025  
-**Source**: Generated from `/web/types/supabase.ts` (Supabase-generated types)  
-**Status**: ✅ CURRENT - Verified against production database  
-**Total Tables**: 70  
-**Total RPC Functions**: 19
+**Last Updated**: November 16, 2025  
+**Source of Truth**: `/web/types/supabase.ts` (Supabase-generated types)  
+**Status**: ✅ Current (synced to latest generated types)
 
 ---
 
 ## Overview
 
-This document provides a comprehensive overview of the Choices platform database schema. The schema is designed to support:
+This document summarizes the Choices platform database schema. The authoritative, up-to-date definitions live in `/web/types/supabase.ts` and should be consulted when making code changes. The schema supports:
 
 - 🗳️ **Poll Management** - Create, vote, and analyze polls
 - 👥 **User Profiles & Trust Tiers** - User management and trust scoring
@@ -20,6 +18,139 @@ This document provides a comprehensive overview of the Choices platform database
 - #️⃣ **Hashtag System** - Trending topics, user preferences, engagement tracking
 - 🔐 **Authentication** - WebAuthn, biometric trust scores, sessions
 - 📱 **Feeds** - User feeds, feed items, interactions
+
+---
+
+## Schema Index (from current generated types)
+
+### Public Tables (current)
+
+- `admin_activity_log`
+- `analytics_event_data`
+- `analytics_events`
+- `audit_logs`
+- `biometric_trust_scores`
+- `bot_detection_logs`
+- `cache_performance_log`
+- `candidate_email_challenges`
+- `candidate_onboarding`
+- `candidate_platforms`
+- `candidate_profile_audit`
+- `candidate_profiles`
+- `candidate_verifications`
+- `civic_action_metadata`
+- `civic_actions`
+- `civic_database_entries`
+- `civic_elections`
+- `contact_messages`
+- `contact_threads`
+- `feature_usage`
+- `feed_interactions`
+- `feed_items`
+- `feedback`
+- `feeds`
+- `hashtag_engagement`
+- `hashtag_flags`
+- `hashtag_usage`
+- `hashtag_user_preferences`
+- `hashtags`
+- `id_crosswalk`
+- `idempotency_keys`
+- `message_delivery_logs`
+- `narrative_analysis_results`
+- `notification_log`
+- `official_email_fast_track`
+- `openstates_people_contacts`
+- `openstates_people_data`
+- `openstates_people_identifiers`
+- `openstates_people_other_names`
+- `openstates_people_roles`
+- `openstates_people_social_media`
+- `openstates_people_sources`
+- `performance_metrics`
+- `permissions`
+- `platform_analytics`
+- `poll_demographic_insights`
+- `poll_options`
+- `poll_participation_analytics`
+- `poll_rankings`
+- `polls`
+- `push_subscriptions`
+- `query_performance_log`
+- `rate_limits`
+- `representative_activity`
+- `representative_campaign_finance`
+- `representative_committees`
+- `representative_contacts`
+- `representative_crosswalk_enhanced`
+- `representative_data_quality`
+- `representative_data_sources`
+- `representative_divisions`
+- `representative_enhanced_crosswalk`
+- `representative_follows`
+- `representative_overrides`
+- `representative_overrides_audit`
+- `representative_photos`
+- `representative_social_media`
+- `representatives_core`
+- `role_permissions`
+- `roles`
+- `site_messages`
+- `sync_log`
+- `system_health`
+- `trending_topics`
+- `trust_tier_analytics`
+- `trust_tier_progression`
+- `user_hashtags`
+- `user_profiles`
+- `user_roles`
+- `user_sessions`
+- `vote_trust_tiers`
+- `voter_registration_resources`
+- `votes`
+- `webauthn_challenges`
+- `webauthn_credentials`
+- `idempotency_monitor`
+- `user_voting_history`
+
+### Public Views (current)
+
+- `openstates_people_current_roles_v`
+- `openstates_people_primary_contacts_v`
+- `openstates_people_social_v`
+- `openstates_people_sources_v`
+- `voter_registration_resources_view`
+
+### RPC Functions (current)
+
+- `analyze_narrative_divergence`
+- `analyze_polls_table`
+- `analyze_query_performance`
+- `calculate_trust_filtered_votes`
+- `calculate_trust_weighted_votes`
+- `calculate_user_trust_tier`
+- `cleanup_expired_data`
+- `create_audit_log`
+- `get_audit_log_stats`
+- `get_duplicate_canonical_ids`
+- `get_hashtag_trending_history`
+- `get_heatmap`
+- `get_performance_recommendations`
+- `get_personalized_recommendations`
+- `get_poll_results_by_trust_tier`
+- `get_poll_votes_by_trust_tier`
+- `get_real_time_analytics`
+- `get_table_columns`
+- `get_upcoming_elections`
+- `link_anonymous_votes_to_user`
+- `optimize_database_performance`
+- `run_maintenance_job`
+- `update_cache_performance_metrics`
+- `update_poll_demographic_insights`
+
+> Notes:
+> - Views are suffixed with `_v` or `_view`.
+> - The functions list is provided for discovery; consult `/web/types/supabase.ts` for exact signatures.
 
 ---
 
@@ -1085,7 +1216,627 @@ npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > types/supa
 
 ---
 
-**Generated**: November 5, 2025  
-**Method**: Parsed from `/web/types/supabase.ts` (Supabase-generated)  
-**Confidence**: HIGH - Direct verification against production schema
+**Generated**: November 16, 2025  
+**Method**: Summarized from `/web/types/supabase.ts` (Supabase-generated)  
+**Confidence**: HIGH - Aligned with current generated types
+
+---
+
+## Selected Table Details (current columns)
+
+### `voter_registration_resources`
+- `state_code` text (PK)
+- `online_url` text | null
+- `mail_form_url` text | null
+- `mailing_address` text | null
+- `election_office_name` text | null
+- `status_check_url` text | null
+- `special_instructions` text | null
+- `sources` text[] (default {})
+- `metadata` jsonb | null
+- `last_verified` timestamptz
+- `created_at` timestamptz
+- `updated_at` timestamptz
+
+### `representatives_core`
+- `id` integer (PK)
+- `name` text
+- `office` text
+- `level` text
+- `state` text
+- `district` text | null
+- `party` text | null
+- `openstates_id` text | null
+- `canonical_id` text | null
+- `is_active` boolean | null
+- `created_at` timestamptz | null
+
+### `representative_data_quality`
+- `id` integer (PK, 1:1 with representative)
+- `representative_id` integer (unique FK)
+- `data_completeness`, `overall_confidence`, `primary_source_score`, `secondary_source_score`, `source_reliability` numeric | null
+- `validation_method` text | null
+- `last_validated` timestamptz | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_data_sources`
+- `id` integer (PK)
+- `representative_id` integer | null (FK)
+- `source_name` text
+- `source_type` text
+- `confidence` text
+- `validation_status` text | null
+- `raw_data` jsonb | null
+- `last_updated` timestamptz | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_divisions`
+- `representative_id` integer (FK)
+- `division_id` text
+- `level` text | null
+- `source` text
+- `created_at`, `updated_at` timestamptz
+
+### `representative_activity`
+- `id` integer (PK)
+- `representative_id` integer (FK)
+- `type` text
+- `title` text
+- `description` text | null
+- `date` date | null
+- `source`, `source_url`, `url` text | null
+- `metadata` jsonb | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `permissions`
+- `id` uuid (PK)
+- `name` text
+- `resource` text
+- `action` text
+- `description` text | null
+- `created_at` timestamptz | null
+
+### `rate_limits`
+- `id` uuid (PK)
+- `endpoint` text
+- `ip_address` inet
+- `request_count` integer | null
+- `expires_at` timestamptz | null
+- `created_at` timestamptz | null
+
+### `feature_usage`
+- `id` uuid (PK)
+- `user_id` uuid | null
+- `session_id` uuid | null
+- `feature_name` text
+- `action_type` text
+- `success` boolean | null
+- `duration` integer | null
+- `context`, `metadata` jsonb | null
+- `error_message` text | null
+- `timestamp` timestamptz | null
+
+### `id_crosswalk`
+- `id` serial (PK)
+- `canonical_id` text
+- `entity_type` text
+- `source` text
+- `source_id` text
+- `attrs` jsonb | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_crosswalk_enhanced` / `representative_enhanced_crosswalk`
+- `id` integer (PK)
+- `representative_id` integer | null (FK)
+- `canonical_id` text
+- `source_system` text
+- `source_id` text
+- `source_confidence` text | null
+- `last_verified` timestamptz | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_data_sources`
+See detailed section above. Uniqueness: `(representative_id, source_name, source_type)`.
+
+### `openstates_people_data`
+- Core person data snapshot from OpenStates:
+- `id` integer (PK), `openstates_id` text, `name` text, `state` text, `level` text | null, `party` text | null,
+  `roles` jsonb | null, `identifiers` jsonb | null, `extras` jsonb | null, timestamps.
+> See `/web/types/supabase.ts` for full column list for all `openstates_*` tables below.
+
+### `openstates_people_contacts`
+- Contact rows linked to OpenStates people:
+- `id` integer (PK), `openstates_id` text, `contact_type` text, `value` text, `note` text | null, timestamps.
+
+### `openstates_people_roles`
+- Current/past roles:
+- `id` integer (PK), `openstates_id` text, `role` text, `district` text | null, `start_date`, `end_date` date | null, timestamps.
+
+### `openstates_people_social_media`
+- Social handles per platform:
+- `id` integer (PK), `openstates_id` text, `platform` text, `handle` text, `url` text | null, timestamps.
+
+### `openstates_people_identifiers`, `openstates_people_other_names`, `openstates_people_sources`
+- Identifier mapping, alternate names, provenance sources. All carry integer `id` PK, `openstates_id` text, payload columns, timestamps.
+
+### `civic_actions`
+- `id` uuid (PK), `title` text, `description` text, `action_type` text, `created_by` uuid, `status` text,
+  targeting fields, signature counts, dates, `offline_synced` boolean, timestamps.
+
+### `civic_action_metadata`
+- `id` uuid (PK), `civic_action_id` uuid (FK), `metadata_key` text, `metadata_value` jsonb, timestamps.
+
+### `civic_elections`
+- Election snapshots:
+- `id` uuid (PK), `state_code` text, `election_date` date, `election_type` text | null, `metadata` jsonb | null, timestamps.
+
+### `poll_participation_analytics`
+- `id` uuid (PK), `poll_id` uuid, `user_id` uuid, `trust_tier` integer, optional demographics columns,
+  `participated_at` timestamptz | null, timestamps, additional verification flags.
+
+### `site_messages`
+- `id` uuid (PK), `message_type` text, `title`, `content` text, `severity` text,
+  `is_active` boolean, `start_time`, `end_time` timestamptz, `target_audience` text, `created_by` uuid, timestamps.
+
+### `feedback`
+- `id` uuid (PK), `feedback_type` text, `category` text | null, `description`/`title` text,
+  `impact_score` numeric | null, `priority`/`status` text | null, `assigned_to` uuid | null,
+  `ai_analysis` jsonb | null, `attachments` text[] | null, timestamps.
+
+### `performance_metrics`, `query_performance_log`, `cache_performance_log`
+- Performance and cache telemetry tables with PK `id` (uuid/serial), metric fields (names/values), metadata jsonb,
+  timestamps; see `/web/types/supabase.ts` for full layouts.
+
+### `user_hashtags`
+- `id` uuid (PK)
+- `user_id` uuid
+- `hashtag_id` uuid (FK hashtags.id)
+- `is_primary` boolean | null
+- `preferences` jsonb | null
+- `usage_count` integer | null
+- `followed_at`, `last_used_at` timestamptz | null
+- `created_at` timestamptz | null
+
+### `representative_follows`
+- `user_id` uuid
+- `representative_id` integer (FK)
+- `notify_on_votes`, `notify_on_events`, `notify_on_public_statements`, `notify_on_committee_activity` boolean
+- `tags` text[] | null
+- `notes` text | null
+- `created_at`, `updated_at` timestamptz
+
+### `representative_overrides`
+- `id` uuid (PK)
+- `representative_id` integer (FK)
+- `user_id` uuid
+- `short_bio`, `press_contact` text | null
+- `profile_photo_url`, `campaign_website` text | null
+- `socials` jsonb | null
+- `created_at`, `updated_at` timestamptz
+
+### `representative_overrides_audit`
+- `id` uuid (PK)
+- `representative_id` integer (FK)
+- `user_id` uuid
+- `field` text
+- `old_value`, `new_value` jsonb | null
+- `ip`, `user_agent` text | null
+- `created_at` timestamptz
+
+### `official_email_fast_track`
+- `id` uuid (PK)
+- `representative_id` integer (FK)
+- `email` text | null
+- `domain` text | null
+- `verified` boolean
+- `last_attempt_at` timestamptz | null
+
+### `user_roles`
+- `id` uuid (PK)
+- `user_id` uuid
+- `role_id` uuid (FK roles.id)
+- `assigned_by` uuid | null
+- `created_at` timestamptz | null
+
+### `user_voting_history` (view)
+- Read-only projection of vote history for users:
+- `id` uuid | null, `user_id` uuid | null, `poll_id` uuid | null, `option_id` uuid | null,
+  `option_text` text | null, `poll_question` text | null, `trust_tier` integer | null,
+  `is_public` boolean | null, `is_shareable` boolean | null, `linked_at` timestamptz | null,
+  `created_by` uuid | null, `created_at` timestamptz | null
+
+### `vote_trust_tiers`
+- `id` uuid (PK)
+- `vote_id` uuid | null (FK votes.id)
+- `trust_tier` integer
+- `confidence_score` numeric | null
+- `sentiment_score` numeric | null
+- `created_at` timestamptz | null
+
+### `message_delivery_logs`
+- `id` uuid (PK)
+- `message_id` uuid (FK contact_messages.id)
+- `delivery_status` text
+- `delivery_timestamp` timestamptz
+- `delivery_metadata` jsonb
+- `created_at` timestamptz
+
+### `poll_demographic_insights`
+- `poll_id` uuid (PK)
+- Aggregates stored as jsonb:
+- `age_group_breakdown`, `education_breakdown`, `income_breakdown`, `geographic_breakdown`,
+  `political_breakdown`, `trust_tier_breakdown`, `demographic_by_trust_tier`,
+  `trust_tier_by_demographic`, `data_quality_distribution`, `verification_method_distribution`
+- `total_responses` integer, `average_confidence_level` numeric
+- `created_at`, `updated_at` timestamptz
+
+### `poll_rankings`
+- `id` uuid (PK)
+- `poll_id` uuid (FK polls.id)
+- `user_id` uuid | null (FK user_profiles.id)
+- `rankings` integer[]
+- `created_at`, `updated_at` timestamptz
+
+### `candidate_profiles`
+- `id` uuid (PK)
+- `user_id` uuid
+- `display_name` text
+- `slug` text
+- `bio` text | null
+- `website` text | null
+- `social` jsonb | null
+- `is_public` boolean
+- `filing_status` text
+- `representative_id` integer | null (FK)
+- `jurisdiction`, `office`, `party` text | null
+- `created_at`, `updated_at` timestamptz
+
+### `candidate_profile_audit`
+- `id` uuid (PK)
+- `candidate_id` uuid (FK candidate_profiles.id)
+- `user_id` uuid
+- `field` text
+- `old_value`, `new_value` jsonb | null
+- `ip`, `user_agent` text | null
+- `created_at` timestamptz
+
+### `candidate_verifications`
+- `id` uuid (PK)
+- `candidate_id` uuid (FK)
+- `method` text
+- `status` text
+- `evidence` jsonb | null
+- `updated_at` timestamptz
+### `idempotency_keys`
+- `id` uuid (PK)
+- `key` text
+- `status` text
+- `data` jsonb | null
+- `error_message` text | null
+- `expires_at`, `created_at`, `started_at`, `completed_at`, `updated_at` timestamptz
+
+### `idempotency_monitor` (view)
+- Aggregated view of idempotency durations:
+- `status` text | null, `count` integer | null, `stuck_count` integer | null,
+  `avg_duration_seconds`, `max_duration_seconds` numeric | null
+
+### `audit_logs`
+- `id` uuid (PK)
+- `event_name` text
+- `event_type` enum
+- `severity` enum | null
+- `resource`, `action`, `status` text | null
+- `user_id` uuid | null, `session_id` uuid | null
+- `ip_address` inet, `user_agent` text | null
+- `request_method`, `request_path` text | null
+- `metadata` jsonb | null
+- `error_message`, `error_stack` text | null
+- `granted` boolean | null
+- `expires_at` timestamptz | null
+- `created_at` timestamptz
+- `updated_at` timestamptz | null
+- `last_verified` timestamptz | null
+- `data_quality_score` integer | null
+- `verification_status` text | null
+- `bioguide_id`, `fec_id`, `google_civic_id`, `legiscan_id`, `congress_gov_id`, `govinfo_id` text | null
+- `wikipedia_url`, `ballotpedia_url`, `facebook_url`, `linkedin_url`, `primary_website`, `primary_photo_url` text | null
+- `twitter_handle`, `instagram_handle` text | null
+- `youtube_channel` text | null
+- `term_start_date`, `term_end_date`, `next_election_date` date | null
+- `data_sources` jsonb | null
+
+### `user_profiles`
+- `id` uuid (PK)
+- `user_id` uuid (auth.users)
+- `username` text
+- `email` text
+- `display_name` text | null
+- `avatar_url` text | null
+- `bio` text | null
+- `is_admin` boolean | null
+- `is_active` boolean | null
+- `demographics` jsonb | null
+- `privacy_settings` jsonb | null
+- `primary_concerns` text[] | null
+- `community_focus` text[] | null
+- `participation_style` text | null
+- `dashboard_layout` jsonb | null
+- `analytics_dashboard_mode` text | null
+- `trust_tier` text | null
+- `created_at` timestamptz | null
+- `updated_at` timestamptz | null
+
+### `votes`
+- `id` uuid (PK)
+- `poll_id` uuid (FK polls.id)
+- `option_id` uuid (FK poll_options.id)
+- `poll_option_id` uuid | null
+- `poll_question` text | null
+- `user_id` uuid | null
+- `voter_session` text | null
+- `trust_tier` integer | null
+- `vote_status` text | null
+- `ip_address` inet
+- `offline_synced` boolean | null
+- `offline_timestamp` bigint | null
+- `linked_at` timestamptz | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_committees`
+- `id` integer (PK)
+- `representative_id` integer (FK representatives_core.id)
+- `committee_name` text
+- `role` text | null
+- `start_date`, `end_date` date | null
+- `is_current` boolean | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_campaign_finance`
+- `id` integer (PK, 1:1 with representative)
+- `representative_id` integer (unique FK)
+- `cycle` integer | null
+- `total_raised`, `total_spent`, `cash_on_hand` numeric | null
+- `small_donor_percentage` numeric | null
+- `top_contributors` jsonb | null
+- `office_code`, `district` text | null
+- `last_filing_date` date | null
+- `source` text
+- `sources` text[] | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `contact_threads`
+- `id` uuid (PK)
+- `user_id` uuid
+- `representative_id` integer (FK representatives_core.id)
+- `subject` text
+- `status` text
+- `priority` text
+- `message_count` integer
+- `last_message_at` timestamptz | null
+- `created_at`, `updated_at` timestamptz
+
+### `system_health`
+- `id` uuid (PK)
+- `service_name` text
+- `health_status` text
+- `response_time` numeric | null
+- `error_rate` numeric | null
+- `uptime_percentage` numeric | null
+- `alerts`, `details`, `metadata` jsonb | null
+- `last_check`, `next_check` timestamptz | null
+
+### `trending_topics`
+- `id` uuid (PK)
+- `topic` text
+- `title` text | null
+- `description` text | null
+- `category` text | null
+- `score`, `trending_score`, `momentum`, `velocity`, `sentiment_score` numeric | null
+- `source_name` text | null
+- `metadata` jsonb | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `user_sessions`
+- `id` uuid (PK)
+- `session_id` text
+- `user_id` uuid | null
+- `device_info`, `location`, `metadata` jsonb | null
+- `user_agent` text | null
+- `ip_address` inet
+- `started_at`, `ended_at`, `last_activity` timestamptz | null
+- `is_active` boolean | null
+- `page_views`, `actions_count`, `total_session_duration` integer | null
+- `avg_page_load_time`, `bounce_rate` numeric | null
+- `conversion_events` jsonb | null
+
+### `roles`
+- `id` uuid (PK)
+- `name` text
+- `description` text | null
+- `level` integer | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `role_permissions`
+- `id` uuid (PK)
+- `role_id` uuid (FK roles.id)
+- `permission_id` uuid (FK permissions.id)
+- `created_at` timestamptz | null
+
+### `analytics_event_data`
+- `id` serial (PK)
+- `event_id` uuid (FK analytics_events.id)
+- `data_key` text
+- `data_value` text
+- `data_type` text | null
+- `created_at` timestamptz | null
+
+### `polls`
+- `id` uuid (PK)
+- `title` text
+- `created_by` uuid
+- `status` text | null
+- `privacy_level` text | null
+- `voting_method` text | null
+- `question` text | null
+- `poll_question` text | null
+- `options` jsonb | null
+- `poll_settings` jsonb | null
+- `settings` jsonb | null
+- `category` text | null
+- `primary_hashtag` text | null
+- `hashtags` text[] | null
+- `tags` text[] | null
+- `is_public`, `is_shareable`, `is_featured`, `is_trending`, `is_verified`, `is_locked`, `is_mock` boolean | null
+- `start_date`, `end_date`, `end_time` timestamptz | null
+- `baseline_at`, `locked_at`, `unlocked_at`, `reopened_at`, `closed_at` timestamptz | null
+- `auto_lock_at` timestamptz | null
+- `lock_type` text | null
+- `lock_reason` text | null
+- `lock_duration` integer | null
+- `lock_metadata` jsonb | null
+- `lock_notifications_sent` boolean | null
+- `modification_reason` text | null
+- `last_modified_by` uuid | null
+- `offline_created` boolean | null
+- `participation`, `participation_rate`, `total_votes`, `total_views`, `trending_score`, `engagement_score` numeric | null
+- `sponsors` text[] | null
+- `verification_notes`, `moderation_notes` text | null
+- `moderation_status` text | null
+- `moderation_reviewed_at` timestamptz | null
+- `moderation_reviewed_by` uuid | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `poll_options`
+- `id` uuid (PK)
+- `poll_id` uuid (FK polls.id)
+- `text` text
+- `option_text` text | null
+- `order_index` integer | null
+- `vote_count` integer | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `analytics_events`
+- `id` uuid (PK)
+- `event_type` text
+- `event_data` jsonb | null
+- `user_id` uuid | null
+- `session_id` uuid | null
+- `ip_address` inet
+- `referrer` text | null
+- `user_agent` text | null
+- `created_at` timestamptz | null
+
+### `hashtags`
+- `id` uuid (PK)
+- `name` text (unique)
+- `description` text | null
+- `category` text | null
+- `metadata` jsonb | null
+- `follower_count` integer | null
+- `usage_count` integer | null
+- `trending_score` numeric | null
+- `is_featured`, `is_trending`, `is_verified` boolean | null
+- `created_by` uuid | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `hashtag_engagement`
+- `id` uuid (PK)
+- `hashtag_id` uuid (FK hashtags.id)
+- `user_id` uuid
+- `engagement_type` text
+- `metadata` jsonb | null
+- `timestamp` timestamptz | null
+- `created_at` timestamptz | null
+
+### `feeds`
+- `id` uuid (PK)
+- `user_id` uuid
+- `feed_name` text
+- `feed_type` text
+- `content_filters` jsonb | null
+- `hashtag_filters` jsonb | null
+- `is_active` boolean | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `feed_items`
+- `id` uuid (PK)
+- `feed_id` uuid (FK feeds.id)
+- `item_type` text
+- `item_data` jsonb | null
+- `poll_id` uuid | null
+- `is_featured` boolean | null
+- `position` integer | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `contact_messages`
+- `id` uuid (PK)
+- `user_id` uuid
+- `representative_id` integer (FK representatives_core.id)
+- `thread_id` uuid | null
+- `subject`, `message` text
+- `priority` text | null
+- `status` text | null
+- `offline_synced` boolean | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_photos`
+- `id` integer (PK)
+- `representative_id` integer (FK representatives_core.id)
+- `url` text
+- `source` text
+- `alt_text`, `attribution` text | null
+- `width`, `height` integer | null
+- `is_primary` boolean | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_contacts`
+- `id` integer (PK)
+- `representative_id` integer (FK representatives_core.id)
+- `contact_type` text
+- `value` text
+- `is_primary`, `is_verified` boolean | null
+- `source` text | null
+- `created_at`, `updated_at` timestamptz | null
+
+### `representative_social_media`
+- `id` integer (PK)
+- `representative_id` integer (FK representatives_core.id)
+- `platform` text
+- `handle` text
+- `url` text | null
+- `followers_count` bigint | null
+- `is_primary`, `is_verified`, `verified` boolean | null
+- `created_at`, `updated_at` timestamptz | null
+### `platform_analytics`
+- `id` uuid (PK)
+- `metric_name` text
+- `metric_type` text
+- `metric_value` numeric
+- `dimensions` jsonb | null
+- `metadata` jsonb | null
+- `category`, `subcategory`, `source` text | null
+- `period_start`, `period_end` timestamptz | null
+- `timestamp` timestamptz | null
+
+### `push_subscriptions`
+- `id` uuid (PK)
+- `user_id` uuid
+- `endpoint` text (unique)
+- `p256dh_key` text | null
+- `auth_key` text | null
+- `subscription_data` jsonb
+- `preferences` jsonb | null
+- `is_active` boolean | null
+- `created_at`, `updated_at`, `deactivated_at` timestamptz | null
+
+### `notification_log`
+- `id` uuid (PK)
+- `user_id` uuid
+- `subscription_id` uuid | null
+- `title`, `body` text
+- `payload` jsonb
+- `status` text
+- `error_message` text | null
+- `sent_at` timestamptz | null
+- `created_at` timestamptz | null
 

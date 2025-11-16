@@ -18,8 +18,15 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import {
+  authError,
+  errorResponse,
+  notFoundError,
+  successResponse,
+  validationError,
+  withErrorHandling,
+} from '@/lib/api';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -180,10 +187,10 @@ const AI_PROVIDERS: Record<AIProvider, {
  * GET /api/analytics/unified/poll-123?methods=sentiment,bot-detection&ai-provider=colab
  * GET /api/analytics/unified/poll-123?methods=comprehensive&trust-tiers=1,2,3
  */
-export async function GET(
+export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const startTime = Date.now();
   
   try {
@@ -204,12 +211,9 @@ export async function GET(
     );
     
     if (validMethods.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No valid analytics methods specified',
-        available_methods: Object.keys(ANALYTICS_METHODS),
-        timestamp: new Date().toISOString()
-      }, { status: 400 });
+    return validationError({
+      methods: `No valid analytics methods specified. Available: ${Object.keys(ANALYTICS_METHODS).join(', ')}`
+    });
     }
     
     // Validate AI provider
@@ -241,21 +245,13 @@ export async function GET(
       .single();
     
     if (pollError || !poll) {
-      return NextResponse.json({
-        success: false,
-        error: 'Poll not found or access denied',
-        timestamp: new Date().toISOString()
-      }, { status: 404 });
+      return notFoundError('Poll not found or access denied');
     }
     
     // Check authentication for non-public analytics
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required for analytics',
-        timestamp: new Date().toISOString()
-      }, { status: 401 });
+    const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
+    if (authFetchError || !user) {
+      return authError('Authentication required for analytics');
     }
     
     // Check admin access for sophisticated analytics
@@ -379,23 +375,20 @@ export async function GET(
       aiProvider
     });
     
-    return NextResponse.json(response);
+    return successResponse(response);
     
   } catch (error) {
     logger.error('Unified analytics API error:', error instanceof Error ? error : new Error(String(error)));
     
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error',
-      timestamp: new Date().toISOString(),
+    return errorResponse('Internal server error', 500, {
       metadata: {
         platform: 'choices',
         repository: 'https://github.com/choices-project/choices',
         live_site: 'https://choices-platform.vercel.app'
       }
-    }, { status: 500 });
+    });
   }
-}
+});
 
 /**
  * Execute specific analytics method

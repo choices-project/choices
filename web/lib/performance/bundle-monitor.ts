@@ -1,5 +1,4 @@
 import { stripUndefinedDeep } from '@/lib/util/clean';
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 /**
  * Bundle Monitor
@@ -39,22 +38,23 @@ class BundleMonitor {
   private observers: ((metrics: BundleMetrics[]) => void)[] = [];
 
   constructor(thresholds?: Partial<BundleThresholds>) {
-    this.thresholds = withOptional({
+    this.thresholds = {
       maxBundleSize: 512000, // 500KB
       maxChunkSize: 244000,  // 250KB
       warningBundleSize: 400000, // 400KB
       warningChunkSize: 200000,  // 200KB
-    }, thresholds ?? {});
+      ...(thresholds ?? {}),
+    };
   }
 
   /**
    * Add bundle metrics
    */
   addMetrics(metrics: Omit<BundleMetrics, 'timestamp'>): void {
-    const bundleMetrics: BundleMetrics = withOptional({
-      ...stripUndefinedDeep(metrics),
+    const bundleMetrics: BundleMetrics = {
+      ...(stripUndefinedDeep(metrics) as Omit<BundleMetrics, 'timestamp'>),
       timestamp: Date.now(),
-    }) as BundleMetrics;
+    };
 
     this.metrics.push(bundleMetrics);
     this.checkThresholds(bundleMetrics);

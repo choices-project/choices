@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { withOptional } from '@/lib/util/objects'
+import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils'
 import { devLog } from '@/lib/utils/logger'
 
 // Types
@@ -84,6 +84,9 @@ export function useDeviceDetection() {
   }, [])
 
   const detectBrowser = useCallback((userAgent: string): string => {
+    // Prefer centralized browser utils; fallback to local patterns if needed
+    const info = detectBrowserInfo()
+    if (info.name !== 'unknown') return info.name
     for (const [browser, pattern] of Object.entries(BROWSER_PATTERNS)) {
       if (pattern.test(userAgent)) {
         return browser
@@ -230,7 +233,16 @@ export function useDeviceDetection() {
   }, [detectDeviceType, detectOS, detectBrowser, checkCapabilities, getOptimizationSettings])
 
   const updateOptimizationSettings = useCallback((newSettings: Partial<OptimizationSettings>) => {
-    setOptimizationSettings(prev => prev ? withOptional(prev, newSettings) : null)
+    setOptimizationSettings(prev => {
+      if (!prev) return null;
+      const next: OptimizationSettings = { ...prev };
+      for (const [k, v] of Object.entries(newSettings) as [keyof OptimizationSettings, OptimizationSettings[keyof OptimizationSettings]][]) {
+        if (v !== undefined && v !== null) {
+          (next as Record<string, unknown>)[k as string] = v;
+        }
+      }
+      return next;
+    })
   }, [])
 
   const checkNetworkStatus = useCallback(async (): Promise<{ online: boolean; speed: 'slow' | 'medium' | 'fast' }> => {

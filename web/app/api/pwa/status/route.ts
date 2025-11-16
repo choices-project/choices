@@ -6,7 +6,6 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
@@ -32,8 +31,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       userStatus = await getUserPWAStatus(userId);
     }
 
-    const response = {
-      success: true,
+    const payload = {
       features: {
         pwa: true,
         offlineVoting: isFeatureEnabled('PWA'),
@@ -46,7 +44,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       timestamp: new Date().toISOString()
     };
 
-    const responseObj = NextResponse.json(response);
+    const responseObj = successResponse(payload);
     
     // Add CORS headers
     responseObj.headers.set('Access-Control-Allow-Origin', '*');

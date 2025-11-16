@@ -25,14 +25,13 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
-import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
-import { withOptional } from '@/lib/util/objects';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import { useContactMessages, useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 
 type ContactModalProps = {
@@ -54,7 +53,7 @@ export default function ContactModal({
   isOpen,
   onClose,
   representative,
-  userId
+  userId: _userId
 }: ContactModalProps) {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
@@ -94,7 +93,7 @@ export default function ContactModal({
   } = useContactThreads();
 
   const {
-    divisionIds: representativeDivisionIds,
+    divisionIds: _representativeDivisionIds,
     elections: representativeElections,
     loading: electionLoading,
     error: electionError,
@@ -153,7 +152,7 @@ export default function ContactModal({
       });
       setLocalTemplateValues(initialValues);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, localTemplateValues]);
 
   // Apply filled template when it's ready
   useEffect(() => {
@@ -450,7 +449,7 @@ export default function ContactModal({
                         onChange={(e) => {
                           const value = e.target.value;
                           updateTemplateValue(placeholder.key, value);
-                          setLocalTemplateValues(prev => withOptional(prev, { [placeholder.key]: value }));
+                          setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"

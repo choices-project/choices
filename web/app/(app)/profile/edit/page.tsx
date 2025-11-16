@@ -9,12 +9,30 @@ import { Button } from '@/components/ui/button';
 import { ProfileEdit, useProfileLoadingStates } from '@/features/profile';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 
 export default function EditProfilePage() {
   const router = useRouter();
   const user = useUser();
   const { profile, isLoading, error, refetch } = useProfile();
   const { isUpdating } = useProfileLoadingStates();
+  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/profile/edit');
+    setSidebarActiveSection('profile');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Profile', href: '/profile' },
+      { label: 'Edit Profile', href: '/profile/edit' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!isLoading && !user) {

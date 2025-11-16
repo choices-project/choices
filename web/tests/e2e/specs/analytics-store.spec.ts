@@ -6,10 +6,12 @@ import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __analyticsStoreHarness?: AnalyticsStoreHarness;
     __playwrightAnalytics?: PlaywrightAnalyticsBridge;
   }
+   
 }
 
 const gotoHarness = async (page: Page) => {

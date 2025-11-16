@@ -14,7 +14,6 @@
  * @since 2024-12-27
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 // Analytics event types
@@ -192,7 +191,7 @@ export class AuthAnalytics {
       metadata?: Record<string, any>
     } = {}
   ): Promise<void> {
-    const event: AuthEvent = withOptional({
+    const event: AuthEvent = {
       id: this.generateEventId(),
       eventType,
       success,
@@ -203,16 +202,15 @@ export class AuthAnalytics {
         deviceType: 'unknown',
         browser: 'unknown',
         platform: 'unknown'
-      }
-    }, {
-      userId: context.userId,
-      authMethod,
-      duration: options.duration,
-      errorCode: options.errorCode,
-      errorMessage: options.errorMessage,
-      riskScore: options.riskScore,
-      metadata: options.metadata
-    })
+      },
+      ...(context.userId ? { userId: context.userId } : {}),
+      ...(authMethod ? { authMethod } : {}),
+      ...(options.duration !== undefined ? { duration: options.duration } : {}),
+      ...(options.errorCode ? { errorCode: options.errorCode } : {}),
+      ...(options.errorMessage ? { errorMessage: options.errorMessage } : {}),
+      ...(options.riskScore !== undefined ? { riskScore: options.riskScore } : {}),
+      ...(options.metadata ? { metadata: options.metadata } : {}),
+    }
 
     // Add to events
     this.events.push(event)
@@ -239,11 +237,11 @@ export class AuthAnalytics {
 
   // Convenience methods for common events
   async trackRegistrationAttempt(context: AuthContext, metadata?: Record<string, any>): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.REGISTRATION_ATTEMPT, AuthMethod.PASSWORD, false, context, withOptional({}, { metadata }))
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_ATTEMPT, AuthMethod.PASSWORD, false, context, { ...(metadata ? { metadata } : {}) })
   }
 
   async trackRegistrationSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.REGISTRATION_SUCCESS, AuthMethod.PASSWORD, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_SUCCESS, AuthMethod.PASSWORD, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackRegistrationFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -251,11 +249,11 @@ export class AuthAnalytics {
   }
 
   async trackLoginAttempt(context: AuthContext, authMethod: AuthMethod, metadata?: Record<string, any>): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.LOGIN_ATTEMPT, authMethod, false, context, withOptional({}, { metadata }))
+    await this.trackAuthEvent(AuthEventType.LOGIN_ATTEMPT, authMethod, false, context, { ...(metadata ? { metadata } : {}) })
   }
 
   async trackLoginSuccess(context: AuthContext, authMethod: AuthMethod, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.LOGIN_SUCCESS, authMethod, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.LOGIN_SUCCESS, authMethod, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackLoginFailure(context: AuthContext, authMethod: AuthMethod, errorCode: string, errorMessage: string): Promise<void> {
@@ -267,7 +265,7 @@ export class AuthAnalytics {
   }
 
   async trackBiometricSetupSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_SUCCESS, AuthMethod.BIOMETRIC, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_SUCCESS, AuthMethod.BIOMETRIC, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackBiometricSetupFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -279,7 +277,7 @@ export class AuthAnalytics {
   }
 
   async trackBiometricAuthSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_SUCCESS, AuthMethod.BIOMETRIC, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_SUCCESS, AuthMethod.BIOMETRIC, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackBiometricAuthFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -291,7 +289,7 @@ export class AuthAnalytics {
   }
 
   async trackDeviceFlowSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_SUCCESS, AuthMethod.DEVICE_FLOW, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_SUCCESS, AuthMethod.DEVICE_FLOW, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackDeviceFlowFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -303,7 +301,7 @@ export class AuthAnalytics {
   }
 
   async trackPasswordResetSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_SUCCESS, AuthMethod.PASSWORD, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_SUCCESS, AuthMethod.PASSWORD, true, context, { ...(duration !== undefined ? { duration } : {}) })
   }
 
   async trackPasswordResetFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {

@@ -4,19 +4,24 @@
  * Errors for when a request conflicts with the current state of the resource.
  */
 
-import { withOptional } from '@/lib/util/objects';
-
 import { ApplicationError, type ErrorDetails } from './base';
 
 const EMPTY_DETAILS: ErrorDetails = {};
-
-function sanitizeDetails(details?: ErrorDetails): ErrorDetails {
-  return details ? withOptional(details) : EMPTY_DETAILS;
+function mergeDetailsDefined(base: ErrorDetails = {}, extras?: Partial<ErrorDetails>): ErrorDetails {
+  const result: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  if (extras) {
+    for (const [k, v] of Object.entries(extras)) {
+      if (v !== undefined) {
+        result[k] = v;
+      }
+    }
+  }
+  return result as ErrorDetails;
 }
-
-function mergeDetails(details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails {
-  return withOptional(sanitizeDetails(details), extras);
-}
+const sanitizeDetails = (details?: ErrorDetails): ErrorDetails =>
+  details ? mergeDetailsDefined(details) : EMPTY_DETAILS;
+const mergeDetails = (details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails =>
+  mergeDetailsDefined(sanitizeDetails(details), extras);
 
 export class ConflictError extends ApplicationError {
   constructor(message: string = 'Resource conflict', details?: ErrorDetails) {

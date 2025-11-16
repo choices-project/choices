@@ -28,7 +28,7 @@ export function assertPepperConfig() {
   }
   const cur = process.env.PRIVACY_PEPPER_CURRENT;
   if (!isPrefixed(cur)) throw new Error('PRIVACY_PEPPER_CURRENT must be base64:/hex: prefixed');
-  if (byteLenFromPrefixed(cur!) < 32) throw new Error('PRIVACY_PEPPER_CURRENT must be ≥32 bytes');
+  if (byteLenFromPrefixed(cur ?? '') < 32) throw new Error('PRIVACY_PEPPER_CURRENT must be ≥32 bytes');
 
   const prev = process.env.PRIVACY_PEPPER_PREVIOUS;
   if (prev) {

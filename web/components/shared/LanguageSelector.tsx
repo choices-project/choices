@@ -1,9 +1,9 @@
 /**
  * @fileoverview Language Selector Component
- * 
+ *
  * Dropdown component for selecting application language.
  * Integrates with i18n system and app store.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -13,12 +13,13 @@
 'use client';
 
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
+import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n/config';
-import { useAppStore } from '@/lib/stores/appStore';
+import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
 
 type LanguageSelectorProps = {
@@ -32,7 +33,7 @@ const SUPPORTED_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.filter((option) =>
   SUPPORTED_LOCALES.includes(option.code as SupportedLocale),
 );
 
-export default function LanguageSelector({ 
+export default function LanguageSelector({
   className = '',
   variant = 'dropdown',
   showLabel = true,
@@ -40,27 +41,70 @@ export default function LanguageSelector({
 }: LanguageSelectorProps) {
   const { t, currentLanguage, changeLanguage } = useI18n();
   const isLoading = false;
+  const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const [liveMessage, setLiveMessage] = useState('');
+
+  const announce = useCallback(
+    (message: string, politeness: 'polite' | 'assertive' = 'polite') => {
+      setLiveMessage(message);
+      ScreenReaderSupport.announce(message, politeness);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
   const getDisplayName = (code: string) => {
     const opt = SUPPORTED_LANGUAGE_OPTIONS.find(o => o.code === code);
     return showNativeNames ? (opt?.native ?? code) : (opt?.name ?? code);
   };
-  const updateSettings = useAppStore((state) => state.updateSettings);
-  const [isOpen, setIsOpen] = useState(false);
+  const { updateSettings } = useAppActions();
 
   const handleLanguageChange = async (language: string) => {
     try {
       updateSettings({ language });
       await changeLanguage(language);
+      const languageLabel = getDisplayName(language);
+      announce(t('navigation.languageSelector.live.changed', { language: languageLabel }));
     } catch (error) {
       logger.error('Failed to change language:', error);
+      announce(t('navigation.languageSelector.live.error'), 'assertive');
     } finally {
       setIsOpen(false);
     }
   };
 
+  const LiveRegion = () => (
+    <div
+      aria-live="polite"
+      role="status"
+      className="sr-only"
+      data-testid="language-selector-live-message"
+    >
+      {liveMessage}
+    </div>
+  );
+
   if (variant === 'buttons') {
     return (
       <div className={`space-y-2 ${className}`} data-testid="language-selector">
+        <LiveRegion />
         {showLabel && (
           <label className="block text-sm font-medium text-gray-700">
             {t('settings.language')}
@@ -72,6 +116,7 @@ export default function LanguageSelector({
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
               disabled={isLoading}
+              data-language-option={lang.code}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 currentLanguage === lang.code
                   ? 'bg-blue-600 text-white'
@@ -89,10 +134,15 @@ export default function LanguageSelector({
   if (variant === 'compact') {
     return (
       <div className={`relative ${className}`} data-testid="language-selector">
+        <LiveRegion />
         <button
+          ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
           disabled={isLoading}
           className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-controls={`${menuId}-menu`}
         >
           <GlobeAltIcon className="h-4 w-4" />
           <span>{getDisplayName(currentLanguage)}</span>
@@ -100,7 +150,12 @@ export default function LanguageSelector({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+          <div
+            id={`${menuId}-menu`}
+            role="listbox"
+            aria-label={t('settings.language')}
+            className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+          >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
@@ -111,6 +166,9 @@ export default function LanguageSelector({
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
+                  role="option"
+                  aria-selected={currentLanguage === lang.code}
+                  data-language-option={lang.code}
                 >
                   <div className="flex items-center justify-between">
                     <span>{showNativeNames ? lang.native : lang.name}</span>
@@ -130,6 +188,7 @@ export default function LanguageSelector({
   // Default dropdown variant
   return (
     <div className={`space-y-2 ${className}`} data-testid="language-selector">
+      <LiveRegion />
       {showLabel && (
         <label className="block text-sm font-medium text-gray-700">
           {t('settings.language')}
@@ -137,9 +196,13 @@ export default function LanguageSelector({
       )}
       <div className="relative">
         <button
+            ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
           disabled={isLoading}
           className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            aria-controls={`${menuId}-menu`}
         >
           <div className="flex items-center space-x-2">
             <GlobeAltIcon className="h-4 w-4 text-gray-400" />
@@ -149,7 +212,12 @@ export default function LanguageSelector({
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+            <div
+              id={`${menuId}-menu`}
+              role="listbox"
+              aria-label={t('settings.language')}
+              className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+            >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
@@ -160,6 +228,9 @@ export default function LanguageSelector({
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
+                    role="option"
+                    aria-selected={currentLanguage === lang.code}
+                  data-language-option={lang.code}
                 >
                   <div className="flex items-center justify-between">
                     <div>

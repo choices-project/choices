@@ -18,7 +18,8 @@ import {
   withErrorHandling,
   successResponse,
   authError,
-  errorResponse
+  errorResponse,
+  validationError,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -101,6 +102,41 @@ const mapPollRecord = (
   return basePoll;
 };
 
+type NumberParamParseOptions = {
+  paramName: string;
+  defaultValue: number;
+  min: number;
+  max?: number;
+};
+
+const parseNumberParam = (
+  rawValue: string | null,
+  { paramName, defaultValue, min, max }: NumberParamParseOptions,
+): { value: number } | { error: string } => {
+  if (rawValue === null) {
+    return { value: defaultValue };
+  }
+
+  const parsed = Number(rawValue);
+
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+    return { error: `${paramName} must be an integer.` };
+  }
+
+  if (parsed < min) {
+    return { error: `${paramName} must be at least ${min}.` };
+  }
+
+  if (typeof max === 'number' && parsed > max) {
+    return { error: `${paramName} must be at most ${max}.` };
+  }
+
+  return { value: parsed };
+};
+
+const ALLOWED_STATUSES = new Set(['active', 'closed', 'draft', 'trending', 'all']);
+const ALLOWED_SORTS = new Set(['popular', 'trending', 'engagement', 'newest']);
+
 /**
  * Get polls with filtering and sorting
  *
@@ -125,15 +161,44 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const category = searchParams.get('category');
+    const status = searchParams.get('status') ?? undefined;
+    const category = searchParams.get('category') ?? undefined;
     const hashtags = searchParams.get('hashtags');
-    const search = searchParams.get('search');
-    const sort = searchParams.get('sort') ?? 'newest';
+    const search = searchParams.get('search') ?? undefined;
+    const sortRaw = searchParams.get('sort') ?? 'newest';
     const includeHashtagData = searchParams.get('include_hashtag_data') === 'true';
     const includeAnalytics = searchParams.get('include_analytics') === 'true';
-    const limit = parseInt(searchParams.get('limit') ?? '20');
-    const offset = parseInt(searchParams.get('offset') ?? '0');
+
+    const limitResult = parseNumberParam(searchParams.get('limit'), {
+      paramName: 'limit',
+      defaultValue: 20,
+      min: 1,
+      max: 100,
+    });
+    if ('error' in limitResult) {
+      return validationError({ limit: limitResult.error });
+    }
+
+    const offsetResult = parseNumberParam(searchParams.get('offset'), {
+      paramName: 'offset',
+      defaultValue: 0,
+      min: 0,
+      max: 10_000,
+    });
+    if ('error' in offsetResult) {
+      return validationError({ offset: offsetResult.error });
+    }
+
+    const limit = limitResult.value;
+    const offset = offsetResult.value;
+
+    if (status && !ALLOWED_STATUSES.has(status)) {
+      return validationError({
+        status: `Unsupported status "${status}". Allowed values: ${Array.from(ALLOWED_STATUSES).join(', ')}`,
+      });
+    }
+
+    const sort = ALLOWED_SORTS.has(sortRaw) ? sortRaw : 'newest';
 
     // Build enhanced query with hashtag support
     let selectFields = `
@@ -159,8 +224,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     let query = supabase
-        .from('polls')
-      .select(selectFields)
+      .from('polls')
+      .select(selectFields, { count: 'exact' })
       .range(offset, offset + limit - 1);
 
     // Apply enhanced filters
@@ -201,7 +266,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         break;
     }
 
-    const { data: polls, error } = await query;
+    const { data: polls, error, count } = await query;
 
     if (error) {
       logger.error('Error fetching polls:', error);
@@ -332,6 +397,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           )
         : transformedPolls;
 
+    const effectiveTotal =
+      status === 'trending'
+        ? filteredPolls.length
+        : typeof count === 'number'
+          ? count
+          : offset + filteredPolls.length;
+
+    const pagination = {
+      limit,
+      offset,
+      total: effectiveTotal,
+      hasMore: offset + filteredPolls.length < effectiveTotal,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.max(1, Math.ceil(effectiveTotal / limit)),
+    };
+
     logger.info('Polls fetched successfully', {
       count: filteredPolls.length,
       filters: { status, category, hashtags, search, sort },
@@ -342,21 +423,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return successResponse(
       {
         polls: filteredPolls,
-        analytics:
-          includeAnalytics
-            ? {
+        ...(includeAnalytics
+          ? {
+              analytics: {
                 trendingHashtags: trendingHashtags.slice(0, 10),
                 totalHashtags: trendingHashtags.length,
-              }
-            : undefined,
+              },
+            }
+          : {}),
       },
       {
-        pagination: {
-          limit,
-          offset,
-          total: filteredPolls.length,
-          hasMore: filteredPolls.length === limit,
-        },
+        pagination,
       },
     );
 });
@@ -390,13 +467,22 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Check authentication
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) {
     logger.warn('User not authenticated');
     return authError('Authentication required');
   }
 
-    const body = await request.json();
+    let body: Record<string, any>;
+    try {
+      body = await request.json();
+    } catch {
+      return validationError({ body: 'Invalid JSON payload.' });
+    }
+
     const {
       title,
       description,
@@ -405,13 +491,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       category,
       tags,
       settings,
-      metadata
+      metadata,
     } = body;
 
     const resolveVotingMethod = () => {
-      const method = (metadata?.votingMethod ?? settings?.votingMethod ?? 'single')
-        .toString()
-        .toLowerCase();
+      const method = (metadata?.votingMethod ?? settings?.votingMethod ?? 'single').toString().toLowerCase();
       switch (method) {
         case 'single':
         case 'single_choice':
@@ -434,13 +518,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const normalizedVotingMethod = resolveVotingMethod();
 
     // Validate required fields
-    if (!title || !question || !options || !Array.isArray(options) || options.length < 2) {
-      return errorResponse(
-        'Title, question, and at least 2 options are required',
-        400,
-        { title: !title, question: !question, options: !options || options.length < 2 },
-        'VALIDATION_ERROR'
-      );
+    if (!title || !question) {
+      return validationError({
+        ...(title ? {} : { title: 'Title is required.' }),
+        ...(question ? {} : { question: 'Question is required.' }),
+      });
+    }
+
+    if (!options || !Array.isArray(options) || options.length < 2) {
+      return validationError({
+        options: 'Provide at least two poll options.',
+      });
     }
 
     // Create sophisticated poll with enhanced features
@@ -508,17 +596,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return errorResponse('Failed to create poll', 500, pollError.message);
     }
 
-    // Create poll options
-    const optionsData = options.map((option: any, index: number) => {
-      const text = typeof option === 'string' ? option : option?.text ?? '';
-      return {
-        poll_id: poll.id,
-        text,
-        option_text: text,
-        order_index: index,
-        vote_count: 0,
-      };
+    const normalizedOptions = options.map((option: any, index: number) => {
+      const value =
+        typeof option === 'string'
+          ? option.trim()
+          : typeof option?.text === 'string'
+            ? option.text.trim()
+            : '';
+      return { value, order: index };
     });
+
+    const invalidOption = normalizedOptions.find((option) => option.value.length === 0);
+    if (invalidOption) {
+      return validationError({
+        options: 'Each option must include display text.',
+      });
+    }
+
+    // Create poll options
+    const optionsData = normalizedOptions.map(({ value, order }) => ({
+      poll_id: poll.id,
+      text: value,
+      option_text: value,
+      order_index: order,
+      vote_count: 0,
+    }));
 
     const { error: optionsError } = await supabase
       .from('poll_options')

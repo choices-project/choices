@@ -1,0 +1,1010 @@
+[
+  {
+    "state_code": "AK",
+    "election_office_name": null,
+    "online_url": "https://voterregistration.alaska.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://myvoterportal.alaska.gov/",
+    "special_instructions": "Online registration available; see https://www.elections.alaska.gov/Core/voterregistration.php.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.elections.alaska.gov/",
+      "more_info": "https://www.elections.alaska.gov/Core/voterregistration.php",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "AL",
+    "election_office_name": null,
+    "online_url": "https://www.alabamainteractive.org/sos/voter_registration/voterRegistrationWelcome.action",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://myinfo.alabamavotes.gov/VoterView/RegistrantSearch.do",
+    "special_instructions": "Online registration available; see https://www.sos.alabama.gov/alabama-votes/voter/register-to-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.alabama.gov/alabama-votes",
+      "more_info": "https://www.sos.alabama.gov/alabama-votes/voter/register-to-vote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "AR",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.voterview.ar-nova.org/voterview",
+    "special_instructions": "Register by mail. Review detailed instructions at https://www.sos.arkansas.gov/elections/voter-information/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.arkansas.gov/elections/",
+      "more_info": "https://www.sos.arkansas.gov/elections/voter-information/",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "AS",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://aselectionoffice.gov/status.php",
+    "special_instructions": "Register in person. Confirm requirements at https://aselectionoffice.gov/node/3.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://aselectionoffice.gov/",
+      "more_info": "https://aselectionoffice.gov/node/3",
+      "registration_type": "in-person",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "AZ",
+    "election_office_name": null,
+    "online_url": "https://servicearizona.com/VoterRegistration/selectLanguage",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://my.arizona.vote/WhereToVote.aspx?s=individual",
+    "special_instructions": "Online registration available; see https://azsos.gov/elections/voters/registering-vote/registerupdate-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://azsos.gov/elections",
+      "more_info": "https://azsos.gov/elections/voters/registering-vote/registerupdate-vote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "CA",
+    "election_office_name": null,
+    "online_url": "https://registertovote.ca.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterstatus.sos.ca.gov/",
+    "special_instructions": "Online registration available; see https://www.sos.ca.gov/elections/voting-resources/voting-california/registering-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.ca.gov/elections",
+      "more_info": "https://www.sos.ca.gov/elections/voting-resources/voting-california/registering-vote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "CO",
+    "election_office_name": null,
+    "online_url": "https://www.sos.state.co.us/voter/pages/pub/olvr/verifyNewVoter.xhtml",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.sos.state.co.us/voter/pages/pub/olvr/findVoterReg.xhtml",
+    "special_instructions": "Online registration available; see https://www.coloradosos.gov/voter/pages/pub/home.xhtml.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.state.co.us/pubs/elections/",
+      "more_info": "https://www.coloradosos.gov/voter/pages/pub/home.xhtml",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "CT",
+    "election_office_name": null,
+    "online_url": "https://voterregistration.ct.gov/OLVR/welcome.do",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://portaldir.ct.gov/sots/LookUp.aspx",
+    "special_instructions": "Online registration available; see https://portal.ct.gov/SOTS/Election-Services/Voter-Information/Voter-Fact-Sheet.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://portal.ct.gov/sots",
+      "more_info": "https://portal.ct.gov/SOTS/Election-Services/Voter-Information/Voter-Fact-Sheet",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "DC",
+    "election_office_name": null,
+    "online_url": "https://vr.dcboe.org/213324797239968?agency_code=12",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://apps.dcboe.org/vrs",
+    "special_instructions": "Online registration available; see https://www.dcboe.org/voters/register-to-vote/register-update-voter-registration.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://dcboe.org/",
+      "more_info": "https://www.dcboe.org/voters/register-to-vote/register-update-voter-registration",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "DE",
+    "election_office_name": null,
+    "online_url": "https://ivote.de.gov/VoterView/registrant/newregistrant",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://ivote.de.gov/VoterView",
+    "special_instructions": "Online registration available; see https://elections.delaware.gov/voter/votereg.shtml.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.delaware.gov/index.shtml",
+      "more_info": "https://elections.delaware.gov/voter/votereg.shtml",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "FL",
+    "election_office_name": null,
+    "online_url": "https://registertovoteflorida.gov/eligibilityreactive",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://registration.elections.myflorida.com/CheckVoterStatus",
+    "special_instructions": "Online registration available; see https://registertovoteflorida.gov/home.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://dos.myflorida.com/elections/",
+      "more_info": "https://registertovoteflorida.gov/home",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "GA",
+    "election_office_name": null,
+    "online_url": "https://registertovote.sos.ga.gov/GAOLVR/welcome.do#no-back-button",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://mvp.sos.ga.gov/s/",
+    "special_instructions": "Online registration available; see https://sos.ga.gov/elections-division-georgia-secretary-states-office.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.ga.gov/index.php/elections",
+      "more_info": "https://sos.ga.gov/elections-division-georgia-secretary-states-office",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "GU",
+    "election_office_name": null,
+    "online_url": "https://gec.guam.gov/register/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://gec.guam.gov/validate/",
+    "special_instructions": "Online registration available; see https://gec.guam.gov/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://gec.guam.gov/",
+      "more_info": "https://gec.guam.gov/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "HI",
+    "election_office_name": null,
+    "online_url": "https://olvr.hawaii.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://olvr.hawaii.gov/",
+    "special_instructions": "Online registration available; see https://elections.hawaii.gov/voters/registration/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.hawaii.gov/",
+      "more_info": "https://elections.hawaii.gov/voters/registration/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "IA",
+    "election_office_name": null,
+    "online_url": "https://mymvd.iowadot.gov/Account/Login?ReturnUrl=%2fVoterRegistration",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://sos.iowa.gov/elections/voterreg/regtovote/search.aspx",
+    "special_instructions": "Online registration available; see https://sos.iowa.gov/elections/voterinformation/voterregistration.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.iowa.gov/",
+      "more_info": "https://sos.iowa.gov/elections/voterinformation/voterregistration.html",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "ID",
+    "election_office_name": null,
+    "online_url": "https://elections.sos.idaho.gov/ElectionLink/ElectionLink/ApplicationInstructions.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://elections.sos.idaho.gov/ElectionLink/ElectionLink/VoterSearch.aspx",
+    "special_instructions": "Online registration available; see https://idahovotes.gov/voting/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://idahovotes.gov/",
+      "more_info": "https://idahovotes.gov/voting/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "IL",
+    "election_office_name": null,
+    "online_url": "https://ova.elections.il.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://ova.elections.il.gov/RegistrationLookup.aspx",
+    "special_instructions": "Online registration available; see https://www.elections.il.gov/Default.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.elections.il.gov/",
+      "more_info": "https://www.elections.il.gov/Default.aspx",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "IN",
+    "election_office_name": null,
+    "online_url": "https://indianavoters.in.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://indianavoters.in.gov/",
+    "special_instructions": "Online registration available; see https://www.in.gov/sos/elections/2403.htm.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.in.gov/sos/elections/",
+      "more_info": "https://www.in.gov/sos/elections/2403.htm",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "KS",
+    "election_office_name": null,
+    "online_url": "https://www.kdor.ks.gov/Apps/VoterReg/Default.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://myvoteinfo.voteks.org/voterview/",
+    "special_instructions": "Online registration available; see https://sos.ks.gov/elections/voter-information.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.ks.gov/elections/elections.html",
+      "more_info": "https://sos.ks.gov/elections/voter-information.html",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "KY",
+    "election_office_name": null,
+    "online_url": "https://vrsws.sos.ky.gov/ovrweb/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vrsws.sos.ky.gov/VIC/",
+    "special_instructions": "Online registration available; see https://elect.ky.gov/Resources/Pages/Registration.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elect.ky.gov/Pages/default.aspx",
+      "more_info": "https://elect.ky.gov/Resources/Pages/Registration.aspx",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "LA",
+    "election_office_name": null,
+    "online_url": "https://voterportal.sos.la.gov/VoterRegistration",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterportal.sos.la.gov/",
+    "special_instructions": "Online registration available; see https://www.sos.la.gov/ElectionsAndVoting/RegisterToVote/Pages/default.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.la.gov/ElectionsAndVoting/Pages/default.aspx",
+      "more_info": "https://www.sos.la.gov/ElectionsAndVoting/RegisterToVote/Pages/default.aspx",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MA",
+    "election_office_name": null,
+    "online_url": "https://www.sec.state.ma.us/ovr/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.sec.state.ma.us/VoterRegistrationSearch/MyVoterRegStatus.aspx",
+    "special_instructions": "Online registration available; see https://www.sec.state.ma.us/divisions/elections/voter-resources/registering-to-vote.htm.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sec.state.ma.us/ele/eleidx.htm",
+      "more_info": "https://www.sec.state.ma.us/divisions/elections/voter-resources/registering-to-vote.htm",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MD",
+    "election_office_name": null,
+    "online_url": "https://voterservices.elections.maryland.gov/OnlineVoterRegistration/InstructionsStep1",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterservices.elections.maryland.gov/VoterSearch",
+    "special_instructions": "Online registration available; see https://www.elections.maryland.gov/voter_registration/application.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.maryland.gov/",
+      "more_info": "https://www.elections.maryland.gov/voter_registration/application.html",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "ME",
+    "election_office_name": null,
+    "online_url": "https://registertovote.sos.maine.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://maine.gov/sos/cec/elec/munic.html",
+    "special_instructions": "Online registration available; see https://maine.gov/sos/cec/elec/voter-info/voterguide.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.maine.gov/sos/cec/elec/",
+      "more_info": "https://maine.gov/sos/cec/elec/voter-info/voterguide.html",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MI",
+    "election_office_name": null,
+    "online_url": "https://mvic.sos.state.mi.us/registervoter",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://mvic.sos.state.mi.us/Voter/Index",
+    "special_instructions": "Online registration available; see https://mvic.sos.state.mi.us/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.michigan.gov/sos/elections",
+      "more_info": "https://mvic.sos.state.mi.us/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MN",
+    "election_office_name": null,
+    "online_url": "https://mnvotes.sos.state.mn.us/VoterRegistration/VoterRegistrationMain.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://mnvotes.sos.state.mn.us/VoterStatus.aspx",
+    "special_instructions": "Online registration available; see https://www.sos.state.mn.us/elections-voting/register-to-vote/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.state.mn.us/elections-voting/",
+      "more_info": "https://www.sos.state.mn.us/elections-voting/register-to-vote/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MO",
+    "election_office_name": null,
+    "online_url": "https://s1.sos.mo.gov/elections/voterregistration/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voteroutreach.sos.mo.gov/portal/",
+    "special_instructions": "Online registration available; see https://www.sos.mo.gov/elections/goVoteMissouri/register.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.mo.gov/elections",
+      "more_info": "https://www.sos.mo.gov/elections/goVoteMissouri/register",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MP",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.votecnmi.gov.mp/voter/are-you-registered-to-vote",
+    "special_instructions": "Register in person. Confirm requirements at https://www.votecnmi.gov.mp/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.votecnmi.gov.mp/",
+      "more_info": "https://www.votecnmi.gov.mp/",
+      "registration_type": "in-person",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MS",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.msegov.com/sos/voter_registration/amiregistered/Search",
+    "special_instructions": "Register by mail. Review detailed instructions at https://www.sos.ms.gov/elections-voting/voter-registration-information.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.ms.gov/elections-voting/voter-registration-information",
+      "more_info": "https://www.sos.ms.gov/elections-voting/voter-registration-information",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "MT",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://prodvoterportal.mt.gov/WhereToVote.aspx",
+    "special_instructions": "Register by mail. Review detailed instructions at https://votemt.gov/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://votemt.gov/",
+      "more_info": "https://votemt.gov/",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NC",
+    "election_office_name": null,
+    "online_url": "https://www.ncdot.gov/dmv/offices-services/online/Pages/voter-registration-application.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vt.ncsbe.gov/RegLkup/",
+    "special_instructions": "Online registration available; see https://www.ncsbe.gov/registering/how-register.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.ncsbe.gov/voting",
+      "more_info": "https://www.ncsbe.gov/registering/how-register",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "ND",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vip.sos.nd.gov/WhereToVote.aspx?tab=&ptlPKID=&ptlhPKID=",
+    "special_instructions": "North Dakota does not require voter registration. Visit https://vip.sos.nd.gov/PortalList.aspx for voting information.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://vip.sos.nd.gov/PortalList.aspx",
+      "more_info": "https://vip.sos.nd.gov/PortalList.aspx",
+      "registration_type": "not-needed",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NE",
+    "election_office_name": null,
+    "online_url": "https://www.nebraska.gov/apps-sos-voter-registration/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.votercheck.necvr.ne.gov/voterview",
+    "special_instructions": "Online registration available; see https://sos.nebraska.gov/elections/voter-forms.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.nebraska.gov/elections/2020-elections",
+      "more_info": "https://sos.nebraska.gov/elections/voter-forms",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NH",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://app.sos.nh.gov/voterinformation",
+    "special_instructions": "Register by mail. Review detailed instructions at https://www.sos.nh.gov/elections/voters/register-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.nh.gov/home",
+      "more_info": "https://www.sos.nh.gov/elections/voters/register-vote",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NJ",
+    "election_office_name": null,
+    "online_url": "https://voter.svrs.nj.gov/register",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voter.svrs.nj.gov/registration-check",
+    "special_instructions": "Online registration available; see https://nj.gov/state/elections/voter-registration.shtml.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.state.nj.us/state/elections/index.shtml",
+      "more_info": "https://nj.gov/state/elections/voter-registration.shtml",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NM",
+    "election_office_name": null,
+    "online_url": "https://portal.sos.state.nm.us/OVR/WebPages/InstructionsStep1.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterportal.servis.sos.state.nm.us/WhereToVote.aspx",
+    "special_instructions": "Online registration available; see https://www.sos.state.nm.us/voting-and-elections/voter-information/voter-registration-information/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.state.nm.us/voting-and-elections/",
+      "more_info": "https://www.sos.state.nm.us/voting-and-elections/voter-information/voter-registration-information/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NV",
+    "election_office_name": null,
+    "online_url": "https://www.nvsos.gov/SOSVoterServices/start.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.nvsos.gov/votersearch/",
+    "special_instructions": "Online registration available; see https://www.nvsos.gov/sos/elections/voters/registering-to-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.nvsos.gov/sos/elections",
+      "more_info": "https://www.nvsos.gov/sos/elections/voters/registering-to-vote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "NY",
+    "election_office_name": null,
+    "online_url": "https://dmv.ny.gov/more-info/electronic-voter-registration-application",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterlookup.elections.ny.gov/",
+    "special_instructions": "Online registration available; see https://www.elections.ny.gov/votingregister.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.elections.ny.gov/",
+      "more_info": "https://www.elections.ny.gov/votingregister.html",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "OH",
+    "election_office_name": null,
+    "online_url": "https://olvr.ohiosos.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voterlookup.ohiosos.gov/voterlookup.aspx",
+    "special_instructions": "Online registration available; see https://olvr.ohiosos.gov/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.state.oh.us/elections/",
+      "more_info": "https://olvr.ohiosos.gov/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "OK",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://okvoterportal.okelections.us/",
+    "special_instructions": "Register by mail. Review detailed instructions at https://oklahoma.gov/elections/voter-registration/register-to-vote.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.ok.gov/elections/",
+      "more_info": "https://oklahoma.gov/elections/voter-registration/register-to-vote.html",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "OR",
+    "election_office_name": null,
+    "online_url": "https://secure.sos.state.or.us/orestar/vr/register.do",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://secure.sos.state.or.us/orestar/vr/showVoterSearch.do?lang=eng&source=SOS",
+    "special_instructions": "Online registration available; see https://sos.oregon.gov/voting/Pages/registration.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.oregon.gov/voting-elections/Pages/default.aspx",
+      "more_info": "https://sos.oregon.gov/voting/Pages/registration.aspx",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "PA",
+    "election_office_name": null,
+    "online_url": "https://www.pavoterservices.pa.gov/Pages/VoterRegistrationApplication.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.pavoterservices.pa.gov/pages/voterregistrationstatus.aspx",
+    "special_instructions": "Online registration available; see https://www.pa.gov/guides/voting-and-elections/#RegisteringtoVote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.pa.gov/guides/voting-and-elections/",
+      "more_info": "https://www.pa.gov/guides/voting-and-elections/#RegisteringtoVote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "PR",
+    "election_office_name": null,
+    "online_url": "https://ere.ceepur.org/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://consulta.ceepur.org/",
+    "special_instructions": "Online registration available; see https://ww2.ceepur.org/es-pr/Paginas/cee-english.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://ww2.ceepur.org/Home/Index?aspxerrorpath=/es-pr/Paginas/default.aspx",
+      "more_info": "https://ww2.ceepur.org/es-pr/Paginas/cee-english.aspx",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "RI",
+    "election_office_name": null,
+    "online_url": "https://vote.sos.ri.gov/Home/RegistertoVote",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vote.sos.ri.gov/Home/UpdateVoterRecord?ActiveFlag=0",
+    "special_instructions": "Online registration available; see https://vote.sos.ri.gov/Voter/RegisterToVote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.ri.gov/",
+      "more_info": "https://vote.sos.ri.gov/Voter/RegisterToVote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "SC",
+    "election_office_name": null,
+    "online_url": "https://info.scvotes.sc.gov/eng/ovr/start.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://info.scvotes.sc.gov/eng/voterinquiry/VoterInformationRequest.aspx?PageMode=VoterInfo",
+    "special_instructions": "Online registration available; see https://scvotes.gov/voters/register-to-vote/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.scvotes.gov/",
+      "more_info": "https://scvotes.gov/voters/register-to-vote/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "SD",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vip.sdsos.gov/VIPLogin.aspx",
+    "special_instructions": "Register by mail. Review detailed instructions at https://sdsos.gov/elections-voting/voting/register-to-vote/default.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sdsos.gov/elections-voting/",
+      "more_info": "https://sdsos.gov/elections-voting/voting/register-to-vote/default.aspx",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "TN",
+    "election_office_name": null,
+    "online_url": "https://ovr.govote.tn.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://tnmap.tn.gov/voterlookup/",
+    "special_instructions": "Online registration available; see https://sos.tn.gov/products/elections/register-vote.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.tn.gov/elections",
+      "more_info": "https://sos.tn.gov/products/elections/register-vote",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "TX",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://teamrv-mvp.sos.texas.gov/MVP/mvp.do",
+    "special_instructions": "Register by mail. Review detailed instructions at https://www.votetexas.gov/register-to-vote/index.html.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.votetexas.gov/index.html",
+      "more_info": "https://www.votetexas.gov/register-to-vote/index.html",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "UT",
+    "election_office_name": null,
+    "online_url": "https://secure.utah.gov/voterreg/login.html?selection=REGISTER",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://votesearch.utah.gov/voter-search/search/search-by-voter/voter-info",
+    "special_instructions": "Online registration available; see https://voteinfo.utah.gov/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.utah.gov/",
+      "more_info": "https://voteinfo.utah.gov/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "VA",
+    "election_office_name": null,
+    "online_url": "https://www.elections.virginia.gov/citizen-portal/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://www.elections.virginia.gov/registration/view-your-info/",
+    "special_instructions": "Online registration available; see https://www.elections.virginia.gov/registration/how-to-register/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.elections.virginia.gov/",
+      "more_info": "https://www.elections.virginia.gov/registration/how-to-register/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "VI",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://vivote.gov/voters/lookup/",
+    "special_instructions": "Register in person. Confirm requirements at https://www.vivote.gov/voters/register-to-vote/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.vivote.gov/voters/register-to-vote/",
+      "more_info": "https://www.vivote.gov/voters/register-to-vote/",
+      "registration_type": "in-person",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "VT",
+    "election_office_name": null,
+    "online_url": "https://olvr.vermont.gov/",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://mvp.vermont.gov/",
+    "special_instructions": "Online registration available; see https://sos.vermont.gov/elections/voters/registration/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.vermont.gov/elections/",
+      "more_info": "https://sos.vermont.gov/elections/voters/registration/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "WA",
+    "election_office_name": null,
+    "online_url": "https://voter.votewa.gov/WhereToVote.aspx",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://voter.votewa.gov/WhereToVote.aspx",
+    "special_instructions": "Online registration available; see https://www.sos.wa.gov/elections/voters/.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://www.sos.wa.gov/elections/",
+      "more_info": "https://www.sos.wa.gov/elections/voters/",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "WI",
+    "election_office_name": null,
+    "online_url": "https://myvote.wi.gov/en-us/RegisterToVote",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://myvote.wi.gov/en-us/MyVoterInfo",
+    "special_instructions": "Online registration available; see https://elections.wi.gov/Register.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://elections.wi.gov/voters",
+      "more_info": "https://elections.wi.gov/Register",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "WV",
+    "election_office_name": null,
+    "online_url": "https://ovr.sos.wv.gov/Register/Landing",
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://apps.sos.wv.gov/Elections/voter/amiregisteredtovote",
+    "special_instructions": "Online registration available; see https://ovr.sos.wv.gov/Register/Landing.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.wv.gov/elections/Pages/default.aspx",
+      "more_info": "https://ovr.sos.wv.gov/Register/Landing",
+      "registration_type": "online",
+      "national_form_accepted": false
+    }
+  },
+  {
+    "state_code": "WY",
+    "election_office_name": null,
+    "online_url": null,
+    "mail_form_url": null,
+    "mailing_address": null,
+    "status_check_url": "https://sos.wyo.gov/Elections/Docs/WYCountyClerks.pdf",
+    "special_instructions": "Register by mail. Review detailed instructions at https://sos.wyo.gov/Elections/State/RegisteringToVote.aspx.",
+    "sources": [
+      "vote.gov"
+    ],
+    "metadata": {
+      "homepage": "https://sos.wyo.gov/elections/state/registeringtovote.aspx",
+      "more_info": "https://sos.wyo.gov/Elections/State/RegisteringToVote.aspx",
+      "registration_type": "by-mail",
+      "national_form_accepted": false
+    }
+  }
+]

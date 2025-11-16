@@ -3,7 +3,7 @@
 import { Hash, Plus, Search, Filter } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { withOptional } from '@/lib/util/objects';
+// withOptional removed
 import logger from '@/lib/utils/logger';
 
 import { searchHashtags, createHashtag, deleteHashtag } from '../lib/hashtag-service';
@@ -52,7 +52,7 @@ export function HashtagManagement({
       if (userHashtags && userHashtags.length > 0) {
         setHashtags(userHashtags.map(uh => uh.hashtag ?? uh));
       } else {
-        const result = await searchHashtags({ 
+        const result = await searchHashtags({
           query: '',
           limit: 100,
           ...(selectedCategory !== 'all' ? { category: selectedCategory } : {})
@@ -200,7 +200,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.name}
-                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { name: e.target.value }))}
+                onChange={(e) => setNewHashtag(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g., #climatechange"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -210,7 +210,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.display_name}
-                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { display_name: e.target.value }))}
+                onChange={(e) => setNewHashtag(prev => ({ ...prev, display_name: e.target.value }))}
                   placeholder="e.g., Climate Change"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -220,9 +220,7 @@ export function HashtagManagement({
                 <select
                   value={newHashtag.category}
                   onChange={(e) =>
-                    setNewHashtag(prev =>
-                      withOptional(prev, { category: e.target.value as HashtagCategory })
-                    )
+                    setNewHashtag(prev => ({ ...prev, category: e.target.value as HashtagCategory }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
@@ -238,7 +236,7 @@ export function HashtagManagement({
                 <input
                   type="text"
                   value={newHashtag.description}
-                  onChange={(e) => setNewHashtag(prev => withOptional(prev, { description: e.target.value }))}
+                onChange={(e) => setNewHashtag(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Brief description..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />

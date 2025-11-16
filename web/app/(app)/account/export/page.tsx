@@ -7,6 +7,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAppActions } from '@/lib/stores/appStore';
 import { useUser, useUserLoading } from '@/lib/stores/userStore';
 import { devLog } from '@/lib/utils/logger';
 
@@ -32,6 +33,7 @@ type ExportHistory = {
 
 export default function DataExportPage() {
   const router = useRouter()
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions()
   const user = useUser()
   const isLoading = useUserLoading()
   
@@ -135,6 +137,21 @@ export default function DataExportPage() {
       devLog('Error loading export history:', { error })
     }
   }, [user])
+
+  useEffect(() => {
+    setCurrentRoute('/account/export');
+    setSidebarActiveSection('account');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Account', href: '/account' },
+      { label: 'Export Data', href: '/account/export' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   // Load export history on component mount
   useEffect(() => {

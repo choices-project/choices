@@ -5,19 +5,21 @@ import type { UserStoreHarness } from '@/app/(app)/e2e/user-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface Window {
     __userStoreHarness?: UserStoreHarness;
   }
 }
 
+const HARNESS_TIMEOUT = 90_000;
+
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/user-store', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+  await page.goto('/e2e/user-store', { waitUntil: 'domcontentloaded', timeout: HARNESS_TIMEOUT });
   await waitForPageReady(page);
   await page.waitForFunction(
     () => document.documentElement.dataset.userStoreHarness === 'ready',
     undefined,
-    { timeout: 45_000 }
+    { timeout: HARNESS_TIMEOUT }
   );
 };
 

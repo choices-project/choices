@@ -30,30 +30,31 @@ export const GET = withErrorHandling(async (
   }
 
   if (!progressionData) {
+    const now = Date.now();
     return successResponse({
-        user_id: id,
-        current_tier: 3,
-        progression_history: [
-          {
-            previous_tier: 1,
-            new_tier: 2,
-            reason: 'User signed up and linked anonymous votes',
-            created_at: new Date(Date.now() - 86400000).toISOString()
-          },
-          {
-            previous_tier: 2,
-            new_tier: 3,
-            reason: 'Participated in 10+ polls',
-            created_at: new Date(Date.now() - 43200000).toISOString()
-          }
-        ],
-        next_tier_requirements: {
-          tier_2: 'Complete profile verification',
-          tier_3: 'Participate in 10+ polls',
-          tier_4: 'Community verification and engagement'
+      user_id: id,
+      current_tier: 'T3',
+      progression_history: [
+        {
+          previous_tier: 'T1',
+          new_tier: 'T2',
+          reason: 'User signed up and linked anonymous votes',
+          created_at: new Date(now - 86400000).toISOString(),
         },
+        {
+          previous_tier: 'T2',
+          new_tier: 'T3',
+          reason: 'Participated in 10+ polls',
+          created_at: new Date(now - 43200000).toISOString(),
+        },
+      ],
+      next_tier_requirements: {
+        T1: 'Complete profile verification',
+        T2: 'Participate in 5+ polls',
+        T3: 'Participate in 10+ polls',
+      },
       analysis_method: 'trust_tier_based',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 

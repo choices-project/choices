@@ -46,7 +46,8 @@ export const POST = withErrorHandling(async (
   if (existing) {
     return successResponse({
       message: 'Already following this representative',
-      following: true
+      following: true,
+      follow: existing
     });
   }
 
@@ -76,7 +77,7 @@ export const POST = withErrorHandling(async (
 
   return successResponse({
     message: 'Successfully followed representative',
-    data: followData,
+    follow: followData,
     following: true
   }, undefined, 201);
 });
@@ -155,7 +156,7 @@ export const GET = withErrorHandling(async (
 
   return successResponse({
     following: !!followData,
-    data: followData ?? null
+    follow: followData ?? null
   });
 });
 

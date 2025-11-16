@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
 type PasskeyRegisterProps = {
@@ -91,18 +90,14 @@ export function PasskeyRegister({
       const credentialOptions = await response.json();
 
       // Create credential
-      const publicKeyOptions = withOptional(
-        credentialOptions ?? {},
-        {
-          authenticatorSelection: withOptional(
-            credentialOptions?.authenticatorSelection ?? {},
-            {
-              userVerification: 'required',
-              authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
-            }
-          ),
-        }
-      );
+      const publicKeyOptions = {
+        ...(credentialOptions ?? {}),
+        authenticatorSelection: {
+          ...(credentialOptions?.authenticatorSelection ?? {}),
+          userVerification: 'required',
+          authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+        },
+      };
 
       const credential = await navigator.credentials.create({
         publicKey: publicKeyOptions,

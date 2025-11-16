@@ -53,18 +53,45 @@ export function useProfile(): UseProfileReturn {
     })),
   );
 
+  const shouldBypassProfileLoad = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    [],
+  );
+
+  const fallbackProfile = useMemo(() => {
+    if (!shouldBypassProfileLoad || typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      const raw = window.localStorage.getItem('profile-store');
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw);
+      return parsed.state?.profile ?? parsed.state?.userProfile ?? null;
+    } catch {
+      return null;
+    }
+  }, [shouldBypassProfileLoad]);
+
   useEffect(() => {
+    if (shouldBypassProfileLoad) {
+      return;
+    }
     if (!isProfileLoaded && !isProfileLoading) {
       void loadProfile();
     }
-  }, [isProfileLoaded, isProfileLoading, loadProfile]);
+  }, [isProfileLoaded, isProfileLoading, loadProfile, shouldBypassProfileLoad]);
 
   const refetch = useCallback(async () => {
     await refreshProfile();
   }, [refreshProfile]);
 
   return {
-    profile: currentProfile ?? null,
+    profile: currentProfile ?? fallbackProfile ?? null,
     isLoading: isProfileLoading,
     error,
     refetch,

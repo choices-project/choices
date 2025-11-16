@@ -16,6 +16,8 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils';
+
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
@@ -244,6 +246,8 @@ const resolveNetworkInfo = (nav?: Navigator, connection?: NetworkConnection): Ne
 });
 
 const detectBrowser = (userAgent: string): string => {
+  const info = detectBrowserInfo();
+  if (info.name && info.name !== 'unknown') return info.name.charAt(0).toUpperCase() + info.name.slice(1);
   if (userAgent.includes('Chrome')) return 'Chrome';
   if (userAgent.includes('Firefox')) return 'Firefox';
   if (userAgent.includes('Safari')) return 'Safari';

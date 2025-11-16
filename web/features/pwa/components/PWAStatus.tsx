@@ -14,6 +14,7 @@ import {
 import React, { useEffect, useRef } from 'react';
 
 
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   usePWAInstallation,
   usePWAOffline,
@@ -22,7 +23,6 @@ import {
   usePWAError,
   usePWAActions,
 } from '@/lib/stores/pwaStore';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
 
 type PWAStatusProps = {

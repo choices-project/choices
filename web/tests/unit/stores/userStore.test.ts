@@ -68,16 +68,25 @@ describe('userStore', () => {
       },
     } as unknown as UserStore['profile']);
 
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: representatives }),
-    }) as unknown as typeof global.fetch;
+    // First call: POST address lookup -> returns jurisdiction envelope
+    // Second call: GET representatives by state -> returns reps envelope
+    global.fetch = jest
+      .fn()
+      // address lookup
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, data: { jurisdiction: { state: 'CA' } } }),
+      } as any)
+      // representatives
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { representatives } }),
+      } as any) as unknown as typeof global.fetch;
 
     await store.getState().handleAddressUpdate('123 Main St');
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/v1/civics/address-lookup?address=123%20Main%20St'
-    );
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toBe('/api/v1/civics/address-lookup');
+    expect((global.fetch as jest.Mock).mock.calls[1][0]).toContain('/api/v1/civics/by-state?state=CA');
     expect(store.getState().currentAddress).toBe('123 Main St');
     expect(store.getState().representatives).toEqual(representatives);
     expect(store.getState().savedSuccessfully).toBe(true);
@@ -99,10 +108,16 @@ describe('userStore', () => {
       },
     } as unknown as UserStore['profile']);
 
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: [] }),
-    }) as unknown as typeof global.fetch;
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, data: { jurisdiction: { state: 'CA' } } }),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { representatives: [] } }),
+      } as any) as unknown as typeof global.fetch;
 
     await store.getState().handleAddressUpdate('456 Market St');
 

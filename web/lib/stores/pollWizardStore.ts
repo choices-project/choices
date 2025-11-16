@@ -5,12 +5,12 @@
  * persistence, and selector helpers for the creation flow.
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
-import { shallow } from 'zustand/shallow';
 
 import { createPollRequest, type PollCreateRequestResult } from '@/lib/polls/api';
 import {
@@ -205,10 +205,12 @@ export const createPollWizardActions = (
         draft.error = 'Please fix the highlighted issues before publishing.';
       });
 
+      const validationMessage = 'Please fix the highlighted issues before publishing.';
       return {
         success: false,
         status: 422,
-        message: 'Please fix the highlighted issues before publishing.',
+        message: validationMessage,
+        error: validationMessage,
         fieldErrors,
         reason: 'validation',
       };
@@ -231,10 +233,12 @@ export const createPollWizardActions = (
           });
         }
 
+        const errorMessage = result.message ?? 'Unable to publish poll. Please try again.';
         const failureResult: PollWizardSubmissionError = {
           success: false,
           status: result.status,
-          message: result.message,
+          message: errorMessage,
+          error: errorMessage,
           reason,
         };
 
@@ -254,19 +258,21 @@ export const createPollWizardActions = (
         draft.error = null;
       });
 
-      const successResult: PollWizardSubmissionResult = {
-        success: true,
+      const successPayload = {
         pollId: result.data.id,
         title: result.data.title,
         status: result.status,
       };
 
-      if (result.message) {
-        successResult.message = result.message;
-      }
-      if (result.durationMs !== undefined) {
-        successResult.durationMs = result.durationMs;
-      }
+      const successResult: PollWizardSubmissionResult = {
+        success: true,
+        data: successPayload,
+        pollId: successPayload.pollId,
+        title: successPayload.title,
+        status: successPayload.status,
+        ...(result.message ? { message: result.message } : {}),
+        ...(result.durationMs !== undefined ? { durationMs: result.durationMs } : {}),
+      };
 
       return successResult;
     } catch (error) {
@@ -286,6 +292,7 @@ export const createPollWizardActions = (
         success: false,
         status: 0,
         message,
+        error: message,
         reason: 'network',
       };
     } finally {
@@ -523,8 +530,10 @@ export const usePollWizardCanGoBack = () => usePollWizardStore((state) => state.
 export const usePollWizardIsComplete = () => usePollWizardStore((state) => state.isComplete);
 
 export const usePollWizardActions = () =>
-  usePollWizardStore(
-    useShallow((state) => ({
+  useMemo(() => {
+    const state = usePollWizardStore.getState();
+
+    return {
       nextStep: state.nextStep,
       prevStep: state.prevStep,
       goToStep: state.goToStep,
@@ -548,8 +557,8 @@ export const usePollWizardActions = () =>
       isStepValid: state.isStepValid,
       getStepErrors: state.getStepErrors,
       submitPoll: state.submitPoll,
-    })),
-  );
+    };
+  }, []);
 
 export const usePollWizardStats = () =>
   usePollWizardStore(
@@ -571,14 +580,22 @@ export const usePollWizardStepData = (step: number) =>
 export const usePollWizardStepErrors = (step: number) =>
   usePollWizardStore((state) => state.getStepErrors(step));
 
-export const usePollWizardStepValidation = (step: number) =>
-  usePollWizardStore(
-    useShallow((state) => ({
-      isValid: state.isStepValid(step),
-      errors: state.getStepErrors(step),
-      canProceed: state.canProceedToNextStep(step),
-    })),
+export const usePollWizardStepValidation = (step: number) => {
+  const data = usePollWizardStore((state) => state.data);
+  const canProceed = usePollWizardStore((state) => state.canProceedToNextStep(step));
+
+  const stepErrors = useMemo(() => validatePollWizardStep(step, data), [step, data]);
+  const isValid = useMemo(() => Object.keys(stepErrors).length === 0, [stepErrors]);
+
+  return useMemo(
+    () => ({
+      isValid,
+      errors: stepErrors,
+      canProceed,
+    }),
+    [isValid, stepErrors, canProceed],
   );
+};
 
 export const pollWizardStoreUtils = {
   getWizardSummary: () => {

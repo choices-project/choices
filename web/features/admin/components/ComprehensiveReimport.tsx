@@ -62,16 +62,29 @@ export default function ComprehensiveReimport() {
             {/* Overall Progress */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+                <span id="reimport-progress-label" className="text-sm font-medium text-gray-700">
+                  Overall Progress
+                </span>
                 <span className="text-sm text-gray-600">
                   {progress.processedStates}/{progress.totalStates} states
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                role="progressbar"
+                aria-labelledby="reimport-progress-label"
+                aria-valuenow={getProgressPercentage()}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-describedby="reimport-progress-description"
+                className="w-full bg-gray-200 rounded-full h-3"
+              >
                 <div
                   className="bg-blue-600 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${getProgressPercentage()}%` }}
                 />
+              </div>
+              <div id="reimport-progress-description" className="sr-only">
+                {getProgressPercentage().toFixed(1)}% complete. {progress.processedStates} of {progress.totalStates} states processed.
               </div>
               <div className="mt-2 text-sm text-gray-600">
                 {getProgressBar(getProgressPercentage())} {getProgressPercentage().toFixed(1)}%

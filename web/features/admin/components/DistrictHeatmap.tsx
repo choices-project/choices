@@ -20,9 +20,16 @@ Download,
   MapPin,
   Filter,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   BarChart,
   Bar,
@@ -38,7 +45,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import logger from '@/lib/utils/logger'
+import { AnalyticsSummaryTable, type AnalyticsSummaryColumn, type AnalyticsSummaryRow } from '@/features/analytics/components/AnalyticsSummaryTable';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import logger from '@/lib/utils/logger';
 
 type HeatmapEntry = {
   district_id: string;
@@ -50,9 +60,12 @@ type HeatmapEntry = {
 };
 
 type HeatmapData = {
-  ok: boolean;
-  heatmap: HeatmapEntry[];
-  k_anonymity: number;
+  success: boolean;
+  data?: {
+    heatmap: HeatmapEntry[];
+    kAnonymity: number;
+    generatedAt?: string;
+  };
 };
 
 type DistrictHeatmapProps = {
@@ -108,6 +121,7 @@ export default function DistrictHeatmap({
   defaultLevel = 'federal',
   defaultMinCount = 5
 }: DistrictHeatmapProps) {
+  const { t, currentLanguage } = useI18n();
   const [data, setData] = useState<HeatmapEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +129,82 @@ export default function DistrictHeatmap({
   const [selectedLevel, setSelectedLevel] = useState<string>(defaultLevel);
   const [minCount, setMinCount] = useState(defaultMinCount);
   const [kAnonymity, setKAnonymity] = useState(5);
+  const summarySectionId = useId();
+  const summaryAnnouncementRef = useRef<string | null>(null);
+  const errorAnnouncementRef = useRef<string | null>(null);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const sortedDistricts = useMemo(
+    () => [...data].sort((a, b) => b.engagement_count - a.engagement_count),
+    [data],
+  );
+
+  const totalEngagement = useMemo(
+    () => data.reduce((sum, entry) => sum + entry.engagement_count, 0),
+    [data],
+  );
+
+  const averageEngagement = useMemo(
+    () => (data.length ? Math.round(totalEngagement / data.length) : 0),
+    [data.length, totalEngagement],
+  );
+
+  const topDistrict = sortedDistricts[0] ?? null;
+
+  const summaryIntro = useMemo(() => {
+    if (!data.length) {
+      return '';
+    }
+
+    if (topDistrict) {
+      return t('analytics.districts.summaryIntro', {
+        totalDistricts: formatNumber(data.length),
+        totalEngagement: formatNumber(totalEngagement),
+        topDistrict: topDistrict.district_name ?? topDistrict.district_id,
+        topState: topDistrict.state,
+        topEngagement: formatNumber(topDistrict.engagement_count),
+      });
+    }
+
+    return t('analytics.districts.summaryFallback', {
+      totalDistricts: formatNumber(data.length),
+    });
+  }, [data.length, formatNumber, t, topDistrict, totalEngagement]);
+
+  const tableColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'district', label: t('analytics.tables.columns.district') },
+      { key: 'state', label: t('analytics.tables.columns.state') },
+      { key: 'level', label: t('analytics.tables.columns.level') },
+      { key: 'engagement', label: t('analytics.tables.columns.engagementCount'), isNumeric: true },
+      { key: 'representatives', label: t('analytics.tables.columns.representatives'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const tableRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      sortedDistricts.map((entry) => ({
+        id: entry.district_id,
+        cells: {
+          district: `${entry.district_name} (${entry.district_id})`,
+          state: entry.state,
+          level: entry.level,
+          engagement: formatNumber(entry.engagement_count),
+          representatives: formatNumber(entry.representative_count),
+        },
+      })),
+    [formatNumber, sortedDistricts],
+  );
 
   const fetchHeatmapData = useCallback(async () => {
     setIsLoading(true);
@@ -142,14 +232,12 @@ export default function DistrictHeatmap({
 
       const result: HeatmapData = await response.json();
 
-      if (!result.ok) {
-        throw new Error(result && typeof result === 'object' && 'message' in result
-          ? String((result as any).message)
-          : 'The heatmap service returned an unexpected response.');
+      if (!result.success || !result.data) {
+        throw new Error('The heatmap service returned an unexpected response.');
       }
 
-      setData(result.heatmap);
-      setKAnonymity(result.k_anonymity);
+      setData(result.data.heatmap ?? []);
+      setKAnonymity(result.data.kAnonymity ?? minCount);
     } catch (err) {
       logger.error('Failed to fetch heatmap data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load heatmap data');
@@ -162,6 +250,32 @@ export default function DistrictHeatmap({
   useEffect(() => {
     fetchHeatmapData();
   }, [fetchHeatmapData]);
+
+  useEffect(() => {
+    if (!summaryIntro) {
+      return;
+    }
+
+    if (summaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    summaryAnnouncementRef.current = summaryIntro;
+  }, [summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (errorAnnouncementRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(error, 'assertive');
+    errorAnnouncementRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -352,22 +466,28 @@ export default function DistrictHeatmap({
           </div>
         ) : (
           <>
+            {summaryIntro ? (
+              <p className="mb-4 text-sm text-gray-700" role="status" aria-live="polite">
+                {summaryIntro}
+              </p>
+            ) : null}
+
             {/* Stats Summary */}
             <div className="mb-6 grid grid-cols-3 gap-4">
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Total Districts</p>
-                <p className="text-2xl font-bold text-gray-900">{data.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(data.length)}</p>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Total Engagement</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {data.reduce((sum, d) => sum + d.engagement_count, 0).toLocaleString()}
+                  {formatNumber(totalEngagement)}
                 </p>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Avg per District</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(data.reduce((sum, d) => sum + d.engagement_count, 0) / data.length)}
+                  {formatNumber(averageEngagement)}
                 </p>
               </div>
             </div>
@@ -444,12 +564,11 @@ export default function DistrictHeatmap({
             </div>
 
             {/* Top Districts */}
-            {data.length > 0 && (
+            {sortedDistricts.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Top 5 Most Engaged Districts</h3>
                 <div className="space-y-2">
-                  {data
-                    .sort((a, b) => b.engagement_count - a.engagement_count)
+                  {sortedDistricts
                     .slice(0, 5)
                     .map((district, index) => (
                       <div
@@ -465,7 +584,7 @@ export default function DistrictHeatmap({
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            {district.engagement_count.toLocaleString()}
+                            {formatNumber(district.engagement_count)}
                           </p>
                           <p className="text-xs text-gray-500">engagements</p>
                         </div>
@@ -474,6 +593,28 @@ export default function DistrictHeatmap({
                 </div>
               </div>
             )}
+
+            <section
+              className="mt-8 space-y-3"
+              aria-labelledby={`${summarySectionId}-heading`}
+            >
+              <h3
+                id={`${summarySectionId}-heading`}
+                className="text-base font-semibold text-foreground"
+              >
+                {t('analytics.tables.heading')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {t('analytics.districts.table.description')}
+              </p>
+              <AnalyticsSummaryTable
+                tableId={`${summarySectionId}-districts`}
+                title={t('analytics.districts.table.title')}
+                description={t('analytics.districts.table.description')}
+                columns={tableColumns}
+                rows={tableRows}
+              />
+            </section>
           </>
         )}
       </CardContent>

@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
+import {
+  createInitialFeedsState,
+  feedsStoreCreator,
+} from '@/lib/stores/feedsStore';
+import { fetchFeedsFromApi } from '@/lib/stores/services/feedsService';
+import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+
 jest.mock('@/lib/utils/privacy-guard', () => ({
   hasPrivacyConsent: jest.fn().mockReturnValue(true),
   PrivacyDataType: { FEED_ACTIVITY: 'FEED_ACTIVITY' },
@@ -13,14 +21,6 @@ jest.mock('@/lib/stores/services/feedsService', () => {
     fetchFeedsFromApi: jest.fn(),
   };
 });
-
-import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
-import {
-  createInitialFeedsState,
-  feedsStoreCreator,
-} from '@/lib/stores/feedsStore';
-import { fetchFeedsFromApi } from '@/lib/stores/services/feedsService';
-import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
 const createTestFeedsStore = () =>
   create<FeedsStore>()(immer(feedsStoreCreator));
@@ -37,6 +37,12 @@ beforeEach(() => {
       category: 'all',
       district: null,
       sort: 'trending',
+    },
+    pagination: {
+      total: 0,
+      limit: 0,
+      offset: 0,
+      hasMore: false,
     },
   });
 });
@@ -172,6 +178,12 @@ describe('feedsStore', () => {
         district: null,
         sort: 'trending',
       },
+    pagination: {
+      total: 3,
+      limit: 20,
+      offset: 0,
+      hasMore: false,
+    },
     };
 
     fetchFeedsFromApiMock.mockResolvedValueOnce(feedsPayload);
@@ -183,6 +195,7 @@ describe('feedsStore', () => {
       category: null,
       district: null,
       limit: 20,
+    offset: 0,
       sort: 'newest',
     });
 
@@ -209,6 +222,12 @@ describe('feedsStore', () => {
         district: null,
         sort: 'newest',
       },
+    pagination: {
+      total: 4,
+      limit: 20,
+      offset: 0,
+      hasMore: true,
+    },
     };
 
     const additionalPayload = {
@@ -222,6 +241,12 @@ describe('feedsStore', () => {
         district: null,
         sort: 'newest',
       },
+    pagination: {
+      total: 4,
+      limit: 20,
+      offset: 2,
+      hasMore: false,
+    },
     };
 
     fetchFeedsFromApiMock
@@ -240,12 +265,14 @@ describe('feedsStore', () => {
       category: null,
       district: null,
       limit: 20,
+    offset: 0,
       sort: 'newest',
     });
     expect(fetchFeedsFromApiMock.mock.calls[1]?.[0]).toEqual({
       category: null,
       district: null,
-      limit: 22,
+    limit: 20,
+    offset: 2,
       sort: 'newest',
     });
     expect(state.feeds).toHaveLength(4);
@@ -306,6 +333,12 @@ describe('feedsStore', () => {
         district: null,
         sort: 'newest',
       },
+    pagination: {
+      total: 3,
+      limit: 20,
+      offset: 0,
+      hasMore: true,
+    },
     };
     const additionalPayload = {
       feeds: [
@@ -318,6 +351,12 @@ describe('feedsStore', () => {
         district: null,
         sort: 'newest',
       },
+    pagination: {
+      total: 3,
+      limit: 20,
+      offset: 2,
+      hasMore: false,
+    },
     };
 
     fetchFeedsFromApiMock

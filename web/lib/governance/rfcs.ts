@@ -5,9 +5,10 @@
  * democracy platform, enabling community-driven decision making.
  */
 
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
+ 
 
 export type RFCData = {
   title: string;
@@ -133,8 +134,8 @@ export class RFCManager {
     const rfc: RFC = Object.assign({}, RFCManager.RFC_TEMPLATE, rfcData, {
       id: rfcId,
       status: 'Draft',
-      created: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
-      updated: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
+      created: formatISODateOnly(nowISO()),
+      updated: formatISODateOnly(nowISO()),
       comments: [],
       votes: [],
       tags: this.extractTags(rfcData),
@@ -171,7 +172,7 @@ export class RFCManager {
     }
     
     rfc.status = 'Review';
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     
     await this.saveRFC(rfc);
     await this.publishToPublicRepo(rfc);
@@ -216,17 +217,15 @@ export class RFCManager {
     }
     
     const commentId = this.generateCommentId();
-    const comment: RFCComment = withOptional(
-      {
-        id: commentId,
-        rfcId,
-        author,
-        content,
-        timestamp: Date.now(),
-        replies: []
-      },
-      { parentId }
-    );
+    const comment: RFCComment = {
+      id: commentId,
+      rfcId,
+      author,
+      content,
+      timestamp: Date.now(),
+      replies: [],
+      ...(parentId ? { parentId } : {})
+    };
     
     const comments = this.commentStorage.get(rfcId) ?? [];
     comments.push(comment);
@@ -234,7 +233,7 @@ export class RFCManager {
     
     // Update RFC comment count
     rfc.comments = comments;
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     await this.saveRFC(rfc);
     
     await this.notifyCommentAdded(rfc, comment);
@@ -266,16 +265,14 @@ export class RFCManager {
     }
     
     const voteId = this.generateVoteId();
-    const rfcVote: RFCVote = withOptional(
-      {
-        id: voteId,
-        rfcId,
-        voter,
-        vote,
-        timestamp: Date.now()
-      },
-      { reasoning }
-    );
+    const rfcVote: RFCVote = {
+      id: voteId,
+      rfcId,
+      voter,
+      vote,
+      timestamp: Date.now(),
+      ...(reasoning ? { reasoning } : {})
+    };
     
     const votes = this.voteStorage.get(rfcId) ?? [];
     
@@ -290,7 +287,7 @@ export class RFCManager {
     
     // Update RFC vote count
     rfc.votes = votes;
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     await this.saveRFC(rfc);
     
     await this.notifyVoteCast(rfc, rfcVote);

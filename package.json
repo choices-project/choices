@@ -19,6 +19,7 @@
     "prepare": "husky install",
     "ci:install": "npm ci --ignore-scripts",
     "ci:verify": "npm audit --audit-level=moderate",
+    "governance:check": "node scripts/check-governance.js",
     "test": "npm run test --prefix web",
     "test:e2e": "npm run test:e2e --prefix web"
   },

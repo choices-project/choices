@@ -38,6 +38,7 @@ export type PollWizardSettings = {
   allowWriteIns: boolean;
   allowComments: boolean;
   enableNotifications: boolean;
+  preventDuplicateVotes: boolean;
   maxSelections: number;
   votingMethod: 'single' | 'multiple' | 'ranked' | 'quadratic';
   privacyLevel: PollPrivacyLevel;

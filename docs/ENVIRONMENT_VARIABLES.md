@@ -1,7 +1,7 @@
 # Environment Variables Documentation
 
-**Last Updated:** November 03, 2025  
-**Status:** ✅ Current (Verified against .env.local)
+**Last Updated:** November 16, 2025  
+**Status:** ✅ Current (verified against codebase)
 
 This document lists all environment variables required for the Choices application.
 
@@ -39,10 +39,7 @@ This document lists all environment variables required for the Choices applicati
   - Used by: Admin monitoring, SSR/server actions
   - Default: Auto-detected from request headers
 
-- `NEXT_PUBLIC_APP_URL` (optional)
-  - Application public URL
-  - Used by: PWA manifest, canonical URLs
-  - Default: Auto-detected
+> Note: `NEXT_PUBLIC_APP_URL` is not required; rely on detected origins unless explicitly needed for canonical URLs in production.
 
 - `NEXT_PUBLIC_APP_VERSION` (optional)
   - Application version string
@@ -72,7 +69,9 @@ This document lists all environment variables required for the Choices applicati
 ### Google Civic Information API
 - `GOOGLE_CIVIC_API_KEY` (required for address lookup)
   - Google Civic Information API key for district resolution
-  - Used by: `/api/v1/civics/address-lookup` endpoint
+  - Used by: `/api/v1/civics/address-lookup` endpoint (server proxy)
+  - Client modules call the proxy; the key is never exposed to the browser
+  - Endpoint includes per-IP rate limiting and a short-term response cache
   - Security: ⚠️ Server-only, never expose to client
   - Purpose: Convert address → district (no full addresses stored)
   - Get from: https://console.cloud.google.com/apis/credentials

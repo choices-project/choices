@@ -7,8 +7,6 @@
 
 import { logger } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
-
 import type { CacheStats } from './caching';
 
 export type IntegrationMetrics = {
@@ -202,21 +200,19 @@ export class IntegrationMonitor {
         errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
       }
 
-      const healthCheck: HealthCheck = withOptional(
-        {
-          apiName,
-          status,
-          timestamp: new Date(),
+      const healthCheck: HealthCheck = {
+        apiName,
+        status,
+        timestamp: new Date(),
+        responseTime,
+        errorRate,
+        details: {
           responseTime,
           errorRate,
-          details: {
-            responseTime,
-            errorRate,
-            isHealthy
-          }
+          isHealthy
         },
-        { lastError }
-      );
+        ...(lastError ? { lastError } : {})
+      };
 
       this.healthChecks.set(apiName, healthCheck);
       

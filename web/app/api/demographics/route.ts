@@ -1,4 +1,4 @@
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -13,7 +13,9 @@ export const GET = withErrorHandling(async () => {
         .select('id, user_id, username, email, trust_tier, created_at, updated_at, avatar_url, bio, is_active')
         .eq('is_active', true);
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        return errorResponse('Failed to load user demographics', 502, { reason: usersError.message });
+      }
 
       const totalUsers = users.length || 0;
 
@@ -25,7 +27,9 @@ export const GET = withErrorHandling(async () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (pollsError) throw pollsError;
+      if (pollsError) {
+        return errorResponse('Failed to load polls', 502, { reason: pollsError.message });
+      }
 
       // Get recent votes
       const { data: votes, error: votesError } = await supabase
@@ -35,7 +39,9 @@ export const GET = withErrorHandling(async () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (votesError) throw votesError;
+      if (votesError) {
+        return errorResponse('Failed to load votes', 502, { reason: votesError.message });
+      }
 
       // Generate demographics data with real user count
       const demographics = getMockDemographicsResponse();

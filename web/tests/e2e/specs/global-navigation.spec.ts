@@ -12,7 +12,7 @@ const gotoHarness = async (page: Page) => {
   });
 };
 
-test.describe('Global navigation accessibility', () => {
+test.describe('@axe Global navigation accessibility', () => {
   test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
   });
@@ -48,7 +48,7 @@ test.describe('Global navigation accessibility', () => {
   test('language selector updates navigation labels', async ({ page, context }) => {
     const selector = page.getByTestId('language-selector').first();
     await selector.getByRole('button').click();
-    await page.getByRole('button', { name: /Español/i }).click();
+    await page.getByRole('option', { name: /Español/i }).click();
 
     await expect(page.getByRole('link', { name: 'Encuestas' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Panel' })).toBeVisible();

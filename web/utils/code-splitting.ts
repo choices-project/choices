@@ -77,8 +77,13 @@ export function createCodeSplitComponent<T extends ComponentType<Record<string, 
       }
     }
     
-    onError?.(lastError!);
-    throw lastError;
+    if (lastError) {
+      onError?.(lastError);
+      throw lastError;
+    }
+    const unknownError = new Error('Unknown component load error');
+    onError?.(unknownError);
+    throw unknownError;
   });
 
   return function CodeSplitWrapper(props: Record<string, unknown>) {

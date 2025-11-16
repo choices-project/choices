@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
@@ -37,14 +36,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Failed to fetch trending hashtags', 500);
   }
 
-    if (!trendingHashtags || trendingHashtags.length === 0) {
-      logger.info('No new trending hashtags found');
-      return NextResponse.json({
-        success: true,
-        message: 'No new trending hashtags',
-        notificationsSent: 0
-      });
-    }
+  if (!trendingHashtags || trendingHashtags.length === 0) {
+    logger.info('No new trending hashtags found');
+    return successResponse({
+      message: 'No new trending hashtags',
+      notificationsSent: 0,
+      trendingHashtagsProcessed: 0
+    });
+  }
 
     logger.info(`Found ${trendingHashtags.length} trending hashtags`);
 
