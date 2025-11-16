@@ -1,8 +1,8 @@
 /**
  * Rate Limiting in Server Actions Tests
- * 
+ *
  * Tests for the enhanced checkRateLimit function that now actually enforces rate limits
- * 
+ *
  * Created: 2025-01-16
  */
 
@@ -33,7 +33,7 @@ jest.mock('@/lib/utils/logger', () => ({
 describe('checkRateLimit', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     (getSecurityConfig as jest.MockedFunction<typeof getSecurityConfig>).mockReturnValue({
       rateLimit: {
         maxRequests: 100,

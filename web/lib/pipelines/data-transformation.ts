@@ -367,12 +367,19 @@ export class DataTransformationPipeline {
    */
   private determineBillLevel(billType: string): 'federal' | 'state' | 'local' {
     // Use billType for classification
-    if (billType.toLowerCase().includes('hr') || billType.toLowerCase().includes('s')) {
-      return 'federal';
-    }
-    if (billType.toLowerCase().includes('state') || billType.toLowerCase().includes('assembly') || billType.toLowerCase().includes('senate')) {
+    const typeLower = billType.toLowerCase();
+    
+    // Check for state patterns first (to avoid false matches with 's' in 'assembly')
+    if (typeLower.includes('state') || typeLower.includes('assembly') || 
+        typeLower.includes('state senate') || typeLower.includes('state house')) {
       return 'state';
     }
+    
+    // Check for federal patterns (HR, S, H.R., S., etc.)
+    if (typeLower.includes('hr') || typeLower.match(/\b(s|h\.r\.|s\.)\b/)) {
+      return 'federal';
+    }
+    
     return 'local'; // Default for local bills
   }
 

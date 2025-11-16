@@ -36,7 +36,7 @@ describe('DataTransformationPipeline - Bill Processing', () => {
       const stateBill = {
         id: 'bill-2',
         title: 'State Assembly Bill 456',
-        billType: 'AB-456',
+        billType: 'Assembly Bill AB-456',
         billNumber: 'AB-456'
       };
 

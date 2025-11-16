@@ -1,8 +1,8 @@
 /**
  * Data Validation Duplicate Detection Tests
- * 
+ *
  * Tests for duplicate record detection using seenRecords
- * 
+ *
  * Created: 2025-01-16
  */
 
@@ -24,7 +24,8 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'John Doe',
         jurisdiction: 'US',
         office: 'Representative',
-        level: 'federal'
+        level: 'federal',
+        party: 'Democrat'
       };
 
       const rep2: NormalizedRepresentative = {
@@ -32,16 +33,17 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'John Doe',
         jurisdiction: 'US',
         office: 'Representative',
-        level: 'federal'
+        level: 'federal',
+        party: 'Democrat'
       };
 
       const result1 = pipeline.validateRepresentative(rep1);
       const result2 = pipeline.validateRepresentative(rep2);
 
-      expect(result1.valid).toBe(true);
+      expect(result1.isValid).toBe(true);
       expect(result1.warnings).toHaveLength(0);
 
-      expect(result2.valid).toBe(true);
+      expect(result2.isValid).toBe(true);
       expect(result2.warnings.length).toBeGreaterThan(0);
       expect(result2.warnings.some(w => w.message.includes('Duplicate'))).toBe(true);
     });
@@ -52,7 +54,8 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'John Doe',
         jurisdiction: 'US',
         office: 'Representative',
-        level: 'federal'
+        level: 'federal',
+        party: 'Democrat'
       };
 
       const rep2: NormalizedRepresentative = {
@@ -60,16 +63,17 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'Jane Smith',
         jurisdiction: 'US',
         office: 'Representative',
-        level: 'federal'
+        level: 'federal',
+        party: 'Republican'
       };
 
       const result1 = pipeline.validateRepresentative(rep1);
       const result2 = pipeline.validateRepresentative(rep2);
 
-      expect(result1.valid).toBe(true);
+      expect(result1.isValid).toBe(true);
       expect(result1.warnings.some(w => w.message.includes('Duplicate'))).toBe(false);
 
-      expect(result2.valid).toBe(true);
+      expect(result2.isValid).toBe(true);
       expect(result2.warnings.some(w => w.message.includes('Duplicate'))).toBe(false);
     });
 
@@ -79,7 +83,8 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'John Doe',
         jurisdiction: 'US',
         office: 'Representative',
-        level: 'federal'
+        level: 'federal',
+        party: 'Democrat'
       };
 
       const rep2: NormalizedRepresentative = {
@@ -87,14 +92,17 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
         name: 'John Doe',
         jurisdiction: 'CA',
         office: 'Representative',
-        level: 'state'
+        level: 'state',
+        party: 'Democrat'
       };
 
       const result1 = pipeline.validateRepresentative(rep1);
       const result2 = pipeline.validateRepresentative(rep2);
 
       // Different jurisdictions should not be flagged as duplicates
+      expect(result1.isValid).toBe(true);
       expect(result1.warnings.some(w => w.message.includes('Duplicate'))).toBe(false);
+      expect(result2.isValid).toBe(true);
       expect(result2.warnings.some(w => w.message.includes('Duplicate'))).toBe(false);
     });
   });
@@ -104,34 +112,36 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
       const bill1: NormalizedBill = {
         id: 'bill-123',
         title: 'Test Bill',
-        billNumber: 'HR-123',
+        billNumber: 'H.R. 123',
         billType: 'House Resolution',
         level: 'federal',
         jurisdiction: 'US',
         introducedDate: '2025-01-01',
         sources: ['congress.gov'],
-        lastUpdated: '2025-01-01'
+        lastUpdated: '2025-01-01',
+        congress: 118
       };
 
       const bill2: NormalizedBill = {
         id: 'bill-123',
         title: 'Test Bill',
-        billNumber: 'HR-123',
+        billNumber: 'H.R. 123',
         billType: 'House Resolution',
         level: 'federal',
         jurisdiction: 'US',
         introducedDate: '2025-01-01',
         sources: ['congress.gov'],
-        lastUpdated: '2025-01-01'
+        lastUpdated: '2025-01-01',
+        congress: 118
       };
 
       const result1 = pipeline.validateBill(bill1);
       const result2 = pipeline.validateBill(bill2);
 
-      expect(result1.valid).toBe(true);
+      expect(result1.isValid).toBe(true);
       expect(result1.warnings).toHaveLength(0);
 
-      expect(result2.valid).toBe(true);
+      expect(result2.isValid).toBe(true);
       expect(result2.warnings.length).toBeGreaterThan(0);
       expect(result2.warnings.some(w => w.message.includes('Duplicate'))).toBe(true);
     });
@@ -145,31 +155,34 @@ describe('DataValidationPipeline - Duplicate Detection', () => {
           name: 'Rep 1',
           jurisdiction: 'US',
           office: 'Representative',
-          level: 'federal'
+          level: 'federal',
+          party: 'Democrat'
         },
         {
           id: 'rep-1', // Duplicate
           name: 'Rep 1',
           jurisdiction: 'US',
           office: 'Representative',
-          level: 'federal'
+          level: 'federal',
+          party: 'Democrat'
         },
         {
           id: 'rep-2',
           name: 'Rep 2',
           jurisdiction: 'US',
           office: 'Representative',
-          level: 'federal'
+          level: 'federal',
+          party: 'Republican'
         }
       ];
 
-      const results = pipeline.validate(representatives, 'representative');
+      const results = representatives.map(rep => pipeline.validateRepresentative(rep));
 
       expect(results).toHaveLength(3);
-      expect(results[0]?.valid).toBe(true);
-      expect(results[1]?.valid).toBe(true);
+      expect(results[0]?.isValid).toBe(true);
+      expect(results[1]?.isValid).toBe(true);
       expect(results[1]?.warnings.some(w => w.message.includes('Duplicate'))).toBe(true);
-      expect(results[2]?.valid).toBe(true);
+      expect(results[2]?.isValid).toBe(true);
     });
   });
 });

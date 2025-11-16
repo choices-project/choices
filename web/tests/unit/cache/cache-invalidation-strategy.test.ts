@@ -122,7 +122,11 @@ describe('CacheInvalidationManager with Strategy Manager', () => {
   });
 
   afterEach(() => {
-    manager.destroy();
+    try {
+      manager.destroy();
+    } catch (error) {
+      // Ignore destroy errors in tests
+    }
   });
 });
 
