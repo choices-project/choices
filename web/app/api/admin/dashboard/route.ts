@@ -325,7 +325,7 @@ async function loadAdminAnalytics(_supabase: any) {
 async function loadSystemHealth(supabase: any) {
   const cacheKey = 'admin:system_health';
   const cache = await getRedisClient();
-  const _cacheTTLSeconds = 60;
+  // Cache TTL: 60 seconds (not currently used but available for future cache.set calls)
 
   // Check cache first
   const cached = await cache.get(cacheKey);

@@ -14,7 +14,7 @@ const editLimiter = createRateLimiter({
   maxBurst: 10
 });
 
-export const GET = withErrorHandling(async (request: NextRequest, { params }: { params: { slug: string } }) => {
+export const GET = withErrorHandling(async (_request: NextRequest, { params }: { params: { slug: string } }) => {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return notFoundError('Not available');
 

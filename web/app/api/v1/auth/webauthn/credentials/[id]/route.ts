@@ -27,6 +27,10 @@ export const DELETE = withErrorHandling(async (
     return authError('Authentication required');
   }
 
+  // Extract security context for logging
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? 'unknown';
+
     // Delete the credential
     const { error: deleteError } = await supabase
       .from('webauthn_credentials')
@@ -35,13 +39,20 @@ export const DELETE = withErrorHandling(async (
       .eq('user_id', user.id); // Ensure user can only delete their own credentials
 
   if (deleteError) {
-    logger.error('Failed to delete WebAuthn credential:', deleteError);
+    logger.error('Failed to delete WebAuthn credential:', deleteError, {
+      userId: user.id,
+      credentialId,
+      ipAddress,
+      userAgent,
+    });
     return errorResponse('Failed to delete credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_DELETE_FAILED');
   }
 
   logger.info('WebAuthn credential deleted successfully', { 
     userId: user.id, 
-    credentialId 
+    credentialId,
+    ipAddress,
+    userAgent,
   });
 
   return successResponse({

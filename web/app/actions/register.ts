@@ -1,6 +1,6 @@
 'use server';
 
-import { headers } from 'next/headers';
+// import { headers } from 'next/headers'; // Not currently used
 import { z } from 'zod';
 
 
@@ -52,13 +52,15 @@ export async function register(
     
     // ---- context usage (security + provenance) ----
     const h = await headers();
-    const _ip = context.ipAddress ?? h.get('x-forwarded-for') ?? null;
-    const _ua = context.userAgent ?? h.get('user-agent') ?? null;
+    const ipAddress = context.ipAddress ?? h.get('x-forwarded-for') ?? 'unknown';
+    const userAgent = context.userAgent ?? h.get('user-agent') ?? 'unknown';
 
     // No authenticated caller should be registering a new account
     if (context.userId) {
       logger.warn('Registration attempt from authenticated user', {
         userId: context.userId,
+        ipAddress,
+        userAgent,
       });
       return { ok: false, error: 'Already authenticated' };
     }
@@ -70,8 +72,12 @@ export async function register(
       password: String(formData.get('password') ?? ''),
     };
     
-    // Debug logging
-    logger.info('Register payload received', { payload });
+    // Debug logging with security context
+    logger.info('Register payload received', { 
+      payload,
+      ipAddress,
+      userAgent,
+    });
     logger.info('FormData entries', { entries: Array.from(formData.entries()) });
     
     const data = RegisterForm.parse(payload);
@@ -98,7 +104,11 @@ export async function register(
     }
 
     if (existingUsername) {
-      logger.warn('Registration attempt with existing username', { username: data.username });
+      logger.warn('Registration attempt with existing username', { 
+        username: data.username,
+        ipAddress,
+        userAgent,
+      });
       return { ok: false, error: 'Username already taken' };
     }
     

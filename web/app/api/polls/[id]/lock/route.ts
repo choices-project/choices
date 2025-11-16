@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -86,7 +86,7 @@ export const POST = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;

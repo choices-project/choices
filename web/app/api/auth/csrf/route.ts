@@ -16,10 +16,11 @@ export const dynamic = 'force-dynamic';
  */
 
 export const GET = withErrorHandling(async () => {
-  const _logger = createApiLogger('/api/auth/csrf', 'GET');
+  const logger = createApiLogger('/api/auth/csrf', 'GET');
   
   // Get or create CSRF token
   const csrfToken = await getOrSetCsrfCookie();
+  logger.info('CSRF token retrieved', { tokenLength: csrfToken.length });
   
   // Create response with token nested under data.token
   const response = successResponse({

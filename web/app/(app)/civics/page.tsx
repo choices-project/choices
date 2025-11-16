@@ -46,7 +46,6 @@ export default function Civics2Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('federal');
-  const [_likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
@@ -112,18 +111,6 @@ export default function Civics2Page() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const _handleLike = (id: string) => {
-    setLikedRepresentatives(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
   const handleFollow = (id: string) => {
     setFollowedRepresentatives(prev => {
       const newSet = new Set(prev);
@@ -139,11 +126,6 @@ export default function Civics2Page() {
   const handleContact = (id: string, type: string) => {
     // Contact functionality
     logger.info('Contacting representative', { id, type });
-  };
-
-  const _handleShare = (representative: SuperiorRepresentativeData) => {
-    // Share functionality
-    logger.info('Sharing representative', { name: representative.name });
   };
 
   const filteredRepresentatives = representatives.filter(rep => {

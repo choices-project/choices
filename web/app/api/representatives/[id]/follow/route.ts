@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
@@ -83,7 +83,7 @@ export const POST = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
@@ -124,7 +124,7 @@ export const DELETE = withErrorHandling(async (
 });
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
