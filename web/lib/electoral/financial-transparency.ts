@@ -1140,7 +1140,8 @@ export class FinancialTransparencySystem {
       if (hasGovernmentService) {
         transitions++;
         // Higher salary increase = higher revolving door risk
-        const salaryIncrease = employment.salary > 0 ? Math.min(employment.salary / 100000, 50) : 0;
+        const salary = employment.salary ?? 0;
+        const salaryIncrease = salary > 0 ? Math.min(salary / 100000, 50) : 0;
         score += salaryIncrease;
       }
     }
@@ -1295,7 +1296,7 @@ export class FinancialTransparencySystem {
       });
     }
 
-    return influences.sort((a, b) => b.influence_score - a.influence_score);
+    return influences.sort((a, b) => b.influenceScore - a.influenceScore);
   }
 
   private async identifyConflictsOfInterest(candidateId: string, corporateConnections: CorporateConnection[]): Promise<ConflictOfInterest[]> {
@@ -1322,7 +1323,7 @@ export class FinancialTransparencySystem {
           if (conflictScore > 30) { // Threshold for significant conflict
             conflicts.push({
               issue: industry,
-              conflict_type: this.determineConflictType(connection),
+              conflictType: this.determineConflictType(connection),
               description: this.generateConflictDescription(connection, industry, relevantVotes.length),
               severity: this.determineRiskLevel(conflictScore) === 'high' ? 'high' :
                        this.determineRiskLevel(conflictScore) === 'medium' ? 'medium' : 'low',
@@ -1482,7 +1483,7 @@ export class FinancialTransparencySystem {
     industry: string,
     relevantVotes: number
   ): string {
-    return `Candidate has ${connection.connection_type} relationship with ${connection.company} in the ${industry} industry, with ${relevantVotes} relevant votes on industry-related legislation.`;
+    return `Candidate has ${connection.connectionType} relationship with ${connection.company} in the ${industry} industry, with ${relevantVotes} relevant votes on industry-related legislation.`;
   }
 }
 

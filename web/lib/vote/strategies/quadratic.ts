@@ -169,17 +169,18 @@ export class QuadraticStrategy implements VotingStrategy {
 
     } catch (error) {
       devLog('Quadratic vote processing error:', error);
-      return {
-        success: false,
+      const base = {
+        success: false as const,
         message: error instanceof Error ? error.message : 'Vote processing failed',
         pollId: request.pollId,
         responseTime: 0,
         metadata: {
-          votingMethod: 'quadratic',
+          votingMethod: 'quadratic' as const,
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        voteId: undefined,
-        auditReceipt: undefined,
+      };
+      return {
+        ...base,
         ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
       };
     }
