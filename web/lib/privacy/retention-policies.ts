@@ -6,7 +6,6 @@
 
 import logger from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements data retention policies and automatic purging
@@ -211,9 +210,14 @@ export class DataRetentionManager {
       throw new Error(`Retention policy not found for data type: ${dataType}`);
     }
 
-    const updatedPolicy: RetentionPolicy = withOptional(existingPolicy, Object.assign({}, policy, {
-      lastUpdated: new Date()
-    }));
+    const updatedPolicy: RetentionPolicy = Object.assign(
+      {},
+      existingPolicy,
+      Object.fromEntries(
+        Object.entries(Object.assign({}, policy, { lastUpdated: new Date() }))
+          .filter(([, v]) => v !== undefined)
+      )
+    );
 
     this.policies.set(dataType, updatedPolicy);
     
@@ -305,21 +309,17 @@ export class DataRetentionManager {
       // Calculate next cleanup time
       const nextCleanup = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
       
-      return withOptional(
-        {
-          dataType,
-          totalRecords: stats.totalRecords,
-          recordsToDelete,
-          recordsToAnonymize,
-          oldestRecord: stats.oldestRecord,
-          newestRecord: stats.newestRecord,
-          nextCleanup,
-          policy
-        },
-        {
-          lastCleanup: stats.lastCleanup
-        }
-      );
+      return {
+        dataType,
+        totalRecords: stats.totalRecords,
+        recordsToDelete,
+        recordsToAnonymize,
+        oldestRecord: stats.oldestRecord,
+        newestRecord: stats.newestRecord,
+        nextCleanup,
+        policy,
+        ...(stats.lastCleanup ? { lastCleanup: stats.lastCleanup } : {}),
+      };
     } catch (error) {
       logger.error(`Error getting retention status for ${dataType}:`, error);
       return null;

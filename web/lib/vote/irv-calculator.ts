@@ -2,12 +2,12 @@
 // IRV CALCULATOR - MINIMAL, CORRECT, DETERMINISTIC
 // ============================================================================
 // Surgical fix to get tests green without bloat
-// 
+//
 // Features:
 // - Deterministic tie-breaking (lexicographic or seeded)
 // - Proper majority detection and round recording
 // - Handles all edge cases from test suite
-// 
+//
 // Created: January 15, 2025
 // Status: Test-Focused Implementation
 // ============================================================================
@@ -15,7 +15,6 @@
 import * as crypto from 'node:crypto';
 
 import { isPresent } from '../util/clean';
-import { withOptional } from '../util/objects';
 
 export type UserRanking = {
   pollId: string;
@@ -132,7 +131,7 @@ export class IRVCalculator {
       }
     }
     const allCandidates = Array.from(candidateSet);
-    
+
     // Filter out withdrawn candidates
     const withdrawnCandidates = new Set<string>();
     this.candidates.forEach((candidate, id) => {
@@ -140,7 +139,7 @@ export class IRVCalculator {
         withdrawnCandidates.add(id);
       }
     });
-    
+
     const active = new Set(allCandidates.filter(id => !withdrawnCandidates.has(id)));
 
     // Track withdrawn candidates in metadata
@@ -200,20 +199,17 @@ export class IRVCalculator {
         if (first === only) counted++;
       }
       votes[only] = counted;
-      rounds.push(withOptional(
-        {
+      rounds.push({
           round: 1,
-          votes, 
+          votes,
           totalVotes: totalBallots,
           activeCandidates: allCandidates,
-          exhausted: totalBallots - counted 
-        },
-        {
-          winner: only
-        }
-      ));
+          exhausted: totalBallots - counted
+        ,
+        winner: only,
+      });
     return {
-        winner: only ?? null, 
+        winner: only ?? null,
       rounds,
         totalVotes: totalBallots,
       metadata: {
@@ -260,22 +256,18 @@ export class IRVCalculator {
       // If only one candidate left, declare winner
       if (remaining.length <= 1) {
         const finalWinner = remaining[0] ?? null;
-        const round: IRVRound = withOptional(
-          {
+        const round: IRVRound = {
             round: rounds.length + 1,
-            votes, 
+            votes,
             totalVotes: activeVotes,
             activeCandidates: remaining,
-            exhausted 
-          },
-          {
-            winner: finalWinner ?? undefined
-          }
-        );
+            exhausted,
+            winner: finalWinner ?? undefined,
+          };
         rounds.push(round);
     return {
-          winner: finalWinner, 
-          rounds, 
+          winner: finalWinner,
+          rounds,
           totalVotes: totalBallots,
           metadata: {
             calculationTime: Math.round(performance.now() - startTime),
@@ -304,24 +296,20 @@ export class IRVCalculator {
           tieBreaksUsed++;
           edgeCasesHandled.push('final_tie');
 
-          const round: IRVRound = withOptional(
-            {
+          const round: IRVRound = {
               round: rounds.length + 1,
-              votes, 
+              votes,
               winner,
               totalVotes: activeVotes,
               activeCandidates: remaining,
-              exhausted 
-            },
-            {
-              eliminated: toEliminate
-            }
-          );
+              exhausted,
+              eliminated: toEliminate,
+            };
           rounds.push(round);
 
-          return { 
-            winner, 
-            rounds, 
+          return {
+            winner,
+            rounds,
             totalVotes: totalBallots,
             metadata: {
               calculationTime: Math.round(performance.now() - startTime),
@@ -336,7 +324,7 @@ export class IRVCalculator {
       // Special case: if there are candidates with 0 votes, eliminate them first
       const zeroVoteCandidates = remaining.filter(id => (votes[id] ?? 0) === 0);
       let toEliminate: string[];
-      
+
       if (zeroVoteCandidates.length > 0) {
         // Eliminate zero-vote candidates first, using tie-breaking if multiple
         if (zeroVoteCandidates.length > 1) {
@@ -351,7 +339,7 @@ export class IRVCalculator {
         let min = Infinity;
         for (const id of remaining) min = Math.min(min, votes[id] ?? 0);
         const lowest = remaining.filter(id => (votes[id] ?? 0) === min);
-        
+
         // Use elimination tie-breaking policy for all ties
         if (lowest.length > 1) {
           toEliminate = [pickElimination(lowest, round1Votes, this.seed ?? '')];
@@ -367,7 +355,7 @@ export class IRVCalculator {
       // Check if we have a winner after elimination
       const newRemaining = Array.from(active).filter(id => !eliminated.has(id));
       let winner: string | undefined = undefined;
-      
+
       if (newRemaining.length === 1) {
         // Only one candidate left, declare winner
         winner = newRemaining[0];
@@ -385,26 +373,22 @@ export class IRVCalculator {
         }
       }
 
-      const round: IRVRound = withOptional(
-        {
+      const round: IRVRound = {
           round: rounds.length + 1,
-          votes, 
+          votes,
           totalVotes: activeVotes,
           activeCandidates: remaining,
-          exhausted
-        },
-        {
+          exhausted,
           eliminated: toEliminate[0] ?? undefined, // Only single elimination for golden tests
-          winner // Declare winner in same round if majority reached
-        }
-      );
+          winner, // Declare winner in same round if majority reached
+        };
       rounds.push(round);
 
       // If we have a winner, return immediately
       if (winner) {
-        return { 
-          winner, 
-          rounds, 
+        return {
+          winner,
+          rounds,
           totalVotes: totalBallots,
           metadata: {
             calculationTime: Math.round(performance.now() - startTime),
@@ -425,8 +409,8 @@ export class IRVCalculator {
       edgeCasesHandled.push('final-tiebreak');
     }
     return {
-      winner: last, 
-      rounds, 
+      winner: last,
+      rounds,
       totalVotes: totalBallots,
       metadata: {
         calculationTime: Math.round(performance.now() - startTime),

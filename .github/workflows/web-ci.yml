@@ -105,6 +105,10 @@ jobs:
       - name: Contract tests
         run: npm run test:contracts
 
+      - name: Governance check
+        working-directory: ..
+        run: npm run governance:check
+
       - name: Verify i18n snapshot
         run: |
           npm run i18n:extract

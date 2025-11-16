@@ -31,10 +31,13 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 - Civics + feeds + trending coverage (Workflow B) now asserts pep/CSRF helpers, cookie writes, fallback metadata, rate limiter invocations, tracker source/metadata plumbing, and pagination metadata. Keep mocks narrow so the suites continue to exercise the real handlers.
 - When adding a new route contract, document the scope in `docs/TESTING/api-contract-plan.md` and keep fixtures under `web/tests/fixtures/api/` so Playwright/MSW reuse the same payloads.
 
-### MSW Fixture Troubleshooting
-- **Missing handler errors** (`[MSW] Warning: captured "GET /api/...`): add/update the handler under `web/tests/msw/handlers` and ensure `setupExternalAPIMocks` registers it before specs run. The API harness boots with `PLAYWRIGHT_USE_MOCKS=1` by default, so every route must exist offline.
+### MSW Fixture & Dev Server Troubleshooting
+- **Fixture source of truth**: Canonical payloads now live under `web/tests/fixtures/api/**`. MSW (`web/tests/msw/api-handlers.ts`), Playwright (`tests/e2e/helpers/e2e-setup.ts`), and the contract suites all import from these modules, so updating a fixture keeps every harness aligned.
+- **Missing handler errors** (`[MSW] Warning: captured "GET /api/...`): add/update the handler under `web/tests/msw/api-handlers.ts` (and, if applicable, the corresponding Playwright route inside `setupExternalAPIMocks`). The API harness boots with `PLAYWRIGHT_USE_MOCKS=1` by default, so every route must exist offline.
 - **Contract suite fails but Playwright passes**: verify the real handler returns `successResponse`/`errorResponse`. MSW might still serve the legacy shape, masking the regression. Fix the handler first, then regenerate fixtures.
 - **Hanging dev server**: clear `.next`, run `PLAYWRIGHT_NO_SERVER=1 npm run test:e2e -- --grep <spec>` and start `npm run dev` manually. Ensure `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` is set so harness pages expose bridges.
+- **Chunk 500s in dev (`/_next/static/chunks/next-dist-...` 500 / wrong MIME)**: we now gate custom `splitChunks`/`runtimeChunk` tuning to production in `web/next.config.js`. If you see dev-only 500s again, confirm `process.env.NODE_ENV === 'production'` guards still wrap the optimization block and restart the dev server after clearing `.next`.
+- **Harness boot timing out**: Playwright harness specs now expect slower first compiles (~45s) on cold caches. Set `HARNESS_NAV_TIMEOUT=60000` (see `tests/e2e/helpers/e2e-setup.ts`) or run `npm run dev` for 30s before invoking `npx playwright test` so the initial build finishes. The helper already retries navigation when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` is set, but long compiles without the new timeout env will still fail.
 - Always type fixtures via `ApiSuccessResponse<T>` to get TypeScript failures when payloads drift.
 - **Feeds engagement shape drift**: `FeedEngagement` now requires `bookmarks` in addition to `likes/shares/comments/views`. Update `web/tests/msw/feeds-handlers.ts` (and any ad-hoc fixtures) whenever the type changes so Playwright + contract suites fail fast instead of silently shipping mismatched payloads.
 
@@ -53,7 +56,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 - Analytics harness auth seeding: `web/app/(app)/e2e/analytics-dashboard/page.tsx` seeds an admin user via `userStore.initializeAuth` once the persisted store hydrates, so the dashboard never falls back to `<UnauthorizedAccess />`. If you refactor that harness, keep the hydration guard (or call `initializeAuth` yourself) or the screen-reader spec will only ever see the “Access denied” layout and fail before the Refresh button appears.
 - Analytics reference patterns: review `web/features/analytics/components/AnalyticsSummaryTable.tsx` for the accessible table scaffold used by dashboard sweeps and baseline snapshots.
 - Widget modernization reference: bookmark `scratch/gpt5-codex/store-roadmaps/widget-store-checklist.md` for acceptance criteria that harmonise harness expectations, keyboard affordances, and analytics announcements.
-- MSW fixtures live under `web/tests/msw/`. Use `setupExternalAPIMocks(page, { auth: true })` for Playwright and `tests/setup.ts` for Jest.
+- MSW fixtures live under `web/tests/fixtures/api/` and are registered through `web/tests/msw/api-handlers.ts`. Use `setupExternalAPIMocks(page, { auth: true })` for Playwright and `tests/setup.ts` (which boots `web/tests/msw/server.ts`) for Jest.
 - Shared guidance on modernization + selectors: `docs/STATE_MANAGEMENT.md`.
 - Admin navigation sanity: run `npm run test -- --runInBand tests/unit/admin/Sidebar.test.tsx` after tweaking breadcrumb/selector wiring; it stubs system metrics and verifies the sidebar highlights the section registered via `useAppActions`.
 - **Cross-store cascade testing**: When testing auth flows (login/logout, session expiry), verify that `userStore.signOut()` or unauthenticated transitions reset `profileStore` and `adminStore`. See `web/tests/unit/stores/authCascade.test.ts` for unit coverage and `web/tests/e2e/specs/dashboard-auth.spec.ts` for E2E validation. The cascade ensures no stale user data persists after logout.
@@ -69,6 +72,8 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 ## Quick Tips
 
 - Set `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` when running harness pages locally.
+- Pass `HARNESS_NAV_TIMEOUT=60000 NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npx playwright test …` for the full suite so Playwright waits for slow dev compiles; individual specs inherit defaults from `tests/e2e/helpers/e2e-setup.ts`.
+- When `_next/static` requests log CSP `connect-src` or `font-src` warnings, append `http://127.0.0.1:3000` and `https://fonts.gstatic.com https://fonts.googleapis.com` to `next.config.js::headers.allowedDevOrigins` (or `CONTENT_SECURITY_POLICY` env) so CI logs stay clean.
 - If the widget dashboard harness refuses to reflect keyboard updates, verify you are instantiating the store via `createWidgetStore` (post-2025-11-14 change mutates widgets in place). Clearing `.next` can recover from ENOSPC build artefacts when Playwright boots dev servers. When debugging keyboard specs, inspect `window.__announceLogs` in the browser console to confirm `[WidgetRenderer][announce]` messages are firing, and lean on the shared announcement helpers instead of inlining ad-hoc waiters.
 - Install `installScreenReaderCapture(page)` **before** your spec triggers navigation so console + direct `ScreenReaderSupport.announce` calls land in `window.__announceLogs`; the helper now registers its bookkeeping on `window` once and subsequent overwrites will wipe the harness signal.
 - Prefer `findBy*` queries in RTL tests to allow harness hydration.

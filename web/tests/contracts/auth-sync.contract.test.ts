@@ -15,6 +15,27 @@ jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
 }));
 
+const expectSuccessEnvelope = (body: any) => {
+  expect(body.success).toBe(true);
+  expect(body.metadata).toEqual(
+    expect.objectContaining({
+      timestamp: expect.any(String),
+    }),
+  );
+};
+
+const expectErrorEnvelope = (body: any, options?: { code?: string }) => {
+  expect(body.success).toBe(false);
+  expect(body.metadata).toEqual(
+    expect.objectContaining({
+      timestamp: expect.any(String),
+    }),
+  );
+  if (options?.code) {
+    expect(body.code).toBe(options.code);
+  }
+};
+
 describe('Auth sync-user API contract', () => {
   const loadRoute = () => {
     let routeModule: any;
@@ -67,7 +88,7 @@ describe('Auth sync-user API contract', () => {
     const body = await response.json();
 
     expect(response.status).toBe(201);
-    expect(body.success).toBe(true);
+    expectSuccessEnvelope(body);
     expect(body.data.user.user_id).toBe('user-1');
     expect(body.metadata).toEqual(expect.objectContaining({ timestamp: expect.any(String) }));
   });
@@ -99,7 +120,7 @@ describe('Auth sync-user API contract', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
+    expectSuccessEnvelope(body);
     expect(body.data.message).toBe('User already synced');
     expect(body.metadata).toEqual(expect.objectContaining({ timestamp: expect.any(String) }));
   });
@@ -115,8 +136,7 @@ describe('Auth sync-user API contract', () => {
     const body = await response.json();
 
     expect(response.status).toBe(401);
-    expect(body.code).toBe('AUTH_ERROR');
-    expect(body.metadata).toEqual(expect.objectContaining({ timestamp: expect.any(String) }));
+    expectErrorEnvelope(body, { code: 'AUTH_ERROR' });
   });
 
   it('propagates lookup failures', async () => {
@@ -146,7 +166,7 @@ describe('Auth sync-user API contract', () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body.code).toBe('SYNC_PROFILE_LOOKUP_FAILED');
+    expectErrorEnvelope(body, { code: 'SYNC_PROFILE_LOOKUP_FAILED' });
     expect(body.details).toEqual({ message: 'lookup failed' });
   });
 
@@ -187,7 +207,7 @@ describe('Auth sync-user API contract', () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body.code).toBe('SYNC_PROFILE_CREATE_FAILED');
+    expectErrorEnvelope(body, { code: 'SYNC_PROFILE_CREATE_FAILED' });
     expect(body.details).toEqual({ message: 'insert failed' });
   });
 });

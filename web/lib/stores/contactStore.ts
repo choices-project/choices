@@ -351,6 +351,13 @@ const buildMessagesQuery = (threadId: string, options: FetchMessagesOptions = {}
   return queryString ? `?${queryString}` : '';
 };
 
+const generateOptimisticId = () => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto && typeof crypto.randomUUID === 'function') {
+    return `optimistic-${crypto.randomUUID()}`;
+  }
+  return `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const createContactActions = (
   set: Parameters<ContactStoreCreator>[0],
   get: Parameters<ContactStoreCreator>[1],
@@ -552,9 +559,50 @@ const createContactActions = (
   };
 
   const sendMessage: ContactActions['sendMessage'] = async (input) => {
+    const optimisticId = generateOptimisticId();
+    const optimisticCreatedAt = new Date().toISOString();
+
     setState((draft) => {
       draft.isSendingMessage = true;
       draft.error = null;
+
+      const optimisticMessage: ContactMessage = {
+        id: optimisticId,
+        threadId: input.threadId,
+        senderId: String(input.representativeId ?? 'me'),
+        recipientId: input.representativeId,
+        subject: input.subject,
+        content: input.content,
+        status: 'sent',
+        priority: input.priority ?? 'normal',
+        messageType: input.messageType ?? 'text',
+        attachments: input.attachments ?? [],
+        createdAt: optimisticCreatedAt,
+        updatedAt: null,
+        readAt: null,
+        repliedAt: null,
+      };
+
+      const existingMessages = draft.messagesByThreadId[input.threadId] ?? [];
+      draft.messagesByThreadId[input.threadId] = mergeMessages(existingMessages, [optimisticMessage], true);
+
+      const thread = draft.threadsById[input.threadId];
+      if (thread) {
+        thread.lastMessageAt = optimisticCreatedAt;
+        thread.messageCount = Number.isFinite(thread.messageCount)
+          ? thread.messageCount + 1
+          : (draft.messagesByThreadId[input.threadId]?.length ?? 1);
+        thread.updatedAt = optimisticCreatedAt;
+      }
+
+      const meta = draft.messagesMetaByThreadId[input.threadId];
+      draft.messagesMetaByThreadId[input.threadId] = {
+        total: (meta?.total ?? existingMessages.length) + 1,
+        limit: meta?.limit ?? existingMessages.length + 1,
+        offset: 0,
+        hasMore: meta?.hasMore ?? false,
+        lastFetchedAt: Date.now(),
+      };
     });
 
     try {
@@ -579,7 +627,7 @@ const createContactActions = (
       const payload = extractPayload<{ message?: any; threadId?: string }>(data);
 
       if (!response.ok || data?.success !== true || !payload.message) {
-        throw new Error(data?.error ?? 'Failed to send contact message');
+        throw new Error('Failed to send contact message');
       }
 
       const normalisedMessage = normaliseMessage(
@@ -590,7 +638,8 @@ const createContactActions = (
       setState((draft) => {
         const threadId = normalisedMessage.threadId;
         const existingMessages = draft.messagesByThreadId[threadId] ?? [];
-        const updatedMessages = mergeMessages(existingMessages, [normalisedMessage], true);
+        const withoutOptimistic = existingMessages.filter((message) => message.id !== optimisticId);
+        const updatedMessages = mergeMessages(withoutOptimistic, [normalisedMessage], true);
         draft.messagesByThreadId[threadId] = updatedMessages;
 
         const thread = draft.threadsById[threadId];
@@ -624,6 +673,30 @@ const createContactActions = (
       const message =
         error instanceof Error ? error.message : 'Unknown error sending contact message';
       baseActions.setError(message);
+
+      setState((draft) => {
+        const messages = draft.messagesByThreadId[input.threadId];
+        if (messages) {
+          draft.messagesByThreadId[input.threadId] = messages.filter((msg) => msg.id !== optimisticId);
+        }
+
+        const thread = draft.threadsById[input.threadId];
+        if (thread && Number.isFinite(thread.messageCount)) {
+          thread.messageCount = Math.max(0, thread.messageCount - 1);
+        }
+
+        if (draft.messagesMetaByThreadId[input.threadId]) {
+          draft.messagesMetaByThreadId[input.threadId] = {
+            ...draft.messagesMetaByThreadId[input.threadId]!,
+            total: Math.max(
+              0,
+              (draft.messagesMetaByThreadId[input.threadId]?.total ?? 1) - 1,
+            ),
+            lastFetchedAt: Date.now(),
+          };
+        }
+      });
+
       throw error;
     } finally {
       setState((draft) => {

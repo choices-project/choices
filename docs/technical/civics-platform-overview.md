@@ -28,6 +28,9 @@ Use this guide to orient yourself before diving into the detailed civics documen
 ## Fast Checks
 
 - Confirm `SUPABASE_SERVICE_ROLE_KEY` and `GOOGLE_CIVIC_API_KEY` are configured (see `ENVIRONMENT_VARIABLES.md`).
+  - Address resolution uses a server proxy: `POST /api/v1/civics/address-lookup`
+  - Proxy enforces per-IP rate limiting and caches responses briefly
+  - Client code must not call Google APIs directly; use the proxy
 - Run `npm run test:e2e -- --grep civics` after changing API routes or stores.
 - For data refreshes, execute the scripts in `services/civics-backend/src/scripts/state/` following the archive runbook.
 

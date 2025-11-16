@@ -52,22 +52,14 @@ const normaliseDateKey = (timestamp: string): string => {
   return date.toISOString().slice(0, 10);
 };
 
-const toNumber = (value: unknown, fallback = 0): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number.parseFloat(value);
-    if (!Number.isNaN(parsed)) return parsed;
-  }
-  return fallback;
-};
-
 export const GET = withErrorHandling(async (request: NextRequest) => {
   if (!isFeatureEnabled('ANALYTICS')) {
     return errorResponse('Analytics feature is disabled', 403);
   }
 
   const supabase = await getSupabaseServerClient();
-  const { searchParams } = request.nextUrl;
+  const urlObj = request.nextUrl ?? new URL(request.url ?? 'http://localhost');
+  const { searchParams } = urlObj;
   const windowDays = parseWindowDays(searchParams.get('windowDays'));
 
   const since = new Date();

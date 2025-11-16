@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { withOptional } from '@/lib/util/objects'
 import { devLog } from '@/lib/utils/logger'
 
 // Types
@@ -230,7 +229,16 @@ export function useDeviceDetection() {
   }, [detectDeviceType, detectOS, detectBrowser, checkCapabilities, getOptimizationSettings])
 
   const updateOptimizationSettings = useCallback((newSettings: Partial<OptimizationSettings>) => {
-    setOptimizationSettings(prev => prev ? withOptional(prev, newSettings) : null)
+    setOptimizationSettings(prev => {
+      if (!prev) return null;
+      const next: OptimizationSettings = { ...prev };
+      for (const [k, v] of Object.entries(newSettings) as [keyof OptimizationSettings, OptimizationSettings[keyof OptimizationSettings]][]) {
+        if (v !== undefined && v !== null) {
+          (next as Record<string, unknown>)[k as string] = v;
+        }
+      }
+      return next;
+    })
   }, [])
 
   const checkNetworkStatus = useCallback(async (): Promise<{ online: boolean; speed: 'slow' | 'medium' | 'fast' }> => {

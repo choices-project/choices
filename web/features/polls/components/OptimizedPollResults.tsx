@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 
-
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
 import { logger } from '@/lib/utils/logger';
 
@@ -23,6 +24,10 @@ export default function OptimizedPollResults({
   onError,
   showPerformanceMetrics = false
 }: OptimizedPollResultsProps) {
+  const { t } = useI18n();
+  const resultsRegionId = useId();
+  const resultsHeadingId = useId();
+  const previousRefreshRef = useRef<number | null>(null);
   const [results, setResults] = useState<OptimizedPollResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -110,9 +115,30 @@ export default function OptimizedPollResults({
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
+    const refreshTime = Date.now();
+    ScreenReaderSupport.announce(t('polls.results.refreshing'), 'polite');
     await loadPollResults()
     await loadCacheStats()
-  }, [loadPollResults, loadCacheStats])
+    previousRefreshRef.current = refreshTime;
+  }, [loadPollResults, loadCacheStats, t])
+
+  // Announce results updates
+  useEffect(() => {
+    if (!results || loading) return;
+    
+    const totalVotes = results.totalVotes ?? 0;
+    const topOption = sortedOptions[0];
+    if (!topOption) return;
+
+    const summary = t('polls.results.summary', {
+      totalVotes,
+      topOption: topOption.label ?? topOption.option,
+      topVotes: topOption.voteCount ?? topOption.votes,
+      topPercentage: (topOption.votePercentage ?? topOption.percentage ?? 0).toFixed(1),
+    });
+
+    ScreenReaderSupport.announce(summary, 'polite');
+  }, [results, sortedOptions, loading, t]);
 
   if (loading) {
     return (
@@ -252,38 +278,77 @@ export default function OptimizedPollResults({
       </div>
 
       {/* Results */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Results</h3>
-        <div className="space-y-3">
-          {sortedOptions.map((option) => (
-            <div key={option.optionId ?? option.option} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.label ?? option.option}</h4>
-                <span className="text-sm text-gray-600">
-                  {option.voteCount ?? option.votes} votes ({((option.votePercentage ?? option.percentage) ?? 0).toFixed(1)}%)
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+      <section
+        aria-labelledby={resultsHeadingId}
+        className="space-y-4"
+        role="region"
+      >
+        <h2 id={resultsHeadingId} className="text-lg font-semibold text-gray-900">
+          {t('polls.results.heading')}
+        </h2>
+        <div className="space-y-3" role="list">
+          {sortedOptions.map((option, index) => {
+            const optionId = option.optionId ?? option.option;
+            const votes = option.voteCount ?? option.votes ?? 0;
+            const percentage = ((option.votePercentage ?? option.percentage) ?? 0).toFixed(1);
+            const uniqueVoters = option.uniqueVoters ?? 0;
+            const optionLabel = option.label ?? option.option;
+            const optionSummaryId = `${resultsRegionId}-option-${index}-summary`;
+            
+            return (
+              <article
+                key={optionId}
+                className="bg-white border border-gray-200 rounded-lg p-4"
+                role="listitem"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-medium text-gray-900">{optionLabel}</h3>
+                  <span className="text-sm text-gray-600">
+                    {t('polls.results.optionVotes', { votes, percentage })}
+                  </span>
+                </div>
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${option.votePercentage ?? option.percentage ?? 0}%` }}
-                 />
-              </div>
-              <div className="mt-2 text-xs text-gray-500">
-                {option.uniqueVoters ?? 0} unique voters
-              </div>
-            </div>
-          ))}
+                  className="w-full bg-gray-200 rounded-full h-2"
+                  role="progressbar"
+                  aria-labelledby={`${resultsRegionId}-option-${index}-label`}
+                  aria-valuenow={parseFloat(percentage)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-describedby={optionSummaryId}
+                >
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <p id={optionSummaryId} className="sr-only">
+                  {t('polls.results.optionSummary', {
+                    option: optionLabel,
+                    votes,
+                    percentage,
+                    uniqueVoters,
+                  })}
+                </p>
+                <p id={`${resultsRegionId}-option-${index}-label`} className="sr-only">
+                  {optionLabel}
+                </p>
+                <div className="mt-2 text-xs text-gray-500">
+                  {t('polls.results.uniqueVoters', { count: uniqueVoters })}
+                </div>
+              </article>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
       {/* Refresh Button */}
       <div className="flex justify-end">
         <button
           onClick={handleRefresh}
           className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+          aria-label={t('polls.results.refreshLabel')}
         >
-          Refresh Results
+          {t('polls.results.refresh')}
         </button>
       </div>
     </div>

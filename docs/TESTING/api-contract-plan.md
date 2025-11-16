@@ -15,10 +15,16 @@ Establish a lightweight Jest contract suite that hits `web/app/api/**` handlers 
 1. **Profile & Auth surfaces**  
    - `/api/profile` (GET/POST/PUT/PATCH) via shared `createProfilePayload`.  
    - `/api/user/complete-onboarding`, `/api/privacy/preferences`.
-   - `/api/auth/register` contract tests assert CSRF + rate-limit guards, username regex validation, Supabase sign-up failures, and profile insert warnings (no mocking of `withErrorHandling`).  
-   - `/api/auth/sync-user` suite now covers missing-auth guard, lookup/create failure payload details, and metadata timestamp assertions.
+   - `/api/auth/register` contract tests assert CSRF + rate-limit guards, username regex validation, Supabase sign-up failures, profile insert warnings, and metadata timestamp envelopes (no mocking of `withErrorHandling`).  
+   - `/api/auth/sync-user` suite now covers missing-auth guard, lookup/create failure payload details, and metadata timestamp assertions for every envelope (`AUTH_ERROR`, `SYNC_PROFILE_LOOKUP_FAILED`, `SYNC_PROFILE_CREATE_FAILED`).
+   - `/api/profile` onboarding POST now has explicit invalid-payload coverage asserting `VALIDATION_ERROR` envelopes (metadata timestamps + field-level error details) when onboarding fields fail schema validation.
 2. **Civics endpoints**  
-   - `/api/v1/civics/address-lookup`, `/api/v1/civics/by-state`, `/api/v1/civics/elections`.  
+   - `/api/v1/civics/address-lookup` (POST), `/api/v1/civics/by-state`, `/api/v1/civics/elections`.  
+   - Address lookup assertions:
+     - Returns jurisdiction payload and sets jurisdiction cookie (state, optional district/county)
+     - Enforces per-IP rate limiting (expect 429 when exceeded)
+     - Serves cached responses within TTL window (meta.cached = true)
+     - Never exposes `GOOGLE_CIVIC_API_KEY` to client
    - Address lookup now validates cookie writes, pepper config, and fallback metadata when Google Civic API fails.  
    - `/api/v1/civics/elections` asserts count metadata for empty RPC results plus `divisions` query parsing.  
    - `/api/v1/civics/by-state` asserts success + validation + Supabase failure envelopes **and** emits filtering metadata for `fields`/`include` queries.
@@ -52,12 +58,18 @@ Establish a lightweight Jest contract suite that hits `web/app/api/**` handlers 
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth/Profile | `/api/auth/*`, `/api/profile`, `/api/user/complete-onboarding`, `/api/privacy/preferences` | ✅ | WebAuthn + onboarding POST now emit shared envelopes; add new codes in `docs/API/contracts.md` when extending. |
-| Civics | `/api/v1/civics/address-lookup`, `/by-state`, `/elections` | ✅ | Address lookup asserts cookie + metadata; elections asserts pagination + `fields/include` filters. |
+| Civics | `/api/v1/civics/address-lookup` (POST), `/by-state`, `/elections` | ✅ | Address lookup asserts cookie + metadata, rate limit (429), and caching; elections asserts pagination + `fields/include` filters. |
 | Dashboard/Analytics | `/api/dashboard`, `/api/analytics/**` | ✅ | Cache metadata + error codes validated. Update MSW fixtures when TTL/headers change. |
 | Feeds/Trending | `/api/feeds`, `/api/trending`, `/api/polls/trending` | ✅ | Pagination + rate limit metadata asserted; keep tracker metadata stable. |
 | Contact/Notifications | `/api/contact/messages|threads`, `/api/notifications` | ✅ | Validation + not-found flows covered. |
 | Admin/Candidate/Cron | `/api/admin/breaking-news`, `/api/candidate/journey/send-email`, `/api/cron/candidate-reminders` | ✅ | Ensure audit logging mocks assert payload. |
 | Legacy Admin/Civics (Workflow C follow-up) | `/api/admin/*` (legacy), `/api/candidate/*` extras | 🚧 | Track remaining legacy handlers in `scratch/gpt5-codex/store-roadmaps/api-response-modernization.md`. |
+
+## Dev Server Hygiene & Harness Reliability
+
+- **Chunk 500s / `_next/static` MIME errors**: aggressive `splitChunks` tuning now runs only in production. If contract or Playwright suites start logging chunk 500s again, ensure the webpack optimization block inside `next.config.js` is still guarded by `process.env.NODE_ENV === 'production'`.
+- **Harness boot timeout**: The Playwright helpers respect `HARNESS_NAV_TIMEOUT` (default 45000 ms). Set `HARNESS_NAV_TIMEOUT=60000 NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npx playwright test …` when running the full suite locally so the first Next.js compile has time to finish before navigation assertions fire.
+- **Allowed dev origins / CSP warnings**: Add additional sources to `ALLOWED_DEV_ORIGINS` (comma-separated) when hitting the dev server from non-default hosts (e.g., GitHub Codespaces). `next.config.js` merges these into the development CSP (`connect-src`, `script-src`, etc.) and emits an `X-Allowed-Dev-Origins` header so diagnostics stay visible.
 
 ## Test Harness Design
 
@@ -73,11 +85,12 @@ Establish a lightweight Jest contract suite that hits `web/app/api/**` handlers 
 - **Performance**: Keep each file < ~5 tests; mock DB/responses to avoid network.
 
 ### Fixture & Playwright Alignment
-- Every contract-tested route must also have a deterministic MSW handler under `web/tests/msw/handlers`. `setupExternalAPIMocks` powers both Playwright specs and local dev harnesses.
+- Every contract-tested route must also have a deterministic MSW handler registered via `web/tests/msw/server.ts`. Shared payloads now live under `web/tests/fixtures/api/**` and are imported by both MSW (`api-handlers.ts`) and Playwright (`tests/e2e/helpers/e2e-setup.ts`), so updating a fixture keeps Jest/MSW/Playwright aligned.
+- `setupExternalAPIMocks` consumes these fixtures directly—treat it as the canonical offline behavior for harness runs.
 - After changing a payload, update:
   1. The route handler (shared envelope helpers).
   2. Contract assertions.
-  3. MSW fixture + any Playwright spec snapshots.
+  3. Fixtures under `web/tests/fixtures/api/**` plus any MSW/Playwright handler that consumes them.
   4. `docs/API/contracts.md` if new codes/metadata fields were introduced.
 
 ### Adding a New Route Checklist
@@ -90,7 +103,7 @@ Establish a lightweight Jest contract suite that hits `web/app/api/**` handlers 
 ## Tasks
 
 1. [x] Create `web/tests/contracts/` with utility to invoke API routes (mock Supabase, request objects).  
-2. [x] Add fixtures for profile, civics, contact, and dashboard responses under `web/tests/fixtures/api/`.  
+2. [x] Add fixtures for profile, civics, contact, dashboard, polls, notifications, share analytics, and PWA responses under `web/tests/fixtures/api/`.  
 3. [x] Author initial contract suites:
    - `profile.contract.test.ts`
    - `civics.contract.test.ts`

@@ -5,7 +5,6 @@
  * into query performance and suggests optimizations.
  */
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -113,7 +112,7 @@ export class QueryAnalyzer {
     const complexity = this.calculateComplexity(query);
     const suggestions = this.generateOptimizations(query, pattern, executionTime, rowsReturned, rowsExamined, usedIndex);
 
-    const plan = withOptional({
+    const plan: QueryPlan = {
       id: this.generateQueryId(query),
       query,
       pattern,
@@ -124,9 +123,8 @@ export class QueryAnalyzer {
       complexity,
       suggestions,
       timestamp: Date.now(),
-    }, {
-      indexName
-    }) as QueryPlan;
+      ...(indexName ? { indexName } : {})
+    };
 
     this.queryHistory.push(plan);
     this.updatePerformanceMetrics(pattern, plan);

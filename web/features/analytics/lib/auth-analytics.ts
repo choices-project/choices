@@ -14,7 +14,6 @@
  * @since 2024-12-27
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 // Analytics event types
@@ -219,7 +218,10 @@ export class AuthAnalytics {
     if (options.riskScore !== undefined) optionalData.riskScore = options.riskScore;
     if (options.metadata) optionalData.metadata = options.metadata;
     
-    const event = withOptional(baseEvent, optionalData) as AuthEvent;
+    const event: AuthEvent = {
+      ...(baseEvent as AuthEvent),
+      ...(optionalData as Partial<AuthEvent>),
+    };
 
     // Add to events
     this.events.push(event)

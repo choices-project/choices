@@ -66,10 +66,10 @@ All stores follow the `immer -> persist -> devtools` order documented in `STATE_
 ## 5. Rollout Checklist (Phase C)
 | Item | Owner | Status | Notes |
 | --- | --- | --- | --- |
-| Civics shell RTL suite (`/civics` selectors) | Platform RTL | ☐ | Mirror `AppShell.test.tsx` assertions to ensure civics uses selector hooks only. |
-| Contact shell RTL suite | Platform RTL | ☐ | Validate breadcrumbs + `setSidebarActiveSection('contact')`. |
-| Account shell RTL suite | Platform RTL | ☐ | Ensure profile/account layouts avoid raw store access. |
-| Middleware docs | GPT‑5 Codex | ✅ | Captured above; link from `STATE_MANAGEMENT.md`. |
+| Civics shell RTL suite (`/civics` selectors) | Platform RTL pod · Phase C owner | 🚧 In progress (target Nov 22) | Mirror `AppShell.test.tsx` assertions to ensure civics uses selector hooks only; track in store roadmap. |
+| Contact shell RTL suite | Platform RTL pod · Phase C owner | ☐ Not started (assign by Nov 25) | Validate breadcrumbs + `setSidebarActiveSection('contact')`; add harness capture. |
+| Account shell RTL suite | Platform RTL pod · Phase C owner | ☐ Not started (assign by Nov 25) | Ensure profile/account layouts avoid raw store access. |
+| Middleware docs | GPT‑5 Codex | ✅ Complete (Nov 15) | Captured above; link from `STATE_MANAGEMENT.md`. |
 
 Mark each row when the corresponding test files land; update this table as new shells migrate.
 
@@ -92,5 +92,14 @@ Mark each row when the corresponding test files land; update this table as new s
 5. Add contract coverage (RTL + harness + Playwright) before wiring production routes.
 
 Keep this document updated as shells evolve so downstream teams have a single reference for navigation/store expectations.
+
+---
+
+## 8. Phase C Governance Deliverables
+- **Pull Request Checklist:** All UI-affecting PRs must fill out the inclusive/i18n section in `.github/PULL_REQUEST_TEMPLATE.md`, confirming that `t()` keys, lint, axe specs, and release-note entries were handled. Missing checkboxes result in CI failures.
+- **Doc Cross-links:** When a store/layout change lands, update this file *and* `docs/STATE_MANAGEMENT.md` plus the applicable store checklist under `scratch/gpt5-codex/store-roadmaps/`. A link to the relevant section is mandatory in the PR summary.
+- **Release Sign-off:** Before tagging a release, verify Section 5 tasks are complete (RTL suites merged or waived) and the audit schedule in `docs/qa/i18n-accessibility-playbook.md#9-audit-schedule` reflects the most recent run.
+- **Owner Tracking:** Update the table in Section 5 whenever ownership changes. Owner names/roles are the source of truth for Phase C governance and inform enforcement bots that will land in Phase D.
+- **Automation:** Run `npm run governance:check` (or let CI do it) whenever you touch `web/lib/stores/**` to ensure roadmap + doc updates accompany the code changes. Set `GOVERNANCE_BYPASS=1` only when explicitly approved.
 
 

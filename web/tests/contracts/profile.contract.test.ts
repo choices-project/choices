@@ -20,6 +20,27 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+const expectSuccessEnvelope = (body: any) => {
+  expect(body.success).toBe(true);
+  expect(body.metadata).toEqual(
+    expect.objectContaining({
+      timestamp: expect.any(String),
+    }),
+  );
+};
+
+const expectErrorEnvelope = (body: any, options?: { code?: string }) => {
+  expect(body.success).toBe(false);
+  expect(body.metadata).toEqual(
+    expect.objectContaining({
+      timestamp: expect.any(String),
+    }),
+  );
+  if (options?.code) {
+    expect(body.code).toBe(options.code);
+  }
+};
+
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn(() => mockSupabaseClient),
 }));
@@ -325,8 +346,39 @@ describe('Profile API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(400);
-    expect(body.code).toBe('VALIDATION_ERROR');
+    expectErrorEnvelope(body, { code: 'VALIDATION_ERROR' });
     expect(body.details.step).toContain('expected number to be <=10');
+  });
+
+  it('rejects onboarding payloads with invalid field types', async () => {
+    mockSupabaseClient.auth.getUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
+    });
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'user_profiles') {
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({ data: profileRecord, error: null }),
+        };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    const { POST } = loadRoutes();
+    const response = await POST(
+      createNextRequest('http://localhost/api/profile', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ onboarding: { completed: 'yes' } }),
+      }),
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(400);
+    expectErrorEnvelope(body, { code: 'VALIDATION_ERROR' });
+    expect(body.details.completed).toContain('expected boolean');
   });
 });
 

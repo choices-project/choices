@@ -84,6 +84,8 @@ async function loginForToken(page: Page, user: TestUser): Promise<string> {
   return token!;
 }
 
+const APP_BOOT_TIMEOUT = 90_000;
+
 test.describe('API endpoints (mock harness)', () => {
   let seedHandle: SeedHandle;
   let testData: { user: TestUser; poll: TestPoll };
@@ -115,8 +117,8 @@ test.describe('API endpoints (mock harness)', () => {
     };
 
     await setupExternalAPIMocks(page, { api: true });
-    await page.goto('/');
-    await waitForPageReady(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: APP_BOOT_TIMEOUT });
+    await waitForPageReady(page, APP_BOOT_TIMEOUT);
   });
 
   test.afterEach(async () => {

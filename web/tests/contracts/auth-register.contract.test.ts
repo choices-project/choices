@@ -64,6 +64,27 @@ describe('Auth register API contract', () => {
     'user-agent': 'contract-suite',
   };
 
+  const expectSuccessEnvelope = (body: any) => {
+    expect(body.success).toBe(true);
+    expect(body.metadata).toEqual(
+      expect.objectContaining({
+        timestamp: expect.any(String),
+      }),
+    );
+  };
+
+  const expectErrorEnvelope = (body: any, options?: { code?: string }) => {
+    expect(body.success).toBe(false);
+    expect(body.metadata).toEqual(
+      expect.objectContaining({
+        timestamp: expect.any(String),
+      }),
+    );
+    if (options?.code) {
+      expect(body.code).toBe(options.code);
+    }
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockSupabaseClient.auth.signUp.mockReset();
@@ -115,7 +136,7 @@ describe('Auth register API contract', () => {
     }
     const body = await response.json();
     expect(response.status).toBe(201);
-    expect(body.success).toBe(true);
+    expectSuccessEnvelope(body);
     expect(body.data.user.email).toBe('new@example.com');
     expect(validateCsrfProtection).toHaveBeenCalledWith(expect.any(Request));
     expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith(
@@ -170,7 +191,7 @@ describe('Auth register API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(429);
-    expect(body.code).toBe('RATE_LIMIT');
+    expectErrorEnvelope(body, { code: 'RATE_LIMIT' });
   });
 
   it('rejects invalid usernames via regex validation', async () => {
@@ -189,7 +210,7 @@ describe('Auth register API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(400);
-    expect(body.code).toBe('VALIDATION_ERROR');
+    expectErrorEnvelope(body, { code: 'VALIDATION_ERROR' });
     expect(body.details.username).toContain('Username must be 3-20 characters');
     expect(mockSupabaseClient.auth.signUp).not.toHaveBeenCalled();
   });
@@ -215,7 +236,7 @@ describe('Auth register API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(409);
-    expect(body.code).toBe('EMAIL_EXISTS');
+    expectErrorEnvelope(body, { code: 'EMAIL_EXISTS' });
   });
 
   it('returns 400 with error detail for non-conflict Supabase failures', async () => {
@@ -239,7 +260,7 @@ describe('Auth register API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(400);
-    expect(body.success).toBe(false);
+    expectErrorEnvelope(body);
     expect(body.error).toBe('Registration failed. Please try again.');
     expect(body.details).toEqual(
       expect.objectContaining({
@@ -281,7 +302,7 @@ describe('Auth register API contract', () => {
 
     const body = await response.json();
     expect(response.status).toBe(500);
-    expect(body.success).toBe(false);
+    expectErrorEnvelope(body);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'Orphaned auth user created - cleanup required',
       expect.objectContaining({ user_id: 'user-1', email: 'new@example.com' }),

@@ -93,6 +93,11 @@ export default function TrustTierComparisonChart({
 }: TrustTierComparisonChartProps) {
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
+  const cardHeadingId = useId();
+  const cardDescriptionId = useId();
+  const participationRegionId = useId();
+  const engagementRegionId = useId();
+  const radarRegionId = useId();
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);
@@ -104,11 +109,20 @@ export default function TrustTierComparisonChart({
 
   const tabLabels = useMemo(
     () => ({
-      participation: 'Participation and completion view',
-      engagement: 'Engagement and bot risk view',
-      radar: 'Multi-metric overview',
+      participation: t('analytics.trust.tabsLabels.participation'),
+      engagement: t('analytics.trust.tabsLabels.engagement'),
+      radar: t('analytics.trust.tabsLabels.radar'),
     }),
-    [],
+    [t],
+  );
+
+  const tabAnnouncements = useMemo(
+    () => ({
+      participation: t('analytics.trust.tabAnnouncements.participation'),
+      engagement: t('analytics.trust.tabAnnouncements.engagement'),
+      radar: t('analytics.trust.tabAnnouncements.radar'),
+    }),
+    [t],
   );
 
   const loadTrustTiers = useCallback(async () => {
@@ -228,6 +242,39 @@ export default function TrustTierComparisonChart({
     [data, formatNumber, formatPercent, highestEngagementTier, t],
   );
 
+  const summaryCards = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+    const cards = [
+      {
+        id: 'trust-total-users',
+        label: t('analytics.trust.summaryCards.totalUsers.label'),
+        subtitle: t('analytics.trust.summaryCards.totalUsers.subtitle'),
+        value: formatNumber(data.totalUsers),
+        sr: t('analytics.trust.summaryCards.totalUsers.sr', {
+          value: formatNumber(data.totalUsers),
+        }),
+      },
+    ];
+
+    if (highestEngagementTier) {
+      cards.push({
+        id: 'trust-strongest-tier',
+        label: t('analytics.trust.summaryCards.strongestTier.label'),
+        subtitle: t('analytics.trust.summaryCards.strongestTier.subtitle'),
+        value: `${highestEngagementTier.tierName} (${highestEngagementTier.tier})`,
+        sr: t('analytics.trust.summaryCards.strongestTier.sr', {
+          tier: `${highestEngagementTier.tierName} (${highestEngagementTier.tier})`,
+          engagement: formatNumber(highestEngagementTier.avgEngagement),
+          participation: formatPercent(highestEngagementTier.participationRate),
+        }),
+      });
+    }
+
+    return cards;
+  }, [data, formatNumber, formatPercent, highestEngagementTier, t]);
+
   useEffect(() => {
     void fetchTrustTierComparison({
       fallback: generateMockData,
@@ -237,15 +284,15 @@ export default function TrustTierComparisonChart({
   const handleTabChange = useCallback(
     (value: typeof activeTab) => {
       setActiveTab(value);
-      ScreenReaderSupport.announce(`Viewing ${tabLabels[value] ?? value}.`, 'polite');
+      ScreenReaderSupport.announce(tabAnnouncements[value] ?? tabLabels[value] ?? value, 'polite');
     },
-    [tabLabels],
+    [tabAnnouncements, tabLabels],
   );
 
   const handleRefresh = useCallback(() => {
-    ScreenReaderSupport.announce('Refreshing trust tier comparison data.', 'polite');
+    ScreenReaderSupport.announce(t('analytics.trust.refreshAnnouncement'), 'polite');
     void loadTrustTiers();
-  }, [loadTrustTiers]);
+  }, [loadTrustTiers, t]);
 
   useEffect(() => {
     if (isLoading || !summaryIntro) {
@@ -269,9 +316,12 @@ export default function TrustTierComparisonChart({
       return;
     }
 
-    ScreenReaderSupport.announce(`Trust tier data may be incomplete. ${error}`, 'assertive');
+    ScreenReaderSupport.announce(
+      t('analytics.trust.errorAnnouncement', { error }),
+      'assertive',
+    );
     previousErrorRef.current = error;
-  }, [error]);
+  }, [error, t]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -325,12 +375,15 @@ export default function TrustTierComparisonChart({
   // Loading state
   if (isLoading) {
     return (
-      <Card className={className}>
+      <Card className={className} role="region" aria-labelledby={cardHeadingId} aria-describedby={cardDescriptionId}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle id={cardHeadingId} className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Trust Tier Comparison
+            {t('analytics.trust.cardTitle')}
           </CardTitle>
+          <p id={cardDescriptionId} className="text-sm text-gray-600 mt-1">
+            {t('analytics.trust.cardDescription')}
+          </p>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-64">
@@ -346,17 +399,20 @@ export default function TrustTierComparisonChart({
 
   if (!data) {
     return (
-      <Card className={className}>
+      <Card className={className} role="region" aria-labelledby={cardHeadingId} aria-describedby={cardDescriptionId}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle id={cardHeadingId} className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Trust Tier Comparison
+            {t('analytics.trust.cardTitle')}
           </CardTitle>
+          <p id={cardDescriptionId} className="text-sm text-gray-600 mt-1">
+            {t('analytics.trust.cardDescription')}
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-red-600">
+          <div className="flex items-center justify-center h-64 text-red-600" role="alert">
             <AlertCircle className="h-5 w-5 mr-2" />
-            <span>{error ?? 'No data available'}</span>
+            <span>{error ?? t('analytics.trust.errors.noData')}</span>
           </div>
         </CardContent>
       </Card>
@@ -384,25 +440,21 @@ export default function TrustTierComparisonChart({
   ];
 
   return (
-    <Card className={className}>
+    <Card className={className} role="region" aria-labelledby={cardHeadingId} aria-describedby={cardDescriptionId}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id={cardHeadingId} className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Trust Tier Comparison
+              {t('analytics.trust.cardTitle')}
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              Compare behavior and engagement across trust tiers (T0-T3)
+            <p id={cardDescriptionId} className="text-sm text-gray-600 mt-1">
+              {t('analytics.trust.cardDescription')}
             </p>
           </div>
-          <Button
-            onClick={handleExport}
-            size="sm"
-            variant="outline"
-          >
+          <Button onClick={handleExport} size="sm" variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('analytics.buttons.export')}
           </Button>
         </div>
       </CardHeader>
@@ -418,35 +470,28 @@ export default function TrustTierComparisonChart({
         )}
 
         {/* Summary Stats */}
-        <div className="mb-6 grid grid-cols-4 gap-4">
-          {data.tiers.map((tier) => (
-            <div 
-              key={tier.tier}
-              className="text-center p-4 rounded-lg"
-              style={{ 
-                background: `linear-gradient(135deg, ${TIER_COLORS[tier.tier as keyof typeof TIER_COLORS]}15, ${TIER_COLORS[tier.tier as keyof typeof TIER_COLORS]}30)` 
-              }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Badge 
-                  className="text-white"
-                  style={{ backgroundColor: TIER_COLORS[tier.tier as keyof typeof TIER_COLORS] }}
-                >
-                  {tier.tier}
-                </Badge>
-              </div>
-              <p
-                className="text-2xl font-bold"
-                style={{ color: TIER_COLORS[tier.tier as keyof typeof TIER_COLORS] }}
+        {summaryCards.length > 0 && (
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {summaryCards.map((card) => (
+              <div
+                key={card.id}
+                className="text-center p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100"
+                role="group"
+                aria-labelledby={`${card.id}-label`}
+                aria-describedby={`${card.id}-value`}
               >
-                {formatNumber(tier.userCount)}
-              </p>
-              <p className="text-xs text-gray-600">
-                {tier.tierName} {t('analytics.trust.usersSuffix')}
-              </p>
-            </div>
-          ))}
-        </div>
+                <p id={`${card.id}-label`} className="text-sm text-gray-600">
+                  {card.label}
+                </p>
+                <p id={`${card.id}-value`} className="text-2xl font-bold text-blue-700">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+                <p className="sr-only">{card.sr}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Insights */}
         {data.insights && data.insights.length > 0 && (
@@ -467,28 +512,48 @@ export default function TrustTierComparisonChart({
         )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as typeof activeTab)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => handleTabChange(v as typeof activeTab)}
+          aria-label={t('analytics.trust.tabsGroupLabel')}
+        >
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="participation">Participation</TabsTrigger>
-            <TabsTrigger value="engagement">Engagement</TabsTrigger>
-            <TabsTrigger value="radar">Overview</TabsTrigger>
+            <TabsTrigger value="participation">{tabLabels.participation}</TabsTrigger>
+            <TabsTrigger value="engagement">{tabLabels.engagement}</TabsTrigger>
+            <TabsTrigger value="radar">{tabLabels.radar}</TabsTrigger>
           </TabsList>
 
           {/* Participation Tab */}
-          <TabsContent value="participation" className="mt-6">
+          <TabsContent
+            value="participation"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${participationRegionId}-heading`}
+          >
+            <p id={`${participationRegionId}-heading`} className="sr-only">
+              {tabLabels.participation}
+            </p>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Participation & Completion Rates</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                {t('analytics.trust.sections.participation.title')}
+              </h3>
               <p className="text-xs text-gray-600">
-                Higher tiers typically show better participation and completion rates
+                {t('analytics.trust.sections.participation.description')}
               </p>
             </div>
 
-            <div className="h-80">
+            <div className="h-80" role="img" aria-label={t('analytics.trust.sections.participation.chartLabel')}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.tiers} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="tier" />
-                  <YAxis label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }} />
+                  <YAxis
+                    label={{
+                      value: t('analytics.trust.axes.percentage'),
+                      angle: -90,
+                      position: 'insideLeft',
+                    }}
+                  />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
@@ -531,7 +596,9 @@ export default function TrustTierComparisonChart({
 
             {/* Detailed breakdown */}
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Detailed Metrics</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                {t('analytics.trust.sections.participation.detailedMetrics')}
+              </h3>
               <div className="space-y-2">
                 {data.tiers.map((tier) => (
                   <div 
@@ -556,7 +623,9 @@ export default function TrustTierComparisonChart({
                       <p className="text-sm font-medium text-gray-900">
                         {formatPercent(tier.participationRate)} / {formatPercent(tier.completionRate)}
                       </p>
-                      <p className="text-xs text-gray-500">Participation / Completion</p>
+                      <p className="text-xs text-gray-500">
+                        {t('analytics.trust.sections.participation.rateLabels')}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -565,20 +634,36 @@ export default function TrustTierComparisonChart({
           </TabsContent>
 
           {/* Engagement Tab */}
-          <TabsContent value="engagement" className="mt-6">
+          <TabsContent
+            value="engagement"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${engagementRegionId}-heading`}
+          >
+            <p id={`${engagementRegionId}-heading`} className="sr-only">
+              {tabLabels.engagement}
+            </p>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Engagement & Bot Detection</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                {t('analytics.trust.sections.engagement.title')}
+              </h3>
               <p className="text-xs text-gray-600">
-                Average engagement scores and bot likelihood indicators
+                {t('analytics.trust.sections.engagement.description')}
               </p>
             </div>
 
-            <div className="h-80">
+            <div className="h-80" role="img" aria-label={t('analytics.trust.sections.engagement.chartLabel')}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.tiers} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="tier" />
-                  <YAxis label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
+                  <YAxis
+                    label={{
+                      value: t('analytics.trust.axes.score'),
+                      angle: -90,
+                      position: 'insideLeft',
+                    }}
+                  />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
@@ -621,15 +706,25 @@ export default function TrustTierComparisonChart({
           </TabsContent>
 
           {/* Radar Overview Tab */}
-          <TabsContent value="radar" className="mt-6">
+          <TabsContent
+            value="radar"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${radarRegionId}-heading`}
+          >
+            <p id={`${radarRegionId}-heading`} className="sr-only">
+              {tabLabels.radar}
+            </p>
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Multi-Metric Overview</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                {t('analytics.trust.sections.radar.title')}
+              </h3>
               <p className="text-xs text-gray-600">
-                Comparative view across all key metrics
+                {t('analytics.trust.sections.radar.description')}
               </p>
             </div>
 
-            <div className="h-96">
+            <div className="h-96" role="img" aria-label={t('analytics.trust.sections.radar.chartLabel')}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid />
@@ -748,9 +843,10 @@ export default function TrustTierComparisonChart({
             onClick={handleRefresh}
             size="sm"
             variant="outline"
+            aria-label={t('analytics.buttons.refresh')}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Data
+            {t('analytics.buttons.refresh')}
           </Button>
         </div>
       </CardContent>

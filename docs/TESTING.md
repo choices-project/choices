@@ -23,6 +23,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).
 - `npm run type-check` — TypeScript project references check.
+- `npm run governance:check` — Verifies store/API changes have the required roadmap/doc/changelog updates (CI gate).
 
 ---
 

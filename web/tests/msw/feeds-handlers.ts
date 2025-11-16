@@ -1,7 +1,8 @@
 import type { FeedItem, GenericFeedItem } from '@/lib/stores/types/feeds';
 
 type BuildFeedsResponseParams = {
-  limit: number;
+  limit?: number;
+  offset?: number;
   category?: string | null;
   district?: string | null;
   sort?: string | null;
@@ -129,25 +130,35 @@ export const FEED_CATEGORY_FIXTURES = [
 
 export const buildFeedsResponse = ({
   limit,
+  offset,
   category,
   district,
   sort,
 }: BuildFeedsResponseParams) => {
-  const sanitizedLimit = Number.isNaN(limit) ? FEED_FIXTURES.length : limit;
-  const feeds =
-    sanitizedLimit >= FEED_FIXTURES.length
-      ? FEED_FIXTURES
-      : FEED_FIXTURES.slice(0, Math.max(1, Math.min(2, sanitizedLimit)));
+  const total = FEED_FIXTURES.length;
+  const sanitizedLimit =
+    limit == null || Number.isNaN(limit) || limit <= 0 ? total : limit;
+  const sanitizedOffset =
+    offset == null || Number.isNaN(offset) || offset < 0 ? 0 : offset;
+  const start = Math.min(sanitizedOffset, total);
+  const end = Math.min(start + sanitizedLimit, total);
+  const feeds = FEED_FIXTURES.slice(start, end);
 
   return {
     success: true as const,
     data: {
       feeds,
-      count: FEED_FIXTURES.length,
+      count: total,
       filters: {
         category: category ?? 'all',
         district: district ?? null,
         sort: sort ?? 'newest',
+      },
+      pagination: {
+        total,
+        limit: sanitizedLimit,
+        offset: sanitizedOffset,
+        hasMore: end < total,
       },
     },
   };

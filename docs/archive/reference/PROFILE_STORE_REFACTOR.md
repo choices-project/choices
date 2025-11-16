@@ -64,7 +64,7 @@ const createProfileActions = (
 Inside each action:
 - Use `set((state) => { ... })` instead of returning objects.  
 - Avoid mutating `state` outside Immer blocks.  
-- Prefer Zod helpers (`withOptional`, `safeParse`) over raw spreads.
+- Prefer Zod helpers (`safeParse`, schema `.partial()`) and explicit builder functions over the legacy `withOptional` helper.
 
 ### Step 5: Recompose the store
 The final `profileStoreCreator` becomes:

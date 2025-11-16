@@ -437,7 +437,7 @@ export class AnalyticsService {
       } catch (rpcError: unknown) {
         // Gracefully handle missing function
         if (rpcError instanceof Error && rpcError.message?.includes('does not exist')) {
-          devLog('Warning: update_poll_demographic_insights function not implemented. Database migration needed.')
+          devLog('Warning: update_poll_demographic_insights function not available. Skipping (environment mismatch).')
           return
         }
         throw rpcError
@@ -554,7 +554,7 @@ export class AnalyticsService {
         // Gracefully handle missing table
         const message = tableError instanceof Error ? tableError.message : ''
         if (message.includes('does not exist') || getErrorCode(tableError) === '42P01') {
-          devLog('Warning: civic_database_entries table not implemented. Database migration needed.')
+          devLog('Warning: civic_database_entries table unavailable. Skipping (environment mismatch).')
           return
         }
         throw tableError
@@ -683,7 +683,48 @@ export class AnalyticsService {
         throw new Error('Poll not found')
       }
 
-      // Get poll analytics from votes table
+      // Prefer precomputed demographic insights
+      const { data: precomputed, error: preError } = await supabase
+        .from('poll_demographic_insights')
+        .select('*')
+        .eq('poll_id', pollId)
+        .maybeSingle()
+
+      if (!preError && precomputed) {
+        const trustTierBreakdown = (precomputed.trust_tier_breakdown ?? { T0: 0, T1: 0, T2: 0, T3: 0 }) as Record<TrustTier, number>
+        const demographicInsights: PollDemographicInsights = {
+          id: pollData.id,
+          poll_id: pollData.id,
+          total_responses: precomputed.total_responses ?? 0,
+          trust_tier_breakdown: trustTierBreakdown,
+          age_group_breakdown: (precomputed.age_group_breakdown ?? {}) as Record<string, number>,
+          geographic_breakdown: (precomputed.geographic_breakdown ?? {}) as Record<string, number>,
+          education_breakdown: (precomputed.education_breakdown ?? {}) as Record<string, number>,
+          income_breakdown: (precomputed.income_breakdown ?? {}) as Record<string, number>,
+          political_breakdown: (precomputed.political_breakdown ?? {}) as Record<string, number>,
+          average_confidence_level: Number(precomputed.average_confidence_level ?? 0),
+          data_quality_distribution: (precomputed.data_quality_distribution ?? {}) as Record<string, number>,
+          verification_method_distribution: (precomputed.verification_method_distribution ?? {}) as Record<string, number>,
+          trust_tier_by_demographic: (precomputed.trust_tier_by_demographic ?? {}) as Record<string, Record<TrustTier, number>>,
+          demographic_by_trust_tier: (precomputed.demographic_by_trust_tier ?? { T0: {}, T1: {}, T2: {}, T3: {} }) as Record<TrustTier, Record<string, number>>,
+          created_at: precomputed.created_at ?? pollData.created_at ?? new Date().toISOString(),
+          updated_at: precomputed.updated_at ?? new Date().toISOString()
+        }
+
+        return {
+          poll_id: pollId,
+          total_responses: demographicInsights.total_responses,
+          trust_tier_breakdown: trustTierBreakdown,
+          demographic_insights: demographicInsights,
+          data_quality_score: demographicInsights.average_confidence_level, // proxy
+          confidence_level: demographicInsights.average_confidence_level,
+          response_trends: {
+            daily_responses: await this.getDailyResponseTrends(pollId)
+          }
+        }
+      }
+
+      // Fallback: compute from votes table
       const { data: votesData, error: votesError } = await supabase
         .from('votes')
         .select('trust_tier, vote_status, created_at')

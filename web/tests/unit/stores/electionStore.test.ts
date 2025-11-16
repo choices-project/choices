@@ -19,7 +19,7 @@ describe('electionStore', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    useElectionStore.setState(createInitialElectionState(), true);
+    useElectionStore.setState(createInitialElectionState(), false);
     global.fetch = jest.fn();
   });
 
@@ -42,7 +42,7 @@ describe('electionStore', () => {
     const key = 'ocd-division/country:us/state:wa';
 
     expect(global.fetch).toHaveBeenCalledWith(
-      '/api/v1/civics/elections?divisions=  OCD-DIVISION/COUNTRY:US/state:WA  '
+      '/api/v1/civics/elections?divisions=++OCD-DIVISION%2FCOUNTRY%3AUS%2Fstate%3AWA++'
     );
     expect(result).toEqual(mockElections);
     expect(state.electionsByKey[key]).toEqual(mockElections);
@@ -90,7 +90,7 @@ describe('electionStore', () => {
         isLoading: false,
         error: 'previous error'
       },
-      true
+      false
     );
 
     useElectionStore.getState().clearElections();

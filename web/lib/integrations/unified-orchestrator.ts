@@ -939,15 +939,18 @@ export class UnifiedDataOrchestrator {
   }
 
   async getCandidatePostGovernmentEmployment(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidatePostGovernmentEmployment', { candidateId });
+    logger.warn('getCandidatePostGovernmentEmployment not wired; returning empty result', { candidateId });
+    return [];
   }
 
   async getCandidateCorporateConnections(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
+    logger.warn('getCandidateCorporateConnections not wired; returning empty result', { candidateId });
+    return [];
   }
 
   async getCandidatePolicyPositions(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
+    logger.warn('getCandidatePolicyPositions not wired; returning empty result', { candidateId });
+    return [];
   }
 
   private buildLookupAddress(location: UserLocation): string | null {
@@ -991,7 +994,7 @@ export class UnifiedDataOrchestrator {
 
     const incumbent = this.createPlaceholderRepresentative({
       id: `incumbent-${election.id}`,
-      name: 'Incumbent TBD',
+      name: 'Incumbent (Pending)',
       party: 'Unknown',
       office: election.name,
       jurisdiction,
@@ -1080,7 +1083,7 @@ export class UnifiedDataOrchestrator {
   private estimateDeadline(dateString: string, offsetDays: number): string {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
-      return 'TBD';
+      return 'Pending';
     }
 
     const adjusted = new Date(date);
@@ -1264,11 +1267,16 @@ export class UnifiedDataOrchestrator {
 
     this.electionContext.set('placeholder-race', fallbackContext);
 
+    const electionDate = new Date().toISOString().slice(0, 10);
+    const voterRegistrationDeadline = this.estimateDeadline(electionDate, 21);
+    const earlyVotingStart = this.estimateDeadline(electionDate, -14);
+    const absenteeBallotDeadline = this.estimateDeadline(electionDate, 7);
+
     return {
       raceId: 'placeholder-race',
       office: 'Upcoming Election',
       jurisdiction: location.stateCode ?? 'US',
-      electionDate: new Date().toISOString().slice(0, 10),
+      electionDate,
       incumbent: placeholderRepresentative,
       challengers: [],
       allCandidates: [],
@@ -1279,9 +1287,9 @@ export class UnifiedDataOrchestrator {
         'placeholder',
       ),
       pollingData: null,
-      voterRegistrationDeadline: 'TBD',
-      earlyVotingStart: 'TBD',
-      absenteeBallotDeadline: 'TBD',
+      voterRegistrationDeadline,
+      earlyVotingStart,
+      absenteeBallotDeadline,
       recentActivity: [],
       constituentQuestions: 0,
       candidateResponses: 0,

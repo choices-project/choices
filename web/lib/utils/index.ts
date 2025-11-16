@@ -4,7 +4,6 @@ export { logger, logError } from './logger';
 export * from './browser-utils';
 export * from '../util/clean';
 export * from '../util/guards';
-export * from '../util/objects';
 export * from '../util/property-mapping';
 export * from './civics-cache';
 export * from './client-session';

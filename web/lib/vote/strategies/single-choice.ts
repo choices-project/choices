@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -116,44 +115,36 @@ export class SingleChoiceStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'single'
-          }
+      return {
+        success: true,
+        message: 'Vote submitted successfully',
+        pollId,
+        voteId,
+        auditReceipt,
+        responseTime: 0, // Will be set by the engine
+        metadata: {
+          votingMethod: 'single'
         },
-        {
-          privacyLevel,
-          choice: voteData.choice,
-          optionText: poll.options[voteData.choice ?? 0]
-        }
-      );
+        ...(privacyLevel !== undefined ? { privacyLevel } : {}),
+        choice: voteData.choice,
+        optionText: poll.options[voteData.choice ?? 0],
+      };
 
     } catch (error) {
       devLog('Single choice vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'single',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Vote processing failed',
+        pollId: request.pollId,
+        responseTime: 0,
+        metadata: {
+          votingMethod: 'single',
+          error: error instanceof Error ? error.message : 'Unknown error'
         },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+        voteId: undefined,
+        auditReceipt: undefined,
+        ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
+      };
     }
   }
 
@@ -208,19 +199,15 @@ export class SingleChoiceStrategy implements VotingStrategy {
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
+      const results: PollResults = {
+        winnerVotes,
+        winnerPercentage,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0,
+        ...(winner !== undefined ? { winner } : {}),
+      };
 
       const resultsData: ResultsData = {
         pollId: poll.id,

@@ -1,6 +1,6 @@
 /**
  * TrendsChart Component
- * 
+ *
  * Displays time-series analytics data showing trends over time.
  * Features:
  * - Line/Area chart visualization
@@ -8,7 +8,7 @@
  * - Multiple metrics (votes, participation, velocity)
  * - CSV export functionality
  * - Responsive design
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -17,7 +17,7 @@
 
 import {
   Download,
-  Calendar, 
+  Calendar,
   TrendingUp,
   AlertCircle,
   RefreshCw,
@@ -73,6 +73,10 @@ export default function TrendsChart({
 }: TrendsChartProps) {
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
+  const cardHeadingId = useId();
+  const chartDescriptionId = useId();
+  const chartAxesDescriptionId = useId();
+  const chartRegionId = useId();
   const isMobile = useIsMobile();
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
@@ -93,47 +97,69 @@ export default function TrendsChart({
 
   const rangeLabels: Record<DateRange, string> = useMemo(
     () => ({
-      '7d': 'Last 7 days',
-      '30d': 'Last 30 days',
-      '90d': 'Last 90 days',
+      '7d': t('analytics.trends.ranges.7d'),
+      '30d': t('analytics.trends.ranges.30d'),
+      '90d': t('analytics.trends.ranges.90d'),
     }),
-    [],
+    [t],
   );
 
   const chartTypeLabels: Record<ChartType, string> = useMemo(
     () => ({
-      line: 'Line chart',
-      area: 'Area chart',
+      line: t('analytics.trends.chartTypes.line'),
+      area: t('analytics.trends.chartTypes.area'),
     }),
-    [],
+    [t],
   );
+
+  const currentRangeLabel = rangeLabels[dateRange] ?? rangeLabels[defaultRange] ?? dateRange;
+  const currentChartTypeLabel =
+    chartTypeLabels[chartType] ?? chartTypeLabels[defaultChartType] ?? chartType;
+  const chartDescription = useMemo(
+    () =>
+      t('analytics.trends.chart.description', {
+        range: currentRangeLabel,
+        chartType: currentChartTypeLabel,
+    }),
+    [currentChartTypeLabel, currentRangeLabel, t],
+  );
+  const dateRangeLabel = t('analytics.trends.filters.dateRange');
+  const chartTypeSelectLabel = t('analytics.trends.filters.chartType');
+  const exportLabel = t('analytics.buttons.export');
 
   const handleRangeChange = useCallback(
     (range: DateRange) => {
       ScreenReaderSupport.announce(
-        `Date range updated to ${rangeLabels[range] ?? range}.`,
+        t('analytics.trends.announcements.rangeChanged', {
+          range: rangeLabels[range] ?? range,
+        }),
         'polite',
       );
       void loadTrends(range);
     },
-    [loadTrends, rangeLabels],
+    [loadTrends, rangeLabels, t],
   );
 
   const handleChartTypeChange = useCallback(
     (type: ChartType) => {
       setChartType(type);
       ScreenReaderSupport.announce(
-        `Chart view switched to ${chartTypeLabels[type] ?? type}.`,
+        t('analytics.trends.announcements.chartTypeChanged', {
+          chartType: chartTypeLabels[type] ?? type,
+        }),
         'polite',
       );
     },
-    [chartTypeLabels],
+    [chartTypeLabels, t],
   );
 
   const handleRefresh = useCallback(() => {
-    ScreenReaderSupport.announce('Refreshing activity trends data.', 'polite');
+    ScreenReaderSupport.announce(
+      t('analytics.trends.announcements.refresh'),
+      'polite',
+    );
     void loadTrends();
-  }, [loadTrends]);
+  }, [loadTrends, t]);
 
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage),
@@ -156,6 +182,26 @@ export default function TrendsChart({
   const formatPercent = useCallback(
     (value: number) => `${percentFormatter.format(value)}%`,
     [percentFormatter],
+  );
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage, {
+        month: 'short',
+        day: 'numeric',
+      }),
+    [currentLanguage],
+  );
+
+  const formatDate = useCallback(
+    (isoDate: string) => {
+      try {
+        return dateFormatter.format(new Date(isoDate));
+      } catch {
+        return isoDate;
+      }
+    },
+    [dateFormatter],
   );
 
   const trendsColumns = useMemo<AnalyticsSummaryColumn[]>(
@@ -190,6 +236,85 @@ export default function TrendsChart({
     [data, formatNumber, formatPercent],
   );
 
+  const peakVotesPoint = useMemo(() => {
+    if (!data.length) {
+      return null;
+    }
+    return data.reduce((peak, point) => (point.votes > peak.votes ? point : peak), data[0]);
+  }, [data]);
+
+  const peakParticipationPoint = useMemo(() => {
+    if (!data.length) {
+      return null;
+    }
+    return data.reduce(
+      (peak, point) => (point.participation > peak.participation ? point : peak),
+      data[0],
+    );
+  }, [data]);
+
+  const chartSummaryText = useMemo(() => {
+    if (!data.length || !peakVotesPoint || !peakParticipationPoint) {
+      return '';
+    }
+    const voteTrend = getTrend('votes');
+    const trendDirectionKey =
+      voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
+
+    return t('analytics.trends.chart.summary', {
+      peakVotesDate: formatDate(peakVotesPoint.date),
+      peakVotes: formatNumber(peakVotesPoint.votes),
+      peakParticipationDate: formatDate(peakParticipationPoint.date),
+      peakParticipation: formatPercent(peakParticipationPoint.participation),
+      trendDirection: t(`analytics.trends.trendDirections.${trendDirectionKey}`),
+      range: currentRangeLabel,
+    });
+  }, [
+    data.length,
+    formatDate,
+    formatNumber,
+    formatPercent,
+    peakParticipationPoint,
+    peakVotesPoint,
+    currentRangeLabel,
+    t,
+  ]);
+
+  const axisStats = useMemo(() => {
+    if (!data.length) {
+      return null;
+    }
+    const dates = data.map((point) => point.date);
+    const votes = data.map((point) => point.votes);
+    const participation = data.map((point) => point.participation);
+    const velocity = data.map((point) => point.velocity);
+
+    return {
+      startDate: dates[0],
+      endDate: dates[dates.length - 1],
+      minVotes: Math.min(...votes),
+      maxVotes: Math.max(...votes),
+      minParticipation: Math.min(...participation),
+      maxParticipation: Math.max(...participation),
+      minVelocity: Math.min(...velocity),
+      maxVelocity: Math.max(...velocity),
+    };
+  }, [data]);
+
+  const chartAxesDescription = useMemo(() => {
+    if (!axisStats) {
+      return '';
+    }
+    return t('analytics.trends.chart.axesDescription', {
+      startDate: formatDate(axisStats.startDate),
+      endDate: formatDate(axisStats.endDate),
+      minVotes: formatNumber(axisStats.minVotes),
+      maxVotes: formatNumber(axisStats.maxVotes),
+      minParticipation: formatPercent(axisStats.minParticipation),
+      maxParticipation: formatPercent(axisStats.maxParticipation),
+    });
+  }, [axisStats, formatDate, formatNumber, formatPercent, t]);
+
   useEffect(() => {
     void fetchTrends(defaultRange, {
       fallback: (r) => generateMockData(r as DateRange),
@@ -217,11 +342,11 @@ export default function TrendsChart({
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `trends-${dateRange}-${Date.now()}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -229,7 +354,7 @@ export default function TrendsChart({
 
   // Calculate statistics
   const totalVotes = data.reduce((sum, d) => sum + d.votes, 0);
-  const avgParticipation = data.length > 0 
+  const avgParticipation = data.length > 0
     ? data.reduce((sum, d) => sum + d.participation, 0) / data.length
     : 0;
   const avgVelocity = data.length > 0
@@ -292,13 +417,21 @@ export default function TrendsChart({
   // Loading state
   if (isLoading) {
     return (
-      <Card className={className}>
+      <Card
+        className={className}
+        role="region"
+        aria-labelledby={cardHeadingId}
+        aria-describedby={chartDescriptionId}
+      >
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle id={cardHeadingId} className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Activity Trends
+            {t('analytics.trends.chart.title')}
           </CardTitle>
         </CardHeader>
+        <p id={chartDescriptionId} className="sr-only">
+          {chartDescription}
+        </p>
         <CardContent>
           <div className="flex items-center justify-center h-64">
             <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
@@ -312,13 +445,21 @@ export default function TrendsChart({
   const showError = error && data.length === 0;
 
   return (
-    <Card className={className}>
+    <Card
+      role="region"
+      aria-labelledby={cardHeadingId}
+      aria-describedby={chartDescriptionId}
+      className={className}
+    >
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
-            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+            <CardTitle
+              id={cardHeadingId}
+              className="flex items-center gap-2 text-xl md:text-2xl"
+            >
               <TrendingUp className="h-5 w-5" />
-              Activity Trends
+              {t('analytics.trends.chart.title')}
             </CardTitle>
             <p className="text-xs md:text-sm text-gray-600 mt-1">
               {isMobile ? 'Votes, participation & engagement' : 'Historical trends for votes, participation, and engagement'}
@@ -333,11 +474,14 @@ export default function TrendsChart({
               className="flex-1 md:flex-none min-h-[44px]"
             >
               <Download className="h-4 w-4 mr-2" />
-              {isMobile ? 'Export' : 'Export'}
+              {exportLabel}
             </Button>
           </div>
         </div>
       </CardHeader>
+      <p id={chartDescriptionId} className="sr-only">
+        {chartDescription}
+      </p>
       <CardContent>
         {/* Filters - Mobile Optimized */}
         <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 md:gap-4 items-stretch sm:items-center">
@@ -349,11 +493,12 @@ export default function TrendsChart({
                 const range = e.target.value as DateRange;
                 handleRangeChange(range);
               }}
+              aria-label={dateRangeLabel}
               className="flex-1 sm:flex-none px-3 py-2 md:py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
+              <option value="7d">{rangeLabels['7d']}</option>
+              <option value="30d">{rangeLabels['30d']}</option>
+              <option value="90d">{rangeLabels['90d']}</option>
             </select>
           </div>
 
@@ -362,10 +507,11 @@ export default function TrendsChart({
             <select
               value={chartType}
               onChange={(e) => handleChartTypeChange(e.target.value as ChartType)}
+              aria-label={chartTypeSelectLabel}
               className="flex-1 sm:flex-none px-3 py-2 md:py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
             >
-              <option value="line">Line Chart</option>
-              <option value="area">Area Chart</option>
+              <option value="line">{chartTypeLabels.line}</option>
+              <option value="area">{chartTypeLabels.area}</option>
             </select>
           </div>
 
@@ -376,7 +522,7 @@ export default function TrendsChart({
             className="min-h-[44px] flex-1 sm:flex-none"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            {t('analytics.buttons.refresh')}
           </Button>
         </div>
 
@@ -447,34 +593,59 @@ export default function TrendsChart({
 
         {/* Chart */}
         {data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div
+            className="flex flex-col items-center justify-center h-64 text-gray-500"
+            role="region"
+            aria-live="polite"
+          >
             <Activity className="h-12 w-12 mb-4" />
             <p className="text-lg font-medium">No trend data available</p>
             <p className="text-sm">Try selecting a different date range</p>
           </div>
         ) : (
-          <div className={isMobile ? "h-64 md:h-96" : "h-96"}>
+          <div
+            className={isMobile ? "h-64 md:h-96" : "h-96"}
+            role="group"
+            aria-labelledby={`${chartRegionId}-title`}
+            aria-describedby={`${chartRegionId}-summary`}
+          >
+            <p id={`${chartRegionId}-title`} className="sr-only">
+              {t('analytics.trends.chart.title')}
+            </p>
+            <p id={`${chartRegionId}-summary`} className="sr-only">
+              {chartSummaryText || chartDescription}
+            </p>
             <ResponsiveContainer width="100%" height="100%">
               {chartType === 'line' ? (
                 <LineChart data={data} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tick={{ fontSize: isMobile ? 10 : 12 }}
                     angle={isMobile ? -45 : 0}
                     textAnchor={isMobile ? "end" : "middle"}
                     height={isMobile ? 60 : 30}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="left"
-                    label={{ value: 'Count', angle: -90, position: 'insideLeft' }}
+                    label={{
+                      value: t('analytics.trends.chart.axes.votes'),
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="right"
                     orientation="right"
-                    label={{ value: 'Percentage (%)', angle: 90, position: 'insideRight' }}
+                    label={{
+                      value: t('analytics.trends.chart.axes.participation'),
+                      angle: 90,
+                      position: 'insideRight',
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload;
@@ -498,29 +669,29 @@ export default function TrendsChart({
                     }}
                   />
                   <Legend />
-                  <Line 
+                  <Line
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="votes" 
-                    stroke="#3b82f6" 
+                    type="monotone"
+                    dataKey="votes"
+                    stroke="#3b82f6"
                     strokeWidth={2}
                     name="Votes"
                     dot={{ r: 4 }}
                   />
-                  <Line 
+                  <Line
                     yAxisId="right"
-                    type="monotone" 
-                    dataKey="participation" 
-                    stroke="#22c55e" 
+                    type="monotone"
+                    dataKey="participation"
+                    stroke="#22c55e"
                     strokeWidth={2}
                     name="Participation %"
                     dot={{ r: 4 }}
                   />
-                  <Line 
+                  <Line
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="velocity" 
-                    stroke="#a855f7" 
+                    type="monotone"
+                    dataKey="velocity"
+                    stroke="#a855f7"
                     strokeWidth={2}
                     name="Velocity"
                     dot={{ r: 4 }}
@@ -529,23 +700,33 @@ export default function TrendsChart({
               ) : (
                 <AreaChart data={data} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tick={{ fontSize: isMobile ? 10 : 12 }}
                     angle={isMobile ? -45 : 0}
                     textAnchor={isMobile ? "end" : "middle"}
                     height={isMobile ? 60 : 30}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="left"
-                    label={{ value: 'Count', angle: -90, position: 'insideLeft' }}
+                    label={{
+                      value: t('analytics.trends.chart.axes.votes'),
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="right"
                     orientation="right"
-                    label={{ value: 'Percentage (%)', angle: 90, position: 'insideRight' }}
+                    label={{
+                      value: t('analytics.trends.chart.axes.participation'),
+                      angle: 90,
+                      position: 'insideRight',
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
                       const data = payload[0]?.payload;
@@ -569,29 +750,29 @@ export default function TrendsChart({
                     }}
                   />
                   <Legend />
-                  <Area 
+                  <Area
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="votes" 
-                    stroke="#3b82f6" 
+                    type="monotone"
+                    dataKey="votes"
+                    stroke="#3b82f6"
                     fill="#3b82f6"
                     fillOpacity={0.3}
                     name="Votes"
                   />
-                  <Area 
+                  <Area
                     yAxisId="right"
-                    type="monotone" 
-                    dataKey="participation" 
-                    stroke="#22c55e" 
+                    type="monotone"
+                    dataKey="participation"
+                    stroke="#22c55e"
                     fill="#22c55e"
                     fillOpacity={0.3}
                     name="Participation %"
                   />
-                  <Area 
+                  <Area
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="velocity" 
-                    stroke="#a855f7" 
+                    type="monotone"
+                    dataKey="velocity"
+                    stroke="#a855f7"
                     fill="#a855f7"
                     fillOpacity={0.3}
                     name="Velocity"
@@ -641,13 +822,13 @@ export default function TrendsChart({
 function generateMockData(range: DateRange): TrendDataPoint[] {
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
   const data: TrendDataPoint[] = [];
-  
+
   const today = new Date();
-  
+
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    
+
     data.push({
       date: date.toISOString().split('T')[0] ?? date.toISOString(),
       votes: Math.floor(Math.random() * 500) + 200,
@@ -655,7 +836,7 @@ function generateMockData(range: DateRange): TrendDataPoint[] {
       velocity: Math.floor(Math.random() * 50) + 20
     });
   }
-  
+
   return data;
 }
 

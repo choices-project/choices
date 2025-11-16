@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useMemo } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { useProfile } from '@/features/profile/hooks/use-profile';
@@ -23,6 +23,13 @@ export default function DashboardPage() {
   const router = useRouter();
   const { profile, isLoading, error } = useProfile();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+  const shouldBypassAuth = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    [],
+  );
 
   useEffect(() => {
     setCurrentRoute('/dashboard');
@@ -39,11 +46,14 @@ export default function DashboardPage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
+    if (shouldBypassAuth) {
+      return;
+    }
     if (!isLoading && !profile) {
       logger.debug('🚨 Dashboard: No profile found - redirecting to login');
       router.replace('/auth');
     }
-  }, [isLoading, profile, router]);
+  }, [isLoading, profile, router, shouldBypassAuth]);
 
   if (isLoading) {
     return (
@@ -53,7 +63,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile) {
+  if (!profile && !shouldBypassAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">

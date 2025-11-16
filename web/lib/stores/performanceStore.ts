@@ -15,7 +15,6 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { createAutoRefreshTimer, createPerformanceMonitor } from '@/lib/performance/performanceMonitorService';
-import { withOptional } from '@/lib/util/objects';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -280,7 +279,9 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
         // Actions - Metrics
         recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => {
           const id = `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedMetric = withOptional(metric);
+          const sanitizedMetric = Object.fromEntries(
+            Object.entries(metric).filter(([, v]) => v !== undefined)
+          ) as typeof metric;
           const newMetric = Object.assign({}, sanitizedMetric, {
             id,
             timestamp: new Date(),
@@ -307,16 +308,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           value: number,
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'navigation',
               name,
               value,
               unit: 'ms',
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
         },
@@ -326,16 +325,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           value: number,
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'resource',
               name,
               value,
               unit: 'ms',
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
         },
@@ -346,16 +343,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           unit: PerformanceMetric['unit'] = 'ms',
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'custom',
               name,
               value,
               unit,
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
         },
@@ -369,7 +364,9 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
         // Actions - Alerts
         createAlert: (alert: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>) => {
           const id = `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedAlert = withOptional(alert);
+          const sanitizedAlert = Object.fromEntries(
+            Object.entries(alert).filter(([, v]) => v !== undefined)
+          ) as typeof alert;
           const newAlert = Object.assign({}, sanitizedAlert, {
             id,
             timestamp: new Date(),

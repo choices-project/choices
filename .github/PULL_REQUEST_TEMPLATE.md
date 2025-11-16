@@ -1,3 +1,25 @@
+# Summary
+- 
+
+## Testing
+- [ ] `npm run lint`
+- [ ] `npm run test`
+- [ ] `npm run test:e2e -- --grep <tag>`
+- [ ] Other (describe):
+
+## Accessibility / I18N Checklist
+- [ ] UI strings call `t()` and new keys were added to `web/messages/*.json`
+- [ ] Ran `npm run i18n:extract` and committed snapshot changes (if strings changed)
+- [ ] Ran axe/locale specs (`npm run test:e2e:axe`, `npx playwright test --grep @locale`) for affected journeys
+- [ ] Verified ScreenReaderSupport announcements / live regions for interactive changes
+
+## Docs / Contracts / Release Notes
+- [ ] Updated relevant docs (`docs/ARCHITECTURE/stores.md`, `docs/API/contracts.md`, playbooks) if contracts, stores, or governance patterns changed
+- [ ] Added/updated MSW fixtures + contract suites (`npm run test:contracts`) when API payloads changed
+- [ ] Added an entry to `docs/archive/release-notes/CHANGELOG.md` for user-facing changes
+- [ ] Included links to issues / roadmap items (PHASE-* labels) in the PR description
+
+> Need help? See `docs/inclusive-ui-guidelines.md`, `docs/qa/i18n-accessibility-playbook.md`, and `docs/technical/testing-harness-playbooks.md`.
 # PR Title
 <!-- Example: feat(analytics): add cache metadata to dashboard API -->
 

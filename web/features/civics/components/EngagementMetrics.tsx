@@ -30,7 +30,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/hooks/useI18n';
 import { useAnalyticsActions, useFeedsActions, useFeedById } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
+ 
 
 import type { EngagementData } from '../lib/types/civics-types';
 
@@ -102,7 +102,8 @@ export default function EngagementMetrics({
     }
 
     setMetrics((previous) =>
-      withOptional(previous, {
+      ({
+        ...previous,
         likes: storeFeed.engagement.likes ?? previous.likes,
         shares: storeFeed.engagement.shares ?? previous.shares,
         comments: storeFeed.engagement.comments ?? previous.comments,
@@ -151,10 +152,11 @@ export default function EngagementMetrics({
       }
 
       setMetrics((previous) => {
-        const updated = withOptional(previous, {
+        const updated = {
+          ...previous,
           likes: nextLikes,
           lastUpdated: new Date(),
-        });
+        };
         onEngagement?.('likes', itemId, nextLikes);
         return updated;
       });
@@ -204,10 +206,11 @@ export default function EngagementMetrics({
       }
 
       setMetrics((previous) => {
-        const updated = withOptional(previous, {
+        const updated = {
+          ...previous,
           bookmarks: nextBookmarks,
           lastUpdated: new Date(),
-        });
+        };
         onEngagement?.('bookmarks', itemId, nextBookmarks);
         return updated;
       });
@@ -247,10 +250,11 @@ export default function EngagementMetrics({
       }
 
       setMetrics((previous) => {
-        const updated = withOptional(previous, {
+        const updated = {
+          ...previous,
           shares: nextShares,
           lastUpdated: new Date(),
-        });
+        };
         onEngagement?.('shares', itemId, nextShares);
         return updated;
       });
@@ -281,10 +285,11 @@ export default function EngagementMetrics({
     const nextTotal = metrics.likes + nextComments + metrics.shares;
 
     setMetrics((previous) => {
-      const updated = withOptional(previous, {
+      const updated = {
+        ...previous,
         comments: nextComments,
         lastUpdated: new Date(),
-      });
+      };
       onEngagement?.('comments', itemId, nextComments);
       return updated;
     });

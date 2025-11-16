@@ -3,8 +3,8 @@ import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import boundaries from 'eslint-plugin-boundaries';
 import eslintComments from 'eslint-plugin-eslint-comments';
-import importPlugin from 'eslint-plugin-import';
 import formatjs from 'eslint-plugin-formatjs';
+import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -142,6 +142,7 @@ export default [
           { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
           { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
           { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
+          { group: ['@/lib/util/objects', '@/lib/util/objects.*'], message: 'withOptional is deprecated. Use explicit builders/conditional spreads.' },
         ],
       }],
 
@@ -155,10 +156,6 @@ export default [
         {
           selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
           message: 'Use conditional spread or delete, not = undefined.'
-        },
-        {
-          selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]',
-          message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.'
         }
       ],
     },

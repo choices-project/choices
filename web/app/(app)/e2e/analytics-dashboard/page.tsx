@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { AnalyticsTestBridge } from '@/app/(app)/e2e/_components/AnalyticsTestBridge';
 import { EnhancedAnalyticsDashboard } from '@/features/analytics/components/EnhancedAnalyticsDashboard';

@@ -72,7 +72,9 @@ This document lists all environment variables required for the Choices applicati
 ### Google Civic Information API
 - `GOOGLE_CIVIC_API_KEY` (required for address lookup)
   - Google Civic Information API key for district resolution
-  - Used by: `/api/v1/civics/address-lookup` endpoint
+  - Used by: `/api/v1/civics/address-lookup` endpoint (server proxy)
+  - Client modules call the proxy; the key is never exposed to the browser
+  - Endpoint includes per-IP rate limiting and a short-term response cache
   - Security: ⚠️ Server-only, never expose to client
   - Purpose: Convert address → district (no full addresses stored)
   - Get from: https://console.cloud.google.com/apis/credentials

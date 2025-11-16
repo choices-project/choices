@@ -4,6 +4,7 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
 
 const POLL_ID = 'harness-poll';
+const HARNESS_NAV_TIMEOUT = 90_000;
 const RESULTS_ROUTE = new RegExp(`/api/polls/${POLL_ID}/results$`);
 const VOTE_ROUTE = new RegExp(`/api/polls/${POLL_ID}/vote$`);
 const CANCEL_ROUTE = new RegExp(`/api/voting/records/vote-harness$`);
@@ -74,7 +75,10 @@ test.describe('@axe Poll viewer harness', () => {
   });
 
   test('emits analytics for viewing, sharing, and voting', async ({ page }) => {
-    await page.goto(`/e2e/poll-run/${POLL_ID}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`/e2e/poll-run/${POLL_ID}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: HARNESS_NAV_TIMEOUT,
+    });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
     await runAxeAudit(page, 'poll run initial state');

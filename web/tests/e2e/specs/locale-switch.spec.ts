@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
@@ -15,6 +15,65 @@ const gotoHarness = async (page: Page, route: string = HARNESS_ROUTE, timeout = 
   );
 };
 
+const LOCALE_COOKIE_NAME = 'choices.locale';
+
+type LanguageSelection = {
+  option: Locator;
+  label: string;
+  code?: string | null;
+};
+
+const waitForLocaleCookie = async (page: Page, expected: string | null | undefined) => {
+  if (!expected) {
+    await page.waitForTimeout(500);
+    return;
+  }
+
+  await page.waitForFunction(
+    ({ cookieName, expectedValue }) => {
+      const cookies = document.cookie.split('; ').filter(Boolean);
+      return cookies.some((cookie) => {
+        if (!cookie.startsWith(`${cookieName}=`)) {
+          return false;
+        }
+        return cookie.slice(cookieName.length + 1) === expectedValue;
+      });
+    },
+    { cookieName: LOCALE_COOKIE_NAME, expectedValue: expected },
+    { timeout: 10_000 },
+  );
+};
+
+const normalizeLabel = (value?: string | null) =>
+  value?.replace(/✓/g, '').replace(/\s+/g, ' ').trim() ?? null;
+
+const findAlternateLanguage = async (
+  options: Locator,
+  currentLabel?: string | null,
+): Promise<LanguageSelection | null> => {
+  const count = await options.count();
+  const normalizedCurrent = normalizeLabel(currentLabel);
+  for (let index = 0; index < count; index += 1) {
+    const option = options.nth(index);
+    const rawLabel = await option.textContent();
+    const label = normalizeLabel(rawLabel);
+    if (!label || label === normalizedCurrent) {
+      continue;
+    }
+    const code = await option.getAttribute('data-language-option');
+    return { option, label, code };
+  }
+  return null;
+};
+
+const applyLanguageSelection = async (page: Page, selection: LanguageSelection) => {
+  await selection.option.click();
+  await waitForLocaleCookie(page, selection.code);
+  await page.waitForFunction(
+    () => document.documentElement.dataset.globalNavigationHarness === 'ready',
+  );
+};
+
 /**
  * Locale Switching E2E Tests
  * 
@@ -28,6 +87,7 @@ const gotoHarness = async (page: Page, route: string = HARNESS_ROUTE, timeout = 
 
 test.describe('Locale Switching', () => {
   test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
     await gotoHarness(page);
   });
 
@@ -58,7 +118,7 @@ test.describe('Locale Switching', () => {
     const button = selector.getByRole('button').first();
     
     // Get current language
-    const currentLanguage = await button.textContent();
+    const currentLanguage = (await button.textContent())?.trim();
     
     // Open dropdown
     await button.click();
@@ -66,26 +126,15 @@ test.describe('Locale Switching', () => {
     
     // Find a different language option (not the current one)
     const options = selector.locator('[role="option"]');
-    const optionCount = await options.count();
+    const selection = await findAlternateLanguage(options, currentLanguage);
     
-    if (optionCount > 1) {
-      // Select a different option (second option if available)
-      const differentOption = options.nth(1);
-      const newLanguage = await differentOption.textContent();
+    if (selection) {
+      await applyLanguageSelection(page, selection);
       
-      if (newLanguage !== currentLanguage) {
-        await differentOption.click();
-        
-        // Wait for locale to change
-        await page.waitForTimeout(1000);
-        
-        // Verify button text updated
-        const updatedButton = selector.getByRole('button').first();
-        const updatedLanguage = await updatedButton.textContent();
-        
-        // Should show the new language (might be different format)
-        expect(updatedLanguage).not.toBe(currentLanguage);
-      }
+      await expect(button).toHaveText(selection.label);
+      
+      const liveRegion = page.getByTestId('language-selector-live-message');
+      await expect(liveRegion).not.toHaveText('');
     }
   });
 
@@ -94,32 +143,26 @@ test.describe('Locale Switching', () => {
     const button = selector.getByRole('button').first();
     
     // Get initial language
-    const initialLanguage = await button.textContent();
+    const initialLanguage = (await button.textContent())?.trim();
     
     // Change language if multiple options available
     await button.click();
     const options = selector.locator('[role="option"]');
-    const optionCount = await options.count();
+    const selection = await findAlternateLanguage(options, initialLanguage);
     
-    if (optionCount > 1) {
-      const newOption = options.nth(1);
-      const newLanguageText = await newOption.textContent();
+    if (selection) {
+      await applyLanguageSelection(page, selection);
       
-      if (newLanguageText !== initialLanguage) {
-        await newOption.click();
-        await page.waitForTimeout(1000);
-        
-    // Navigate to another (query-param) view of the harness to simulate route changes
-        await gotoHarness(page, `${HARNESS_ROUTE}?view=secondary`, 60_000);
-        
-        // Verify language selector still shows the new language
-        const newPageSelector = page.getByTestId('language-selector').first();
-        const newPageButton = newPageSelector.getByRole('button').first();
-        const persistedLanguage = await newPageButton.textContent();
-        
-        // Should maintain the changed language
-        expect(persistedLanguage).not.toBe(initialLanguage);
-      }
+      await expect(button).toHaveText(selection.label);
+      const changedLabel = (await button.textContent())?.trim() ?? selection.label;
+
+      // Navigate to another (query-param) view of the harness to simulate route changes
+      await gotoHarness(page, `${HARNESS_ROUTE}?view=secondary`, 60_000);
+      
+      // Verify language selector still shows the new language
+      const newPageSelector = page.getByTestId('language-selector').first();
+      const newPageButton = newPageSelector.getByRole('button').first();
+      await expect(newPageButton).toHaveText(changedLabel);
     }
   });
 
@@ -128,36 +171,27 @@ test.describe('Locale Switching', () => {
     const button = selector.getByRole('button').first();
     
     // Get initial language
-    const initialLanguage = await button.textContent();
+    const initialLanguage = (await button.textContent())?.trim();
     
     // Change language if multiple options available
     await button.click();
     const options = selector.locator('[role="option"]');
-    const optionCount = await options.count();
+    const selection = await findAlternateLanguage(options, initialLanguage);
     
-    if (optionCount > 1) {
-      const newOption = options.nth(1);
-      const newLanguageText = await newOption.textContent();
+    if (selection) {
+      await applyLanguageSelection(page, selection);
       
-      if (newLanguageText !== initialLanguage) {
-        await newOption.click();
-        await page.waitForTimeout(1000);
-        
-        // Get the new language text from button
-        const changedLanguage = await button.textContent();
-        
-        // Reload page
-        await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 });
-        await waitForPageReady(page, 60_000);
-        
-        // Verify language is restored
-        const reloadedSelector = page.getByTestId('language-selector').first();
-        const reloadedButton = reloadedSelector.getByRole('button').first();
-        const restoredLanguage = await reloadedButton.textContent();
-        
-        // Should restore to the changed language (not initial)
-        expect(restoredLanguage).not.toBe(initialLanguage);
-      }
+      await expect(button).toHaveText(selection.label);
+      const changedLanguage = (await button.textContent())?.trim() ?? selection.label;
+      
+      // Reload page
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await waitForPageReady(page, 60_000);
+      
+      // Verify language is restored
+      const reloadedSelector = page.getByTestId('language-selector').first();
+      const reloadedButton = reloadedSelector.getByRole('button').first();
+      await expect(reloadedButton).toHaveText(changedLanguage);
     }
   });
 
@@ -167,26 +201,35 @@ test.describe('Locale Switching', () => {
     
     await button.click();
     const options = selector.locator('[role="option"]');
-    const optionCount = await options.count();
+    const firstSelection = await findAlternateLanguage(options, (await button.textContent())?.trim());
     
-    if (optionCount >= 2) {
-      // Switch to second option
-      await options.nth(1).click();
-      await page.waitForTimeout(500);
+    if (firstSelection) {
+      // Switch to alternate language
+      await applyLanguageSelection(page, firstSelection);
       
-      // Switch back to first option
+      // Switch back to the first option (baseline)
       await button.click();
-      await options.nth(0).click();
-      await page.waitForTimeout(500);
+      const baseOption = options.first();
+      const baseCode = await baseOption.getAttribute('data-language-option');
+      await baseOption.click();
+      await waitForLocaleCookie(page, baseCode);
+      await page.waitForFunction(
+        () => document.documentElement.dataset.globalNavigationHarness === 'ready',
+      );
       
-      // Switch to second option again
+      // Switch to alternate language again
       await button.click();
-      await options.nth(1).click();
-      await page.waitForTimeout(500);
+      const secondSelection = await findAlternateLanguage(
+        options,
+        (await button.textContent())?.trim(),
+      );
+      if (secondSelection) {
+        await applyLanguageSelection(page, secondSelection);
+      }
       
       // Verify selector is still functional
       await expect(button).toBeVisible();
-      const finalLanguage = await button.textContent();
+      const finalLanguage = (await button.textContent())?.trim();
       expect(finalLanguage).toBeTruthy();
     }
   });
@@ -205,15 +248,14 @@ test.describe('Locale Switching', () => {
     // Change language
     await button.click();
     const options = selector.locator('[role="option"]');
-    const optionCount = await options.count();
+    const selection = await findAlternateLanguage(options, (await button.textContent())?.trim());
     
-    if (optionCount > 1 && initialText) {
-      await options.nth(1).click();
-      await page.waitForTimeout(1000);
+    if (selection && initialText) {
+      await applyLanguageSelection(page, selection);
       
       // Verify navigation label may have changed (or at least still exists)
       const updatedDashboardLink = page.getByTestId('dashboard-nav').first();
-      const updatedText = await updatedDashboardLink.textContent().catch(() => null);
+      const updatedText = (await updatedDashboardLink.textContent().catch(() => null))?.trim();
       
       // Label should still exist (even if translation didn't change)
       expect(updatedText).toBeTruthy();

@@ -344,41 +344,54 @@ export function AccessiblePollWizard() {
     setSubmissionResult(result);
 
     if (result.success) {
-      const detail = { pollId: result.pollId, title: result.title };
+      const pollData = result.data ?? {
+        pollId: result.pollId,
+        title: result.title,
+        status: result.status,
+      };
+
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('choices:poll-created', { detail }));
+        window.dispatchEvent(
+          new CustomEvent('choices:poll-created', {
+            detail: {
+              id: pollData.pollId,
+              pollId: pollData.pollId,
+              title: pollData.title ?? data.title,
+            },
+          }),
+        );
       }
 
       addNotification({
         type: 'success',
         title: 'Poll created',
-        message: result.message ?? `"${result.title}" is live for voters.`,
+        message: result.message ?? `"${pollData.title}" is live for voters.`,
       });
-      ScreenReaderSupport.announce(`Poll created successfully. "${result.title}" is live for voters.`, 'polite');
+      ScreenReaderSupport.announce(`Poll created successfully. "${pollData.title}" is live for voters.`, 'polite');
 
       logger.info('Poll created successfully', {
-        pollId: result.pollId,
-        title: result.title,
+        pollId: pollData.pollId,
+        title: pollData.title,
         category: data.category,
-        status: result.status,
+        status: pollData.status,
         durationMs: result.durationMs,
       });
       recordPollEvent('poll_created', {
         category: 'poll_creation',
-        label: result.pollId,
+        label: pollData.pollId,
         metadata: {
-          pollId: result.pollId,
-          status: result.status,
+          pollId: pollData.pollId,
+          status: pollData.status,
           durationMs: result.durationMs,
         },
       });
 
       setShareInfo({
-        pollId: result.pollId,
-        title: result.title,
+        pollId: pollData.pollId,
+        title: pollData.title,
         privacyLevel: data.settings.privacyLevel,
         category: data.category,
-        status: result.status,
+        status: pollData.status,
         ...(result.durationMs !== undefined ? { durationMs: result.durationMs } : {}),
       });
       setHasCopiedShareLink(false);
@@ -1013,7 +1026,7 @@ export function AccessiblePollWizard() {
               <CheckCircle2 className="mt-0.5 h-5 w-5" />
               <div>
                 <p className="font-medium">Poll published!</p>
-                <p>Your poll “{submissionResult.title}” is ready for voters.</p>
+                <p>Your poll “{submissionResult.data?.title ?? submissionResult.title}” is ready for voters.</p>
               </div>
             </div>
           )}

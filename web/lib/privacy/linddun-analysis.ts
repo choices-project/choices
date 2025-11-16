@@ -13,7 +13,7 @@
 // - Data flow privacy analysis
 // - Retention policy enforcement
 
-import { withOptional } from '@/lib/util/objects';
+ 
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -351,10 +351,11 @@ export class PrivacyThreatAssessmentManager {
       const maxRisk = Math.max(...dimensionThreats.map(t => t.riskLevel));
       const representativeThreat = dimensionThreats.find(t => t.riskLevel === maxRisk)!;
       
-      aggregated.push(withOptional(representativeThreat, {
+      aggregated.push({
+        ...representativeThreat,
         riskLevel: maxRisk,
         status: maxRisk > 0.6 ? 'requires_attention' : 'acceptable'
-      }));
+      });
     });
     
     return aggregated;

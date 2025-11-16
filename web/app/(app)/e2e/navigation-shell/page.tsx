@@ -2,10 +2,10 @@
 
 import { useEffect } from 'react';
 
+import { AdminLayout } from '@/app/(app)/admin/layout/AdminLayout';
+import { AppShell } from '@/components/shared/AppShell';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
-import { AppShell } from '@/components/shared/AppShell';
-import { AdminLayout } from '@/app/(app)/admin/layout/AdminLayout';
 import {
   useAppActions,
   useBreadcrumbs,
@@ -18,6 +18,7 @@ type NavigationShellHarness = {
 };
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     __navigationShellHarness?: NavigationShellHarness;
   }

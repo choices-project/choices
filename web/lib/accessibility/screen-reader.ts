@@ -21,7 +21,6 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-import { withOptional } from '../util/objects';
 
 export type ScreenReaderAnnouncement = {
   message: string;
@@ -229,10 +228,7 @@ export class ScreenReaderSupport {
     }
     
     // Set focus
-    const focusOptions = withOptional(
-      {},
-      { preventScroll: options.preventScroll }
-    );
+    const focusOptions = options.preventScroll ? { preventScroll: true } : {};
     element.focus(focusOptions);
     
     // Announce focus change if requested
@@ -474,8 +470,8 @@ export class ScreenReaderSupport {
       hook?.(payload);
     }
 
-    if (typeof console !== 'undefined' && typeof console.info === 'function') {
-      console.info('[WidgetRenderer][announce]', {
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('[WidgetRenderer][announce]', {
         key: 'screen-reader-support',
         message: announcement.message,
         priority: announcement.priority,
@@ -585,10 +581,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
  * @param announce - Optional announcement
  */
 export function focusElement(element: HTMLElement, announce?: string): void {
-  const options = withOptional(
-    {},
-    { announce }
-  );
+  const options = announce !== undefined ? { announce } : {};
   ScreenReaderSupport.setFocus(element, options);
 }
 

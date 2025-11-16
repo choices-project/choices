@@ -206,10 +206,12 @@ export const createPollWizardActions = (
         draft.error = 'Please fix the highlighted issues before publishing.';
       });
 
+      const validationMessage = 'Please fix the highlighted issues before publishing.';
       return {
         success: false,
         status: 422,
-        message: 'Please fix the highlighted issues before publishing.',
+        message: validationMessage,
+        error: validationMessage,
         fieldErrors,
         reason: 'validation',
       };
@@ -232,10 +234,12 @@ export const createPollWizardActions = (
           });
         }
 
+        const errorMessage = result.message ?? 'Unable to publish poll. Please try again.';
         const failureResult: PollWizardSubmissionError = {
           success: false,
           status: result.status,
-          message: result.message,
+          message: errorMessage,
+          error: errorMessage,
           reason,
         };
 
@@ -255,19 +259,21 @@ export const createPollWizardActions = (
         draft.error = null;
       });
 
-      const successResult: PollWizardSubmissionResult = {
-        success: true,
+      const successPayload = {
         pollId: result.data.id,
         title: result.data.title,
         status: result.status,
       };
 
-      if (result.message) {
-        successResult.message = result.message;
-      }
-      if (result.durationMs !== undefined) {
-        successResult.durationMs = result.durationMs;
-      }
+      const successResult: PollWizardSubmissionResult = {
+        success: true,
+        data: successPayload,
+        pollId: successPayload.pollId,
+        title: successPayload.title,
+        status: successPayload.status,
+        ...(result.message ? { message: result.message } : {}),
+        ...(result.durationMs !== undefined ? { durationMs: result.durationMs } : {}),
+      };
 
       return successResult;
     } catch (error) {
@@ -287,6 +293,7 @@ export const createPollWizardActions = (
         success: false,
         status: 0,
         message,
+        error: message,
         reason: 'network',
       };
     } finally {

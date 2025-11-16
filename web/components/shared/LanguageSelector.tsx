@@ -13,13 +13,14 @@
 'use client';
 
 import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n/config';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
+import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 
 type LanguageSelectorProps = {
   className?: string;
@@ -43,6 +44,15 @@ export default function LanguageSelector({
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const [liveMessage, setLiveMessage] = useState('');
+
+  const announce = useCallback(
+    (message: string, politeness: 'polite' | 'assertive' = 'polite') => {
+      setLiveMessage(message);
+      ScreenReaderSupport.announce(message, politeness);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -70,16 +80,31 @@ export default function LanguageSelector({
     try {
       updateSettings({ language });
       await changeLanguage(language);
+      const languageLabel = getDisplayName(language);
+      announce(t('navigation.languageSelector.live.changed', { language: languageLabel }));
     } catch (error) {
       logger.error('Failed to change language:', error);
+      announce(t('navigation.languageSelector.live.error'), 'assertive');
     } finally {
       setIsOpen(false);
     }
   };
 
+  const LiveRegion = () => (
+    <div
+      aria-live="polite"
+      role="status"
+      className="sr-only"
+      data-testid="language-selector-live-message"
+    >
+      {liveMessage}
+    </div>
+  );
+
   if (variant === 'buttons') {
     return (
       <div className={`space-y-2 ${className}`} data-testid="language-selector">
+        <LiveRegion />
         {showLabel && (
           <label className="block text-sm font-medium text-gray-700">
             {t('settings.language')}
@@ -91,6 +116,7 @@ export default function LanguageSelector({
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
               disabled={isLoading}
+              data-language-option={lang.code}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 currentLanguage === lang.code
                   ? 'bg-blue-600 text-white'
@@ -108,6 +134,7 @@ export default function LanguageSelector({
   if (variant === 'compact') {
     return (
       <div className={`relative ${className}`} data-testid="language-selector">
+        <LiveRegion />
         <button
           ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
@@ -141,7 +168,7 @@ export default function LanguageSelector({
                   }`}
                   role="option"
                   aria-selected={currentLanguage === lang.code}
-                  data-language-option
+                  data-language-option={lang.code}
                 >
                   <div className="flex items-center justify-between">
                     <span>{showNativeNames ? lang.native : lang.name}</span>
@@ -161,6 +188,7 @@ export default function LanguageSelector({
   // Default dropdown variant
   return (
     <div className={`space-y-2 ${className}`} data-testid="language-selector">
+      <LiveRegion />
       {showLabel && (
         <label className="block text-sm font-medium text-gray-700">
           {t('settings.language')}
@@ -202,7 +230,7 @@ export default function LanguageSelector({
                   }`}
                     role="option"
                     aria-selected={currentLanguage === lang.code}
-                    data-language-option
+                  data-language-option={lang.code}
                 >
                   <div className="flex items-center justify-between">
                     <div>

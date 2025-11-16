@@ -14,7 +14,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { requireTrustedOrigin } from '@/lib/http/origin';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
-import { withOptional } from '@/lib/util/objects';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -178,13 +177,12 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         );
       }
 
-      const authUser: AuthUser = withOptional({
+      const authUser: AuthUser = {
         id: user.id,
         email: user.email ?? '',
-        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier ?? 'T1' : 'T1'
-      }, {
-        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      });
+        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier ?? 'T1' : 'T1',
+        username: profile && !('error' in profile) ? (profile as UserProfile).username ?? null : null
+      };
 
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
@@ -270,13 +268,12 @@ export function withAuth(
     const username = profile && !('error' in profile) ? (profile as any).username : null;
     
     const context: AuthContext = {
-      user: withOptional({
+      user: {
         id: user!.id,
         email: user!.email || '',
-        trust_tier: isAdmin ? 'T3' : 'T1'
-      }, {
-        username
-      }),
+        trust_tier: isAdmin ? 'T3' : 'T1',
+        ...(username ? { username } : {})
+      },
       supabase
     };
 

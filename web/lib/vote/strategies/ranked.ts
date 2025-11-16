@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -139,47 +138,39 @@ export class RankedStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'ranked',
-            rankings: voteData.rankings,
-            rankedOptions: voteData.rankings?.map((rank, index) => ({
-              rank: index + 1,
-              option: poll.options[rank]?.text
-            })) ?? []
-          }
+      return {
+        success: true,
+        message: 'Vote submitted successfully',
+        pollId,
+        voteId,
+        auditReceipt,
+        responseTime: 0, // Will be set by the engine
+        metadata: {
+          votingMethod: 'ranked',
+          rankings: voteData.rankings,
+          rankedOptions: voteData.rankings?.map((rank, index) => ({
+            rank: index + 1,
+            option: poll.options[rank]?.text
+          })) ?? []
         },
-        {
-          privacyLevel
-        }
-      );
+        ...(privacyLevel !== undefined ? { privacyLevel } : {}),
+      };
 
     } catch (error) {
       devLog('Ranked vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'ranked',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Vote processing failed',
+        pollId: request.pollId,
+        responseTime: 0,
+        metadata: {
+          votingMethod: 'ranked',
+          error: error instanceof Error ? error.message : 'Unknown error'
         },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+        voteId: undefined,
+        auditReceipt: undefined,
+        ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
+      };
     }
   }
 
@@ -242,21 +233,17 @@ export class RankedStrategy implements VotingStrategy {
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          bordaScores,
-          instantRunoffRounds: runoffRounds,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
+      const results: PollResults = {
+        winnerVotes,
+        winnerPercentage,
+        bordaScores,
+        instantRunoffRounds: runoffRounds,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0,
+        ...(winner !== undefined ? { winner } : {}),
+      };
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -357,16 +344,12 @@ export class RankedStrategy implements VotingStrategy {
       }
       remainingOptions.delete(eliminated);
 
-      rounds.push(withOptional(
-        {
-          round,
-          votes: roundVotes,
-          percentages: roundPercentages
-        },
-        {
-          eliminated
-        }
-      ));
+      rounds.push({
+        round,
+        votes: roundVotes,
+        percentages: roundPercentages,
+        eliminated,
+      });
 
       round++;
     }

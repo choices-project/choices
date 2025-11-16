@@ -16,7 +16,7 @@ MESSAGE_TEMPLATES,
   fillTemplate,
   validateTemplateValues,
 } from '@/lib/contact/message-templates';
-import { withOptional } from '@/lib/util/objects';
+// withOptional removed
 import logger from '@/lib/utils/logger';
 
 export function useMessageTemplates() {
@@ -68,7 +68,7 @@ export function useMessageTemplates() {
 
   // Update a template value
   const updateTemplateValue = useCallback((key: string, value: string) => {
-    setTemplateValues(prev => withOptional(prev, { [key]: value }));
+    setTemplateValues(prev => ({ ...prev, [key]: value }));
   }, []);
 
   // Fill the template with current values

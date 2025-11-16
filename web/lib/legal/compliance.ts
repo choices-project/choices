@@ -4,7 +4,6 @@
 
 import logger from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
@@ -421,18 +420,13 @@ export class CommunicationComplianceManager {
   ): Promise<string> {
     const requestId = this.generateRequestId();
     
-    const request: DataSubjectRequest = withOptional(
-      {
-        id: requestId,
-        type,
-        status: 'pending' as const,
-        requestedAt: new Date(),
-        legalBasis: this.getLegalBasisForRequest(type)
-      },
-      {
-        response: undefined
-      }
-    );
+    const request: DataSubjectRequest = {
+      id: requestId,
+      type,
+      status: 'pending' as const,
+      requestedAt: new Date(),
+      legalBasis: this.getLegalBasisForRequest(type)
+    };
 
     // Store request
     await this.storeDataSubjectRequest(userId, request);

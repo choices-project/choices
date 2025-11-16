@@ -69,7 +69,6 @@ import {
   useRepresentativeGlobalLoading,
   useUserRepresentativeEntries,
 } from '@/lib/stores/representativeStore';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { PersonalAnalytics } from '@/types/features/dashboard';
 import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
@@ -81,10 +80,10 @@ const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
   showEngagementScore: true,
 };
 
-const HARNESS_DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = withOptional(
-  DEFAULT_DASHBOARD_PREFERENCES,
-  { showElectedOfficials: true },
-);
+const HARNESS_DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+  ...DEFAULT_DASHBOARD_PREFERENCES,
+  showElectedOfficials: true,
+};
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -101,7 +100,7 @@ const loadHarnessPreferences = (): DashboardPreferences | null => {
       return null;
     }
     const parsed = JSON.parse(raw) as Partial<DashboardPreferences>;
-    return withOptional(HARNESS_DEFAULT_DASHBOARD_PREFERENCES, parsed);
+    return { ...HARNESS_DEFAULT_DASHBOARD_PREFERENCES, ...parsed };
   } catch (error) {
     logger.warn('Failed to load dashboard harness preferences', error);
     return null;
@@ -157,9 +156,63 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const { t } = useI18n();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
+  const { signOut: signOutUser } = useUserActions();
+  const shouldBypassAuth = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    [],
+  );
+  const fallbackAuthenticated = useMemo(() => {
+    if (!shouldBypassAuth || typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      const raw = window.localStorage.getItem('user-store');
+      if (!raw) {
+        return false;
+      }
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed.state?.isAuthenticated);
+    } catch {
+      return false;
+    }
+  }, [shouldBypassAuth]);
+  const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
   const dashboardPreferences = useProfileStore(
     (state) => state.preferences?.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
   );
+  const handleHarnessLogout = useCallback(() => {
+    signOutUser();
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        'user-store',
+        JSON.stringify({
+          state: { isAuthenticated: false, user: null, profile: null },
+          version: 0,
+        }),
+      );
+      window.localStorage.setItem(
+        'profile-store',
+        JSON.stringify({
+          state: { profile: null, userProfile: null },
+          version: 0,
+        }),
+      );
+      window.localStorage.setItem(
+        'admin-store',
+        JSON.stringify({
+          state: { activeTab: 'overview' },
+          version: 0,
+        }),
+      );
+      window.localStorage.removeItem('e2e-dashboard-bypass');
+      window.sessionStorage.clear();
+      document.cookie = 'e2e-dashboard-bypass=; Max-Age=0; path=/';
+    }
+    router.push('/auth');
+  }, [router, signOutUser]);
   const profileName = useProfileStore(
     (state) => state.profile?.display_name ?? state.profile?.username ?? null,
   );
@@ -172,14 +225,15 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     if (stored) {
       useProfileStore.setState((state) => {
         const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
-        state.preferences = withOptional(currentPreferences, {
+        state.preferences = {
+          ...currentPreferences,
           dashboard: stored,
-        }) as ProfilePreferences;
+        } as ProfilePreferences;
       });
     }
   }, []);
 
-  if (!isUserLoading && !isAuthenticated) {
+  if (!shouldBypassAuth && !isUserLoading && !effectiveIsAuthenticated) {
     return (
       <div className={`space-y-6 ${className}`}>
         <Card>
@@ -205,13 +259,14 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
       let nextDashboardPrefs: DashboardPreferences | null = null;
       useProfileStore.setState((state) => {
         const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
-        const nextDashboard = withOptional(
-          currentPreferences.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
-          { [key]: checked },
-        );
-        const updated = withOptional(currentPreferences, {
+        const nextDashboard = {
+          ...(currentPreferences.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES),
+          [key]: checked,
+        };
+        const updated = {
+          ...currentPreferences,
           dashboard: nextDashboard,
-        }) as ProfilePreferences;
+        } as ProfilePreferences;
         state.preferences = updated;
         nextDashboardPrefs = nextDashboard;
       });
@@ -245,6 +300,9 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
           <Badge variant='outline' className='flex items-center gap-2' data-testid='participation-score'>
             <Activity className='h-4 w-4' /> {t('dashboard.personal.harness.header.badge')}
           </Badge>
+          <Button variant='outline' size='sm' onClick={handleHarnessLogout}>
+            Logout
+          </Button>
         </div>
       </div>
 
@@ -372,11 +430,26 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
-  return IS_E2E_HARNESS ? (
-    <HarnessPersonalDashboard {...props} />
-  ) : (
-    <StandardPersonalDashboard {...props} />
-  );
+  const [useHarness, setUseHarness] = useState<boolean>(() => {
+    if (IS_E2E_HARNESS) {
+      return true;
+    }
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (useHarness || IS_E2E_HARNESS) {
+      return;
+    }
+    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
+      setUseHarness(true);
+    }
+  }, [useHarness]);
+
+  return useHarness ? <HarnessPersonalDashboard {...props} /> : <StandardPersonalDashboard {...props} />;
 }
 
 function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: PersonalDashboardProps) {
@@ -427,6 +500,29 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const analyticsError = useAnalyticsError();
   const analyticsLoading = useAnalyticsLoading();
   const { signOut: resetUserState } = useUserActions();
+  const shouldBypassAuth = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    [],
+  );
+  const fallbackAuthenticated = useMemo(() => {
+    if (!shouldBypassAuth || typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      const raw = window.localStorage.getItem('user-store');
+      if (!raw) {
+        return false;
+      }
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed.state?.isAuthenticated);
+    } catch {
+      return false;
+    }
+  }, [shouldBypassAuth]);
+  const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
 
   const trendingHashtags = useTrendingHashtags();
   const hashtagLoading = useHashtagLoading().isLoading;
@@ -464,15 +560,15 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
 
   useEffect(() => {
-    if (!isAuthenticated || hasRequestedTrending.current) {
+    if (!effectiveIsAuthenticated || hasRequestedTrending.current) {
       return;
     }
     hasRequestedTrending.current = true;
     void getTrendingHashtags(undefined, 6);
-  }, [getTrendingHashtags, isAuthenticated]);
+  }, [effectiveIsAuthenticated, getTrendingHashtags]);
 
   useEffect(() => {
-    if (!isAuthenticated || isUserLoading) {
+    if (!effectiveIsAuthenticated || isUserLoading) {
       return;
     }
     if (hasRequestedRepresentatives.current) {
@@ -480,30 +576,33 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     }
     hasRequestedRepresentatives.current = true;
     void getUserRepresentatives();
-  }, [getUserRepresentatives, isAuthenticated, isUserLoading]);
+  }, [effectiveIsAuthenticated, getUserRepresentatives, isUserLoading]);
 
   useEffect(() => {
+    if (shouldBypassAuth) {
+      return;
+    }
     if (!isUserLoading && !isAuthenticated) {
       resetUserState();
       router.replace('/auth?redirectTo=/dashboard');
     }
-  }, [isAuthenticated, isUserLoading, resetUserState, router]);
+  }, [isAuthenticated, isUserLoading, resetUserState, router, shouldBypassAuth]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!effectiveIsAuthenticated) {
       hasRequestedTrending.current = false;
       hasRequestedRepresentatives.current = false;
     }
-  }, [isAuthenticated]);
+  }, [effectiveIsAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated || lastPollsFetchedAt) {
+    if (!effectiveIsAuthenticated || lastPollsFetchedAt) {
       return;
     }
     loadPolls().catch((error) => {
       logger.error('Failed to load polls for dashboard', error as Error);
     });
-  }, [isAuthenticated, lastPollsFetchedAt, loadPolls]);
+  }, [effectiveIsAuthenticated, lastPollsFetchedAt, loadPolls]);
 
   const profileRecord = profile as Record<string, unknown> | null;
   const userProfileId =
@@ -646,17 +745,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
         logger.warn('Dashboard preferences update skipped for unauthenticated user');
         return;
       }
-      const nextPreferences = withOptional(preferencesRef.current, updates);
+      const nextPreferences = { ...preferencesRef.current, ...updates };
       setPreferences(nextPreferences);
       preferencesRef.current = nextPreferences;
 
       try {
-        await updatePreferences(
-          withOptional(
-            {} as Partial<ProfilePreferences>,
-            { dashboard: nextPreferences },
-          ),
-        );
+        await updatePreferences({ dashboard: nextPreferences } as Partial<ProfilePreferences>);
       } catch (error) {
         logger.error('Error saving dashboard preferences', error as Error);
       }

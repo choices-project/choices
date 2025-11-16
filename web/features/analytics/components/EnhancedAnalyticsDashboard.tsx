@@ -42,13 +42,12 @@ import React, {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/hooks/useI18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Database } from '@/types/database';
 
@@ -88,9 +87,13 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 }) => {
   const { t, currentLanguage } = useI18n();
   const headingId = useId();
+  const tabDescriptionId = useId();
+  const summaryRegionId = useId();
   const regionRef = useRef<HTMLElement | null>(null);
   const hasAnnouncedTab = useRef(false);
   const isInitialUpdate = useRef(true);
+  const tabAnnouncementRef = useRef<string | null>(null);
+  const overviewAnnouncementRef = useRef<string | null>(null);
 
   // Responsive hooks
   const isMobile = useIsMobile();
@@ -115,14 +118,13 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     getSystemHealth,
     getActiveSiteMessages,
     refresh
-  } = useEnhancedAnalytics(withOptional({
+  } = useEnhancedAnalytics({
     enableRealTime,
-    enableNewSchema
-  }, {
+    enableNewSchema,
     ...(pollId ? { pollId } : {}),
     ...(userId ? { userId } : {}),
-    ...(sessionId ? { sessionId } : {})
-  }));
+    ...(sessionId ? { sessionId } : {}),
+  });
 
   const [systemHealth, setSystemHealth] = useState<SystemHealthRow[]>([]);
   const [siteMessages, setSiteMessages] = useState<SiteMessageRow[]>([]);
@@ -170,6 +172,54 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     [t],
   );
 
+  const tabDescriptions = useMemo(
+    () => ({
+      overview: t('analytics.tabDescriptions.overview'),
+      trends: t('analytics.tabDescriptions.trends'),
+      heatmaps: t('analytics.tabDescriptions.heatmaps'),
+      demographics: t('analytics.tabDescriptions.demographics'),
+      temporal: t('analytics.tabDescriptions.temporal'),
+      trust: t('analytics.tabDescriptions.trust'),
+    }),
+    [t],
+  );
+
+  const numberFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 0,
+      }),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value?: number | null) => {
+      if (typeof value !== 'number') {
+        return '0';
+      }
+      return numberFormatter.format(value);
+    },
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value?: number | null) => {
+      if (typeof value !== 'number') {
+        return '0%';
+      }
+      return `${percentFormatter.format(value)}%`;
+    },
+    [percentFormatter],
+  );
+
   const formatTime = useCallback(
     (date?: Date | null) => {
       if (!date) return '';
@@ -185,6 +235,116 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     },
     [currentLanguage],
   );
+
+  const overviewSummary = useMemo(() => {
+    if (!data?.summary) {
+      return null;
+    }
+
+    const {
+      totalUsers,
+      activeUsers,
+      totalPolls,
+      newPolls,
+      totalVotes,
+      newVotes,
+      engagementScore,
+      trustScore,
+    } = data.summary;
+
+    return t('analytics.summaries.overview', {
+      totalUsers: formatNumber(totalUsers),
+      activeUsers: formatNumber(activeUsers),
+      totalPolls: formatNumber(totalPolls),
+      newPolls: formatNumber(newPolls),
+      totalVotes: formatNumber(totalVotes),
+      newVotes: formatNumber(newVotes),
+      engagementScore: formatPercent(engagementScore),
+      trustScore: formatPercent(trustScore),
+    });
+  }, [data, formatNumber, formatPercent, t]);
+
+  const overviewMetrics = useMemo(() => {
+    if (!data?.summary) {
+      return [];
+    }
+
+    const {
+      totalUsers,
+      activeUsers,
+      totalPolls,
+      newPolls,
+      totalVotes,
+      newVotes,
+      engagementScore,
+      trustScore,
+    } = data.summary;
+
+    return [
+      {
+        id: 'analytics-overview-total-users',
+        icon: Users,
+        title: t('analytics.overview.metrics.totalUsers.title'),
+        value: formatNumber(totalUsers),
+        subtitle: t('analytics.overview.metrics.totalUsers.subtitle', {
+          active: formatNumber(activeUsers),
+        }),
+        srSummary: t('analytics.overview.metrics.totalUsers.sr', {
+          total: formatNumber(totalUsers),
+          active: formatNumber(activeUsers),
+        }),
+      },
+      {
+        id: 'analytics-overview-total-polls',
+        icon: Activity,
+        title: t('analytics.overview.metrics.totalPolls.title'),
+        value: formatNumber(totalPolls),
+        subtitle: t('analytics.overview.metrics.totalPolls.subtitle', {
+          newPolls: formatNumber(newPolls),
+        }),
+        srSummary: t('analytics.overview.metrics.totalPolls.sr', {
+          total: formatNumber(totalPolls),
+          newPolls: formatNumber(newPolls),
+        }),
+      },
+      {
+        id: 'analytics-overview-total-votes',
+        icon: TrendingUp,
+        title: t('analytics.overview.metrics.totalVotes.title'),
+        value: formatNumber(totalVotes),
+        subtitle: t('analytics.overview.metrics.totalVotes.subtitle', {
+          newVotes: formatNumber(newVotes),
+        }),
+        srSummary: t('analytics.overview.metrics.totalVotes.sr', {
+          total: formatNumber(totalVotes),
+          newVotes: formatNumber(newVotes),
+        }),
+      },
+      {
+        id: 'analytics-overview-engagement',
+        icon: HeartPulse,
+        title: t('analytics.overview.metrics.engagement.title'),
+        value: formatPercent(engagementScore),
+        subtitle: t('analytics.overview.metrics.engagement.subtitle', {
+          trustScore: formatPercent(trustScore),
+        }),
+        srSummary: t('analytics.overview.metrics.engagement.sr', {
+          engagement: formatPercent(engagementScore),
+          trustScore: formatPercent(trustScore),
+        }),
+      },
+    ];
+  }, [data, formatNumber, formatPercent, t]);
+
+  const describedBy = useMemo(() => {
+    const ids = [tabDescriptionId];
+    if (overviewSummary) {
+      ids.push(summaryRegionId);
+    }
+    return ids.join(' ');
+  }, [overviewSummary, summaryRegionId, tabDescriptionId]);
+
+  const ariaDescribedBy = describedBy || undefined;
 
   useEffect(() => {
     if (!lastUpdated) {
@@ -224,6 +384,35 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
       setIsRefreshing(false);
     }
   }, [refresh, t]);
+
+  useEffect(() => {
+    if (!overviewSummary) {
+      return;
+    }
+
+    if (overviewAnnouncementRef.current === overviewSummary) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(overviewSummary, 'polite');
+    overviewAnnouncementRef.current = overviewSummary;
+  }, [overviewSummary]);
+
+  useEffect(() => {
+    const description = tabDescriptions[activeTab];
+
+    if (!description) {
+      return;
+    }
+
+    const cacheKey = `${activeTab}:${description}`;
+    if (tabAnnouncementRef.current === cacheKey) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(description, 'polite');
+    tabAnnouncementRef.current = cacheKey;
+  }, [activeTab, tabDescriptions]);
 
   useEffect(() => {
     if (!data) {
@@ -301,17 +490,25 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const trustTierDistribution = enhancedInsights?.trustTierDistribution;
   const platformMetricsSummary = enhancedInsights?.platformMetrics ?? [];
 
-    return (
+  return (
     <section
       ref={regionRef}
       id="main-content"
       aria-labelledby={headingId}
+      aria-describedby={ariaDescribedBy}
+      role="main"
       tabIndex={-1}
       className={`space-y-4 md:space-y-6 p-4 md:p-6 ${className}`}
     >
       <div aria-live="polite" role="status" className="sr-only">
         {statusMessage}
       </div>
+      <p id={summaryRegionId} className="sr-only" aria-live="polite">
+        {overviewSummary ?? ''}
+      </p>
+      <p id={tabDescriptionId} className="sr-only" aria-live="polite">
+        {tabDescriptions[activeTab]}
+      </p>
       {/* Header - Mobile Optimized */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div className="flex-1">
@@ -430,70 +627,48 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
         <TabsContent value="overview" className="mt-6 space-y-6">
 
       {/* Core Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              {data.summary.activeUsers} active users
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Polls</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalPolls}</div>
-            <p className="text-xs text-muted-foreground">
-              {data.summary.newPolls} new this period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Votes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.summary.totalVotes}</div>
-            <p className="text-xs text-muted-foreground">
-              {data.summary.newVotes} new this period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Engagement Score</CardTitle>
-            <HeartPulse className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.summary.engagementScore}%</div>
-            <p className="text-xs text-muted-foreground">
-              Trust score: {data.summary.trustScore}%
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {overviewMetrics.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {overviewMetrics.map((metric) => {
+            const Icon = metric.icon;
+            const titleId = `${metric.id}-title`;
+            const subtitleId = `${metric.id}-subtitle`;
+            return (
+              <Card
+                key={metric.id}
+                role="group"
+                aria-labelledby={titleId}
+                aria-describedby={subtitleId}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle id={titleId} className="text-sm font-medium">
+                    {metric.title}
+                  </CardTitle>
+                  <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{metric.value}</div>
+                  <p id={subtitleId} className="text-xs text-muted-foreground">
+                    {metric.subtitle}
+                  </p>
+                  <p className="sr-only">{metric.srSummary}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Enhanced Insights */}
       {enhancedInsights && (
-        <Card>
+        <Card role="region" aria-labelledby="enhanced-insights-heading" aria-describedby="enhanced-insights-description">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id="enhanced-insights-heading" className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Enhanced Insights
+              {t('analytics.overviewSections.enhancedInsights.title')}
             </CardTitle>
-            <CardDescription>
-              Advanced analytics powered by new schema capabilities
+            <CardDescription id="enhanced-insights-description">
+              {t('analytics.overviewSections.enhancedInsights.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -546,14 +721,14 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 
       {/* Session Insights */}
       {data.sessionInsights && (
-        <Card>
+        <Card role="region" aria-labelledby="session-analytics-heading" aria-describedby="session-analytics-description">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id="session-analytics-heading" className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Session Analytics
+              {t('analytics.overviewSections.sessionAnalytics.title')}
             </CardTitle>
-            <CardDescription>
-              Real-time session tracking and user behavior
+            <CardDescription id="session-analytics-description">
+              {t('analytics.overviewSections.sessionAnalytics.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -581,12 +756,15 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 
       {/* System Health */}
       {systemHealth.length > 0 && (
-        <Card>
+        <Card role="region" aria-labelledby="system-health-heading" aria-describedby="system-health-description">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id="system-health-heading" className="flex items-center gap-2">
               <HeartPulse className="h-5 w-5" />
-              System Health
+              {t('analytics.overviewSections.systemHealth.title')}
             </CardTitle>
+            <CardDescription id="system-health-description">
+              {t('analytics.overviewSections.systemHealth.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -613,12 +791,15 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 
       {/* Site Messages */}
       {siteMessages.length > 0 && (
-        <Card>
+        <Card role="region" aria-labelledby="site-messages-heading" aria-describedby="site-messages-description">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id="site-messages-heading" className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Active Site Messages
+              {t('analytics.overviewSections.siteMessages.title')}
             </CardTitle>
+            <CardDescription id="site-messages-description">
+              {t('analytics.overviewSections.siteMessages.description')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

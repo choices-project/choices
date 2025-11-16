@@ -1,5 +1,32 @@
 import type { Page } from '@playwright/test';
 
+import {
+  buildFeedCategoriesResponse,
+  buildFeedInteractionResponse,
+  buildFeedSearchResponse,
+  buildFeedsResponse,
+  FEED_FIXTURES,
+} from '../../msw/feeds-handlers';
+import { normalizeMockPayload } from '../../msw/utils/envelope';
+import {
+  POLL_FIXTURES,
+  type MockPollRecord,
+  createPollRecord,
+} from '../../fixtures/api/polls';
+import { buildDashboardData } from '../../fixtures/api/dashboard';
+import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
+import { profileRecord } from '../../fixtures/api/profile';
+import {
+  buildNotification,
+  buildNotificationList,
+} from '../../fixtures/api/notifications';
+import { buildShareAnalytics } from '../../fixtures/api/share';
+import {
+  PWA_NOTIFICATION_FIXTURE,
+  PWA_OFFLINE_FIXTURE,
+  PWA_SUBSCRIPTION_FIXTURE,
+} from '../../fixtures/api/pwa';
+
 type RouteHandler = Parameters<Page['route']>[1];
 type RoutePattern = Parameters<Page['route']>[0];
 type PlaywrightRoute = Parameters<RouteHandler>[0];
@@ -23,33 +50,12 @@ export type TestPoll = {
   category: string;
 };
 
-type MockPollOption = {
-  id: string;
-  text: string;
-};
-
-type MockPollRecord = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  options: MockPollOption[];
-};
-
 export type TestDataPayload = {
   user?: Partial<TestUser>;
   poll?: Partial<TestPoll>;
 };
 
 export type SeedHandle = string;
-
-import {
-  buildFeedCategoriesResponse,
-  buildFeedInteractionResponse,
-  buildFeedSearchResponse,
-  buildFeedsResponse,
-  FEED_FIXTURES,
-} from '../../msw/feeds-handlers';
 
 const DISABLE_FLAGS = new Set(['0', 'false', 'no', 'off']);
 
@@ -207,6 +213,10 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
   await page.context().clearCookies();
   await page.context().clearPermissions();
   await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  await page.evaluate(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }).catch(() => undefined);
 }
 
 export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
@@ -286,52 +296,11 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     return async () => Promise.resolve();
   }
 
-  type MockEnvelope = {
-    success: boolean;
-    data?: unknown;
-    error?: string;
-    code?: string;
-    details?: unknown;
-    metadata?: Record<string, unknown>;
-  };
-
-  const buildMetadata = (metadata?: Record<string, unknown>) => ({
-    timestamp: new Date().toISOString(),
-    ...(metadata ?? {}),
-  });
-
-  const normalizePayload = (payload: unknown): MockEnvelope => {
-    if (payload && typeof payload === 'object' && 'success' in payload) {
-      const envelope = payload as MockEnvelope;
-      if (envelope.success) {
-        return {
-          success: true,
-          data: 'data' in envelope ? envelope.data ?? null : null,
-          metadata: buildMetadata(envelope.metadata),
-        };
-      }
-
-      return {
-        success: false,
-        error: envelope.error ?? 'Request failed',
-        ...(envelope.code ? { code: envelope.code } : {}),
-        ...(envelope.details ? { details: envelope.details } : {}),
-        metadata: buildMetadata(envelope.metadata),
-      };
-    }
-
-    return {
-      success: true,
-      data: payload,
-      metadata: buildMetadata(),
-    };
-  };
-
   const respondJson = async (route: PlaywrightRoute, payload: unknown, status = 200) => {
     await route.fulfill({
       status,
       contentType: 'application/json',
-      body: JSON.stringify(normalizePayload(payload)),
+      body: JSON.stringify(normalizeMockPayload(payload)),
     });
   };
 
@@ -350,6 +319,14 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
   const hasAuthHeader = (route: PlaywrightRoute) => {
     const headers = route.request().headers();
     return typeof headers['authorization'] === 'string' && headers['authorization'].startsWith('Bearer ');
+  };
+
+  const shouldBypassHarnessAuth = (route: PlaywrightRoute) => {
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1') {
+      return false;
+    }
+    const cookieHeader = route.request().headers()['cookie'] ?? '';
+    return cookieHeader.includes('e2e-dashboard-bypass=1');
   };
 
   const unauthorizedResponse = () => ({
@@ -378,20 +355,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       }
       await respondJson(route, {
         success: true,
-        data: {
-          jurisdiction: {
-            district: '13',
-            state: 'IL',
-            county: 'Sangamon',
-            fallback: false,
-          },
-          normalizedInput: {
-            line1: '123 Any St',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704',
-          },
-        },
+        data: CIVICS_ADDRESS_LOOKUP,
         metadata: {
           integration: 'google-civic',
           fallback: false,
@@ -424,10 +388,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
           route,
           {
             success: true,
-            data: {
-              notifications: [],
-              total: 0,
-            },
+            data: buildNotificationList(),
           },
           200,
         );
@@ -440,12 +401,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
           route,
           {
             success: true,
-            data: {
-              id: 'mock-notification-id',
-              title: body?.title ?? 'Mock Notification',
-              message: body?.message ?? 'Mock notification body',
-              createdAt: new Date().toISOString(),
-            },
+            data: buildNotification({
+              title: body?.title,
+              message: body?.message,
+            }),
           },
           201,
         );
@@ -454,7 +413,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
 
       if (method === 'PUT') {
         const body = parseJsonBody(route);
-        const notificationId = body?.notificationId ?? 'mock-notification-id';
+        const notificationId = body?.notificationId ?? 'notification-1';
         await respondJson(
           route,
           {
@@ -539,19 +498,8 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       });
     };
 
-    let currentAuthEmail = 'user@example.com';
-    const profileState = {
-      email: currentAuthEmail,
-      displayName: 'Test User',
-      bio: '',
-    };
-
-    const serializeProfile = () => ({
-      email: profileState.email,
-      displayName: profileState.displayName,
-      display_name: profileState.displayName,
-      bio: profileState.bio,
-    });
+    let currentAuthEmail = profileRecord.email as string;
+    const profileState = { ...profileRecord };
 
     const loginHandler: RouteHandler = async (route) => {
       const payload = parseJsonBody(route);
@@ -581,25 +529,25 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     };
 
     const profileHandler: RouteHandler = async (route) => {
-      if (!hasAuthHeader(route)) {
+      if (!hasAuthHeader(route) && !shouldBypassHarnessAuth(route)) {
         await respondJson(route, unauthorizedResponse(), 401);
         return;
       }
       if (route.request().method() === 'GET') {
-        await respondJson(route, { profile: serializeProfile() });
+        await respondJson(route, { profile: profileState });
         return;
       }
       if (route.request().method() === 'PUT') {
         const payload = parseJsonBody(route);
         if (typeof payload.displayName === 'string') {
-          profileState.displayName = payload.displayName;
+          profileState.display_name = payload.displayName;
         } else if (typeof payload.display_name === 'string') {
-          profileState.displayName = payload.display_name;
+          profileState.display_name = payload.display_name;
         }
         if (typeof payload.bio === 'string') {
           profileState.bio = payload.bio;
         }
-        await respondJson(route, { profile: serializeProfile() });
+        await respondJson(route, { profile: profileState });
         return;
       }
       await respondJson(route, { success: false, error: 'Method not allowed' }, 405);
@@ -632,35 +580,30 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
   }
 
   if (options.api) {
-    const polls: MockPollRecord[] = [];
+    const polls: MockPollRecord[] = POLL_FIXTURES.map((poll) => ({
+      ...poll,
+      options: poll.options.map((option) => ({ ...option })),
+    }));
 
     const ensurePoll = (
       payload: Partial<MockPollRecord> & {
         rawOptions?: string[];
       },
     ): MockPollRecord => {
-      const id = payload.id ?? `poll-${polls.length + 1}`;
-      const rawOptions = payload.rawOptions ?? payload.options?.map((option) => option.text);
-      const options =
-        (payload.options && payload.options.length > 0 ? payload.options : undefined) ??
-        (Array.isArray(rawOptions) && rawOptions.length > 0
-          ? rawOptions.map((text, index) => ({
-              id: `${id}-option-${index + 1}`,
-              text,
-            }))
-          : ['Option 1', 'Option 2'].map((text, index) => ({
-              id: `${id}-option-${index + 1}`,
-              text,
-            })));
-
-      const poll: MockPollRecord = {
-        id,
-        title: payload.title ?? `Mock Poll ${polls.length + 1}`,
-        description: payload.description ?? 'Mock poll description',
-        category: payload.category ?? 'general',
-        options,
-      };
-      polls.push(poll);
+      const poll = createPollRecord({
+        id: payload.id ?? `poll-${polls.length + 1}`,
+        ...payload,
+        options:
+          payload.options ??
+          payload.rawOptions?.map((text, index) => ({
+            id: `${payload.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
+            text,
+          })),
+      });
+      polls.push({
+        ...poll,
+        options: poll.options.map((option) => ({ ...option })),
+      });
       return poll;
     };
 
@@ -757,42 +700,17 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     };
 
     const dashboardHandler: RouteHandler = async (route) => {
-      if (!hasAuthHeader(route)) {
+      if (!hasAuthHeader(route) && !shouldBypassHarnessAuth(route)) {
         await respondJson(route, unauthorizedResponse(), 401);
         return;
       }
-      await respondJson(route, {
-        platform: {
-          activeUsers: 120,
-          newPolls: polls.length,
-        },
-        polls,
-        analytics: {
-          total_votes: 480,
-          total_polls_created: polls.length,
-        },
-      });
+      await respondJson(route, buildDashboardData(polls));
     };
 
     const civicsStateHandler: RouteHandler = async (route) => {
       await respondJson(route, {
         success: true,
-        data: {
-          state: 'IL',
-          level: 'federal',
-          count: 1,
-          representatives: [
-            {
-              id: 'rep-1',
-              name: 'Representative Example',
-              office: 'House',
-              level: 'federal',
-              jurisdiction: 'IL',
-              party: 'Independent',
-              last_updated: new Date().toISOString()
-            }
-          ]
-        },
+        data: CIVICS_STATE_FIXTURE,
         metadata: {
           timestamp: new Date().toISOString()
         }
@@ -842,23 +760,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
 
       await respondJson(route, {
         success: true,
-        data: {
-          analytics: {
-            totalShares: 128,
-            platformBreakdown: {
-              twitter: 64,
-              facebook: 32,
-              sms: 16,
-              other: 16,
-            },
-            topPolls: [
-              { pollId: 'share-poll-1', shares: 24 },
-              { pollId: 'share-poll-2', shares: 18 },
-            ],
-            periodDays: days,
-            filters: { platform, pollId },
-          },
-        },
+        data: buildShareAnalytics({
+          periodDays: days,
+          filters: { platform, pollId },
+        }),
         metadata: { timestamp: new Date().toISOString() },
       });
     };
@@ -937,10 +842,11 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     const feedsHandler: RouteHandler = async (route) => {
       const requestUrl = new URL(route.request().url());
       const limit = Number(requestUrl.searchParams.get('limit') ?? FEED_FIXTURES.length);
+      const offset = Number(requestUrl.searchParams.get('offset') ?? '0');
       const category = requestUrl.searchParams.get('category');
       const district = requestUrl.searchParams.get('district');
       const sort = requestUrl.searchParams.get('sort');
-      const response = buildFeedsResponse({ limit, category, district, sort });
+      const response = buildFeedsResponse({ limit, offset, category, district, sort });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

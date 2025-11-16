@@ -25,6 +25,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .from('user_followed_representatives')
       .select(`
         id,
+        user_id,
         notify_on_votes,
         notify_on_committee_activity,
         notify_on_public_statements,
@@ -69,6 +70,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const representatives = (followed ?? []).map((follow: any) => ({
       follow: {
         id: follow.id,
+        user_id: follow.user_id,
         notify_on_votes: follow.notify_on_votes,
         notify_on_committee_activity: follow.notify_on_committee_activity,
         notify_on_public_statements: follow.notify_on_public_statements,

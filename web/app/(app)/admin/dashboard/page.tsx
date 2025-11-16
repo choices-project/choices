@@ -3,8 +3,8 @@
 import dynamic from 'next/dynamic';
 import React, { Suspense, useEffect } from 'react';
 
-import { AdminLayout } from '../layout/AdminLayout';
 import { useAppActions } from '@/lib/stores/appStore';
+import { AdminLayout } from '../layout/AdminLayout';
 
 // Dynamically import the ComprehensiveAdminDashboard component with optimizations
 const ComprehensiveAdminDashboard = dynamic(() => import('@/features/admin').then(mod => ({ default: mod.ComprehensiveAdminDashboard })), {

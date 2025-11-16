@@ -120,10 +120,10 @@ export default function AnalyticsStoreHarnessPage() {
       setChartConfig: (...args) => actionsRef.current.setChartConfig(...args),
     };
 
-    console.info('[analytics-store-harness] setting window.__analyticsStoreHarness');
+    console.warn('[analytics-store-harness] setting window.__analyticsStoreHarness');
     window.__analyticsStoreHarness = harness;
     return () => {
-      console.info('[analytics-store-harness] cleaning window.__analyticsStoreHarness');
+      console.warn('[analytics-store-harness] cleaning window.__analyticsStoreHarness');
       if (window.__analyticsStoreHarness === harness) {
         delete window.__analyticsStoreHarness;
       }
@@ -134,7 +134,7 @@ export default function AnalyticsStoreHarnessPage() {
     if (!isMounted) {
       return;
     }
-    console.info('[analytics-store-harness] marking dataset ready');
+    console.warn('[analytics-store-harness] marking dataset ready');
     document.documentElement.dataset.analyticsStoreHarness = 'ready';
     return () => {
       if (document.documentElement.dataset.analyticsStoreHarness) {

@@ -405,8 +405,13 @@ export default function CreatePollPage() {
       return;
     }
 
-    const { pollId, title: createdTitle } = result;
-    const shareTitle = createdTitle ?? data.title;
+    const pollData = result.data ?? {
+      pollId: result.pollId,
+      title: result.title ?? data.title,
+      status: result.status,
+    };
+
+    const shareTitle = pollData.title ?? data.title;
 
     addNotification({
       type: 'success',
@@ -417,11 +422,11 @@ export default function CreatePollPage() {
 
     recordPollEvent('poll_created', {
       category: 'poll_creation',
-      label: pollId,
+      label: pollData.pollId,
       value: 1,
       metadata: {
-        pollId,
-        status: result.status,
+        pollId: pollData.pollId,
+        status: pollData.status,
         durationMs: result.durationMs,
         optionCount: data.options.length,
         privacyLevel: data.settings.privacyLevel,
@@ -430,7 +435,7 @@ export default function CreatePollPage() {
     });
 
     setShareInfo({
-      pollId,
+      pollId: pollData.pollId,
       title: shareTitle,
       privacyLevel: data.settings.privacyLevel,
       category: data.category,
@@ -440,7 +445,11 @@ export default function CreatePollPage() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('choices:poll-created', {
-          detail: { id: pollId, title: createdTitle },
+          detail: {
+            id: pollData.pollId,
+            pollId: pollData.pollId,
+            title: pollData.title ?? shareTitle,
+          },
         }),
       );
     }

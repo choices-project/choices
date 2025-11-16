@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
 import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 
@@ -97,7 +96,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       setLoading(true);
       setError(null);
 
-      const requestFilters = withOptional(filters, customFilters);
+      const requestFilters = { ...filters, ...(customFilters ?? {}) };
       const queryParams = new URLSearchParams({
         period: requestFilters.dateRange ?? '7d'
       });
@@ -324,7 +323,7 @@ export function useOverviewAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchOverview
   };
 }
@@ -333,11 +332,11 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   const analytics = useAnalytics(options);
   
   const fetchTrends = useCallback((dateRange?: string) => {
-    return analytics.fetchData('trends', withOptional({}, { dateRange }));
+    return analytics.fetchData('trends', { ...(dateRange ? { dateRange } : {}) });
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchTrends
   };
 }
@@ -350,7 +349,7 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchPerformance
   };
 }

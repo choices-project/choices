@@ -8,6 +8,7 @@
  */
 
 import { logger } from './logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Define proper types for request/response
 type Request = {
@@ -46,13 +47,29 @@ export type SessionValidation = {
  */
 export function getUser(): Promise<AuthResult> {
   try {
-    // This would integrate with your actual auth system
-    // For now, return null as this is a placeholder
     logger.info('Getting current user');
-    return Promise.resolve({
-      user: null,
-      error: null
-    });
+    return (async () => {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        return { user: null, error: 'Auth client unavailable' };
+      }
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        return { user: null, error: error.message ?? 'Failed to get user' };
+      }
+      const u = data?.user;
+      if (!u) {
+        return { user: null, error: null };
+      }
+      const user: User = {
+        id: u.id,
+        email: u.email ?? '',
+        name: (u.user_metadata?.name as string | undefined) ?? '',
+        avatar: (u.user_metadata?.avatar_url as string | undefined),
+        role: (u.app_metadata?.role as string | undefined)
+      };
+      return { user, error: null };
+    })();
   } catch (error) {
     logger.error('Failed to get user', error instanceof Error ? error : new Error(String(error)));
     return Promise.resolve({
@@ -101,12 +118,30 @@ export function checkPermissions(userId: string, permission: string): Promise<bo
  */
 export function validateSession(sessionToken: string): Promise<SessionValidation> {
   try {
-    // This would integrate with your actual session validation
-    logger.info('Validating session', { sessionToken });
-    return Promise.resolve({
-      valid: false, // Placeholder - would validate actual session
-      error: 'Session validation not implemented'
-    });
+    logger.info('Validating session', { sessionTokenPresent: Boolean(sessionToken) });
+    return (async () => {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        return { valid: false, error: 'Auth client unavailable' };
+      }
+      // Rely on Supabase cookie/session; token param is ignored in server context
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        return { valid: false, error: error.message ?? 'Session invalid' };
+      }
+      const u = data?.user;
+      if (!u) {
+        return { valid: false, error: 'No active session' };
+      }
+      const user: User = {
+        id: u.id,
+        email: u.email ?? '',
+        name: (u.user_metadata?.name as string | undefined) ?? '',
+        avatar: (u.user_metadata?.avatar_url as string | undefined),
+        role: (u.app_metadata?.role as string | undefined)
+      };
+      return { valid: true, user };
+    })();
   } catch (error) {
     logger.error('Session validation failed', error instanceof Error ? error : new Error(String(error)));
     return Promise.resolve({

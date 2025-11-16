@@ -52,6 +52,27 @@ describe('usePollCreatedListener', () => {
     expect(pushMock).toHaveBeenCalledWith('/polls/analytics?pollId=poll-abc');
   });
 
+  it('supports events that provide pollId instead of id', () => {
+    render(<TestComponent />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('choices:poll-created', { detail: { pollId: 'poll-alt', title: 'Alt Budget' } }),
+      );
+    });
+
+    const notifications = useNotificationStore.getState().notifications;
+    expect(notifications.length).toBe(1);
+    const notification = notifications[0]!;
+    expect(notification.message).toContain('Alt Budget');
+
+    notification.actions?.[0]?.action();
+    expect(pushMock).toHaveBeenCalledWith('/polls/poll-alt');
+
+    notification.actions?.[1]?.action();
+    expect(pushMock).toHaveBeenCalledWith('/polls/analytics?pollId=poll-alt');
+  });
+
   it('ignores events without poll id', () => {
     render(<TestComponent />);
 

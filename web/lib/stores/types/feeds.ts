@@ -301,6 +301,12 @@ export type FeedsApiPayload = {
     district: string | null;
     sort: string;
   };
+  pagination?: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 };
 
 export type FeedUpdateInput = Partial<FeedItem>;

@@ -1,6 +1,6 @@
 /**
  * Widget Dashboard Component
- * 
+ *
  * Main container for the customizable widget-based analytics dashboard.
  * Features:
  * - Drag and drop widgets
@@ -9,18 +9,18 @@
  * - Preset layouts
  * - Widget configuration
  * - Responsive design
- * 
+ *
  * Created: November 5, 2025
  * Status: PRODUCTION
  */
 
 'use client';
 
-import { 
-  Edit, 
-  Save, 
-  X, 
-  Layout, 
+import {
+  Edit,
+  Save,
+  X,
+  Layout,
   Plus,
   Undo,
   Redo,
@@ -167,6 +167,11 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState<{ gridDensity: 'comfortable' | 'compact'; autoRefreshSeconds: number }>({
+    gridDensity: 'comfortable',
+    autoRefreshSeconds: 0
+  });
   const shortcutHelpId = useId();
 
   // ============================================================================
@@ -239,7 +244,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
     const loadUserLayout = async () => {
       try {
         const response = await fetch(`/api/analytics/dashboard/layout?userId=${userId}`);
-        
+
         if (response.ok) {
           const layout = await response.json();
           schedule(() => {
@@ -349,7 +354,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
     try {
       await saveLayout({ userId });
       logger.info('Layout saved successfully', { userId });
-      
+
       // Exit edit mode after saving
       setEditingIfChanged(false);
     } catch (error) {
@@ -535,7 +540,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {/* TODO: Open settings */}}
+                  onClick={() => setShowSettings(true)}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
@@ -661,6 +666,77 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
           <div><kbd>Esc</kbd> - Cancel editing</div>
           <div>{t('analytics.widgets.overlayMoveHint' as never)}</div>
           <div>{t('analytics.widgets.overlayResizeHint' as never)}</div>
+        </div>
+      )}
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="fixed inset-0 z-40 bg-background/90 backdrop-blur">
+          <div className="absolute right-0 top-0 h-full w-full max-w-md border-l bg-background shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span className="font-semibold">Dashboard Settings</span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowSettings(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-4 space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Grid Density</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={settings.gridDensity === 'comfortable' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSettings({ ...settings, gridDensity: 'comfortable' })}
+                  >
+                    Comfortable
+                  </Button>
+                  <Button
+                    variant={settings.gridDensity === 'compact' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSettings({ ...settings, gridDensity: 'compact' })}
+                  >
+                    Compact
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Auto-refresh (seconds)</label>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-32 rounded border bg-background p-2 text-sm"
+                  value={settings.autoRefreshSeconds}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      autoRefreshSeconds: Math.max(0, Number.parseInt(e.target.value || '0', 10))
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  0 disables auto-refresh.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    // Persist later when a settings store is available
+                    logger.info('Dashboard settings updated', settings as unknown as Record<string, unknown>);
+                    setShowSettings(false);
+                  }}
+                >
+                  Save
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowSettings(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

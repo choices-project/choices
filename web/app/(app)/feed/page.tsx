@@ -22,7 +22,6 @@ import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { withOptional } from '@/lib/util/objects';
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
@@ -49,11 +48,12 @@ export default function FeedPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <UnifiedFeedRefactored
-        {...withOptional({
+        {...{
           enableAnalytics: true,
           maxItems: 50,
           userDistrict,
-        }, user?.id ? { userId: user.id } : undefined)}
+          ...(user?.id ? { userId: user.id } : {}),
+        }}
       />
     </div>
   );

@@ -14,6 +14,12 @@ jest.mock('@/lib/stores/appStore', () => ({
   useAppActions: jest.fn(),
 }));
 
+jest.mock('@/lib/accessibility/screen-reader', () => ({
+  ScreenReaderSupport: {
+    announce: jest.fn(),
+  },
+}));
+
 type I18nModule = typeof import('@/hooks/useI18n');
 const mockedI18n = jest.requireMock('@/hooks/useI18n') as {
   [K in keyof I18nModule]: jest.Mock;

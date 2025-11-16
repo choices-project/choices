@@ -9,16 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Phase C Governance & Rollout
 
-### Added
-- **Governance Artifacts:** Published `docs/ARCHITECTURE/stores.md`, `docs/API/contracts.md`, and updated testing playbooks/contract plans so downstream teams can align on selectors, middleware, and response envelopes.
-- **Inclusive Release Gates:** Updated PR template + deployment guide with inclusive UI/i18n checklists, SR + locale audit scheduling, and MSW/contract parity requirements.
+### Experience Quality
+- PWA installer and offline-sync flows now emit success/error toasts via `useNotificationActions`, guaranteeing consistent live-region announcements and enabling harness verification.
 
-### Changed
-- **API Documentation:** Contract plan now includes a coverage matrix + MSW alignment steps; API handlers reference the shared `{ success, data, metadata }` envelope consistently.
-- **Automation Guidance:** Playwright README + harness playbooks capture MSW troubleshooting, offline expectations, and locale-debug tips.
+### Documentation
+- Expanded `docs/ARCHITECTURE/stores.md` with owner-tracked rollout checklist, governance deliverables, and cross-links to state-management docs.
+- Added a Phase C coverage matrix + release checklist to `docs/API/contracts.md`, clarifying responsibilities for Workflows A–C.
+- Refreshed the Accessibility & I18N QA Playbook with a live audit schedule, PR/release sign-off criteria, and references to the inclusive UI guidelines.
 
-### Upcoming
-- **Analytics & API Release Notes:** Prepare partner-facing callouts covering analytics cache metadata, WebAuthn parity, and contract test enforcement before the next tagged release.
+### Governance & Tooling
+- Introduced `.github/PULL_REQUEST_TEMPLATE.md` so every PR confirms accessibility/i18n work, translation snapshots, contract tests, and release-note entries.
+- Added `npm run governance:check` to enforce roadmap/doc updates whenever `web/lib/stores/**` or API handlers change; CI will run it alongside contract tests.
+- Linked PR template + docs to the inclusive governance workflow; CI will require the new checklist for UI/contract changes.
+
+### Testing & Audits
+- Documented locale/axe gates in the playbook and roadmap; locale specs will join CI once auth/onboarding coverage lands.
+- Recorded quarterly SR + locale audit dates (NVDA/VoiceOver) and ownership so GOV-001/002 can enforce SLAs.
+- Added a Civics lure harness (`web/app/(app)/e2e/civics-lure`) plus RTL + Playwright coverage to ensure election countdown announcements and localization remain stable.
+- Extended `dashboard-journey.spec.ts` to assert feed error toasts surface user-facing copy and emit the correct notification harness snapshot.
+
+### Communications
+- Partner release packet now references the updated docs, coverage matrix, and governance gate. Include these links when notifying analytics/API stakeholders prior to the next tag.
 
 ---
 

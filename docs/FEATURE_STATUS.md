@@ -21,6 +21,7 @@ This document captures the features that still require engineering work before t
 | Accessibility Enhancements | `ACCESSIBILITY` | Not implemented | – | Accessibility work is ongoing but not behind a flag. Replace with concrete tasks (e.g., axe audits). |
 | Internationalisation | `INTERNATIONALIZATION` | **In progress** | `web/app/layout.tsx`, `web/hooks/useI18n.ts`, `web/messages/*.json` | `next-intl` provider, locale middleware, and `LanguageSelector` ship with `en`/`es`. Finish extraction tooling & lint (`npm run i18n:extract`) and expand catalogue coverage before enabling flag. |
 | Civic Engagement v2 | `CIVIC_ENGAGEMENT_V2` | WIP module gated behind flag | `web/lib/utils/sophisticated-civic-engagement.ts`, `web/lib/core/feature-flags.ts` | Helpers exist but require Supabase integration, UI surfacing, and QA. |
+| Analytics – Demographic Insights | `ANALYTICS` | Implemented (precomputed) | `supabase/migrations/*_update_poll_demographic_insights.sql`, `web/features/analytics/lib/analytics-service.ts` | `poll_demographic_insights` table + RPC implemented; service reads precomputed insights with fallback. Trigger keeps insights fresh on writes. |
 
 ## Always-On Capabilities
 
@@ -41,6 +42,7 @@ These capabilities surface in the admin dashboard as **Locked** entries—attemp
 1. **Prioritise Social Sharing** – It has the most scaffolding in place and offers immediate user value once persistence + reporting land.
 2. **Decide on OAuth Device Flow vs. WebAuthn Enhancements** – Treat them as separate projects, keeping security implications in mind.
 3. **Audit Remaining Flags Each Quarter** – Delete placeholders that do not have a concrete owner or plan.
+4. **Adopt Precomputed Analytics** – Prefer reads from `poll_demographic_insights`; schedule batch recompute for legacy data if needed.
 4. **Use This Document as the Source of Truth** – Update it whenever a project ships or a flag changes ownership.
 
 

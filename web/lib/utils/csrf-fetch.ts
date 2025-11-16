@@ -1,33 +1,46 @@
 /**
  * CSRF Fetch Utility
- * 
+ *
  * Fetch utility with CSRF protection
- * 
+ *
  * Created: October 26, 2025
  * Status: ACTIVE
  */
 
-import { withOptional } from '@/lib/util/objects';
+const mergeRequestInit = (base: RequestInit, extras: RequestInit): RequestInit => {
+  const merged: RequestInit = Object.assign({}, base);
+  for (const [key, value] of Object.entries(extras) as [
+    keyof RequestInit,
+    RequestInit[keyof RequestInit],
+  ][]) {
+    if (value !== undefined && value !== null) {
+      (merged as Record<string, unknown>)[key as string] = value;
+    } else {
+      delete (merged as Record<string, unknown>)[key as string];
+    }
+  }
+  return merged;
+};
 
 /**
  * Fetch with CSRF token
  */
 export async function csrfFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
+
   const headers = new Headers(options.headers);
   if (csrfToken) {
     headers.set('X-CSRF-Token', csrfToken);
   }
-  
-  return fetch(url, withOptional(options, { headers }));
+
+  return fetch(url, mergeRequestInit(options, { headers }));
 }
 
 /**
  * GET request with CSRF protection
  */
 export async function csrfGet(url: string, options: RequestInit = {}): Promise<Response> {
-  return csrfFetch(url, withOptional(options, { method: 'GET' }));
+  return csrfFetch(url, mergeRequestInit(options, { method: 'GET' }));
 }
 
 /**
@@ -36,12 +49,15 @@ export async function csrfGet(url: string, options: RequestInit = {}): Promise<R
 export async function csrfPost(url: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
-  
-  const fetchOptions = withOptional(options, {
+
+  const fetchOptions = mergeRequestInit(options, {
     method: 'POST',
     headers,
-    body: data ? JSON.stringify(data) : undefined,
   });
+
+  if (data !== undefined) {
+    fetchOptions.body = JSON.stringify(data);
+  }
 
   return csrfFetch(url, fetchOptions);
 }
@@ -52,12 +68,15 @@ export async function csrfPost(url: string, data?: unknown, options: RequestInit
 export async function csrfPut(url: string, data?: unknown, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
-  
-  const fetchOptions = withOptional(options, {
+
+  const fetchOptions = mergeRequestInit(options, {
     method: 'PUT',
     headers,
-    body: data ? JSON.stringify(data) : undefined,
   });
+
+  if (data !== undefined) {
+    fetchOptions.body = JSON.stringify(data);
+  }
 
   return csrfFetch(url, fetchOptions);
 }
@@ -66,7 +85,7 @@ export async function csrfPut(url: string, data?: unknown, options: RequestInit 
  * DELETE request with CSRF protection
  */
 export async function csrfDelete(url: string, options: RequestInit = {}): Promise<Response> {
-  return csrfFetch(url, withOptional(options, { method: 'DELETE' }));
+  return csrfFetch(url, mergeRequestInit(options, { method: 'DELETE' }));
 }
 
 export default {

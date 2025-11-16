@@ -20,17 +20,16 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
-import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useAnalyticsActions, useContactActions } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
-import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 import { useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
-import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+
 
 type BulkContactModalProps = {
   isOpen: boolean;
@@ -51,7 +50,7 @@ export default function BulkContactModal({
   isOpen,
   onClose,
   representatives,
-  userId
+  userId: _userId
 }: BulkContactModalProps) {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
@@ -168,7 +167,7 @@ export default function BulkContactModal({
       });
       setLocalTemplateValues(initialValues);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, localTemplateValues]);
 
   // Apply filled template when it's ready
   useEffect(() => {
@@ -583,7 +582,7 @@ export default function BulkContactModal({
                         onChange={(e) => {
                           const value = e.target.value;
                           updateTemplateValue(placeholder.key, value);
-                          setLocalTemplateValues(prev => withOptional(prev, { [placeholder.key]: value }));
+                          setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"

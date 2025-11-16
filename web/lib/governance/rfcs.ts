@@ -7,7 +7,7 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
+ 
 
 export type RFCData = {
   title: string;
@@ -216,17 +216,15 @@ export class RFCManager {
     }
     
     const commentId = this.generateCommentId();
-    const comment: RFCComment = withOptional(
-      {
-        id: commentId,
-        rfcId,
-        author,
-        content,
-        timestamp: Date.now(),
-        replies: []
-      },
-      { parentId }
-    );
+    const comment: RFCComment = {
+      id: commentId,
+      rfcId,
+      author,
+      content,
+      timestamp: Date.now(),
+      replies: [],
+      ...(parentId ? { parentId } : {})
+    };
     
     const comments = this.commentStorage.get(rfcId) ?? [];
     comments.push(comment);
@@ -266,16 +264,14 @@ export class RFCManager {
     }
     
     const voteId = this.generateVoteId();
-    const rfcVote: RFCVote = withOptional(
-      {
-        id: voteId,
-        rfcId,
-        voter,
-        vote,
-        timestamp: Date.now()
-      },
-      { reasoning }
-    );
+    const rfcVote: RFCVote = {
+      id: voteId,
+      rfcId,
+      voter,
+      vote,
+      timestamp: Date.now(),
+      ...(reasoning ? { reasoning } : {})
+    };
     
     const votes = this.voteStorage.get(rfcId) ?? [];
     

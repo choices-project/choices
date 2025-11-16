@@ -11,7 +11,6 @@ import {
   shouldSendReminder,
   calculateProgress
 } from '@/lib/candidate/journey-tracker'
-import { withOptional } from '@/lib/util/objects'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
@@ -85,17 +84,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Build progress object with proper optional handling
-    const progress = withOptional({
+    const progress = {
       platformId: platform.id,
       userId: authUser.id,
       currentStage,
       milestones,
       lastActiveAt: platform.last_active_at ? new Date(platform.last_active_at) : createdDate,
-      daysSinceDeclaration
-    }, {
-      nextActionDue: platform.filing_deadline ? new Date(platform.filing_deadline) : undefined,
-      daysUntilDeadline
-    })
+      daysSinceDeclaration,
+      ...(platform.filing_deadline ? { nextActionDue: new Date(platform.filing_deadline) } : {}),
+      ...(daysUntilDeadline !== undefined ? { daysUntilDeadline } : {})
+    }
 
     // Get checklist
     const checklist = getJourneyChecklist(currentStage)

@@ -1,10 +1,8 @@
 import { randomBytes } from "crypto";
 
 import { cookies } from "next/headers";
-import { NextResponse } from 'next/server';
-
-
 import { CSRF_COOKIE } from "./cookies";
+import { errorResponse } from "@/lib/api";
 
 /**
  * CSRF Protection Module
@@ -125,12 +123,11 @@ export async function validateCsrfProtection(request: Request): Promise<boolean>
  *
  * @returns NextResponse with 403 Forbidden status
  */
-export function createCsrfErrorResponse(): NextResponse {
-  return NextResponse.json(
-    {
-      error: "CSRF token validation failed",
-      message: "Request blocked for security reasons",
-    },
-    { status: 403 }
+export function createCsrfErrorResponse() {
+  return errorResponse(
+    "CSRF token validation failed",
+    403,
+    { reason: "Request blocked for security reasons" },
+    "CSRF_ERROR"
   );
 }

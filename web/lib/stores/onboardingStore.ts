@@ -20,7 +20,6 @@ import type {
   ValuesData as FeatureValuesData,
   PrivacyPreferences,
 } from '@/features/onboarding/types';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
@@ -136,6 +135,14 @@ export type OnboardingActions = {
   submitOnboarding: () => Promise<void>;
   validateStep: (step: number) => boolean;
   validateAllSteps: () => boolean;
+  // Candidate onboarding extensions (no new store)
+  startCandidateOnboarding: (input: {
+    displayName: string;
+    office?: string;
+    jurisdiction?: string;
+    party?: string;
+  }) => Promise<{ id: string; slug: string } | null>;
+  verifyCandidateOfficialEmail: () => Promise<{ ok: boolean; slug?: string }>;
 };
 
 export type OnboardingStore = OnboardingState & OnboardingActions;
@@ -208,7 +215,14 @@ const defaultSteps: OnboardingStep[] = [
 
 const mergeState = <T extends object>(state: T, updates: Partial<T>): T => {
   const base = Object.assign({}, state) as Record<string, unknown>;
-  return withOptional(base as T, updates as Record<string, unknown>);
+  for (const [k, v] of Object.entries(updates as Record<string, unknown>)) {
+    if (v !== undefined) {
+      base[k] = v;
+    } else {
+      delete base[k];
+    }
+  }
+  return base as T;
 };
 
 const mergeStepData = (
@@ -356,30 +370,68 @@ export const createOnboardingActions = (
     set((state: OnboardingStore) => {
       const existing = asRecord(state.stepData[step]);
       const merged = mergeState(existing, data as Record<string, unknown>);
-      return {
+      const next = {
         stepData: mergeStepData(state.stepData, step, merged),
-      };
+      } as Partial<OnboardingStore>;
+      queueMicrotask(async () => {
+        try {
+          await get().saveProgress();
+        } catch {}
+      });
+      return next as OnboardingStore;
     }),
 
   updateAuthData: (data) =>
-    set((state: OnboardingStore) => ({
-      authData: mergeState(state.authData, data),
-    })),
+    set((state: OnboardingStore) => {
+      const next = {
+        authData: mergeState(state.authData, data),
+      } as Partial<OnboardingStore>;
+      queueMicrotask(async () => {
+        try {
+          await get().saveProgress();
+        } catch {}
+      });
+      return next as OnboardingStore;
+    }),
 
   updateProfileData: (data) =>
-    set((state: OnboardingStore) => ({
-      profileData: mergeState(state.profileData, data),
-    })),
+    set((state: OnboardingStore) => {
+      const next = {
+        profileData: mergeState(state.profileData, data),
+      } as Partial<OnboardingStore>;
+      queueMicrotask(async () => {
+        try {
+          await get().saveProgress();
+        } catch {}
+      });
+      return next as OnboardingStore;
+    }),
 
   updateValuesData: (data) =>
-    set((state: OnboardingStore) => ({
-      valuesData: mergeState(state.valuesData, data),
-    })),
+    set((state: OnboardingStore) => {
+      const next = {
+        valuesData: mergeState(state.valuesData, data),
+      } as Partial<OnboardingStore>;
+      queueMicrotask(async () => {
+        try {
+          await get().saveProgress();
+        } catch {}
+      });
+      return next as OnboardingStore;
+    }),
 
   updatePreferencesData: (data) =>
-    set((state: OnboardingStore) => ({
-      preferencesData: mergeState(state.preferencesData, data),
-    })),
+    set((state: OnboardingStore) => {
+      const next = {
+        preferencesData: mergeState(state.preferencesData, data),
+      } as Partial<OnboardingStore>;
+      queueMicrotask(async () => {
+        try {
+          await get().saveProgress();
+        } catch {}
+      });
+      return next as OnboardingStore;
+    }),
 
   clearStepData: (step) =>
     set((state: OnboardingStore) => ({
@@ -614,6 +666,68 @@ export const createOnboardingActions = (
   validateAllSteps: () => {
     const { validateStep, totalSteps } = get();
     return Array.from({ length: totalSteps }, (_, i) => i).every((step) => validateStep(step));
+  },
+
+  startCandidateOnboarding: async (input) => {
+    const { setLoading, setError } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/candidates/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          displayName: input.displayName,
+          office: input.office,
+          jurisdiction: input.jurisdiction,
+          party: input.party,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.success === false || !payload?.data?.slug) {
+        throw new Error(payload?.error ?? 'Failed to start candidate onboarding');
+      }
+      // Persist slug into stepData for the current step
+      const state = get();
+      const step = state.currentStep;
+      const existing = asRecord(state.stepData[step]);
+      const merged = mergeState(existing, { candidateSlug: payload.data.slug, candidateId: payload.data.id });
+      set({
+        stepData: mergeStepData(state.stepData, step, merged),
+      });
+      return { id: String(payload.data.id), slug: String(payload.data.slug) };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error starting candidate onboarding';
+      get().setError(message);
+      return null;
+    } finally {
+      get().setLoading(false);
+    }
+  },
+
+  verifyCandidateOfficialEmail: async () => {
+    const { setLoading, setError } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/candidates/verify/official-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.success === false) {
+        throw new Error(payload?.error ?? 'Verification failed');
+      }
+      return { ok: Boolean(payload?.data?.ok), slug: payload?.data?.slug };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error during verification';
+      get().setError(message);
+      return { ok: false };
+    } finally {
+      get().setLoading(false);
+    }
   },
 });
 

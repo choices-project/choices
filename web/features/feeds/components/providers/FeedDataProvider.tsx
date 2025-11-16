@@ -19,7 +19,10 @@
 import type React from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
+import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
+import FeedShareDialog from '@/features/share/components/FeedShareDialog';
 import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
   useFilteredFeeds,
@@ -32,7 +35,8 @@ import {
   useNotificationActions,
 } from '@/lib/stores';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
-import type { FeedItem } from '@/lib/stores/feedsStore';
+import type { FeedItem } from '@/lib/stores/types/feeds';
+// withOptional removed
 import logger from '@/lib/utils/logger';
 
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
@@ -72,6 +76,15 @@ function HarnessFeedDataProvider({
 
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
+  const { trackItemShare } = useFeedAnalytics({ feedId: 'harness-feed', userId: user?.id ?? userId });
+  const trackItemShareRef = useRef(trackItemShare);
+  useEffect(() => {
+    trackItemShareRef.current = trackItemShare;
+  }, [trackItemShare]);
+  const [shareItem, setShareItem] = useState<FeedItem | null>(null);
+  const [liveMessage, setLiveMessage] = useState('');
+  const previousFeedIdsRef = useRef<Set<string>>(new Set());
+  const hasAnnouncedInitialRef = useRef(false);
   const initialLoadRef = useRef(false);
 
   const notifyFeedError = useCallback(
@@ -159,7 +172,17 @@ function HarnessFeedDataProvider({
   }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
 
   const handleShare = useCallback((itemId: string) => {
-    logger.info('[HarnessFeedDataProvider] Sharing feed:', itemId);
+    trackItemShareRef.current(itemId);
+    const nextItem = feeds.find((feed) => feed.id === itemId) ?? null;
+    if (!nextItem) {
+      logger.warn('[HarnessFeedDataProvider] Unable to locate feed item for sharing', { itemId });
+      return;
+    }
+    setShareItem(nextItem);
+  }, [feeds]);
+
+  const handleCloseShareDialog = useCallback(() => {
+    setShareItem(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -225,7 +248,53 @@ function HarnessFeedDataProvider({
     hasMore: showLoadMore,
   };
 
-  return <>{children(showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps)}</>;
+  const renderedChildren = children(
+    showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps,
+  );
+
+  useEffect(() => {
+    if (feeds.length === 0) {
+      previousFeedIdsRef.current = new Set();
+      return;
+    }
+
+    const currentIds = new Set(feeds.map((feed) => feed.id));
+
+    if (!hasAnnouncedInitialRef.current) {
+      const message = t('feeds.live.initialLoad', { count: feeds.length });
+      setLiveMessage(message);
+      ScreenReaderSupport.announce(message, 'polite');
+      hasAnnouncedInitialRef.current = true;
+    } else {
+      let newCount = 0;
+      feeds.forEach((feed) => {
+        if (!previousFeedIdsRef.current.has(feed.id)) {
+          newCount += 1;
+        }
+      });
+      if (newCount > 0) {
+        const message = t('feeds.live.newItems', { count: newCount });
+        setLiveMessage(message);
+        ScreenReaderSupport.announce(message, 'polite');
+      }
+    }
+
+    previousFeedIdsRef.current = currentIds;
+  }, [feeds, t]);
+
+  const LiveRegion = () => (
+    <div aria-live="polite" role="status" className="sr-only" data-testid="feeds-live-message">
+      {liveMessage}
+    </div>
+  );
+
+  return (
+    <>
+      {renderedChildren}
+      <LiveRegion />
+      <FeedShareDialog item={shareItem} isOpen={Boolean(shareItem)} onClose={handleCloseShareDialog} />
+    </>
+  );
 }
 
 type FeedDataProviderProps = {
@@ -293,10 +362,19 @@ function StandardFeedDataProvider({
   } = useFeedsActions();
   const user = useUser();
   const { addNotification } = useNotificationActions();
+  const { trackItemShare } = useFeedAnalytics({ feedId: 'primary-feed', userId: user?.id ?? userId });
+  const trackItemShareRef = useRef(trackItemShare);
+  useEffect(() => {
+    trackItemShareRef.current = trackItemShare;
+  }, [trackItemShare]);
 
   // Local state for hashtag filtering and district filtering
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
+  const [shareItem, setShareItem] = useState<FeedItem | null>(null);
+  const [liveMessage, setLiveMessage] = useState('');
+  const previousFeedIdsRef = useRef<Set<string>>(new Set());
+  const hasAnnouncedInitialRef = useRef(false);
 
   const notifyFeedError = useCallback(
     (message: string) => {
@@ -389,8 +467,17 @@ function StandardFeedDataProvider({
   }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
 
   const handleShare = useCallback((itemId: string) => {
-    // Social sharing logic here
-    logger.info('Sharing feed:', itemId);
+    trackItemShareRef.current(itemId);
+    const nextItem = feeds.find((feed) => feed.id === itemId) ?? null;
+    if (!nextItem) {
+      logger.warn('[FeedDataProvider] Unable to locate feed item for sharing', { itemId });
+      return;
+    }
+    setShareItem(nextItem);
+  }, [feeds]);
+
+  const handleCloseShareDialog = useCallback(() => {
+    setShareItem(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -486,7 +573,37 @@ function StandardFeedDataProvider({
   const effectiveLimit = totalAvailable > 0 ? Math.min(maxItems, totalAvailable) : maxItems;
   const hasMore = enableInfiniteScroll && storeHasMore && feeds.length < effectiveLimit;
 
-  return children({
+  useEffect(() => {
+    if (feeds.length === 0) {
+      previousFeedIdsRef.current = new Set();
+      return;
+    }
+
+    const currentIds = new Set(feeds.map((feed) => feed.id));
+
+    if (!hasAnnouncedInitialRef.current) {
+      const message = t('feeds.live.initialLoad', { count: feeds.length });
+      setLiveMessage(message);
+      ScreenReaderSupport.announce(message, 'polite');
+      hasAnnouncedInitialRef.current = true;
+    } else {
+      let newCount = 0;
+      feeds.forEach((feed) => {
+        if (!previousFeedIdsRef.current.has(feed.id)) {
+          newCount += 1;
+        }
+      });
+      if (newCount > 0) {
+        const message = t('feeds.live.newItems', { count: newCount });
+        setLiveMessage(message);
+        ScreenReaderSupport.announce(message, 'polite');
+      }
+    }
+
+    previousFeedIdsRef.current = currentIds;
+  }, [feeds, t]);
+
+  const childNode = children({
     feeds: filteredFeeds,
     isLoading,
     error: storeError,
@@ -503,6 +620,20 @@ function StandardFeedDataProvider({
     ...(enableInfiniteScroll ? { onLoadMore: handleLoadMore } : {}),
     ...(enableInfiniteScroll ? { hasMore } : {})
   });
+
+  const LiveRegion = () => (
+    <div aria-live="polite" role="status" className="sr-only" data-testid="feeds-live-message">
+      {liveMessage}
+    </div>
+  );
+
+  return (
+    <>
+      {childNode}
+      <LiveRegion />
+      <FeedShareDialog item={shareItem} isOpen={Boolean(shareItem)} onClose={handleCloseShareDialog} />
+    </>
+  );
 }
 
 export default function FeedDataProvider(props: FeedDataProviderProps) {

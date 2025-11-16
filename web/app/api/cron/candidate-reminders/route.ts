@@ -7,7 +7,6 @@ import {
   type JourneyMilestone
 } from '@/lib/candidate/journey-tracker'
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -121,7 +120,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           optionalProgress.daysUntilDeadline = daysUntilDeadline;
         }
 
-        const progress = withOptional(baseProgress, optionalProgress);
+        const progress = { ...baseProgress, ...optionalProgress };
 
         // Check if reminder needed
         const reminder = shouldSendReminder(progress as typeof baseProgress & { daysUntilDeadline?: number })
@@ -178,7 +177,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           optionalEmailData.daysUntilDeadline = daysUntilDeadline;
         }
 
-        const emailData = withOptional(baseEmailData, optionalEmailData);
+        const emailData = { ...baseEmailData, ...optionalEmailData };
 
         // Send email
         const emailResult = await sendCandidateJourneyEmail(emailType, emailData as typeof baseEmailData & { filingDeadline?: Date; daysUntilDeadline?: number })

@@ -16,7 +16,6 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 // ============================================================================
@@ -154,13 +153,13 @@ export class AuditLogService {
     role?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
-    const metadata = withOptional(options.metadata ?? {}, {
+    const metadata = mergeDefined(options.metadata ?? {}, {
       userId,
       role,
       type: 'analytics_access',
     });
 
-    const mergedOptions = withOptional(options as Record<string, unknown>, {
+    const mergedOptions = mergeDefined(options as Record<string, unknown>, {
       metadata,
       severity: granted ? 'info' : 'warning',
     }) as AuditLogOptions;
@@ -191,12 +190,12 @@ export class AuditLogService {
     method?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
-    const metadata = withOptional(options.metadata ?? {}, {
+    const metadata = mergeDefined(options.metadata ?? {}, {
       method,
       success,
     });
 
-    const mergedOptions = withOptional(options as Record<string, unknown>, {
+    const mergedOptions = mergeDefined(options as Record<string, unknown>, {
       metadata,
       severity: success ? 'info' : 'warning',
     }) as AuditLogOptions;
@@ -225,7 +224,7 @@ export class AuditLogService {
     resource?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
-    const mergedOptions = withOptional(options as Record<string, unknown>, {
+    const mergedOptions = mergeDefined(options as Record<string, unknown>, {
       severity,
     }) as AuditLogOptions;
 
@@ -253,11 +252,11 @@ export class AuditLogService {
     resource?: string,
     options: AuditLogOptions = {}
   ): Promise<string | null> {
-    const metadata = withOptional(options.metadata ?? {}, {
+    const metadata = mergeDefined(options.metadata ?? {}, {
       adminUserId: userId,
     });
 
-    const mergedOptions = withOptional(options as Record<string, unknown>, {
+    const mergedOptions = mergeDefined(options as Record<string, unknown>, {
       metadata,
       severity: 'info',
     }) as AuditLogOptions;
@@ -392,6 +391,23 @@ export class AuditLogService {
     }
   }
 }
+
+const mergeDefined = <T extends Record<string, unknown>>(
+  base: T,
+  extras?: Record<string, unknown>,
+): T => {
+  const result: Record<string, unknown> = { ...base };
+  if (extras) {
+    for (const [key, value] of Object.entries(extras)) {
+      if (value !== undefined) {
+        result[key] = value;
+      } else {
+        delete result[key];
+      }
+    }
+  }
+  return result as T;
+};
 
 // ============================================================================
 // Factory Functions

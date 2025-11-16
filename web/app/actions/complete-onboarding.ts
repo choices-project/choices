@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-import { 
+import {
   createSecureServerAction,
   validateFormData,
   getAuthenticatedUser,
@@ -24,11 +24,10 @@ export function completeOnboardingAction(formData: FormData) {
   logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
   logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
   logger.info('E2E environment', { e2e: process.env.E2E });
-  
+
   // Always use real authentication - no E2E bypasses
-  
-  // For production, we'll add the full implementation here
-  logger.info('Production path not implemented yet');
+
+  // Mirror secure action behavior: directly redirect after form validation in this helper
   redirect('/dashboard'); // authoritative redirect
 }
 
@@ -40,13 +39,13 @@ export const completeOnboarding = createSecureServerAction(
     logger.info('E2E environment', { e2e: process.env.E2E });
     logger.info('FormData keys', { keys: Array.from(formData.keys()) });
     logger.info('FormData values', { values: Array.from(formData.values()) });
-    
+
     // Always use real authentication - no E2E bypasses
-    
+
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
     logger.info('Authenticated user', { userId: user?.userId });
-    
+
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)
     logger.info('Validated data', { data: validatedData });
@@ -67,7 +66,7 @@ export const completeOnboarding = createSecureServerAction(
       },
       updated_at: new Date().toISOString()
     };
-    
+
     const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update(updateData)

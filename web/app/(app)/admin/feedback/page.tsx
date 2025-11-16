@@ -2,9 +2,9 @@
 
 import React, { useEffect } from 'react';
 
+import { useAppActions } from '@/lib/stores/appStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLayout } from '../layout/AdminLayout';
-import { useAppActions } from '@/lib/stores/appStore';
 
 export default function AdminFeedbackPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();

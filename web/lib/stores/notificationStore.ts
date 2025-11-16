@@ -758,12 +758,32 @@ export const notificationStoreUtils = {
     });
   },
 
+  createSuccessWithSettings: (title: string, message: string) => {
+    const state = useNotificationStore.getState();
+    state.addNotification({
+      type: 'success',
+      title,
+      message,
+      duration: state.settings.duration,
+    });
+  },
+
   createError: (title: string, message: string, duration?: number) => {
     useNotificationStore.getState().addNotification({
       type: 'error',
       title,
       message,
       duration: duration ?? 0
+    });
+  },
+
+  createErrorWithSettings: (title: string, message: string) => {
+    const state = useNotificationStore.getState();
+    state.addNotification({
+      type: 'error',
+      title,
+      message,
+      duration: state.settings.duration,
     });
   },
 

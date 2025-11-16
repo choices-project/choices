@@ -38,6 +38,7 @@ const DEFAULT_LAYOUT_ID = 'widget-dashboard-layout';
 const HARNESS_USER_ID = '00000000-0000-0000-0000-000000000042';
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     __widgetDashboardHarness?: WidgetDashboardHarness;
   }
@@ -114,7 +115,7 @@ export default function WidgetDashboardHarnessPage() {
     });
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[WidgetDashboardHarness] seeded layout', {
+      console.warn('[WidgetDashboardHarness] seeded layout', {
         widgetCount: layoutClone.widgets.length,
       });
     }

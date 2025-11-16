@@ -76,7 +76,19 @@ When fixtures break:
 
 ---
 
-## 6. Adding a New Route
+## 6. Coverage Matrix (Phase C)
+| Workflow | Routes / Areas | Status | Owner | Notes |
+| --- | --- | --- | --- | --- |
+| Workflow A — Auth/Profile | `/api/auth/register`, `/api/auth/sync-user`, `/api/profile` onboarding POST | ✅ Complete | Backend/API pod | Suites assert CSRF + rate limiting, onboarding payload validation, deterministic envelopes. |
+| Workflow B — Civics/Feeds/Trending | `/api/v1/civics/address-lookup` (POST), `/api/v1/civics/elections`, `/api/v1/civics/by-state`, `/api/feeds`, `/api/trending`, `/api/polls/trending` | 🚧 In progress (ETA Nov 21) | Backend/API pod | Address lookup documented in `docs/API/address-lookup.md`; cookie write + rate limit + cache behavior asserted by contract tests. Pagination/tracker assertions partially merged. |
+| Ops — Analytics Backfill | `/api/cron/backfill-poll-insights` (POST) | ✅ | Data/Infra | Documented in `docs/API/cron-backfill-poll-insights.md`; requires `CRON_SECRET` header; returns processed/updated/errors. |
+| Workflow C — Analytics/Admin/Candidate | `/api/analytics/**`, `/api/admin/**`, `/api/candidate/**`, cron routes | ☐ Not started (kickoff Nov 22) | Analytics/Admin pod | Requires cache metadata + audit logging assertions; coordinate with doc/CI updates once suites land. |
+
+Update this table whenever workflow ownership or status changes; it feeds the governance checklist and release notes.
+
+---
+
+## 7. Adding a New Route
 1. Scaffold handler with `withErrorHandling`.
 2. Define payload types in `web/lib/api/types.ts` or a feature-specific type file.
 3. Emit envelope via helper.
@@ -86,4 +98,10 @@ When fixtures break:
 
 Keeping this reference current ensures partners, QA, and automation owners can trust the API surface without reading every route file.
 
+---
 
+## 8. Release & Communication Checklist
+- **Changelog Entry:** Record user-facing contract updates under `docs/archive/release-notes/CHANGELOG.md` (Phase C section) before tagging a release.
+- **PR Template:** Tick the Contracts/Docs checkbox in `.github/PULL_REQUEST_TEMPLATE.md` when routes, fixtures, or contract suites change.
+- **Partner Packet:** Summarise envelope, caching, and error-code changes for partner teams; include links to this doc and any MSW fixture diffs.
+- **CI Gate:** `npm run governance:check` and `npm run test:contracts` must pass in CI (post-lint). Waiving either gate requires explicit approval noted in the PR.

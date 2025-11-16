@@ -20,7 +20,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
@@ -426,7 +425,7 @@ export default function Civics2Page() {
               }`}>
                 {filteredRepresentatives.map((representative) => {
                   // Transform SuperiorRepresentativeData to Representative
-                  const transformedRep: Representative = withOptional({
+                  const transformedRep: Representative = {
                     id: parseInt(representative.id) ?? 0,
                     name: representative.name,
                     party: representative.party,
@@ -439,19 +438,18 @@ export default function Civics2Page() {
                     data_sources: representative.dataSource ?? [],
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    last_verified: representative.lastVerified ?? new Date().toISOString()
-                  }, {
-                    district: representative.district,
-                    primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value,
-                    primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value,
-                    primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value,
-                    twitter_handle: representative.twitter,
-                    facebook_url: representative.facebook,
-                    primary_photo_url: representative.photoUrl ?? representative.photo,
-                    term_start_date: representative.termStart,
-                    term_end_date: representative.termEnd,
-                    next_election_date: representative.nextElection
-                  });
+                    last_verified: representative.lastVerified ?? new Date().toISOString(),
+                    ...(representative.district ? { district: representative.district } : {}),
+                    ...(representative.enhancedContacts?.find(c => c.type === 'email')?.value ? { primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value } : {}),
+                    ...(representative.enhancedContacts?.find(c => c.type === 'phone')?.value ? { primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value } : {}),
+                    ...(representative.enhancedContacts?.find(c => c.type === 'website')?.value ? { primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value } : {}),
+                    ...(representative.twitter ? { twitter_handle: representative.twitter } : {}),
+                    ...(representative.facebook ? { facebook_url: representative.facebook } : {}),
+                    ...(representative.photoUrl ?? representative.photo ? { primary_photo_url: representative.photoUrl ?? representative.photo } : {}),
+                    ...(representative.termStart ? { term_start_date: representative.termStart } : {}),
+                    ...(representative.termEnd ? { term_end_date: representative.termEnd } : {}),
+                    ...(representative.nextElection ? { next_election_date: representative.nextElection } : {}),
+                  };
 
                   return (
                     <RepresentativeCard

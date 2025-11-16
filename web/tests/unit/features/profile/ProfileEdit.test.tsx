@@ -8,7 +8,7 @@ import type { ProfileEditProps } from '@/features/profile';
 import ProfileEdit from '@/features/profile/components/ProfileEdit';
 import { createInitialProfileState, useProfileStore } from '@/lib/stores/profileStore';
 import { createInitialUserState, useUserStore } from '@/lib/stores/userStore';
-import { withOptional } from '@/lib/util/objects';
+ 
 
 const mockUpdateProfile = jest.fn();
 const mockUploadAvatar = jest.fn();
@@ -40,27 +40,25 @@ jest.mock('@/features/profile/hooks/use-profile', () => {
 /* eslint-enable no-restricted-syntax */
 
 const createProfile = (overrides: Partial<ProfileEditProps['profile']> = {}) =>
-  withOptional(
-    {
-      id: 'profile-1',
-      display_name: 'Ada Lovelace',
-      bio: 'Mathematician and writer',
-      username: 'adalovelace',
-      avatar_url: 'https://example.com/avatar.png',
-      primary_concerns: [] as string[],
-      community_focus: [] as string[],
-      participation_style: 'participant',
-      privacy_settings: {
-        show_email: false,
-        show_activity: false,
-        allow_messages: false,
-      },
-      demographics: {
-        languages: ['English'],
-      },
+  ({
+    id: 'profile-1',
+    display_name: 'Ada Lovelace',
+    bio: 'Mathematician and writer',
+    username: 'adalovelace',
+    avatar_url: 'https://example.com/avatar.png',
+    primary_concerns: [] as string[],
+    community_focus: [] as string[],
+    participation_style: 'participant',
+    privacy_settings: {
+      show_email: false,
+      show_activity: false,
+      allow_messages: false,
     },
-    overrides as Record<string, unknown>,
-  ) as ProfileEditProps['profile'];
+    demographics: {
+      languages: ['English'],
+    },
+    ...(overrides as Record<string, unknown>),
+  }) as ProfileEditProps['profile'];
 
 const renderComponent = (props: ProfileEditProps = {}) => {
   const profile = props.profile === undefined ? createProfile() : props.profile;
@@ -93,7 +91,7 @@ describe('ProfileEdit', () => {
 
     mockUpdateProfile.mockResolvedValue({
       success: true,
-      data: withOptional(profile ?? {}, { display_name: 'Persisted Name' }),
+      data: { ...(profile ?? {}), display_name: 'Persisted Name' },
       error: null,
     });
 

@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 
-import { AdminLayout } from '../layout/AdminLayout';
 import { useAppActions } from '@/lib/stores/appStore';
+import { AdminLayout } from '../layout/AdminLayout';
 
 type AdminMonitoringShellProps = {
   children: React.ReactNode;

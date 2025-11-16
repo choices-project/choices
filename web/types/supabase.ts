@@ -303,6 +303,41 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_onboarding: {
+        Row: {
+          candidate_id: string
+          completed: boolean
+          id: string
+          started_at: string
+          step: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          completed?: boolean
+          id?: string
+          started_at?: string
+          step: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          completed?: boolean
+          id?: string
+          started_at?: string
+          step?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_onboarding_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_platforms: {
         Row: {
           ballot_access_confirmed: boolean | null
@@ -413,6 +448,103 @@ export type Database = {
           visibility?: string | null
         }
         Relationships: []
+      }
+      candidate_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_name: string
+          filing_status: string
+          id: string
+          is_public: boolean
+          jurisdiction: string | null
+          office: string | null
+          party: string | null
+          representative_id: number | null
+          slug: string
+          social: Json | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          filing_status?: string
+          id?: string
+          is_public?: boolean
+          jurisdiction?: string | null
+          office?: string | null
+          party?: string | null
+          representative_id?: number | null
+          slug: string
+          social?: Json | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          filing_status?: string
+          id?: string
+          is_public?: boolean
+          jurisdiction?: string | null
+          office?: string | null
+          party?: string | null
+          representative_id?: number | null
+          slug?: string
+          social?: Json | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_profiles_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_verifications: {
+        Row: {
+          candidate_id: string
+          evidence: Json | null
+          id: string
+          method: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          evidence?: Json | null
+          id?: string
+          method: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          evidence?: Json | null
+          id?: string
+          method?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_verifications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       civic_action_metadata: {
         Row: {
@@ -1350,6 +1482,41 @@ export type Database = {
           },
         ]
       }
+      official_email_fast_track: {
+        Row: {
+          domain: string | null
+          email: string | null
+          id: string
+          last_attempt_at: string | null
+          representative_id: number
+          verified: boolean
+        }
+        Insert: {
+          domain?: string | null
+          email?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          representative_id: number
+          verified?: boolean
+        }
+        Update: {
+          domain?: string | null
+          email?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          representative_id?: number
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_email_fast_track_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       openstates_people_contacts: {
         Row: {
           contact_type: string
@@ -1769,6 +1936,60 @@ export type Database = {
           source?: string | null
           subcategory?: string | null
           timestamp?: string | null
+        }
+        Relationships: []
+      }
+      poll_demographic_insights: {
+        Row: {
+          age_group_breakdown: Json
+          average_confidence_level: number
+          created_at: string
+          data_quality_distribution: Json
+          demographic_by_trust_tier: Json
+          education_breakdown: Json
+          geographic_breakdown: Json
+          income_breakdown: Json
+          political_breakdown: Json
+          poll_id: string
+          total_responses: number
+          trust_tier_breakdown: Json
+          trust_tier_by_demographic: Json
+          updated_at: string
+          verification_method_distribution: Json
+        }
+        Insert: {
+          age_group_breakdown?: Json
+          average_confidence_level?: number
+          created_at?: string
+          data_quality_distribution?: Json
+          demographic_by_trust_tier?: Json
+          education_breakdown?: Json
+          geographic_breakdown?: Json
+          income_breakdown?: Json
+          political_breakdown?: Json
+          poll_id: string
+          total_responses?: number
+          trust_tier_breakdown?: Json
+          trust_tier_by_demographic?: Json
+          updated_at?: string
+          verification_method_distribution?: Json
+        }
+        Update: {
+          age_group_breakdown?: Json
+          average_confidence_level?: number
+          created_at?: string
+          data_quality_distribution?: Json
+          demographic_by_trust_tier?: Json
+          education_breakdown?: Json
+          geographic_breakdown?: Json
+          income_breakdown?: Json
+          political_breakdown?: Json
+          poll_id?: string
+          total_responses?: number
+          trust_tier_breakdown?: Json
+          trust_tier_by_demographic?: Json
+          updated_at?: string
+          verification_method_distribution?: Json
         }
         Relationships: []
       }
@@ -2692,6 +2913,53 @@ export type Database = {
             foreignKeyName: "representative_enhanced_crosswalk_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_overrides: {
+        Row: {
+          campaign_website: string | null
+          created_at: string
+          id: string
+          press_contact: string | null
+          profile_photo_url: string | null
+          representative_id: number
+          short_bio: string | null
+          socials: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_website?: string | null
+          created_at?: string
+          id?: string
+          press_contact?: string | null
+          profile_photo_url?: string | null
+          representative_id: number
+          short_bio?: string | null
+          socials?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_website?: string | null
+          created_at?: string
+          id?: string
+          press_contact?: string | null
+          profile_photo_url?: string | null
+          representative_id?: number
+          short_bio?: string | null
+          socials?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_overrides_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: true
             referencedRelation: "representatives_core"
             referencedColumns: ["id"]
           },

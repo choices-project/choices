@@ -10,7 +10,6 @@ import {
   parseBody,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient, type Database } from '@/utils/supabase/server'
 
@@ -31,7 +30,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const rateLimitResult = await apiRateLimiter.checkLimit(
       ip,
       '/api/auth/login',
-      withOptional({}, { userAgent })
+      { ...(userAgent ? { userAgent } : {}) }
     );
     
     if (!rateLimitResult.allowed) {

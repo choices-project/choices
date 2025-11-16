@@ -16,6 +16,10 @@
       "refreshing": "Actualizando...",
       "scrollToTopAria": "Volver al inicio"
     },
+    "live": {
+      "initialLoad": "{count, plural, one {Feed cargado con # actualización.} other {Feed cargado con # actualizaciones.}}",
+      "newItems": "{count, plural, one {# actualización nueva en el feed.} other {# actualizaciones nuevas en el feed.}}"
+    },
     "hashtagPolls": {
       "error": {
         "retry": "Intentar de nuevo"
@@ -114,6 +118,35 @@
           "message": "No pudimos cargar más elementos. Inténtalo de nuevo.",
           "withReason": "No se pudieron cargar más feeds: {error}"
         }
+      }
+    }
+  },
+  "share": {
+    "dialog": {
+      "feedTitle": "Comparte esta actualización",
+      "description": "Ayuda a que otras personas participen en “{title}” copiando el enlace o compartiéndolo directamente.",
+      "urlLabel": "Enlace para compartir",
+      "urlDescription": "Copia y pega este enlace donde quieras compartirlo.",
+      "copy": "Copiar enlace",
+      "copied": "¡Copiado!",
+      "systemShare": "Compartir con el sistema",
+      "emailShare": "Compartir por correo",
+      "openSource": "Ver fuente",
+      "actionsHeading": "Opciones para compartir",
+      "metadataHeading": "Aspectos destacados",
+      "emailSubject": "Revisa esta actualización cívica: {title}",
+      "metadata": {
+        "source": "Fuente",
+        "author": "Autor/a",
+        "category": "Categoría",
+        "district": "Distrito",
+        "updated": "Última actualización",
+        "tags": "Etiquetas relacionadas"
+      },
+      "live": {
+        "opened": "Se abrió el diálogo para compartir {title}.",
+        "copied": "Enlace copiado al portapapeles.",
+        "copyError": "No se pudo copiar el enlace. Copia el enlace manualmente."
       }
     }
   },
@@ -370,6 +403,14 @@
         "voters": "Más de 10.000 votantes",
         "privacy": "100% privado",
         "access": "Acceso equitativo"
+      },
+      "live": {
+        "locationUpdated": "Información cívica actualizada para {location}.",
+        "representativesLoaded": "{count, plural, one {# representante local sincronizado.} other {# representantes locales sincronizados.}}",
+        "nextElection": "Próxima elección {name} en {count, plural, =0 {hoy.} one {# día.} other {# días.}}",
+        "nextElectionToday": "La elección {name} es hoy.",
+        "unnamedElection": "tu próxima elección",
+        "error": "No pudimos actualizar la información cívica. {message}"
       }
     },
     "engagement": {
@@ -404,7 +445,13 @@
     "settings": "Configuración",
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
-    "register": "Crear cuenta"
+    "register": "Crear cuenta",
+    "languageSelector": {
+      "live": {
+        "changed": "Idioma establecido en {language}.",
+        "error": "No se pudo cambiar el idioma. Inténtalo de nuevo."
+      }
+    }
   },
   "analytics": {
     "heading": {
@@ -418,7 +465,8 @@
       "showDetails": "Mostrar detalles",
       "hideDetails": "Ocultar detalles",
       "refresh": "Actualizar",
-      "refreshing": "Actualizando…"
+      "refreshing": "Actualizando…",
+      "export": "Exportar datos"
     },
     "status": {
       "loading": "Cargando análisis avanzados…",
@@ -445,9 +493,20 @@
       "temporalShort": "Temporal",
       "trust": "Niveles de confianza"
     },
+    "tabDescriptions": {
+      "overview": "La pestaña Resumen destaca usuarios totales, encuestas, votos, puntaje de participación, salud del sistema y mensajes activos.",
+      "trends": "La pestaña Tendencias muestra gráficas interactivas y tablas resumidas de votos, participación y velocidad para el rango seleccionado.",
+      "heatmaps": "La pestaña Mapas de calor muestra mapas por distrito y encuesta con controles accesibles y resúmenes de participación geográfica.",
+      "demographics": "La pestaña Demografía lista niveles de confianza, edades, distritos y educación usando tablas accesibles.",
+      "temporal": "La pestaña Temporal grafica actividad por hora y día además de métricas de velocidad con tablas textuales.",
+      "trust": "La pestaña Niveles de confianza compara el rendimiento por nivel con resúmenes de participación, interacción y probabilidad de bots."
+    },
     "live": {
       "refreshing": "Actualizando datos de análisis",
       "refreshed": "Análisis actualizados a las {time}"
+    },
+    "summaries": {
+      "overview": "{totalUsers} usuarios en total con {activeUsers} activos. {totalPolls} encuestas en total ({newPolls} nuevas en este período) y {totalVotes} votos totales ({newVotes} nuevos). Puntaje de participación {engagementScore} y puntaje de confianza {trustScore}."
     },
     "a11y": {
       "tabChanged": "Contenido de la pestaña {tab} enfocado"
@@ -482,7 +541,11 @@
         "avgEngagement": "Prom. participación",
         "botLikelihood": "Probabilidad de bot",
         "avgPollsVoted": "Prom. encuestas votadas",
-        "avgTimeOnSite": "Prom. tiempo en el sitio (min)"
+        "avgTimeOnSite": "Prom. tiempo en el sitio (min)",
+        "state": "Estado",
+        "level": "Nivel",
+        "engagementCount": "Conteo de interacciones",
+        "representatives": "Representantes"
       },
       "statuses": {
         "active": "Activa",
@@ -490,6 +553,47 @@
       }
     },
     "demographics": {
+      "cardTitle": "Desglose demográfico",
+      "cardDescriptionMobile": "Anonimato K: {threshold}",
+      "cardDescriptionDesktop": "Demografía de usuarios con protecciones de privacidad (anonimato K: {threshold})",
+      "tabsGroupLabel": "Pestañas de datos demográficos",
+      "tabsLabels": {
+        "trust": "Niveles de confianza",
+        "age": "Grupos de edad",
+        "district": "Distritos",
+        "education": "Educación"
+      },
+      "tabsShort": {
+        "trust": "Confianza",
+        "age": "Edad",
+        "district": "Distritos",
+        "education": "Educ."
+      },
+      "tabAnnouncements": {
+        "trust": "Mostrando la distribución por nivel de confianza.",
+        "age": "Mostrando la distribución por grupo de edad.",
+        "district": "Mostrando la participación por distrito.",
+        "education": "Mostrando la distribución por nivel educativo."
+      },
+      "privacy": {
+        "title": "Datos protegidos por privacidad",
+        "line1": "Solo se incluyen usuarios que aceptaron la recopilación analítica.",
+        "line2": "Las categorías con menos de {threshold} usuarios se ocultan para mantener el anonimato.",
+        "line3": "{optedOut} usuarios rechazaron la recopilación y se excluyen."
+      },
+      "summaryCards": {
+        "totalUsers": "Usuarios totales",
+        "optedIn": "Con consentimiento",
+        "optedOut": "Sin consentimiento",
+        "privacyLevel": "Nivel de privacidad",
+        "privacyValue": "K-{threshold}",
+        "sr": {
+          "totalUsers": "{total} usuarios totales incluidos.",
+          "optedIn": "{count} usuarios con consentimiento.",
+          "optedOut": "{count} usuarios sin consentimiento.",
+          "privacyLevel": "Nivel de privacidad K-{threshold}."
+        }
+      },
       "summaryIntro": "Mostrando {total} usuarios totales con {optedIn} con consentimiento y {optedOut} sin consentimiento. Las categorías ocultan grupos menores a {threshold} usuarios.",
       "tables": {
         "trust": {
@@ -511,6 +615,38 @@
       }
     },
     "trends": {
+      "ranges": {
+        "7d": "Últimos 7 días",
+        "30d": "Últimos 30 días",
+        "90d": "Últimos 90 días"
+      },
+      "chartTypes": {
+        "line": "Gráfica de líneas",
+        "area": "Gráfica de área"
+      },
+      "chart": {
+        "title": "Tendencias de actividad",
+        "description": "Muestra votos, participación y velocidad para {range} usando una vista {chartType}.",
+        "axes": {
+          "votes": "Votos / Velocidad",
+          "participation": "Tasa de participación (%)"
+        },
+        "summary": "El mayor número de votos ocurrió el {peakVotesDate} con {peakVotes} votos. La participación alcanzó su punto máximo el {peakParticipationDate} con {peakParticipation}. La tendencia de votos es {trendDirection} durante {range}."
+      },
+      "filters": {
+        "dateRange": "Seleccionar rango de fechas",
+        "chartType": "Seleccionar tipo de gráfica"
+      },
+      "announcements": {
+        "rangeChanged": "El rango de fechas cambió a {range}.",
+        "chartTypeChanged": "La vista de la gráfica cambió a {chartType}.",
+        "refresh": "Actualizando los datos de tendencias."
+      },
+      "trendDirections": {
+        "increasing": "ascendente",
+        "decreasing": "descendente",
+        "steady": "estable"
+      },
       "summaryIntro": "Se registraron {totalVotes} votos en total. La participación promedio es {avgParticipation} con una velocidad promedio de {avgVelocity}.",
       "table": {
         "title": "Datos de tendencia por día",
@@ -518,7 +654,88 @@
       }
     },
     "temporal": {
+      "cardTitle": "Análisis temporal",
+      "cardDescription": "Patrones de actividad por hora del día y día de la semana.",
+      "errors": {
+        "noData": "No hay datos temporales disponibles."
+      },
+      "ranges": {
+        "7d": "Últimos 7 días",
+        "30d": "Últimos 30 días",
+        "90d": "Últimos 90 días"
+      },
+      "filters": {
+        "dateRange": "Selecciona un rango de fechas"
+      },
+      "announcements": {
+        "rangeChanged": "El rango temporal cambió a {range}.",
+        "refresh": "Actualizando los datos temporales."
+      },
+      "tabsGroupLabel": "Vistas de análisis temporal",
+      "tabsLabels": {
+        "hourly": "Patrón por hora",
+        "daily": "Patrón por día",
+        "velocity": "Velocidad de interacción"
+      },
+      "tabAnnouncements": {
+        "hourly": "Mostrando el mapa de calor por hora.",
+        "daily": "Mostrando la actividad por día de la semana.",
+        "velocity": "Mostrando la tendencia de velocidad."
+      },
+      "tabSummaries": {
+        "hourly": "La mayor actividad ocurre alrededor de las {peakHour}. La actividad promedio por franja es {avgActivity}.",
+        "daily": "El día con más interacción es {peakDay}. La actividad promedio por franja es {avgActivity}.",
+        "velocity": "La tendencia de velocidad es {trendDirection}. La última lectura en {lastTimestamp} es {lastVelocity}."
+      },
+      "velocityTrend": {
+        "increasing": "ascendente",
+        "decreasing": "descendente",
+        "steady": "estable"
+      },
       "summaryIntro": "La mayor actividad ocurre a las {peakHour} del {peakDay}. La actividad promedio por franja horaria es {avgActivity}.",
+      "summaryCards": {
+        "peakHour": {
+          "label": "Hora pico",
+          "subtitle": "Momento de mayor actividad",
+          "sr": "Hora pico {value}."
+        },
+        "peakDay": {
+          "label": "Día pico",
+          "subtitle": "Día de mayor actividad",
+          "sr": "Día pico {value}."
+        },
+        "avgActivity": {
+          "label": "Actividad promedio",
+          "subtitle": "Por franja horaria",
+          "sr": "Actividad promedio {value} por franja."
+        }
+      },
+      "sections": {
+        "hourly": {
+          "title": "Patrón de 24 horas",
+          "description": "Muestra la participación durante todo el día (0 = medianoche, 12 = mediodía).",
+          "heatmapLabel": "Mapa de calor por hora que indica la intensidad de actividad.",
+          "legendLow": "Baja",
+          "legendHigh": "Alta"
+        },
+        "daily": {
+          "title": "Patrón por día de la semana",
+          "description": "Muestra la participación en cada día de la semana.",
+          "listTitle": "Participación por día",
+          "percentOfPeak": "{value}% del pico"
+        },
+        "velocity": {
+          "title": "Velocidad de participación",
+          "description": "Tasa de cambio de la participación en el tiempo."
+        }
+      },
+      "axes": {
+        "activityCount": "Conteo de actividad",
+        "velocity": "Velocidad (actividades/hora)"
+      },
+      "notes": {
+        "mockData": "Usando datos simulados para demostración. {error}"
+      },
       "tables": {
         "hourly": {
           "title": "Actividad por hora",
@@ -535,6 +752,44 @@
       }
     },
     "heatmap": {
+      "cardTitle": "Mapa de calor de participación",
+      "cardDescription": "Visualiza la intensidad de participación en las encuestas por categoría.",
+      "filters": {
+        "category": "Selecciona una categoría",
+        "limit": "Mostrar",
+        "topCount": "Top {count}"
+      },
+      "announcements": {
+        "categoryChanged": "Filtro de categoría establecido en {category}.",
+        "limitChanged": "Mostrando las {count} encuestas principales.",
+        "refresh": "Actualizando el mapa de calor de participación."
+      },
+      "summaryCards": {
+        "totalVotes": {
+          "label": "Votos totales",
+          "subtitle": "Encuestas seleccionadas",
+          "sr": "{value} votos en total en las encuestas seleccionadas."
+        },
+        "avgEngagement": {
+          "label": "Prom. participación",
+          "subtitle": "Puntaje promedio",
+          "sr": "Puntaje promedio de participación {value}."
+        },
+        "activePolls": {
+          "label": "Encuestas activas",
+          "subtitle": "En ejecución",
+          "sr": "{value} encuestas activas actualmente."
+        },
+        "topPoll": {
+          "label": "Encuesta destacada",
+          "subtitle": "Mayor participación",
+          "sr": "Encuesta destacada {title} con puntaje {engagement}."
+        }
+      },
+      "chart": {
+        "title": "Gráfica de participación",
+        "summary": "Mostrando {count} encuestas ordenadas por participación. La más alta es {topTitle} con puntaje {topEngagement}."
+      },
       "summaryIntro": "{total} votos totales en {active} encuestas activas. {topPoll} lidera con una puntuación de {engagement}.",
       "summaryFallback": "{total} votos totales en {active} encuestas activas.",
       "table": {
@@ -545,7 +800,66 @@
         "votesLabel": "votos"
       }
     },
+    "districts": {
+      "summaryIntro": "{totalDistricts} distritos cumplen con las salvaguardas de privacidad con {totalEngagement} interacciones totales. {topDistrict} ({topState}) lidera con {topEngagement} interacciones.",
+      "summaryFallback": "{totalDistricts} distritos cumplen con las salvaguardas de privacidad en esta vista.",
+      "table": {
+        "title": "Detalles de participación por distrito",
+        "description": "Distritos listados con estado, nivel, conteos de interacción y cobertura de representantes."
+      }
+    },
     "trust": {
+      "cardTitle": "Comparación de niveles de confianza",
+      "cardDescription": "Compara métricas de comportamiento y participación entre niveles de confianza (T0-T3).",
+      "tabsGroupLabel": "Pestañas de visualización de niveles de confianza",
+      "tabsLabels": {
+        "participation": "Participación",
+        "engagement": "Interacción",
+        "radar": "Radar"
+      },
+      "tabAnnouncements": {
+        "participation": "Viendo tasas de participación y finalización por nivel de confianza.",
+        "engagement": "Viendo puntajes de interacción y probabilidad de bots por nivel de confianza.",
+        "radar": "Viendo comparación multi-métrica en radar entre niveles de confianza."
+      },
+      "sections": {
+        "participation": {
+          "title": "Tasas de Participación y Finalización",
+          "description": "Porcentaje de usuarios que participan y completan encuestas por nivel de confianza.",
+          "chartLabel": "Gráfico de barras mostrando tasas de participación y finalización para cada nivel de confianza. Eje X muestra niveles de confianza (T0-T3), eje Y muestra porcentaje.",
+          "detailedMetrics": "Métricas Detalladas",
+          "rateLabels": "Participación / Finalización"
+        },
+        "engagement": {
+          "title": "Interacción y Detección de Bots",
+          "description": "Puntajes promedio de interacción e indicadores de probabilidad de bots por nivel de confianza.",
+          "chartLabel": "Gráfico de barras mostrando puntajes promedio de interacción y porcentajes de probabilidad de bots para cada nivel de confianza. Eje X muestra niveles de confianza (T0-T3), eje Y muestra valores de puntaje."
+        },
+        "radar": {
+          "title": "Resumen Multi-Métrica",
+          "description": "Vista de radar comparativa entre métricas de participación, finalización, interacción y puntaje de confianza.",
+          "chartLabel": "Gráfico de radar comparando participación, finalización, interacción y puntajes de confianza entre todos los niveles de confianza. Cada nivel está representado por un polígono de color diferente."
+        }
+      },
+      "axes": {
+        "percentage": "Porcentaje (%)",
+        "score": "Puntaje"
+      },
+      "errors": {
+        "noData": "No hay datos de niveles de confianza disponibles"
+      },
+      "summaryCards": {
+        "totalUsers": {
+          "label": "Usuarios totales",
+          "subtitle": "Entre todos los niveles de confianza",
+          "sr": "{value} usuarios totales entre todos los niveles de confianza."
+        },
+        "strongestTier": {
+          "label": "Nivel más fuerte",
+          "subtitle": "Mayor interacción",
+          "sr": "{tier} muestra la mayor interacción ({engagement}) con participación en {participation}."
+        }
+      },
       "summaryIntro": "{totalUsers} usuarios en total. {strongestTier} muestra la mayor participación ({engagement}) con una tasa de {participation}.",
       "summaryFallback": "{totalUsers} usuarios en total entre todos los niveles de confianza.",
       "table": {
@@ -553,11 +867,57 @@
         "description": "Principales métricas por nivel de confianza, incluyendo participación, finalización y probabilidad de bots."
       },
       "usersSuffix": "usuarios",
-      "usersLabel": "Usuarios"
+      "usersLabel": "Usuarios",
+      "refreshAnnouncement": "Actualizando datos de comparación de niveles de confianza.",
+      "errorAnnouncement": "Los datos de niveles de confianza pueden estar incompletos. {error}"
+    },
+    "overview": {
+      "metrics": {
+        "totalUsers": {
+          "title": "Usuarios totales",
+          "subtitle": "{active} usuarios activos",
+          "sr": "{total} usuarios totales con {active} activos."
+        },
+        "totalPolls": {
+          "title": "Encuestas totales",
+          "subtitle": "{newPolls} nuevas en este período",
+          "sr": "{total} encuestas totales con {newPolls} creadas en este período."
+        },
+        "totalVotes": {
+          "title": "Votos totales",
+          "subtitle": "{newVotes} nuevos en este período",
+          "sr": "{total} votos totales con {newVotes} registrados en este período."
+        },
+        "engagement": {
+          "title": "Puntaje de participación",
+          "subtitle": "Puntaje de confianza: {trustScore}",
+          "sr": "Puntaje de participación {engagement} con puntaje de confianza {trustScore}."
+        }
+      }
+    },
+    "overviewSections": {
+      "enhancedInsights": {
+        "title": "Información mejorada",
+        "description": "Analítica avanzada impulsada por el nuevo esquema."
+      },
+      "sessionAnalytics": {
+        "title": "Analítica de sesiones",
+        "description": "Seguimiento en tiempo real del comportamiento del usuario."
+      },
+      "systemHealth": {
+        "title": "Salud del sistema",
+        "description": "Monitoreo de servicios y estados de incidentes."
+      },
+      "siteMessages": {
+        "title": "Mensajes activos del sitio",
+        "description": "Anuncios que se muestran actualmente a los usuarios."
+      }
     },
     "widgets": {
       "moveButton": "Mover",
+      "moveButtonAria": "Activar o desactivar el modo de movimiento con el teclado para este widget",
       "resizeButton": "Redimensionar",
+      "resizeButtonAria": "Activar o desactivar el modo de redimensionado con el teclado para este widget",
       "addWidget": "Agregar widget",
       "defaultInstructions": "Pon el foco en este widget y usa los botones Mover o Redimensionar para ajustarlo con el teclado.",
       "moveModeOn": "Modo de movimiento activado para {title}. Usa las flechas para cambiar de posición. Pulsa Enter para confirmar o Escape para cancelar.",
@@ -631,7 +991,12 @@
       "complete": "Finalizado"
     },
     "progress": {
-      "valueText": "Paso {current} de {total}: {label}"
+      "valueText": "Paso {current} de {total}: {label}",
+      "live": {
+        "step": "Paso {current} de {total}: {label}",
+        "completed": "Onboarding completado. Ya puedes explorar Choices.",
+        "error": "Error en onboarding: {message}"
+      }
     },
     "welcome": {
       "title": "Bienvenido a Choices",
@@ -823,6 +1188,16 @@
         "previous": "Anterior",
         "next": "Siguiente",
         "pageLabel": "Página {current} de {total}"
+      },
+      "results": {
+        "heading": "Resultados",
+        "refreshing": "Actualizando resultados de la encuesta.",
+        "refresh": "Actualizar Resultados",
+        "refreshLabel": "Actualizar resultados de la encuesta",
+        "summary": "{totalVotes} votos totales. {topOption} lidera con {topVotes} votos ({topPercentage}%).",
+        "optionVotes": "{votes} votos ({percentage}%)",
+        "optionSummary": "{option}: {votes} votos ({percentage}%), {uniqueVoters} votantes únicos.",
+        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}"
       }
     }
   },
@@ -883,6 +1258,56 @@
         "signIn": "Iniciar sesión"
       },
       "altSignInDivider": "O continúa con"
+    }
+  },
+  "pwa": {
+    "installer": {
+      "prompt": {
+        "title": "Instala Choices",
+        "subtitle": "Obtén la app para una experiencia rápida y disponible sin conexión.",
+        "dismiss": "Después",
+        "install": "Instalar",
+        "installAria": "Instalar la aplicación Choices"
+      },
+      "benefits": {
+        "homeScreen": "Abre Choices directamente desde tu pantalla de inicio",
+        "performance": "Disfruta de un rendimiento más rápido y fluido",
+        "offline": "Vota sin conexión; las acciones se sincronizan al reconectarte",
+        "notifications": "Recibe notificaciones sobre nuevas encuestas y resultados",
+        "native": "Experimenta controles y navegación tipo aplicación nativa"
+      },
+      "offlineStatus": {
+        "titleOnline": "Votos listos para sincronizar",
+        "titleOffline": "Votos sin conexión guardados",
+        "description": "{count, plural, one {# voto esperando a enviarse} other {# votos esperando a enviarse}}",
+        "syncButton": "Sincronizar ahora"
+      },
+      "offlineBanner": "Estás sin conexión. Los votos se guardan y se sincronizan cuando regreses.",
+      "live": {
+        "installPrompt": "Instala Choices para usarlo cuando quieras.",
+        "installSuccess": "Choices se instaló correctamente. Ya puedes usarlo sin conexión.",
+        "installError": "No se pudo instalar. Inténtalo más tarde.",
+        "offlineVotesPending": "{count, plural, one {# voto sin conexión pendiente.} other {# votos sin conexión pendientes.}}",
+        "offline": "Estás sin conexión. Los votos se sincronizarán cuando vuelvas a conectarte."
+      },
+      "notifications": {
+        "syncSuccess": {
+          "title": "¡Votos sincronizados! 📤",
+          "message": "{count, plural, one {Se envió # voto sin conexión.} other {Se enviaron # votos sin conexión.}}"
+        },
+        "syncError": {
+          "title": "La sincronización falló",
+          "message": "Inténtalo de nuevo cuando tengas una conexión estable."
+        },
+        "installSuccess": {
+          "title": "¡Choices se instaló correctamente! 🎉",
+          "message": "Ahora puedes usar Choices sin conexión y recibir notificaciones."
+        },
+        "installError": {
+          "title": "La instalación falló",
+          "message": "Inténtalo de nuevo más tarde o revisa tu conexión."
+        }
+      }
     }
   },
   "harness": {

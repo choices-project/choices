@@ -10,13 +10,16 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
-import { usePWAInstallation, usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { logger } from '@/lib/utils/logger';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { useNotificationActions } from '@/lib/stores';
+import { usePWAInstallation, usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
+import type { Notification } from '@/lib/stores/types';
+import { logger } from '@/lib/utils/logger';
+import { useI18n } from '@/hooks/useI18n';
 
 /**
  * PWA Installer Component
@@ -32,12 +35,35 @@ import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
  * @returns Installation UI or null if PWA already installed/not supported
  */
 export default function PWAInstaller() {
+  const { t } = useI18n();
   const installation = usePWAInstallation();
   const offline = usePWAOffline();
   const preferences = usePWAPreferences();
   const { installPWA, syncData } = usePWAActions();
+  const { addNotification } = useNotificationActions();
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [showOfflineStatus, setShowOfflineStatus] = useState(false)
+
+  const showNotification = useCallback(
+    (title: string, message: string, type: Notification['type'] = 'info') => {
+      addNotification({
+        type,
+        title,
+        message,
+        duration: type === 'error' ? 0 : undefined,
+        source: 'system',
+        context: {
+          kind: 'pwa',
+          surface: 'installer',
+          state: type,
+        },
+        metadata: {
+          component: 'PWAInstaller',
+        },
+      });
+    },
+    [addNotification],
+  );
   
   const installDialogRef = useRef<HTMLDivElement>(null)
   const installButtonRef = useRef<HTMLButtonElement>(null)
@@ -47,6 +73,13 @@ export default function PWAInstaller() {
   const isOnline = offline.isOnline
   const isSupported = 'serviceWorker' in navigator
   const isEnabled = preferences.installPrompt
+  const benefitKeys = [
+    'pwa.installer.benefits.homeScreen',
+    'pwa.installer.benefits.performance',
+    'pwa.installer.benefits.offline',
+    'pwa.installer.benefits.notifications',
+    'pwa.installer.benefits.native',
+  ]
 
   useAccessibleDialog({
     isOpen: showInstallPrompt,
@@ -59,68 +92,76 @@ export default function PWAInstaller() {
 
   useEffect(() => {
     // Initialize offline outbox
-    initializeOfflineOutbox()
+    initializeOfflineOutbox();
 
     // Show install prompt when PWA becomes installable
     if (installation.canInstall && !installation.isInstalled) {
-      setShowInstallPrompt(true)
+      setShowInstallPrompt(true);
     }
 
     // Show offline status when there are offline votes
     if (hasOfflineData) {
-      setShowOfflineStatus(true)
+      setShowOfflineStatus(true);
     }
 
     // Listen for offline votes synced event
     const handleOfflineVotesSynced = (event: CustomEvent) => {
-      const { syncedCount } = event.detail
+      const { syncedCount } = event.detail;
       if (syncedCount > 0) {
-        showNotification(
-          'Offline votes synced! 📤',
-          `${syncedCount} vote${syncedCount > 1 ? 's' : ''} have been successfully submitted.`
-        )
+        const title = t('pwa.installer.notifications.syncSuccess.title');
+        const message = t('pwa.installer.notifications.syncSuccess.message', {
+          count: syncedCount,
+        });
+        showNotification(title, message, 'success');
+        ScreenReaderSupport.announce(message, 'polite');
       }
-    }
+    };
 
-    window.addEventListener('offlineVotesSynced', handleOfflineVotesSynced as EventListener)
+    window.addEventListener('offlineVotesSynced', handleOfflineVotesSynced as EventListener);
 
     // Cleanup
     return () => {
-      window.removeEventListener('offlineVotesSynced', handleOfflineVotesSynced as EventListener)
-    }
-  }, [installation.canInstall, installation.isInstalled, hasOfflineData])
+      window.removeEventListener('offlineVotesSynced', handleOfflineVotesSynced as EventListener);
+    };
+  }, [installation.canInstall, installation.isInstalled, hasOfflineData, showNotification, t]);
 
   useEffect(() => {
     if (showInstallPrompt) {
-      ScreenReaderSupport.announce('Install Choices prompt available.', 'polite');
+      const message = t('pwa.installer.live.installPrompt');
+      ScreenReaderSupport.announce(message, 'polite');
     }
-  }, [showInstallPrompt]);
+  }, [showInstallPrompt, t]);
 
   useEffect(() => {
     if (showOfflineStatus) {
-      ScreenReaderSupport.announce(
-        `${offlineVotes} offline vote${offlineVotes === 1 ? '' : 's'} pending.`,
-        offline.isOnline ? 'polite' : 'assertive',
-      );
+      const message = t('pwa.installer.live.offlineVotesPending', { count: offlineVotes });
+      ScreenReaderSupport.announce(message, offline.isOnline ? 'polite' : 'assertive');
     }
-  }, [showOfflineStatus, offlineVotes, offline.isOnline]);
+  }, [showOfflineStatus, offlineVotes, offline.isOnline, t]);
 
   useEffect(() => {
     if (!isOnline) {
-      ScreenReaderSupport.announce('You are offline. Votes will sync when you reconnect.', 'assertive');
+      ScreenReaderSupport.announce(t('pwa.installer.live.offline'), 'assertive');
     }
-  }, [isOnline]);
+  }, [isOnline, t]);
 
   const handleInstallClick = async () => {
     try {
       await installPWA()
-      
+
       if (installation.isInstalled) {
         logger.info('User accepted the install prompt')
-        showNotification('Choices installed successfully! 🎉', 'You can now use Choices offline and get notifications for new polls.')
+        const title = t('pwa.installer.notifications.installSuccess.title')
+        const message = t('pwa.installer.notifications.installSuccess.message')
+        showNotification(title, message, 'success')
+        ScreenReaderSupport.announce(t('pwa.installer.live.installSuccess'), 'polite');
       }
     } catch (error) {
       logger.error('Installation failed:', error instanceof Error ? error : new Error(String(error)))
+      const title = t('pwa.installer.notifications.installError.title')
+      const message = t('pwa.installer.notifications.installError.message')
+      showNotification(title, message, 'error')
+      ScreenReaderSupport.announce(t('pwa.installer.live.installError'), 'assertive');
     } finally {
       setShowInstallPrompt(false)
     }
@@ -128,39 +169,18 @@ export default function PWAInstaller() {
 
   const handleSyncOfflineVotes = async () => {
     try {
-      await syncData()
-      showNotification('Votes synced! 📤', 'Your offline votes have been submitted successfully.')
+      await syncData();
+      const title = t('pwa.installer.notifications.syncSuccess.title');
+      const message = t('pwa.installer.notifications.syncSuccess.message', { count: offlineVotes });
+      showNotification(title, message, 'success');
+      ScreenReaderSupport.announce(message, 'polite');
     } catch (error) {
-      logger.error('Failed to sync offline votes:', error instanceof Error ? error : new Error(String(error)))
-      showNotification('Sync failed', 'Please try again when you have a stable connection.')
+      logger.error('Failed to sync offline votes:', error instanceof Error ? error : new Error(String(error)));
+      const title = t('pwa.installer.notifications.syncError.title');
+      const message = t('pwa.installer.notifications.syncError.message');
+      showNotification(title, message, 'error');
+      ScreenReaderSupport.announce(message, 'assertive');
     }
-  }
-
-  const showNotification = (title: string, message: string) => {
-    // Create a toast notification
-    const toast = document.createElement('div')
-    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm'
-    
-    // Create title element
-    const titleEl = document.createElement('div')
-    titleEl.className = 'font-semibold'
-    titleEl.textContent = title
-    
-    // Create message element
-    const messageEl = document.createElement('div')
-    messageEl.className = 'text-sm opacity-90'
-    messageEl.textContent = message
-    
-    // Append elements to toast
-    toast.appendChild(titleEl)
-    toast.appendChild(messageEl)
-    
-    document.body.appendChild(toast)
-    
-    // Remove after 5 seconds
-    setTimeout(() => {
-      toast.remove()
-    }, 5000)
   }
 
   // Don't show anything if PWA is already installed or not supported
@@ -190,27 +210,27 @@ export default function PWAInstaller() {
                   </div>
                   <div>
                     <h3 id="pwa-install-title" className="font-semibold text-gray-900">
-                      Install Choices
+                      {t('pwa.installer.prompt.title')}
                     </h3>
-                    <p className="text-sm text-gray-600">Get the app for a better experience</p>
+                    <p className="text-sm text-gray-600">{t('pwa.installer.prompt.subtitle')}</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setShowInstallPrompt(false)}
                     className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700"
-                    aria-label="Dismiss install prompt"
+                    aria-label={t('pwa.installer.prompt.dismiss')}
                   >
-                    Later
+                    {t('pwa.installer.prompt.dismiss')}
                   </button>
                   <button
                     onClick={handleInstallClick}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     data-testid="pwa-install-button"
-                    aria-label="Install Choices application"
+                    aria-label={t('pwa.installer.prompt.installAria')}
                     ref={installButtonRef}
                   >
-                    Install
+                    {t('pwa.installer.prompt.install')}
                   </button>
                 </div>
               </div>
@@ -221,18 +241,12 @@ export default function PWAInstaller() {
                 id="pwa-install-benefits"
               >
                 <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
-                  {[
-                    'Access Choices directly from your home screen',
-                    'Faster loading and better performance',
-                    'Works offline - vote even without internet',
-                    'Get notifications for new polls and results',
-                    'Native app-like experience',
-                  ].map((benefit) => (
-                    <div key={benefit} className="flex items-center space-x-2">
+                  {benefitKeys.map((key) => (
+                    <div key={key} className="flex items-center space-x-2">
                       <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>{benefit}</span>
+                      <span>{t(key)}</span>
                     </div>
                   ))}
                 </div>
@@ -257,10 +271,12 @@ export default function PWAInstaller() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-yellow-800">
-                      {isOnline ? 'Votes ready to sync' : 'Offline votes stored'}
+                      {isOnline
+                        ? t('pwa.installer.offlineStatus.titleOnline')
+                        : t('pwa.installer.offlineStatus.titleOffline')}
                     </h3>
                     <p className="text-sm text-yellow-700" id="offline-votes-description">
-                      {offlineVotes} vote{offlineVotes > 1 ? 's' : ''} waiting to be submitted
+                      {t('pwa.installer.offlineStatus.description', { count: offlineVotes })}
                     </p>
                   </div>
                 </div>
@@ -271,7 +287,7 @@ export default function PWAInstaller() {
                     data-testid="sync-offline-data-button"
                     aria-describedby="offline-votes-description"
                   >
-                    Sync Now
+                    {t('pwa.installer.offlineStatus.syncButton')}
                   </button>
                 )}
               </div>
@@ -291,7 +307,7 @@ export default function PWAInstaller() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
                 </svg>
                 <span className="text-sm font-medium text-red-800">
-                  You&apos;re offline. Votes will be stored and synced when you&apos;re back online.
+                  {t('pwa.installer.offlineBanner')}
                 </span>
               </div>
             </div>

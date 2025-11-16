@@ -155,6 +155,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   const isMoveMode = isSelected && keyboardMode === 'move';
   const isResizeMode = isSelected && keyboardMode === 'resize';
   const instructionsId = `${config.id}-keyboard-instructions`;
+  const moveButtonAriaLabel = t('analytics.widgets.moveButtonAria' as never);
+  const resizeButtonAriaLabel = t('analytics.widgets.resizeButtonAria' as never);
 
   const handleError = (widgetError: Error) => {
     logger.error('Widget rendering error:', { widgetId: config.id, error: widgetError });
@@ -480,6 +482,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
                 size="icon"
                 onClick={handleToggleMove}
                 aria-pressed={isMoveMode}
+                aria-label={moveButtonAriaLabel}
+                aria-describedby={instructionsId}
+                aria-controls={instructionsId}
+                aria-keyshortcuts="m"
                 className="h-8 w-8"
                 title={t('analytics.widgets.moveButton' as never)}
               >
@@ -490,6 +496,10 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
                 size="icon"
                 onClick={handleToggleResize}
                 aria-pressed={isResizeMode}
+                aria-label={resizeButtonAriaLabel}
+                aria-describedby={instructionsId}
+                aria-controls={instructionsId}
+                aria-keyshortcuts="r"
                 className="h-8 w-8"
                 title={t('analytics.widgets.resizeButton' as never)}
               >
@@ -595,7 +605,31 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
             <p className="text-sm text-muted-foreground">
               Configuration panel for {config.type} widget
             </p>
-            {/* TODO: Add widget-specific configuration controls */}
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor={`${config.id}-title`}>
+                  Title
+                </label>
+                <input
+                  id={`${config.id}-title`}
+                  className="w-full rounded border bg-background p-2 text-sm"
+                  defaultValue={config.title}
+                  onBlur={(e) => onConfigChange?.({ title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor={`${config.id}-description`}>
+                  Description
+                </label>
+                <textarea
+                  id={`${config.id}-description`}
+                  className="w-full rounded border bg-background p-2 text-sm"
+                  rows={3}
+                  defaultValue={config.description ?? ''}
+                  onBlur={(e) => onConfigChange?.({ description: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

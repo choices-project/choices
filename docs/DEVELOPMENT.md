@@ -76,12 +76,16 @@ import type { Database } from '@/types/database';
 - **Linting**: `npm run lint`
 - **Type check**: `npm run type-check`
 - **Config**: Rules live in `web/eslint.config.js`; formatting follows the repo-standard Prettier settings.
+- **Governance**: run `npm run governance:check` before opening a PR. The script verifies that store/layout or API changes are paired with updates to their roadmap/docs/changelog entries. (Use `GOVERNANCE_BYPASS=1 npm run governance:check` only when an owner explicitly approves the bypass.)
 
 ### Key Rules
 - Use `??` for nullish coalescing (not `||` for non-boolean)
 - Prefer optional chaining (`?.`)
 - No unused variables
 - Proper JSDoc on complex functions
+ - Do not use the deprecated `withOptional` helper. Prefer explicit object construction and conditional spreads. Examples:
+   - Request options: `const opts = { ...base, ...(signal ? { signal } : {}) }`
+   - Domain builders: set fields conditionally, e.g. `if (value !== undefined) obj.field = value`
 
 ---
 
@@ -102,6 +106,32 @@ See `TESTING.md` for the broader strategy and harness overview.
 - **Integration coverage**: add React Testing Library suites that instantiate the creator in isolation. See `tests/unit/stores/notification.integration.test.tsx` for the reference pattern (fake timers + helper stubs).
 - **Playwright harnesses**: expose harness pages under `/app/(app)/e2e/<store>` that register a `window.__<store>Harness` facade. The notification store example lives at `/app/(app)/e2e/notification-store/page.tsx` with its spec in `tests/e2e/specs/notification-store.spec.ts`.
 - **Documentation**: track store-specific progress in `scratch/gpt5-codex/store-roadmaps/`, updating action items (consumer audits, harness coverage) as work ships.
+
+### Import order hygiene (Admin/E2E harnesses)
+
+- Group imports by source: external → internal (`@/lib`, `@/features`, `@/components`) → relative (`../` or `./`).
+- Maintain a blank line between import groups.
+- For type-only imports, co-locate with their module group.
+- For harness logging, prefer `console.warn` or `console.error`; other console methods are blocked by lint rules.
+
+Example:
+```ts
+import { QueryClient } from '@tanstack/react-query';
+import type { User } from '@supabase/supabase-js';
+
+import { useAppActions } from '@/lib/stores/appStore';
+import { AdminLayout } from '../layout/AdminLayout';
+```
+
+### API tests that hit Supabase chains
+
+When mocking Supabase in tests, keep chainability explicit:
+```ts
+mockFrom.mockReturnValue({
+  select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
+  update: () => ({ eq: () => ({ error: null }) }),
+});
+```
 
 ---
 

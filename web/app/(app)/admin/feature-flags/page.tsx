@@ -2,10 +2,9 @@
 
 import React, { useEffect } from 'react';
 
-import FeatureFlags from '@/features/admin/components/FeatureFlags';
-
-import { AdminLayout } from '../layout/AdminLayout';
 import { useAppActions } from '@/lib/stores/appStore';
+import FeatureFlags from '@/features/admin/components/FeatureFlags';
+import { AdminLayout } from '../layout/AdminLayout';
 
 export default function AdminFeatureFlagsPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();

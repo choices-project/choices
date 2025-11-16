@@ -82,19 +82,48 @@ export class LocationService {
         return cached;
       }
 
-      // For development, use mock data
+      // Prefer Google Maps Geocoding API if available
+      const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
+      if (apiKey) {
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          logger.error('❌ LocationService: Geocoding HTTP error', { status: response.status });
+          return null;
+        }
+        const data = (await response.json()) as any;
+        if (!data || data.status !== 'OK' || !Array.isArray(data.results) || data.results.length === 0) {
+          logger.info('⚠️ LocationService: Geocoding returned no results', { status: data?.status });
+          return null;
+        }
+        const result = data.results[0];
+        const addressComponents: Array<{ long_name: string; short_name: string; types: string[] }> =
+          result.address_components ?? [];
+        const stateComp = addressComponents.find((c) => c.types.includes('administrative_area_level_1'));
+        const districtComp = addressComponents.find((c) => c.types.includes('sublocality_level_1'));
+        const cityComp = addressComponents.find((c) => c.types.includes('locality'));
+        const countyComp = addressComponents.find((c) => c.types.includes('administrative_area_level_2'));
+        const location: LocationResult = {
+          address: result.formatted_address ?? address,
+          latitude: result.geometry?.location?.lat ?? 0,
+          longitude: result.geometry?.location?.lng ?? 0,
+          state: stateComp?.short_name ?? '',
+          ...(districtComp?.short_name ? { district: districtComp.short_name.replace(/\D+/g, '') } : {}),
+          ...(cityComp?.long_name ? { city: cityComp.long_name } : {}),
+          ...(countyComp?.long_name ? { county: countyComp.long_name } : {}),
+        };
+        this.cache.set(address, location);
+        return location;
+      }
+
+      // Fallback: use mock data when no API key is configured
       const mockResult = MOCK_LOCATIONS[address];
       if (mockResult) {
         logger.info('📍 LocationService: Using mock data');
         this.cache.set(address, mockResult);
         return mockResult;
       }
-
-      // Google Maps Geocoding: configure API key and enable in production
-      // const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
-      // const data = await response.json();
-      
-      logger.info('❌ LocationService: Address not found in mock data');
+      logger.info('❌ LocationService: Address not found and no API key configured');
       return null;
     } catch (error) {
       logger.error('❌ LocationService: Geocoding error:', error);
@@ -166,10 +195,79 @@ export class LocationService {
     try {
       logger.info('📍 LocationService: Finding representatives by coordinates:', { latitude, longitude, radius });
       
-      // Reverse geocoding: use Google Maps or alternative geocoding service
-      // For now, return null as this requires Google Maps API
-      logger.info('⚠️ LocationService: Coordinate search not implemented yet');
-      return null;
+      // Reverse geocoding: prefer Google Maps API if configured, fallback to mock/disabled
+      const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
+      if (!apiKey) {
+        logger.info('⚠️ LocationService: Reverse geocoding disabled (no API key configured)');
+        return null;
+      }
+
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${encodeURIComponent(
+        `${latitude},${longitude}`
+      )}&key=${apiKey}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        logger.error('❌ LocationService: Reverse geocoding HTTP error', { status: response.status });
+        return null;
+      }
+      const data = (await response.json()) as any;
+      if (!data || data.status !== 'OK' || !Array.isArray(data.results) || data.results.length === 0) {
+        logger.info('⚠️ LocationService: Reverse geocoding returned no results', { status: data?.status });
+        return null;
+      }
+
+      const result = data.results[0];
+      const addressComponents: Array<{ long_name: string; short_name: string; types: string[] }> =
+        result.address_components ?? [];
+      const stateComp = addressComponents.find((c) => c.types.includes('administrative_area_level_1'));
+      const districtComp = addressComponents.find((c) => c.types.includes('sublocality_level_1'));
+      const cityComp = addressComponents.find((c) => c.types.includes('locality'));
+      const countyComp = addressComponents.find((c) => c.types.includes('administrative_area_level_2'));
+
+      const location: LocationResult = {
+        address: result.formatted_address ?? `${latitude}, ${longitude}`,
+        latitude,
+        longitude,
+        state: stateComp?.short_name ?? '',
+        ...(districtComp?.short_name ? { district: districtComp.short_name.replace(/\D+/g, '') } : {}),
+        ...(cityComp?.long_name ? { city: cityComp.long_name } : {}),
+        ...(countyComp?.long_name ? { county: countyComp.long_name } : {}),
+      };
+
+      // Fetch representatives using resolved location
+      const params = new URLSearchParams();
+      if (location.state) params.append('state', location.state);
+      if (location.district) params.append('district', location.district);
+      params.append('limit', '50');
+
+      const repsResponse = await fetch(`/api/representatives?${params.toString()}`);
+      const repsData = await repsResponse.json();
+      if (!repsResponse.ok || !repsData?.success) {
+        logger.error('❌ LocationService: Failed to fetch representatives for coordinates', {
+          status: repsResponse.status,
+        });
+        return null;
+      }
+
+      const representatives = repsData.data.representatives || [];
+      const federal = representatives.filter((rep: Representative) => rep.level === 'federal');
+      const state = representatives.filter((rep: Representative) => rep.level === 'state');
+      const local = representatives.filter((rep: Representative) => rep.level === 'local');
+
+      const resultPayload: RepresentativesByLocation = {
+        location,
+        representatives,
+        federal,
+        state,
+        local,
+      };
+
+      logger.info('✅ LocationService: Found representatives by coordinates', {
+        total: representatives.length,
+      });
+
+      return resultPayload;
     } catch (error) {
       logger.error('❌ LocationService: Error finding representatives by coordinates:', error);
       return null;

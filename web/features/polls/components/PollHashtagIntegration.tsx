@@ -108,12 +108,29 @@ export default function PollHashtagIntegration({
   // Load trending hashtags on mount
   useEffect(() => {
     void getTrendingHashtags();
+    // Record a view when the component mounts
+    _trackHashtagEngagement('view');
   }, [getTrendingHashtags]);
 
   // Track hashtag engagement in real-time
   const _trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
     logger.info(`Hashtag engagement tracked: ${action}`);
-    // TODO: Integrate with analytics service to persist hashtag engagement metrics
+    // Persist engagement via API (best-effort, non-blocking)
+    void (async () => {
+      try {
+        await fetch('/api/analytics/hashtag/engagement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pollId: poll.id,
+            action,
+            hashtags: poll.hashtags ?? []
+          })
+        });
+      } catch {
+        // Swallow errors to avoid impacting UX
+      }
+    })();
   };
 
   // Handle hashtag updates with enhanced analytics
@@ -308,6 +325,7 @@ export default function PollHashtagIntegration({
                       showCount={true}
                       showCategory={true}
                       clickable={true}
+                      onHashtagClick={() => _trackHashtagEngagement('click')}
                     />
                   )}
                 </div>

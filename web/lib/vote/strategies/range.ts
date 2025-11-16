@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -156,47 +155,39 @@ export class RangeStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'range',
-            ratings,
-            totalScore,
-            averageScore,
-            rangeMin: poll.votingConfig.rangeMin ?? 0,
-            rangeMax: poll.votingConfig.rangeMax ?? 10
-          }
+      return {
+        success: true,
+        message: 'Vote submitted successfully',
+        pollId,
+        voteId,
+        auditReceipt,
+        responseTime: 0, // Will be set by the engine
+        metadata: {
+          votingMethod: 'range',
+          ratings,
+          totalScore,
+          averageScore,
+          rangeMin: poll.votingConfig.rangeMin ?? 0,
+          rangeMax: poll.votingConfig.rangeMax ?? 10
         },
-        {
-          privacyLevel
-        }
-      );
+        ...(privacyLevel !== undefined ? { privacyLevel } : {}),
+      };
 
     } catch (error) {
       devLog('Range vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'range',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Vote processing failed',
+        pollId: request.pollId,
+        responseTime: 0,
+        metadata: {
+          votingMethod: 'range',
+          error: error instanceof Error ? error.message : 'Unknown error'
         },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+        voteId: undefined,
+        auditReceipt: undefined,
+        ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
+      };
     }
   }
 
@@ -274,21 +265,17 @@ export class RangeStrategy implements VotingStrategy {
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          rangeScores,
-          rangeAverages,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
+      const results: PollResults = {
+        winnerVotes,
+        winnerPercentage,
+        rangeScores,
+        rangeAverages,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0,
+        ...(winner !== undefined ? { winner } : {}),
+      };
 
       const resultsData: ResultsData = {
         pollId: poll.id,

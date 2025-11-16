@@ -3,8 +3,10 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
+// type imported only for external consumers via window harness
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// import type { PollWizardStore } from '@/lib/stores/pollWizardStore';
 import { usePollWizardStore } from '@/lib/stores/pollWizardStore';
-import type { PollWizardStore } from '@/lib/stores/pollWizardStore';
 
 import { AnalyticsTestBridge } from '../_components/AnalyticsTestBridge';
 import type { PollWizardHarness } from '../poll-wizard/page';
@@ -75,8 +77,8 @@ export default function PollCreateHarnessPage() {
 
     let unsubscribe: (() => void) | void;
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.info('[E2E] Poll wizard persist helpers available?', Boolean(persist));
+  if (process.env.NODE_ENV !== 'production') {
+      console.warn('[E2E] Poll wizard persist helpers available?', Boolean(persist));
     }
 
     if (persist?.hasHydrated?.()) {

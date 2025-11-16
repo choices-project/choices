@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   CalendarClock,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
 import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
@@ -30,6 +30,7 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 type CivicsLureProps = {
   userLocation?: string;
@@ -124,6 +125,19 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
   );
 
   const locationLabel = userLocation ?? storedAddress;
+  const [liveMessage, setLiveMessage] = useState('');
+  const announce = useCallback(
+    (message: string, politeness: 'polite' | 'assertive' = 'polite') => {
+      setLiveMessage(message);
+      ScreenReaderSupport.announce(message, politeness);
+    },
+    [],
+  );
+  const previousLocationRef = useRef<string | null>(null);
+  const previousRepresentativesRef = useRef<number>(0);
+  const previousElectionIdRef = useRef<string | null>(null);
+  const previousElectionDaysRef = useRef<number | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!locationLabel || locationRepresentatives.length > 0) {
@@ -140,6 +154,33 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       }
     })();
   }, [findByLocation, locationLabel, locationRepresentatives.length]);
+
+  useEffect(() => {
+    if (!locationLabel) {
+      return;
+    }
+    if (previousLocationRef.current === locationLabel) {
+      return;
+    }
+    previousLocationRef.current = locationLabel;
+    announce(t('civics.lure.live.locationUpdated', { location: locationLabel }));
+  }, [announce, locationLabel, t]);
+
+  useEffect(() => {
+    if (locationRepresentatives.length === 0) {
+      previousRepresentativesRef.current = 0;
+      return;
+    }
+    if (previousRepresentativesRef.current === locationRepresentatives.length) {
+      return;
+    }
+    previousRepresentativesRef.current = locationRepresentatives.length;
+    announce(
+      t('civics.lure.live.representativesLoaded', {
+        count: locationRepresentatives.length,
+      }),
+    );
+  }, [announce, locationRepresentatives.length, t]);
 
   const divisionIds = useMemo(() => {
     const divisions = new Set<string>();
@@ -169,6 +210,51 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       },
     },
   });
+
+  useEffect(() => {
+    if (!nextElection?.election_id) {
+      previousElectionIdRef.current = null;
+      previousElectionDaysRef.current = null;
+      return;
+    }
+    const currentDays = daysUntilNextElection ?? null;
+    if (
+      previousElectionIdRef.current === nextElection.election_id &&
+      previousElectionDaysRef.current === currentDays
+    ) {
+      return;
+    }
+    previousElectionIdRef.current = nextElection.election_id;
+    previousElectionDaysRef.current = currentDays;
+
+    if (daysUntilNextElection != null && daysUntilNextElection <= 0) {
+      announce(
+        t('civics.lure.live.nextElectionToday', {
+          name: nextElection.name ?? t('civics.lure.live.unnamedElection'),
+        }),
+      );
+    } else if (daysUntilNextElection != null) {
+      announce(
+        t('civics.lure.live.nextElection', {
+          name: nextElection.name ?? t('civics.lure.live.unnamedElection'),
+          count: daysUntilNextElection,
+        }),
+      );
+    }
+  }, [announce, daysUntilNextElection, nextElection, t]);
+
+  useEffect(() => {
+    const activeError = representativeError ?? electionError ?? null;
+    if (!activeError) {
+      previousErrorRef.current = null;
+      return;
+    }
+    if (previousErrorRef.current === activeError) {
+      return;
+    }
+    previousErrorRef.current = activeError;
+    announce(t('civics.lure.live.error', { message: activeError }), 'assertive');
+  }, [announce, electionError, representativeError, t]);
 
   const candidateSummaries = useMemo<CandidateSummary[]>(() => {
     if (!locationRepresentatives.length) {
@@ -278,6 +364,9 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200 rounded-2xl p-6 mb-8">
+      <div aria-live="polite" role="status" className="sr-only" data-testid="civics-lure-live-message">
+        {liveMessage}
+      </div>
       {/* Header */}
       <div className="text-center mb-6">
         <div className="flex justify-center mb-4">

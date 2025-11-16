@@ -40,6 +40,7 @@ describe('pollsStore', () => {
     expect(state.error).toBeNull();
     expect(state.filters.trendingOnly).toBe(false);
     expect(state.lastFetchedAt).toBeNull();
+    expect(state.voteHistory).toEqual({});
   });
 
   it('setPolls replaces poll list', () => {
@@ -88,6 +89,50 @@ describe('pollsStore', () => {
     expect(result.success).toBe(true);
   });
 
+  it('hasUserVoted reflects server-provided metadata', () => {
+    const store = createTestPollsStore();
+    const poll = {
+      id: 'poll-server-metadata',
+      status: 'active',
+      userVote: 'choice-1',
+    } as unknown as Parameters<PollsStore['setPolls']>[0][number];
+
+    store.getState().setPolls([poll]);
+
+    expect(store.getState().hasUserVoted('poll-server-metadata')).toBe(true);
+  });
+
+  it('hasUserVoted tracks optimistic vote history across vote and undo actions', async () => {
+    const store = createTestPollsStore();
+    const poll = {
+      id: 'poll-history',
+      status: 'active',
+      total_votes: 0,
+    } as unknown as Parameters<PollsStore['setPolls']>[0][number];
+
+    store.getState().setPolls([poll]);
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ totalVotes: 1, voteId: 'vote-1' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ totalVotes: 0 }),
+      }) as unknown as typeof global.fetch;
+
+    await store.getState().voteOnPoll('poll-history', 'option-1');
+    expect(store.getState().hasUserVoted('poll-history')).toBe(true);
+
+    await store.getState().undoVote('poll-history');
+    expect(store.getState().hasUserVoted('poll-history')).toBe(false);
+    expect(store.getState().voteHistory['poll-history']).toBeUndefined();
+  });
+
   it('voteOnPoll captures errors from failed requests', async () => {
     const store = createTestPollsStore();
     const poll = {
@@ -118,13 +163,26 @@ describe('pollsStore', () => {
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => [
+      json: async () => ({
+        success: true,
+        data: {
+          polls: [
         {
           id: 'poll-1',
           status: 'active',
           title: 'Climate Action',
+              userVote: null,
         },
       ],
+        },
+        metadata: {
+          pagination: {
+            total: 1,
+            totalPages: 1,
+            page: 1,
+          },
+        },
+      }),
     }) as unknown as typeof global.fetch;
 
     await store.getState().searchPolls('climate');
@@ -235,9 +293,13 @@ describe('pollsStore', () => {
       ok: true,
       status: 200,
       json: async () => ({
+        success: true,
+        data: {
         id: 'poll-created',
         status: 'draft',
         title: 'Transit Improvements',
+          userVote: null,
+        },
       }),
     }) as unknown as typeof global.fetch;
 

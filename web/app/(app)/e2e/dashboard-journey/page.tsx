@@ -4,15 +4,12 @@ import { useEffect, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
 import { useHashtagStore } from '@/lib/stores/hashtagStore';
+import type { NotificationStore } from '@/lib/stores/notificationStore';
+import { useNotificationActions, useNotificationStore } from '@/lib/stores/notificationStore';
 import { usePollsStore } from '@/lib/stores/pollsStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
-import {
-  useNotificationActions,
-  useNotificationStore,
-} from '@/lib/stores/notificationStore';
 import { useRepresentativeStore, type UserRepresentativeEntry } from '@/lib/stores/representativeStore';
 import { useUserStore } from '@/lib/stores/userStore';
-import type { NotificationStore } from '@/lib/stores/notificationStore';
 import type { ProfileUser } from '@/types/profile';
 
 type NotificationHarnessRef = {
@@ -22,6 +19,7 @@ type NotificationHarnessRef = {
 };
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     __notificationHarnessRef?: NotificationHarnessRef;
   }

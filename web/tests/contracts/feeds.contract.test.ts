@@ -120,6 +120,15 @@ describe('Feeds API contract', () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.data.feeds).toHaveLength(2);
+    expect(body.data.count).toBe(2);
+    expect(body.data.pagination).toEqual(
+      expect.objectContaining({
+        total: 2,
+        limit: 5,
+        offset: 0,
+        hasMore: false,
+      }),
+    );
     expect(body.data.filters.sort).toBe('trending');
     expect(mockRateLimiter.checkLimit).toHaveBeenCalledWith(
       '127.0.0.1',

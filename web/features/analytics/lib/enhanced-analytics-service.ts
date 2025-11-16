@@ -6,7 +6,6 @@
 
 import type { createClient } from '@supabase/supabase-js';
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 import type { Database, Json } from '@/types/database';
 
@@ -17,7 +16,7 @@ type FeatureUsageRow = Database['public']['Tables']['feature_usage']['Row'];
 type PlatformAnalyticsRow = Database['public']['Tables']['platform_analytics']['Row'];
 type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
 type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];
-type SiteMessageInsert = Database['public']['Tables']['site_messages']['Insert'];
+// type SiteMessageInsert = Database['public']['Tables']['site_messages']['Insert'];
 type FeedbackRow = Database['public']['Tables']['feedback']['Row'];
 
 type AnalyticsRecord = Record<string, unknown>;
@@ -46,7 +45,7 @@ type UserSessionPayload = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const asRecord = (value: unknown): Record<string, unknown> => (isRecord(value) ? value : {});
+// const asRecord = (value: unknown): Record<string, unknown> => (isRecord(value) ? value : {});
 
 const extractRecordField = (source: AnalyticsRecord, key: string): Record<string, unknown> => {
   const value = source[key];
@@ -89,6 +88,15 @@ export class EnhancedAnalyticsService {
    */
   async enhanceUnifiedAnalytics(pollId: string, existingAnalytics: AnalyticsRecord | null = null): Promise<AnalyticsRecord> {
     try {
+      // Prefer precomputed demographic insights when available
+      const { data: insights } = await this.supabase
+        .from('poll_demographic_insights')
+        .select('*')
+        .eq('poll_id', pollId)
+        .maybeSingle();
+
+      const precomputed = insights ?? null;
+
       // Use our new built-in functions to enhance existing analytics
       const [
         comprehensiveAnalytics,
@@ -115,25 +123,28 @@ export class EnhancedAnalyticsService {
         comprehensiveAnalysis: comprehensiveAnalytics.data,
         trustTierDistribution: trustTierAnalysis.data,
         botDetectionResults: botDetection.data,
-        platformMetrics
+        platformMetrics,
+        demographicInsights: precomputed
       };
 
       const baseAnalytics: AnalyticsRecord = existingAnalytics ?? {};
       const baseMetadata = extractRecordField(baseAnalytics, 'metadata');
 
-      const enhancedMetadata = withOptional(baseMetadata, {
+      const enhancedMetadata = {
+        ...baseMetadata,
         enhancedWith: 'new_schema_capabilities',
         schemaVersion: 'enhanced_2025_10_27',
         integrationTimestamp: new Date().toISOString()
-      });
+      };
 
-      const enhancedAnalytics = withOptional(baseAnalytics, {
+      const enhancedAnalytics = {
+        ...baseAnalytics,
         enhancedInsights,
         sessionAnalytics: await this.getSessionAnalytics(pollId),
         featureUsage: await this.getFeatureUsageAnalytics(pollId),
         systemHealth: await this.getSystemHealthContext(),
         metadata: enhancedMetadata
-      });
+      };
 
       // Track this enhancement in platform analytics
       await this.recordPlatformMetric('analytics_enhancement', {
@@ -174,7 +185,8 @@ export class EnhancedAnalyticsService {
       const baseStore: AnalyticsRecord = storeData ?? {};
       const features = ensureArray(featureUsage as FeatureUsageRow[] | null | undefined);
 
-      const enhancedStoreData = withOptional(baseStore, {
+      const enhancedStoreData = {
+        ...baseStore,
         sessionInsights: {
           sessionData: sessionData ?? null,
           featureUsage: features,
@@ -186,7 +198,7 @@ export class EnhancedAnalyticsService {
           }
         },
         enhancedAt: new Date().toISOString()
-      });
+      };
 
       return enhancedStoreData;
     } catch (error) {
@@ -214,7 +226,8 @@ export class EnhancedAnalyticsService {
 
       // Enhance hook data with user-specific insights
       const baseHook: AnalyticsRecord = hookData ?? {};
-      const enhancedHookData = withOptional(baseHook, {
+      const enhancedHookData = {
+        ...baseHook,
         userInsights: {
           sessions: userSessions,
           featureUsage: userFeatureUsage,
@@ -227,7 +240,7 @@ export class EnhancedAnalyticsService {
           platformMetricsTracking: true,
           systemHealthMonitoring: true
         }
-      });
+      };
 
       return enhancedHookData;
     } catch (error) {
@@ -255,10 +268,11 @@ export class EnhancedAnalyticsService {
         session_id: sessionId
       });
 
-      return withOptional(authEvent, {
+      return {
+        ...authEvent,
         sessionEnhanced: true,
         trackedInNewSchema: true
-      });
+      };
     } catch (error) {
       logger.error('Auth analytics enhancement error:', error);
       return authEvent;

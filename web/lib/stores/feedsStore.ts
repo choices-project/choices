@@ -312,6 +312,31 @@ const applyFeedMutation = (
   );
 };
 
+const deriveTotalAvailableFeeds = (payload: FeedsApiPayload, fallback: number) =>
+  payload.pagination?.total ?? payload.count ?? fallback;
+
+const deriveHasMoreFeeds = (
+  payload: FeedsApiPayload,
+  requestedLimit: number,
+  appendedCount: number,
+  nextLength: number,
+): boolean => {
+  if (typeof payload.pagination?.hasMore === 'boolean') {
+    return payload.pagination.hasMore;
+  }
+
+  const total = deriveTotalAvailableFeeds(payload, nextLength);
+  if (total > nextLength) {
+    return true;
+  }
+
+  if (payload.feeds.length === 0 || appendedCount <= 0) {
+    return false;
+  }
+
+  return payload.feeds.length === requestedLimit;
+};
+
 const createFeedsActions = (
   set: Parameters<FeedsStoreCreator>[0],
   get: Parameters<FeedsStoreCreator>[1]
@@ -357,18 +382,30 @@ const createFeedsActions = (
 
       try {
         const currentState = get();
+        const limit = currentState.preferences.itemsPerPage;
         const payload = await fetchFeedsFromApi({
           category: currentState.selectedCategory,
           district: currentState.filters.district ?? null,
-          limit: currentState.preferences.itemsPerPage,
+          limit,
+          offset: 0,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           state.feeds = payload.feeds;
           state.filteredFeeds = filterFeeds(payload.feeds, state.filters);
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > payload.feeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            payload.feeds.length,
+          );
+          const appendedCount = state.feeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            state.feeds.length,
+          );
           state.isRefreshing = false;
         });
 
@@ -399,21 +436,32 @@ const createFeedsActions = (
       baseActions.setLoading(true);
 
       try {
-        const limit =
-          currentState.feeds.length + currentState.preferences.itemsPerPage;
+        const limit = currentState.preferences.itemsPerPage;
+        const offset = currentState.feeds.length;
         const payload = await fetchFeedsFromApi({
           category: currentState.selectedCategory,
           district: currentState.filters.district ?? null,
           limit,
+          offset,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           const mergedFeeds = mergeUniqueFeeds(state.feeds, payload.feeds);
           state.feeds = mergedFeeds;
           state.filteredFeeds = filterFeeds(mergedFeeds, state.filters);
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > mergedFeeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            Math.max(mergedFeeds.length, state.totalAvailableFeeds),
+          );
+          const appendedCount = mergedFeeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            mergedFeeds.length,
+          );
         });
 
         logger.info('More feeds loaded', {
@@ -712,19 +760,31 @@ const createFeedsActions = (
 
       try {
         const currentState = get();
+        const limit = currentState.preferences.itemsPerPage;
         const payload = await fetchFeedsFromApi({
           category: category ?? currentState.selectedCategory,
           district: currentState.filters.district ?? null,
-          limit: currentState.preferences.itemsPerPage,
+          limit,
+          offset: 0,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           state.feeds = payload.feeds;
           state.filteredFeeds = filterFeeds(payload.feeds, state.filters);
           state.selectedCategory = category ?? currentState.selectedCategory ?? null;
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > payload.feeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            payload.feeds.length,
+          );
+          const appendedCount = state.feeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            state.feeds.length,
+          );
         });
 
         logger.info('Feeds loaded', {

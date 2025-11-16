@@ -8,7 +8,6 @@
  * Agent D - Database Specialist
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 // Redis client types
@@ -302,16 +301,14 @@ export class RedisClient {
     }
 
     try {
-      const entry: CacheEntry<T> = withOptional(
-        {
-          data: value,
-          expiresAt: Date.now() + (ttlSeconds * 1000),
-          createdAt: Date.now(),
-          hitCount: 0,
-          tags,
-        },
-        metadata ?? {}
-      )
+      const entry: CacheEntry<T> = {
+        data: value,
+        expiresAt: Date.now() + (ttlSeconds * 1000),
+        createdAt: Date.now(),
+        hitCount: 0,
+        tags,
+        ...(metadata ? { metadata } : {})
+      }
 
       await this.client.set(key, JSON.stringify(entry), { ex: ttlSeconds })
 

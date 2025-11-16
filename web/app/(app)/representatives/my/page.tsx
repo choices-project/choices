@@ -25,7 +25,6 @@ import {
   useRepresentativeGlobalLoading,
   useRepresentativeError
 } from '@/lib/stores/representativeStore';
-import { withOptional } from '@/lib/util/objects';
 import type { Representative } from '@/types/representative';
 
 // Prevent static generation since this requires authentication
@@ -178,14 +177,13 @@ export default function MyRepresentativesPage() {
             setShowContactModal(false);
             setSelectedRepresentative(null);
           }}
-          representative={withOptional({
+          representative={{
             id: selectedRepresentative.id,
             name: selectedRepresentative.name,
             office: selectedRepresentative.office ?? 'Unknown Office',
             party: selectedRepresentative.party,
-          }, {
-            photo: selectedRepresentative.primary_photo_url ?? undefined,
-          })}
+            ...(selectedRepresentative.primary_photo_url ? { photo: selectedRepresentative.primary_photo_url } : {})
+          }}
           userId={user.id}
         />
       )}

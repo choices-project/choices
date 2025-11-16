@@ -162,50 +162,54 @@ function DeclareCandidacyPageContent() {
     
     setIsSubmitting(true)
     try {
-      const formData = new FormData()
-      formData.append('office', data.office)
-      formData.append('level', data.level)
-      formData.append('state', data.state)
-      if (data.district) formData.append('district', data.district)
-      formData.append('jurisdiction', data.jurisdiction)
-      formData.append('candidateName', data.candidateName)
-      if (data.party) formData.append('party', data.party)
-      if (data.photoUrl) formData.append('photoUrl', data.photoUrl)
-      if (data.experience) formData.append('experience', data.experience)
-      formData.append('platformPositions', JSON.stringify(data.platformPositions))
-      formData.append('endorsements', JSON.stringify(data.endorsements))
-      if (data.campaignWebsite) formData.append('campaignWebsite', data.campaignWebsite)
-      if (data.campaignEmail) formData.append('campaignEmail', data.campaignEmail)
-      if (data.campaignPhone) formData.append('campaignPhone', data.campaignPhone)
-      formData.append('visibility', data.visibility)
-      
-      // Add official filing information (optional)
-      if (data.officialFilingId) formData.append('officialFilingId', data.officialFilingId)
-      if (data.officialFilingDate) formData.append('officialFilingDate', data.officialFilingDate)
-      if (data.filingJurisdiction) formData.append('filingJurisdiction', data.filingJurisdiction)
-      if (data.filingDocument) formData.append('filingDocument', data.filingDocument)
-      if (data.electionDate) formData.append('electionDate', data.electionDate)
-      if (data.filingDeadline) formData.append('filingDeadline', data.filingDeadline)
-      
-      const result = await declareCandidacy(formData)
-      
-      if (result.success) {
-        // Trigger welcome email immediately (non-blocking)
-        // If this fails, cron job will send welcome email within 24h
-        fetch('/api/candidate/journey/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            platformId: result.platformId,
-            type: 'welcome'
-          })
-        }).catch((error) => {
-          // Non-blocking - cron will handle it if this fails
-          logger.error('Welcome email trigger failed (will retry via cron):', error)
+      // 1) Start onboarding (ensures candidate profile exists)
+      const onboardResp = await fetch('/api/candidates/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          displayName: data.candidateName || 'Candidate',
+          office: data.office,
+          jurisdiction: data.jurisdiction,
+          party: data.party
         })
-        
-        router.push(`/candidate/dashboard`)
+      })
+      const onboardJson = await onboardResp.json().catch(() => ({}))
+      if (!onboardResp.ok || onboardJson?.success === false || !onboardJson?.data?.slug) {
+        throw new Error(onboardJson?.error ?? 'Failed to start candidate onboarding')
       }
+      const slug: string = onboardJson.data.slug
+
+      // 2) Update candidate profile with campaign links and bio; keep private until user chooses to publish
+      await fetch(`/api/candidates/${slug}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          bio: data.experience || undefined,
+          website: data.campaignWebsite || undefined,
+          social: {
+            email: data.campaignEmail || undefined,
+            phone: data.campaignPhone || undefined
+          },
+          is_public: false
+        })
+      }).catch(() => undefined)
+
+      // 3) Trigger welcome email immediately (non-blocking)
+      fetch('/api/candidates/journey/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platformId: slug, // placeholder identifier for email context
+          type: 'welcome'
+        })
+      }).catch((error) => {
+        logger.error('Welcome email trigger failed (will retry via cron):', error)
+      })
+
+      // 4) Route to the public candidate page (preview) or dashboard; choose dashboard for edits
+      router.push(`/candidates/${slug}`)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to declare candidacy'
       setErrors({ submit: errorMessage })

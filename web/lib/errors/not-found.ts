@@ -4,18 +4,27 @@
  * Errors for when requested resources cannot be found.
  */
 
-import { withOptional } from '@/lib/util/objects';
-
 import { ApplicationError, type ErrorDetails } from './base';
 
 const EMPTY_DETAILS: ErrorDetails = {};
+function mergeDetailsDefined(base: ErrorDetails = {}, extras?: Partial<ErrorDetails>): ErrorDetails {
+  const result: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  if (extras) {
+    for (const [k, v] of Object.entries(extras)) {
+      if (v !== undefined) {
+        result[k] = v;
+      }
+    }
+  }
+  return result as ErrorDetails;
+}
 
 function sanitizeDetails(details?: ErrorDetails): ErrorDetails {
-  return details ? withOptional(details) : EMPTY_DETAILS;
+  return details ? mergeDetailsDefined(details) : EMPTY_DETAILS;
 }
 
 function mergeDetails(details: ErrorDetails | undefined, extras: Partial<ErrorDetails>): ErrorDetails {
-  return withOptional(sanitizeDetails(details), extras);
+  return mergeDetailsDefined(sanitizeDetails(details), extras);
 }
 
 export class NotFoundError extends ApplicationError {

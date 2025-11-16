@@ -26,7 +26,6 @@
 // SECURE KEY MANAGER CLASS
 // ============================================================================
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
 export type SecureKey = {
@@ -478,31 +477,27 @@ export class SecureKeyManager {
     const key = this.keys.get(keyId);
     if (!key) return null;
     
-    return withOptional(
-      {
-        id: key.id,
-        algorithm: key.algorithm,
-        extractable: key.extractable,
-        usages: key.usages,
-        createdAt: key.createdAt,
-        version: key.version
-      },
-      { expiresAt: key.expiresAt }
-    );
+    return {
+      id: key.id,
+      algorithm: key.algorithm,
+      extractable: key.extractable,
+      usages: key.usages,
+      createdAt: key.createdAt,
+      version: key.version,
+      ...(key.expiresAt ? { expiresAt: key.expiresAt } : {}),
+    };
   }
 
   listKeys(): Omit<SecureKey, 'key'>[] {
-    return Array.from(this.keys.values()).map(key => withOptional(
-      {
-        id: key.id,
-        algorithm: key.algorithm,
-        extractable: key.extractable,
-        usages: key.usages,
-        createdAt: key.createdAt,
-        version: key.version
-      },
-      { expiresAt: key.expiresAt }
-    ));
+    return Array.from(this.keys.values()).map(key => ({
+      id: key.id,
+      algorithm: key.algorithm,
+      extractable: key.extractable,
+      usages: key.usages,
+      createdAt: key.createdAt,
+      version: key.version,
+      ...(key.expiresAt ? { expiresAt: key.expiresAt } : {}),
+    }));
   }
 
   deleteKey(keyId: string): boolean {

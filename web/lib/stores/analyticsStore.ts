@@ -619,6 +619,17 @@ export const createAnalyticsActions = (
     },
 
     sendAnalytics: async () => {
+      if (!shouldTrack()) {
+        logger.info('Analytics send skipped - tracking disabled by user consent settings');
+        return;
+      }
+
+      const pendingEvents = get().events;
+      if (pendingEvents.length === 0) {
+        logger.debug('Analytics send skipped - no events queued');
+        return;
+      }
+
       setState((draft) => {
         draft.isSending = true;
         draft.error = null;

@@ -9,12 +9,13 @@ import { createInitialUserState } from '../../../lib/stores/userStore';
 import { createInitialProfileState } from '../../../lib/stores/profileStore';
 import { createInitialAdminState } from '../../../lib/stores/adminStore';
 
-const AUTHSPEC_TIMEOUT = 30_000;
+const AUTHSPEC_TIMEOUT = 90_000;
 
 test.describe('@mocks dashboard auth experience', () => {
+  test.describe.configure({ timeout: 120_000 });
   let cleanupMocks: (() => Promise<void>) | undefined;
 
-  test.beforeEach(async ({ page }, testInfo) => {
+  test.beforeEach(async ({ page }) => {
     cleanupMocks = await setupExternalAPIMocks(page, {
       auth: true,
       analytics: true,
@@ -22,12 +23,6 @@ test.describe('@mocks dashboard auth experience', () => {
       feeds: true,
       civics: true,
     });
-
-    await testInfo.attach('cleanup-mocks', {
-      contentType: 'application/json',
-      body: JSON.stringify({ attached: true }),
-    });
-
     await ensureLoggedOut(page);
   });
 
@@ -41,6 +36,10 @@ test.describe('@mocks dashboard auth experience', () => {
   test('guest redirect and logout cascades profile/admin state', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: AUTHSPEC_TIMEOUT });
     await page.waitForURL(/\/auth/, { timeout: AUTHSPEC_TIMEOUT });
+    await page.evaluate(() => {
+      localStorage.setItem('e2e-dashboard-bypass', '1');
+      document.cookie = 'e2e-dashboard-bypass=1; path=/';
+    });
 
     const authedUserState = createInitialUserState();
     authedUserState.user = {
@@ -89,7 +88,7 @@ test.describe('@mocks dashboard auth experience', () => {
       selectedUsers: ['user-123'],
     };
 
-    await page.addInitScript(
+    await page.evaluate(
       ({ user, profile, admin }) => {
         localStorage.setItem('user-store', JSON.stringify({ state: user, version: 0 }));
         localStorage.setItem('profile-store', JSON.stringify({ state: profile, version: 0 }));

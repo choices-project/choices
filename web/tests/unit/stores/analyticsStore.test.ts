@@ -124,6 +124,9 @@ describe('analyticsStore', () => {
   it('sendAnalytics clears events on success', async () => {
     const store = createTestAnalyticsStore();
 
+    store.getState().setTrackingEnabled(true);
+    store.getState().updatePreferences({ trackingEnabled: true });
+
     store.setState((state) => {
       state.events.push({
         id: 'event_1',
@@ -156,6 +159,9 @@ describe('analyticsStore', () => {
   it('sendAnalytics records error when service fails', async () => {
     const store = createTestAnalyticsStore();
 
+    store.getState().setTrackingEnabled(true);
+    store.getState().updatePreferences({ trackingEnabled: true });
+
     store.setState((state) => {
       state.events.push({
         id: 'event_2',
@@ -180,6 +186,30 @@ describe('analyticsStore', () => {
     expect(store.getState().events).toHaveLength(1);
     expect(store.getState().isSending).toBe(false);
     expect(store.getState().error).toBe('Failed to send analytics data');
+  });
+
+  it('sendAnalytics short-circuits when tracking disabled', async () => {
+    const store = createTestAnalyticsStore();
+
+    store.setState((state) => {
+      state.events.push({
+        id: 'event_3',
+        event_type: 'sample',
+        session_id: state.sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        type: 'sample',
+        category: 'sample',
+        action: 'sample',
+      });
+    });
+
+    await store.getState().sendAnalytics();
+
+    expect(sendAnalyticsEvents).not.toHaveBeenCalled();
+    expect(store.getState().events).toHaveLength(1);
+    expect(store.getState().isSending).toBe(false);
   });
 });
 

@@ -17,7 +17,9 @@ This roadmap captures the technical debt and follow-up work surfaced during the 
 
 ## 2. Linting & Code Quality (High Priority)
 - **Import order cleanup:** Standardize ordering across admin analytics components, PWA modules, Next API routes, and Supabase clients.
-- **`withOptional` adoption:** Replace direct `undefined` spreads with `withOptional()/stripUndefinedDeep` in admin store, analytics services, PWA modules, civics components, and shared hooks.
+- **`withOptional` deprecation:** Completed. All usages replaced with explicit builders/conditional spreads. Follow-ups:
+  - Enforce “no `withOptional` import” in lint rules.
+  - Prefer purpose-specific merge helpers (e.g., `mergeDefined`, explicit RequestInit merges).
 - **Accessibility fixes:** Address `jsx-a11y` violations (non-interactive click handlers, stray `tabIndex`, `autoFocus`) in navigation, onboarding, analytics widgets, and admin dashboards.
 - **React hook hygiene:** Add missing dependencies to `useEffect/useCallback` hooks in analytics dashboards, contact flows, onboarding steps, and PWA components.
 - **Playwright/Jest setup hygiene:** Remove unused arguments, stale `eslint-disable` directives, and empty blocks in archived E2E suites.

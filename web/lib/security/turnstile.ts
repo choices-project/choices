@@ -1,13 +1,12 @@
 /**
  * Cloudflare Turnstile Integration
- * 
+ *
  * Implements Cloudflare Turnstile CAPTCHA verification for enhanced security.
  * Protects against automated attacks and bot submissions.
  */
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 
 export type TurnstileConfig = {
   secretKey: string;
@@ -64,17 +63,17 @@ export async function verifyTurnstileToken(
   // Validate required configuration
   if (!finalConfig.secretKey) {
     devLog('Turnstile verification failed: Missing secret key');
-    return { 
-      success: false, 
-      error: 'Turnstile configuration missing' 
+    return {
+      success: false,
+      error: 'Turnstile configuration missing'
     };
   }
 
   if (!token) {
     devLog('Turnstile verification failed: Missing token');
-    return { 
-      success: false, 
-      error: 'Turnstile token required' 
+    return {
+      success: false,
+      error: 'Turnstile token required'
     };
   }
 
@@ -112,13 +111,11 @@ export async function verifyTurnstileToken(
     });
 
     if (!result.success) {
-      return withOptional(
-        { success: false },
-        { 
-          error: 'Turnstile verification failed',
-          errorCodes: result.error_codes
-        }
-      );
+      return {
+        success: false,
+        ...(result.error_codes ? { errorCodes: result.error_codes } : {}),
+        error: 'Turnstile verification failed',
+      };
     }
 
     // Additional validation in strict mode
@@ -129,18 +126,16 @@ export async function verifyTurnstileToken(
       }
     }
 
-    return withOptional(
-      { success: true },
-      { 
-        hostname: result.hostname,
-        action: result.action,
-        timestamp: result.challenge_ts
-      }
-    );
+    return {
+      success: true,
+      ...(result.hostname ? { hostname: result.hostname } : {}),
+      ...(result.action ? { action: result.action } : {}),
+      ...(result.challenge_ts ? { timestamp: result.challenge_ts } : {}),
+    };
 
   } catch (error) {
     devLog('Turnstile verification error:', error);
-    
+
     if (error instanceof Error && error.name === 'AbortError') {
       return {
         success: false,
@@ -276,14 +271,12 @@ export function getTurnstileWidgetConfig(action?: string): {
   size?: 'normal' | 'compact';
   tabindex?: number;
 } {
-  return withOptional(
-    {
-      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
-      theme: 'auto' as const,
-      size: 'normal' as const,
-    },
-    { action }
-  );
+  return {
+    sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+    theme: 'auto' as const,
+    size: 'normal' as const,
+    ...(action ? { action } : {}),
+  };
 }
 
 /**

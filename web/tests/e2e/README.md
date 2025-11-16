@@ -19,6 +19,8 @@ For the canonical Playwright/auth/onboarding guidance, see:
 - `locale-switch.spec.ts` mounts the global navigation harness (`/e2e/global-navigation`) so the language selector is available without Supabase auth. All locale persistence assertions (reloads, simulated navigation, UI label changes) stay within that harness by swapping query parameters, which keeps the suite deterministic and CI-friendly.
 - `api-endpoints.spec.ts` drives the REST API harness. It boots `setupExternalAPIMocks(page, { api: true })`, which serves deterministic responses for `/api/auth/*`, `/api/polls`, `/api/dashboard`, `/api/v1/civics/*`, `/api/profile`, `/api/pwa/**`, etc. The spec authenticates once via the mocked `/api/auth/login`, then verifies creation/listing/voting flows, profile updates, WebAuthn routes, civics lookups, dashboard metrics, and PWA endpoints without touching live Supabase services. Update the helper mocks first whenever you add or change API routes so the suite remains offline-friendly.
 - The Playwright config automatically boots `npm run dev -- --turbo`. Override with `PLAYWRIGHT_SERVE` or disable with `PLAYWRIGHT_NO_SERVER=1` if you prefer to manage the server manually. Harness pages expose an `__playwrightAnalytics` bridge so specs can opt-in to analytics tracking without touching production flows.
+- Cold starts now take ~45 s; export `HARNESS_NAV_TIMEOUT=60000 NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` when running `npx playwright test …` so navigation waits for the initial compile.
+- When tunneling or running inside Codespaces/Gitpod, set `ALLOWED_DEV_ORIGINS=https://<tunnel-host>` before `npm run dev` so the CSP includes that origin and `_next/static`/font loads don’t trigger browser warnings.
 
 ### MSW & Offline Harnesses
 - Specs default to offline mode via `PLAYWRIGHT_USE_MOCKS=1`; MSW handlers in `web/tests/msw/` must mirror production envelopes (`successResponse`, etc.) so contract tests and Playwright stay aligned.
@@ -59,6 +61,7 @@ For the canonical Playwright/auth/onboarding guidance, see:
 
 ### Troubleshooting
 - **Server never boots** → run `PLAYWRIGHT_NO_SERVER=1 npm run test:e2e <spec>` and start `npm run dev` manually (still export `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`).
+- **Chunk 500s / `_next/static` MIME errors** → clear `.next`, ensure `npm run dev` restarted after switching branches, and confirm `next.config.js` only applies `splitChunks`/`runtimeChunk` tweaks when `NODE_ENV === 'production'`. Setting `ALLOWED_DEV_ORIGINS` adds extra hosts to the CSP headers if you are not hitting `localhost`.
 - **Announcements missing** → inspect `window.__announceLogs` to confirm `ScreenReaderSupport` instrumentation is wired before tweaking test expectations.
 - **Locale specs flaky** → `await page.waitForResponse('**/api/i18n/sync')` after `LanguageSelector` interactions so the MSW handler completes before asserting.
 

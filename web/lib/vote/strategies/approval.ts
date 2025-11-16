@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -143,7 +142,7 @@ export class ApprovalStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return withOptional({
+      return {
         success: true,
         message: 'Vote submitted successfully',
         pollId,
@@ -154,14 +153,13 @@ export class ApprovalStrategy implements VotingStrategy {
           votingMethod: 'approval',
           approvals: voteData.approvals,
           approvedOptions: voteData.approvals?.map(index => poll.options[index]?.text) ?? []
-        }
-      }, {
-        privacyLevel
-      });
+        },
+        ...(privacyLevel !== undefined ? { privacyLevel } : {}),
+      };
 
     } catch (error) {
       devLog('Approval vote processing error:', error);
-      return withOptional({
+      return {
         success: false,
         message: error instanceof Error ? error.message : 'Vote processing failed',
         pollId: request.pollId,
@@ -169,12 +167,11 @@ export class ApprovalStrategy implements VotingStrategy {
         metadata: {
           votingMethod: 'approval',
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }, {
+        },
         voteId: undefined,
         auditReceipt: undefined,
-        privacyLevel: request.privacyLevel
-      });
+        ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
+      };
     }
   }
 
@@ -241,7 +238,7 @@ export class ApprovalStrategy implements VotingStrategy {
         });
       }
 
-      const results: PollResults = withOptional({
+      const results: PollResults = {
         winnerVotes,
         winnerPercentage,
         approvalScores,
@@ -249,10 +246,9 @@ export class ApprovalStrategy implements VotingStrategy {
         optionVotes,
         optionPercentages,
         abstentions: 0,
-        abstentionPercentage: 0
-      }, {
-        winner
-      });
+        abstentionPercentage: 0,
+        ...(winner !== undefined ? { winner } : {}),
+      };
 
       const resultsData: ResultsData = {
         pollId: poll.id,

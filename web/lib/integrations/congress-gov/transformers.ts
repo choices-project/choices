@@ -4,7 +4,7 @@
  * Transform raw Congress.gov API responses into normalized data structures
  */
 
-import { withOptional } from '../../util/objects';
+ 
 
 import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 
@@ -82,30 +82,26 @@ export function transformCongressGovMember(member: CongressGovMember): Normalize
  * Transform Congress.gov bill data to normalized format
  */
 export function transformCongressGovBill(bill: CongressGovBill): NormalizedBill {
-  return withOptional(
-    {
-      id: bill.billId,
-      title: bill.title,
-      billType: bill.billType,
-      number: bill.number,
-      congress: bill.congress,
-      introducedDate: bill.introducedDate,
-      sponsor: {
-        id: bill.sponsor.bioguideId,
-        name: bill.sponsor.fullName,
-        party: bill.sponsor.party,
-        state: bill.sponsor.state
-      },
-      subjects: bill.subjects,
-      url: bill.url,
-      source: 'congress-gov',
-      lastUpdated: new Date().toISOString()
+  return {
+    id: bill.billId,
+    title: bill.title,
+    billType: bill.billType,
+    number: bill.number,
+    congress: bill.congress,
+    introducedDate: bill.introducedDate,
+    sponsor: {
+      id: bill.sponsor.bioguideId,
+      name: bill.sponsor.fullName,
+      party: bill.sponsor.party,
+      state: bill.sponsor.state
     },
-    {
-      shortTitle: bill.shortTitle,
-      summary: bill.summary?.text
-    }
-  );
+    subjects: bill.subjects,
+    url: bill.url,
+    source: 'congress-gov',
+    lastUpdated: new Date().toISOString(),
+    ...(bill.shortTitle ? { shortTitle: bill.shortTitle } : {}),
+    ...(bill.summary?.text ? { summary: bill.summary.text } : {})
+  };
 }
 
 /**
