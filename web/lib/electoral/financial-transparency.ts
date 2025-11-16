@@ -548,13 +548,20 @@ export class FinancialTransparencySystem {
     industry: string;
     influenceScore: number;
   }>> {
-    return contributors.map(contributor => ({
-      name: contributor.name,
-      amount: contributor.amount,
-      type: contributor.type,
-      industry: contributor.industry ?? 'Unknown',
-      influenceScore: contributor.influenceScore
-    }));
+    return contributors.map(contributor => {
+      // Calculate or validate influence score if missing or invalid
+      const calculatedScore = contributor.influenceScore > 0 
+        ? contributor.influenceScore 
+        : this.calculateContributorInfluenceScore(contributor);
+      
+      return {
+        name: contributor.name,
+        amount: contributor.amount,
+        type: contributor.type,
+        industry: contributor.industry ?? 'Unknown',
+        influenceScore: calculatedScore
+      };
+    });
   }
 
   private calculateContributorInfluenceScore(contributor: {

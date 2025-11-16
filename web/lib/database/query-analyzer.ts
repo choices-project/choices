@@ -316,6 +316,14 @@ export class QueryAnalyzer {
   ): QueryOptimization[] {
     const optimizations: QueryOptimization[] = [];
 
+    // Log query pattern for analytics and optimization matching
+    logger.debug('Generating optimizations', {
+      pattern,
+      executionTime,
+      rowsReturned,
+      usedIndex: usedIndex ?? false
+    });
+
     // Check for missing indexes
     if (!usedIndex && this.hasWhereClause(query)) {
       const table = this.extractTableName(query);

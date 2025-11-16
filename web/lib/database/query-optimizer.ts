@@ -113,16 +113,19 @@ export class AdvancedQueryOptimizer {
         const cachedResult = this.getFromCache(cacheKey)
         if (cachedResult) {
           fromCache = true
-          _cacheHit = true
+          const cacheHit = true
           
           const metrics: QueryMetrics = {
             query: this.sanitizeQuery(query),
             executionTime: Date.now() - startTime,
             rowsReturned: Array.isArray(cachedResult) ? cachedResult.length : 1,
-            cacheHit: true,
+            cacheHit,
             fromCache: true,
             timestamp: Date.now()
           }
+          
+          // Log cache hit for analytics
+          logger.debug('Query cache hit', { cacheKey, cacheHit, executionTime: metrics.executionTime })
           
           this.recordMetrics(metrics)
           
@@ -225,11 +228,17 @@ export class AdvancedQueryOptimizer {
     explain: boolean,
     analyze: boolean
   ): Promise<T> {
-    const explainQuery = `EXPLAIN ${analyze ? 'ANALYZE' : ''} ${query}`
+    // Only execute EXPLAIN if requested (explain parameter is true)
+    // If analyze is true but explain is false, still execute EXPLAIN ANALYZE
+    const shouldExplain = explain || analyze
+    const explainQuery = shouldExplain 
+      ? `EXPLAIN ${analyze ? 'ANALYZE' : ''} ${query}`
+      : query
+    
     const { data, error } = await this.supabase.rpc('execute_query', { query_text: explainQuery })
     
     if (error) {
-      throw new Error(`EXPLAIN query failed: ${error.message}`)
+      throw new Error(`${shouldExplain ? 'EXPLAIN ' : ''}query failed: ${error.message}`)
     }
     
     return data

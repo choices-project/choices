@@ -705,7 +705,9 @@ export function withPerformanceMonitoring<T extends unknown[], R>(
 
 // Database connection pool management
 export class ConnectionPoolManager {
-  private pool: unknown
+  // Pool placeholder for future connection pool implementation
+  // TODO: Initialize actual connection pool when database connection pooling is implemented
+  private pool: unknown = null
   private metrics = {
     totalConnections: 0,
     activeConnections: 0,
@@ -730,7 +732,11 @@ export class ConnectionPoolManager {
 
   private updateMetrics() {
     // Update connection pool metrics
-    // This would integrate with the actual connection pool
+    // This would integrate with the actual connection pool (this.pool)
+    // For now, using mock metrics until pool is implemented
+    if (this.pool === null) {
+      logger.debug('Connection pool not yet initialized, using mock metrics')
+    }
     this.metrics = {
       totalConnections: 10,
       activeConnections: 2,
