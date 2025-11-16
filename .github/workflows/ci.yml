@@ -247,7 +247,7 @@ jobs:
     - name: Test Docker image
       run: |
         cd web
-        docker run --rm choices-platform:latest npm run test:jest:ci
+        docker run --rm choices-platform:latest npm run test:coverage:ci
 
   # Deploy to Staging
   deploy-staging:
