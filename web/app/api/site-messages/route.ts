@@ -29,7 +29,18 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     // Create Supabase client properly
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    // In CI/test environments, if Supabase is not configured, return empty messages
+    // This allows the app to build and run tests without real Supabase credentials
     if (!supabaseUrl || !supabaseKey) {
+      if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
+        logger.warn('Supabase not configured in CI/test; returning empty site messages');
+        return {
+          messages: [],
+          count: 0,
+          timestamp: new Date().toISOString()
+        };
+      }
       throw new Error('Supabase environment variables are not configured');
     }
     const supabase = createClient(

@@ -423,15 +423,23 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
       return;
     }
 
-    if (!hasAnnouncedTab.current) {
-      hasAnnouncedTab.current = true;
-      return;
-    }
+    // Focus the main content area when tab changes for screen reader accessibility
+    // Use setTimeout to ensure the DOM has updated with the new tab content
+    const focusTimeout = setTimeout(() => {
+      if (regionRef.current) {
+        ScreenReaderSupport.setFocus(regionRef.current, {
+          preventScroll: true,
+          announce: hasAnnouncedTab.current 
+            ? t('analytics.a11y.tabChanged', { tab: tabLabels[activeTab] })
+            : undefined,
+        });
+        hasAnnouncedTab.current = true;
+      }
+    }, 0);
 
-    ScreenReaderSupport.setFocus(regionRef.current, {
-      preventScroll: true,
-      announce: t('analytics.a11y.tabChanged', { tab: tabLabels[activeTab] }),
-    });
+    return () => {
+      clearTimeout(focusTimeout);
+    };
   }, [activeTab, data, tabLabels, t]);
 
   // Block unauthorized users
