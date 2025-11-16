@@ -11,7 +11,9 @@ export const dynamic = 'force-dynamic';
 
 function extractDomain(email: string): string | null {
   const parts = String(email).toLowerCase().trim().split('@');
-  return parts.length === 2 ? parts[1] : null;
+  if (parts.length !== 2) return null;
+  const domain = parts[1] ?? null;
+  return domain && domain.length > 0 ? domain : null;
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -64,11 +66,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   } else if (Array.isArray(repDomain) && repDomain.length > 0) {
     // Heuristic: if there is a single rep for this domain, accept; else require manual review later
     if (repDomain.length === 1) {
-      representativeId = repDomain[0].id;
+      const only = repDomain[0];
+      if (only?.id) representativeId = only.id;
     }
   } else if (Array.isArray(fastTrackDomain) && fastTrackDomain.length > 0) {
     if (fastTrackDomain.length === 1) {
-      representativeId = fastTrackDomain[0].representative_id;
+      const only = fastTrackDomain[0];
+      if (only?.representative_id) representativeId = only.representative_id;
     }
   }
 
