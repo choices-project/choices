@@ -60,7 +60,7 @@ export async function calculateHashtagAnalytics(
 
     // Get usage data
     const usageData = await getHashtagUsageData(hashtagId, startDate, endDate);
-    
+
     // Log usage count validation for debugging and validation
     if (process.env.NODE_ENV === 'development') {
       logger.debug('Hashtag usage count validation', {
@@ -209,7 +209,7 @@ export async function calculateTrendingHashtags(
         time_period: '24h'
       });
     }
-    
+
     // If category is provided, get category trends for additional context
     if (category) {
       try {

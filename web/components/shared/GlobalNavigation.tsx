@@ -46,9 +46,9 @@ export default function GlobalNavigation() {
 
   // Auth stubs to avoid build-time hook resolution issues
   const user: { id?: string; email?: string; [key: string]: unknown } | null = null;
-  const _signOut: (() => Promise<void>) | null = null;
+  const signOut: (() => Promise<void>) | null = null;
   const isLoading = false;
-  const _isAuthenticated = false;
+  const isAuthenticated = false;
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((open) => !open);
@@ -61,10 +61,14 @@ export default function GlobalNavigation() {
   const handleLogout = useCallback(async () => {
     try {
       closeMobileMenu();
+      // Use signOut if available (integrated from auth stubs)
+      if (signOut) {
+        await signOut();
+      }
     } catch (error) {
       logger.error('Logout failed:', error);
     }
-  }, [closeMobileMenu]);
+  }, [closeMobileMenu, signOut]);
 
   const isActive = useCallback(
     (path: string) => pathname === path,
@@ -189,7 +193,7 @@ export default function GlobalNavigation() {
           {/* Desktop Auth Section */}
           <div className="hidden md:flex md:items-center md:space-x-4">
             <LanguageSelector variant="compact" />
-            {user ? (
+            {user && isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link
                   href="/profile"
@@ -297,7 +301,7 @@ export default function GlobalNavigation() {
 
               {/* Mobile Auth Section */}
               <div className="pt-4 border-t border-gray-200">
-                {user ? (
+                {user && isAuthenticated ? (
                   <div className="space-y-2">
                     <Link
                       href="/profile"

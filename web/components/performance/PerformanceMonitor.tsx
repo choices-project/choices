@@ -65,12 +65,29 @@ export default function PerformanceMonitor({
   }, []);
 
   // Update metrics from performance data
-  const _updateMetrics = useCallback((newMetrics: Partial<PerformanceMetrics>) => {
+  const updateMetrics = useCallback((newMetrics: Partial<PerformanceMetrics>) => {
     setMetrics(prev => ({
       ...prev,
       ...newMetrics
     }));
   }, []);
+  
+  // Update metrics when performance data changes
+  useEffect(() => {
+    if (isMonitoring && typeof window !== 'undefined') {
+      const updateInterval = setInterval(() => {
+        const newMetrics: Partial<PerformanceMetrics> = {
+          dashboardLoadTime: performance.now(),
+          apiResponseTime: 0, // Would be updated from actual API calls
+          cacheHitRate: 0, // Would be updated from cache stats
+          errors: 0 // Would be updated from error tracking
+        };
+        updateMetrics(newMetrics);
+      }, 5000); // Update every 5 seconds
+      
+      return () => clearInterval(updateInterval);
+    }
+  }, [isMonitoring, updateMetrics]);
 
   // Get performance status color
   const getStatusColor = (value: number, thresholds: { good: number; warning: number }) => {

@@ -74,7 +74,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   } = options;
 
   // const featureFlags = useFeatureFlags();
-  const _featureFlags = { flags: {}, isLoading: false };
+  const featureFlags = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +82,14 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
   const [filters, setFilters] = useState<AnalyticsFilters>(defaultFilters);
 
-  // Check feature flags
-  const analyticsEnabled = isFeatureEnabled('analytics');
-  const aiFeaturesEnabled = isFeatureEnabled('aiFeatures');
+  // Check feature flags - use featureFlags if available
+  const analyticsEnabled = featureFlags.flags?.analytics ?? isFeatureEnabled('analytics');
+  const aiFeaturesEnabled = featureFlags.flags?.aiFeatures ?? isFeatureEnabled('aiFeatures');
+  
+  // Log feature flag status for debugging
+  if (process.env.NODE_ENV === 'development' && featureFlags.isLoading) {
+    logger.debug('Feature flags loading', { analyticsEnabled, aiFeaturesEnabled });
+  }
 
   const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
     if (!analyticsEnabled) {

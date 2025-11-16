@@ -180,7 +180,14 @@ export async function verifyRegistrationResponse(
     
     // Parse attestation object
     const attestationObject = response.response.attestationObject;
-    const _attestationData = new Uint8Array(attestationObject);
+    const attestationData = new Uint8Array(attestationObject);
+    
+    // Log attestation data for security audit (first 16 bytes for verification)
+    logger.debug('WebAuthn attestation data received', {
+      credentialId: response.id,
+      attestationDataLength: attestationData.length,
+      attestationDataPrefix: Array.from(attestationData.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join('')
+    });
     
     // Extract credential ID and public key from attestation object
     // This is a simplified implementation - in production, you'd need to

@@ -97,7 +97,16 @@ export class NetworkOptimizer {
    * Make the actual network request
    */
   private async makeRequest<T>(config: RequestConfig, startTime: number): Promise<T> {
-    const { url, method, headers = {}, body, retries = 3, timeout = 10000 } = config;
+    // Merge default config with request config (defaultConfig takes precedence for defaults)
+    const mergedConfig = {
+      ...this.defaultConfig,
+      ...config,
+      headers: {
+        ...this.defaultConfig.headers,
+        ...config.headers,
+      },
+    };
+    const { url, method, headers = {}, body, retries = 3, timeout = 10000 } = mergedConfig;
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {

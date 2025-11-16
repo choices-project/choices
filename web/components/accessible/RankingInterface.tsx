@@ -244,7 +244,9 @@ export function AccessibleRankingInterface({
       ...prevState,
       focusedIndex: index
     }));
-  }, []);
+    // Use setFocus helper for accessibility
+    _setFocus(index);
+  }, [_setFocus]);
 
   // ============================================================================
   // EFFECTS
