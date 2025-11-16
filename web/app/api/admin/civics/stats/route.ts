@@ -1,4 +1,4 @@
-'use server'
+// Server route handler
 
 /**
  * Admin: Civics Stats Summary

@@ -11,7 +11,7 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
-import type React from 'react';
+// Note: Avoid importing the React type name directly to prevent self-referential typeof issues below.
 
 import { authServer } from './msw/server';
 
@@ -28,12 +28,12 @@ afterEach(() => {
 });
 
 jest.mock('lucide-react', () => {
-  const React = jest.requireActual('react') as typeof React;
+  const ReactActual = jest.requireActual<typeof import('react')>('react');
   const icons: Record<string, unknown> = {};
 
   const createIcon = (name: string) =>
-    React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
-      React.createElement('svg', { ref, 'data-icon': name, ...props }),
+    ReactActual.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
+      ReactActual.createElement('svg', { ref, 'data-icon': name, ...props }),
     );
 
   return new Proxy(

@@ -598,7 +598,8 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
           payload.rawOptions?.map((text, index) => ({
             id: `${payload.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
             text,
-          })),
+          })) ??
+          [],
       });
       polls.push({
         ...poll,

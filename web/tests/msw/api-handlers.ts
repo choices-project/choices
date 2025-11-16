@@ -20,7 +20,7 @@ import { buildShareAnalytics } from '../fixtures/api/share';
 
 import { mockError, mockSuccess } from './utils/envelope';
 
-const json = (body: unknown, status = 200) => HttpResponse.json(body, { status });
+const json = (body: any, status = 200) => HttpResponse.json(body, { status });
 
 const clonePoll = (poll: MockPollRecord): MockPollRecord => ({
   ...poll,
@@ -38,7 +38,8 @@ const ensurePoll = (input: Partial<MockPollRecord> & { rawOptions?: string[] }) 
       input.rawOptions?.map((text, index) => ({
         id: `${input.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
         text,
-      })),
+      })) ??
+      [],
   });
 
   polls.push(clonePoll(poll));
@@ -69,7 +70,7 @@ export const apiHandlers = [
   ),
 
   http.post('/api/polls', async ({ request }) => {
-    const payload = await request.json().catch(() => ({}));
+    const payload: any = await request.json().catch(() => ({}));
     const poll = ensurePoll({
       title: typeof payload?.title === 'string' ? payload.title : undefined,
       description: typeof payload?.description === 'string' ? payload.description : undefined,
@@ -97,7 +98,7 @@ export const apiHandlers = [
     if (!poll) {
       return json(mockError('Poll not found', { code: 'NOT_FOUND' }), 404);
     }
-    const payload = await request.json().catch(() => ({}));
+    const payload: any = await request.json().catch(() => ({}));
     const optionId = typeof payload?.optionId === 'string' ? payload.optionId : poll.options[0]?.id ?? null;
 
     return json(
@@ -153,7 +154,7 @@ export const apiHandlers = [
   ),
 
   http.post('/api/notifications', async ({ request }) => {
-    const body = await request.json().catch(() => ({}));
+    const body: any = await request.json().catch(() => ({}));
     return json(
       mockSuccess(
         buildNotification({
@@ -166,7 +167,7 @@ export const apiHandlers = [
   }),
 
   http.put('/api/notifications', async ({ request }) => {
-    const body = await request.json().catch(() => ({}));
+    const body: any = await request.json().catch(() => ({}));
     return json(
       mockSuccess({
         id: body?.notificationId ?? 'notification-1',
@@ -242,7 +243,7 @@ export const apiHandlers = [
   ),
 
   http.post('/api/shared/vote', async ({ request }) => {
-    const body = await request.json().catch(() => ({}));
+    const body: any = await request.json().catch(() => ({}));
     return json(
       mockSuccess({
         voteId: `vote-${Date.now()}`,

@@ -56,14 +56,19 @@ export const normalizeMockPayload = (payload: unknown): MockEnvelope => {
       );
     }
 
-    return mockError(
-      'error' in envelope ? (envelope as MockErrorEnvelope).error ?? 'Request failed' : 'Request failed',
-      {
-        code: 'code' in envelope ? envelope.code : undefined,
-        details: 'details' in envelope ? envelope.details : undefined,
-        metadata: envelope.metadata,
-      },
-    );
+    const errorMessage =
+      'error' in envelope ? (envelope as MockErrorEnvelope).error ?? 'Request failed' : 'Request failed';
+    const opts: { code?: string; details?: unknown; metadata?: Partial<ApiMetadata> } = {};
+    if ('code' in envelope && typeof envelope.code === 'string') {
+      opts.code = envelope.code;
+    }
+    if ('details' in envelope && envelope.details !== undefined) {
+      opts.details = envelope.details;
+    }
+    if (envelope.metadata) {
+      opts.metadata = envelope.metadata;
+    }
+    return mockError(errorMessage, opts);
   }
 
   return mockSuccess(payload);
