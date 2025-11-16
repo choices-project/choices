@@ -112,6 +112,11 @@ export async function getAutoCompleteSuggestions(
     
     const normalizedQuery = query.toLowerCase().replace(/^#/, '');
     
+    // Log for analytics if userId is provided
+    if (userId) {
+      logger.debug('Auto-complete suggestions requested', { userId, query: normalizedQuery, limit });
+    }
+    
     // Get hashtags matching the query
     const { data: hashtags, error } = await supabase
       .from('hashtags')
