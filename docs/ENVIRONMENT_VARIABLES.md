@@ -1,6 +1,6 @@
 # Environment Variables Documentation
 
-**Last Updated:** November 16, 2025  
+**Last Updated:** November 16, 2025 (Supabase CI fallbacks + hashtag analytics build-safety)  
 **Status:** ✅ Current (verified against codebase)
 
 This document lists all environment variables required for the Choices application.
@@ -23,6 +23,14 @@ This document lists all environment variables required for the Choices applicati
   - Used for: Server-side operations requiring elevated permissions
   - Security: ⚠️ NEVER expose in client-side code, server-only
   - Note: Replaces legacy `SUPABASE_SECRET_KEY`
+  - CI behaviour: In GitHub Actions and test environments, if these Supabase variables are not set, the server client falls back to test-only placeholder values so builds and tests do not fail purely on missing secrets. **Production and staging must still provide real values.**
+
+> CI-only defaults (for reference):
+>
+> - `NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`
+> - `NEXT_PUBLIC_SUPABASE_ANON_KEY=fake-dev-key-for-ci-only`
+> - `SUPABASE_SERVICE_ROLE_KEY=dev-only-secret`
+
 
 ### Rate Limiting (Upstash Redis)
 - `UPSTASH_REDIS_REST_URL` (required)
@@ -111,6 +119,11 @@ This document lists all environment variables required for the Choices applicati
 - **Session Management**: Automatically handled by Supabase client
 
 ### Monitoring & Admin
+
+### Hashtag Analytics
+- **Supabase Client (server-side analytics)**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - The advanced hashtag analytics module (`web/features/hashtags/lib/hashtag-analytics.ts`) now creates its Supabase client lazily and will throw a clear runtime error **only when analytics functions are called** without proper Supabase configuration.
+  - This allows Next.js builds and static generation (including CI and E2E builds) to succeed even if Supabase env vars are unset, while still enforcing correct configuration in real environments that actually use these analytics.
 - **Sentry**: `NEXT_PUBLIC_SENTRY_DSN`
 - **Admin Monitoring**: `ADMIN_MONITORING_KEY`, `NEXT_PUBLIC_BASE_URL`
 
@@ -128,6 +141,7 @@ This document lists all environment variables required for the Choices applicati
 3. **Use environment variable validation**
    - Check for required variables on startup
    - Provide clear error messages for missing variables
+   - CI/test exception: Supabase server utilities intentionally fall back to safe test-only values when `CI=true` or `NODE_ENV=test` so that pipelines do not fail solely due to missing secrets. Do **not** rely on these values outside CI/test.
 
 4. **Production vs Development**
    - Use `.env.local` for local development (git-ignored)

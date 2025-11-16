@@ -1,9 +1,9 @@
 /**
  * Hashtag Analytics Service
- * 
+ *
  * Advanced analytics and trending algorithms for hashtag performance tracking
  * Includes cross-feature discovery, engagement analysis, and predictive insights
- * 
+ *
  * Created: October 10, 2025
  * Updated: October 11, 2025
  * Status: ✅ ACTIVE
@@ -56,16 +56,16 @@ export async function calculateHashtagAnalytics(
 
     // Get usage data
     const usageData = await getHashtagUsageData(hashtagId, startDate, endDate);
-    
+
     // Get engagement data
     const engagementData = await getHashtagEngagementData(hashtagId, startDate, endDate);
-    
+
     // Get user data
     const userData = await getHashtagUserData(hashtagId, startDate, endDate);
-    
+
     // Get content data
     const contentData = await getHashtagContentData(hashtagId, startDate, endDate);
-    
+
     // Calculate metrics
     const metrics = {
       usage_count: usageData.totalUsage,
@@ -173,7 +173,7 @@ export async function calculateTrendingHashtags(
       const growthRate = calculateGrowthRate(metrics.usageCount, 0); // Simplified for now
       const engagementRate = calculateEngagementRate(metrics.usageCount, metrics.usageCount);
       const recency = 1; // Simplified for now
-      
+
       const trendScore = calculateTrendingScore(
         metrics.usageCount,
         growthRate,
@@ -217,7 +217,7 @@ export async function getHashtagPerformanceInsights(hashtagId: string): Promise<
   try {
     const analytics = await calculateHashtagAnalytics(hashtagId, '7d');
     const performance = getHashtagPerformanceLevel(analytics.engagement_rate);
-    
+
     const insights: string[] = [];
     const recommendations: string[] = [];
 
@@ -298,13 +298,13 @@ export async function getCrossFeatureDiscovery(
 
     // Get profile-based suggestions
     const profileSuggestions = await getProfileBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get poll-based suggestions
     const pollSuggestions = await getPollBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get feed-based suggestions
     const feedSuggestions = await getFeedBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get trending suggestions
     const trendingSuggestions = await getTrendingSuggestions(currentHashtagIds, limit);
 
@@ -333,7 +333,7 @@ function getPeriodStartDate(period: string): string {
     '90d': 90 * 24 * 60 * 60 * 1000,
     '1y': 365 * 24 * 60 * 60 * 1000
   };
-  
+
   const startTime = new Date(now.getTime() - (periods[period as keyof typeof periods] || periods['7d']));
   return startTime.toISOString();
 }
@@ -387,7 +387,7 @@ async function getHashtagUserData(hashtagId: string, startDate: string, endDate:
   if (error) throw error;
 
   const uniqueUsers = new Set(data?.map(d => d.user_id).filter(Boolean));
-  
+
   return {
     uniqueUsers: uniqueUsers.size,
     topUsers: Array.from(uniqueUsers).slice(0, 10)
@@ -444,10 +444,10 @@ async function getRelatedHashtags(hashtagId: string): Promise<string[]> {
 
     // Combine and deduplicate results
     const relatedNames = new Set<string>();
-    
+
     // Add category-based related hashtags
     relatedHashtags?.forEach((h: any) => relatedNames.add(h.name));
-    
+
     // Add co-occurring hashtags
     coOccurringHashtags?.forEach((h: any) => {
       if (h.hashtag?.name) {
@@ -489,7 +489,7 @@ async function getSentimentDistribution(hashtagId: string, startDate: string, en
     });
 
     const total = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative;
-    
+
     if (total === 0) {
       return {
         positive: 0.6,
@@ -636,7 +636,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
 
 async function _getUsageCount(hashtagId: string, days: number): Promise<number> {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  
+
   const { data, error } = await supabase
     .from('hashtag_usage')
     .select('id')
@@ -921,7 +921,7 @@ async function _calculatePeakPosition(hashtagId: string): Promise<number> {
   try {
     // Get historical usage data for the last 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('hashtag_usage')
       .select('created_at')
@@ -963,7 +963,7 @@ async function _calculateCurrentPosition(hashtagId: string): Promise<number> {
   try {
     // Get current usage data for the last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('hashtag_usage')
       .select('id')
@@ -996,7 +996,7 @@ async function getPreviousPeriodUsage(hashtagId: string, startDate: string, endD
     const start = new Date(startDate);
     const end = new Date(endDate);
     const periodLength = end.getTime() - start.getTime();
-    
+
     // Calculate previous period dates
     const previousEnd = new Date(start.getTime() - 1);
     const previousStart = new Date(previousEnd.getTime() - periodLength);

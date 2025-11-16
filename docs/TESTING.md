@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: November 13, 2025 (widget keyboard coverage added)_
+_Last updated: November 16, 2025 (CI-safe Supabase env fallbacks, hashtag analytics build-safety, and Jest/Playwright hygiene)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -19,6 +19,38 @@ npm run test:e2e:axe          # Accessibility smoke (chromium, @axe-tagged specs
 cd web && npx playwright test --config=playwright.config.ts
 cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user-store.spec.ts
 ```
+
+### CI Test Jobs (GitHub Actions)
+
+- **Types / Lint**
+  - Workflow file: `.github/workflows/types.yml`
+  - Installs dependencies with:
+    - `cd web && npm ci`
+  - Runs:
+    - `npm run lint:strict`
+    - `npm run types:ci`
+  - Local equivalent:
+    ```bash
+    cd web
+    npm run lint:strict
+    npm run types:ci
+    ```
+
+- **Contracts**
+  - Contract tests live under `web/tests/contracts/**`.
+  - Local equivalent for a single contract:
+    ```bash
+    cd web
+    npm run test:contracts -- tests/contracts/candidate-journey.contract.test.ts
+    ```
+  - When adding new contracts:
+    - Keep mocks hoisted and avoid referencing `jest.mock`-local variables before initialization (no TDZ/hoist issues).
+
+- **Playwright E2E**
+  - CI currently runs the curated Playwright projects defined in `web/playwright.config.ts` (e.g., `chromium`, `api-tests`, `pwa-tests`).
+  - When adding new projects:
+    - Ensure the CI jobs reference only existing `projects` names.
+    - Tag performance-sensitive specs with `@performance` to participate in the `Performance Tests` job.
 
 See also:
 - `docs/technical/testing-harness-playbooks.md` for quick-reference workflows
@@ -88,6 +120,11 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
       - `type I18nModule = typeof import('@/hooks/useI18n')`
       - `const mocked = jest.requireMock('@/hooks/useI18n') as { [K in keyof I18nModule]: jest.Mock }`
   - Avoid inline `import('module').Type` annotations; use module-level `typeof import` or value imports instead.
+  - Example (React mocks):
+    ```ts
+    // Good: avoids self-referential typeof React
+    const ReactActual = jest.requireActual<typeof import('react')>('react');
+    ```
 
 - Playwright harness
   - Use `web/tests/e2e/playwright.config.ts` as the single config.

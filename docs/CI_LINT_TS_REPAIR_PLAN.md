@@ -2,6 +2,12 @@
 
 Last baseline: `npm run check` after eslint --fix. This file groups remaining errors by category, provides context pointers, and splits work into phases suitable for multiple parallel agents. Each task lists representative files; agents should search for similar patterns across the codebase.
 
+**Status (November 16, 2025):**  
+- All phases 1–6 have been completed for the web workspace.  
+- Supabase server utils and hashtag analytics have been updated to be CI/build-safe while still enforcing real env configuration at runtime.  
+- The `types` GitHub Actions workflow has been aligned with the `web` workspace (`cd web && npm ci`, `npm run lint:strict`, `npm run types:ci`).  
+- Contract tests, Jest setup, and Playwright config have been cleaned up to satisfy strict lint + type gates in CI.
+
 ---
 
 ## Phase 1 — Quick wins (autofix-unfriendly but trivial edits)

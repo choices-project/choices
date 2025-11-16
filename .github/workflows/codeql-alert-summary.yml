@@ -2,12 +2,13 @@ name: CodeQL Alert Summary
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 jobs:
   summarize:
-    # Ensure CodeQL analyze job has completed first
-    needs: [analyze]                # <-- the job id from your CodeQL workflow
+    # This job runs independently and queries Code Scanning alerts via the API.
+    # It does not depend on a local 'analyze' job in this workflow; CodeQL analysis
+    # is handled by `.github/workflows/codeql-js.yml` (job: analyze).
     runs-on: ubuntu-latest
     permissions:
       contents: read

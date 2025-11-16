@@ -1,7 +1,9 @@
+type Env = Record<string, string | undefined>;
+
 // Run once at server start (import from your route/util entry point)
-function isDev() {
-  const env = process.env.NODE_ENV;
-  return env === 'development' || env === 'test';
+function isDev(env: Env) {
+  const nodeEnv = env.NODE_ENV ?? process.env.NODE_ENV ?? 'development';
+  return nodeEnv === 'development' || nodeEnv === 'test';
 }
 
 function isPrefixed(v?: string) {
@@ -14,22 +16,32 @@ function byteLenFromPrefixed(v: string): number {
   return enc === 'hex' ? Buffer.from(body, 'hex').length : Buffer.from(body, 'base64').length;
 }
 
-export function assertPepperConfig() {
-  if (isDev()) {
-    if (!process.env.PRIVACY_PEPPER_DEV) {
+/**
+ * Validate privacy pepper configuration.
+ *
+ * - In dev/test: requires PRIVACY_PEPPER_DEV and forbids PRIVACY_PEPPER_CURRENT.
+ * - In preview/prod: requires PRIVACY_PEPPER_CURRENT (≥32 bytes, prefixed) and forbids PRIVACY_PEPPER_DEV.
+ *
+ * Tests can pass a custom env object; runtime callers use the real process.env by default.
+ */
+export function assertPepperConfig(envOverride?: Env) {
+  const env: Env = envOverride ?? process.env;
+
+  if (isDev(env)) {
+    if (!env.PRIVACY_PEPPER_DEV) {
       throw new Error('PRIVACY_PEPPER_DEV required in dev/test');
     }
     return;
   }
 
-  if (process.env.PRIVACY_PEPPER_DEV) {
+  if (env.PRIVACY_PEPPER_DEV) {
     throw new Error('PRIVACY_PEPPER_DEV must NOT be set in preview/prod');
   }
-  const cur = process.env.PRIVACY_PEPPER_CURRENT;
+  const cur = env.PRIVACY_PEPPER_CURRENT;
   if (!isPrefixed(cur)) throw new Error('PRIVACY_PEPPER_CURRENT must be base64:/hex: prefixed');
   if (byteLenFromPrefixed(cur ?? '') < 32) throw new Error('PRIVACY_PEPPER_CURRENT must be ≥32 bytes');
 
-  const prev = process.env.PRIVACY_PEPPER_PREVIOUS;
+  const prev = env.PRIVACY_PEPPER_PREVIOUS;
   if (prev) {
     if (!isPrefixed(prev)) throw new Error('PRIVACY_PEPPER_PREVIOUS must be base64:/hex: prefixed');
     if (byteLenFromPrefixed(prev) < 32) throw new Error('PRIVACY_PEPPER_PREVIOUS must be ≥32 bytes');

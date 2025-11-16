@@ -21,7 +21,6 @@ const validateEnvironment = () => {
     // In CI and test environments we don't want builds or tests to fail purely
     // due to missing Supabase env vars. Use safe, test-only fallbacks instead.
     if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
-      // eslint-disable-next-line no-console
       console.warn(
         `Supabase environment variables missing in CI/test environment; using test-only fallbacks for: ${missing.join(', ')}`
       )
