@@ -14,11 +14,11 @@ import { getSupabaseServerClient, getSupabaseAdminClient } from '../../utils/sup
 
 /**
  * @fileoverview User Registration Server Action
- * 
+ *
  * Secure user registration action with comprehensive validation, security features,
  * and fraud prevention. Handles user account creation with email verification,
  * username validation, and security logging.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -42,14 +42,14 @@ export async function register(
   try {
     logger.info('Register function called with formData', { entries: Array.from(formData.entries()) });
     logger.info('Register function called with context', { context });
-    
+
     // Always use real Supabase for registration
     logger.info('NEXT_PUBLIC_SUPABASE_URL', { url: process.env.NEXT_PUBLIC_SUPABASE_URL });
     logger.info('NODE_ENV', { env: process.env.NODE_ENV });
-    
+
     const supabase = await getSupabaseServerClient();
     logger.info('Supabase client created', { created: !!supabase });
-    
+
     // ---- context usage (security + provenance) ----
     const h = await headers();
     const ipAddress = context.ipAddress ?? h.get('x-forwarded-for') ?? 'unknown';
@@ -71,20 +71,20 @@ export async function register(
       username: String(formData.get('username') ?? ''),
       password: String(formData.get('password') ?? ''),
     };
-    
+
     // Debug logging with security context
-    logger.info('Register payload received', { 
+    logger.info('Register payload received', {
       payload,
       ipAddress,
       userAgent,
     });
     logger.info('FormData entries', { entries: Array.from(formData.entries()) });
-    
+
     const data = RegisterForm.parse(payload);
 
     // ---- idempotent user creation ----
     // Note: supabase client already obtained above
-    
+
     // Note: We don't need to check for existing users here
     // Supabase signUp will handle duplicates and return appropriate errors
     logger.info('Proceeding with user registration');
@@ -104,19 +104,19 @@ export async function register(
     }
 
     if (existingUsername) {
-      logger.warn('Registration attempt with existing username', { 
+      logger.warn('Registration attempt with existing username', {
         username: data.username,
         ipAddress,
         userAgent,
       });
       return { ok: false, error: 'Username already taken' };
     }
-    
+
     logger.info('No existing username found, proceeding with user creation');
 
     // CORRECT APPROACH: Use Admin API for test users, normal auth for production
     const isTestUser = data.email.includes('@example.com') || data.email.includes('test');
-    
+
     if (isTestUser) {
       logger.info('🔍 Creating test user via Admin API (bypasses email confirmation)...');
       const serviceRoleClient = await getSupabaseAdminClient();
@@ -129,34 +129,34 @@ export async function register(
           display_name: data.username
         }
       });
-      
+
       if (authError) {
-        logger.error('🚨 Failed to create test user via Admin API', authError, { 
+        logger.error('🚨 Failed to create test user via Admin API', authError, {
           error: authError.message,
-          details: authError 
+          details: authError
         });
         return { ok: false, error: `Failed to create test user account: ${authError.message}` };
       }
-      
+
       if (!authUserData.user) {
         logger.error('🚨 No user returned from Admin API test user creation');
         return { ok: false, error: 'Failed to create test user account - no user returned' };
       }
-      
-      logger.info('✅ Test user created successfully via Admin API', { 
+
+      logger.info('✅ Test user created successfully via Admin API', {
         userId: authUserData.user.id,
-        email: authUserData.user.email 
+        email: authUserData.user.email
       });
-      
+
       const authUser = authUserData.user;
-      
+
       // Create user profile using service role client (bypasses RLS)
-      logger.info('🔍 About to create user profile', { 
+      logger.info('🔍 About to create user profile', {
         userId: authUser.id,
         username: data.username.toLowerCase(),
         email: data.email.toLowerCase()
       });
-      
+
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
@@ -176,7 +176,7 @@ export async function register(
       }
 
       logger.info('✅ User profile created successfully');
-      
+
       // Create user role
       // Note: user_roles table type not in Database type definition
       const { error: roleError } = await (serviceRoleClient as unknown as {
@@ -198,7 +198,7 @@ export async function register(
       }
 
       logger.info('✅ User role created successfully');
-      
+
       return { ok: true, userId: authUser.id };
     } else {
       // PRODUCTION: Use normal Supabase auth signup
@@ -213,7 +213,7 @@ export async function register(
           }
         }
       });
-      
+
       if (authError) {
         logger.error('🚨 Failed to create production user via normal signup', authError, {
           error: authError.message,
@@ -226,47 +226,47 @@ export async function register(
         logger.error('🚨 No user returned from normal signup');
         return { ok: false, error: 'Failed to create user account - no user returned' };
       }
-      
-      logger.info('✅ Production user created successfully via normal signup', { 
+
+      logger.info('✅ Production user created successfully via normal signup', {
         userId: authUserData.user.id,
         email: authUserData.user.email,
         emailConfirmed: authUserData.user.email_confirmed_at,
         needsConfirmation: !authUserData.user.email_confirmed_at
       });
-      
+
       const authUser = authUserData.user;
-      
+
       // CRITICAL: Wait for auth user to be fully committed to database
       logger.info('⏳ Waiting for auth user to be fully committed...');
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      
+
       // Create user profile using service role client (bypasses RLS)
       const serviceRoleClient = await getSupabaseAdminClient();
-      
+
       // CRITICAL DEBUGGING: Verify auth user exists before creating profile
       logger.info('🔍 Verifying auth user exists before profile creation...');
       const { data: authUserCheck, error: authUserCheckError } = await serviceRoleClient.auth.admin.getUserById(authUser.id);
-      
+
       if (authUserCheckError || !authUserCheck.user) {
-        logger.error('🚨 Auth user not found before profile creation', authUserCheckError ?? new Error('Unknown error'), { 
+        logger.error('🚨 Auth user not found before profile creation', authUserCheckError ?? new Error('Unknown error'), {
           error: authUserCheckError?.message,
           userId: authUser.id,
           authUserData: authUserData
         });
         return { ok: false, error: `Auth user not found before profile creation: ${authUserCheckError?.message}` };
       }
-      
-      logger.info('✅ Auth user verified before profile creation', { 
+
+      logger.info('✅ Auth user verified before profile creation', {
         userId: authUserCheck.user.id,
-        email: authUserCheck.user.email 
+        email: authUserCheck.user.email
       });
-      
-      logger.info('🔍 About to create user profile', { 
+
+      logger.info('🔍 About to create user profile', {
         userId: authUser.id,
         username: data.username.toLowerCase(),
         email: data.email.toLowerCase()
       });
-      
+
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
@@ -286,7 +286,7 @@ export async function register(
       }
 
       logger.info('✅ User profile created successfully');
-      
+
       // Create user role
       // Note: user_roles table type not in Database type definition
       const { error: roleError } = await (serviceRoleClient as unknown as {
@@ -308,7 +308,7 @@ export async function register(
       }
 
       logger.info('✅ User role created successfully');
-      
+
       return { ok: true, userId: authUser.id };
     }
   } catch (err) {
@@ -318,7 +318,7 @@ export async function register(
       // Re-throw the redirect error so Next.js can handle it
       throw err;
     }
-    
+
     if (err instanceof TypeGuardError) {
       logger.warn('Register type validation failed', { error: err.message });
       return { ok: false, error: `Invalid input: ${err.message}` };
@@ -328,7 +328,7 @@ export async function register(
         acc[issue.path.join('.')] = issue.message;
         return acc;
       }, {} as Record<string, string>);
-      
+
       logger.warn('Register validation failed', { fieldErrors });
       return { ok: false, error: 'Validation failed', fieldErrors };
     }

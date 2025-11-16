@@ -131,11 +131,8 @@ export default function AuthPage() {
     try {
       setAuthLoading(true);
       if (isSignUp) {
-        // Create context object for security (not used directly here)
-        const _context: ServerActionContext = {
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-        };
-
+        // Note: registerUser API doesn't currently accept ServerActionContext
+        // Security context (IP, user agent) is handled server-side via headers
         const result = await registerUser({
           email: formData.email,
           username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),

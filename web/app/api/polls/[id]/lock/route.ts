@@ -18,13 +18,13 @@ export const POST = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
-          
+
   if (!supabase) {
     return errorResponse('Supabase client not available', 500);
   }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required to lock polls');
   }
@@ -97,13 +97,13 @@ export const DELETE = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
-          
+
   if (!supabase) {
     return errorResponse('Supabase client not available', 500);
   }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     return authError('Authentication required to unlock polls');
   }

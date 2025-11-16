@@ -12,7 +12,7 @@ export const DELETE = withErrorHandling(async (
 ) => {
   const { id } = await params;
   const credentialId = id;
-  
+
   if (!credentialId) {
     return validationError({ credentialId: 'Credential ID is required' });
   }
@@ -48,8 +48,8 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Failed to delete credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_DELETE_FAILED');
   }
 
-  logger.info('WebAuthn credential deleted successfully', { 
-    userId: user.id, 
+  logger.info('WebAuthn credential deleted successfully', {
+    userId: user.id,
     credentialId,
     ipAddress,
     userAgent,
@@ -66,7 +66,7 @@ export const PATCH = withErrorHandling(async (
 ) => {
     const { id } = await params;
     const credentialId = id;
-    
+
     if (!credentialId) {
       return validationError({ credentialId: 'Credential ID is required' });
     }
@@ -97,10 +97,10 @@ export const PATCH = withErrorHandling(async (
       return errorResponse('Failed to update credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_UPDATE_FAILED');
     }
 
-    logger.info('WebAuthn credential updated successfully', { 
-      userId: user.id, 
+    logger.info('WebAuthn credential updated successfully', {
+      userId: user.id,
       credentialId,
-      device_label 
+      device_label
     });
 
     return successResponse({

@@ -86,11 +86,20 @@ export default function RegisterPage() {
     setError('')
 
     const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const _username = String(fd.get('username') ?? '').trim()
-    const _email = String(fd.get('email') ?? '').trim()
+    const username = String(fd.get('username') ?? '').trim()
+    const email = String(fd.get('email') ?? '').trim()
     const password = String(fd.get('password') ?? '')
     const confirm = String(fd.get('confirmPassword') ?? '')
 
+    // Validate inputs
+    if (!username || username.length < 3) {
+      setError('Username must be at least 3 characters')
+      return
+    }
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
     if (password !== confirm) {
       setError('Passwords do not match')
       return

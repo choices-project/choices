@@ -323,7 +323,10 @@ export class InterestBasedPollFeed {
   async getCivicRecommendations(userId: string, locationData: any): Promise<any> {
     try {
       const parsedLocation = this.parseLocationData(JSON.stringify(locationData));
-      if (!parsedLocation) return [];
+      if (!parsedLocation) {
+        logger.debug('No location data available for civic recommendations', { userId });
+        return [];
+      }
 
       // Get representatives for user's district
       const { data: representatives, error: repError } = await this.supabase

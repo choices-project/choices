@@ -610,7 +610,7 @@ export default function DemographicsChart({
                       outerRadius={100}
                       label={({ tier, percentage }) => `${tier}: ${percentage}%`}
                     >
-                      {data.trustTiers.map((entry, index) => (
+                      {data.trustTiers.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS.trust[index % COLORS.trust.length]} />
                       ))}
                     </Pie>
@@ -684,7 +684,7 @@ export default function DemographicsChart({
                 />
                 <Legend />
                 <Bar dataKey="count" name="User Count">
-                  {data.ageGroups.map((entry, index) => (
+                  {data.ageGroups.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS.age[index % COLORS.age.length]} />
                   ))}
                 </Bar>
@@ -742,7 +742,7 @@ export default function DemographicsChart({
                 />
                 <Legend />
                 <Bar dataKey="count" name="User Count">
-                  {data.districts.map((entry, index) => (
+                  {data.districts.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS.district[index % COLORS.district.length]} />
                   ))}
                 </Bar>
@@ -775,7 +775,7 @@ export default function DemographicsChart({
                       outerRadius={100}
                       label={({ level, percentage }) => `${level}: ${percentage}%`}
                     >
-                      {data.education.map((entry, index) => (
+                      {data.education.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS.education[index % COLORS.education.length]} />
                       ))}
                     </Pie>
