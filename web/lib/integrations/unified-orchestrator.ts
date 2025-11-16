@@ -944,13 +944,11 @@ export class UnifiedDataOrchestrator {
   }
 
   async getCandidateCorporateConnections(candidateId: string): Promise<unknown[]> {
-    logger.warn('getCandidateCorporateConnections not wired; returning empty result', { candidateId });
-    return [];
+    return this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
   }
 
   async getCandidatePolicyPositions(candidateId: string): Promise<unknown[]> {
-    logger.warn('getCandidatePolicyPositions not wired; returning empty result', { candidateId });
-    return [];
+    return this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
   }
 
   private buildLookupAddress(location: UserLocation): string | null {

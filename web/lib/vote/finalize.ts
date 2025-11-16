@@ -138,12 +138,19 @@ export class FinalizePollManager {
 
       // 3. Create Merkle tree for auditability
       const merkleTree = this.ballotVerifier.createTree(pollId);
-      const _ballotCommitments = merkleTree.addBallots(
+      const ballotCommitments = merkleTree.addBallots(
         officialBallots.map(ballot => ({
           id: ballot.id,
           data: ballot
         }))
       );
+      
+      // Log ballot commitments for audit trail
+      logger.debug('Ballot commitments added to Merkle tree', {
+        pollId,
+        commitmentCount: ballotCommitments.length,
+        ballotCount: officialBallots.length
+      });
 
       // 4. Calculate IRV results
       const irvResults = await this.calculateIRVResults(poll, officialBallots);
@@ -699,6 +706,7 @@ export class FinalizePollManager {
 
   /**
    * Compute Merkle root from leaves
+   * Used for manual Merkle root computation when needed for verification
    */
   private computeMerkleRoot(leaves: string[]): string {
     if (leaves.length === 0) return '';
@@ -716,7 +724,16 @@ export class FinalizePollManager {
       }
       level = next;
     }
-    return level[0] ?? '';
+    const root = level[0] ?? '';
+    
+    // Log computed root for verification purposes
+    logger.debug('Computed Merkle root', {
+      leavesCount: leaves.length,
+      rootLength: root.length,
+      rootPrefix: root.substring(0, 8)
+    });
+    
+    return root;
   }
 }
 

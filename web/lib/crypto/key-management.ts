@@ -419,6 +419,14 @@ export class SecureKeyManager {
     return this.deterministicHash(canonicalJson);
   }
 
+  /**
+   * Generate deterministic IV from seed for audit purposes
+   * WARNING: Only use for non-cryptographic purposes (audits, logging)
+   */
+  generateDeterministicIV(seed: string): Uint8Array {
+    return this.generateIVFromSeed(seed);
+  }
+
   // ============================================================================
   // UTILITY METHODS
   // ============================================================================
