@@ -427,12 +427,16 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     // Use setTimeout to ensure the DOM has updated with the new tab content
     const focusTimeout = setTimeout(() => {
       if (regionRef.current) {
-        ScreenReaderSupport.setFocus(regionRef.current, {
+        const focusOptions: {
+          preventScroll: boolean;
+          announce?: string;
+        } = {
           preventScroll: true,
-          announce: hasAnnouncedTab.current 
-            ? t('analytics.a11y.tabChanged', { tab: tabLabels[activeTab] })
-            : undefined,
-        });
+        };
+        if (hasAnnouncedTab.current) {
+          focusOptions.announce = t('analytics.a11y.tabChanged', { tab: tabLabels[activeTab] });
+        }
+        ScreenReaderSupport.setFocus(regionRef.current, focusOptions);
         hasAnnouncedTab.current = true;
       }
     }, 0);

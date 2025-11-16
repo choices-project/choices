@@ -25,11 +25,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
     const { createClient } = await import('@supabase/supabase-js');
-    
+
     // Create Supabase client properly
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
+
     // In CI/test environments, if Supabase is not configured, return empty messages
     // This allows the app to build and run tests without real Supabase credentials
     if (!supabaseUrl || !supabaseKey) {
@@ -47,22 +47,22 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       supabaseUrl,
       supabaseKey
     );
-    
+
     const now = new Date().toISOString();
-    
+
     // Build query with correct column names
     let query = supabase
       .from('site_messages')
       .select('*')
       .eq('is_active', true);
-    
+
     // Filter by date range if not including expired
     if (!includeExpired) {
       query = query
         .or(`start_date.is.null,start_date.lte.${now}`)
         .or(`end_date.is.null,end_date.gte.${now}`);
     }
-    
+
     query = query
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
