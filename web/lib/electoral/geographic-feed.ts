@@ -182,12 +182,16 @@ export class GeographicElectoralFeed {
                 divisionToReps.set(key, []);
               }
               if (row.representative) {
-                divisionToReps.get(key)!.push({
+                const list = divisionToReps.get(key);
+                if (list) {
+                  list.push({
                   id: row.representative.id,
                   name: row.representative.name,
                   party: row.representative.party ?? null,
                   office: row.representative.office,
-                });
+                  });
+                  divisionToReps.set(key, list);
+                }
               }
             }
           } else if (repErr) {

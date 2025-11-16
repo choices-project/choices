@@ -68,7 +68,6 @@ const ScrollableJson = ({ label, dataTestId, value }: ScrollableJsonProps) => (
     <pre
       data-testid={dataTestId}
       className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-      tabIndex={0}
       role='region'
       aria-label={`${label} JSON output`}
     >

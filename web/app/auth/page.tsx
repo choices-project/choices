@@ -140,7 +140,6 @@ export default function AuthPage() {
           email: formData.email,
           username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),
           password: formData.password,
-          context,
         });
         if (result.ok) {
           await syncSupabaseSession();

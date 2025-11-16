@@ -5,7 +5,7 @@
  * Integrates with existing appStore and provides real-time updates.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { useAppActions, useAppFeatureFlags } from '@/lib/stores/appStore';
@@ -18,30 +18,8 @@ export function useFeatureFlags() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (IS_E2E_HARNESS) {
-    return {
-      flags: features,
-      isLoading: false,
-      error: null,
-      fetchFlags: async () => {},
-      setFeatureFlag,
-      toggleFeatureFlag,
-      setFeatureFlags,
-      clearError: () => {},
-      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
-      getAllFlags: () => featureFlagManager.getAllFlags(),
-      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
-      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
-      getFlagsByCategory: (category: string) => featureFlagManager.getFlagsByCategory(category),
-      getSystemInfo: () => featureFlagManager.getSystemInfo(),
-      systemInfo: featureFlagManager.getSystemInfo(),
-      areDependenciesEnabled: (flagId: string) => featureFlagManager.areDependenciesEnabled(flagId),
-      subscribe: () => ({ unsubscribe: () => {} })
-    };
-  }
-
   // Fetch flags from API and sync with appStore
-  const fetchFlags = async () => {
+  const fetchFlags = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -71,12 +49,38 @@ export function useFeatureFlags() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setFeatureFlags]);
 
   // Auto-fetch flags on mount
   useEffect(() => {
-    fetchFlags();
-  }, []);
+    if (IS_E2E_HARNESS) {
+      // Skip network work in harness mode
+      return;
+    }
+    void fetchFlags();
+  }, [fetchFlags]);
+
+  if (IS_E2E_HARNESS) {
+    return {
+      flags: features,
+      isLoading: false,
+      error: null,
+      fetchFlags: async () => { return; },
+      setFeatureFlag,
+      toggleFeatureFlag,
+      setFeatureFlags,
+      clearError: () => setError(null),
+      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
+      getAllFlags: () => featureFlagManager.getAllFlags(),
+      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
+      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
+      getFlagsByCategory: (category: string) => featureFlagManager.getFlagsByCategory(category),
+      getSystemInfo: () => featureFlagManager.getSystemInfo(),
+      systemInfo: featureFlagManager.getSystemInfo(),
+      areDependenciesEnabled: (flagId: string) => featureFlagManager.areDependenciesEnabled(flagId),
+      subscribe: () => ({ unsubscribe: () => { return; } })
+    };
+  }
 
   return {
     // State

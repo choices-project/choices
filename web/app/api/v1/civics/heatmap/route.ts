@@ -87,7 +87,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       if (!districtGroups.has(districtKey)) {
         districtGroups.set(districtKey, []);
       }
-      districtGroups.get(districtKey)!.push(u);
+      const group = districtGroups.get(districtKey);
+      if (group) {
+        group.push(u);
+      }
     });
 
     // Get civic actions count per district

@@ -44,13 +44,13 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
       pwa.setOnlineStatus(true);
     }
-  }, [pwa.setOnlineStatus]);
+  }, [pwa]);
 
   const handleOffline = useCallback(() => {
     if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
       pwa.setOnlineStatus(false);
     }
-  }, [pwa.setOnlineStatus]);
+  }, [pwa]);
 
   useEffect(() => {
     // Only run on client side and sync with Zustand store
@@ -66,7 +66,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         window.removeEventListener('offline', handleOffline);
       }
     }
-  }, [handleOnline, handleOffline, pwa.setOnlineStatus]) // Stable dependencies
+  }, [handleOnline, handleOffline, pwa]) // Stable dependencies
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }
@@ -243,10 +243,10 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       </div>
 
       {/* Focusable Elements */}
-      <div data-testid="pwa-first-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-first-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         First Focusable Element
       </div>
-      <div data-testid="pwa-second-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-second-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         Second Focusable Element
       </div>
 

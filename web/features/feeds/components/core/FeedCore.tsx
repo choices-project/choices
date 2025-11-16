@@ -96,7 +96,6 @@ export default function FeedCore({
   const [activeTab, setActiveTab] = useState('feed');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   
@@ -147,17 +146,7 @@ export default function FeedCore({
     };
   }, [onLoadMore, hasMore, isLoading, isClient]);
 
-  // Scroll to top button visibility
-  useEffect(() => {
-    if (!isClient) return;
-
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isClient]);
+ 
 
   // Pull-to-refresh
   useEffect(() => {
@@ -220,9 +209,7 @@ export default function FeedCore({
     }
   }, [isDarkMode]);
 
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+ 
 
   const handleHashtagSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();

@@ -109,13 +109,14 @@ export function PasskeyLogin({
           credential: {
             id: credential.id,
             rawId: Array.from(new Uint8Array(credential.rawId)),
-            response: {
+              response: {
               authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
               clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
               signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
-              userHandle: (credential.response as AuthenticatorAssertionResponse).userHandle 
-                ? Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).userHandle!))
-                : null
+              userHandle: (() => {
+                const uh = (credential.response as AuthenticatorAssertionResponse).userHandle;
+                return uh ? Array.from(new Uint8Array(uh)) : null;
+              })()
             },
             type: credential.type
           }

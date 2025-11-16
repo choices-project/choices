@@ -53,7 +53,7 @@ export default function AnalyticsPanel({
     clearError,
   } = useAnalyticsActions();
 
-  // Fetch data when component mounts or metric changes
+  // Fetch data when component mounts or metric changes (include referenced store actions in deps)
   const fetchData = useCallback(async () => {
     setLoading(true);
     clearError();
@@ -85,7 +85,7 @@ export default function AnalyticsPanel({
     } finally {
       setLoading(false);
     }
-  }, [setDashboard, setPerformanceMetrics, updateUserBehavior]);
+  }, [clearError, setDashboard, setError, setLoading, setPerformanceMetrics, updateUserBehavior]);
 
   useEffect(() => {
     void fetchData();

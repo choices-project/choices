@@ -33,6 +33,7 @@ const createBallot = (overrides: Partial<Ballot> = {}): Ballot => ({
   ...overrides,
 });
 
+
 const createVotingRecord = (overrides: Partial<VotingRecord> = {}): VotingRecord => ({
   id: 'record-1',
   ballotId: 'ballot-1',
@@ -173,7 +174,7 @@ describe('votingStore', () => {
     const store = createTestVotingStore();
     const clearSpy = jest.spyOn(global, 'clearInterval');
 
-    const handleOne = setInterval(() => {}, 1000);
+    const handleOne = setInterval(() => { return; }, 1000);
     const timerId = store.getState().registerTimer(handleOne);
     expect(store.getState().timerHandles[timerId]).toBe(handleOne);
 
@@ -181,7 +182,7 @@ describe('votingStore', () => {
     expect(clearSpy).toHaveBeenCalledWith(handleOne);
     expect(store.getState().timerHandles[timerId]).toBeUndefined();
 
-    const handleTwo = setInterval(() => {}, 1000);
+    const handleTwo = setInterval(() => { return; }, 1000);
     store.getState().registerTimer(handleTwo);
     store.getState().reset();
 

@@ -54,6 +54,7 @@ type AddressLookupFormProps = {
  * @returns JSX element or null if feature is disabled
  */
 export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFormProps) {
+  const isEnabled = isFeatureEnabled('CIVICS_ADDRESS_LOOKUP');
   const [address, setAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { handleAddressUpdate } = useUserActions();
@@ -73,11 +74,6 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
   const voterRegistrationResource = useVoterRegistration(registrationStateCode);
 
   const isLoading = addressLoading || repLoading;
-
-  // Feature flag check - don't render if disabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    return null;
-  }
 
   const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
@@ -136,7 +132,12 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     if (!normalizedState) return;
     setRegistrationStateCode((previous) => (previous === normalizedState ? previous : normalizedState));
     void fetchVoterRegistration(normalizedState);
-  }, [userDivisionIds.length, userCurrentState, fetchVoterRegistration]);
+  }, [userDivisionIds, userCurrentState, fetchVoterRegistration]);
+
+  // Render guard after all hooks to preserve hook ordering
+  if (!isEnabled) {
+    return null;
+  }
 
   return (
     <div className={`civics-address-lookup ${className}`}>

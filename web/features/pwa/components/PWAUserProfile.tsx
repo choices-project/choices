@@ -105,6 +105,15 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
   }, [])
 
+  const tierInfo = useMemo(() => {
+    const tier = user?.trustTier ?? 'T0';
+    return TIER_META[tier as keyof typeof TIER_META] ?? TIER_META.T0;
+  }, [user?.trustTier]);
+  const visibilityInfo = useMemo(() => {
+    const vis = user?.profileVisibility ?? 'pseudonymous';
+    return VISIBILITY_META[vis as keyof typeof VISIBILITY_META] ?? VISIBILITY_META.pseudonymous;
+  }, [user?.profileVisibility]);
+
   const handleRequestNotifications = async () => {
     const granted = await pwaManager.requestNotificationPermission()
     if (granted) {
@@ -169,11 +178,6 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     )
   }
 
-  const tierInfo = useMemo(() => TIER_META[user.trustTier] ?? TIER_META.T0, [user.trustTier])
-  const visibilityInfo = useMemo(
-    () => VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous,
-    [user.profileVisibility]
-  )
   const VisibilityIcon = visibilityInfo.icon
 
   return (

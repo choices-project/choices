@@ -128,8 +128,13 @@ export function useDeviceDetection() {
     // Check battery level
     if ('getBattery' in navigator) {
       try {
-        const battery = await (navigator as Navigator & { getBattery?: () => Promise<{ level: number }> }).getBattery!()
-        capabilities.battery_level = battery.level * 100
+        const getBattery = (navigator as Navigator & { getBattery?: () => Promise<{ level: number }> }).getBattery;
+        if (typeof getBattery === 'function') {
+          const battery = await getBattery();
+          if (typeof battery?.level === 'number') {
+            capabilities.battery_level = battery.level * 100;
+          }
+        }
       } catch (error) {
         devLog('Error checking battery level:', error)
       }

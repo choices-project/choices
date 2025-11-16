@@ -2,6 +2,7 @@ import { act } from '@testing-library/react';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 import {
   defaultNotificationSettings,
   notificationStoreCreator,
@@ -206,3 +207,5 @@ describe('notificationStore', () => {
     expect(notificationStore.getState().adminNotifications).toHaveLength(1);
   });
 });
+
+/* eslint-enable @typescript-eslint/no-empty-function */

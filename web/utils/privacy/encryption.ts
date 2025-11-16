@@ -78,7 +78,7 @@ export class UserEncryption {
     
     return {
       encryptedData: encrypted,
-      salt: this.salt!,
+      salt: this.salt ?? new Uint8Array(),
       iv: iv
     };
   }

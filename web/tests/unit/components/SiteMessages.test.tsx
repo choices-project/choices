@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * @jest-environment jsdom
  */
@@ -71,3 +72,4 @@ describe('SiteMessages', () => {
   });
 });
 
+/* eslint-enable @typescript-eslint/no-empty-function */

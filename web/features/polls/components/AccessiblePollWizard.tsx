@@ -545,7 +545,7 @@ export function AccessiblePollWizard() {
       return `${window.location.origin}/polls/${shareInfo.pollId}`;
     }
     return '';
-  }, [shareInfo?.pollId]);
+  }, [shareInfo]);
 
   const isShareOpen = Boolean(shareInfo);
 

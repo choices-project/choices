@@ -176,7 +176,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     ) => {
       const message = t(key as never, params as never);
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[WidgetRenderer][announce]', {
+        logger.debug('[WidgetRenderer][announce]', {
           key,
           message,
           priority,

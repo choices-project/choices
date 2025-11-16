@@ -1,3 +1,4 @@
+/* eslint-disable boundaries/element-types */
 /**
  * @jest-environment jsdom
  */
@@ -200,3 +201,4 @@ describe('AuthPage', () => {
   });
 });
 
+/* eslint-enable boundaries/element-types */

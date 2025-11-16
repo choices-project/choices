@@ -75,7 +75,6 @@ export default function TrendsChart({
   const summarySectionId = useId();
   const cardHeadingId = useId();
   const chartDescriptionId = useId();
-  const chartAxesDescriptionId = useId();
   const chartRegionId = useId();
   const isMobile = useIsMobile();
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
@@ -256,6 +255,15 @@ export default function TrendsChart({
     );
   }, [data]);
 
+  // Calculate trend direction (memoized to satisfy exhaustive-deps)
+  const getTrend = useCallback((metric: 'votes' | 'participation' | 'velocity'): number => {
+    if (data.length < 2) return 0;
+    const first = data[0]?.[metric];
+    const last = data[data.length - 1]?.[metric];
+    if (first === undefined || last === undefined || first === 0) return 0;
+    return ((last - first) / first) * 100;
+  }, [data]);
+
   const chartSummaryText = useMemo(() => {
     if (!data.length || !peakVotesPoint || !peakParticipationPoint) {
       return '';
@@ -265,10 +273,10 @@ export default function TrendsChart({
       voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
 
     return t('analytics.trends.chart.summary', {
-      peakVotesDate: formatDate(peakVotesPoint!.date),
-      peakVotes: formatNumber(peakVotesPoint!.votes),
-      peakParticipationDate: formatDate(peakParticipationPoint!.date),
-      peakParticipation: formatPercent(peakParticipationPoint!.participation),
+      peakVotesDate: formatDate(peakVotesPoint.date),
+      peakVotes: formatNumber(peakVotesPoint.votes),
+      peakParticipationDate: formatDate(peakParticipationPoint.date),
+      peakParticipation: formatPercent(peakParticipationPoint.participation),
       trendDirection: t(`analytics.trends.trendDirections.${trendDirectionKey}`),
       range: currentRangeLabel,
     });
@@ -280,49 +288,20 @@ export default function TrendsChart({
     peakParticipationPoint,
     peakVotesPoint,
     currentRangeLabel,
+    getTrend,
     t,
   ]);
+ 
 
-  const axisStats = useMemo(() => {
-    if (!data.length) {
-      return null;
-    }
-    const dates = data.map((point) => point.date);
-    const votes = data.map((point) => point.votes);
-    const participation = data.map((point) => point.participation);
-    const velocity = data.map((point) => point.velocity);
-
-    return {
-      startDate: dates[0],
-      endDate: dates[dates.length - 1],
-      minVotes: Math.min(...votes),
-      maxVotes: Math.max(...votes),
-      minParticipation: Math.min(...participation),
-      maxParticipation: Math.max(...participation),
-      minVelocity: Math.min(...velocity),
-      maxVelocity: Math.max(...velocity),
-    };
-  }, [data]);
-
-  const chartAxesDescription = useMemo(() => {
-    if (!axisStats) {
-      return '';
-    }
-    return t('analytics.trends.chart.axesDescription', {
-      startDate: formatDate(axisStats.startDate ?? ''),
-      endDate: formatDate(axisStats.endDate ?? ''),
-      minVotes: formatNumber(axisStats.minVotes),
-      maxVotes: formatNumber(axisStats.maxVotes),
-      minParticipation: formatPercent(axisStats.minParticipation),
-      maxParticipation: formatPercent(axisStats.maxParticipation),
-    });
-  }, [axisStats, formatDate, formatNumber, formatPercent, t]);
+  // Removed unused chartAxesDescription to satisfy unused variables lint
 
   useEffect(() => {
     void fetchTrends(defaultRange, {
       fallback: (r) => generateMockData(r as DateRange),
     });
   }, [defaultRange, fetchTrends]);
+
+  
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -363,15 +342,6 @@ export default function TrendsChart({
   const avgVelocity = data.length > 0
     ? data.reduce((sum, d) => sum + d.velocity, 0) / data.length
     : 0;
-
-  // Calculate trend direction
-  const getTrend = (metric: 'votes' | 'participation' | 'velocity'): number => {
-    if (data.length < 2) return 0;
-    const first = data[0]?.[metric];
-    const last = data[data.length - 1]?.[metric];
-    if (first === undefined || last === undefined || first === 0) return 0;
-    return ((last - first) / first) * 100;
-  };
 
   const formatTrendValue = useCallback(
     (value: number) => percentFormatter.format(Math.abs(value)),

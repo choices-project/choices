@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * @jest-environment node
  */
@@ -44,6 +45,8 @@ jest.mock('@/lib/cache/analytics-cache', () => {
   };
 });
 
+/* eslint-enable @typescript-eslint/no-empty-function */
+
 const mockSupabaseClient: Record<string, any> = {
   auth: {
     getUser: jest.fn(),
@@ -64,6 +67,7 @@ const mockPrivacyBuilder = {
 const isolateRoute = (path: string) => () => {
   let routeModule: any;
   jest.isolateModules(() => {
+    // eslint-disable-next-line import/no-dynamic-require
     routeModule = require(path);
   });
   return routeModule;

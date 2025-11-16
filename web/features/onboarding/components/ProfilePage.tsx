@@ -40,6 +40,23 @@ export default function ProfilePage() {
   
   const [showExportConfirm, setShowExportConfirm] = useState(false);
 
+  const profilePreferences = useMemo(() => {
+    const p = profile as unknown as UserProfile | undefined;
+    const prefs = p && typeof p === 'object' ? (p as Record<string, unknown>).preferences : undefined;
+    if (prefs && typeof prefs === 'object') {
+      return prefs as Record<string, unknown>;
+    }
+    return {};
+  }, [profile]);
+  const profilePrivacySettings = useMemo(() => {
+    const p = profile as unknown as UserProfile | undefined;
+    const settings = p && typeof p === 'object' ? (p as Record<string, unknown>).privacy_settings : undefined;
+    if (settings && typeof settings === 'object') {
+      return settings as Record<string, unknown>;
+    }
+    return {};
+  }, [profile]);
+
   // Handle export data
   const handleExportData = () => {
     void exportMutation.exportProfile({ includeActivity: true, includeVotes: true, includeComments: true, format: 'json' });
@@ -71,24 +88,6 @@ export default function ProfilePage() {
   }
 
   const profileData = profile as UserProfile;
-  const profilePreferences = useMemo(() => {
-    if (profileData && typeof profileData === 'object' && 'preferences' in profileData) {
-      const prefs = (profileData as Record<string, unknown>).preferences;
-      if (prefs && typeof prefs === 'object') {
-        return prefs as Record<string, unknown>;
-      }
-    }
-    return {};
-  }, [profileData]);
-  const profilePrivacySettings = useMemo(() => {
-    if (profileData && typeof profileData === 'object' && 'privacy_settings' in profileData) {
-      const settings = (profileData as Record<string, unknown>).privacy_settings;
-      if (settings && typeof settings === 'object') {
-        return settings as Record<string, unknown>;
-      }
-    }
-    return {};
-  }, [profileData]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

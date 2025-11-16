@@ -60,9 +60,12 @@ export default function AuthSetupStep({
   data,
   onUpdate,
   onNext,
-  onBack,
   forceInteractive = false,
 }: AuthSetupStepProps) {
+  const isBypass =
+    !forceInteractive &&
+    (process.env.NODE_ENV === 'test' ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co');
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
   const [email, setEmail] = useState(data?.email || '')
   const [success, setSuccess] = useState(false)
@@ -70,7 +73,7 @@ export default function AuthSetupStep({
 
   const userError = useUserError();
   const isLoading = useUserLoading();
-  const { setLoading, setError, clearError, signOut } = useUserActions();
+  const { setLoading, setError, clearError } = useUserActions();
   const initializeAuth = useUserStore((state) => state.initializeAuth);
   const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
@@ -97,25 +100,19 @@ export default function AuthSetupStep({
     }
   }, [initializeAuth, setSessionAndDerived]);
 
-  // E2E bypass: If we're in test environment, render a simple version
-  if (
-    !forceInteractive &&
-    (process.env.NODE_ENV === 'test' ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co')
-  ) {
-    return (
-      <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
-        <p className="text-gray-600 mb-6">Choose your authentication method</p>
-        <button
-          onClick={onNext}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-        >
-          Continue
-        </button>
-      </div>
-    )
-  }
+  // E2E bypass content (keep hooks order consistent; render conditionally later)
+  const renderBypass = (
+    <div className="max-w-2xl mx-auto text-center">
+      <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
+      <p className="text-gray-600 mb-6">Choose your authentication method</p>
+      <button
+        onClick={onNext}
+        className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+      >
+        Continue
+      </button>
+    </div>
+  )
 
   const handleEmailSignup = async () => {
     if (!email) {
@@ -630,7 +627,7 @@ export default function AuthSetupStep({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {renderContent()}
+      {isBypass ? renderBypass : renderContent()}
     </div>
   )
 }

@@ -130,10 +130,6 @@ export const createBallotFromPoll = (
   const normalizedStatus =
     statusMap[status] ?? (status === 'completed' ? 'closed' : 'active');
 
-  const totalVotes =
-    context?.totalVotes ??
-    (typeof poll.totalVotes === 'number' ? poll.totalVotes : undefined);
-
   return {
     id: poll.id,
     electionId: `poll-${poll.id}`,

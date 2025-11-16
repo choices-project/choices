@@ -401,7 +401,11 @@ export class FinancialTransparencySystem {
       if (!this.influenceAnalyses.has(candidateId)) {
         this.influenceAnalyses.set(candidateId, []);
       }
-      this.influenceAnalyses.get(candidateId)!.push(analysis);
+      const analyses = this.influenceAnalyses.get(candidateId);
+      if (analyses) {
+        analyses.push(analysis);
+        this.influenceAnalyses.set(candidateId, analyses);
+      }
 
       logger.info('Issue influence analysis completed', {
         candidateId,

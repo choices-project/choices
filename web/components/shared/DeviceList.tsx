@@ -202,19 +202,13 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       {/* Device List */}
       <div className="space-y-3">
         {memoizedDevices.map((device) => (
-          <div
+          <button
             key={device.id}
             className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
               selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
             }`}
             data-testid="device-item"
-            role="listitem"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setSelectedDevice(device.id)
-              }
-            }}
+            type="button"
             onClick={() => setSelectedDevice(device.id)}
           >
             {/* Device Info */}
@@ -263,7 +257,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 </button>
               )}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 

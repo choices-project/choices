@@ -114,7 +114,14 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
         notification.read ? 'opacity-75' : ''
       }`}
       onClick={handleClick}
-      role={priority === 'assertive' ? 'alert' : 'status'}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       aria-live={priority}
       aria-atomic="true"
     >

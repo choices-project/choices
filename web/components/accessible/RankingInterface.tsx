@@ -356,7 +356,7 @@ export function AccessibleRankingInterface({
           <div
             key={candidate.id}
             ref={(el) => { candidateRefs.current[index] = el; }}
-            role="listitem"
+            role="button"
             tabIndex={state.focusedIndex === index ? 0 : -1}
             className={`candidate-card ${state.focusedIndex === index ? 'focused' : ''} ${isCandidateRanked(candidate.id) ? 'ranked' : ''}`}
             onKeyDown={(e) => handleKeyboardNavigation(e, candidate.id)}
@@ -364,6 +364,7 @@ export function AccessibleRankingInterface({
             onFocus={() => handleFocus(index)}
             aria-label={`${candidate.name}, currently ranked ${getCandidateRank(candidate.id)}`}
             aria-describedby={`candidate-${candidate.id}-description`}
+            aria-pressed={isCandidateRanked(candidate.id)}
             data-selected={isCandidateRanked(candidate.id)}
           >
             <div className="candidate-info">

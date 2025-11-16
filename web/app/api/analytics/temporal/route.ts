@@ -136,11 +136,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const defaultDay = { day: 'Monday', activity: 0, dayIndex: 0 };
 
         const peakHour = hourly.length > 0
-          ? hourly.reduce((max, curr) => (curr.activity > max.activity ? curr : max), hourly[0]!)
+          ? hourly.reduce((max, curr) => (curr.activity > max.activity ? curr : max), defaultHour)
           : defaultHour;
 
         const peakDay = daily.length > 0
-          ? daily.reduce((max, curr) => (curr.activity > max.activity ? curr : max), daily[0]!)
+          ? daily.reduce((max, curr) => (curr.activity > max.activity ? curr : max), defaultDay)
           : defaultDay;
 
         const avgActivity = (votes?.length ?? 0) / days;

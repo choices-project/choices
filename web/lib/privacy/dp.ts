@@ -415,7 +415,11 @@ export class DifferentialPrivacyManager {
         operations: []
       });
     }
-    return this.budgets.get(pollId)!;
+    const budget = this.budgets.get(pollId);
+    if (!budget) {
+      throw new Error('Failed to initialize epsilon budget');
+    }
+    return budget;
   }
 
   private calculateConfidence(epsilon: number): number {

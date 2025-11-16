@@ -13,9 +13,9 @@ import {
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 

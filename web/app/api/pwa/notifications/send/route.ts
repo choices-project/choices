@@ -18,10 +18,10 @@ import {
   errorResponse
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import type { Database, Json } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 

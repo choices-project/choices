@@ -298,7 +298,7 @@ export function validateAndTransform<T, U>(
       failure.error = validationResult.error;
     }
     if (validationResult.details !== undefined) {
-      failure.details = validationResult.details as unknown as import('zod').ZodError;
+      failure.details = validationResult.details as unknown as ZodError;
     }
     return failure;
   }

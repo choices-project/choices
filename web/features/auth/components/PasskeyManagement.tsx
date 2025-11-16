@@ -188,7 +188,6 @@ function PasskeyCard({
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
                 className="border border-gray-300 rounded px-2 py-1 text-sm"
-                autoFocus
               />
               <button
                 onClick={handleSave}

@@ -17,9 +17,9 @@ export { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 export const getAnalyticsUtils = () => {
   if (!isFeatureEnabled('analytics')) {
     return {
-      trackEvent: () => {},
-      trackPageView: () => {},
-      trackUserAction: () => {},
+      trackEvent: () => { return; },
+      trackPageView: () => { return; },
+      trackUserAction: () => { return; },
       getAnalyticsData: () => Promise.resolve(null),
     };
   }
@@ -47,9 +47,9 @@ export const isAnalyticsEnabled = () => isFeatureEnabled('analytics');
 
 // Graceful fallbacks for disabled features
 export const ANALYTICS_FALLBACKS = {
-  trackEvent: () => {},
-  trackPageView: () => {},
-  trackUserAction: () => {},
+  trackEvent: () => { return; },
+  trackPageView: () => { return; },
+  trackUserAction: () => { return; },
   getAnalyticsData: () => Promise.resolve(null),
   isEnabled: false,
 };

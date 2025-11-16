@@ -5,7 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
@@ -488,13 +488,18 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Initialize Supabase client and enhanced analytics service
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Initialize Supabase client and enhanced analytics service with stable references
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    logger.error('Supabase environment variables are not configured');
+  }
+  const supabase = useMemo(() => createClient<Database>(
+    (supabaseUrl as string),
+    (supabaseAnonKey as string)
+  ), [supabaseAnonKey, supabaseUrl]);
 
-  const enhancedAnalytics = new EnhancedAnalyticsService(supabase);
+  const enhancedAnalytics = useMemo(() => new EnhancedAnalyticsService(supabase), [supabase]);
 
   const {
     setDashboard: setAnalyticsDashboard,
@@ -617,7 +622,20 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       setLoading(false);
       setAnalyticsLoading(false);
     }
-  }, [pollId, userId, sessionId, enableNewSchema, enhancedAnalytics]);
+  }, [
+    pollId,
+    userId,
+    sessionId,
+    enableNewSchema,
+    enhancedAnalytics,
+    setLoading,
+    setError,
+    setAnalyticsLoading,
+    setAnalyticsError,
+    setAnalyticsDashboard,
+    updateUserBehavior,
+    setLastUpdated,
+  ]);
 
   // Track feature usage
   const trackFeatureUsage = useCallback(async (

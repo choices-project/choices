@@ -1,3 +1,4 @@
+/* eslint-disable boundaries/element-types */
 /**
  * @jest-environment jsdom
  */
@@ -71,3 +72,5 @@ describe('FeedPage', () => {
     });
   });
 });
+
+/* eslint-enable boundaries/element-types */

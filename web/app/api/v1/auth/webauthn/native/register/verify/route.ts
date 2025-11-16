@@ -14,9 +14,9 @@ import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyRegistrationResponse } from '@/features/auth/lib/webauthn/native/server';
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 

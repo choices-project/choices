@@ -69,7 +69,10 @@ export class NetworkOptimizer {
 
     // Check if request is already in progress
     if (this.requestQueue.has(cacheKey)) {
-      return this.requestQueue.get(cacheKey)! as Promise<T>;
+      const inFlight = this.requestQueue.get(cacheKey);
+      if (inFlight) {
+        return inFlight as Promise<T>;
+      }
     }
 
     // Make the request

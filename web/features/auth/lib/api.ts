@@ -4,9 +4,7 @@
  * Shared client helpers for authentication actions to keep components/tests consistent.
  */
 
-import { loginAction } from '@/app/actions/login';
-import { register } from '@/app/actions/register';
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
+// Use API routes instead of importing server actions to satisfy boundaries rules
 
 import {
   beginRegister,
@@ -27,22 +25,39 @@ export type RegisterPayload = {
   email: string;
   username: string;
   password: string;
-  context: ServerActionContext;
 };
 
 export async function loginWithPassword(payload: LoginPayload) {
-  const formData = new FormData();
-  formData.append('email', payload.email);
-  formData.append('password', payload.password);
-  return loginAction(formData);
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: payload.email,
+      password: payload.password,
+    }),
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody?.message ?? 'Login failed');
+  }
+  return response.json();
 }
 
 export async function registerUser(payload: RegisterPayload) {
-  const formData = new FormData();
-  formData.append('email', payload.email);
-  formData.append('username', payload.username);
-  formData.append('password', payload.password);
-  return register(formData, payload.context);
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: payload.email,
+      username: payload.username,
+      password: payload.password,
+    }),
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody?.message ?? 'Registration failed');
+  }
+  return response.json();
 }
 
 export const passkeyAPI = {

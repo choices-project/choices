@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
+
 import { assertPepperConfig } from '@/lib/civics/env-guard';
 
 describe('assertPepperConfig', () => {

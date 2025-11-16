@@ -11,7 +11,7 @@
 import { enableMapSet } from 'immer';
 import type { ReactNode } from 'react';
 import { createElement, createContext, useContext, useMemo } from 'react';
-import { create, useStore } from 'zustand';
+import { create } from 'zustand';
 import type { StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -158,7 +158,7 @@ const applyWidgetUpdates = (base: WidgetConfig, updates: Partial<WidgetConfig>):
   if (updates.position) {
     next.position = { ...next.position, ...updates.position };
     if (process.env.NODE_ENV !== 'production') {
-      console.info(
+          logger.debug(
         '[widgetStore] applyWidgetUpdates position',
         JSON.stringify(
           {
@@ -441,7 +441,7 @@ export const widgetStoreCreator = (
   loadLayout: (layout: DashboardLayout) => {
     set((draft) => {
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] loadLayout', {
+        logger.debug('[widgetStore] loadLayout', {
           layoutId: layout.id,
           widgetCount: layout.widgets.length,
         });
@@ -506,7 +506,7 @@ export const widgetStoreCreator = (
         currentState.currentLayoutChecksum !== layoutChecksum);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[widgetStore] initializeLayout call', {
+      logger.debug('[widgetStore] initializeLayout call', {
         layoutId: layout?.id ?? null,
         shouldApplyLayout,
         prevChecksum: currentState.currentLayoutChecksum,
@@ -522,14 +522,14 @@ export const widgetStoreCreator = (
             pushLayoutToHistory(draft, layout);
           }
           if (process.env.NODE_ENV !== 'production') {
-            console.info('[widgetStore] initializeLayout applied layout', {
+            logger.debug('[widgetStore] initializeLayout applied layout', {
               layoutId: layout.id,
               historyLength: draft.history.length,
               historyIndex: draft.historyIndex,
             });
           }
         } else if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] initializeLayout skipped layout apply', {
+          logger.debug('[widgetStore] initializeLayout skipped layout apply', {
             layoutId: layout.id,
           });
         }
@@ -544,7 +544,7 @@ export const widgetStoreCreator = (
         draft.history = [];
         draft.historyIndex = -1;
         if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] initializeLayout cleared layout');
+          logger.debug('[widgetStore] initializeLayout cleared layout');
         }
       }
 
@@ -638,7 +638,7 @@ export const widgetStoreCreator = (
       if (!widget) {
         logger.warn('Widget not found', { widgetId });
         if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] updateWidget missing widget', { widgetId, hasKeys: Array.from(draft.widgets.keys()) });
+          logger.debug('[widgetStore] updateWidget missing widget', { widgetId, hasKeys: Array.from(draft.widgets.keys()) });
         }
         return;
       }
@@ -649,7 +649,7 @@ export const widgetStoreCreator = (
 
       draft.widgets.set(widgetId, updatedWidget);
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] updateWidget applied', {
+        logger.debug('[widgetStore] updateWidget applied', {
           widgetId,
           position: 'position' in changes ? updatedWidget.position : undefined,
           size: 'size' in changes ? updatedWidget.size : undefined,
@@ -676,7 +676,7 @@ export const widgetStoreCreator = (
       }
 
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] moveWidget draft snapshot', {
+        logger.debug('[widgetStore] moveWidget draft snapshot', {
           widgetId,
           currentPosition: { ...widget.position },
           nextPosition: position,
@@ -747,7 +747,7 @@ export const widgetStoreCreator = (
       }
       draft.selectedWidgetId = widgetId;
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] setSelectedWidget', widgetId);
+        logger.debug('[widgetStore] setSelectedWidget', widgetId);
       }
     });
   },
@@ -762,7 +762,7 @@ export const widgetStoreCreator = (
     set((draft) => {
       draft.keyboardMode = mode;
       if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] setKeyboardMode', mode);
+        logger.debug('[widgetStore] setKeyboardMode', mode);
       }
     });
   },
@@ -779,7 +779,7 @@ export const widgetStoreCreator = (
     const nextY = Math.max(0, widget.position.y + deltaY);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info(
+      logger.debug(
         '[widgetStore] nudgeWidgetPosition',
         JSON.stringify(
           {
@@ -826,7 +826,7 @@ export const widgetStoreCreator = (
     const nextHeight = Math.max(minH, Math.min(maxH, proposedHeight));
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[widgetStore] nudgeWidgetSize', {
+      logger.debug('[widgetStore] nudgeWidgetSize', {
         widgetId,
         deltaW,
         deltaH,

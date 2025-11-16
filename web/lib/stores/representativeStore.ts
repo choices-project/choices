@@ -33,13 +33,7 @@ import type { BaseStore } from './types';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 
-const extractDivisionIds = (representative: Representative): string[] => {
-  return (
-    representative.ocdDivisionIds ??
-    representative.division_ids ??
-    getRepresentativeDivisionIds(representative)
-  );
-};
+ 
 
 export type RepresentativeFollowRecord = {
   id: string;

@@ -200,7 +200,7 @@ export class GoogleCivicErrorHandler {
     operation: () => Promise<T>,
     context?: ErrorContext
   ): Promise<T> {
-    let lastError: GoogleCivicApiError;
+    let lastError: GoogleCivicApiError | null = null;
     
     for (let attempt = 1; attempt <= this.retryConfig.maxAttempts; attempt++) {
       try {
@@ -232,7 +232,7 @@ export class GoogleCivicErrorHandler {
       }
     }
 
-    throw lastError!;
+    throw lastError ?? new GoogleCivicApiError('Unknown error after retries', 500, { context });
   }
 
   /**

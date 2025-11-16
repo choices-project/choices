@@ -295,7 +295,20 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        role="button"
+        tabIndex={0}
+        aria-label="Close menu"
         onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClose();
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            onClose();
+          }
+        }}
       />
       
       {/* Menu */}

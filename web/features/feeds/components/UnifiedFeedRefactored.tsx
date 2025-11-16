@@ -36,7 +36,6 @@ type UnifiedFeedProps = {
   enableHashtagPolls?: boolean;
   enableMobileOptimization?: boolean;
   showTrending?: boolean;
-  maxItems?: number;
 };
 
 /**
@@ -56,7 +55,6 @@ export default function UnifiedFeedRefactored({
   enableHashtagPolls: _enableHashtagPolls = true,
   enableMobileOptimization: _enableMobileOptimization = true,
   showTrending: _showTrending = true,
-  maxItems = 50
 }: UnifiedFeedProps) {
   logger.debug('[UnifiedFeedRefactored] Rendering', { userId, userDistrict });
 
