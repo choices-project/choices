@@ -15,6 +15,7 @@
     "dev": "TZ=UTC next dev",
     "build": "TZ=UTC next build",
     "start": "next start",
+    "start:ci": "sh -c 'if [ -f .next/standalone/server.js ]; then node .next/standalone/server.js; else next start; fi'",
     "start:playwright": "npm run build && TZ=UTC next start",
     "lint:fix": "node ./scripts/run-with-timeout.js 300 eslint . --fix",
     "lint": "node ./scripts/run-with-timeout.js 300 eslint .",
