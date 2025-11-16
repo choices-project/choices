@@ -51,13 +51,17 @@ export const fetchFeedsFromApi = async (
   }
 
   const raw = await response.json();
-  return parseFeedsPayload(raw, {
+  const fallbackBase = {
     category: params.category ?? 'all',
     district: params.district ?? null,
     sort: params.sort ?? 'trending',
-    limit: params.limit,
-    offset: params.offset,
-  });
+  };
+  const fallback: FeedsPayloadFallback = {
+    ...fallbackBase,
+    ...(params.limit != null ? { limit: params.limit } : {}),
+    ...(params.offset != null ? { offset: params.offset } : {}),
+  };
+  return parseFeedsPayload(raw, fallback);
 };
 
 type FeedSearchResponse = {
@@ -110,7 +114,10 @@ export const parseFeedsPayload = (
       pagination: buildPaginationMetadata(
         successPayload.data.pagination,
         total,
-        { limit: fallback.limit, offset: fallback.offset },
+        {
+          ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+          ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+        },
       ),
     };
   }
@@ -131,7 +138,10 @@ export const parseFeedsPayload = (
         pagination: buildPaginationMetadata(
           payload.pagination,
           total,
-          { limit: fallback.limit, offset: fallback.offset },
+          {
+            ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+            ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+          },
         ),
       };
     }
@@ -151,7 +161,10 @@ export const parseFeedsPayload = (
       pagination: buildPaginationMetadata(
         undefined,
         total,
-        { limit: fallback.limit, offset: fallback.offset },
+        {
+          ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+          ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+        },
       ),
     };
   }

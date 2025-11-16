@@ -222,7 +222,7 @@ export async function executeWithRetry<T>(
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
   context: string = 'Open States API'
 ): Promise<T> {
-  let lastError: OpenStatesApiError;
+  let lastError: OpenStatesApiError = new OpenStatesApiError('Unknown error', 'UNKNOWN_ERROR');
   
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {

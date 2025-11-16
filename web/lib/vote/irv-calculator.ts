@@ -257,13 +257,13 @@ export class IRVCalculator {
       if (remaining.length <= 1) {
         const finalWinner = remaining[0] ?? null;
         const round: IRVRound = {
-            round: rounds.length + 1,
-            votes,
-            totalVotes: activeVotes,
-            activeCandidates: remaining,
-            exhausted,
-            winner: finalWinner ?? undefined,
-          };
+          round: rounds.length + 1,
+          votes,
+          totalVotes: activeVotes,
+          activeCandidates: remaining,
+          exhausted,
+          ...(finalWinner ? { winner: finalWinner } : {}),
+        };
         rounds.push(round);
     return {
           winner: finalWinner,
@@ -297,14 +297,14 @@ export class IRVCalculator {
           edgeCasesHandled.push('final_tie');
 
           const round: IRVRound = {
-              round: rounds.length + 1,
-              votes,
-              winner,
-              totalVotes: activeVotes,
-              activeCandidates: remaining,
-              exhausted,
-              eliminated: toEliminate,
-            };
+            round: rounds.length + 1,
+            votes,
+            totalVotes: activeVotes,
+            activeCandidates: remaining,
+            exhausted,
+            eliminated: toEliminate,
+            ...(winner ? { winner } : {}),
+          };
           rounds.push(round);
 
           return {
@@ -374,14 +374,14 @@ export class IRVCalculator {
       }
 
       const round: IRVRound = {
-          round: rounds.length + 1,
-          votes,
-          totalVotes: activeVotes,
-          activeCandidates: remaining,
-          exhausted,
-          eliminated: toEliminate[0] ?? undefined, // Only single elimination for golden tests
-          winner, // Declare winner in same round if majority reached
-        };
+        round: rounds.length + 1,
+        votes,
+        totalVotes: activeVotes,
+        activeCandidates: remaining,
+        exhausted,
+        ...(toEliminate[0] ? { eliminated: toEliminate[0] } : {}),
+        ...(winner ? { winner } : {}),
+      };
       rounds.push(round);
 
       // If we have a winner, return immediately

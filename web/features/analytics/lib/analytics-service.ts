@@ -716,8 +716,8 @@ export class AnalyticsService {
           total_responses: demographicInsights.total_responses,
           trust_tier_breakdown: trustTierBreakdown,
           demographic_insights: demographicInsights,
-          data_quality_score: demographicInsights.average_confidence_level, // proxy
-          confidence_level: demographicInsights.average_confidence_level,
+          data_quality_score: Number(demographicInsights.average_confidence_level), // ensure number
+          confidence_level: Number(demographicInsights.average_confidence_level),
           response_trends: {
             daily_responses: await this.getDailyResponseTrends(pollId)
           }
@@ -798,8 +798,8 @@ export class AnalyticsService {
         total_responses,
         trust_tier_breakdown: trustTierBreakdown,
         demographic_insights: demographicInsights,
-        data_quality_score,
-        confidence_level,
+        data_quality_score: Number(data_quality_score),
+        confidence_level: Number(confidence_level),
         response_trends: {
           daily_responses: await this.getDailyResponseTrends(pollId)
         }

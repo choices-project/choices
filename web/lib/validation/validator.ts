@@ -267,10 +267,11 @@ export function validateMultipleResponses<T>(
     });
   }
 
-  return mergeDefined(
-    { success: validItems.length > 0 },
-    { data: validItems, error: errors.length > 0 ? errors.join('; ') : undefined }
-  );
+  if (validItems.length > 0) {
+    return { success: true, data: validItems };
+  }
+  const errorMessage = errors.join('; ');
+  return errorMessage ? { success: false, error: errorMessage } : { success: false };
 }
 
 /**
@@ -347,8 +348,9 @@ export function validateBatch<T extends Record<string, unknown>>(
     });
   }
 
-  return mergeDefined(
-    { success: errors.length === 0 },
-    { data: result as T, error: errors.length > 0 ? errors.join('; ') : undefined }
-  );
+  if (errors.length === 0) {
+    return { success: true, data: result as T };
+  }
+  const errorMessage = errors.join('; ');
+  return errorMessage ? { success: false, error: errorMessage } : { success: false };
 }

@@ -247,7 +247,7 @@ const resolveNetworkInfo = (nav?: Navigator, connection?: NetworkConnection): Ne
 
 const detectBrowser = (userAgent: string): string => {
   const info = detectBrowserInfo();
-  if (info.name && info.name !== 'unknown') return info.name[0].toUpperCase() + info.name.slice(1);
+  if (info.name && info.name !== 'unknown') return info.name.charAt(0).toUpperCase() + info.name.slice(1);
   if (userAgent.includes('Chrome')) return 'Chrome';
   if (userAgent.includes('Firefox')) return 'Firefox';
   if (userAgent.includes('Safari')) return 'Safari';

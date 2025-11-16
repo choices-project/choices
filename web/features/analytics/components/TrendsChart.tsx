@@ -309,8 +309,8 @@ export default function TrendsChart({
       return '';
     }
     return t('analytics.trends.chart.axesDescription', {
-      startDate: formatDate(axisStats.startDate),
-      endDate: formatDate(axisStats.endDate),
+      startDate: formatDate(axisStats.startDate ?? ''),
+      endDate: formatDate(axisStats.endDate ?? ''),
       minVotes: formatNumber(axisStats.minVotes),
       maxVotes: formatNumber(axisStats.maxVotes),
       minParticipation: formatPercent(axisStats.minParticipation),
