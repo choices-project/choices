@@ -35,8 +35,8 @@ export type {
   HashtagPollsFeed as HashtagPollsFeedData
 } from './types/feed-types';
 
-// Lib utilities
-export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/TrendingHashtags';
+// Lib utilities (centralized in core lib)
+export { TrendingHashtagsTracker, trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 
 // Hashtag-Polls Integration (Client Version)
 export {

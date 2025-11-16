@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
 import { devLog } from '@/lib/utils/logger'
+import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils'
 
 // Types
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'tv'
@@ -83,6 +84,9 @@ export function useDeviceDetection() {
   }, [])
 
   const detectBrowser = useCallback((userAgent: string): string => {
+    // Prefer centralized browser utils; fallback to local patterns if needed
+    const info = detectBrowserInfo()
+    if (info.name !== 'unknown') return info.name
     for (const [browser, pattern] of Object.entries(BROWSER_PATTERNS)) {
       if (pattern.test(userAgent)) {
         return browser

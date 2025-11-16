@@ -26,13 +26,6 @@ jest.mock('@/lib/utils/logger', () => ({
   },
 }));
 
-jest.mock('@/lib/util/objects', () => ({
-  withOptional: jest.fn((required: Record<string, unknown>, optional: Record<string, unknown>) => ({
-    ...required,
-    ...optional,
-  })),
-}));
-
 jest.mock('next/dynamic', () => {
   const React = require('react');
   return () => () => <div data-testid="dynamic-component" />;

@@ -10,6 +10,7 @@
 
 import { NotImplementedError } from '@/lib/errors';
 import { logger } from '@/lib/utils/logger';
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
@@ -115,7 +116,7 @@ export class GeographicElectoralFeed {
   private estimateDeadline(dateString: string, offsetDays: number): string {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
-      return new Date().toISOString().slice(0, 10);
+      return formatISODateOnly(nowISO());
     }
     const adjusted = new Date(date);
     adjusted.setUTCDate(date.getUTCDate() - offsetDays);
@@ -133,7 +134,7 @@ export class GeographicElectoralFeed {
       }
 
       const stateCode = location.stateCode ?? this.resolveStateCode(location) ?? null;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = formatISODateOnly(nowISO());
 
       // civic_elections schema (columns): election_id, name, ocd_division_id, election_day, fetched_at, raw_payload
       let query = (supabase as any)
@@ -303,7 +304,7 @@ export class GeographicElectoralFeed {
             travel: 0,
             fundraising: 0,
             sources: Array.isArray(f?.sources) ? f!.sources : ['db'],
-            lastUpdated: f?.updated_at ?? new Date().toISOString(),
+            lastUpdated: f?.updated_at ?? nowISO(),
             dataQuality: f ? 'high' : 'medium',
           };
         };
@@ -472,7 +473,7 @@ export class GeographicElectoralFeed {
       const feed: ElectoralFeed = {
         userId,
         location,
-        generatedAt: new Date().toISOString(),
+        generatedAt: nowISO(),
         currentOfficials,
         upcomingElections,
         activeRaces,

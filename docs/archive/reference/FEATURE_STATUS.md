@@ -1,6 +1,6 @@
 # Feature Readiness Tracker
 
-This document captures the features that still require engineering work before they can be considered production-ready. It is based on the current flag inventory in `web/lib/core/feature-flags.ts`, exploratory code review, and the latest implementation state of each area.
+This document captures feature readiness and maps to the live flag inventory in `web/lib/core/feature-flags.ts`. Treat this as the source for product/engineering coordination; track execution details in `docs/ROADMAP_SINGLE_SOURCE.md`.
 
 | Feature | Flag Key | Current State | Key References | Notes / Next Steps |
 | --- | --- | --- | --- | --- |
@@ -18,7 +18,7 @@ This document captures the features that still require engineering work before t
 | Performance Optimization Suite | `PERFORMANCE_OPTIMIZATION` | Partially implemented | `web/lib/performance/*`, `web/lib/core/database/optimizer.ts` | Plenty of utilities exist but many callers are unused. Audit actual adoption before enabling globally. |
 | Push Notifications | `PUSH_NOTIFICATIONS` | Backend scaffolding only | `web/app/api/pwa/notifications/*`, `web/features/pwa/components` | Routes exist but client opt-in + delivery guarantees remain unfinished. Needs testing + product sign-off. |
 | Themes / Dark Mode | `THEMES` | Not implemented | – | No theme provider or tokens. Remove flag or schedule UX project. |
-| Accessibility Enhancements | `ACCESSIBILITY` | Not implemented | – | Accessibility work is ongoing but not behind a flag. Replace with concrete tasks (e.g., axe audits). |
+| Accessibility Enhancements | `ACCESSIBILITY` | Not implemented (tracked as tasks) | `qa/i18n-accessibility-playbook.md` | Work is ongoing outside flags. Use the QA playbook and roadmap tasks (axe audits, SR transcripts). |
 | Internationalisation | `INTERNATIONALIZATION` | **In progress** | `web/app/layout.tsx`, `web/hooks/useI18n.ts`, `web/messages/*.json` | `next-intl` provider, locale middleware, and `LanguageSelector` ship with `en`/`es`. Finish extraction tooling & lint (`npm run i18n:extract`) and expand catalogue coverage before enabling flag. |
 | Civic Engagement v2 | `CIVIC_ENGAGEMENT_V2` | WIP module gated behind flag | `web/lib/utils/sophisticated-civic-engagement.ts`, `web/lib/core/feature-flags.ts` | Helpers exist but require Supabase integration, UI surfacing, and QA. |
 | Analytics – Demographic Insights | `ANALYTICS` | Implemented (precomputed) | `supabase/migrations/*_update_poll_demographic_insights.sql`, `web/features/analytics/lib/analytics-service.ts` | `poll_demographic_insights` table + RPC implemented; service reads precomputed insights with fallback. Trigger keeps insights fresh on writes. |
@@ -33,7 +33,7 @@ The following flags were moved into `ALWAYS_ENABLED_FLAGS` because the applicati
 - `CANDIDATE_ACCOUNTABILITY`, `CANDIDATE_CARDS`, `ALTERNATIVE_CANDIDATES`
 - `FEATURE_DB_OPTIMIZATION_SUITE`, `ANALYTICS`, `WEBAUTHN`
 
-When planning future work, rely on the real toggles listed in the table above and remove dormant flags rather than carrying long-term technical debt.
+When planning future work, rely on the real toggles listed in the table above and remove dormant flags rather than carrying long-term technical debt. Execution tracking lives in `docs/ROADMAP_SINGLE_SOURCE.md`.
 
 These capabilities surface in the admin dashboard as **Locked** entries—attempting to toggle them is blocked at both the API and UI layers.
 

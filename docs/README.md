@@ -14,10 +14,9 @@ This index lists the active documentation set after the November 2025 cleanup. L
 | High-level architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | Development setup | [`DEVELOPMENT.md`](DEVELOPMENT.md) |
 | Testing strategy | [`TESTING.md`](TESTING.md) |
-| Feature overview | [`FEATURES.md`](FEATURES.md) |
-| Feature flag tracker | [`FEATURE_STATUS.md`](FEATURE_STATUS.md) |
 | State management standards | [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) |
-| Technical roadmap | [`ROADMAP.md`](ROADMAP.md) |
+| Technical roadmap (**single source**) | [`ROADMAP_SINGLE_SOURCE.md`](ROADMAP_SINGLE_SOURCE.md) |
+| Canonical utilities guide | [`UTILS_GUIDE.md`](UTILS_GUIDE.md) |
 | Security & privacy references | [`SECURITY.md`](SECURITY.md), [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
 
 ---
@@ -28,14 +27,12 @@ This index lists the active documentation set after the November 2025 cleanup. L
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — Deployment checklist.
 - [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — Table & function summary (update pending analytics retrofit).
 - [`SECURITY.md`](SECURITY.md) / [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) — Compliance references.
+- [`OPERATIONS/llc-and-compliance-checklist.md`](OPERATIONS/llc-and-compliance-checklist.md) — Entity choice & launch compliance checklist (kept prominent).
 
 ---
 
 ## Technical Highlights
-
-- [`technical/README.md`](technical/README.md) — Quick links to highlighted civics and testing references.
-- [`technical/civics-platform-overview.md`](technical/civics-platform-overview.md) — Snapshot of civics ingest + APIs with links to full runbooks.
-- [`technical/testing-harness-playbooks.md`](technical/testing-harness-playbooks.md) — Summary of harness commands and archived playbooks.
+Archived in `docs/archive/reference/technical/`. See archive index below if you need historical context.
 
 ---
 
@@ -43,6 +40,7 @@ This index lists the active documentation set after the November 2025 cleanup. L
 
 Out-of-date, historical, or deep-dive material now lives under `docs/archive/`. Use these when you need additional context, but treat the files above as the current source of truth.
 
+Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and now points to `ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
 ```
 docs/archive/
 ├─ release-notes/          # Changelog, API change logs, one-off status memos
@@ -65,6 +63,6 @@ Outdated or superseded documents live under the archive tree above, including th
 
 - Update this README whenever new core docs are added or archived.
 - Keep summary tables in `CURRENT_STATUS.md` and `FEATURES.md` realistic—avoid “perfect completion” phrasing.
-- Reference modernization checklists in `/scratch` rather than duplicating them here.
+- Do not use `/scratch` documents for planning; the single source is `ROADMAP_SINGLE_SOURCE.md`.
 
-For questions or missing documentation, sync with the web platform team in `#web-platform`.
+For questions or missing documentation, see the ownership notes in each doc and raise in `#web-platform`.

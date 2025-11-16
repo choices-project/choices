@@ -68,7 +68,7 @@ Recent work (notification store, profile store, etc.) follows a standard pattern
 3. Add dedicated action hooks (`use<Store>Actions`) so features never pull raw `getState()`.
 4. Supply integration harnesses (RTL + Playwright) to validate store behaviour outside app pages.
 
-Reference material lives in `docs/STATE_MANAGEMENT.md` and the checklists under `scratch/gpt5-codex/store-roadmaps/`.
+Reference material lives in `docs/STATE_MANAGEMENT.md` and `docs/ROADMAP_SINGLE_SOURCE.md`.
 
 ---
 

@@ -9,6 +9,7 @@
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, errorResponse, methodNotAllowed } from '@/lib/api';
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Database connection not available', 500);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatISODateOnly(nowISO());
 
   const [{ data: elections, error: electionsErr }, { error: repsErr }] = await Promise.all([
     (supabase as any)
@@ -57,7 +58,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   return successResponse({
-    timestamp: new Date().toISOString(),
+    timestamp: nowISO(),
     elections: {
       count: electionCount,
       nextElectionDay: nextElection,

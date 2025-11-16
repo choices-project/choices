@@ -13,6 +13,7 @@ import logger from '@/lib/utils/logger';
  */
 export function getSessionData(): Record<string, unknown> | null {
   try {
+    if (typeof window === 'undefined') return null;
     const data = localStorage.getItem('session');
     return data ? JSON.parse(data) : null;
   } catch {
@@ -25,6 +26,7 @@ export function getSessionData(): Record<string, unknown> | null {
  */
 export function setSessionData(data: Record<string, unknown>): void {
   try {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('session', JSON.stringify(data));
   } catch (error) {
     logger.error('Failed to set session data:', error);
@@ -36,6 +38,7 @@ export function setSessionData(data: Record<string, unknown>): void {
  */
 export function clearSessionData(): void {
   try {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem('session');
   } catch (error) {
     logger.error('Failed to clear session data:', error);

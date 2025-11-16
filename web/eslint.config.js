@@ -11,7 +11,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
-const hasLegacyCopy = true;
+const hasLegacyCopy = false;
 
 export default [
   // Global environment
@@ -143,6 +143,12 @@ export default [
           { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
           { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
           { group: ['@/lib/util/objects', '@/lib/util/objects.*'], message: 'withOptional is deprecated. Use explicit builders/conditional spreads.' },
+          // Prevent reintroduction of removed/legacy HTTP/CORS/CSRF utilities
+          { group: ['@/lib/utils/http', '@/lib/utils/http.*', '@/lib/http', '@/lib/http.*'], message: 'Use "@/lib/http/origin" (canonical).' },
+          { group: ['@/lib/utils/cors', '@/lib/utils/cors.*'], message: 'Use CORS helpers in "@/lib/api/response-utils".' },
+          { group: ['@/lib/utils/csrf', '@/lib/utils/csrf.*', '@/lib/utils/csrf-fetch', '@/lib/utils/csrf-fetch.*'], message: 'CSRF utilities were removed; use standard Next.js patterns and auth middleware.' },
+          // Prevent using duplicate trending implementation
+          { group: ['@/features/feeds/lib/TrendingHashtags', '@/features/feeds/lib/TrendingHashtags.*'], message: 'Use "@/lib/trending/TrendingHashtags" (canonical).' },
         ],
       }],
 

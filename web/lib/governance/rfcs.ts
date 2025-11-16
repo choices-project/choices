@@ -6,6 +6,7 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 
  
 
@@ -133,8 +134,8 @@ export class RFCManager {
     const rfc: RFC = Object.assign({}, RFCManager.RFC_TEMPLATE, rfcData, {
       id: rfcId,
       status: 'Draft',
-      created: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
-      updated: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
+      created: formatISODateOnly(nowISO()),
+      updated: formatISODateOnly(nowISO()),
       comments: [],
       votes: [],
       tags: this.extractTags(rfcData),
@@ -171,7 +172,7 @@ export class RFCManager {
     }
     
     rfc.status = 'Review';
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     
     await this.saveRFC(rfc);
     await this.publishToPublicRepo(rfc);
@@ -232,7 +233,7 @@ export class RFCManager {
     
     // Update RFC comment count
     rfc.comments = comments;
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     await this.saveRFC(rfc);
     
     await this.notifyCommentAdded(rfc, comment);
@@ -286,7 +287,7 @@ export class RFCManager {
     
     // Update RFC vote count
     rfc.votes = votes;
-    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
+    rfc.updated = formatISODateOnly(nowISO());
     await this.saveRFC(rfc);
     
     await this.notifyVoteCast(rfc, rfcVote);

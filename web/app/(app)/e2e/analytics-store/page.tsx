@@ -51,18 +51,24 @@ export default function AnalyticsStoreHarnessPage() {
   const chartMaxValue = useAnalyticsStore((store) => store.chartMaxValue);
   const chartShowTrends = useAnalyticsStore((store) => store.chartShowTrends);
   const chartShowConfidence = useAnalyticsStore((store) => store.chartShowConfidence);
-  const session = {
-    sessionId,
-    events,
-    isTracking,
-    isSending,
-  };
-  const chartContext = {
-    data: chartData,
-    maxValue: chartMaxValue,
-    showTrends: chartShowTrends,
-    showConfidence: chartShowConfidence,
-  };
+  const session = React.useMemo(
+    () => ({
+      sessionId,
+      events,
+      isTracking,
+      isSending,
+    }),
+    [sessionId, events, isTracking, isSending],
+  );
+  const chartContext = React.useMemo(
+    () => ({
+      data: chartData,
+      maxValue: chartMaxValue,
+      showTrends: chartShowTrends,
+      showConfidence: chartShowConfidence,
+    }),
+    [chartData, chartMaxValue, chartShowTrends, chartShowConfidence],
+  );
   const [isMounted, setIsMounted] = useState(false);
   const actions = useAnalyticsActions();
   const actionsRef = useRef(actions);

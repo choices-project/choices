@@ -1,17 +1,17 @@
 declare module 'web-push' {
-  export interface WebPushError extends Error {
+  export type WebPushError = Error & {
     statusCode?: number;
     headers?: Record<string, string>;
     body?: string;
-  }
+  };
 
-  export interface PushSubscription {
+  export type PushSubscription = {
     endpoint: string;
     keys: {
       auth: string;
       p256dh: string;
     };
-  }
+  };
 
   export function setVapidDetails(
     subject: string,

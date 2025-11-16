@@ -1,7 +1,7 @@
 # Environment Variables Documentation
 
-**Last Updated:** November 03, 2025  
-**Status:** ✅ Current (Verified against .env.local)
+**Last Updated:** November 16, 2025  
+**Status:** ✅ Current (verified against codebase)
 
 This document lists all environment variables required for the Choices application.
 
@@ -39,10 +39,7 @@ This document lists all environment variables required for the Choices applicati
   - Used by: Admin monitoring, SSR/server actions
   - Default: Auto-detected from request headers
 
-- `NEXT_PUBLIC_APP_URL` (optional)
-  - Application public URL
-  - Used by: PWA manifest, canonical URLs
-  - Default: Auto-detected
+> Note: `NEXT_PUBLIC_APP_URL` is not required; rely on detected origins unless explicitly needed for canonical URLs in production.
 
 - `NEXT_PUBLIC_APP_VERSION` (optional)
   - Application version string

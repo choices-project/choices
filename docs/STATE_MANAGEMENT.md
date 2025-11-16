@@ -2,7 +2,7 @@
 
 _Last updated: November 10, 2025_
 
-This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It complements the modernization checklists that live under `scratch/gpt5-codex/store-roadmaps/`.
+This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
 ---
 
@@ -104,7 +104,7 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 2. **Refactor core** — pull initial state/actions into helpers, export `use<Store>Actions`, add selectors.
 3. **Update consumers** — migrate components/tests to the new hooks; avoid `getState()` in React components.
 4. **Testing** — add/refresh unit + integration suites; build Playwright harness if the store drives UI interactions.
-5. **Docs & checklist** — mark progress in the corresponding `scratch/gpt5-codex/store-roadmaps/*` file and update this guide if new patterns emerge.
+5. **Docs & checklist** — mark progress in `docs/STATE_MANAGEMENT.md` (this guide) and `docs/ROADMAP_SINGLE_SOURCE.md` instead of `scratch/*`. Add or update examples here if new patterns emerge.
 6. **Election alerts** — civics features that surface countdowns should call `useElectionCountdown` with `notify`, `notificationSource`, and threshold metadata so the hook can dedupe per election/division and dispatch through `notificationStoreUtils.createElectionNotification`.
 
 ---
@@ -114,6 +114,18 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 - Notification store modernization PRs — see `web/lib/stores/notificationStore.ts`, `web/features/civics/utils/civicsCountdownUtils.ts` (election notification hook), and tests covering analytics + countdown notifications (`web/tests/unit/stores/notification.integration.test.tsx`, `web/tests/unit/features/civics/useElectionCountdown.test.ts`).
 - Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
 - Development setup & testing commands — `docs/DEVELOPMENT.md`, `docs/TESTING.md`.
-- Technical backlog — `docs/ROADMAP.md`.
+- Technical backlog — `docs/ROADMAP.md`.  
+- Canonical utilities — `docs/UTILS_GUIDE.md`.
+
+---
+
+## Consolidation Notes (Scratch → Docs)
+
+- The following scratch checklists/roadmaps are superseded by this guide and the single-source roadmap:
+  - `scratch/gpt5-codex/store-roadmaps/*` (store checklists and modernization tasks)
+  - `scratch/gpt5-codex/roadmaps/*` (web store modernization lines)
+- Action:
+  - Track store modernization in `docs/ROADMAP_SINGLE_SOURCE.md` (Section C) and update this guide with patterns and examples.
+  - Treat scratch documents as archived references. Do not add new roadmap items under `scratch/` going forward.
 
 For questions, drop a note in `#web-platform` or annotate the relevant checklist in `/scratch`.

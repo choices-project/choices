@@ -1,9 +1,9 @@
 /**
  * Poll Hashtag Integration Component
- * 
+ *
  * Integrates hashtag functionality into the polls feature
  * Allows poll creators to tag polls with hashtags for better discovery
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ ACTIVE
  */
@@ -98,6 +98,7 @@ export default function PollHashtagIntegration({
   const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegration | null>(
     poll.hashtags ? createIntegrationFromPoll(poll) : null
   );
+  const [engagementTotals, setEngagementTotals] = useState<{ view: number; click: number; share: number } | null>(null);
 
   // Hashtag store hooks
   const trendingHashtags = useTrendingHashtags();
@@ -110,6 +111,28 @@ export default function PollHashtagIntegration({
     void getTrendingHashtags();
     // Record a view when the component mounts
     _trackHashtagEngagement('view');
+    // Fetch aggregated engagement totals (best-effort)
+    void (async () => {
+      try {
+        const res = await fetch(`/api/analytics/hashtag/engagement?poll_id=${encodeURIComponent(poll.id)}&days=30`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const totals = json?.data?.totals ?? json?.totals;
+          if (totals && typeof totals === 'object') {
+            setEngagementTotals({
+              view: Number(totals.view ?? 0) || 0,
+              click: Number(totals.click ?? 0) || 0,
+              share: Number(totals.share ?? 0) || 0
+            });
+          }
+        }
+      } catch {
+        // ignore
+      }
+    })();
   }, [getTrendingHashtags]);
 
   // Track hashtag engagement in real-time
@@ -153,12 +176,12 @@ export default function PollHashtagIntegration({
   // Calculate trending score based on hashtag popularity
   const _calculateTrendingScore = (hashtagNames: string[]): number => {
     if (!hashtagNames.length) return 0;
-    
+
     const totalScore = hashtagNames.reduce((score, hashtagName) => {
       const hashtag = hashtags.find(h => h.name === hashtagName);
       return score + (hashtag?.trend_score ?? 0);
     }, 0);
-    
+
     return Math.round(totalScore / hashtagNames.length);
   };
 
@@ -176,7 +199,7 @@ export default function PollHashtagIntegration({
   };
 
   // Get hashtag objects for display
-  const pollHashtagObjects = poll.hashtags?.map((hashtagName: string) => 
+  const pollHashtagObjects = poll.hashtags?.map((hashtagName: string) =>
     hashtags.find((h) => h.name === hashtagName)
   ).filter(Boolean) as Hashtag[] ?? [];
 
@@ -210,24 +233,24 @@ export default function PollHashtagIntegration({
                 <Eye className="h-4 w-4 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium">Views</p>
-                  <p className="text-2xl font-bold">{hashtagIntegration.hashtag_engagement.total_views}</p>
+                  <p className="text-2xl font-bold">{engagementTotals?.view ?? hashtagIntegration.hashtag_engagement.total_views}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
                 <Share2 className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium">Shares</p>
-                  <p className="text-2xl font-bold">{hashtagIntegration.hashtag_engagement.hashtag_shares}</p>
+                  <p className="text-2xl font-bold">{engagementTotals?.share ?? hashtagIntegration.hashtag_engagement.hashtag_shares}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -270,7 +293,7 @@ export default function PollHashtagIntegration({
                     allowCustom={true}
                     className="mb-4"
                   />
-                  
+
                   {poll.hashtags && poll.hashtags.length > 0 && (
                     <div className="space-y-4">
                       <div>
@@ -291,9 +314,9 @@ export default function PollHashtagIntegration({
                           ))}
                         </div>
                       </div>
-                      
+
                       <Separator />
-                      
+
                       <div>
                         <p className="text-sm font-medium mb-2">All Hashtags:</p>
                         <div className="flex flex-wrap gap-2">
@@ -359,9 +382,9 @@ export default function PollHashtagIntegration({
                     showCategory={true}
                     clickable={true}
                   />
-                  
+
                   <Separator />
-                  
+
                   <div className="text-sm text-muted-foreground">
                     <p>Showing trending hashtags that might be relevant to your poll</p>
                     <p>Click on hashtags to add them to your poll</p>
@@ -392,34 +415,34 @@ export default function PollHashtagIntegration({
                         <span className="font-medium">Total Views</span>
                       </div>
                       <p className="text-2xl font-bold text-blue-600">
-                        {0}
+                      {engagementTotals?.view ?? 0}
                       </p>
                       <p className="text-sm text-muted-foreground">Hashtag impressions</p>
                     </div>
-                    
+
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <Hash className="h-4 w-4 text-green-600" />
                         <span className="font-medium">Hashtag Clicks</span>
                       </div>
                       <p className="text-2xl font-bold text-green-600">
-                        {0}
+                      {engagementTotals?.click ?? 0}
                       </p>
                       <p className="text-sm text-muted-foreground">Direct hashtag interactions</p>
                     </div>
-                    
+
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <Share2 className="h-4 w-4 text-purple-600" />
                         <span className="font-medium">Shares</span>
                       </div>
                       <p className="text-2xl font-bold text-purple-600">
-                        {0}
+                      {engagementTotals?.share ?? 0}
                       </p>
                       <p className="text-sm text-muted-foreground">Poll shares via hashtags</p>
                     </div>
                   </div>
-                  
+
                   {/* Trending Score */}
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
@@ -427,7 +450,7 @@ export default function PollHashtagIntegration({
                       <span className="font-medium">Trending Score</span>
                     </div>
                     <p className="text-2xl font-bold text-orange-600">
-                      0
+                      {hashtagIntegration.hashtag_trending_score}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Based on hashtag popularity and engagement
@@ -436,35 +459,39 @@ export default function PollHashtagIntegration({
                   <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Total Views</p>
-                   <p className="text-2xl font-bold">0</p>
+                   <p className="text-2xl font-bold">{engagementTotals?.view ?? 0}</p>
                 </div>
                     <div>
                       <p className="text-sm font-medium">Hashtag Clicks</p>
-                      <p className="text-2xl font-bold">0</p>
+                      <p className="text-2xl font-bold">{engagementTotals?.click ?? 0}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Hashtag Shares</p>
-                      <p className="text-2xl font-bold">0</p>
+                      <p className="text-2xl font-bold">{engagementTotals?.share ?? 0}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Trending Score</p>
-                      <p className="text-2xl font-bold">0</p>
+                      <p className="text-2xl font-bold">{hashtagIntegration.hashtag_trending_score}</p>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Related Polls</p>
                     <p className="text-sm text-muted-foreground">
                       0 polls share similar hashtags
                     </p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Hashtag Performance</p>
                     <div className="space-y-1">
-                      {poll.hashtags?.map((hashtag: any, index: number) => (
+                      {poll.hashtags?.map((hashtag: any, index: number) => {
+                        const totalViews = engagementTotals?.view ?? 0;
+                        const totalEngagement = (engagementTotals?.click ?? 0) + (engagementTotals?.share ?? 0);
+                        const engagementRatePct = totalViews > 0 ? Math.round((totalEngagement / totalViews) * 100) : 0;
+                        return (
                         <div key={`performance-${hashtag}-${index}`} className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1">
                             <Hash className="h-3 w-3" />
@@ -474,10 +501,10 @@ export default function PollHashtagIntegration({
                             )}
                           </span>
                           <span className="text-muted-foreground">
-                            {Math.floor(Math.random() * 100)}% engagement
+                            {engagementRatePct}% engagement
                           </span>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 </div>
@@ -514,23 +541,27 @@ export default function PollHashtagIntegration({
               <div>
                 <p className="font-medium">Total Views:</p>
                 <p className="text-muted-foreground">
-                   0 views
+                   {(engagementTotals?.view ?? 0)} views
                 </p>
               </div>
               <div>
                 <p className="font-medium">Engagement Rate:</p>
                 <p className="text-muted-foreground">
-                  0%
+                  {(() => {
+                    const views = engagementTotals?.view ?? 0;
+                    const engagement = (engagementTotals?.click ?? 0) + (engagementTotals?.share ?? 0);
+                    return views > 0 ? `${Math.round((engagement / views) * 100)}%` : '0%';
+                  })()}
                 </p>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="text-sm text-muted-foreground">
               <p>
-                Hashtags help people discover your poll through search and trending topics. 
-                Choose relevant hashtags that describe your poll&apos;s topic and audience. 
+                Hashtags help people discover your poll through search and trending topics.
+                Choose relevant hashtags that describe your poll&apos;s topic and audience.
                 The primary hashtag will be used for poll categorization and recommendations.
               </p>
             </div>

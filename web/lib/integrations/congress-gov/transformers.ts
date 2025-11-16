@@ -7,6 +7,7 @@
  
 
 import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
+import { nowISO } from '@/lib/utils/format-utils';
 
 export type NormalizedRepresentative = {
   id: string;
@@ -74,7 +75,7 @@ export function transformCongressGovMember(member: CongressGovMember): Normalize
     chamber: member.chamber.toLowerCase() as 'house' | 'senate',
     url: member.url,
     source: 'congress-gov',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: nowISO()
   };
 }
 
@@ -98,7 +99,7 @@ export function transformCongressGovBill(bill: CongressGovBill): NormalizedBill 
     subjects: bill.subjects,
     url: bill.url,
     source: 'congress-gov',
-    lastUpdated: new Date().toISOString(),
+    lastUpdated: nowISO(),
     ...(bill.shortTitle ? { shortTitle: bill.shortTitle } : {}),
     ...(bill.summary?.text ? { summary: bill.summary.text } : {})
   };
@@ -120,7 +121,7 @@ export function transformCongressGovVote(vote: CongressGovVote): NormalizedVote 
     result: vote.result,
     url: vote.url,
     source: 'congress-gov',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: nowISO()
   };
 }
 

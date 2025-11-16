@@ -111,10 +111,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest, { params }: 
     }
   }
 
-  const { error: updErr } = await supabase
-    .from('candidate_profiles')
-    .update(allowed)
-    .eq('id', candidate.id);
+  const { error: updErr } = await updateCandidateProfile(supabase, candidate.id, allowed);
   if (updErr) {
     return errorResponse('Failed to update candidate', 500);
   }
@@ -136,4 +133,15 @@ export const PATCH = withErrorHandling(async (request: NextRequest, { params }: 
 
   return successResponse(updated ?? { id: candidate.id, slug });
 });
+
+export async function updateCandidateProfile(
+  supabase: any,
+  id: string,
+  allowed: Record<string, unknown>
+): Promise<{ error: unknown | null }> {
+  return await supabase
+    .from('candidate_profiles')
+    .update(allowed)
+    .eq('id', id);
+}
 

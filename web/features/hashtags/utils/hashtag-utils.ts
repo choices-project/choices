@@ -12,6 +12,12 @@ import type {
   HashtagCategory,
   HashtagValidation
 } from '../types';
+import {
+  formatUsageCount as _formatUsageCount,
+  formatEngagementRate as _formatEngagementRate,
+  formatGrowthRate as _formatGrowthRate,
+  formatTrendingScore as _formatTrendingScore,
+} from '@/lib/utils/format-utils';
 
 // ============================================================================
 // HASHTAG VALIDATION UTILITIES
@@ -254,37 +260,28 @@ export function autoCategorizeHashtag(name: string): HashtagCategory {
  * Format usage count for display
  */
 export function formatUsageCount(count: number): string {
-  if (count >= 1000000) {
-    return `${(count / 1000000).toFixed(1)}M`;
-  } else if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}K`;
-  }
-  return count.toString();
+  return _formatUsageCount(count);
 }
 
 /**
  * Format engagement rate
  */
 export function formatEngagementRate(rate: number): string {
-  return `${(rate * 100).toFixed(1)}%`;
+  return _formatEngagementRate(rate);
 }
 
 /**
  * Format growth rate
  */
 export function formatGrowthRate(rate: number): string {
-  const sign = rate >= 0 ? '+' : '';
-  return `${sign}${rate.toFixed(1)}%`;
+  return _formatGrowthRate(rate);
 }
 
 /**
  * Format trending score
  */
 export function formatTrendingScore(score: number): string {
-  if (score >= 1000) {
-    return `${(score / 1000).toFixed(1)}K`;
-  }
-  return score.toString();
+  return _formatTrendingScore(score);
 }
 
 // ============================================================================

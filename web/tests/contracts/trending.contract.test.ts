@@ -19,7 +19,7 @@ jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
 }));
 
-jest.mock('@/features/feeds/lib/TrendingHashtags', () => ({
+jest.mock('@/lib/trending/TrendingHashtags', () => ({
   trendingHashtagsTracker: mockTrendingTracker,
 }));
 

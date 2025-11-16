@@ -1,8 +1,15 @@
 /**
  * @fileoverview Analytics Utilities
- * 
+ *
+ * STATUS: RARELY USED, SUPPORTED
+ * Ownership: Analytics/Core
+ * Notes:
+ * - This module is intentionally kept small in the public surface area.
+ * - Avoid new imports unless vetted; prefer higher-level analyticsService if available.
+ * - In development, a single usage ping is emitted for observability.
+ *
  * Analytics utilities for comprehensive event tracking, engagement analysis, and civic metrics.
- * 
+ *
  * This module provides analytics capabilities including:
  * - Event tracking with detailed metadata
  * - Engagement metrics calculation
@@ -10,7 +17,7 @@
  * - Civic engagement analytics
  * - A/B testing framework
  * - Conversion funnel analysis
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -19,17 +26,20 @@
 
 import { logger } from '@/lib/utils/logger';
 
+// Development-only, once-per-process usage ping for observability
+let __sophisticatedAnalyticsUsageLogged = false;
+
 /**
  * Analytics event types supported by our platform
- * 
+ *
  * These event types provide comprehensive tracking of user interactions,
  * civic engagement, and platform usage.
- * 
+ *
  * @typedef {string} AnalyticsEventType
  */
-export type AnalyticsEventType = 
-  | 'poll_created' 
-  | 'poll_voted' 
+export type AnalyticsEventType =
+  | 'poll_created'
+  | 'poll_voted'
   | 'poll_viewed'
   | 'poll_shared'
   | 'civic_action_created'
@@ -48,11 +58,11 @@ export type AnalyticsEventType =
 
 /**
  * Advanced analytics event data structure
- * 
+ *
  * Represents a sophisticated analytics event with comprehensive tracking
  * capabilities including user identification, session management, and detailed
  * event metadata.
- * 
+ *
  * @interface SophisticatedAnalyticsEvent
  */
 export type SophisticatedAnalyticsEvent = {
@@ -74,10 +84,10 @@ export type SophisticatedAnalyticsEvent = {
 
 /**
  * Analytics event data for detailed tracking
- * 
+ *
  * Provides key-value metadata storage for analytics events with type safety
  * and structured data organization.
- * 
+ *
  * @interface AnalyticsEventData
  */
 export type AnalyticsEventData = {
@@ -93,10 +103,10 @@ export type AnalyticsEventData = {
 
 /**
  * Comprehensive engagement metrics
- * 
+ *
  * Calculated metrics for user engagement including participation rates,
  * trust scores, and civic engagement levels.
- * 
+ *
  * @interface EngagementMetrics
  */
 export type EngagementMetrics = {
@@ -118,10 +128,10 @@ export type EngagementMetrics = {
 
 /**
  * Civic engagement metrics for community impact analysis
- * 
+ *
  * Tracks civic engagement activities including petitions, representative
  * interactions, and community impact measurements.
- * 
+ *
  * @interface CivicEngagementMetrics
  */
 export type CivicEngagementMetrics = {
@@ -141,11 +151,11 @@ export type CivicEngagementMetrics = {
 
 /**
  * Track sophisticated analytics events with comprehensive metadata
- * 
+ *
  * Creates and stores analytics events in our 37-table database schema with
  * detailed tracking capabilities including user identification, session management,
  * and comprehensive event metadata.
- * 
+ *
  * @param {AnalyticsEventType} eventType - Type of analytics event to track
  * @param {Record<string, unknown>} eventData - Detailed event data as key-value pairs
  * @param {Object} options - Optional tracking parameters
@@ -154,7 +164,7 @@ export type CivicEngagementMetrics = {
  * @param {string} [options.ipAddress] - IP address for geolocation tracking
  * @param {string} [options.userAgent] - User agent for device/browser tracking
  * @returns {Promise<string | null>} Session ID if successful, null if failed
- * 
+ *
  * @example
  * ```typescript
  * await trackSophisticatedEvent('poll_created', {
@@ -163,7 +173,7 @@ export type CivicEngagementMetrics = {
  *   poll_category: 'budget'
  * }, { userId: 'user-456' });
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function trackSophisticatedEvent(
@@ -177,8 +187,12 @@ export async function trackSophisticatedEvent(
   } = {}
 ): Promise<string | null> {
   try {
+    if (process.env.NODE_ENV !== 'production' && !__sophisticatedAnalyticsUsageLogged) {
+      logger.info('[SophisticatedAnalytics] Module in use (dev)', { eventTypeSample: eventType });
+      __sophisticatedAnalyticsUsageLogged = true;
+    }
     const sessionId = options.sessionId ?? crypto.randomUUID();
-    
+
     // In a real implementation, this would make an API call to store the event
     logger.info('Sophisticated analytics event tracked', {
       eventType,
@@ -196,17 +210,17 @@ export async function trackSophisticatedEvent(
 
 /**
  * Track detailed analytics event data with structured metadata
- * 
+ *
  * Stores detailed key-value metadata for analytics events with type safety
  * and structured data organization for comprehensive analysis.
- * 
+ *
  * @param {string} eventId - ID of the parent analytics event
  * @param {Array<Object>} dataPoints - Array of data points to store
  * @param {string} dataPoints[].key - Key for the data point
  * @param {string | number | boolean} dataPoints[].value - Value of the data point
  * @param {'string' | 'number' | 'boolean' | 'object' | 'array'} dataPoints[].type - Type of the data value
  * @returns {Promise<boolean>} True if successful, false if failed
- * 
+ *
  * @example
  * ```typescript
  * await trackAnalyticsEventData('event-123', [
@@ -215,7 +229,7 @@ export async function trackSophisticatedEvent(
  *   { key: 'is_anonymous', value: false, type: 'boolean' }
  * ]);
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function trackAnalyticsEventData(
@@ -248,19 +262,19 @@ export async function trackAnalyticsEventData(
 
 /**
  * Calculate sophisticated engagement metrics from analytics events
- * 
+ *
  * Analyzes analytics events to compute comprehensive engagement metrics
  * including participation rates, trust scores, and civic engagement levels.
- * 
+ *
  * @param {SophisticatedAnalyticsEvent[]} events - Array of analytics events to analyze
  * @returns {EngagementMetrics} Comprehensive engagement metrics
- * 
+ *
  * @example
  * ```typescript
  * const metrics = calculateEngagementMetrics(analyticsEvents);
  * logger.info(`Engagement Score: ${metrics.engagement_score}`);
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export function calculateEngagementMetrics(
@@ -269,7 +283,7 @@ export function calculateEngagementMetrics(
   const sessionDuration = calculateSessionDuration(events);
   const bounceRate = calculateBounceRate(events);
   const conversionRate = calculateConversionRate(events);
-  
+
   // Sophisticated engagement scoring
   const engagementScore = calculateEngagementScore(events);
   const participationRate = calculateParticipationRate(events);
@@ -289,19 +303,19 @@ export function calculateEngagementMetrics(
 
 /**
  * Calculate civic engagement metrics from analytics events
- * 
+ *
  * Analyzes civic engagement events to compute community impact metrics
  * including petition activity, representative interactions, and civic scoring.
- * 
+ *
  * @param {SophisticatedAnalyticsEvent[]} civicEvents - Array of civic engagement events
  * @returns {CivicEngagementMetrics} Comprehensive civic engagement metrics
- * 
+ *
  * @example
  * ```typescript
  * const civicMetrics = calculateCivicEngagementMetrics(civicEvents);
  * logger.info(`Civic Score: ${civicMetrics.civic_score}`);
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export function calculateCivicEngagementMetrics(
@@ -310,14 +324,14 @@ export function calculateCivicEngagementMetrics(
   const civicActions = civicEvents.filter(e => e.event_type === 'civic_action_created');
   const petitions = civicEvents.filter(e => e.event_type === 'civic_action_signed');
   const representativeContacts = civicEvents.filter(e => e.event_type === 'representative_contacted');
-  
+
   const totalActions = civicActions.length;
   const activePetitions = petitions.length;
   const representativeInteractions = representativeContacts.length;
-  const signatureCount = petitions.reduce((sum, event) => 
+  const signatureCount = petitions.reduce((sum, event) =>
     sum + ((event.event_data as any)?.signature_count ?? 0), 0
   );
-  
+
   const civicScore = calculateCivicScore(civicEvents);
   const communityImpact = calculateCommunityImpact(civicEvents);
 
@@ -333,10 +347,10 @@ export function calculateCivicEngagementMetrics(
 
 /**
  * Track poll creation with sophisticated analytics
- * 
+ *
  * Records poll creation events with comprehensive metadata including
  * poll settings, auto-lock configuration, and moderation status.
- * 
+ *
  * @param {Object} pollData - Poll creation data
  * @param {string} pollData.pollId - Unique poll identifier
  * @param {string} pollData.title - Poll title
@@ -346,7 +360,7 @@ export function calculateCivicEngagementMetrics(
  * @param {string} pollData.moderationStatus - Moderation status
  * @param {string} userId - User ID of poll creator
  * @returns {Promise<void>} Promise that resolves when tracking is complete
- * 
+ *
  * @example
  * ```typescript
  * await trackPollCreation({
@@ -357,7 +371,7 @@ export function calculateCivicEngagementMetrics(
  *   moderationStatus: 'approved'
  * }, 'user-456');
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function trackPollCreation(
@@ -383,10 +397,10 @@ export async function trackPollCreation(
 
 /**
  * Track poll voting with engagement analytics
- * 
+ *
  * Records poll voting events with comprehensive metadata including
  * vote details, anonymity status, and engagement metrics.
- * 
+ *
  * @param {Object} pollData - Poll voting data
  * @param {string} pollData.pollId - Unique poll identifier
  * @param {string[]} pollData.optionIds - Array of selected option IDs
@@ -394,7 +408,7 @@ export async function trackPollCreation(
  * @param {string} pollData.pollCategory - Poll category
  * @param {string} [userId] - Optional user ID for authenticated votes
  * @returns {Promise<void>} Promise that resolves when tracking is complete
- * 
+ *
  * @example
  * ```typescript
  * await trackPollVoting({
@@ -404,7 +418,7 @@ export async function trackPollCreation(
  *   pollCategory: 'politics'
  * }, 'user-456');
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function trackPollVoting(
@@ -427,10 +441,10 @@ export async function trackPollVoting(
 
 /**
  * Track civic action creation with comprehensive analytics
- * 
+ *
  * Records civic action creation events with detailed metadata including
  * action type, urgency level, target representatives, and engagement metrics.
- * 
+ *
  * @param {Object} actionData - Civic action creation data
  * @param {string} actionData.actionId - Unique action identifier
  * @param {string} actionData.actionType - Type of civic action
@@ -439,7 +453,7 @@ export async function trackPollVoting(
  * @param {number[]} actionData.targetRepresentatives - Array of target representative IDs
  * @param {string} userId - User ID of action creator
  * @returns {Promise<void>} Promise that resolves when tracking is complete
- * 
+ *
  * @example
  * ```typescript
  * await trackCivicActionCreation({
@@ -450,7 +464,7 @@ export async function trackPollVoting(
  *   targetRepresentatives: [1, 2, 3]
  * }, 'user-456');
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function trackCivicActionCreation(
@@ -475,59 +489,59 @@ export async function trackCivicActionCreation(
 // Helper functions for sophisticated calculations
 function calculateSessionDuration(events: SophisticatedAnalyticsEvent[]): number {
   if (events.length < 2) return 0;
-  
+
   const timestamps = events.map(e => new Date(e.created_at).getTime());
   const start = Math.min(...timestamps);
   const end = Math.max(...timestamps);
-  
+
   return (end - start) / 1000; // Duration in seconds
 }
 
 function calculateBounceRate(events: SophisticatedAnalyticsEvent[]): number {
-  const singleEventSessions = events.filter((event, index, arr) => 
+  const singleEventSessions = events.filter((event, index, arr) =>
     arr.filter(e => e.session_id === event.session_id).length === 1
   ).length;
-  
+
   return events.length > 0 ? (singleEventSessions / events.length) * 100 : 0;
 }
 
 function calculateConversionRate(events: SophisticatedAnalyticsEvent[]): number {
-  const conversionEvents = events.filter(e => 
+  const conversionEvents = events.filter(e =>
     ['poll_voted', 'civic_action_signed', 'representative_contacted'].includes(e.event_type)
   ).length;
-  
+
   return events.length > 0 ? (conversionEvents / events.length) * 100 : 0;
 }
 
 function calculateEngagementScore(events: SophisticatedAnalyticsEvent[]): number {
-  const engagementEvents = events.filter(e => 
+  const engagementEvents = events.filter(e =>
     ['poll_voted', 'poll_shared', 'civic_action_signed', 'user_engagement'].includes(e.event_type)
   );
-  
+
   return engagementEvents.length * 10; // Base score calculation
 }
 
 function calculateParticipationRate(events: SophisticatedAnalyticsEvent[]): number {
-  const participationEvents = events.filter(e => 
+  const participationEvents = events.filter(e =>
     ['poll_voted', 'civic_action_created', 'civic_action_signed'].includes(e.event_type)
   );
-  
+
   return events.length > 0 ? (participationEvents.length / events.length) * 100 : 0;
 }
 
 function calculateTrustScore(events: SophisticatedAnalyticsEvent[]): number {
-  const trustEvents = events.filter(e => 
+  const trustEvents = events.filter(e =>
     ['trust_score_updated', 'user_engagement'].includes(e.event_type)
   );
-  
+
   return trustEvents.length * 5; // Base trust score calculation
 }
 
 function calculateCivicEngagementScore(events: SophisticatedAnalyticsEvent[]): number {
-  const civicEvents = events.filter(e => 
+  const civicEvents = events.filter(e =>
     ['civic_action_created', 'civic_action_signed', 'representative_contacted'].includes(e.event_type)
   );
-  
+
   return civicEvents.length * 15; // Civic engagement scoring
 }
 
@@ -535,14 +549,14 @@ function calculateCivicScore(events: SophisticatedAnalyticsEvent[]): number {
   const civicActions = events.filter(e => e.event_type === 'civic_action_created');
   const signatures = events.filter(e => e.event_type === 'civic_action_signed');
   const representativeContacts = events.filter(e => e.event_type === 'representative_contacted');
-  
+
   return (civicActions.length * 20) + (signatures.length * 10) + (representativeContacts.length * 15);
 }
 
 function calculateCommunityImpact(events: SophisticatedAnalyticsEvent[]): number {
-  const communityEvents = events.filter(e => 
+  const communityEvents = events.filter(e =>
     ['civic_action_created', 'representative_contacted', 'user_engagement'].includes(e.event_type)
   );
-  
+
   return communityEvents.length * 8; // Community impact scoring
 }

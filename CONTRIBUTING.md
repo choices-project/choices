@@ -29,3 +29,10 @@ Do not file public issues for vulnerabilities. See SECURITY.md for private repor
 ## License
 By contributing, you agree that your contributions will be licensed under the MIT License. See LICENSE.
 
+## Code Style and Utilities
+- Prefer canonical utilities over ad‑hoc implementations. See `docs/UTILS_GUIDE.md` for:
+  - Date helpers (`nowISO`, `formatISODateOnly`)
+  - Browser/SSR‑safe helpers (`browser-utils`, `ssr-safe`)
+  - API response/CORS helpers (`@/lib/api`, `response-utils`)
+  - Origin validation (`@/lib/http/origin`)
+- Avoid importing from deprecated paths. ESLint will block re‑introducing removed modules (e.g., legacy CORS/HTTP/CSRF utilities and feature‑local trending).

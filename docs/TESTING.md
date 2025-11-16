@@ -20,6 +20,25 @@ cd web && npx playwright test --config=playwright.config.ts
 cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user-store.spec.ts
 ```
 
+See also:
+- `docs/technical/testing-harness-playbooks.md` for quick-reference workflows
+- `docs/ROADMAP_SINGLE_SOURCE.md` for in-flight test gaps and priorities
+
+### Quick Runbook (Copy/Paste)
+
+```bash
+# Types, lint, tests baseline (from web/)
+cd web
+npm run check
+
+# I18N extraction refresh
+npm run i18n:extract
+
+# E2E smoke (Chromium, key suites)
+npm run test:e2e
+npm run test:e2e:axe
+```
+
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).
 - `npm run type-check` — TypeScript project references check.

@@ -440,7 +440,7 @@ export default function Civics2Page() {
                     updated_at: new Date().toISOString(),
                     last_verified: representative.lastVerified ?? new Date().toISOString(),
                     ...(representative.district ? { district: representative.district } : {}),
-                    ...(representative.enhancedContacts?.find(c => c.type === 'email')?.value ? { primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value } : {}),
+                    primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value ?? '',
                     ...(representative.enhancedContacts?.find(c => c.type === 'phone')?.value ? { primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value } : {}),
                     ...(representative.enhancedContacts?.find(c => c.type === 'website')?.value ? { primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value } : {}),
                     ...(representative.twitter ? { twitter_handle: representative.twitter } : {}),

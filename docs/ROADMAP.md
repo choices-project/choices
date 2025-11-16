@@ -1,4 +1,9 @@
-# Choices Platform Roadmap
+# [ARCHIVED] Choices Platform Roadmap
+
+> Authoritative roadmap: `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items here. Keep that file as the single source of truth, and archive superseded docs under `docs/archive/`.
+
+This document is retained for historical context. The authoritative, up-to-date roadmap is:
+- `docs/ROADMAP_SINGLE_SOURCE.md`
 
 _Last updated: November 9, 2025_
 

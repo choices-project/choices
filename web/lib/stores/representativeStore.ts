@@ -43,7 +43,7 @@ const extractDivisionIds = (representative: Representative): string[] => {
 
 export type RepresentativeFollowRecord = {
   id: string;
-  user_id?: string;
+  user_id: string;
   notify_on_votes: boolean;
   notify_on_committee_activity: boolean;
   notify_on_public_statements: boolean;
@@ -432,7 +432,7 @@ export const createRepresentativeActions = (
 
         const normalised = entries.map<UserRepresentative>((entry) => ({
           id: entry.follow.id,
-          user_id: entry.follow.user_id ?? '',
+          user_id: entry.follow.user_id,
           representative_id: entry.representative.id,
           relationship_type: 'following',
           created_at: entry.follow.created_at,

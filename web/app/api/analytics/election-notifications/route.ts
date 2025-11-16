@@ -6,6 +6,7 @@ import {
   validationError,
   withErrorHandling
 } from '@/lib/api';
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -47,7 +48,7 @@ const parseWindowDays = (value: string | null): number => {
 const normaliseDateKey = (timestamp: string): string => {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) {
-    return new Date().toISOString().slice(0, 10);
+    return formatISODateOnly(nowISO());
   }
   return date.toISOString().slice(0, 10);
 };
@@ -89,7 +90,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const type = event.event_type as ElectionEventType;
     if (!EVENT_TYPES.includes(type)) return;
 
-    const bucket = byDay.get(normaliseDateKey(event.created_at ?? new Date().toISOString())) ?? {
+    const bucket = byDay.get(normaliseDateKey(event.created_at ?? nowISO())) ?? {
       delivered: 0,
       opened: 0
     };
@@ -111,7 +112,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       sourceBucket.opened += 1;
     }
 
-    byDay.set(normaliseDateKey(event.created_at ?? new Date().toISOString()), bucket);
+    byDay.set(normaliseDateKey(event.created_at ?? nowISO()), bucket);
     bySource.set(source, sourceBucket);
   });
 
@@ -136,7 +137,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         delivered: stats.delivered,
         opened: stats.opened
       })),
-    lastUpdated: new Date().toISOString()
+    lastUpdated: nowISO()
   };
 
   return successResponse(response);

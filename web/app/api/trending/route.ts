@@ -15,10 +15,11 @@
 
 import type { NextRequest } from 'next/server';
 
-import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
+import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 import { withErrorHandling, validationError, successResponse, errorResponse } from '@/lib/api';
 import { logger, devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { nowISO } from '@/lib/utils/format-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,7 +125,7 @@ async function getTrendingPolls(limit: number) {
         polls: [],
         type: 'polls',
         limit,
-        generatedAt: new Date().toISOString()
+        generatedAt: nowISO()
       });
     }
 
@@ -156,7 +157,7 @@ async function getTrendingPolls(limit: number) {
       polls: transformedPolls,
       type: 'polls',
       limit,
-      generatedAt: new Date().toISOString()
+      generatedAt: nowISO()
     });
 
   } catch (error) {
@@ -188,7 +189,7 @@ async function getTrendingHashtags(request: NextRequest, limit: number) {
       type: 'hashtags',
       hashtagType,
       limit,
-      generatedAt: new Date().toISOString()
+      generatedAt: nowISO()
     });
 
   } catch (error) {
@@ -277,7 +278,7 @@ async function getTrendingTopics(limit: number) {
       polls: trendingPolls,
       type: 'topics',
       limit,
-      generatedAt: new Date().toISOString()
+      generatedAt: nowISO()
     });
 
   } catch (error) {
@@ -313,7 +314,7 @@ async function trackHashtags(request: NextRequest) {
       message: 'Hashtags tracked successfully',
       count: hashtags.length,
       type: 'hashtags',
-      generatedAt: new Date().toISOString()
+      generatedAt: nowISO()
     });
 
   } catch (error) {

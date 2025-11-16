@@ -1,19 +1,32 @@
-## LLC, Compliance, and Launch Checklist (Choices Platform)
+## Entity Choice, Compliance, and Launch Checklist (Choices Platform)
+This checklist remains prominent for operational readiness. Track execution status in `docs/ROADMAP_SINGLE_SOURCE.md`.
 
-This document is a practical, end‑to‑end checklist to get from “I own choices-app.com” to “I operate the app as a compliant business.” It assumes you’ll use ZenBusiness (or similar) to file the LLC and Vercel + Resend for hosting and email.
+This document is a practical, end‑to‑end checklist to get from “I own choices-app.com” to “I operate the app as a compliant organization.” It covers both LLC and Nonprofit (501(c)(3)) paths and Vercel + Resend for hosting and email.
 
 ### 0) One‑page decisions (make these now)
+- **Entity type**
+  - Nonprofit (501(c)(3)) — mission‑first; donations and many grants become available; volunteer moderators allowed; additional governance (board), annual filings, and public disclosure.
+  - LLC (for‑profit) — faster setup; compatible with SBIR/contracts; classic donations not tax‑deductible; volunteers problematic (use stipends/payroll).
 - **State of formation**
-  - Default: your home state (simplest).
-  - Alternative: Delaware + foreign registration in your home state (more filings/fees; common for startups).
-- **LLC name**: “Choices App LLC” (or variant) — confirm availability in your state registry.
-- **Registered agent**: choose ZenBusiness (keeps your address private) or similar.
+  - Default: your home state (simplest) for either entity.
+  - Alternative: Delaware (if later complexity/VC planned) + foreign registration in your home state.
+- **Organization name**: e.g., “Choices Foundation” (nonprofit) or “Choices App LLC” (for‑profit).
+- **Registered agent**: ZenBusiness or similar (keeps your address private).
 
-### 1) Form the LLC (ZenBusiness can do most of this)
+### 1) Form the entity
+#### If Nonprofit (501(c)(3)) — recommended for mission alignment
+- **Incorporate nonprofit** with the state (Articles of Incorporation with charitable purpose + dissolution clause).
+- **Board of directors**: at least 3 (varies by state); adopt bylaws and initial resolutions.
+- **EIN**: obtain from IRS (free).
+- **501(c)(3) application**: file IRS Form 1023 (standard) or 1023‑EZ (if eligible); prepare narrative of activities, budgets for 3 years, and conflict‑of‑interest policy.
+- **State charitable registration** (if required) for fundraising.
+- **Annual filings**: IRS Form 990/990‑EZ/990‑N + state reports.
+
+#### If LLC (for‑profit)
 - **Articles of Organization**: file with the state.
 - **Operating Agreement**: include (single‑member is fine).
-- **EIN**: obtain from IRS (free) or have ZenBusiness do it.
-- **Initial compliance**: any state‑specific initial report/publication.
+- **EIN**: obtain from IRS (free) or via ZenBusiness.
+- **Initial compliance**: any state‑specific report/publication.
 
 ### 2) Banking & financial hygiene
 - **Business bank account** (after EIN): open under LLC name + EIN.
@@ -21,6 +34,8 @@ This document is a practical, end‑to‑end checklist to get from “I own choi
 - (If/when you accept payments) **Stripe**:
   - Legal entity: LLC name + EIN + bank account.
   - Set fraud/chargeback rules; configure payout schedule.
+
+> Nonprofit note: You can still use Stripe for donations/fees. Ensure your 501(c)(3) status (or fiscal sponsorship) is reflected for donor tax receipts. Keep restricted vs unrestricted funds tracked.
 
 ### 3) App hosting and domain
 - **Vercel**: add `choices-app.com` to your project; set primary domain; redirect `www` → apex (or vice‑versa).
@@ -94,7 +109,9 @@ This document is a practical, end‑to‑end checklist to get from “I own choi
 - **Trademark**: if you plan to defend the brand.
 
 ### Your minimal action plan (in order)
-1) Decide formation state, LLC name, registered agent → have ZenBusiness file LLC, Operating Agreement, EIN.
+1) Decide entity (Nonprofit vs LLC), formation state, name, registered agent.
+   - If Nonprofit: incorporate + EIN → file 1023/1023‑EZ with board, bylaws, COI policy and 3‑yr budgets.
+   - If LLC: file Articles + Operating Agreement + EIN.
 2) Open business bank account; connect bookkeeping.
 3) Point `choices-app.com` to Vercel; verify TLS.
 4) In Resend: add domain, DKIM, (optional) DMARC; set sender `verify@choices-app.com`.
@@ -102,6 +119,34 @@ This document is a practical, end‑to‑end checklist to get from “I own choi
 6) Populate ToS/Privacy/AUP links in the app footer.
 7) Run end‑to‑end tests (email verification, publish, overrides, admin revert).
 8) Monitor deliverability; tighten DMARC to `p=quarantine` once stable.
+
+---
+
+## Nonprofit vs LLC: Opportunities and Trade‑offs
+
+### Opportunities unlocked by Nonprofit (501(c)(3))
+- **Donations & tax‑deductibility**: Individuals and foundations can donate; many require 501(c)(3) status.
+- **Grants**: Broad access to federal/state/local/civic/philanthropic grants not open to for‑profits.
+- **Volunteers**: True volunteers can lawfully contribute moderation/support without wage issues.
+- **Public trust & governance**: Board oversight and public 990s can build credibility for civic tech.
+
+### Trade‑offs for Nonprofit
+- **Time to status**: 1023 processing can take months (1023‑EZ faster if eligible). Consider **fiscal sponsorship** as a bridge.
+- **Governance overhead**: Board meetings, minutes, bylaws, conflict-of‑interest policies, public disclosures.
+- **Revenue flexibility**: Commercial product add‑ons may require a separate taxable subsidiary or UBIT management.
+
+### Opportunities with LLC (for‑profit)
+- **Speed**: Quick to form and pivot.
+- **Government innovation funds**: SBIR/STTR and certain contracts are for‑profit friendly.
+- **Commercial revenue**: Fewer restrictions on monetization.
+
+### Trade‑offs for LLC
+- **Donations**: Not tax‑deductible to donors; many foundation grants unavailable (unless via fiscal sponsorship or as a subrecipient).
+- **Volunteers**: Risky; use stipends/payroll instead.
+
+### Hybrid/bridge options
+- **Fiscal sponsorship**: A nonprofit “sponsor” receives deductible donations/grants on your behalf while you operate; later spin out as your own 501(c)(3).
+- **Sister entities**: A 501(c)(3) for mission; an LLC/subsidiary for commercial add‑ons (clear cost allocation & governance needed).
 
 Keep this file as your operational playbook; check off items and add dates/owners as you proceed. If you need, I can generate ToS/Privacy/AUP templates tailored to the app’s current feature set and wire footer links.*** End Patch
 

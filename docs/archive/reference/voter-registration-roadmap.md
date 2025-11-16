@@ -1,4 +1,7 @@
-# Voter Registration Integration Roadmap
+# [ARCHIVED] Voter Registration Integration Roadmap
+Active work and status live in:
+- `docs/ROADMAP_SINGLE_SOURCE.md`
+- `docs/STATE_MANAGEMENT.md` (store patterns)
 
 **Goal:** Attach a state-appropriate voter registration call-to-action to the address lookup experience so every user gets a single authoritative next step without leaving the civics flow.
 

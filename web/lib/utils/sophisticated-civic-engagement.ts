@@ -1,15 +1,21 @@
 /**
  * @fileoverview Civic Engagement Utilities
- * 
+ *
+ * STATUS: RARELY USED, FEATURE-GATED (CIVIC_ENGAGEMENT_V2)
+ * Ownership: Civic/Integrations
+ * Notes:
+ * - Access is explicitly gated by feature flag to avoid accidental usage spread.
+ * - Keep API surface minimal; prefer higher-level services for production pathways.
+ *
  * Civic engagement utilities for representative integration, petition management, and civic action tracking.
- * 
+ *
  * This module provides civic engagement capabilities including:
  * - Representative integration with OpenStates data
  * - Petition creation and management
  * - Campaign tracking and signature collection
  * - Trust scoring and community impact analysis
  * - Civic engagement recommendations
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -36,41 +42,41 @@ function assertCivicEngagementEnabled(context: string): void {
 
 /**
  * Sophisticated civic action types supported by our platform
- * 
+ *
  * These action types enable comprehensive civic engagement including
  * petitions, campaigns, surveys, events, protests, and meetings.
- * 
+ *
  * @typedef {string} CivicActionType
  */
 export type CivicActionType = 'petition' | 'campaign' | 'survey' | 'event' | 'protest' | 'meeting';
 
 /**
  * Urgency levels for civic actions
- * 
+ *
  * These urgency levels help prioritize civic actions and determine
  * appropriate response times and resource allocation.
- * 
+ *
  * @typedef {string} UrgencyLevel
  */
 export type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical';
 
 /**
  * Status values for civic actions
- * 
+ *
  * These status values track the lifecycle of civic actions from
  * creation through completion or cancellation.
- * 
+ *
  * @typedef {string} ActionStatus
  */
 export type ActionStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
 
 /**
  * Advanced civic action data structure
- * 
+ *
  * Represents a sophisticated civic action with comprehensive tracking
  * capabilities including representative targeting, signature collection,
  * and community impact measurement.
- * 
+ *
  * @interface SophisticatedCivicAction
  */
 export type SophisticatedCivicAction = {
@@ -110,10 +116,10 @@ export type SophisticatedCivicAction = {
 
 /**
  * Representative data structure with sophisticated features
- * 
+ *
  * Represents a representative with comprehensive contact information,
  * social media presence, and advanced engagement metrics.
- * 
+ *
  * @interface RepresentativeData
  */
 export type RepresentativeData = {
@@ -151,10 +157,10 @@ export type RepresentativeData = {
 
 /**
  * Civic engagement metrics for community impact analysis
- * 
+ *
  * Tracks civic engagement activities including petitions, representative
  * interactions, and community impact measurements with trust tier assessment.
- * 
+ *
  * @interface CivicEngagementMetrics
  */
 export type CivicEngagementMetrics = {
@@ -176,10 +182,10 @@ export type CivicEngagementMetrics = {
 
 /**
  * Create sophisticated civic action with comprehensive tracking
- * 
+ *
  * Creates a new civic action with advanced features including representative
  * targeting, signature collection, urgency levels, and community impact tracking.
- * 
+ *
  * @param {Object} actionData - Civic action creation data
  * @param {string} actionData.title - Action title
  * @param {string} actionData.description - Detailed action description
@@ -192,7 +198,7 @@ export type CivicEngagementMetrics = {
  * @param {boolean} actionData.isPublic - Whether the action is publicly visible
  * @param {string} userId - User ID of action creator
  * @returns {Promise<SophisticatedCivicAction | null>} Created civic action or null if failed
- * 
+ *
  * @example
  * ```typescript
  * const action = await createSophisticatedCivicAction({
@@ -206,7 +212,7 @@ export type CivicEngagementMetrics = {
  *   isPublic: true
  * }, 'user-456');
  * ```
- * 
+ *
  * @since 2.0.0
  */
 export async function createSophisticatedCivicAction(
@@ -286,7 +292,7 @@ export async function getRepresentativesByLocation(
   try {
     // In a real implementation, this would query the representatives_core table
     // with sophisticated filtering based on trust scores, contact frequency, etc.
-    
+
     logger.info('Fetching representatives by location', {
       location,
       filters
@@ -333,10 +339,10 @@ export function calculateCivicEngagementMetrics(
 ): CivicEngagementMetrics {
   assertCivicEngagementEnabled('calculateCivicEngagementMetrics');
   const totalActions = actions.length;
-  const activePetitions = actions.filter(a => 
+  const activePetitions = actions.filter(a =>
     a.action_type === 'petition' && a.status === 'active'
   ).length;
-  
+
   const civicScore = calculateCivicScore(actions, interactions, signatures);
   const communityImpact = calculateCommunityImpact(actions, signatures);
   const trustTier = calculateTrustTier(civicScore);
@@ -404,7 +410,7 @@ export async function getTrendingCivicActions(
     logger.info('Fetching trending civic actions', { limit, category });
 
     const supabase = supabaseClient ?? await getSupabaseServerClient();
-    
+
     if (!supabase) {
       logger.error('Failed to get Supabase client for trending civic actions');
       return [];
@@ -461,13 +467,13 @@ export async function getTrendingCivicActions(
       const ageInHours = (now - createdAt) / (1000 * 60 * 60);
       const signatureCount = action.current_signatures ?? 0;
       const signatureGrowthRate = signatureCount / Math.max(ageInHours, 1);
-      
+
       // Time decay factor (more recent = higher score)
       const timeDecay = Math.max(0, 1 - (ageInHours / (7 * 24))); // Decay over 7 days
-      
+
       // Calculate trending score
       const trendingScore = signatureGrowthRate * timeDecay;
-      
+
       return {
         ...action,
         // Map schema fields to expected format
@@ -484,7 +490,7 @@ export async function getTrendingCivicActions(
       .map(({ trendingScore: _trendingScore, ...action }) => action);
 
     logger.info('Retrieved trending civic actions', { count: trendingActions.length, limit, category });
-    
+
     return trendingActions;
   } catch (error) {
     logger.error('Error fetching trending civic actions', error instanceof Error ? error : new Error(String(error)));
@@ -504,7 +510,7 @@ export function calculateCivicScore(
   const actionScore = actions.length * 10;
   const interactionScore = interactions * 5;
   const signatureScore = Math.min(signatures / 100, 50); // Cap at 50 points
-  
+
   return Math.min(actionScore + interactionScore + signatureScore, 100);
 }
 
@@ -518,7 +524,7 @@ export function calculateCommunityImpact(
   assertCivicEngagementEnabled('calculateCommunityImpact');
   const publicActions = actions.filter(a => a.is_public).length;
   const signatureImpact = Math.min(signatures / 1000, 50); // Cap at 50 points
-  
+
   return Math.min(publicActions * 10 + signatureImpact, 100);
 }
 

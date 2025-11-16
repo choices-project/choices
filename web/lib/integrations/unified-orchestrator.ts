@@ -1083,7 +1083,7 @@ export class UnifiedDataOrchestrator {
   private estimateDeadline(dateString: string, offsetDays: number): string {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
-      return 'Pending';
+      return '' as unknown as string; // use nullish at call sites instead of placeholder text
     }
 
     const adjusted = new Date(date);

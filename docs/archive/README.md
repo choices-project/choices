@@ -16,3 +16,7 @@ When archiving additional documents:
 3. Update `docs/README.md` so the primary index remains accurate.
 
 If the archived file still contains useful technical insight, consider extracting the relevant pieces into the active docs before archiving.
+
+### Archived-in-place (to preserve inbound links)
+
+- `docs/ROADMAP.md` — Marked as [ARCHIVED] and points to `docs/ROADMAP_SINGLE_SOURCE.md`. Kept in place to avoid breaking links; do not add new items.

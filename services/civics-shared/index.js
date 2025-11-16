@@ -74,7 +74,7 @@ export function determineRaceImportance(electionName, jurisdiction) {
 export function estimateDeadline(dateString, offsetDays) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) {
-    return 'TBD';
+    return null;
   }
 
   const adjusted = new Date(date);

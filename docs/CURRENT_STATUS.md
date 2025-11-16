@@ -11,7 +11,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 | Area | Status | Notes |
 | --- | --- | --- |
 | Store modernization | 🔄 In progress | Notification store complete with integration + E2E coverage; profile/user stores partially migrated; app/admin/polls stores queued. |
-| Documentation | 🔄 In progress | Core docs refreshed (civics ingest, operations, quickstart); legacy “100% complete” narratives queued for archive. |
+| Documentation | ✅ Current | Core docs refreshed; scratch materials archived; single-source roadmap established. |
 | Testing | 🚧 Needs expansion | Jest suites cover key stores; Playwright harnesses exist for profile + notification stores; analytics and civic flows still lack modern coverage. |
 | Analytics dashboard | 🚧 Partially wired | UI components exist, but endpoints rely on mocks and Redis caching experiments. |
 | Admin tooling | 🔄 Being refit | Feature flag UI and notification system now consume shared hooks; broader audit tooling still references legacy patterns. |
@@ -42,6 +42,19 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 
 ---
 
+## Civics Ingest Status (OpenStates)
+
+- Phase 2 — Validation harness: In progress. Staging fixtures and CLI smoke-test template to be added (see `services/civics-backend/ROADMAP.md`).
+- Phase 3 — Crosswalk + dedupe automation: Planned. API call optimization matrix pending implementation.
+- Phase 4 — Types: Next schema change will trigger Supabase types regeneration (run `cd web && npm run types:generate`).
+- Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
+
+References:
+- Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
+- Backend plan: `services/civics-backend/ROADMAP.md`
+
+---
+
 ## Known Gaps & Risks
 
 - **TypeScript debt**: `TS2589` recursion and strict optional property errors persist in profile, feeds, and analytics modules.
@@ -65,10 +78,9 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 
 ## References
 
-- Store modernization checklist: `scratch/gpt5-codex/store-roadmaps/notification-store-checklist.md`
-- Technical roadmap: `docs/ROADMAP.md`
+- Technical roadmap (single source): `docs/ROADMAP_SINGLE_SOURCE.md`
 - Testing strategy: `docs/TESTING.md`
 - State management standards: `docs/STATE_MANAGEMENT.md`
 
-For ongoing progress notes, continue tracking in the `/scratch` workspace directories.
+For ongoing progress updates, track in `docs/ROADMAP_SINGLE_SOURCE.md`.
 

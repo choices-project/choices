@@ -303,6 +303,47 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_email_challenges: {
+        Row: {
+          candidate_id: string
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          candidate_id: string
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          candidate_id?: string
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_email_challenges_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_onboarding: {
         Row: {
           candidate_id: string
@@ -448,6 +489,50 @@ export type Database = {
           visibility?: string | null
         }
         Relationships: []
+      }
+      candidate_profile_audit: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          field: string
+          id: string
+          ip: string | null
+          new_value: Json | null
+          old_value: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          field: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          field?: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_profile_audit_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       candidate_profiles: {
         Row: {
@@ -2918,6 +3003,53 @@ export type Database = {
           },
         ]
       }
+      representative_follows: {
+        Row: {
+          created_at: string
+          notes: string | null
+          notify_on_committee_activity: boolean
+          notify_on_events: boolean
+          notify_on_public_statements: boolean
+          notify_on_votes: boolean
+          representative_id: number
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          notes?: string | null
+          notify_on_committee_activity?: boolean
+          notify_on_events?: boolean
+          notify_on_public_statements?: boolean
+          notify_on_votes?: boolean
+          representative_id: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          notes?: string | null
+          notify_on_committee_activity?: boolean
+          notify_on_events?: boolean
+          notify_on_public_statements?: boolean
+          notify_on_votes?: boolean
+          representative_id?: number
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_follows_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       representative_overrides: {
         Row: {
           campaign_website: string | null
@@ -2960,6 +3092,50 @@ export type Database = {
             foreignKeyName: "representative_overrides_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: true
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      representative_overrides_audit: {
+        Row: {
+          created_at: string
+          field: string
+          id: string
+          ip: string | null
+          new_value: Json | null
+          old_value: Json | null
+          representative_id: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          representative_id: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          id?: string
+          ip?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          representative_id?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representative_overrides_audit_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
             referencedRelation: "representatives_core"
             referencedColumns: ["id"]
           },

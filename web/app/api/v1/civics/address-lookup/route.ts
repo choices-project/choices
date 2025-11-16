@@ -62,6 +62,7 @@ import { assertPepperConfig } from '@/lib/civics/env-guard';
 import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
 import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

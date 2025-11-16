@@ -51,6 +51,7 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 - **[docs/CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current status
 - **[docs/WIDGET_SYSTEM.md](./docs/WIDGET_SYSTEM.md)** - Widget dashboard docs
 - **[docs/API_CHANGES.md](./docs/API_CHANGES.md)** - API consolidation
+ - **Single Source Roadmap**: [docs/ROADMAP_SINGLE_SOURCE.md](./docs/ROADMAP_SINGLE_SOURCE.md)
  - **Operations**:
    - Email & Verification (freemium/domain): [docs/OPERATIONS/email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md)
    - LLC & Compliance Checklist: [docs/OPERATIONS/llc-and-compliance-checklist.md](./docs/OPERATIONS/llc-and-compliance-checklist.md)

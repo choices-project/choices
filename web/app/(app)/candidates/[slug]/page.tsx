@@ -1,6 +1,6 @@
 'use client'
 
-import useSWR from 'swr';
+import useSWR from '@/shims/swr';
 import Link from 'next/link';
 import { useState } from 'react';
 
