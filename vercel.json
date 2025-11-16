@@ -3,6 +3,14 @@
   "installCommand": "cd web && npm install",
   "framework": "nextjs",
   "outputDirectory": "web/.next",
+  "functions": {
+    "web/app/**/*.ts": {
+      "runtime": "nodejs22.x"
+    },
+    "web/app/**/*.tsx": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/candidate-reminders",
