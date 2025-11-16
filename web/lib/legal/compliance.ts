@@ -663,8 +663,13 @@ export class CommunicationComplianceManager {
   }
 
   private async storeDataSubjectRequest(userId: string, request: DataSubjectRequest): Promise<void> {
-    // Store data subject request
-    logger.info(`Data subject request stored: ${request.id}`);
+    // Store data subject request with user context for audit trail
+    logger.info('Data subject request stored', {
+      requestId: request.id,
+      userId,
+      requestType: request.type,
+      timestamp: request.timestamp
+    });
   }
 
   private async processDataSubjectRequest(requestId: string, type: string, details: any): Promise<void> {

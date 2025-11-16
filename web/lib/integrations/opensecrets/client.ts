@@ -286,6 +286,14 @@ export class OpenSecretsClient {
   private checkRateLimits(): void {
     const now = Date.now();
     
+    // Check if daily reset is needed (24 hours have passed since last reset)
+    const timeSinceLastReset = now - this.lastDailyReset;
+    if (timeSinceLastReset >= 24 * 60 * 60 * 1000) {
+      this.dailyRequestCount = 0;
+      this.lastDailyReset = now;
+      logger.debug('Daily request counter reset', { lastReset: this.lastDailyReset });
+    }
+    
     // Check daily limit
     if (this.dailyRequestCount >= this.config.rateLimit.requestsPerDay) {
       throw new OpenSecretsApiError(

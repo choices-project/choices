@@ -440,6 +440,14 @@ export class ApiUsageMonitor {
       };
       
       if (metrics.requestsToday >= dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] ?? 10000)) {
+        // Store alert for monitoring and notification systems
+        this.alerts.push({
+          apiName,
+          threshold: dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] ?? 10000),
+          current: metrics.requestsToday,
+          timestamp: new Date()
+        });
+        
         logger.error('API quota alert', {
           apiName,
           requestsToday: metrics.requestsToday,
@@ -448,6 +456,23 @@ export class ApiUsageMonitor {
         });
       }
     }
+    
+    // Clean up old alerts (keep only last 100)
+    if (this.alerts.length > 100) {
+      this.alerts = this.alerts.slice(-100);
+    }
+  }
+  
+  /**
+   * Get recent alerts
+   */
+  getRecentAlerts(limit: number = 10): Array<{
+    apiName: string;
+    threshold: number;
+    current: number;
+    timestamp: Date;
+  }> {
+    return this.alerts.slice(-limit);
   }
 }
 

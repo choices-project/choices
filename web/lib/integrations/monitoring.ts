@@ -372,12 +372,31 @@ export class IntegrationMonitor {
       }
     }
 
-    // Update current metrics
+    // Update current metrics with response time and error type
     currentMetrics.requests.total++;
+    if (responseTime > 0) {
+      currentMetrics.responseTime.total += responseTime;
+      currentMetrics.responseTime.count++;
+      currentMetrics.responseTime.avg = currentMetrics.responseTime.total / currentMetrics.responseTime.count;
+      if (responseTime > currentMetrics.responseTime.max) {
+        currentMetrics.responseTime.max = responseTime;
+      }
+      if (currentMetrics.responseTime.min === 0 || responseTime < currentMetrics.responseTime.min) {
+        currentMetrics.responseTime.min = responseTime;
+      }
+    }
+    
     if (success) {
       currentMetrics.requests.successful++;
     } else {
       currentMetrics.requests.failed++;
+      // Track error type for failed requests
+      if (errorType) {
+        if (!currentMetrics.errors) {
+          currentMetrics.errors = {};
+        }
+        currentMetrics.errors[errorType] = (currentMetrics.errors[errorType] || 0) + 1;
+      }
       if (statusCode === 429) {
         currentMetrics.requests.rateLimited++;
       }

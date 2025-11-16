@@ -3,17 +3,17 @@ import logger from '@/lib/utils/logger';
 // PHASE 1: PROOF-OF-PERSONHOOD WITH WEBAUTHN
 // ============================================================================
 // Agent A1 - Infrastructure Specialist
-// 
+//
 // This module implements proof-of-personhood using WebAuthn passkeys for
 // the Ranked Choice Democracy Revolution platform.
-// 
+//
 // Features:
 // - WebAuthn passkey registration and authentication
 // - Device presence verification
 // - Reputation score calculation
 // - Constituent status verification
 // - Blind-signed anonymous credentials
-// 
+//
 // Created: January 15, 2025
 // Status: Phase 1 Implementation
 // ============================================================================
@@ -157,7 +157,7 @@ export class ProofOfPersonhoodManager {
           timeout: 60000
         }
       }) as PublicKeyCredential;
-      
+
       // Validate origin matches expected origin
       if (typeof window !== 'undefined' && window.location.origin !== this.origin) {
         logger.warn('WebAuthn origin mismatch', {
@@ -233,16 +233,16 @@ export class ProofOfPersonhoodManager {
   calculateReputationScore(userProfile: UserProfile): ReputationMetrics {
     // Age score (0-1): Higher for older accounts
     const ageScore = Math.min(userProfile.accountAge / (365 * 24 * 60 * 60 * 1000), 2) / 2;
-    
+
     // Consistency score (0-1): Higher for consistent voting patterns
     const consistencyScore = Math.min(userProfile.consistencyScore, 1);
-    
+
     // Activity score (0-1): Higher for active users
     const activityScore = Math.min(userProfile.totalVotes / 100, 1);
-    
+
     // Device score (0-1): Higher for users with multiple verified devices
     const deviceScore = Math.min(userProfile.deviceCount / 3, 1);
-    
+
     // Overall score (weighted average)
     const overallScore = (
       ageScore * 0.3 +
@@ -268,7 +268,7 @@ export class ProofOfPersonhoodManager {
     try {
       // On-device jurisdiction determination
       const jurisdiction = await this.determineJurisdiction(address);
-      
+
       if (!jurisdiction) {
         return {
           verified: false,
@@ -281,7 +281,7 @@ export class ProofOfPersonhoodManager {
 
       // Generate blind-signed credential
       const credential = await this.generateBlindSignedCredential(jurisdiction);
-      
+
       return {
         verified: true,
         jurisdiction,
@@ -306,7 +306,7 @@ export class ProofOfPersonhoodManager {
   // ============================================================================
 
   async verifyProofOfPersonhood(
-    userId: string, 
+    userId: string,
     userProfile: UserProfile,
     address?: string
   ): Promise<ProofOfPersonhoodResult> {
@@ -323,7 +323,7 @@ export class ProofOfPersonhoodManager {
         deviceCount: userProfile.deviceCount,
         hasAddress: !!address
       });
-      
+
       // Verify device presence
       devicePresence = await this.verifyDevicePresence();
       if (devicePresence) {
@@ -335,7 +335,7 @@ export class ProofOfPersonhoodManager {
       // Calculate reputation score
       const reputationMetrics = this.calculateReputationScore(userProfile);
       const reputationScore = reputationMetrics.overallScore;
-      
+
       if (reputationScore > 0.7) {
         confidence += 0.3;
       } else if (reputationScore < 0.3) {
@@ -346,7 +346,7 @@ export class ProofOfPersonhoodManager {
       if (address) {
         const constituent = await this.verifyConstituentStatus(address);
         constituentStatus = constituent.verified;
-        
+
         if (constituentStatus) {
           confidence += 0.3;
         } else {
@@ -465,7 +465,7 @@ export class ProofOfPersonhoodManager {
 
 export async function checkWebAuthnSupport(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  
+
   return !!(
     window.PublicKeyCredential &&
     window.navigator.credentials &&
@@ -476,7 +476,7 @@ export async function checkWebAuthnSupport(): Promise<boolean> {
 
 export async function checkPlatformAuthenticator(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  
+
   try {
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch {
@@ -487,21 +487,21 @@ export async function checkPlatformAuthenticator(): Promise<boolean> {
 export function calculateUserEntropy(votingHistory: any[]): number {
   // Calculate entropy based on voting patterns
   if (votingHistory.length === 0) return 0;
-  
+
   const patterns = new Map();
   votingHistory.forEach(vote => {
     const pattern = JSON.stringify(vote.choices);
     patterns.set(pattern, (patterns.get(pattern) || 0) + 1);
   });
-  
+
   let entropy = 0;
   const total = votingHistory.length;
-  
+
   patterns.forEach(count => {
     const probability = count / total;
     entropy -= probability * Math.log2(probability);
   });
-  
+
   return entropy;
 }
 

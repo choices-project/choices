@@ -1,9 +1,9 @@
 /**
  * Congress.gov API Client
- * 
+ *
  * Official government data source for congressional information
  * Rate limits: 5,000 requests/day
- * 
+ *
  * @author Agent E
  * @date 2025-01-15
  */
@@ -135,9 +135,9 @@ export class CongressGovClient {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+
     const msUntilMidnight = tomorrow.getTime() - now.getTime();
-    
+
     setTimeout(() => {
       this.dailyRequestCount = 0;
       this.lastDailyReset = Date.now();
@@ -154,7 +154,7 @@ export class CongressGovClient {
 
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
     url.searchParams.set('api_key', this.config.apiKey);
-    
+
     // Add query parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -163,7 +163,7 @@ export class CongressGovClient {
     });
 
     const startTime = Date.now();
-    
+
     try {
       logger.debug('Making Congress.gov API request', {
         endpoint,
@@ -215,7 +215,7 @@ export class CongressGovClient {
 
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       if (error instanceof CongressGovApiError) {
         throw error;
       }
@@ -242,7 +242,7 @@ export class CongressGovClient {
 
   private checkRateLimits(): void {
     const now = Date.now();
-    
+
     // Check if daily reset is needed (24 hours have passed since last reset)
     const timeSinceLastReset = now - this.lastDailyReset;
     if (timeSinceLastReset >= 24 * 60 * 60 * 1000) {
@@ -250,7 +250,7 @@ export class CongressGovClient {
       this.lastDailyReset = now;
       logger.debug('Daily request counter reset', { lastReset: this.lastDailyReset });
     }
-    
+
     // Check daily limit
     if (this.dailyRequestCount >= this.config.rateLimit.requestsPerDay) {
       throw new CongressGovApiError(
@@ -308,7 +308,7 @@ export class CongressGovClient {
   async getMembersByState(state: string, chamber?: 'house' | 'senate'): Promise<CongressGovMember[]> {
     const params: Record<string, string> = { state };
     if (chamber) params.chamber = chamber;
-    
+
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovMember>>('/member', params);
     return response.results ?? [];
   }
@@ -402,7 +402,7 @@ export class CongressGovClient {
  */
 export function createCongressGovClient(): CongressGovClient {
   const apiKey = process.env.CONGRESS_GOV_API_KEY;
-  
+
   if (!apiKey) {
     throw new CongressGovApiError('CONGRESS_GOV_API_KEY environment variable is required', 500);
   }
