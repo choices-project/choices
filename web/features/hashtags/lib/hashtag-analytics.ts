@@ -28,11 +28,16 @@ import {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase environment variables are not configured for hashtag analytics.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lazily-configured Supabase client: avoid throwing at module load time so builds
+// (including CI/E2E) can succeed even when env vars are not present.
+const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : new Proxy({} as ReturnType<typeof createClient>, {
+        get(_target, _prop) {
+          throw new Error('Supabase environment variables are not configured for hashtag analytics.');
+        },
+      });
 
 // ============================================================================
 // ANALYTICS CORE FUNCTIONS

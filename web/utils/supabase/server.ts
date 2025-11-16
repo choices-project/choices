@@ -18,6 +18,24 @@ const validateEnvironment = () => {
     .map(([key]) => key)
 
   if (missing.length > 0) {
+    // In CI and test environments we don't want builds or tests to fail purely
+    // due to missing Supabase env vars. Use safe, test-only fallbacks instead.
+    if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Supabase environment variables missing in CI/test environment; using test-only fallbacks for: ${missing.join(', ')}`
+      )
+
+      return {
+        NEXT_PUBLIC_SUPABASE_URL:
+          process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://example.supabase.co',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'fake-dev-key-for-ci-only',
+        SUPABASE_SERVICE_ROLE_KEY:
+          process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'dev-only-secret'
+      }
+    }
+
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
   }
 

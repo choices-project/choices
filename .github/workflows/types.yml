@@ -14,7 +14,8 @@ jobs:
             export PATH="/usr/local/bin:$PATH"
           fi
           which gtimeout || which timeout
-      - run: npm ci --workspaces
+      - name: Install dependencies for web workspace
+        run: cd web && npm ci
       - name: Verify TypeScript config
         run: |
           node -e "const a=require('child_process').execSync('npx tsc --showConfig',{encoding:'utf8'}); if(!/\"exactOptionalPropertyTypes\": true/.test(a)) process.exit(1)"
