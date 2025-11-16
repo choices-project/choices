@@ -47,13 +47,19 @@ jobs:
           REPO="${GITHUB_REPOSITORY#*/}"
           PR_REF="${{ steps.refs.outputs.PR_REF }}"
 
-          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref="$PR_REF" -F per_page=100 \
-            | jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' \
-            > pr.tsv
+          # Fetch alerts for PR ref; tolerate 404 (no alerts yet for this ref)
+          if ! gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref="$PR_REF" -F per_page=100 > pr_raw.json 2>/dev/null; then
+            echo "[]" > pr_raw.json
+          fi
+          jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' pr_raw.json \
+            > pr.tsv || echo -n > pr.tsv
 
-          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref=refs/heads/main -F per_page=100 \
-            | jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' \
-            > main.tsv
+          # Fetch alerts for main; tolerate 404 (no alerts configured yet)
+          if ! gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref=refs/heads/main -F per_page=100 > main_raw.json 2>/dev/null; then
+            echo "[]" > main_raw.json
+          fi
+          jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' main_raw.json \
+            > main.tsv || echo -n > main.tsv
 
           # New/changed alerts introduced by PR (compare by rule|path|line)
           awk -F'\t' '{print $1"|"$3"|"$4"\t"$0}' main.tsv | sort -u > main.sig

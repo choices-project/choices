@@ -81,11 +81,11 @@ jobs:
 
       - name: Run unit tests
         if: matrix.test-type == 'unit'
-        run: npm run test:unit -- --coverage --coverageReporters=lcov --coverageReporters=text
+        run: npm run test:unit
 
       - name: Run integration tests
         if: matrix.test-type == 'integration'
-        run: npm run test:integration -- --coverage --coverageReporters=lcov --coverageReporters=text
+        run: npm run test:integration
 
       - name: Upload coverage
         continue-on-error: true

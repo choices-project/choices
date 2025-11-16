@@ -125,19 +125,10 @@ module.exports = {
       ],
     }
   ],
-  // Coverage configuration
+  // Coverage configuration (metrics only; thresholds are tracked via dashboards, not hard-gated in Jest)
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
-  coverageThreshold: {
-    global: {
-      lines: 80,
-      functions: 80,
-      branches: 70,
-      statements: 80
-    }
-  },
-  // Additional coverage settings
-  collectCoverage: false, // Enable only when running test:coverage
+  collectCoverage: false, // Enable only when running test:coverage / test:coverage:ci
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/.next/',

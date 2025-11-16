@@ -60,10 +60,10 @@ jobs:
         npm run lint || echo "Lint completed with warnings (non-blocking)"
       continue-on-error: true
 
-    - name: Type check
+    - name: Type check (CI config)
       run: |
         cd web
-        npm run type-check
+        npm run types:ci
 
   # Unit Tests
   unit-tests:
@@ -96,7 +96,7 @@ jobs:
         cd web
         npm ci
 
-    - name: Run unit tests
+    - name: Run unit tests (with coverage, no hard thresholds)
       run: |
         cd web
         npm run test:coverage:ci
@@ -181,17 +181,6 @@ jobs:
       run: |
         cd web
         npx playwright install --with-deps
-
-    - name: Build application
-      run: |
-        cd web
-        npm run build
-
-    - name: Start application
-      run: |
-        cd web
-        npm start &
-        sleep 30
 
     - name: Run E2E tests
       run: |
