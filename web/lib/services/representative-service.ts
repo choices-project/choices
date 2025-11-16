@@ -42,6 +42,14 @@ export class RepresentativeService {
     try {
       logger.info('🔍 Service: getRepresentatives called with query:', query);
       
+      // Check cache first using cache key and validation
+      const cacheKey = this.getCacheKey(JSON.stringify(query ?? {}));
+      const cached = this.cache.get(cacheKey) as { data: RepresentativeListResponse; timestamp: number } | undefined;
+      if (cached && this.isCacheValid(cached.timestamp)) {
+        logger.info('✅ Service: Returning cached response');
+        return cached.data;
+      }
+      
       // Build query string
       const params = new URLSearchParams();
       if (query?.state) params.append('state', query.state);
@@ -78,7 +86,7 @@ export class RepresentativeService {
       );
       
       logger.info('✅ Service: Returning API response');
-      return {
+      const result: RepresentativeListResponse = {
         success: true,
         data: {
           representatives,
@@ -88,6 +96,11 @@ export class RepresentativeService {
           hasMore: (apiResult.data?.length ?? 0) >= (query?.limit ?? 20)
         }
       };
+      
+      // Cache the result
+      this.cache.set(cacheKey, { data: result, timestamp: Date.now() });
+      
+      return result;
     } catch (error) {
       logger.error('RepresentativeService.getRepresentatives error:', error);
       return {

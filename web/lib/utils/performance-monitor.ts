@@ -69,6 +69,7 @@ export class PerformanceMonitor {
   private isMonitoring = false;
 
   constructor() {
+    this.isMonitoring = true;
     this.initializeObservers();
   }
 
@@ -76,7 +77,10 @@ export class PerformanceMonitor {
    * Initialize performance observers
    */
   private initializeObservers(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      this.isMonitoring = false;
+      return;
+    }
 
     // LCP Observer
     if ('PerformanceObserver' in window) {

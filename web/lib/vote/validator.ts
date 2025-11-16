@@ -154,6 +154,14 @@ export class VoteValidator {
     poll: PollData, 
     userId?: string
   ): Promise<VoteValidation> {
+    // Log vote data context for audit trail
+    logger.debug('Validating business rules', {
+      pollId: poll.id,
+      userId: userId ?? 'anonymous',
+      voteChoicesCount: voteData.choices?.length ?? 0,
+      pollStatus: poll.status
+    });
+    
     // Check if poll is active
     if (poll.status !== 'active') {
       return {
@@ -212,6 +220,14 @@ export class VoteValidator {
     poll: PollData, 
     userId?: string
   ): Promise<VoteValidation> {
+    // Log vote data context for security audit
+    logger.debug('Validating security constraints', {
+      pollId: poll.id,
+      userId: userId ?? 'anonymous',
+      hasVoteData: !!voteData,
+      requiresVerification: poll.votingConfig.requireVerification
+    });
+    
     // Check authentication requirements
     if (poll.votingConfig.requireVerification && !userId) {
       return {

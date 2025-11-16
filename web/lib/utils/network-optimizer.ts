@@ -209,17 +209,27 @@ export class NetworkOptimizer {
     config: RequestConfig,
     delay = 300
   ): Promise<T> {
+    // Use key to track debounced requests and prevent duplicate calls
+    const existingTimeout = (this.cache as Map<string, NodeJS.Timeout>).get(key);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+    
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(async () => {
         try {
+          // Remove key from cache when request completes
+          (this.cache as Map<string, NodeJS.Timeout>).delete(key);
           const result = await this.request<T>(config);
           resolve(result);
         } catch (error) {
+          (this.cache as Map<string, NodeJS.Timeout>).delete(key);
           reject(error);
         }
       }, delay);
 
-      // Store timeout ID for potential cancellation
+      // Store timeout ID using key for potential cancellation
+      (this.cache as Map<string, NodeJS.Timeout>).set(key, timeoutId);
       (config as any).timeoutId = timeoutId;
     });
   }

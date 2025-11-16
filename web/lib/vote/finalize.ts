@@ -571,7 +571,11 @@ export class FinalizePollManager {
       const replayData = merkleTree.generateReplayData('IRV with deterministic tie-breaking');
       
       // Store replay data (implementation depends on storage system)
-      logger.info('Generated replay data:', replayData);
+      logger.info('Generated replay data', {
+        pollId,
+        replayDataLength: JSON.stringify(replayData).length,
+        merkleTreeSize: merkleTree.getSize()
+      });
       
       // In production, this would be stored in a dedicated table or file system
     } catch (error) {

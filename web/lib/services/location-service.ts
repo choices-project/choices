@@ -75,11 +75,14 @@ export class LocationService {
     try {
       logger.info('🌍 LocationService: Geocoding address:', address);
       
-      // Check cache first
+      // Check cache first with timeout validation
       const cached = this.cache.get(address);
-      if (cached) {
+      if (cached && cached.timestamp && (Date.now() - cached.timestamp) < this.cacheTimeout) {
         logger.info('📍 LocationService: Using cached result');
         return cached;
+      } else if (cached) {
+        // Cache expired, remove it
+        this.cache.delete(address);
       }
 
       // Prefer Google Maps Geocoding API if available
