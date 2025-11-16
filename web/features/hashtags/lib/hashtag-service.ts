@@ -847,8 +847,22 @@ export async function getHashtagAnalytics(
   hashtagId: string,
   period: '24h' | '7d' | '30d' | '90d' | '1y' = '7d'
 ): Promise<HashtagApiResponse<HashtagAnalytics>> {
-  const _supabase = await ensureSupabaseClient(); // kept for parity if needed later
+  const supabase = await ensureSupabaseClient();
   try {
+    // Verify hashtag exists using supabase client
+    const { data: hashtag, error: hashtagError } = await supabase
+      .from('hashtags')
+      .select('id')
+      .eq('id', hashtagId)
+      .single();
+    
+    if (hashtagError || !hashtag) {
+      return {
+        success: false,
+        error: 'Hashtag not found'
+      };
+    }
+    
     // Import the analytics function from hashtag-analytics.ts
     const { calculateHashtagAnalytics } = await import('./hashtag-analytics');
     const analytics = await calculateHashtagAnalytics(hashtagId, period);
@@ -909,7 +923,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
  * Validate hashtag name
  */
 export async function validateHashtagName(name: string): Promise<HashtagApiResponse<HashtagValidation>> {
-  const _supabase = await ensureSupabaseClient(); // ensure client ready for potential calls
+  const supabase = await ensureSupabaseClient();
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
     const errors: string[] = [];
@@ -923,6 +937,17 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
 
     if (normalizedName.length > 50) {
       errors.push('Hashtag must be less than 50 characters');
+    }
+    
+    // Check if hashtag already exists using supabase
+    const { data: existing } = await supabase
+      .from('hashtags')
+      .select('id, name')
+      .eq('name', normalizedName)
+      .single();
+    
+    if (existing) {
+      warnings.push('Hashtag already exists');
     }
 
     if (!/^[a-z0-9_]+$/.test(normalizedName)) {

@@ -177,6 +177,7 @@ export type HashtagModeration = {
   updated_at: string;
   moderated_by?: string;
   moderated_at?: string;
+  flags?: HashtagFlag[]; // Include flags for detailed review
 };
 
 export type HashtagFlag = {

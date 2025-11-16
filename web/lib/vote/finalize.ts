@@ -2,17 +2,17 @@
 // PHASE 1: FINALIZE POLL JOB IMPLEMENTATION
 // ============================================================================
 // Agent A1 - Infrastructure Specialist
-// 
+//
 // This module implements the poll finalization job that creates official
 // snapshots and locks polls for the Ranked Choice Democracy Revolution platform.
-// 
+//
 // Features:
 // - Official results calculation and snapshot creation
 // - Checksum generation for auditability
 // - Poll locking and status updates
 // - Broadcast notifications for real-time updates
 // - Error handling and rollback capabilities
-// 
+//
 // Created: January 15, 2025
 // Status: Phase 1 Implementation
 // ============================================================================
@@ -112,11 +112,11 @@ export class FinalizePollManager {
   // ============================================================================
 
   async finalizePoll(
-    pollId: string, 
+    pollId: string,
     options: FinalizeOptions = this.getDefaultOptions()
   ): Promise<FinalizeResult> {
     const startTime = performance.now();
-    
+
     try {
       // 1. Validate poll and get data
       const poll = await this.getPoll(pollId);
@@ -144,7 +144,7 @@ export class FinalizePollManager {
           data: ballot
         }))
       );
-      
+
       // Log ballot commitments for audit trail
       logger.debug('Ballot commitments added to Merkle tree', {
         pollId,
@@ -275,7 +275,7 @@ export class FinalizePollManager {
           .select('*')
           .eq('poll_id', pollId)
           .lte('created_at', closeAt.toISOString());
-        
+
         if (result.error) {
           logger.error('Error fetching official ballots:', result.error);
           return [];
@@ -287,7 +287,7 @@ export class FinalizePollManager {
         .from('votes')
         .select('*')
         .eq('poll_id', pollId);
-      
+
       if (result.error) {
         logger.error('Error fetching official ballots:', result.error);
         return [];
@@ -354,7 +354,7 @@ export class FinalizePollManager {
   }> {
     try {
       const calculator = new IRVCalculator(poll.id, poll.candidates);
-      
+
       const rankings: UserRanking[] = ballots.map(ballot => ({
         pollId: ballot.pollId,
         userId: ballot.userId,
@@ -363,16 +363,16 @@ export class FinalizePollManager {
       }));
 
       const results = calculator.calculateResults(rankings);
-      
+
       // Calculate percentages for each round
       const roundsWithPercentages = results.rounds.map(round => {
         const totalVotes = Object.values(round.votes).reduce((sum, count) => sum + count, 0);
         const percentages: Record<string, number> = {};
-        
+
         for (const [candidate, votes] of Object.entries(round.votes)) {
           percentages[candidate] = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
         }
-        
+
         const out: {
           round: number;
           votes: Record<string, number>;
@@ -433,7 +433,7 @@ export class FinalizePollManager {
   }, ballots: Ballot[]): string {
     const candidateIds = poll.candidates.map(c => c.id);
     const ballotsHash = this.hashBallots(ballots);
-    
+
     return snapshotChecksum({
       pollId: poll.id,
       candidateIds,
@@ -448,7 +448,7 @@ export class FinalizePollManager {
       ranking: ballot.ranking,
       createdAt: ballot.createdAt.toISOString()
     }));
-    
+
     return createHash('sha256')
       .update(JSON.stringify(ballotData))
       .digest('hex');
@@ -576,14 +576,14 @@ export class FinalizePollManager {
   private async generateReplayData(pollId: string, merkleTree: MerkleTree): Promise<void> {
     try {
       const replayData = merkleTree.generateReplayData('IRV with deterministic tie-breaking');
-      
+
       // Store replay data (implementation depends on storage system)
       logger.info('Generated replay data', {
         pollId,
         replayDataLength: JSON.stringify(replayData).length,
         merkleTreeSize: merkleTree.getSize()
       });
-      
+
       // In production, this would be stored in a dedicated table or file system
     } catch (error) {
       logger.error('Error generating replay data:', error);
@@ -725,14 +725,14 @@ export class FinalizePollManager {
       level = next;
     }
     const root = level[0] ?? '';
-    
+
     // Log computed root for verification purposes
     logger.debug('Computed Merkle root', {
       leavesCount: leaves.length,
       rootLength: root.length,
       rootPrefix: root.substring(0, 8)
     });
-    
+
     return root;
   }
 
@@ -744,7 +744,7 @@ export class FinalizePollManager {
     try {
       const merkleTree = await this.createMerkleTree(pollId);
       const actualRoot = merkleTree.getRoot();
-      
+
       // Also compute manually for verification
       const ballots = await this.getOfficialBallots(pollId);
       const leaves = ballots.map(ballot => {
@@ -752,12 +752,12 @@ export class FinalizePollManager {
         commitment.addBallot(ballot.id, ballot);
         return commitment.getRoot();
       });
-      
+
       const computedRoot = this.computeMerkleRoot(leaves);
-      
+
       // Verify both methods produce the same root
       const isValid = actualRoot === expectedRoot && computedRoot === expectedRoot;
-      
+
       if (!isValid) {
         logger.warn('Merkle root verification failed', {
           pollId,
@@ -766,7 +766,7 @@ export class FinalizePollManager {
           computedRoot
         });
       }
-      
+
       return isValid;
     } catch (error) {
       logger.error('Error verifying Merkle root', { pollId, error });
@@ -801,11 +801,11 @@ export async function createPollSnapshot(pollId: string): Promise<string> {
   const supabase = await getSupabaseServerClient();
   const manager = new FinalizePollManager(supabase);
   const result = await manager.finalizePoll(pollId);
-  
+
   if (!result.success) {
     throw new Error(`Failed to create snapshot: ${result.error}`);
   }
-  
+
   if (!result.snapshotId) {
     throw new Error('Snapshot ID missing from successful finalization result');
   }

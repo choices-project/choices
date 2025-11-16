@@ -97,7 +97,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
                            flags.length > 0 ? 'flagged' : 'approved';
 
     // Transform flags to match HashtagFlag type
-    const _transformedFlags: HashtagFlag[] = flags.map((flag: HashtagFlagRow) => ({
+    const transformedFlags: HashtagFlag[] = flags.map((flag: HashtagFlagRow) => ({
       id: flag.id,
       hashtag_id: flag.hashtag_id,
       user_id: flag.user_id,
@@ -117,6 +117,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       updated_at: (flags[0] as HashtagFlagRow | undefined)?.created_at ?? new Date().toISOString(),
       human_review_required: pendingFlags.length > 0,
       ...(pendingFlags.length > 0 ? { moderation_reason: 'Pending review' } : {}),
+      flags: transformedFlags // Include transformed flags in moderation data for detailed review
     } as HashtagModeration;
 
     return {

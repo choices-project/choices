@@ -51,18 +51,25 @@ export async function getSmartSuggestions(
     const { text, category, contentType = 'poll', limit = 10 } = context;
     
     // Extract hashtags from text if provided
-    const _extractedHashtags = text ? extractHashtagsFromText(text) : [];
+    const extractedHashtags = text ? extractHashtagsFromText(text) : [];
     
     // Get user's current hashtags for context
     const userHashtags = await getUserHashtags(userId);
     
+    // Filter out already extracted hashtags from suggestions
+    const extractedHashtagNames = new Set(extractedHashtags.map(h => h.toLowerCase()));
+    
     // Get suggestions from multiple sources
     const suggestions: HashtagSuggestion[] = [];
     
-    // 1. Content-based suggestions
+    // 1. Content-based suggestions (excluding already extracted hashtags)
     if (text) {
       const contentSuggestions = await getContentBasedSuggestions(text, userHashtags, limit);
-      suggestions.push(...contentSuggestions);
+      // Filter out hashtags that were already extracted from the text
+      const filteredContentSuggestions = contentSuggestions.filter(
+        suggestion => !extractedHashtagNames.has(suggestion.hashtag.name.toLowerCase())
+      );
+      suggestions.push(...filteredContentSuggestions);
     }
     
     // 2. Category-based suggestions

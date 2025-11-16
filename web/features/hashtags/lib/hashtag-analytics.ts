@@ -54,8 +54,22 @@ export async function calculateHashtagAnalytics(
     const startDate = getPeriodStartDate(period);
     const endDate = new Date().toISOString();
 
+    // Get usage count for validation using helper function
+    const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+    const usageCountValidation = await _getUsageCount(hashtagId, days);
+
     // Get usage data
     const usageData = await getHashtagUsageData(hashtagId, startDate, endDate);
+    
+    // Log usage count validation for debugging and validation
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Hashtag usage count validation', {
+        hashtagId,
+        period,
+        usageCountValidation,
+        usageDataTotal: usageData.totalUsage
+      });
+    }
 
     // Get engagement data
     const engagementData = await getHashtagEngagementData(hashtagId, startDate, endDate);
@@ -66,9 +80,9 @@ export async function calculateHashtagAnalytics(
     // Get content data
     const contentData = await getHashtagContentData(hashtagId, startDate, endDate);
 
-    // Calculate metrics
+    // Calculate metrics - use validated usage count if available
     const metrics = {
-      usage_count: usageData.totalUsage,
+      usage_count: usageCountValidation > 0 ? usageCountValidation : usageData.totalUsage,
       unique_users: userData.uniqueUsers,
       engagement_rate: calculateEngagementRate(Number(usageData.totalViews), Number(engagementData.totalInteractions)),
       growth_rate: calculateGrowthRate(usageData.currentUsage, usageData.previousUsage),
@@ -174,6 +188,10 @@ export async function calculateTrendingHashtags(
       const engagementRate = calculateEngagementRate(metrics.usageCount, metrics.usageCount);
       const recency = 1; // Simplified for now
 
+      // Calculate peak and current positions using helper functions
+      const peakPosition = await _calculatePeakPosition(hashtag.id);
+      const currentPosition = await _calculateCurrentPosition(hashtag.id);
+
       const trendScore = calculateTrendingScore(
         metrics.usageCount,
         growthRate,
@@ -186,8 +204,24 @@ export async function calculateTrendingHashtags(
         trend_score: trendScore,
         growth_rate: growthRate,
         peak_usage: metrics.peakUsage,
+        peak_position: peakPosition,
+        current_position: currentPosition,
         time_period: '24h'
       });
+    }
+    
+    // If category is provided, get category trends for additional context
+    if (category) {
+      try {
+        const categoryTrends = await _getCategoryTrends(category);
+        logger.debug('Category trends retrieved', {
+          category,
+          trendingCount: categoryTrends.trending_hashtags,
+          averageTrendScore: categoryTrends.average_trend_score
+        });
+      } catch (error) {
+        logger.warn('Failed to get category trends', { category, error });
+      }
     }
 
     // Sort by trend score and return top results
