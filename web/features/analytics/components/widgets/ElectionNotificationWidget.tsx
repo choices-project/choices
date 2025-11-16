@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, TrendingUp, BellRing, Activity, AlertTriangle } from 'lucide-react';
+import { RefreshCw, TrendingUp, Activity, AlertTriangle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';

@@ -17,10 +17,10 @@ import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
 import { useI18n } from '@/hooks/useI18n';
+import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 import { SUPPORTED_LOCALES, type SupportedLocale } from '@/lib/i18n/config';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
-import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 
 type LanguageSelectorProps = {
   className?: string;

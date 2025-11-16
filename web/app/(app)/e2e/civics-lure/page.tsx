@@ -12,7 +12,7 @@ const MOCK_REPRESENTATIVES: Representative[] = [
     id: 1,
     name: 'Representative One',
     office: 'Mayor',
-    level: 'city',
+    level: 'local',
     photo_url: null,
     party: 'Independent',
     ocdDivisionIds: ['ocd-division/country:us/state:ca/place:san_francisco'],
@@ -21,7 +21,7 @@ const MOCK_REPRESENTATIVES: Representative[] = [
     verification_status: 'verified',
     activities: [
       {
-        id: 'activity-1',
+        id: 1,
         type: 'town_hall',
         title: 'Hosted neighborhood town hall',
         description: 'Discussed community safety improvements',
@@ -61,7 +61,7 @@ export default function CivicsLureHarnessPage() {
 
     useUserStore.setState((state) => {
       state.currentAddress = 'San Francisco, CA';
-      state.representatives = MOCK_REPRESENTATIVES.map((rep) => rep.id);
+      state.representatives = MOCK_REPRESENTATIVES;
     });
   }, []);
 

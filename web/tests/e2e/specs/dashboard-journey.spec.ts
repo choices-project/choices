@@ -198,7 +198,7 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
     } finally {
       if (consoleMessages.length) {
-        // eslint-disable-next-line no-console
+         
         console.log('[dashboard-journey console]', consoleMessages.join('\n'));
       }
       await cleanupMocks();

@@ -16,7 +16,7 @@
  * Status: ✅ Production-ready
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
 import { withErrorHandling, forbiddenError, successResponse } from '@/lib/api';

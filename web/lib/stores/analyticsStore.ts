@@ -21,7 +21,6 @@ import type {
   TrendDataPoint,
   TrustTierComparisonData,
 } from '@/features/analytics/types/analytics';
-import { logger } from '@/lib/utils/logger';
 import {
   fetchAnalyticsDemographics,
   fetchAnalyticsPollHeatmap,
@@ -31,6 +30,7 @@ import {
   generateAnalyticsReport,
   sendAnalyticsEvents,
 } from '@/lib/analytics/services/analyticsService';
+import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';

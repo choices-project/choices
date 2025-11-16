@@ -7,8 +7,8 @@
 
 import { z } from 'zod';
 
-import type { Json } from '@/types/database';
 import { LEGACY_TRUST_TIER_ALIASES, TRUST_TIERS, normalizeTrustTier } from '@/lib/trust/trust-tiers';
+import type { Json } from '@/types/database';
 
 const JsonValueSchema: z.ZodType<Json> = z.lazy(() =>
   z.union([

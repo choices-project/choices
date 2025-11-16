@@ -3,12 +3,12 @@
 import { renderHook, waitFor } from '@testing-library/react';
 
 import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
-import { useElectionStore } from '@/lib/stores/electionStore';
-import { notificationStoreUtils } from '@/lib/stores/notificationStore';
 import {
   createInitialAnalyticsState,
   useAnalyticsStore,
 } from '@/lib/stores/analyticsStore';
+import { useElectionStore } from '@/lib/stores/electionStore';
+import { notificationStoreUtils } from '@/lib/stores/notificationStore';
 
 describe('useElectionCountdown', () => {
   const mockNow = new Date('2025-01-01T00:00:00Z').getTime();

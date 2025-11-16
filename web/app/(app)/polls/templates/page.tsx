@@ -11,8 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
-import { devLog } from '@/lib/utils/logger';
 import { useAppActions } from '@/lib/stores/appStore';
+import { devLog } from '@/lib/utils/logger';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },

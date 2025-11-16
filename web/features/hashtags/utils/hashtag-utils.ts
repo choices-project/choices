@@ -7,17 +7,18 @@
  * Status: ✅ ACTIVE
  */
 
-import type { 
-  Hashtag, 
-  HashtagCategory,
-  HashtagValidation
-} from '../types';
 import {
   formatUsageCount as _formatUsageCount,
   formatEngagementRate as _formatEngagementRate,
   formatGrowthRate as _formatGrowthRate,
   formatTrendingScore as _formatTrendingScore,
 } from '@/lib/utils/format-utils';
+
+import type { 
+  Hashtag, 
+  HashtagCategory,
+  HashtagValidation
+} from '../types';
 
 // ============================================================================
 // HASHTAG VALIDATION UTILITIES

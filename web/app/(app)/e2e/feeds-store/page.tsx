@@ -43,7 +43,7 @@ export type FeedsStoreHarness = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var __feedsStoreHarness: FeedsStoreHarness | undefined;
 }
 

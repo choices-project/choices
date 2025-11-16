@@ -19,8 +19,8 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
-import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {

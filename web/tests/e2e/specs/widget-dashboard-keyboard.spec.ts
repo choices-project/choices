@@ -15,9 +15,11 @@ const HARNESS_USER_ID = '00000000-0000-0000-0000-000000000042';
 const DEFAULT_WIDGET_ID = 'widget-dashboard-default';
 
 declare global {
+   
   interface Window {
     __widgetDashboardHarness?: WidgetDashboardHarness;
   }
+   
 }
 
 const stubLayout = {
@@ -54,7 +56,7 @@ const layoutApiMatcher = '**/api/analytics/dashboard/layout*';
 const gotoWidgetHarness = async (page: Page, testInfo: TestInfo) => {
   await installScreenReaderCapture(page);
   page.on('console', (msg) => {
-    // eslint-disable-next-line no-console
+     
     console.log(`[browser:${msg.type()}] ${msg.text()}`);
   });
 

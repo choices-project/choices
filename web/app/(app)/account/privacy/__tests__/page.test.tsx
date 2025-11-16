@@ -4,8 +4,9 @@
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import PrivacyPage from '../page';
 import type { PrivacySettings } from '@/types/profile';
+
+import PrivacyPage from '../page';
 
 jest.mock('@/lib/stores/appStore', () => ({
   useAppActions: jest.fn(),

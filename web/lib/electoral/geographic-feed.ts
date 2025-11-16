@@ -9,8 +9,8 @@
  */
 
 import { NotImplementedError } from '@/lib/errors';
-import { logger } from '@/lib/utils/logger';
 import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
@@ -303,7 +303,7 @@ export class GeographicElectoralFeed {
             staff: 0,
             travel: 0,
             fundraising: 0,
-            sources: Array.isArray(f?.sources) ? f!.sources : ['db'],
+            sources: Array.isArray(f?.sources) ? (f?.sources as string[]) : ['db'],
             lastUpdated: f?.updated_at ?? nowISO(),
             dataQuality: f ? 'high' : 'medium',
           };

@@ -16,10 +16,10 @@ import {
   createVotingRecordFromPollSubmission,
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
+import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationActions, useAnalyticsStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
@@ -93,8 +93,6 @@ export default function PollClient({ poll }: PollClientProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { addNotification } = useNotificationActions();
-  const trackEvent = useAnalyticsStore((state) => state.trackEvent);
-  const analyticsSessionId = useAnalyticsStore((state) => state.sessionId);
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const {
     setBallots,

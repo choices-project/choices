@@ -3,12 +3,12 @@
 import { act, render, screen } from '@testing-library/react';
 import React from 'react';
 
+import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import {
   useNotifications,
   useNotificationStore,
   notificationStoreUtils
 } from '@/lib/stores/notificationStore';
-import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 
 const NotificationList = () => {
   const notifications = useNotifications();

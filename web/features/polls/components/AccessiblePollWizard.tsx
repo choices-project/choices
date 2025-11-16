@@ -6,16 +6,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
+import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/schema';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import type { PollWizardSettings } from '@/lib/polls/types';
 import { useNotificationActions } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 const MAX_OPTIONS = 10;
 const MAX_TAG_LENGTH = 50;
@@ -684,9 +684,9 @@ export function AccessiblePollWizard() {
         Keep option labels short and unique. Avoid duplicating choices.
       </p>
 
-      <div className="space-y-3" role="list" aria-labelledby="poll-options-heading" aria-describedby="poll-options-help poll-options-meta">
+      <div className="space-y-3" aria-labelledby="poll-options-heading" aria-describedby="poll-options-help poll-options-meta">
         {data.options.map((option, index) => (
-          <div key={`option-${index}`} className="space-y-1" role="listitem">
+          <div key={`option-${index}`} className="space-y-1">
             <div className="flex gap-2">
               <input
                 id={`poll-option-${index}`}
@@ -846,12 +846,11 @@ export function AccessiblePollWizard() {
         </div>
 
         {data.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2" role="list" aria-label="Selected tags">
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Selected tags">
             {data.tags.map((tag) => (
               <span
                 key={tag}
                 className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-sm text-blue-800"
-                role="listitem"
               >
                 {tag}
                 <button
@@ -949,11 +948,11 @@ export function AccessiblePollWizard() {
             <p className="mt-1 text-sm text-gray-600">{data.description || 'Add context to help voters decide.'}</p>
           </div>
 
-          <div className="space-y-2" role="list" aria-label="Preview options">
+          <div className="space-y-2" aria-label="Preview options">
             {data.options
               .filter((option) => option.trim().length > 0)
               .map((option, index) => (
-                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-gray-700" role="listitem">
+                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-gray-700">
                   <input type="radio" disabled className="text-blue-600 focus:ring-0" aria-hidden="true" />
                   <span>{option}</span>
                 </div>
@@ -1057,7 +1056,7 @@ export function AccessiblePollWizard() {
               />
             </div>
             <nav className="mt-4" aria-label="Poll creation steps">
-              <ol className="flex flex-wrap gap-3" role="list">
+              <ol className="flex flex-wrap gap-3">
                 {steps.map((step) => (
                   <li key={step.id}>
                     <span

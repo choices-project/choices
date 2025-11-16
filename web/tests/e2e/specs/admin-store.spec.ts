@@ -5,9 +5,11 @@ import type { AdminStoreHarness } from '@/app/(app)/e2e/admin-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __adminStoreHarness?: AdminStoreHarness;
   }
+   
 }
 
 const gotoHarness = async (page: Page) => {

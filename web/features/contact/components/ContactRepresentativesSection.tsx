@@ -25,9 +25,13 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useMemo, useEffect, useState } from 'react';
 
-import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import {
+  trackCivicsRepresentativeEvent,
+  type CivicsRepresentativeEventBase
+} from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 import {
   useAnalyticsActions,
   useContactActions,
@@ -38,10 +42,7 @@ import type { Representative } from '@/types/representative';
 import { useContactThreads } from '../hooks/useContactMessages';
 
 import ContactModal from './ContactModal';
-import {
-  trackCivicsRepresentativeEvent,
-  type CivicsRepresentativeEventBase
-} from '@/features/civics/analytics/civicsAnalyticsEvents';
+
 
 const getRepresentativePhotoUrl = (rep: Representative): string | undefined => {
   if (rep.primary_photo_url) {

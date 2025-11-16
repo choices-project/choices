@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   useAnalyticsActions,
@@ -131,7 +131,8 @@ export default function AnalyticsStoreHarnessPage() {
     return () => {
       console.warn('[analytics-store-harness] cleaning window.__analyticsStoreHarness');
       if (window.__analyticsStoreHarness === harness) {
-        delete window.__analyticsStoreHarness;
+         
+        delete (window as any).__analyticsStoreHarness;
       }
     };
   }, [isMounted]);

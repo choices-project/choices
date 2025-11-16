@@ -2,9 +2,9 @@
  * @jest-environment node
  */
 
-import { profileRecord } from '@/tests/fixtures/api/profile';
 import { createPostgrestBuilder } from '@/tests/contracts/helpers/postgrest';
 import { createNextRequest } from '@/tests/contracts/helpers/request';
+import { profileRecord } from '@/tests/fixtures/api/profile';
 
 const mockSupabaseClient: Record<string, any> = {
   auth: {
@@ -20,7 +20,7 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
-const expectSuccessEnvelope = (body: any) => {
+const _expectSuccessEnvelope = (body: any) => {
   expect(body.success).toBe(true);
   expect(body.metadata).toEqual(
     expect.objectContaining({

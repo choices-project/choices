@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,16 +22,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const body = await request.json().catch(() => ({}));
   const pollId = typeof body?.pollId === 'string' ? body.pollId : '';
   const action = body?.action as 'view' | 'click' | 'share' | undefined;
-  const hashtags = Array.isArray(body?.hashtags)
-    ? (body.hashtags as string[]).filter((h) => typeof h === 'string').slice(0, 20)
+  const hashtags: string[] = Array.isArray(body?.hashtags)
+    ? (body.hashtags as unknown[]).map((h) => String(h)).filter((h) => h.length > 0).slice(0, 20)
     : [];
 
   if (!pollId || !action) {
-    return validationError({
-      pollId: !pollId ? 'pollId is required' : undefined,
-      action: !action ? "action must be 'view' | 'click' | 'share'" : undefined,
-    });
+    const errors: Record<string, string> = {};
+    if (!pollId) errors.pollId = 'pollId is required';
+    if (!action) errors.action = "action must be 'view' | 'click' | 'share'";
+    return validationError(errors);
   }
+
+  const actionStrict: 'view' | 'click' | 'share' = action as 'view' | 'click' | 'share';
 
   try {
     const payload = {
@@ -39,7 +42,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       // Use simple JSON structure to store context
       context: {
         poll_id: pollId,
-        action,
+        action: actionStrict,
         hashtags,
         at: new Date().toISOString(),
       } as unknown as any,

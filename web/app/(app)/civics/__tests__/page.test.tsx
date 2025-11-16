@@ -27,7 +27,6 @@ jest.mock('@/lib/utils/logger', () => ({
 }));
 
 jest.mock('next/dynamic', () => {
-  const React = require('react');
   return () => () => <div data-testid="dynamic-component" />;
 });
 

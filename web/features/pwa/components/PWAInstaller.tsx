@@ -13,13 +13,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
+import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useNotificationActions } from '@/lib/stores';
 import { usePWAInstallation, usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import type { Notification } from '@/lib/stores/types';
 import { logger } from '@/lib/utils/logger';
-import { useI18n } from '@/hooks/useI18n';
 
 /**
  * PWA Installer Component

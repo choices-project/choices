@@ -16,6 +16,7 @@ import { withErrorHandling, authError, forbiddenError, errorResponse, validation
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,7 +103,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const publicKeyBase64 = Buffer.from(publicKey).toString('base64');
 
     // Store credential
-    const { error: credErr } = await supabase.from('webauthn_credentials').insert({
+    const { error: credErr } = await supabase.from('webauthn_credentials').insert(stripUndefinedDeep({
       user_id: user.id,
       rp_id: rpID,
       credential_id: credentialId,
@@ -112,7 +113,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       backup_eligible: verificationResult.backupEligible ?? false,
       backup_state: verificationResult.backupState ?? false,
       created_at: new Date().toISOString()
-    });
+    }));
 
     if (credErr) {
       logger.error('Failed to store credential', { error: credErr });
@@ -123,7 +124,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (chal) {
       await supabase
         .from('webauthn_challenges')
-        .update({ used_at: new Date().toISOString() })
+        .update(stripUndefinedDeep({ used_at: new Date().toISOString() }))
         .eq('id', chal.id);
     }
 
@@ -140,10 +141,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (profile && tierRank[currentTier] !== undefined && tierRank[currentTier] < targetRank) {
       await supabase
         .from('user_profiles')
-        .update({
+        .update(stripUndefinedDeep({
           trust_tier: 'T2',
           trust_tier_upgrade_date: new Date().toISOString(),
-        })
+        }))
         .eq('user_id', user.id);
     }
 

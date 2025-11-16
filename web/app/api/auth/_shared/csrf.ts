@@ -1,8 +1,10 @@
 import { randomBytes } from "crypto";
 
 import { cookies } from "next/headers";
-import { CSRF_COOKIE } from "./cookies";
+
 import { errorResponse } from "@/lib/api";
+
+import { CSRF_COOKIE } from "./cookies";
 
 /**
  * CSRF Protection Module

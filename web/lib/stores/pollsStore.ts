@@ -5,6 +5,15 @@ import { immer } from 'zustand/middleware/immer';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
 import {
+  createPollRequest,
+  type PollCreatePayload,
+  type PollCreateRequestResult,
+  type PollUndoVoteRequestResult,
+  type PollVoteRequestResult,
+  undoVoteRequest,
+  voteOnPollRequest,
+} from '@/lib/polls/api';
+import {
   createDefaultPollFilters,
   createDefaultPollPreferences,
 } from '@/lib/polls/defaults';
@@ -17,15 +26,6 @@ import {
   validatePollFilters,
   type PollStatusTransition,
 } from '@/lib/polls/validation';
-import {
-  createPollRequest,
-  type PollCreatePayload,
-  type PollCreateRequestResult,
-  type PollUndoVoteRequestResult,
-  type PollVoteRequestResult,
-  undoVoteRequest,
-  voteOnPollRequest,
-} from '@/lib/polls/api';
 import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';

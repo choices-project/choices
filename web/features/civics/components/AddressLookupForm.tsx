@@ -15,6 +15,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
+import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import {
   useUserActions,
@@ -34,8 +36,6 @@ import {
   useClearError
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
-import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
-import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
 
 /**
  * Props for the AddressLookupForm component

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { validatePollWizardStep } from '@/lib/polls/validation';
 import {
   usePollWizardActions,
   usePollWizardCanGoBack,
@@ -13,7 +14,6 @@ import {
 
 import { CATEGORIES, POLL_CREATION_STEPS, STEP_TIPS } from './constants';
 import type { PollWizardSubmissionResult } from './schema';
-import { validatePollWizardStep } from '@/lib/polls/validation';
 
 type StepValidationSnapshot = {
   isValid: boolean;

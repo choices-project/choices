@@ -1,11 +1,12 @@
 'use server'
 
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
 import { sendTransactionalEmail } from '@/lib/integrations/email/resend';
 import { welcomeCandidateTemplate } from '@/lib/integrations/email/templates';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,11 +81,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Seed onboarding row
-  await supabase.from('candidate_onboarding').insert({
-    candidate_id: created.id,
-    step: 'verification',
-    completed: false,
-  });
+  await supabase.from('candidate_onboarding').insert(
+    { candidate_id: created.id, step: 'verification', completed: false }
+  );
 
   // Fire-and-forget welcome email
   try {
@@ -93,7 +92,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const { subject, text, html } = welcomeCandidateTemplate(displayName);
       await sendTransactionalEmail({ to: email, subject, text, html });
     }
-  } catch {}
+  } catch {
+    // Non-blocking: onboarding succeeds even if welcome email fails to send
+  }
 
   return successResponse({ id: created.id, slug: created.slug });
 });

@@ -56,13 +56,12 @@
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  */
 
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
+import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
 import { assertPepperConfig } from '@/lib/civics/env-guard';
 import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
-import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -303,9 +302,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (jurisdiction.county) cookieData.county = jurisdiction.county;
     await setJurisdictionCookie(cookieData);
 
-    // Best-effort analytics write (non-blocking)
+    // Best-effort analytics write (non-blocking) with lazy server import to avoid client test env issues
     try {
-      const supabase = await getSupabaseServerClient();
+      const mod = await import('@/utils/supabase/server');
+      const supabase = await (mod as any).getSupabaseServerClient();
       if (supabase) {
         await (supabase as any)
           .from('platform_analytics')

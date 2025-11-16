@@ -4,6 +4,8 @@
 
 import type { NextRequest } from 'next/server';
 
+import { PATCH } from '@/app/api/candidates/[slug]/route';
+
 // Mock Supabase server client
 const mockGetUser = jest.fn();
 const mockFrom = jest.fn();
@@ -45,9 +47,6 @@ jest.mock('@/lib/api', () => {
       createResponse(405, { success: false, error: `Method not allowed. Use: ${methods.join(', ')}` }),
   };
 });
-
-const routeModule = require('@/app/api/candidates/[slug]/route') as typeof import('@/app/api/candidates/[slug]/route');
-const { PATCH } = routeModule;
 
 const buildRequest = (url = 'http://localhost/api/candidates/test-slug', body?: any): NextRequest =>
   ({

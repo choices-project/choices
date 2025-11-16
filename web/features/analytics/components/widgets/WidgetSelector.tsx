@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
-
 import { useWidgetStoreScoped } from '@/lib/stores/widgetStore';
 
 import { createWidgetConfig, getWidget, listWidgets } from '../../lib/widgetRegistry';

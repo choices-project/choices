@@ -1,11 +1,12 @@
 'use server'
 
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
 import { sendTransactionalEmail } from '@/lib/integrations/email/resend';
 import { verificationCodeTemplate } from '@/lib/integrations/email/templates';
-import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +71,9 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         event_type: 'candidate_verify_code_sent',
         metadata: { candidateId: candidate.id, email: email.split('@')[1] },
       });
-  } catch {}
+  } catch {
+    // Ignore analytics failures; verification code email already sent
+  }
 
   return successResponse({ ok: true });
 });

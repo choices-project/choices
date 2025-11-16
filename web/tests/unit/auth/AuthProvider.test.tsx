@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { useUserStore } from '@/lib/stores/userStore';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 jest.mock('@/utils/supabase/client', () => ({
   getSupabaseBrowserClient: jest.fn(),
@@ -77,8 +78,6 @@ const LogoutConsumer = () => {
 };
 
 describe('AuthProvider', () => {
-  const getSupabaseBrowserClient = require('@/utils/supabase/client')
-    .getSupabaseBrowserClient as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();

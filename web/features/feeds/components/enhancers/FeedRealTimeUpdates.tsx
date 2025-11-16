@@ -45,7 +45,6 @@ export default function FeedRealTimeUpdates({
   const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [newItemsCount, setNewItemsCount] = useState(0);
-  const [ws, setWs] = useState<WebSocket | null>(null);
   const { refreshFeeds } = useFeedsActions();
   const feedsError = useFeedsError();
   const { addNotification } = useNotificationActions();
@@ -80,7 +79,6 @@ export default function FeedRealTimeUpdates({
         websocket.onopen = () => {
           logger.info('[WebSocket] Connected to feed updates');
           setIsConnected(true);
-          setWs(websocket);
         };
 
         websocket.onmessage = (event) => {
@@ -107,7 +105,6 @@ export default function FeedRealTimeUpdates({
         websocket.onclose = () => {
           logger.info('[WebSocket] Disconnected');
           setIsConnected(false);
-          setWs(null);
           
           // Attempt to reconnect after 5 seconds
           reconnectTimeout = setTimeout(() => {

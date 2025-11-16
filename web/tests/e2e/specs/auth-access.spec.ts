@@ -83,7 +83,7 @@ async function stubWebAuthn(page: Page) {
 }
 
 test.describe('Auth access harness', () => {
-  let cleanupMocks: (() => Promise<void>) | undefined;
+  let cleanupMocks: (() => Promise<void>) | null = null;
 
   test.beforeEach(async ({ page }) => {
     cleanupMocks = await setupExternalAPIMocks(page, { auth: true });
@@ -93,7 +93,7 @@ test.describe('Auth access harness', () => {
   test.afterEach(async () => {
     if (cleanupMocks) {
       await cleanupMocks();
-      cleanupMocks = undefined;
+      cleanupMocks = null;
     }
   });
 

@@ -5,12 +5,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import type * as NavigationModule from 'next/navigation';
 import React from 'react';
 
+import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountdownUtils';
 import PersonalDashboard from '@/features/dashboard/components/PersonalDashboard';
 import type * as ProfileHooksModule from '@/features/profile/hooks/use-profile';
 import type * as StoresModule from '@/lib/stores';
 import type * as ProfileStoreModule from '@/lib/stores/profileStore';
 import type * as RepresentativeStoreModule from '@/lib/stores/representativeStore';
-import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountdownUtils';
 import type { DashboardPreferences } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 

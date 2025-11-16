@@ -2,10 +2,14 @@
  * @jest-environment node
  */
 
+import type { NextResponse } from 'next/server';
+
+import { canAccessAnalytics } from '@/lib/auth/adminGuard';
+import { getCached } from '@/lib/cache/analytics-cache';
 import { createPostgrestBuilder } from '@/tests/contracts/helpers/postgrest';
 import { createNextRequest } from '@/tests/contracts/helpers/request';
 
-import type { NextResponse } from 'next/server';
+
 
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
@@ -70,9 +74,6 @@ const loadTrendsRoute = isolateRoute('@/app/api/analytics/trends/route');
 const loadTrustTiersRoute = isolateRoute('@/app/api/analytics/trust-tiers/route');
 const loadTemporalRoute = isolateRoute('@/app/api/analytics/temporal/route');
 const loadPollRoute = isolateRoute('@/app/api/analytics/poll/[id]/route');
-
-const { canAccessAnalytics } = require('@/lib/auth/adminGuard');
-const { getCached } = require('@/lib/cache/analytics-cache');
 
 describe('Analytics contracts', () => {
   beforeEach(() => {

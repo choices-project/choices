@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Campaign Finance Transparency & "Bought Off" Indicator System
  *

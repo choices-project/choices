@@ -295,12 +295,11 @@ export default function OptimizedPollResults({
       <section
         aria-labelledby={resultsHeadingId}
         className="space-y-4"
-        role="region"
       >
         <h2 id={resultsHeadingId} className="text-lg font-semibold text-gray-900">
           {t('polls.results.heading')}
         </h2>
-        <div className="space-y-3" role="list">
+        <div className="space-y-3">
           {sortedOptions.map((option, index) => {
             const optionId = option.optionId ?? option.option;
             const votes = option.voteCount ?? option.votes;
@@ -313,7 +312,6 @@ export default function OptimizedPollResults({
               <article
                 key={optionId}
                 className="bg-white border border-gray-200 rounded-lg p-4"
-                role="listitem"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-gray-900">{optionLabel}</h3>

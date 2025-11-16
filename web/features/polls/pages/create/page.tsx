@@ -22,11 +22,11 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
+import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import {
   DESCRIPTION_CHAR_LIMIT,

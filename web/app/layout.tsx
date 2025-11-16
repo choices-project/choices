@@ -1,7 +1,7 @@
 
 import type { Metadata } from 'next'
-import type { AbstractIntlMessages } from 'next-intl';
 import { cookies, headers } from 'next/headers'
+import type { AbstractIntlMessages } from 'next-intl';
 import React from 'react'
 
 import {

@@ -1,6 +1,7 @@
 'use server'
 
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, methodNotAllowed } from '@/lib/api';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -23,7 +24,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           event_type: 'resend_webhook',
           metadata: { eventType, messageId, to, status },
         });
-    } catch {}
+    } catch {
+      // Webhook handling should always succeed; ignore analytics insertion errors
+    }
   }
 
   return successResponse({ ok: true });

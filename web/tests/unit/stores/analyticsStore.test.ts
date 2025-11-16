@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import { sendAnalyticsEvents } from '@/lib/analytics/services/analyticsService';
 import type { AnalyticsStore } from '@/lib/stores/analyticsStore';
 import {
   analyticsStoreCreator,
   createInitialAnalyticsState,
 } from '@/lib/stores/analyticsStore';
-import { sendAnalyticsEvents } from '@/lib/analytics/services/analyticsService';
 
 jest.mock('@/lib/analytics/services/analyticsService', () => ({
   sendAnalyticsEvents: jest.fn(),

@@ -19,16 +19,15 @@
 
 import type { NextRequest } from 'next/server';
 
-import { getRedisClient } from '@/lib/cache/redis-client';
 import {
   authError,
   errorResponse,
-  forbiddenError,
   notFoundError,
   successResponse,
   validationError,
   withErrorHandling,
 } from '@/lib/api';
+import { getRedisClient } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

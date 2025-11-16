@@ -101,13 +101,11 @@ describe('Feeds API contract', () => {
       error: null,
     });
 
-    let fromCalls = 0;
     mockSupabaseClient.from.mockImplementation((table: string) => {
       if (table === 'polls') {
         return pollsBuilder;
       }
       if (table === 'civic_actions') {
-        fromCalls += 1;
         return civicActionsBuilder;
       }
       throw new Error(`Unexpected table: ${table}`);

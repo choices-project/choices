@@ -9,8 +9,7 @@ import {
   useFetchElectionsForDivisions,
 } from '@/lib/stores';
 import { notificationStoreUtils } from '@/lib/stores/notificationStore';
-import type { ElectionNotificationContext } from '@/lib/stores/types';
-import type { Notification as NotificationModel } from '@/lib/stores/types';
+import type { ElectionNotificationContext , Notification as NotificationModel } from '@/lib/stores/types';
 import type { CivicElection } from '@/types/civic';
 
 export const getElectionCountdown = (isoDate: string | undefined): number | null => {

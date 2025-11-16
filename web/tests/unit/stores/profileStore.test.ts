@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { updateProfile } from '@/features/profile/lib/profile-service';
 import type { ProfileStore } from '@/lib/stores/profileStore';
 import { profileStoreCreator } from '@/lib/stores/profileStore';
-import { updateProfile } from '@/features/profile/lib/profile-service';
 import { createSafeStorage } from '@/lib/stores/storage';
 
 jest.mock('@/features/profile/lib/profile-service', () => ({

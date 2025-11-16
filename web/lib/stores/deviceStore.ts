@@ -16,8 +16,9 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { createBaseStoreActions } from './baseStoreActions';
 import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils';
+
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 

@@ -17,8 +17,8 @@ import {
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Json } from '@/types/supabase';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 type SubscriptionPreferences = {
   newPolls: boolean;

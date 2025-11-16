@@ -47,8 +47,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useI18n } from '@/hooks/useI18n';
-import { useAnalyticsActions, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useAnalyticsActions, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
 
 import {
   AnalyticsSummaryTable,

@@ -15,6 +15,7 @@ import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,13 +57,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
     const challengeArray = new Uint8Array(options.challenge);
     
-    const { error: chalErr } = await supabase.from('webauthn_challenges').insert({
+    const { error: chalErr } = await supabase.from('webauthn_challenges').insert(stripUndefinedDeep({
       user_id: user.id,
       rp_id: rpID,
       kind: 'registration',
       challenge: Buffer.from(challengeArray).toString('base64'),
       expires_at: expiresAt,
-    });
+    }));
 
     if (chalErr) {
       logger.error('Challenge persist failed', { error: chalErr });

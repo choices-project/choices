@@ -12,8 +12,8 @@
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse, forbiddenError } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

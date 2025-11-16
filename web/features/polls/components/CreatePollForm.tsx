@@ -5,9 +5,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { PrivacyLevelSelector } from '@/components/ui/PrivacyLevelSelector';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
-import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import type { PollPrivacyLevel } from '@/lib/polls/types';
+import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';
 import { HybridPrivacyManager, PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 
 type CreatePollFormProps = {
@@ -377,9 +377,9 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-option-0">
             Poll Options <span className="text-red-500">*</span>
           </label>
-          <div className="space-y-2" role="list">
+          <div className="space-y-2">
             {data.options.map((option, index) => (
-              <div key={`option-${index}`} className="flex items-center gap-2" role="listitem">
+              <div key={`option-${index}`} className="flex items-center gap-2">
                 <input
                   id={`create-poll-option-${index}`}
                   type="text"

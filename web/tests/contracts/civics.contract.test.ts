@@ -2,8 +2,8 @@
  * @jest-environment node
  */
 
-import { createNextRequest } from '@/tests/contracts/helpers/request';
 import { createPostgrestBuilder } from '@/tests/contracts/helpers/postgrest';
+import { createNextRequest } from '@/tests/contracts/helpers/request';
 
 const mockSupabaseClient: Record<string, any> = {
   from: jest.fn(),

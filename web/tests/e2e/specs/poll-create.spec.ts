@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
+import { waitForPageReady } from '../helpers/e2e-setup';
 import { installScreenReaderCapture, waitForAnnouncement } from '../helpers/screen-reader';
 
 const SAMPLE_TITLE = 'Playwright Created Poll';

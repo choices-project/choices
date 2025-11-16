@@ -6,8 +6,9 @@
 
  
 
-import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 import { nowISO } from '@/lib/utils/format-utils';
+
+import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 
 export type NormalizedRepresentative = {
   id: string;

@@ -2,8 +2,10 @@
  * @jest-environment node
  */
 
+import { rateLimitMiddleware } from '@/lib/core/security/rate-limit';
 import { createPostgrestBuilder } from '@/tests/contracts/helpers/postgrest';
 import { createNextRequest } from '@/tests/contracts/helpers/request';
+
 
 const mockSupabaseClient: Record<string, any> = {
   auth: {
@@ -39,8 +41,6 @@ jest.mock('@/lib/core/security/rate-limit', () => ({
   createRateLimiter: jest.fn(() => ({})),
   rateLimitMiddleware: mockRateLimitMiddleware,
 }));
-
-const { rateLimitMiddleware } = require('@/lib/core/security/rate-limit');
 
 const loadRoute = () => {
   let routeModule: any;

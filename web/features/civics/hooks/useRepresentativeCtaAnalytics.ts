@@ -3,8 +3,6 @@ import { useCallback, useMemo } from 'react';
 import { useAnalyticsActions, useRepresentativeDivisions } from '@/lib/stores';
 import type { Representative } from '@/types/representative';
 
-import { useElectionCountdown } from '../utils/civicsCountdownUtils';
-import { getRepresentativeDivisionIds } from '../utils/divisions';
 import {
   CIVICS_REPRESENTATIVE_SINGLE_EVENT_SET,
   type CivicsRepresentativeEventMap,
@@ -13,6 +11,8 @@ import {
   type CivicsRepresentativeSingleEventName,
   trackCivicsRepresentativeEvent,
 } from '../analytics/civicsAnalyticsEvents';
+import { useElectionCountdown } from '../utils/civicsCountdownUtils';
+import { getRepresentativeDivisionIds } from '../utils/divisions';
 
 type RepresentativeCtaAnalyticsOptions = {
   source?: string;

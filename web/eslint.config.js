@@ -101,7 +101,7 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off', // Handled in type-aware config below
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'error',
       'prefer-const': 'error',
       '@typescript-eslint/no-var-requires': 'error',
       '@typescript-eslint/no-empty-function': 'warn',
@@ -407,6 +407,8 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/consistent-type-definitions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
       'import/no-extraneous-dependencies': 'off',
       'no-console': 'off',
       'unused-imports/no-unused-imports': 'off',
@@ -518,6 +520,7 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'archive/**',
+      'tests/archive/**',
       'archive-*/**',
       'app/archive-*/**',
       '_reports/**',

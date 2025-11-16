@@ -1,14 +1,17 @@
-import { expect, test, type Page } from '@playwright/test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+
+import { expect, test, type Page } from '@playwright/test';
 
 import { runAxeAudit } from '../helpers/accessibility';
 
 declare global {
+   
   interface Window {
     __analyticsStoreHarness?: unknown;
     __playwrightAnalytics?: unknown;
   }
+   
 }
 
 const gotoAnalyticsHarness = async (page: Page) => {

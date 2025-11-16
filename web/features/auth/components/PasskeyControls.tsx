@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+
 import {
   useInitializeBiometricState,
   useUserActions,
 } from '../lib/store';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 export function PasskeyControls() {
   const [mode, setMode] = React.useState<

@@ -23,11 +23,11 @@ import type {
 import type { Representative } from '@/types/representative';
 import type { Database } from '@/types/supabase';
 
+import { useAdminStore } from './adminStore';
 import { createBaseStoreActions } from './baseStoreActions';
+import { useProfileStore } from './profileStore';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
-import { useProfileStore } from './profileStore';
-import { useAdminStore } from './adminStore';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;

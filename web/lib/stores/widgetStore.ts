@@ -8,16 +8,14 @@
  * - Deterministic cloning helpers
  */
 
+import { enableMapSet } from 'immer';
 import type { ReactNode } from 'react';
 import { createElement, createContext, useContext, useMemo } from 'react';
 import { create, useStore } from 'zustand';
 import type { StateCreator, StoreApi } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { enableMapSet } from 'immer';
-
-enableMapSet();
+import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import type {
   DashboardLayout,
@@ -29,6 +27,8 @@ import type {
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
+
+enableMapSet();
 
 const GRID_COLUMNS = 12;
 const HISTORY_LIMIT = 50;
@@ -972,9 +972,10 @@ export const useWidgetStoreScoped = <T,>(
   override?: StoreApi<WidgetStore>,
 ) => {
   const storeApi = useWidgetStoreApi(override);
-  return equalityFn
-    ? useStoreWithEqualityFn(storeApi, selector, equalityFn)
-    : useStore(storeApi, selector);
+  // Always call a single hook to satisfy Rule of Hooks; provide a stable default equality function.
+  const stableEquality: (a: T, b: T) => boolean =
+    equalityFn ?? ((a, b) => Object.is(a, b));
+  return useStoreWithEqualityFn(storeApi, selector, stableEquality);
 };
 
 export const useWidgetStore = widgetStore as WidgetStoreHook;

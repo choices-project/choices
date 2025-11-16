@@ -18,7 +18,6 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
@@ -29,14 +28,13 @@ import {
   useProfileDraftActions,
 } from '@/features/profile/hooks/use-profile';
 import { useUser } from '@/lib/stores';
-import { useProfileStore } from '@/lib/stores/profileStore';
 import { useAppActions } from '@/lib/stores/appStore';
+import { useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 import type { PrivacySettings } from '@/types/profile';
 
 export default function PrivacyPage() {
-  const router = useRouter();
   const { profile, isLoading: profileLoading, error: profileError } = useProfileData();
   const user = useUser();
   const privacySettingsFromStore = useProfileStore((state) => state.privacySettings);

@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
+import {
+  createInitialFeedsState,
+  feedsStoreCreator,
+} from '@/lib/stores/feedsStore';
+import { fetchFeedsFromApi } from '@/lib/stores/services/feedsService';
+import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+
 jest.mock('@/lib/utils/privacy-guard', () => ({
   hasPrivacyConsent: jest.fn().mockReturnValue(true),
   PrivacyDataType: { FEED_ACTIVITY: 'FEED_ACTIVITY' },
@@ -13,14 +21,6 @@ jest.mock('@/lib/stores/services/feedsService', () => {
     fetchFeedsFromApi: jest.fn(),
   };
 });
-
-import type { FeedItem, FeedsStore } from '@/lib/stores/feedsStore';
-import {
-  createInitialFeedsState,
-  feedsStoreCreator,
-} from '@/lib/stores/feedsStore';
-import { fetchFeedsFromApi } from '@/lib/stores/services/feedsService';
-import { hasPrivacyConsent } from '@/lib/utils/privacy-guard';
 
 const createTestFeedsStore = () =>
   create<FeedsStore>()(immer(feedsStoreCreator));

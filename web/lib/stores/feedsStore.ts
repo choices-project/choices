@@ -19,11 +19,11 @@ import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+import type { PrivacySettings } from '@/types/profile';
 
 import { createBaseStoreActions } from './baseStoreActions';
-import { createSafeStorage } from './storage';
 import { fetchFeedsFromApi, parseFeedSearchPayload } from './services/feedsService';
-import type { PrivacySettings } from '@/types/profile';
+import { createSafeStorage } from './storage';
 import type {
   FeedCategory,
   FeedFilters,
@@ -38,7 +38,6 @@ import type {
   FeedsActions,
   ResetFeedsStateOptions,
   FeedUpdateInput,
-  FeedInteractionPayload,
 } from './types/feeds';
 
 const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => {

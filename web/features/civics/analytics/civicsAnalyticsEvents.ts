@@ -28,7 +28,7 @@ export type CivicsRepresentativeSingleEventName = Exclude<
   | 'civics_representative_bulk_contact_template_clear'
 >;
 
-export interface CivicsRepresentativeEventBase extends Record<string, unknown> {
+export type CivicsRepresentativeEventBase = {
   representativeId: number | null;
   representativeName: string | null;
   divisionIds: string[];
@@ -36,17 +36,17 @@ export interface CivicsRepresentativeEventBase extends Record<string, unknown> {
   nextElectionDay: string | null;
   electionCountdownDays: number | null;
   source?: string;
-}
+} & Record<string, unknown>
 
-export interface CivicsRepresentativeBulkEventBase extends Record<string, unknown> {
+export type CivicsRepresentativeBulkEventBase = {
   representativeIds: number[];
   selectedRepresentativeIds?: number[];
   totalRepresentatives: number;
   selectedCount: number;
   divisionIds: string[];
-}
+} & Record<string, unknown>
 
-export interface CivicsRepresentativeEventMap {
+export type CivicsRepresentativeEventMap = {
   civics_representative_follow_toggle: CivicsRepresentativeEventBase & {
     action: 'follow' | 'unfollow';
     previousFollowState: 'following' | 'not_following';

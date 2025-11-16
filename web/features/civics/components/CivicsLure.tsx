@@ -18,6 +18,7 @@ import { ElectionCountdownBadge } from '@/features/civics/components/countdown/E
 import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
 import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
 import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUserCurrentAddress,
   useUserRepresentatives,
@@ -30,7 +31,6 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 type CivicsLureProps = {
   userLocation?: string;

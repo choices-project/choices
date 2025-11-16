@@ -142,7 +142,7 @@ describe('representativeStore division normalisation', () => {
       'ocd-division/country:us/state:wa/cd:7'
     ]);
 
-    const result = await representativeStore.getState().getRepresentativeById(123);
+    const _result = await representativeStore.getState().getRepresentativeById(123);
     const state = representativeStore.getState();
 
     // Result should be populated and state updated

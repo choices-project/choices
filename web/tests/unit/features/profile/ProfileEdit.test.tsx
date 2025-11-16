@@ -12,7 +12,7 @@ import { createInitialUserState, useUserStore } from '@/lib/stores/userStore';
 
 const mockUpdateProfile = jest.fn();
 const mockUploadAvatar = jest.fn();
-/* eslint-disable no-restricted-syntax */
+ 
 jest.mock('@/features/profile/hooks/use-profile', () => {
   const actual = jest.requireActual('@/features/profile/hooks/use-profile');
 
@@ -37,7 +37,7 @@ jest.mock('@/features/profile/hooks/use-profile', () => {
     }),
   };
 });
-/* eslint-enable no-restricted-syntax */
+ 
 
 const createProfile = (overrides: Partial<ProfileEditProps['profile']> = {}) =>
   ({

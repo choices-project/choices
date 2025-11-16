@@ -11,7 +11,6 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
-import { shallow } from 'zustand/shallow';
 
 import { createPollRequest, type PollCreateRequestResult } from '@/lib/polls/api';
 import {

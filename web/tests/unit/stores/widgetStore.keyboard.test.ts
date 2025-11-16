@@ -78,12 +78,6 @@ function createLayout(widget: WidgetConfig): DashboardLayout {
     createdAt: now,
     updatedAt: now,
   };
-
-  Object.entries(overrides).forEach(([key, value]) => {
-    if (value !== undefined) {
-      (widget as Record<string, unknown>)[key] = value as unknown;
-    }
-  });
 }
 
 function resetStore(widgetOverrides: Partial<WidgetConfig> = {}) {

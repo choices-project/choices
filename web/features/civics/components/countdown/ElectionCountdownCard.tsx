@@ -1,16 +1,17 @@
-import React from 'react';
-
 import {
   AlertTriangle,
   CheckCircle2,
   Clock3,
   Loader2
 } from 'lucide-react';
+import React from 'react';
+
 
 import { cn } from '@/lib/utils';
 import type { CivicElection } from '@/types/civic';
 
 import { formatElectionDate } from '../../utils/civicsCountdownUtils';
+
 import { ElectionCountdownBadge } from './ElectionCountdownBadge';
 
 export type ElectionCountdownCardProps = {

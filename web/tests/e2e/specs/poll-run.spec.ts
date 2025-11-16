@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 const POLL_ID = 'harness-poll';
 const HARNESS_NAV_TIMEOUT = 90_000;

@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 // type imported only for external consumers via window harness
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 // import type { PollWizardStore } from '@/lib/stores/pollWizardStore';
 import { usePollWizardStore } from '@/lib/stores/pollWizardStore';
 

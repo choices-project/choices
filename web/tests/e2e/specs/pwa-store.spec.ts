@@ -6,7 +6,7 @@ import { runAxeAudit } from '../helpers/accessibility';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface Window {
     __pwaStoreHarness?: PWAStoreHarness;
   }

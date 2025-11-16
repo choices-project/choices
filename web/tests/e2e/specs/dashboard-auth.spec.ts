@@ -1,19 +1,19 @@
 import { expect, test } from '@playwright/test';
 
+import { createInitialAdminState } from '../../../lib/stores/adminStore';
+import { createInitialProfileState } from '../../../lib/stores/profileStore';
+import { createInitialUserState } from '../../../lib/stores/userStore';
 import {
   ensureLoggedOut,
   setupExternalAPIMocks,
   waitForPageReady,
 } from '../helpers/e2e-setup';
-import { createInitialUserState } from '../../../lib/stores/userStore';
-import { createInitialProfileState } from '../../../lib/stores/profileStore';
-import { createInitialAdminState } from '../../../lib/stores/adminStore';
 
 const AUTHSPEC_TIMEOUT = 90_000;
 
 test.describe('@mocks dashboard auth experience', () => {
   test.describe.configure({ timeout: 120_000 });
-  let cleanupMocks: (() => Promise<void>) | undefined;
+  let cleanupMocks: (() => Promise<void>) | null;
 
   test.beforeEach(async ({ page }) => {
     cleanupMocks = await setupExternalAPIMocks(page, {
@@ -29,7 +29,7 @@ test.describe('@mocks dashboard auth experience', () => {
   test.afterEach(async () => {
     if (cleanupMocks) {
       await cleanupMocks();
-      cleanupMocks = undefined;
+      cleanupMocks = null;
     }
   });
 

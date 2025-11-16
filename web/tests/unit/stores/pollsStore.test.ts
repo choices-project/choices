@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import type { PollCreatePayload } from '@/lib/polls/wizard/submission';
 import type { PollsStore } from '@/lib/stores/pollsStore';
 import {
   createInitialPollsState,
   createPollsActions,
 } from '@/lib/stores/pollsStore';
-import type { PollCreatePayload } from '@/lib/polls/wizard/submission';
 
 const createTestPollsStore = () =>
   create<PollsStore>()(

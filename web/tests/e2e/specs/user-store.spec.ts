@@ -5,7 +5,7 @@ import type { UserStoreHarness } from '@/app/(app)/e2e/user-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface Window {
     __userStoreHarness?: UserStoreHarness;
   }

@@ -1,9 +1,10 @@
 'use server'
 
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, validationError, errorResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,7 +118,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         event_type: 'representative_override_edit',
         metadata: { representativeId, fields: Object.keys(payload) },
       });
-  } catch {}
+  } catch {
+    // Non-blocking: analytics insertion failure should not affect API success
+  }
 
   return successResponse({ ok: true });
 });

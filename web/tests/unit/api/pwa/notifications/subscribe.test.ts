@@ -4,6 +4,13 @@
 
 import type { NextRequest } from 'next/server';
 
+import {
+  POST,
+  DELETE,
+  GET,
+  PUT,
+} from '@/app/api/pwa/notifications/subscribe/route';
+
 const mockSupabaseFrom = jest.fn();
 
 jest.mock('@/lib/core/feature-flags', () => ({
@@ -54,13 +61,6 @@ const { isFeatureEnabled } = jest.requireMock('@/lib/core/feature-flags') as {
 };
 
 const mockIsFeatureEnabled = isFeatureEnabled;
-
-const {
-  POST,
-  DELETE,
-  GET,
-  PUT
-} = require('@/app/api/pwa/notifications/subscribe/route') as typeof import('@/app/api/pwa/notifications/subscribe/route');
 
 const buildRequest = (init?: RequestInit & { url?: string }) => {
   const headers = new Headers(init?.headers);

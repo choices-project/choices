@@ -73,3 +73,28 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 - `notification-store`
   - Election countdown notifications now have dedicated unit coverage (`tests/unit/stores/notification.integration.test.tsx` + `tests/unit/features/civics/useElectionCountdown.test.ts`) to assert analytics hooks + dedupe behaviour before wiring Playwright.
 - `onboarding-store`
+
+---
+
+## Test Hygiene Conventions (Phase 6)
+
+- Type definitions in tests
+  - Prefer `type` aliases over `interface` to satisfy `@typescript-eslint/consistent-type-definitions`.
+  - Exception: Global augmentations like `declare global { interface Window { ... } }` should remain `interface` for correct merging; these blocks may include local rule disables.
+
+- Import typing in tests
+  - Prefer `typeof import('module')` module typing patterns when mocking:
+    - Example:
+      - `type I18nModule = typeof import('@/hooks/useI18n')`
+      - `const mocked = jest.requireMock('@/hooks/useI18n') as { [K in keyof I18nModule]: jest.Mock }`
+  - Avoid inline `import('module').Type` annotations; use module-level `typeof import` or value imports instead.
+
+- Playwright harness
+  - Use `web/tests/e2e/playwright.config.ts` as the single config.
+  - The standalone server script `tests/e2e/scripts/start-standalone-server.cjs` is Node‑scoped and includes the required `/* eslint-env node */` header and globals (`__dirname`, `process`).
+  - Environment flags for deterministic runs:
+    - `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`
+    - `NEXT_DISABLE_REACT_DEV_OVERLAY=1`
+  - Default base URL: `http://localhost:3000` (override with `PLAYWRIGHT_BASE_URL`).
+
+These conventions are enforced by the repo ESLint configuration and should keep test suites lint‑clean and consistent.

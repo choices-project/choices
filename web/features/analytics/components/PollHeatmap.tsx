@@ -44,8 +44,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PollHeatmapFilters } from '@/features/analytics/types/analytics';
 import { useI18n } from '@/hooks/useI18n';
-import { useAnalyticsActions, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useAnalyticsActions, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
 
 import {
   AnalyticsSummaryTable,

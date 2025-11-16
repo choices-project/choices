@@ -1,12 +1,12 @@
 /**
  * @jest-environment jsdom
  */
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 import React from 'react';
 
 import { Sidebar } from '@/app/(app)/admin/layout/Sidebar';
 import { useAppStore } from '@/lib/stores/appStore';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockUsePathname = jest.fn();
 

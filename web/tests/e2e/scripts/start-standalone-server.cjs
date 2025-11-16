@@ -1,4 +1,6 @@
 'use strict';
+/* eslint-env node */
+/* global __dirname, process */
 
 const { spawn } = require('child_process');
 const fs = require('fs');

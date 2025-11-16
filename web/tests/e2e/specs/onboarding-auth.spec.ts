@@ -21,7 +21,7 @@ async function stubWebAuthn(page: Page) {
 
     class MockCredential {
       id: string = 'test-credential';
-      type: 'public-key' = 'public-key';
+      type = 'public-key' as const;
       rawId: ArrayBuffer = Uint8Array.from([1, 2, 3, 4]).buffer;
       response: MockAttestationResponse | MockAssertionResponse;
       constructor(kind: 'register' | 'authenticate') {

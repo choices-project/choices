@@ -1,8 +1,9 @@
 'use client'
 
-import useSWR from '@/shims/swr';
 import Link from 'next/link';
 import { useState } from 'react';
+
+import useSWR from '@/shims/swr';
 
 type CandidateProfile = {
   id: string;
@@ -67,7 +68,7 @@ export default function CandidatePage({ params }: { params: { slug: string } }) 
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',
-                  body: JSON.stringify({ is_public: !Boolean(c.is_public) }),
+                  body: JSON.stringify({ is_public: !c.is_public }),
                 });
                 if (res.ok) {
                   mutate();

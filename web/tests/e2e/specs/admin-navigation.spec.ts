@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
+import { runAxeAudit } from '../helpers/accessibility';
+import { waitForPageReady } from '../helpers/e2e-setup';
+
+ 
 declare global {
   interface Window {
     __navigationShellHarness?: {
@@ -8,11 +13,9 @@ declare global {
     };
   }
 }
+ 
 
-import { runAxeAudit } from '../helpers/accessibility';
-import { waitForPageReady } from '../helpers/e2e-setup';
-
-const gotoNavigationShellHarness = async (page: import('@playwright/test').Page) => {
+const gotoNavigationShellHarness = async (page: Page) => {
   await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page, 60_000);
   await expect(page.getByTestId('navigation-shell-harness')).toBeVisible({ timeout: 30_000 });
@@ -29,14 +32,14 @@ const ADMIN_NAVIGATION_STATES = [
   { route: '/admin/system', breadcrumbLabel: 'System', sidebarSection: 'admin-system', sidebarText: /System/i },
 ];
 
-const expectSidebarHighlight = async (page: import('@playwright/test').Page, tabMatcher: RegExp) => {
+const expectSidebarHighlight = async (page: Page, tabMatcher: RegExp) => {
   const activeNavItem = page
     .locator('nav[aria-label="Admin navigation"]')
     .locator('a[aria-current="page"]');
   await expect(activeNavItem).toContainText(tabMatcher);
 };
 
-const expectBreadcrumbMatches = async (page: import('@playwright/test').Page, matcher: string) => {
+const expectBreadcrumbMatches = async (page: Page, matcher: string) => {
   await page.waitForFunction(
     (expected) => {
       return Array.from(
@@ -48,7 +51,7 @@ const expectBreadcrumbMatches = async (page: import('@playwright/test').Page, ma
 };
 
 const setNavigationShellState = async (
-  page: import('@playwright/test').Page,
+  page: Page,
   state: { route: string; breadcrumbLabel: string; sidebarSection: string },
 ) => {
   await page.evaluate(

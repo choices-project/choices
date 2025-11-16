@@ -1,5 +1,23 @@
 import type { Page } from '@playwright/test';
 
+import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
+import { buildDashboardData } from '../../fixtures/api/dashboard';
+import {
+  buildNotification,
+  buildNotificationList,
+} from '../../fixtures/api/notifications';
+import {
+  POLL_FIXTURES,
+  type MockPollRecord,
+  createPollRecord,
+} from '../../fixtures/api/polls';
+import { profileRecord } from '../../fixtures/api/profile';
+import {
+  PWA_NOTIFICATION_FIXTURE,
+  PWA_OFFLINE_FIXTURE,
+  PWA_SUBSCRIPTION_FIXTURE,
+} from '../../fixtures/api/pwa';
+import { buildShareAnalytics } from '../../fixtures/api/share';
 import {
   buildFeedCategoriesResponse,
   buildFeedInteractionResponse,
@@ -8,24 +26,6 @@ import {
   FEED_FIXTURES,
 } from '../../msw/feeds-handlers';
 import { normalizeMockPayload } from '../../msw/utils/envelope';
-import {
-  POLL_FIXTURES,
-  type MockPollRecord,
-  createPollRecord,
-} from '../../fixtures/api/polls';
-import { buildDashboardData } from '../../fixtures/api/dashboard';
-import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
-import { profileRecord } from '../../fixtures/api/profile';
-import {
-  buildNotification,
-  buildNotificationList,
-} from '../../fixtures/api/notifications';
-import { buildShareAnalytics } from '../../fixtures/api/share';
-import {
-  PWA_NOTIFICATION_FIXTURE,
-  PWA_OFFLINE_FIXTURE,
-  PWA_SUBSCRIPTION_FIXTURE,
-} from '../../fixtures/api/pwa';
 
 type RouteHandler = Parameters<Page['route']>[1];
 type RoutePattern = Parameters<Page['route']>[0];

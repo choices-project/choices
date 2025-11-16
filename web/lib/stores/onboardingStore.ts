@@ -376,7 +376,9 @@ export const createOnboardingActions = (
       queueMicrotask(async () => {
         try {
           await get().saveProgress();
-        } catch {}
+        } catch {
+          // Ignore persistence errors in background save; surfaced via explicit saveProgress calls
+        }
       });
       return next as OnboardingStore;
     }),
@@ -389,7 +391,9 @@ export const createOnboardingActions = (
       queueMicrotask(async () => {
         try {
           await get().saveProgress();
-        } catch {}
+        } catch {
+          // Ignore persistence errors in background save; surfaced via explicit saveProgress calls
+        }
       });
       return next as OnboardingStore;
     }),
@@ -402,7 +406,9 @@ export const createOnboardingActions = (
       queueMicrotask(async () => {
         try {
           await get().saveProgress();
-        } catch {}
+        } catch {
+          // Ignore persistence errors in background save; surfaced via explicit saveProgress calls
+        }
       });
       return next as OnboardingStore;
     }),
@@ -415,7 +421,9 @@ export const createOnboardingActions = (
       queueMicrotask(async () => {
         try {
           await get().saveProgress();
-        } catch {}
+        } catch {
+          // Ignore persistence errors in background save; surfaced via explicit saveProgress calls
+        }
       });
       return next as OnboardingStore;
     }),

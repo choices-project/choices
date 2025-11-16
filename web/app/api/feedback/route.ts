@@ -9,8 +9,9 @@ import {
   parseBody,
 } from '@/lib/api';
 import { devLog, logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Json } from '@/types/supabase';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -198,7 +199,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     const { data: cspResult, error: cspError } = await supabaseClient
       .from('feedback')
-      .insert(cspData)
+      .insert(stripUndefinedDeep(cspData))
       .select()
       .single();
 
@@ -267,7 +268,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     deviceType: userJourney?.deviceInfo?.type,
   });
 
-  const { data, error } = await supabaseClient.from('feedback').insert([feedbackData]).select();
+  const { data, error } = await supabaseClient.from('feedback').insert([stripUndefinedDeep(feedbackData)]).select();
 
   if (error) {
     devLog('Database error:', { error });

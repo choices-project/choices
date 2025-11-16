@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { 
   useAnalyticsChartData, 
   useAnalyticsChartMaxValue, 
@@ -14,7 +15,6 @@ import {
   useAnalyticsChartShowConfidence,
   useAnalyticsActions 
 } from '@/lib/stores/analyticsStore'
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 type ChartData = {
   name: string

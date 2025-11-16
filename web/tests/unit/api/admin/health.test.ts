@@ -4,6 +4,8 @@
 
 import type { NextRequest } from 'next/server';
 
+import { GET } from '@/app/api/admin/health/route';
+
 const mockRequireAdminOr401 = jest.fn();
 const mockGetSupabaseServerClient = jest.fn();
 
@@ -14,8 +16,6 @@ jest.mock('@/features/auth/lib/admin-auth', () => ({
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: (...args: unknown[]) => mockGetSupabaseServerClient(...args),
 }));
-
-const { GET } = require('@/app/api/admin/health/route') as typeof import('@/app/api/admin/health/route');
 
 type SupabaseResult<T> = { data: T; error: null | Error };
 

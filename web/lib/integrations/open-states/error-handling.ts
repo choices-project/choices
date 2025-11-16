@@ -267,11 +267,11 @@ export async function executeWithRetry<T>(
   
   logger.error(`${context} operation failed after all retries`, {
     attempts: config.maxRetries + 1,
-    finalError: lastError!.message,
-    code: lastError!.code
+    finalError: lastError?.message ?? 'Unknown error',
+    code: lastError?.code
   });
   
-  throw lastError!;
+  throw (lastError ?? new OpenStatesApiError('Unknown error after retries', 'UNKNOWN_ERROR'));
 }
 
 // Error monitoring

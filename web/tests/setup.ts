@@ -11,6 +11,8 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
+import type React from 'react';
+
 import { authServer } from './msw/server';
 
 beforeAll(() => {
@@ -26,7 +28,7 @@ afterEach(() => {
 });
 
 jest.mock('lucide-react', () => {
-  const React = jest.requireActual<typeof import('react')>('react');
+  const React = jest.requireActual('react') as typeof React;
   const icons: Record<string, unknown> = {};
 
   const createIcon = (name: string) =>

@@ -4,7 +4,6 @@ import { FileText, CheckCircle, ArrowLeft, ArrowRight, FileCheck, AlertCircle } 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 
-import { declareCandidacy } from '@/app/actions/declare-candidacy'
 import { FilingAssistant } from '@/components/candidate/FilingAssistant'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

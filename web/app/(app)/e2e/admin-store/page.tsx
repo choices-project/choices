@@ -90,7 +90,8 @@ export default function AdminStoreHarnessPage() {
     window.__adminStoreHarness = harness;
     return () => {
       if (window.__adminStoreHarness === harness) {
-        delete window.__adminStoreHarness;
+         
+        delete (window as any).__adminStoreHarness;
       }
     };
   }, [

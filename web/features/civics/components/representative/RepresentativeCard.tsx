@@ -26,8 +26,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
+import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
 import type { RepresentativeCardProps } from '@/types/representative';
 

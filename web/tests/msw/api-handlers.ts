@@ -1,22 +1,23 @@
 import { http, HttpResponse } from 'msw';
 
+import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../fixtures/api/civics';
+import { buildDashboardData } from '../fixtures/api/dashboard';
+import {
+  buildNotification,
+  buildNotificationList,
+} from '../fixtures/api/notifications';
 import {
   POLL_FIXTURES,
   createPollRecord,
   type MockPollRecord,
 } from '../fixtures/api/polls';
-import { buildDashboardData } from '../fixtures/api/dashboard';
-import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../fixtures/api/civics';
-import {
-  buildNotification,
-  buildNotificationList,
-} from '../fixtures/api/notifications';
-import { buildShareAnalytics } from '../fixtures/api/share';
 import {
   PWA_NOTIFICATION_FIXTURE,
   PWA_OFFLINE_FIXTURE,
   PWA_SUBSCRIPTION_FIXTURE,
 } from '../fixtures/api/pwa';
+import { buildShareAnalytics } from '../fixtures/api/share';
+
 import { mockError, mockSuccess } from './utils/envelope';
 
 const json = (body: unknown, status = 200) => HttpResponse.json(body, { status });

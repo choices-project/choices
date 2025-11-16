@@ -259,7 +259,6 @@ export abstract class BaseHashtagPollsIntegrationService {
         }
 
         const pollCount = polls.length;
-        const totalVotes = polls.reduce((sum: number, p: any) => sum + (p.total_votes ?? 0), 0);
         const avgEngagement = pollCount > 0
           ? polls.reduce((sum: number, p: any) => sum + (p.engagement_score ?? 0), 0) / pollCount
           : 0;

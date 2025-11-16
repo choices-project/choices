@@ -1,9 +1,11 @@
 'use server'
 
 import type { NextRequest } from 'next/server';
+
 import { withErrorHandling, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,12 +74,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (!representativeId) {
     // Record attempt and require manual/doc verification
-    await supabase.from('candidate_verifications').insert({
+    await supabase.from('candidate_verifications').insert(stripUndefinedDeep({
       candidate_id: candidate.id,
       method: 'gov_email',
       status: 'in_progress',
       evidence: { email: user.email, domain: userDomain, match: 'none' },
-    });
+    }));
     return successResponse({ ok: false, reason: 'No exact/unique domain match. Proceed with document/manual verification.' });
   }
 
@@ -95,12 +97,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Failed to fast-track', 500);
   }
 
-  await supabase.from('candidate_verifications').insert({
+  await supabase.from('candidate_verifications').insert(stripUndefinedDeep({
     candidate_id: candidate.id,
     method: 'gov_email',
     status: 'verified',
     evidence: { email: user.email, representative_id: representativeId },
-  });
+  }));
 
   return successResponse({ ok: true, slug: candidate.slug, representativeId });
 });

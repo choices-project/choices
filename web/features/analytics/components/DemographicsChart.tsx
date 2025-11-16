@@ -43,9 +43,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 import { useAnalyticsActions, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 import {
   AnalyticsSummaryTable,

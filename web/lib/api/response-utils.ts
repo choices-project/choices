@@ -411,8 +411,8 @@ export function toCamelCase<T extends Record<string, any>>(
 
 const mergeMetadataWithTimestamp = (
   metadata?: Partial<ApiMetadata> | Record<string, any>,
-): Record<string, any> => {
-  const base: Record<string, any> = { timestamp: new Date().toISOString() };
+): ApiMetadata => {
+  const base: ApiMetadata = { timestamp: new Date().toISOString() };
   if (!metadata) {
     return base;
   }

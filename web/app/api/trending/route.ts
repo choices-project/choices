@@ -15,11 +15,11 @@
 
 import type { NextRequest } from 'next/server';
 
-import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 import { withErrorHandling, validationError, successResponse, errorResponse } from '@/lib/api';
+import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
+import { nowISO } from '@/lib/utils/format-utils';
 import { logger, devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { nowISO } from '@/lib/utils/format-utils';
 
 export const dynamic = 'force-dynamic';
 

@@ -16,6 +16,7 @@ import type { NextRequest} from 'next/server';
 import { withErrorHandling, successResponse, validationError, corsPreflightResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 type CSPViolation = {
   'document-uri': string;
@@ -61,7 +62,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const supabase = await getSupabaseServerClient();
       
       // Store in admin_activity_log for security tracking
-      await supabase.from('admin_activity_log').insert({
+      await supabase.from('admin_activity_log').insert(stripUndefinedDeep({
         action: 'csp_violation',
         admin_id: '00000000-0000-0000-0000-000000000000', // System action
         details: {
@@ -70,7 +71,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           ...metadata
         },
         timestamp: new Date().toISOString()
-      });
+      }));
     } catch (dbError) {
       // Don't fail the request if DB storage fails
       logger.warn('Failed to store CSP violation in database', { error: dbError });

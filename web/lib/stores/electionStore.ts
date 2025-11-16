@@ -3,10 +3,11 @@ import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import type { CivicElection } from '@/types/civic';
+
 import { createBaseStoreActions } from './baseStoreActions';
 import type { BaseStore } from './types';
 
-import type { CivicElection } from '@/types/civic';
 
 type ElectionState = {
   electionsByKey: Record<string, CivicElection[]>;

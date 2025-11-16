@@ -2,7 +2,7 @@
 
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, notFoundError, methodNotAllowed, validationError, errorResponse, forbiddenError } from '@/lib/api';
+import { withErrorHandling, successResponse, notFoundError, validationError, errorResponse, forbiddenError } from '@/lib/api';
 import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -129,7 +129,9 @@ export const PATCH = withErrorHandling(async (request: NextRequest, { params }: 
         event_type: 'candidate_profile_edit',
         metadata: { slug, fields: Object.keys(allowed) },
       });
-  } catch {}
+  } catch {
+    // Intentionally ignore analytics insertion failures to avoid blocking the main update flow
+  }
 
   return successResponse(updated ?? { id: candidate.id, slug });
 });

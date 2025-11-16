@@ -5,9 +5,9 @@
  * This is typically used by admin users or automated systems.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 import webPush from 'web-push';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import {
   withErrorHandling,
@@ -19,8 +19,9 @@ import {
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Database, Json } from '@/types/supabase';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,7 +155,7 @@ const logNotification = async (
     error_message: errorMessage ?? null
   } satisfies Database['public']['Tables']['notification_log']['Insert'];
 
-  const { error } = await supabase.from('notification_log').insert(entry);
+  const { error } = await supabase.from('notification_log').insert(stripUndefinedDeep(entry));
   if (error) {
     logger.warn('PWA: Failed to log notification', { subscriptionId: record.id, error });
   }

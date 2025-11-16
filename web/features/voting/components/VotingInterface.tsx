@@ -3,9 +3,9 @@
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
+import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
 import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
-import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
 
 import ApprovalVoting from './ApprovalVoting'

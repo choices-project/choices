@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 
-import type { CivicElection } from '@/types/civic';
 import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
+import type { CivicElection } from '@/types/civic';
 
 const buildElection = (overrides: Partial<CivicElection> = {}): CivicElection => ({
   election_id: overrides.election_id ?? `election-${Math.random()}`,

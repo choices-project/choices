@@ -9,9 +9,11 @@ import {
 } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __feedsStoreHarness?: FeedsStoreHarness;
   }
+   
 }
 
 const gotoFeedsHarness = async (page: Page) => {

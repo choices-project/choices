@@ -15,8 +15,8 @@ import type { NextRequest } from 'next/server';
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { TablesInsert } from '@/types/supabase';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   // Check if social sharing is enabled

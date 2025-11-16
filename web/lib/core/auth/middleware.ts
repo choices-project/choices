@@ -261,7 +261,7 @@ export function withAuth(
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('username, is_admin')
-      .eq('user_id', String(user!.id))
+      .eq('user_id', String(user?.id ?? ''))
       .single();
 
     const isAdmin = profile && !('error' in profile) ? (profile as any).is_admin : false;
@@ -269,8 +269,8 @@ export function withAuth(
     
     const context: AuthContext = {
       user: {
-        id: user!.id,
-        email: user!.email || '',
+        id: user ? user.id : '',
+        email: user?.email || '',
         trust_tier: isAdmin ? 'T3' : 'T1',
         ...(username ? { username } : {})
       },

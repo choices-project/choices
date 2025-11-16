@@ -2,7 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import PasskeyLogin from '@/features/auth/components/PasskeyLogin';
+import { beginAuthenticate } from '@/features/auth/lib/webauthn/client';
 import { useUserStore } from '@/lib/stores/userStore';
+
 
 jest.mock('@/features/auth/lib/webauthn/client', () => ({
   beginRegister: jest.fn(),
@@ -13,10 +15,6 @@ jest.mock('@/features/auth/lib/webauthn/client', () => ({
   getUserCredentials: jest.fn().mockResolvedValue([]),
   getPrivacyStatus: jest.fn().mockResolvedValue({ status: 'ok' }),
 }));
-
-const { beginAuthenticate } = require('@/features/auth/lib/webauthn/client') as {
-  beginAuthenticate: jest.Mock;
-};
 
 describe('PasskeyLogin', () => {
   beforeEach(() => {

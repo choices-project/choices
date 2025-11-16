@@ -1,4 +1,5 @@
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
+
 import type { PrivacySettings, UserProfile } from './types';
 
 export type ProfileResponsePayload = {

@@ -4,6 +4,8 @@
 
 import type { NextRequest } from 'next/server';
 
+import { GET } from '@/app/api/analytics/election-notifications/route';
+
 const mockSupabaseFrom = jest.fn();
 
 jest.mock('@/lib/core/feature-flags', () => ({
@@ -34,8 +36,6 @@ jest.mock('@/lib/api', () => {
 const { isFeatureEnabled } = jest.requireMock('@/lib/core/feature-flags') as {
   isFeatureEnabled: jest.Mock;
 };
-
-const { GET } = require('@/app/api/analytics/election-notifications/route') as typeof import('@/app/api/analytics/election-notifications/route');
 
 type QueryBuilder = {
   select: jest.Mock;

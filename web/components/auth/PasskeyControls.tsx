@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
-import { T } from '@/lib/testing/testIds';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { T } from '@/lib/testing/testIds';
 
 export function PasskeyControls() {
   const [mode, setMode] = React.useState<

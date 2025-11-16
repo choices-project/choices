@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import React, { Suspense, useEffect } from 'react';
 
 import { useAppActions } from '@/lib/stores/appStore';
+
 import { AdminLayout } from '../layout/AdminLayout';
 
 const SystemSettings = dynamic(() => import('@/features/admin/components/SystemSettings'), {
