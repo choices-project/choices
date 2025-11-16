@@ -685,13 +685,13 @@ const createContactActions = (
         }
 
         if (draft.messagesMetaByThreadId[input.threadId]) {
-          const prev = draft.messagesMetaByThreadId[input.threadId]!;
+          const prev = draft.messagesMetaByThreadId[input.threadId];
           draft.messagesMetaByThreadId[input.threadId] = {
-            total: Math.max(0, (prev.total ?? 1) - 1),
+            total: Math.max(0, ((prev?.total ?? 1) - 1)),
             lastFetchedAt: Date.now(),
-            limit: prev.limit,
-            offset: prev.offset,
-            hasMore: prev.hasMore,
+            limit: prev?.limit ?? 50,
+            offset: prev?.offset ?? 0,
+            hasMore: prev?.hasMore ?? false,
           };
         }
       });

@@ -131,8 +131,8 @@ export default function AuthPage() {
     try {
       setAuthLoading(true);
       if (isSignUp) {
-        // Create context object for security
-        const context: ServerActionContext = {
+        // Create context object for security (not used directly here)
+        const _context: ServerActionContext = {
           userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
         };
 
