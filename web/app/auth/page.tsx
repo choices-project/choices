@@ -13,7 +13,6 @@ import {
   useUserStore,
 } from '@/features/auth/lib/store';
 import { useI18n } from '@/hooks/useI18n';
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 

@@ -80,8 +80,8 @@ export async function shouldNotifyHashtagTrending(
   hashtagId: string
 ): Promise<boolean> {
   try {
-    // Check for recent notifications (last 24 hours)
-    const response = await fetch(`/api/notifications?unread_only=false&limit=100`);
+    // Check for recent notifications (last 24 hours) for this user
+    const response = await fetch(`/api/notifications?unread_only=false&limit=100&user_id=${userId}`);
     
     if (!response.ok) {
       return true;  // If can't check, allow notification

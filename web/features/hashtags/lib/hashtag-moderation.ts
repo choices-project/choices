@@ -174,7 +174,7 @@ export async function flagHashtag(
       flagged_by: user.id,
       reason,
       status: 'pending',
-      flag_type: 'inappropriate'
+      flag_type: flagType // Use the flagType parameter instead of hardcoding
     };
 
     const result = await supabase
