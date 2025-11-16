@@ -11,6 +11,9 @@ import { checkRateLimit } from '@/lib/core/auth/server-actions';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { getSecurityConfig } from '@/lib/core/security/config';
 
+// Mock server-only to allow testing
+jest.mock('server-only', () => ({}));
+
 // Mock dependencies
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
   apiRateLimiter: {
@@ -28,6 +31,13 @@ jest.mock('@/lib/utils/logger', () => ({
     debug: jest.fn(),
     error: jest.fn()
   }
+}));
+
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn()
+  }))
 }));
 
 describe('checkRateLimit', () => {

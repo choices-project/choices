@@ -1,8 +1,8 @@
 /**
  * Performance Monitor Status Tests
- * 
+ *
  * Tests for monitoring status getter and isMonitoring integration
- * 
+ *
  * Created: 2025-01-16
  */
 
