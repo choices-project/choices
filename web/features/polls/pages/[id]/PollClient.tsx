@@ -145,7 +145,7 @@ export default function PollClient({ poll }: PollClientProps) {
       setSidebarActiveSection(null);
       setBreadcrumbs([]);
     };
-  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
 
   const pollDetailsForBallot = useMemo(() => {
     const totalVotes =
@@ -236,7 +236,7 @@ export default function PollClient({ poll }: PollClientProps) {
       setLoading(false);
       setVotingLoading(false);
     }
-  }, [pollId, clearVotingError, setVotingError, setVotingLoading]);
+  }, [pollId, clearVotingError, setVotingError, setVotingLoading, t]);
 
   useEffect(() => {
     void fetchPollData();
@@ -300,7 +300,7 @@ export default function PollClient({ poll }: PollClientProps) {
         votes,
       };
     });
-  }, [optionVoteLookup, pollOptions]);
+  }, [optionVoteLookup, pollOptions, t]);
 
   const initialVoteTotal = useMemo(
     () =>

@@ -67,7 +67,7 @@ export const POST = withErrorHandling(async (
     // Check if action exists and is active
     const { data: action, error: fetchError } = await supabase
       .from('civic_actions')
-      .select('id, status, is_public, current_signatures, required_signatures, end_date')
+      .select('id, status, is_public, current_signatures, required_signatures, end_date, action_type')
       .eq('id', id)
       .single();
 

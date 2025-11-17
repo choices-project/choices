@@ -71,7 +71,7 @@ export const GET = withErrorHandling(async (
     const { data: { user } } = await supabase.auth.getUser();
 
     // Build query
-    let query = supabase
+    const query = supabase
       .from('civic_actions')
       .select('*')
       .eq('id', id)

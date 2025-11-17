@@ -148,7 +148,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         return {
           district_id: districtKey,
           district_name: `${state} District ${districtNum}`,
-          state,
+          state: state ?? 'Unknown',
           level: levelFilter,
           engagement_count: engagementCount,
           representative_count: repCount
@@ -185,8 +185,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         engagement_count: number;
         representative_count: number;
       }>;
-      kAnonymity: number;
-      generatedAt: string;
+      k_anonymity: number;
+      generated_at: string;
     };
     const responseData = result as HeatmapResponse | null;
     return successResponse(
