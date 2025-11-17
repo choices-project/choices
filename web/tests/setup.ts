@@ -76,6 +76,75 @@ jest.mock('@/lib/stores/storage', () => {
   };
 });
 
+// Minimal mocks for i18n and next/navigation used by many components in tests
+jest.mock('use-intl', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+
+  type IntlShape = {
+    locale: string;
+    messages: Record<string, string>;
+    formatMessage: (key: string, vars?: Record<string, unknown>) => string;
+  };
+
+  const defaultIntl: IntlShape = {
+    locale: 'en',
+    messages: {},
+    formatMessage: (key: string) => key,
+  };
+
+  const IntlContext = React.createContext(defaultIntl);
+
+  const IntlProvider: React.FC<{
+    locale?: string;
+    messages?: Record<string, string>;
+    children?: React.ReactNode;
+  }> = ({ locale = 'en', messages = {}, children }) => {
+    const value = {
+      locale,
+      messages,
+      formatMessage: (key: string) => {
+        // Basic pass-through so tests can assert keys or full strings if messages are provided
+        return (messages && messages[key]) || key;
+      },
+    };
+
+    return React.createElement(IntlContext.Provider, { value: value as IntlShape }, children);
+  };
+
+  const useLocale = () => React.useContext(IntlContext).locale;
+  const useIntl = () => React.useContext(IntlContext);
+  const useTranslations = (_ns?: string) => {
+    const ctx = React.useContext(IntlContext);
+    return (key: string, _vars?: Record<string, unknown>) => ctx.formatMessage(key);
+  };
+
+  // Provide default exports and named exports used by code
+  return {
+    IntlProvider,
+    useLocale,
+    useIntl,
+    useTranslations,
+    // keep a default object to satisfy imports like `import useIntl from 'use-intl'`
+    default: {},
+  };
+});
+
+jest.mock('next/navigation', () => {
+  const push = jest.fn();
+  const replace = jest.fn();
+  const prefetch = jest.fn().mockResolvedValue(undefined);
+  return {
+    useParams: jest.fn(() => ({ locale: 'en' })),
+    usePathname: jest.fn(() => '/'),
+    useRouter: () => ({
+      push,
+      replace,
+      prefetch,
+      pathname: '/',
+    }),
+  };
+});
+
 (globalThis as any).Notification =
   (typeof Notification !== 'undefined' && Notification) ||
   class MockNotification {
