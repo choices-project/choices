@@ -19,6 +19,9 @@ build/
 .env.admin
 .env.*
 
+# Secrets rotation tracking
+.secrets-rotation.json
+
 # IDE and editor files
 .vscode/
 .idea/
