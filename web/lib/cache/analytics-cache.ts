@@ -24,25 +24,14 @@ import { logger } from '@/lib/utils/logger';
 
 import { redis } from './redis';
 
-/**
- * Cache TTL (Time To Live) configurations in seconds
- */
-export const CACHE_TTL = {
-  // Short-lived caches (frequently changing data)
-  POLL_HEATMAP: 60, // 1 minute
-  TEMPORAL: 300, // 5 minutes
-  
-  // Medium-lived caches (moderate change frequency)
-  DEMOGRAPHICS: 600, // 10 minutes
-  TRENDS: 600, // 10 minutes
-  TRUST_TIERS: 900, // 15 minutes
-  
-  // Long-lived caches (rarely changing data)
-  DISTRICT_HEATMAP: 1800, // 30 minutes
-  
-  // Very long-lived (static-like data)
-  SYSTEM_HEALTH: 60 // 1 minute
-} as const;
+type CacheParamValue = string | number | boolean | null | undefined;
+type CacheParamRecord = Record<string, CacheParamValue>;
+type CacheMetricType = 'hit' | 'miss' | 'error';
+
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+type CacheResult<T> = { data: T; fromCache: boolean };
 
 /**
  * Cache key prefixes for different analytics types
@@ -53,7 +42,37 @@ export const CACHE_PREFIX = {
   DEMOGRAPHICS: 'analytics:demographics',
   TRENDS: 'analytics:trends',
   TRUST_TIERS: 'analytics:trust-tiers',
-  DISTRICT_HEATMAP: 'analytics:district-heatmap'
+  DISTRICT_HEATMAP: 'analytics:district-heatmap',
+  FUNNELS: 'analytics:funnels',
+  KPI: 'analytics:kpi'
+} as const;
+
+export type CacheNamespace = keyof typeof CACHE_PREFIX;
+export type CachePrefixValue = (typeof CACHE_PREFIX)[CacheNamespace];
+
+const CACHE_PREFIX_VALUES = Object.values(CACHE_PREFIX) as CachePrefixValue[];
+const METRICS_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+/**
+ * Cache TTL (Time To Live) configurations in seconds
+ */
+export const CACHE_TTL = {
+  // Short-lived caches (frequently changing data)
+  POLL_HEATMAP: 60, // 1 minute
+  TEMPORAL: 300, // 5 minutes
+  KPI: 120, // 2 minutes
+  
+  // Medium-lived caches (moderate change frequency)
+  DEMOGRAPHICS: 600, // 10 minutes
+  TRENDS: 600, // 10 minutes
+  TRUST_TIERS: 900, // 15 minutes
+  FUNNELS: 600, // 10 minutes
+  
+  // Long-lived caches (rarely changing data)
+  DISTRICT_HEATMAP: 1800, // 30 minutes
+  
+  // Very long-lived (static-like data)
+  SYSTEM_HEALTH: 60 // 1 minute
 } as const;
 
 /**
@@ -70,13 +89,16 @@ type CacheMetrics = {
  * Generate cache key from parameters
  */
 export function generateCacheKey(
-  prefix: string,
-  params: Record<string, any> = {}
+  prefix: CachePrefixValue,
+  params: CacheParamRecord = {}
 ): string {
   // Sort params for consistent keys
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => `${key}:${params[key]}`)
+    .map((key) => {
+      const value = params[key];
+      return `${key}:${serializeParamValue(value)}`;
+    })
     .join(':');
   
   return sortedParams ? `${prefix}:${sortedParams}` : prefix;
@@ -90,16 +112,16 @@ export function generateCacheKey(
  * @param fetchFn - Function to fetch data if cache miss
  * @returns Cached or fresh data
  */
-export async function getCached<T>(
+export async function getCached<T extends JsonValue>(
   cacheKey: string,
   ttl: number,
   fetchFn: () => Promise<T>
-): Promise<{ data: T; fromCache: boolean }> {
+): Promise<CacheResult<T>> {
   const startTime = Date.now();
   
   try {
     // Try to get from cache
-    const cached = await redis.get(cacheKey);
+    const cached = await redis.get<string>(cacheKey);
     
     if (cached !== null) {
       // Cache hit!
@@ -114,7 +136,7 @@ export async function getCached<T>(
       await recordCacheMetric(cacheKey, 'hit');
       
       return {
-        data: JSON.parse(cached as string) as T,
+        data: deserializeCachePayload<T>(cached),
         fromCache: true
       };
     }
@@ -124,7 +146,7 @@ export async function getCached<T>(
     const data = await fetchFn();
     
     // Store in cache for future requests
-    await redis.setex(cacheKey, ttl, JSON.stringify(data));
+    await redis.setex(cacheKey, ttl, serializeCachePayload(data));
     
     const duration = Date.now() - startTime;
     logger.debug('Cache set', {
@@ -235,20 +257,15 @@ export async function invalidateDemographicsCaches(): Promise<void> {
  */
 async function recordCacheMetric(
   cacheKey: string,
-  type: 'hit' | 'miss' | 'error'
+  type: CacheMetricType
 ): Promise<void> {
   try {
-    const metricsKey = `metrics:cache:${cacheKey}`;
-    const field = type === 'hit' ? 'hits' : type === 'miss' ? 'misses' : 'errors';
-    
-    // Increment counter
-    await redis.hincrby(metricsKey, field, 1);
-    
-    // Update last accessed timestamp
-    await redis.hset(metricsKey, 'lastAccessed', new Date().toISOString());
-    
-    // Set expiry on metrics (7 days)
-    await redis.expire(metricsKey, 7 * 24 * 60 * 60);
+    await updateMetricsBucket(getMetricsKey(cacheKey), type);
+
+    const resolvedPrefix = resolvePrefix(cacheKey);
+    if (resolvedPrefix) {
+      await updateMetricsBucket(getPrefixMetricsKey(resolvedPrefix), type);
+    }
   } catch (error) {
     // Silently fail - metrics are not critical
     logger.debug('Failed to record cache metric', { error });
@@ -261,24 +278,11 @@ async function recordCacheMetric(
  * @param cacheKey - Cache key to get metrics for
  */
 export async function getCacheMetrics(cacheKey: string): Promise<CacheMetrics | null> {
-  try {
-    const metricsKey = `metrics:cache:${cacheKey}`;
-    const metrics = await redis.hgetall(metricsKey);
-    
-    if (!metrics || Object.keys(metrics).length === 0) {
-      return null;
-    }
-    
-    return {
-      hits: parseInt(metrics.hits as string) || 0,
-      misses: parseInt(metrics.misses as string) || 0,
-      errors: parseInt(metrics.errors as string) || 0,
-      lastAccessed: metrics.lastAccessed as string || new Date().toISOString()
-    };
-  } catch (error) {
-    logger.error('Failed to get cache metrics', { cacheKey, error });
-    return null;
-  }
+  return fetchMetrics(getMetricsKey(cacheKey), cacheKey);
+}
+
+export async function getCacheMetricsByPrefix(prefix: CachePrefixValue): Promise<CacheMetrics | null> {
+  return fetchMetrics(getPrefixMetricsKey(prefix), prefix);
 }
 
 /**
@@ -303,6 +307,20 @@ export async function getCacheHitRate(cacheKey: string): Promise<number> {
   return (metrics.hits / total) * 100;
 }
 
+export async function getCacheHitRateByPrefix(prefix: CachePrefixValue): Promise<number> {
+  const metrics = await getCacheMetricsByPrefix(prefix);
+  if (!metrics) {
+    return 0;
+  }
+
+  const total = metrics.hits + metrics.misses;
+  if (total === 0) {
+    return 0;
+  }
+
+  return (metrics.hits / total) * 100;
+}
+
 /**
  * Warm up cache with common queries
  * Call this during deployment or low-traffic periods
@@ -323,14 +341,74 @@ export async function warmupCache(): Promise<void> {
 /**
  * Get cache statistics for all analytics endpoints
  */
-export async function getAllCacheStats(): Promise<Record<string, CacheMetrics | null>> {
-  const prefixes = Object.values(CACHE_PREFIX);
-  const stats: Record<string, CacheMetrics | null> = {};
-  
-  for (const prefix of prefixes) {
-    stats[prefix] = await getCacheMetrics(prefix);
+export async function getAllCacheStats(): Promise<Record<CachePrefixValue, CacheMetrics | null>> {
+  const stats: Record<CachePrefixValue, CacheMetrics | null> = {} as Record<CachePrefixValue, CacheMetrics | null>;
+  for (const prefix of CACHE_PREFIX_VALUES) {
+    stats[prefix] = await getCacheMetricsByPrefix(prefix);
   }
-  
   return stats;
 }
 
+function serializeParamValue(value: CacheParamValue): string {
+  if (value === undefined || value === null) {
+    return 'null';
+  }
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+}
+
+function serializeCachePayload<T extends JsonValue>(payload: T): string {
+  try {
+    return JSON.stringify(payload);
+  } catch (error) {
+    logger.error('Failed to serialize cache payload', { error });
+    throw error;
+  }
+}
+
+function deserializeCachePayload<T>(raw: string): T {
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    logger.warn('Failed to deserialize cache payload; returning raw string', { error });
+    return raw as unknown as T;
+  }
+}
+
+function getMetricsKey(cacheKey: string): string {
+  return `metrics:cache:${cacheKey}`;
+}
+
+function getPrefixMetricsKey(prefix: CachePrefixValue): string {
+  return `metrics:cache-prefix:${prefix}`;
+}
+
+async function updateMetricsBucket(metricsKey: string, type: CacheMetricType): Promise<void> {
+  const field = type === 'hit' ? 'hits' : type === 'miss' ? 'misses' : 'errors';
+  await redis.hincrby(metricsKey, field, 1);
+  await redis.hset(metricsKey, 'lastAccessed', new Date().toISOString());
+  await redis.expire(metricsKey, METRICS_TTL_SECONDS);
+}
+
+async function fetchMetrics(metricsKey: string, identifier: string): Promise<CacheMetrics | null> {
+  try {
+    const metrics = await redis.hgetall(metricsKey);
+    
+    if (!metrics || Object.keys(metrics).length === 0) {
+      return null;
+    }
+    
+    return {
+      hits: parseInt(metrics.hits as string, 10) || 0,
+      misses: parseInt(metrics.misses as string, 10) || 0,
+      errors: parseInt(metrics.errors as string, 10) || 0,
+      lastAccessed: (metrics.lastAccessed as string) || new Date().toISOString()
+    };
+  } catch (error) {
+    logger.error('Failed to get cache metrics', { identifier, error });
+    return null;
+  }
+}
+
+function resolvePrefix(cacheKey: string): CachePrefixValue | null {
+  return CACHE_PREFIX_VALUES.find((prefix) => cacheKey.startsWith(prefix)) ?? null;
+}

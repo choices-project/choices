@@ -12,11 +12,6 @@ import {
   createPollRecord,
 } from '../../fixtures/api/polls';
 import { profileRecord } from '../../fixtures/api/profile';
-import {
-  PWA_NOTIFICATION_FIXTURE,
-  PWA_OFFLINE_FIXTURE,
-  PWA_SUBSCRIPTION_FIXTURE,
-} from '../../fixtures/api/pwa';
 import { buildShareAnalytics } from '../../fixtures/api/share';
 import {
   buildFeedCategoriesResponse,

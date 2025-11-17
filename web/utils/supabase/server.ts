@@ -3,6 +3,7 @@ import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+import { logger } from '@/lib/utils/logger'
 import type { Database } from '@/types/supabase'
 
 // Environment validation
@@ -21,8 +22,9 @@ const validateEnvironment = () => {
     // In CI and test environments we don't want builds or tests to fail purely
     // due to missing Supabase env vars. Use safe, test-only fallbacks instead.
     if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
-      console.warn(
-        `Supabase environment variables missing in CI/test environment; using test-only fallbacks for: ${missing.join(', ')}`
+      logger.warn(
+        'Supabase environment variables missing; using test-only fallbacks in CI/test',
+        { missing },
       )
 
       return {

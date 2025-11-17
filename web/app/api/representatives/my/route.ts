@@ -22,7 +22,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Get followed representatives with full representative data
     const { data: followed, error: followedError } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .select(`
         id,
         user_id,
@@ -58,7 +58,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Get total count
     const { count, error: countError } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 

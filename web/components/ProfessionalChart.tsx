@@ -62,13 +62,15 @@ export function ProfessionalChart({
 
   // Show processing state when data changes
   useEffect(() => {
-    if (data.length > 0) {
-      setIsProcessing(true)
-      const timer = setTimeout(() => {
-        setIsProcessing(false)
-      }, 500)
-      return () => clearTimeout(timer)
+    if (data.length === 0) {
+      return;
     }
+    
+    setIsProcessing(true)
+    const timer = setTimeout(() => {
+      setIsProcessing(false)
+    }, 500)
+    return () => clearTimeout(timer)
   }, [data])
 
   // Cache data processing to prevent unnecessary re-renders

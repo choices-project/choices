@@ -1,6 +1,6 @@
 'use server';
 
-// import { headers } from 'next/headers'; // Not currently used
+import { headers } from 'next/headers';
 import { z } from 'zod';
 
 

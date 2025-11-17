@@ -8,10 +8,10 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
+// Database types are used directly when needed
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-type _PollRow = Database['public']['Tables']['polls']['Row'];
+// Database row types are used directly when needed
 
 export type PerformanceMetrics = {
   metricName: string;

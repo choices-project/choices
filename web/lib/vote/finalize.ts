@@ -75,27 +75,8 @@ type SupabaseSnapshotData = {
   total_ballots: number;
   checksum: string;
   merkle_root?: string;
+  replay_data?: unknown; // Replay data for audit and verification
   created_at: string;
-}
-
-// Simplified Supabase client interface to avoid complex query chain typing issues
-type SupabaseQueryBuilder = {
-  select(columns?: string): SupabaseQueryBuilder;
-  eq(column: string, value: unknown): SupabaseQueryBuilder;
-  lte(column: string, value: string): SupabaseQueryBuilder;
-  gt(column: string, value: string): SupabaseQueryBuilder;
-  single(): Promise<{ data: unknown; error: { message: string } | null }>;
-  insert(data: Record<string, unknown>): SupabaseQueryBuilder;
-  update(data: Record<string, unknown>): SupabaseQueryBuilder;
-  upsert(data: Record<string, unknown>, options?: { onConflict?: string }): SupabaseQueryBuilder;
-  then(onfulfilled?: (value: { data: unknown; error: unknown }) => void): Promise<{ data: unknown; error: unknown }>;
-};
-
-type _SupabaseClient = {
-  from(table: string): SupabaseQueryBuilder;
-  channel(name: string): {
-    send(message: { type: string; event: string; payload: Record<string, unknown> }): Promise<void>;
-  };
 }
 
 export class FinalizePollManager {
@@ -577,14 +558,37 @@ export class FinalizePollManager {
     try {
       const replayData = merkleTree.generateReplayData('IRV with deterministic tie-breaking');
 
-      // Store replay data (implementation depends on storage system)
-      logger.info('Generated replay data', {
-        pollId,
-        replayDataLength: JSON.stringify(replayData).length,
-        merkleTreeSize: merkleTree.getSize()
-      });
+      // Store replay data in the poll_snapshots table
+      const { data: snapshotData } = await this.supabaseClient
+        .from('poll_snapshots')
+        .select('id')
+        .eq('poll_id', pollId)
+        .order('taken_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      // In production, this would be stored in a dedicated table or file system
+      if (snapshotData) {
+        const { error } = await this.supabaseClient
+          .from('poll_snapshots')
+          .update({ replay_data: replayData })
+          .eq('id', snapshotData.id);
+
+        if (error) {
+          logger.warn('Failed to store replay data in snapshot', {
+            pollId,
+            snapshotId: snapshotData.id,
+            error: error.message
+          });
+        } else {
+          logger.info('Replay data stored successfully', {
+            pollId,
+            snapshotId: snapshotData.id,
+            replayDataLength: JSON.stringify(replayData).length
+          });
+        }
+      } else {
+        logger.warn('No snapshot found to store replay data', { pollId });
+      }
     } catch (error) {
       logger.error('Error generating replay data:', error);
       // Don't throw - this is not critical for finalization

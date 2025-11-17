@@ -351,7 +351,7 @@ export default function EngagementMetrics({
                 ? 'text-red-500' 
                 : 'text-gray-500 hover:text-red-500'
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-            aria-label={isLiked ? t('civics.engagement.aria.unlike') : t('civics.engagement.aria.like')}
+            aria-label={isLiked ? t('civics.engagement.actions.unlike') : t('civics.engagement.actions.like')}
           >
             {isLiked ? (
               <HeartSolidIcon className="w-5 h-5" />
@@ -369,7 +369,7 @@ export default function EngagementMetrics({
             className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            aria-label={t('civics.engagement.aria.comment')}
+            aria-label={t('civics.engagement.actions.comment')}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
             <span className="text-sm font-medium">
@@ -383,7 +383,7 @@ export default function EngagementMetrics({
             className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            aria-label={t('civics.engagement.aria.share')}
+            aria-label={t('civics.engagement.actions.share')}
           >
             <ShareIcon className="w-5 h-5" />
             <span className="text-sm font-medium">
@@ -403,8 +403,8 @@ export default function EngagementMetrics({
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={
               isBookmarked
-                ? t('civics.engagement.aria.removeBookmark')
-                : t('civics.engagement.aria.addBookmark')
+                ? t('civics.engagement.actions.removeBookmark')
+                : t('civics.engagement.actions.addBookmark')
             }
           >
             {isBookmarked ? (

@@ -1,6 +1,6 @@
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers'
 import { devLog } from '@/lib/utils/logger'
-import type { Database } from '@/types/database'
+// Database types are used directly when needed
 import type {
   TrustTier,
   TrustTierScore,
@@ -15,8 +15,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Use database types for actual schema
 
-type _TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
-type _UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
+// Database row types are used directly from Database type when needed
 type TrustTierAnalyticsFactors = {
   confidence_level?: number;
   data_quality_score?: number;

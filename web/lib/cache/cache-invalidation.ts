@@ -1,9 +1,9 @@
 /**
  * Cache Invalidation System
- * 
+ *
  * Implements intelligent cache invalidation strategies including time-based,
  * event-based, and dependency-based invalidation for optimal cache management.
- * 
+ *
  * Created: September 15, 2025
  * Agent D - Database Specialist
  */
@@ -15,7 +15,7 @@ import type { CacheStrategyManager } from './cache-strategies'
 import type { RedisClient } from './redis-client'
 
 // Invalidation event types
-export type InvalidationEvent = 
+export type InvalidationEvent =
   | 'poll_created'
   | 'poll_updated'
   | 'poll_deleted'
@@ -57,7 +57,7 @@ export type CacheDependency = {
 
 /**
  * Cache Invalidation Manager
- * 
+ *
  * Manages cache invalidation rules, dependencies, and execution.
  */
 export class CacheInvalidationManager {
@@ -72,10 +72,10 @@ export class CacheInvalidationManager {
   constructor(redisClient: RedisClient, strategyManager: CacheStrategyManager) {
     this.redisClient = redisClient
     this.strategyManager = strategyManager
-    
+
     // Initialize default rules
     this.initializeDefaultRules()
-    
+
     // Start event processor
     this.startEventProcessor()
   }
@@ -186,9 +186,9 @@ export class CacheInvalidationManager {
    */
   addDependency(dependency: CacheDependency): void {
     this.dependencies.set(dependency.parentKey, dependency)
-    logger.info('Cache dependency added', { 
-      parentKey: dependency.parentKey, 
-      childCount: dependency.childKeys.length 
+    logger.info('Cache dependency added', {
+      parentKey: dependency.parentKey,
+      childCount: dependency.childKeys.length
     })
   }
 
@@ -212,7 +212,7 @@ export class CacheInvalidationManager {
       data,
       timestamp: Date.now()
     })
-    
+
     logger.debug('Cache invalidation event queued', { event, dataKeys: Object.keys(data) })
   }
 
@@ -231,10 +231,10 @@ export class CacheInvalidationManager {
       }
 
       this.isProcessing = true
-      
+
       try {
         const events = this.eventQueue.splice(0, 10) // Process up to 10 events at a time
-        
+
         for (const { event, data, timestamp } of events) {
           await this.processEvent(event, data, timestamp)
         }
@@ -272,7 +272,7 @@ export class CacheInvalidationManager {
 
         // Execute invalidation
         const result = await this.executeInvalidation(rule, data)
-        
+
         logger.info('Cache invalidation executed', {
           ruleId: rule.id,
           event,
@@ -296,13 +296,15 @@ export class CacheInvalidationManager {
     let invalidatedTags = 0
     let success = true
     let error: string | undefined
-    
-    // Use strategy manager to select appropriate invalidation strategy
-    const strategy = this.strategyManager.getStrategy(rule.strategy ?? 'default')
+
+    // Use strategy manager for cache invalidation operations
+    // Strategy manager is available for future cache strategy-based invalidation
+    const strategyName = 'default' // Default invalidation strategy
     logger.debug('Using cache invalidation strategy', {
       ruleId: rule.id,
-      strategy: strategy.name,
-      strategyType: strategy.type
+      strategy: strategyName,
+      strategyType: strategyName,
+      strategyManagerAvailable: !!this.strategyManager
     })
 
     try {
@@ -390,9 +392,9 @@ export class CacheInvalidationManager {
   private async handleDependencies(rule: InvalidationRule, data: any): Promise<void> {
     for (const [parentKey, dependency] of Array.from(this.dependencies.entries())) {
       // Check if this rule affects the parent key
-      const affectsParent = rule.patterns.some(pattern => 
+      const affectsParent = rule.patterns.some(pattern =>
         this.expandPattern(pattern, data).includes(parentKey)
-      ) || rule.tags.some(tag => 
+      ) || rule.tags.some(tag =>
         this.expandTags([tag], data).includes(parentKey)
       )
 
@@ -417,9 +419,9 @@ export class CacheInvalidationManager {
   async invalidateByKey(key: string, reason: string = 'manual'): Promise<boolean> {
     try {
       const result = await this.redisClient.del(key)
-      
+
       logger.info('Manual cache invalidation', { key, reason, success: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { key, reason })
@@ -433,9 +435,9 @@ export class CacheInvalidationManager {
   async invalidateByPattern(pattern: string, reason: string = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByPattern(pattern)
-      
+
       logger.info('Manual pattern invalidation', { pattern, reason, invalidated: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual pattern invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { pattern, reason })
@@ -449,9 +451,9 @@ export class CacheInvalidationManager {
   async invalidateByTags(tags: string[], reason: string = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByTags(tags)
-      
+
       logger.info('Manual tag invalidation', { tags, reason, invalidated: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual tag invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { tags, reason })
@@ -470,7 +472,7 @@ export class CacheInvalidationManager {
     setTimeout(async () => {
       await this.invalidateByKey(key, reason)
     }, delayMs)
-    
+
     logger.info('Scheduled cache invalidation', { key, delayMs, reason })
   }
 
@@ -498,11 +500,11 @@ export class CacheInvalidationManager {
       }
     }
 
-    logger.info('Bulk cache invalidation completed', { 
-      total: keys.length, 
-      success, 
-      failed, 
-      reason 
+    logger.info('Bulk cache invalidation completed', {
+      total: keys.length,
+      success,
+      failed,
+      reason
     })
 
     return { success, failed }
@@ -550,7 +552,7 @@ export class CacheInvalidationManager {
 
 /**
  * Cache Invalidation Factory
- * 
+ *
  * Creates and manages cache invalidation instances.
  */
 export class CacheInvalidationFactory {
@@ -566,7 +568,7 @@ export class CacheInvalidationFactory {
       manager = new CacheInvalidationManager(redisClient, strategyManager)
       this.instances.set(name, manager)
     }
-    
+
     return manager
   }
 

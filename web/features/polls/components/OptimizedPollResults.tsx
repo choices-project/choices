@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 
 
 import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
+import { optimizedPollService, type OptimizedPollResult } from '@/features/polls/lib/poll-service'
 import { logger } from '@/lib/utils/logger';
 
 type OptimizedPollResultsProps = {

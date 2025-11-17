@@ -19,17 +19,7 @@ import {
 } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
-// Placeholder type for future analytics data (currently unused but reserved for upcoming features)
-type _AnalyticsData = {
-  userGrowth: Array<{ date: string; users: number }>;
-  pollActivity: Array<{ date: string; polls: number; votes: number }>;
-  votingMethods: Array<{ method: string; count: number; percentage: number }>;
-  systemPerformance: {
-    averageResponseTime: number;
-    uptime: number;
-    errorRate: number;
-  };
-}
+// Analytics data types are defined in the analytics hooks and stores
 
 type AnalyticsPanelProps = {
   refreshInterval?: number;

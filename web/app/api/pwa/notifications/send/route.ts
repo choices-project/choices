@@ -40,6 +40,16 @@ const VAPID_SUBJECT =
   process.env.VAPID_CONTACT_EMAIL ??
   'mailto:support@choices.dev';
 
+// Normalize subject to mailto: format if it's just an email address
+const normalizeVapidSubject = (subject: string): string => {
+  if (!subject) return 'mailto:support@choices.dev';
+  if (subject.startsWith('mailto:')) return subject;
+  if (subject.includes('@')) return `mailto:${subject}`;
+  return subject;
+};
+
+const normalizedVapidSubject = normalizeVapidSubject(VAPID_SUBJECT);
+
 let webPushConfigured = false;
 
 const ensureWebPushConfigured = () => {
@@ -48,7 +58,7 @@ const ensureWebPushConfigured = () => {
   }
 
   if (!webPushConfigured) {
-    webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    webPush.setVapidDetails(normalizedVapidSubject, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
     webPushConfigured = true;
   }
 };
@@ -190,6 +200,60 @@ const getTargetSubscriptions = async (
   return data ?? [];
 };
 
+/**
+ * Retry sending a push notification with exponential backoff
+ */
+const sendNotificationWithRetry = async (
+  pushSubscription: webPush.PushSubscription,
+  payload: NotificationPayload,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<{ success: boolean; error?: string; statusCode?: number }> => {
+  let lastError: Error | null = null;
+  let lastStatusCode: number | undefined;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await webPush.sendNotification(pushSubscription, JSON.stringify(payload));
+      return { success: true };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      lastStatusCode = (error as webPush.WebPushError)?.statusCode;
+
+      // Don't retry on permanent failures
+      if (lastStatusCode === 404 || lastStatusCode === 410 || lastStatusCode === 400) {
+        return {
+          success: false,
+          error: lastError.message,
+          ...(lastStatusCode !== undefined && { statusCode: lastStatusCode })
+        };
+      }
+
+      // Don't retry on last attempt
+      if (attempt < maxRetries) {
+        // Exponential backoff: delay = initialDelay * 2^attempt
+        const delay = initialDelay * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        logger.debug(`Retrying push notification (attempt ${attempt + 1}/${maxRetries})`, {
+          delay,
+          error: lastError.message
+        });
+      }
+    }
+  }
+
+  const result: { success: boolean; error?: string; statusCode?: number } = {
+    success: false,
+    error: lastError?.message || 'Unknown error'
+  };
+  
+  if (lastStatusCode !== undefined) {
+    result.statusCode = lastStatusCode;
+  }
+  
+  return result;
+};
+
 const sendPushNotifications = async (
   supabase: SupabaseClient<Database>,
   subscriptions: PushSubscriptionRow[],
@@ -212,18 +276,22 @@ const sendPushNotifications = async (
       continue;
     }
 
-    try {
-      await webPush.sendNotification(pushSubscription, JSON.stringify(payload));
+    // Send with retry logic
+    const { success, error, statusCode } = await sendNotificationWithRetry(
+      pushSubscription,
+      payload
+    );
+
+    if (success) {
       results.successful += 1;
       await logNotification(supabase, record, payload, 'sent');
-    } catch (error) {
+    } else {
       results.failed += 1;
-      const statusCode = (error as webPush.WebPushError)?.statusCode;
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error || 'Unknown error';
+      results.errors.push(`Failed to send to ${record.user_id}: ${errorMessage}`);
+      await logNotification(supabase, record, payload, 'failed', errorMessage);
 
-      results.errors.push(`Failed to send to ${record.user_id}: ${message}`);
-      await logNotification(supabase, record, payload, 'failed', message);
-
+      // Deactivate subscription on permanent failures
       if (statusCode === 404 || statusCode === 410) {
         await deactivateSubscription(supabase, record.id);
       }

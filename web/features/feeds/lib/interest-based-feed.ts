@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 
 
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
+// Database types are used directly when needed
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { hashtagPollsIntegrationService } from './hashtag-polls-integration';
@@ -40,8 +40,7 @@ export type Demographics = {
   [key: string]: unknown;
 }
 
-// Database types
-type _UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+// Database types are used directly when needed
 
 export type PersonalizedPollFeed = {
   userId: string;

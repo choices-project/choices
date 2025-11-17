@@ -57,8 +57,7 @@ jobs:
     - name: Lint code
       run: |
         cd web
-        npm run lint || echo "Lint completed with warnings (non-blocking)"
-      continue-on-error: true
+        npm run lint:strict
 
     - name: Type check (CI config)
       run: |
@@ -123,7 +122,165 @@ jobs:
         path: web/test-results/
         retention-days: 30
 
+  # Contract Tests (API contracts / service boundaries)
+  contract-tests:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'web/package-lock.json'
+
+    - name: Use repo's npm version
+      run: npm i -g npm@${{ env.NPM_VERSION }}
+
+    - name: Setup gtimeout compatibility (Linux uses 'timeout')
+      run: |
+        if ! command -v gtimeout &> /dev/null; then
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
+        fi
+        which gtimeout || which timeout
+
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: web/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('web/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: |
+        cd web
+        npm ci
+
+    - name: Run contract test suite
+      run: |
+        cd web
+        npm run test:contracts
+
   # E2E Tests
+  smoke-tests:
+    name: Playwright Smoke
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'web/package-lock.json'
+
+    - name: Use repo's npm version
+      run: npm i -g npm@${{ env.NPM_VERSION }}
+
+    - name: Setup gtimeout compatibility (Linux uses 'timeout')
+      run: |
+        if ! command -v gtimeout &> /dev/null; then
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
+        fi
+        which gtimeout || which timeout
+
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: web/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('web/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: |
+        cd web
+        npm ci
+
+    - name: Install Playwright Chromium
+      run: |
+        cd web
+        npx playwright install --with-deps chromium
+
+    - name: Run smoke suite
+      env:
+        PLAYWRIGHT_USE_MOCKS: '1'
+      run: |
+        cd web
+        npm run test:e2e:smoke
+
+  accessibility-axe:
+    name: Playwright Axe A11y
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'web/package-lock.json'
+
+    - name: Use repo's npm version
+      run: npm i -g npm@${{ env.NPM_VERSION }}
+
+    - name: Setup gtimeout compatibility (Linux uses 'timeout')
+      run: |
+        if ! command -v gtimeout &> /dev/null; then
+          sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
+          export PATH="/usr/local/bin:$PATH"
+        fi
+        which gtimeout || which timeout
+
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: web/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('web/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: |
+        cd web
+        npm ci
+
+    - name: Install Playwright Chromium
+      run: |
+        cd web
+        npx playwright install --with-deps chromium
+
+    - name: Run axe-tagged specs
+      env:
+        PLAYWRIGHT_USE_MOCKS: '1'
+      run: |
+        cd web
+        npm run test:e2e:axe
+
+    - name: Upload axe report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-axe-report
+        path: web/playwright-report/
+        retention-days: 30
+
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -231,7 +388,7 @@ jobs:
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [quality, unit-tests]
+    needs: [quality, unit-tests, contract-tests, smoke-tests, accessibility-axe]
 
     steps:
     - name: Checkout code
@@ -259,7 +416,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [quality, unit-tests, e2e-tests, security, docker]
+    needs: [quality, unit-tests, contract-tests, smoke-tests, accessibility-axe, e2e-tests, security, docker]
     if: github.ref == 'refs/heads/develop'
 
     steps:
@@ -275,7 +432,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [quality, unit-tests, e2e-tests, security, docker]
+    needs: [quality, unit-tests, contract-tests, smoke-tests, accessibility-axe, e2e-tests, security, docker]
     if: github.ref == 'refs/heads/main'
 
     steps:

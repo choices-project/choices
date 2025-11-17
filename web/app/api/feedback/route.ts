@@ -22,6 +22,7 @@ const FEEDBACK_TYPES = [
   'performance',
   'accessibility',
   'security',
+  'correction',
   'csp-violation',
 ] as const;
 
@@ -244,6 +245,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     },
   };
 
+  const priority =
+    type === 'security'
+      ? 'urgent'
+      : type === 'bug' || type === 'correction'
+        ? 'high'
+        : 'medium';
+
   const feedbackData = {
     user_id: user?.id ?? null,
     feedback_type: type,
@@ -253,7 +261,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     screenshot: screenshot ?? null,
     user_journey: (userJourney ?? {}) as Json,
     status: 'open',
-    priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
+    priority,
     tags: generateTags(type, title, description, sentiment),
     ai_analysis: (feedbackContext?.aiAnalysis ?? {}) as Json,
     metadata: metadataPayload,

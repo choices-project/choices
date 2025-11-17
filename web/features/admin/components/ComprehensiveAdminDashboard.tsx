@@ -48,6 +48,7 @@ import {
 } from '@/lib/stores';
 
 import { NotificationContainer } from './NotificationSystem';
+import ShareAnalyticsPanel from './ShareAnalyticsPanel';
 
 type ComprehensiveAdminDashboardProps = {
   className?: string;
@@ -430,6 +431,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               </div>
             </CardContent>
           </Card>
+
+          {/* Share Analytics */}
+          <ShareAnalyticsPanel refreshInterval={60000} />
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-6">

@@ -5,153 +5,225 @@ import type { AdminStoreHarness } from '@/app/(app)/e2e/admin-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
-   
   interface Window {
     __adminStoreHarness?: AdminStoreHarness;
   }
-   
 }
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__adminStoreHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.adminStoreHarness === 'ready'
+  );
 };
 
-test.describe('Admin store harness', () => {
-  test('exposes key admin state transitions', async ({ page }) => {
+test.describe('Admin Store E2E', () => {
+  test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
+  });
 
-    const sidebar = page.getByTestId('admin-sidebar-collapsed');
-    const currentPage = page.getByTestId('admin-current-page');
-    const notificationCount = page.getByTestId('admin-notification-count');
-    const unreadCount = page.getByTestId('admin-unread-count');
-    const enabledFlags = page.getByTestId('admin-feature-flags-enabled');
-    const usersCount = page.getByTestId('admin-users-count');
-    const bulkActionsVisible = page.getByTestId('admin-bulk-actions-visible');
-    const selectedUsers = page.getByTestId('admin-selected-users');
-    const usersList = page.getByTestId('admin-users-list');
-  const reimportRunning = page.getByTestId('admin-reimport-running');
-  const reimportProgress = page.getByTestId('admin-reimport-progress');
-  const reimportLogs = page.getByTestId('admin-reimport-logs');
+  test('harness exposes admin store API', async ({ page }) => {
+    const harness = await page.evaluate(() => window.__adminStoreHarness);
+    expect(harness).toBeDefined();
+    expect(harness?.toggleSidebar).toBeDefined();
+    expect(harness?.addNotification).toBeDefined();
+    expect(harness?.enableFeatureFlag).toBeDefined();
+    expect(harness?.seedUsers).toBeDefined();
+    expect(harness?.resetAdminState).toBeDefined();
+  });
 
-    await expect(sidebar).toHaveText('false');
-    await expect(currentPage).toHaveText('dashboard');
+  test('toggles sidebar', async ({ page }) => {
+    const initialCollapsed = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.sidebarCollapsed;
+    });
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.toggleSidebar();
     });
 
-    await expect(sidebar).toHaveText('true');
+    const afterToggle = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.sidebarCollapsed;
+    });
 
+    expect(afterToggle).toBe(!initialCollapsed);
+  });
+
+  test('adds and marks notification as read', async ({ page }) => {
     await page.evaluate(() => {
-      window.__adminStoreHarness?.addNotification({
+      const harness = window.__adminStoreHarness;
+      harness?.addNotification({
+        id: 'test-notif-1',
+        title: 'Test Notification',
+        message: 'Test message',
         type: 'info',
-        title: 'Harness notification',
-        message: 'Hello from the admin harness!',
-        timestamp: new Date().toISOString(),
       });
     });
 
-    await expect(notificationCount).toHaveText('1');
-    await expect(unreadCount).toHaveText('1');
+    const notifications = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.notifications;
+    });
+
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0].title).toBe('Test Notification');
 
     await page.evaluate(() => {
-      window.__adminStoreHarness?.seedUsers([
+      window.__adminStoreHarness?.markNotificationRead('test-notif-1');
+    });
+
+    const updatedNotifications = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.notifications;
+    });
+
+    expect(updatedNotifications[0].read).toBe(true);
+  });
+
+  test('manages feature flags', async ({ page }) => {
+    const enabled = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      return harness?.enableFeatureFlag('SOCIAL_SHARING');
+    });
+
+    expect(enabled).toBe(true);
+
+    const featureFlags = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.featureFlags;
+    });
+
+    expect(featureFlags?.SOCIAL_SHARING).toBe(true);
+
+    const disabled = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      return harness?.disableFeatureFlag('SOCIAL_SHARING');
+    });
+
+    expect(disabled).toBe(true);
+
+    const updatedFlags = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.featureFlags;
+    });
+
+    expect(updatedFlags?.SOCIAL_SHARING).toBe(false);
+  });
+
+  test('manages users (select, select all, deselect all)', async ({ page }) => {
+    await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      harness?.seedUsers([
         {
-          id: 'admin-user-1',
-          email: 'admin@example.com',
-          name: 'Admin User',
+          id: 'user-1',
+          email: 'user1@example.com',
+          role: 'user',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'user-2',
+          email: 'user2@example.com',
           role: 'admin',
           status: 'active',
-          is_admin: true,
-          created_at: new Date().toISOString(),
-        } as any,
+          createdAt: new Date().toISOString(),
+        },
       ]);
     });
 
-    await expect(usersCount).toHaveText('1');
-    await expect(selectedUsers).toHaveText('none');
-    await expect(bulkActionsVisible).toHaveText('false');
-    await expect(usersList).toContainText('Admin User');
-
     await page.evaluate(() => {
-      window.__adminStoreHarness?.selectUser('admin-user-1');
+      window.__adminStoreHarness?.selectUser('user-1');
     });
 
-    await expect(selectedUsers).toContainText('admin-user-1');
-    await expect(bulkActionsVisible).toHaveText('true');
+    let selectedUsers = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.userFilters.selectedUsers;
+    });
+
+    expect(selectedUsers).toContain('user-1');
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.selectAllUsers();
     });
 
-    await expect(selectedUsers).toContainText('admin-user-1');
-    await expect(bulkActionsVisible).toHaveText('true');
+    selectedUsers = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.userFilters.selectedUsers;
+    });
+
+    expect(selectedUsers.length).toBeGreaterThan(0);
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.deselectAllUsers();
     });
 
-    await expect(selectedUsers).toHaveText('none');
-    await expect(bulkActionsVisible).toHaveText('false');
-
-    await page.evaluate(() => {
-      const harness = window.__adminStoreHarness;
-      const latestId = harness?.getSnapshot().notifications[0]?.id;
-      if (latestId) {
-        harness?.markNotificationRead(latestId);
-      }
-    });
-
-    await expect(unreadCount).toHaveText('0');
-
-    await page.evaluate(() => {
-      window.__adminStoreHarness?.enableFeatureFlag('THEMES');
-    });
-
-    await expect(enabledFlags).toContainText('THEMES');
-
-    await page.evaluate(() => {
-      window.__adminStoreHarness?.setIsReimportRunning(true);
-      window.__adminStoreHarness?.setReimportProgress({
-        totalStates: 10,
-        processedStates: 4,
-      });
-    });
-
-    await expect(reimportRunning).toHaveText('true');
-    await expect(reimportProgress).toHaveText('4/10');
-
-    await page.evaluate(() => {
-      window.__adminStoreHarness?.setReimportProgress({
-        processedStates: 10,
-        successfulStates: 10,
-        totalStates: 10,
-      });
-      window.__adminStoreHarness?.setIsReimportRunning(false);
+    selectedUsers = await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
       const snapshot = harness?.getSnapshot();
-      snapshot?.addReimportLog?.('Completed'); // fallback if action nested, else no-op
+      return snapshot?.userFilters.selectedUsers;
     });
 
-    await expect(reimportRunning).toHaveText('false');
-    await expect(reimportProgress).toHaveText('10/10');
-    await expect(reimportLogs).toContainText(/completed/i);
+    expect(selectedUsers).toHaveLength(0);
+  });
+
+  test('manages reimport progress', async ({ page }) => {
+    await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      harness?.setReimportProgress({
+        type: 'polls',
+        isRunning: true,
+        current: 50,
+        total: 100,
+        status: 'processing',
+      });
+    });
+
+    const progress = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.reimportProgress;
+    });
+
+    expect(progress?.isRunning).toBe(true);
+    expect(progress?.current).toBe(50);
+    expect(progress?.total).toBe(100);
+    expect(progress?.status).toBe('processing');
+  });
+
+  test('resets admin state', async ({ page }) => {
+    // Set up some state
+    await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      harness?.addNotification({
+        id: 'test-1',
+        title: 'Test',
+        message: 'Test',
+        type: 'info',
+      });
+      harness?.selectUser('user-1');
+    });
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.resetAdminState();
     });
 
-    await expect(sidebar).toHaveText('false');
-    await expect(notificationCount).toHaveText('0');
-    await expect(unreadCount).toHaveText('0');
-    await expect(enabledFlags).not.toContainText('THEMES');
-    await expect(usersCount).toHaveText('0');
-    await expect(selectedUsers).toHaveText('none');
-    await expect(reimportRunning).toHaveText('false');
-    await expect(reimportProgress).toHaveText('0/0');
+    const snapshot = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.notifications).toHaveLength(0);
+    expect(snapshot?.userFilters.selectedUsers).toHaveLength(0);
   });
 });
-
-

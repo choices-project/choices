@@ -11,6 +11,7 @@
  * Sensitive messaging data is not persisted locally to limit exposure of PII.
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -785,14 +786,17 @@ export const useContactActions = () => {
   const clearThreadMessages = useContactStore((state) => state.clearThreadMessages);
   const resetContactState = useContactStore((state) => state.resetContactState);
 
-  return {
-    fetchThreads,
-    createThread,
-    fetchMessages,
-    sendMessage,
-    clearThreadMessages,
-    resetContactState,
-  };
+  return useMemo(
+    () => ({
+      fetchThreads,
+      createThread,
+      fetchMessages,
+      sendMessage,
+      clearThreadMessages,
+      resetContactState,
+    }),
+    [fetchThreads, createThread, fetchMessages, sendMessage, clearThreadMessages, resetContactState]
+  );
 };
 
 

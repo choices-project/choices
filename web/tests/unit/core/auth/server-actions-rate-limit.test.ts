@@ -7,9 +7,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 import { checkRateLimit } from '@/lib/core/auth/server-actions';
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { getSecurityConfig } from '@/lib/core/security/config';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 
 // Mock server-only to allow testing
 jest.mock('server-only', () => ({}));

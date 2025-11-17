@@ -3,6 +3,13 @@ import { act } from '@testing-library/react';
 import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';
 import { pollWizardStoreUtils, usePollWizardStore } from '@/lib/stores/pollWizardStore';
 
+function expectDefined<T>(value: T | undefined, context: string): T {
+  if (value === undefined) {
+    throw new Error(`Expected ${context} to be defined`);
+  }
+  return value;
+}
+
 describe('pollWizardStore', () => {
   const seedValidWizardData = () => {
     act(() => {
@@ -115,21 +122,22 @@ describe('pollWizardStore', () => {
         durationMs: 345,
       });
 
-      let result: PollWizardSubmissionResult;
+      let result: PollWizardSubmissionResult | undefined;
       await act(async () => {
         result = await usePollWizardStore.getState().submitPoll({ request: mockRequest });
       });
 
       expect(mockRequest).toHaveBeenCalledTimes(1);
 
-      expect(result!.success).toBe(true);
-      if (result!.success) {
-        expect(result.data).toEqual({ pollId: 'poll-123', title: 'Transit Priorities', status: 201 });
-        expect(result.pollId).toBe('poll-123');
-        expect(result.title).toBe('Transit Priorities');
-        expect(result.status).toBe(201);
-        expect(result.message).toBe('Poll created');
-        expect(result.durationMs).toBe(345);
+      const resolvedResult = expectDefined(result, 'poll submission result');
+      expect(resolvedResult.success).toBe(true);
+      if (resolvedResult.success) {
+        expect(resolvedResult.data).toEqual({ pollId: 'poll-123', title: 'Transit Priorities', status: 201 });
+        expect(resolvedResult.pollId).toBe('poll-123');
+        expect(resolvedResult.title).toBe('Transit Priorities');
+        expect(resolvedResult.status).toBe(201);
+        expect(resolvedResult.message).toBe('Poll created');
+        expect(resolvedResult.durationMs).toBe(345);
       }
     });
 
@@ -143,18 +151,19 @@ describe('pollWizardStore', () => {
         fieldErrors: undefined,
       });
 
-      let result: PollWizardSubmissionResult;
+      let result: PollWizardSubmissionResult | undefined;
       await act(async () => {
         result = await usePollWizardStore.getState().submitPoll({ request: mockRequest });
       });
 
       expect(mockRequest).toHaveBeenCalledTimes(1);
-      expect(result!.success).toBe(false);
-      if (!result!.success) {
-        expect(result.status).toBe(403);
-        expect(result.reason).toBe('permission');
-        expect(result.error).toBe('Forbidden');
-        expect(result.message).toBe('Forbidden');
+      const resolvedResult = expectDefined(result, 'poll submission result');
+      expect(resolvedResult.success).toBe(false);
+      if (!resolvedResult.success) {
+        expect(resolvedResult.status).toBe(403);
+        expect(resolvedResult.reason).toBe('permission');
+        expect(resolvedResult.error).toBe('Forbidden');
+        expect(resolvedResult.message).toBe('Forbidden');
       }
     });
   });

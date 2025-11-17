@@ -11,6 +11,7 @@
  * - Memoized selector helpers
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -627,21 +628,51 @@ export const useDeviceLoading = () => useDeviceStore((state) => state.isLoading)
 export const useDeviceInitializing = () => useDeviceStore((state) => state.isInitializing);
 export const useDeviceError = () => useDeviceStore((state) => state.error);
 
-export const useDeviceActions = () =>
-  useDeviceStore((state) => ({
-    updateDeviceInfo: state.updateDeviceInfo,
-    setOrientation: state.setOrientation,
-    setScreenSize: state.setScreenSize,
-    setNetworkInfo: state.setNetworkInfo,
-    setCapability: state.setCapability,
-    setLoading: state.setLoading,
-    setInitializing: state.setInitializing,
-    setError: state.setError,
-    clearError: state.clearError,
-    resetDeviceState: state.resetDeviceState,
-    initialize: state.initialize,
-    teardown: state.teardown,
-  }));
+export const useDeviceActions = () => {
+  const updateDeviceInfo = useDeviceStore((state) => state.updateDeviceInfo);
+  const setOrientation = useDeviceStore((state) => state.setOrientation);
+  const setScreenSize = useDeviceStore((state) => state.setScreenSize);
+  const setNetworkInfo = useDeviceStore((state) => state.setNetworkInfo);
+  const setCapability = useDeviceStore((state) => state.setCapability);
+  const setLoading = useDeviceStore((state) => state.setLoading);
+  const setInitializing = useDeviceStore((state) => state.setInitializing);
+  const setError = useDeviceStore((state) => state.setError);
+  const clearError = useDeviceStore((state) => state.clearError);
+  const resetDeviceState = useDeviceStore((state) => state.resetDeviceState);
+  const initialize = useDeviceStore((state) => state.initialize);
+  const teardown = useDeviceStore((state) => state.teardown);
+
+  return useMemo(
+    () => ({
+      updateDeviceInfo,
+      setOrientation,
+      setScreenSize,
+      setNetworkInfo,
+      setCapability,
+      setLoading,
+      setInitializing,
+      setError,
+      clearError,
+      resetDeviceState,
+      initialize,
+      teardown,
+    }),
+    [
+      updateDeviceInfo,
+      setOrientation,
+      setScreenSize,
+      setNetworkInfo,
+      setCapability,
+      setLoading,
+      setInitializing,
+      setError,
+      clearError,
+      resetDeviceState,
+      initialize,
+      teardown,
+    ]
+  );
+};
 
 export const deviceSelectors = {
   deviceType: (state: DeviceStore) => state.deviceType,

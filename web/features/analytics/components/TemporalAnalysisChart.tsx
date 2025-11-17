@@ -51,6 +51,14 @@ import {
   type AnalyticsSummaryRow,
 } from './AnalyticsSummaryTable';
 
+const ensureLabel = (value: string, fallback: string): string => {
+  if (!value) return fallback;
+  if (value.startsWith('analytics.')) {
+    return fallback;
+  }
+  return value;
+};
+
 type HourlyData = {
   hour: number;
   activity: number;
@@ -160,6 +168,15 @@ export default function TemporalAnalysisChart({
       hourly: t('analytics.temporal.tabsLabels.hourly'),
       daily: t('analytics.temporal.tabsLabels.daily'),
       velocity: t('analytics.temporal.tabsLabels.velocity'),
+    }),
+    [t],
+  );
+
+  const axisText = useMemo(
+    () => ({
+      hourOfDay: ensureLabel(t('analytics.temporal.axes.hourOfDay'), 'Hour of day'),
+      dayOfWeek: ensureLabel(t('analytics.temporal.axes.dayOfWeek'), 'Day of week'),
+      timestamp: ensureLabel(t('analytics.temporal.axes.timestamp'), 'Timestamp'),
     }),
     [t],
   );
@@ -667,6 +684,12 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.hourOfDay,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
                   <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
@@ -717,7 +740,15 @@ export default function TemporalAnalysisChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.daily} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
+                  <XAxis
+                    dataKey="day"
+                    label={{
+                      value: axisText.dayOfWeek,
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: 12 },
+                    }}
+                  />
                   <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -814,6 +845,12 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.timestamp,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
                   <YAxis label={{ value: t('analytics.temporal.axes.velocity'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip

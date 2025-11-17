@@ -49,7 +49,7 @@ export abstract class ApplicationError extends Error {
     this.errorCode = errorCode;
     this.timestamp = new Date().toISOString();
     
-    // Use withOptional to handle optional details property
+    // Handle optional details property with explicit conditional
     if (details !== undefined) {
       this.details = details;
     }

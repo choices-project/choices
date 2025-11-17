@@ -48,7 +48,7 @@ export const FEATURE_FLAGS = {
   CIVICS_TESTING_STRATEGY: false,
   DEVICE_FLOW_AUTH: false,
   PERFORMANCE_OPTIMIZATION: false,
-  PUSH_NOTIFICATIONS: false,
+  PUSH_NOTIFICATIONS: true, // ✅ ENABLED - Production ready (January 2025)
   THEMES: false,
   ACCESSIBILITY: false,
   INTERNATIONALIZATION: false,

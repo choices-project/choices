@@ -74,7 +74,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   } = options;
 
   // const featureFlags = useFeatureFlags();
-  const featureFlags = { flags: {}, isLoading: false };
+  const featureFlags: { flags: { analytics?: boolean; aiFeatures?: boolean }; isLoading: boolean } = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   
   // Log feature flag status for debugging
   if (process.env.NODE_ENV === 'development' && featureFlags.isLoading) {
-    logger.debug('Feature flags loading', { analyticsEnabled, aiFeaturesEnabled });
+    devLog('Feature flags loading', { analyticsEnabled, aiFeaturesEnabled });
   }
 
   const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
@@ -136,12 +136,14 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // Auto-refresh effect
   useEffect(() => {
-    if (analyticsEnabled && autoRefreshEnabled) {
-      fetchData();
-      
-      const interval = setInterval(fetchData, refreshInterval);
-      return () => clearInterval(interval);
+    if (!analyticsEnabled || !autoRefreshEnabled) {
+      return;
     }
+    
+    fetchData();
+    
+    const interval = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(interval);
   }, [analyticsEnabled, autoRefreshEnabled, refreshInterval, fetchData]);
 
   // Initial data fetch

@@ -244,7 +244,12 @@ export default function AuthPage() {
               </div>
 
           {message && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4" data-testid="auth-success">
+            <div
+              className="bg-green-50 border border-green-200 rounded-md p-4"
+              data-testid="auth-success"
+              role="status"
+              aria-live="polite"
+            >
               <div className="flex">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
                 <div className="ml-3">
@@ -335,10 +340,11 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                       aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+                      aria-pressed={showPassword}
+                      aria-controls="password"
                       data-testid="password-toggle"
-                      tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -377,10 +383,11 @@ export default function AuthPage() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                         aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-                        data-testid="password-toggle"
-                        tabIndex={-1}
+                        aria-pressed={showConfirmPassword}
+                        aria-controls="confirmPassword"
+                        data-testid="confirm-password-toggle"
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>

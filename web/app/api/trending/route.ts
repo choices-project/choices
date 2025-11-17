@@ -39,7 +39,7 @@ type PollData = {
   }>;
 }
 
-type _TopicData = {
+type TopicData = {
   id: string;
   topic: string;
   score: number;
@@ -212,6 +212,9 @@ async function getTrendingTopics(limit: number) {
       throw new Error('Failed to fetch trending topics');
     }
 
+    // Type the trending topics data for type safety
+    const typedTopics: TopicData[] = (trendingTopics ?? []) as TopicData[];
+
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
     let polls: PollData[] = [];
     try {
@@ -237,7 +240,7 @@ async function getTrendingTopics(limit: number) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics.map((topic: any, index: number) => {
+    const trendingPolls = typedTopics.map((topic: TopicData, index: number) => {
       const poll = polls[index % polls.length] ?? {
         id: `trending-${topic.id}`,
         title: topic.title,

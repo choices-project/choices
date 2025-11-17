@@ -16,7 +16,7 @@ import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 
-type _SupabaseClient = ReturnType<typeof createClient<Database>>;
+// Supabase client type is inferred from createClient usage
 
 type PlatformMetricRow = Database['public']['Tables']['platform_analytics']['Row'];
 type UserSessionRow = Database['public']['Tables']['user_sessions']['Row'];

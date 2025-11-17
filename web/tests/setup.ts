@@ -143,10 +143,10 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service-role-key';
 type SupabaseOp = 'select' | 'insert' | 'update' | 'delete' | 'rpc';
 
 type ExpectationResult =
-  | { kind: 'single'; value: any }
-  | { kind: 'list'; value: any[] }
+  | { kind: 'single'; value: unknown }
+  | { kind: 'list'; value: unknown[] }
   | { kind: 'error'; message: string }
-  | { kind: 'value'; value: any };
+  | { kind: 'value'; value: unknown };
 
 type Expectation = {
   table: string;
@@ -161,6 +161,51 @@ type Metrics = {
   byTable: Record<string, Partial<Record<MetricKind, number>>>;
 };
 
+type SupabaseResponse = {
+  data: unknown;
+  error: { message: string } | null;
+  count?: number;
+};
+
+type SelectQuery = PromiseLike<SupabaseResponse> & {
+  eq: (...args: unknown[]) => SelectQuery;
+  order: (...args: unknown[]) => SelectQuery;
+  limit: (...args: unknown[]) => SelectQuery;
+  maybeSingle: () => Promise<SupabaseResponse>;
+  single: () => Promise<SupabaseResponse>;
+  throwOnError: () => SelectQuery;
+  catch: <TResult = never>(
+    onRejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null
+  ) => Promise<SupabaseResponse | TResult>;
+  finally: (onFinally?: (() => void) | null) => Promise<SupabaseResponse>;
+};
+
+type SupabaseTableOperations = {
+  select: (...args: unknown[]) => SelectQuery;
+  insert: (...args: unknown[]) => Promise<SupabaseResponse>;
+  update: (...args: unknown[]) => Promise<SupabaseResponse>;
+  delete: (...args: unknown[]) => Promise<SupabaseResponse>;
+};
+
+type SupabaseMockClient = {
+  from: jest.Mock<SupabaseTableOperations, [string]>;
+  rpc: jest.Mock<Promise<SupabaseResponse>, [string, ...unknown[]]>;
+  auth: {
+    getUser: jest.Mock<Promise<{ data: { user: null }; error: null }>, []>;
+  };
+};
+
+type ExpectationBuilder = {
+  table: (tableName: string) => ExpectationBuilder;
+  op: (operation: SupabaseOp) => ExpectationBuilder;
+  select: (...args: unknown[]) => ExpectationBuilder;
+  eq: (...args: unknown[]) => ExpectationBuilder;
+  returnsSingle: (value: unknown) => ExpectationBuilder;
+  returnsList: (value: unknown[]) => ExpectationBuilder;
+  returnsError: (message: string) => ExpectationBuilder;
+  returns: (value: unknown) => ExpectationBuilder;
+};
+
 const defaultMetrics = (): Metrics => ({
   totalOperations: 0,
   byTable: {}
@@ -169,7 +214,8 @@ const defaultMetrics = (): Metrics => ({
 const recordMetric = (metrics: Metrics, table: string, kind: MetricKind) => {
   metrics.totalOperations += 1;
   metrics.byTable[table] ??= {};
-  const tableMetrics = metrics.byTable[table]!;
+  const tableMetrics = metrics.byTable[table] ?? {};
+  metrics.byTable[table] = tableMetrics;
   tableMetrics[kind] = (tableMetrics[kind] ?? 0) + 1;
 };
 
@@ -185,7 +231,7 @@ const createSupabaseResponse = (
   table: string,
   metrics: Metrics,
   consumeAs: 'single' | 'list'
-) => {
+): SupabaseResponse => {
   switch (expectation.result.kind) {
     case 'single': {
       recordMetric(metrics, table, 'single');
@@ -233,16 +279,6 @@ const createSupabaseResponse = (
   }
 };
 
-const makeThenable = <T>(execute: () => Promise<T>) => {
-  const promise = {
-    then: (onFulfilled: any, onRejected: any) =>
-      execute().then(onFulfilled, onRejected),
-    catch: (onRejected: any) => execute().catch(onRejected),
-    finally: (onFinally: any) => execute().finally(onFinally)
-  };
-  return promise as Promise<T>;
-};
-
 export const getMS = () => {
   const expectations: Expectation[] = [];
   let metrics = defaultMetrics();
@@ -265,9 +301,9 @@ export const getMS = () => {
     return expectation;
   };
 
-  const buildSelectQuery = (table: string, expectation: Expectation) => {
+  const buildSelectQuery = (table: string, expectation: Expectation): SelectQuery => {
     let consumed = false;
-    const exec = (mode: 'single' | 'list') => {
+    const exec = (mode: 'single' | 'list'): Promise<SupabaseResponse> => {
       if (consumed) {
         return Promise.resolve({
           data: null,
@@ -278,47 +314,53 @@ export const getMS = () => {
       return Promise.resolve(createSupabaseResponse(expectation, table, metrics, mode));
     };
 
-    const query: any = {
-      eq: () => query,
-      order: () => query,
-      limit: () => query,
-      maybeSingle: () => exec('single'),
-      single: () => exec('single'),
-      throwOnError: () => query,
-      then: (...args: any[]) => makeThenable(() => exec('list')).then(...args),
-      catch: (...args: any[]) => makeThenable(() => exec('list')).catch(...args),
-      finally: (...args: any[]) => makeThenable(() => exec('list')).finally(...args)
-    };
+    const query: Partial<SelectQuery> = {};
+    const chain = (): SelectQuery => query as SelectQuery;
 
-    return query;
+    query.eq = (..._args: unknown[]) => chain();
+    query.order = (..._args: unknown[]) => chain();
+    query.limit = (..._args: unknown[]) => chain();
+    query.maybeSingle = () => exec('single');
+    query.single = () => exec('single');
+    query.throwOnError = () => chain();
+    query.then = <TResult1 = SupabaseResponse, TResult2 = never>(
+      onFulfilled?: ((value: SupabaseResponse) => TResult1 | PromiseLike<TResult1>) | null,
+      onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    ) => exec('list').then(onFulfilled, onRejected);
+    query.catch = <TResult = never>(
+      onRejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | null
+    ) => exec('list').catch(onRejected) as Promise<SupabaseResponse | TResult>;
+    query.finally = (onFinally?: (() => void) | null) => exec('list').finally(onFinally ?? undefined);
+
+    return chain();
   };
 
-  const supabaseClient: any = {
+  const supabaseClient = {
     from: jest.fn((table: string) => ({
-      select: (..._args: any[]) => {
+      select: (..._args: unknown[]) => {
         const expectation = shiftExpectation(table, 'select');
         return buildSelectQuery(table, expectation);
       },
-      insert: (..._args: any[]) => {
+      insert: (..._args: unknown[]) => {
         const expectation = shiftExpectation(table, 'insert');
         return Promise.resolve(
           createSupabaseResponse(expectation, table, metrics, 'list')
         );
       },
-      update: (..._args: any[]) => {
+      update: (..._args: unknown[]) => {
         const expectation = shiftExpectation(table, 'update');
         return Promise.resolve(
           createSupabaseResponse(expectation, table, metrics, 'list')
         );
       },
-      delete: (..._args: any[]) => {
+      delete: (..._args: unknown[]) => {
         const expectation = shiftExpectation(table, 'delete');
         return Promise.resolve(
           createSupabaseResponse(expectation, table, metrics, 'list')
         );
       }
     })),
-    rpc: jest.fn((fnName: string, ..._args: any[]) => {
+    rpc: jest.fn((fnName: string, ..._args: unknown[]) => {
       const tableKey = `rpc:${fnName}`;
       const expectation = shiftExpectation(tableKey, 'rpc');
       return Promise.resolve(
@@ -331,14 +373,14 @@ export const getMS = () => {
         error: null
       }))
     }
-  };
+  } satisfies SupabaseMockClient;
 
   const when = () => {
     const expectation: Partial<Expectation> = {
       result: { kind: 'single', value: null }
     };
 
-    const builder: any = {
+    const builder: ExpectationBuilder = {
       table: (tableName: string) => {
         expectation.table = tableName;
         return builder;
@@ -347,14 +389,14 @@ export const getMS = () => {
         expectation.op = operation;
         return builder;
       },
-      select: () => builder,
-      eq: () => builder,
-      returnsSingle: (value: any) => {
+      select: (..._args: unknown[]) => builder,
+      eq: (..._args: unknown[]) => builder,
+      returnsSingle: (value: unknown) => {
         expectation.result = { kind: 'single', value };
         expectations.push(expectation as Expectation);
         return builder;
       },
-      returnsList: (value: any[]) => {
+      returnsList: (value: unknown[]) => {
         expectation.result = { kind: 'list', value };
         expectations.push(expectation as Expectation);
         return builder;
@@ -364,7 +406,7 @@ export const getMS = () => {
         expectations.push(expectation as Expectation);
         return builder;
       },
-      returns: (value: any) => {
+      returns: (value: unknown) => {
         expectation.result = { kind: 'value', value };
         expectations.push(expectation as Expectation);
         return builder;

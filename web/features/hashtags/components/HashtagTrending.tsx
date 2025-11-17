@@ -94,6 +94,8 @@ const errorMessage = error ?? searchError ?? null;
       const interval = setInterval(loadTrendingHashtags, refreshInterval);
       return () => clearInterval(interval);
     }
+    
+    return undefined;
   }, [loadTrendingHashtags, autoRefresh, refreshInterval]);
 
   const getSortedHashtags = () => {

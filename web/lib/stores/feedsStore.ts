@@ -261,6 +261,13 @@ const withFeedAnalyticsConsent = async <T>(
   return handler();
 };
 
+const showFeedSuccessToast = async (title: string, message: string, privacySettings: PrivacySettings | null) => {
+  if (hasFeedActivityConsent(privacySettings)) {
+    const { notificationStoreUtils } = await import('./notificationStore');
+    notificationStoreUtils.createSuccess(title, message, 3000);
+  }
+};
+
 type FeedsStoreCreator = StateCreator<
   FeedsStore,
   [['zustand/immer', never], ['zustand/persist', unknown], ['zustand/devtools', never]]
@@ -413,6 +420,13 @@ const createFeedsActions = (
           category: payload.filters.category,
           district: payload.filters.district,
         });
+
+        // Success-toast analytics wiring
+        await showFeedSuccessToast(
+          'Feeds Refreshed',
+          `Loaded ${payload.count} feeds`,
+          get().privacySettings
+        );
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         baseActions.setError(errorMessage);
@@ -790,6 +804,13 @@ const createFeedsActions = (
           category: payload.filters.category,
           count: payload.count,
         });
+
+        // Success-toast analytics wiring
+        await showFeedSuccessToast(
+          'Feeds Loaded',
+          `Loaded ${payload.count} feeds`,
+          get().privacySettings
+        );
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         setState((state) => {

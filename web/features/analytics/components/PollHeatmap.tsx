@@ -126,6 +126,7 @@ export default function PollHeatmap({
 }: PollHeatmapProps) {
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
+  const chartRegionId = useId();
   const { fetchPollHeatmap } = useAnalyticsActions();
   const pollHeatmap = useAnalyticsPollHeatmap();
   const data = pollHeatmap.data;
@@ -302,6 +303,8 @@ export default function PollHeatmap({
 
     return t('analytics.heatmap.summaryFallback', summaryTotals);
   }, [activePolls, data.length, formatDecimal, formatNumber, t, topPoll, totalVotes]);
+
+  const chartSummaryText = useMemo(() => summaryIntro, [summaryIntro]);
 
 
   useEffect(() => {
@@ -484,7 +487,18 @@ export default function PollHeatmap({
             <p className="text-sm">Try selecting a different category</p>
           </div>
         ) : (
-          <div className="h-96">
+          <div
+            className="h-96"
+            role="group"
+            aria-labelledby={`${chartRegionId}-title`}
+            aria-describedby={`${chartRegionId}-summary`}
+          >
+            <p id={`${chartRegionId}-title`} className="sr-only">
+              Poll engagement heatmap
+            </p>
+            <p id={`${chartRegionId}-summary`} className="sr-only" aria-live="polite">
+              {chartSummaryText}
+            </p>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -494,9 +508,15 @@ export default function PollHeatmap({
                   textAnchor="end"
                   height={100}
                   tick={{ fontSize: 11 }}
+                  label={{
+                    value: 'Poll titles (sorted by engagement)',
+                    position: 'insideBottom',
+                    offset: -60,
+                    style: { fontSize: 11 },
+                  }}
                 />
                 <YAxis
-                  label={{ value: 'Engagement Score', angle: -90, position: 'insideLeft' }}
+                  label={{ value: 'Engagement score', angle: -90, position: 'insideLeft' }}
                 />
                 <Tooltip
                   content={({ active, payload }) => {
@@ -545,6 +565,9 @@ export default function PollHeatmap({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
+              {chartSummaryText}
+            </p>
           </div>
         )}
 

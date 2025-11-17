@@ -66,6 +66,8 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         window.removeEventListener('offline', handleOffline);
       }
     }
+    
+    return undefined;
   }, [handleOnline, handleOffline, pwa]) // Stable dependencies
 
   // Handle undefined store hooks gracefully - provide defaults for testing

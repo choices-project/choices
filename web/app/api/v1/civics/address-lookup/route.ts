@@ -58,9 +58,19 @@
 
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
+import {
+  withErrorHandling,
+  successResponse,
+  validationError,
+  errorResponse,
+  methodNotAllowed,
+} from '@/lib/api';
 import { assertPepperConfig } from '@/lib/civics/env-guard';
-import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
+import {
+  generateAddressHMAC,
+  setJurisdictionCookie,
+  validateAddressInput,
+} from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
@@ -81,38 +91,51 @@ const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
 const CACHE_TTL_MS = 5 * 60_000; // 5 minutes
 const CACHE_MAX_ENTRIES = 1000;
 
-const ipBuckets = new Map<string, Array<number>>(); // ip -> timestamps
+type RateLimitBucket = { count: number; resetAt: number };
+const ipBuckets = new Map<string, RateLimitBucket>(); // ip -> bucket
 type CacheEntry = { value: Jurisdiction; expiresAt: number };
-const addressCache = new Map<string, CacheEntry>(); // key: normalized address
+const addressCache = new Map<string, CacheEntry>(); // key: hashed address
 
-function rateLimit(ip: string): boolean {
+type RateLimitResult = { allowed: boolean; retryAfterMs: number; remaining: number };
+
+function applyRateLimit(ip: string): RateLimitResult {
   const now = Date.now();
-  const bucket = ipBuckets.get(ip) ?? [];
-  const recent = bucket.filter((ts) => now - ts <= RATE_LIMIT_WINDOW_MS);
-  recent.push(now);
-  ipBuckets.set(ip, recent);
-  return recent.length <= RATE_LIMIT_MAX_REQUESTS;
+  const bucket = ipBuckets.get(ip);
+
+  if (!bucket || now >= bucket.resetAt) {
+    const resetAt = now + RATE_LIMIT_WINDOW_MS;
+    ipBuckets.set(ip, { count: 1, resetAt });
+    return { allowed: true, retryAfterMs: 0, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  bucket.count += 1;
+  ipBuckets.set(ip, bucket);
+
+  const allowed = bucket.count <= RATE_LIMIT_MAX_REQUESTS;
+  return {
+    allowed,
+    retryAfterMs: allowed ? 0 : Math.max(0, bucket.resetAt - now),
+    remaining: Math.max(0, RATE_LIMIT_MAX_REQUESTS - bucket.count),
+  };
 }
 
-function getFromCache(address: string): Jurisdiction | null {
-  const key = address.trim().toLowerCase();
-  const entry = addressCache.get(key);
+function getFromCache(cacheKey: string): Jurisdiction | null {
+  const entry = addressCache.get(cacheKey);
   if (!entry) return null;
   if (Date.now() > entry.expiresAt) {
-    addressCache.delete(key);
+    addressCache.delete(cacheKey);
     return null;
   }
   return entry.value;
 }
 
-function setCache(address: string, value: Jurisdiction): void {
-  const key = address.trim().toLowerCase();
+function setCache(cacheKey: string, value: Jurisdiction): void {
   if (addressCache.size >= CACHE_MAX_ENTRIES) {
     // drop oldest entry
     const firstKey = addressCache.keys().next().value as string | undefined;
     if (firstKey) addressCache.delete(firstKey);
   }
-  addressCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+  addressCache.set(cacheKey, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
 /**
@@ -210,16 +233,16 @@ function extractStateFromAddress(address: string): string {
     'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
   };
 
-  const lowerAddress = address.toLowerCase();
-
   for (const [stateName, stateCode] of Object.entries(stateMap)) {
-    if (lowerAddress.includes(stateName)) {
+    const pattern = new RegExp(`\\b${stateName}\\b`, 'i');
+    if (pattern.test(address)) {
       return stateCode;
     }
   }
 
   for (const [, stateCode] of Object.entries(stateMap)) {
-    if (lowerAddress.includes(stateCode.toLowerCase())) {
+    const pattern = new RegExp(`\\b${stateCode}\\b`, 'i');
+    if (pattern.test(address)) {
       return stateCode;
     }
   }
@@ -267,23 +290,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const body = await request.json().catch(() => null);
   const address = body?.address;
 
-  if (!address || typeof address !== 'string') {
-    return validationError({ address: 'Address is required' });
+  const validation = validateAddressInput(typeof address === 'string' ? address : '');
+  if (!validation.valid) {
+    if (validation.error === 'Feature disabled') {
+      return errorResponse('Civics address lookup is disabled', 503, {
+        code: 'CIVICS_FEATURE_DISABLED',
+      });
+    }
+    return validationError({ address: validation.error ?? 'Invalid address' });
   }
 
-  const addrH = generateAddressHMAC(address);
-  void addrH;
+  const addrHash = generateAddressHMAC(address);
 
   // Rate limit by IP
-  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? request.headers.get('x-real-ip')
-    ?? 'unknown';
-  if (!rateLimit(clientIp)) {
-    return errorResponse('Rate limit exceeded', 429, { windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX_REQUESTS });
+  const clientIp = normalizeClientIp(request);
+  const rateLimitResult = applyRateLimit(clientIp);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Rate limit exceeded', 429, {
+      windowMs: RATE_LIMIT_WINDOW_MS,
+      max: RATE_LIMIT_MAX_REQUESTS,
+      retryAfterMs: rateLimitResult.retryAfterMs,
+    });
   }
 
   // Check cache
-  const cached = getFromCache(address);
+  const cached = getFromCache(addrHash);
   if (cached) {
     return successResponse(
       { jurisdiction: cached },
@@ -293,7 +324,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   try {
     const jurisdiction = await lookupJurisdictionFromExternalAPI(address);
-    setCache(address, jurisdiction);
+    setCache(addrHash, jurisdiction);
 
     const cookieData: Record<string, string> = {
       state: jurisdiction.state
@@ -346,3 +377,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 export const GET = withErrorHandling(async () => methodNotAllowed(['POST']));
 export const PUT = withErrorHandling(async () => methodNotAllowed(['POST']));
 export const DELETE = withErrorHandling(async () => methodNotAllowed(['POST']));
+
+function normalizeClientIp(request: NextRequest): string {
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) {
+    const first = xff.split(',')[0]?.trim();
+    if (first) return stripIpv6Prefix(first);
+  }
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) {
+    return stripIpv6Prefix(realIp.trim());
+  }
+  return 'unknown';
+}
+
+function stripIpv6Prefix(value: string): string {
+  if (value.startsWith('::ffff:')) {
+    return value.substring(7);
+  }
+  return value;
+}

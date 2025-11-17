@@ -102,6 +102,9 @@ jobs:
         run: npm run lint || echo "Lint completed with warnings (non-blocking)"
         continue-on-error: true
 
+      - name: Locale lint (blocking)
+        run: npm run lint:locale
+
       - name: Contract tests
         run: npm run test:contracts
 

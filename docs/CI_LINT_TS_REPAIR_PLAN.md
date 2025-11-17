@@ -98,6 +98,7 @@ Status:
 
 - exactOptionalPropertyTypes, undefined handling already improved in civics & responses.
   - Continue: ensure required fields are non-undefined; convert optional params to explicit `undefined ??` defaults where necessary.
+  - Scope expansion: `tsconfig.strict-optional.json` now compiles profile stores plus the analytics surface (`web/app/api/analytics/**`, `web/features/analytics/**`, `web/lib/cache/analytics-cache.ts`, `web/lib/utils/{civic-actions-integration,sophisticated-civic-engagement}.ts`). Run `npm --prefix web run types:strict-optional` to verify.
 
 Status:
 - Non-null assertions removed and guards added:
@@ -108,11 +109,14 @@ Status:
   - `web/lib/integrations/open-states/error-handling.ts` — removed `lastError!`; safe throw with default
   - `web/lib/civics/env-guard.ts` and `web/features/civics/lib/civics/env-guard.ts` — removed `cur!` assertion
   - `web/lib/electoral/geographic-feed.ts` — removed `f!.sources` assertion
+- Strict optional enforcement:
+  - Profile stores and analytics APIs/widgets now pass `npm run types:strict-optional`; Supabase row helpers and civic-action utilities have typed fallbacks instead of `any`.
+  - Remaining scope: feeds/admin routes and legacy civics helpers still rely on disabled `exactOptionalPropertyTypes`; migrate them before flipping the root `tsconfig`.
 - Lint enforcement:
   - Elevated `@typescript-eslint/no-non-null-assertion` to `error` for TS files (tests remain exempt)
 - Next:
   - Adopt `stripUndefinedDeep`/`undefinedToNull` in any remaining DB write paths in routes/services
-  - Audit remaining API routes for strict optional handling and remove any residual `!`
+  - Audit remaining API routes (contact/user/feeds) for strict optional handling and remove any residual `!`
 
 ---
 

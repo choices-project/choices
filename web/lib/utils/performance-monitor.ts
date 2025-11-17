@@ -382,6 +382,7 @@ export function usePerformanceMonitor() {
       const interval = setInterval(updateMetrics, 1000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isMonitoring, updateMetrics]);
 
   return {

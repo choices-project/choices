@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -34,13 +35,16 @@ export const getElectionCountdown = (isoDate: string | undefined): number | null
   return diffDays;
 };
 
-export const formatElectionDate = (isoDate: string | undefined): string => {
+export const formatElectionDate = (
+  isoDate: string | undefined,
+  locale?: string,
+): string => {
   if (!isoDate) {
     return '';
   }
 
   try {
-    return new Date(isoDate).toLocaleDateString(undefined, {
+    return new Date(isoDate).toLocaleDateString(locale ?? undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -78,6 +82,7 @@ export const useElectionCountdown = (
     analytics,
   }: ElectionCountdownOptions = {},
 ) => {
+  const { t, currentLanguage } = useI18n();
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);
@@ -131,14 +136,19 @@ export const useElectionCountdown = (
 
       const countdownLabel =
         daysUntil === 0
-          ? 'Election day'
+          ? t('civics.countdown.notifications.countdown.today')
           : daysUntil === 1
-            ? 'Election tomorrow'
-            : `Election in ${daysUntil} days`;
+            ? t('civics.countdown.notifications.countdown.tomorrow')
+            : t('civics.countdown.notifications.countdown.inDays', {
+                count: daysUntil,
+              });
+      const formattedDate = formatElectionDate(election.election_day, currentLanguage);
+      const notificationTitle =
+        election.name ?? t('civics.countdown.notifications.titleFallback');
 
       notificationStoreUtils.createElectionNotification({
-        title: election.name ?? 'Upcoming election',
-        message: `Election on ${formatElectionDate(election.election_day)}`,
+        title: notificationTitle,
+        message: t('civics.countdown.notifications.message', { date: formattedDate }),
         countdownLabel,
         electionId: election.election_id,
         divisionId: election.ocd_division_id,
@@ -158,6 +168,8 @@ export const useElectionCountdown = (
     notificationType,
     representativeNames,
     upcomingElections,
+    currentLanguage,
+    t,
   ]);
 
   useEffect(() => {

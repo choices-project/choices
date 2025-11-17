@@ -23,7 +23,8 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
   });
   const rate = await rateLimitMiddleware(_request, limiter);
   if (!rate.allowed) {
-    return validationError({ rate: 'Too many requests. Please try later.' });
+    const message = 'Too many requests. Please try later.';
+    return validationError({ rate: message }, message);
   }
   const supabase = await getSupabaseServerClient();
   if (!supabase) return errorResponse('Auth/DB not available', 500);

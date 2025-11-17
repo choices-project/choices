@@ -1,8 +1,8 @@
 import { Loader2, CalendarClock, AlertTriangle } from 'lucide-react';
 import React, { useMemo } from 'react';
 
-
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 import type { CivicElection } from '@/types/civic';
 
@@ -25,20 +25,23 @@ export type ElectionCountdownBadgeProps = {
 
 const DEFAULT_THRESHOLD = 90;
 
-const getCountdownMessage = (daysUntil: number | null | undefined) => {
+const getCountdownMessage = (
+  daysUntil: number | null | undefined,
+  translate: ReturnType<typeof useI18n>['t'],
+) => {
   if (daysUntil == null) {
     return null;
   }
 
   if (daysUntil <= 0) {
-    return 'Election today';
+    return translate('civics.countdown.badge.countdown.today');
   }
 
   if (daysUntil === 1) {
-    return 'In 1 day';
+    return translate('civics.countdown.badge.countdown.tomorrow');
   }
 
-  return `In ${daysUntil} days`;
+  return translate('civics.countdown.badge.countdown.inDays', { count: daysUntil });
 };
 
 export function ElectionCountdownBadge({
@@ -51,10 +54,17 @@ export function ElectionCountdownBadge({
   threshold = DEFAULT_THRESHOLD,
   showDate = true,
   showAdditionalCount = true,
-  emptyMessage = 'No upcoming elections recorded',
-  loadingMessage = 'Checking elections…',
-  errorMessage = 'Election data unavailable'
+  emptyMessage,
+  loadingMessage,
+  errorMessage
 }: ElectionCountdownBadgeProps) {
+  const { t, currentLanguage } = useI18n();
+  const resolvedLoadingMessage =
+    loadingMessage ?? t('civics.countdown.badge.loading');
+  const resolvedErrorMessage =
+    errorMessage ?? t('civics.countdown.badge.error');
+  const resolvedEmptyMessage =
+    emptyMessage ?? t('civics.countdown.badge.empty');
   const state = useMemo<'loading' | 'error' | 'empty' | 'active' | 'upcoming'>(() => {
     if (loading) return 'loading';
     if (error) return 'error';
@@ -72,7 +82,7 @@ export function ElectionCountdownBadge({
         )}
       >
         <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-        {loadingMessage}
+        {resolvedLoadingMessage}
       </Badge>
     );
   }
@@ -86,7 +96,7 @@ export function ElectionCountdownBadge({
         )}
       >
         <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-        {errorMessage}
+        {resolvedErrorMessage}
       </Badge>
     );
   }
@@ -96,15 +106,15 @@ export function ElectionCountdownBadge({
       <Badge
         className={cn('bg-gray-100 text-gray-600 border-gray-200', className)}
       >
-        {emptyMessage}
+        {resolvedEmptyMessage}
       </Badge>
     );
   }
 
-  const countdownMessage = getCountdownMessage(daysUntil);
+  const countdownMessage = getCountdownMessage(daysUntil, t);
   const additionalCount =
     showAdditionalCount && totalUpcoming > 1
-      ? `(+${totalUpcoming - 1})`
+      ? t('civics.countdown.badge.additional', { count: totalUpcoming - 1 })
       : null;
 
   const ariaLiveProps =
@@ -132,7 +142,7 @@ export function ElectionCountdownBadge({
       )}
       {showDate && nextElection?.election_day && (
         <span className="text-blue-600/80">
-          · {formatElectionDate(nextElection.election_day)}
+          · {formatElectionDate(nextElection.election_day, currentLanguage)}
         </span>
       )}
       {additionalCount && (

@@ -9,12 +9,17 @@ const mockAssertPepperConfig = jest.fn();
 
 jest.mock('@/lib/civics/privacy-utils', () => ({
   setJurisdictionCookie: jest.fn(async (...args: unknown[]) => mockSetJurisdictionCookie(...args)),
-  generateAddressHMAC: jest.fn(() => 'hash'),
+  generateAddressHMAC: jest.fn((address: string) => `hash-${address}`),
+  validateAddressInput: jest.fn(() => ({ valid: true })),
 }));
 
 jest.mock('@/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn((...args: unknown[]) => mockAssertPepperConfig(...args)),
 }));
+
+const privacyUtilsModule = jest.requireMock('@/lib/civics/privacy-utils') as {
+  validateAddressInput: jest.Mock;
+};
 
 describe('Civics address lookup contract', () => {
   const loadRoute = () => {
@@ -73,6 +78,7 @@ describe('Civics address lookup contract', () => {
   });
 
   it('validates address payload', async () => {
+    privacyUtilsModule.validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Address is required' });
     const { POST } = loadRoute();
     const response = await POST(
       createNextRequest('http://localhost/api/v1/civics/address-lookup', {
@@ -103,6 +109,23 @@ describe('Civics address lookup contract', () => {
     expect(response.status).toBe(502);
     expect(body.success).toBe(false);
     expect(body.error).toBe('Failed to resolve address jurisdiction');
+  });
+
+  it('returns 503 when feature disabled via validator', async () => {
+    privacyUtilsModule.validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Feature disabled' });
+
+    const { POST } = loadRoute();
+    const response = await POST(
+      createNextRequest('http://localhost/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ address: '123 Main St, Phoenix, AZ' }),
+      }),
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(503);
+    expect(body.error).toMatch(/disabled/i);
   });
 
   it('falls back to state extraction when external API fails', async () => {

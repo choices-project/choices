@@ -4,6 +4,7 @@ import { Download, ExternalLink, Loader2 } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
 import type { VoterRegistrationResource } from '@/lib/stores/voterRegistrationStore';
 
 type VoterRegistrationCTAProps = {
@@ -13,10 +14,13 @@ type VoterRegistrationCTAProps = {
   error: string | null;
 };
 
-const formatDate = (value: string | null | undefined): string | null => {
+const formatDate = (
+  value: string | null | undefined,
+  locale: string | undefined,
+): string | null => {
   if (!value) return null;
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(locale ?? undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -32,12 +36,13 @@ export function VoterRegistrationCTA({
   isLoading,
   error,
 }: VoterRegistrationCTAProps) {
+  const { t, currentLanguage } = useI18n();
   if (!stateCode) {
     return null;
   }
 
   const formattedState = stateCode.toUpperCase();
-  const lastVerified = formatDate(resource?.last_verified ?? resource?.updated_at);
+  const lastVerified = formatDate(resource?.last_verified ?? resource?.updated_at, currentLanguage);
 
   const hasOnlinePortal = Boolean(resource?.online_url);
   const hasMailForm = Boolean(resource?.mail_form_url);
@@ -56,16 +61,19 @@ export function VoterRegistrationCTA({
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold text-blue-900">
-            Register to Vote in {formattedState}
+            {t('civics.registration.heading', { state: formattedState })}
           </h3>
           {lastVerified && (
             <p className="text-xs text-blue-700">
-              Updated {lastVerified}
+              {t('civics.registration.updated', { date: lastVerified })}
             </p>
           )}
         </div>
         {isLoading && (
-          <Loader2 className="h-5 w-5 animate-spin text-blue-600" aria-label="Loading voter registration resources" />
+          <Loader2
+            className="h-5 w-5 animate-spin text-blue-600"
+            aria-label={t('civics.registration.loadingAria')}
+          />
         )}
       </div>
 
@@ -86,7 +94,7 @@ export function VoterRegistrationCTA({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  Start Online Registration
+                  {t('civics.registration.buttons.online')}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
@@ -99,7 +107,7 @@ export function VoterRegistrationCTA({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  Download Registration Form
+                  {t('civics.registration.buttons.mailForm')}
                   <Download className="h-4 w-4" />
                 </a>
               </Button>
@@ -112,7 +120,7 @@ export function VoterRegistrationCTA({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  Download Mail-in Form
+                  {t('civics.registration.buttons.mailForm')}
                   <Download className="h-4 w-4" />
                 </a>
               </Button>
@@ -125,7 +133,7 @@ export function VoterRegistrationCTA({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  Check Registration Status
+                  {t('civics.registration.buttons.status')}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
@@ -138,7 +146,7 @@ export function VoterRegistrationCTA({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  Learn About Registration
+                  {t('civics.registration.buttons.learn')}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
@@ -153,7 +161,9 @@ export function VoterRegistrationCTA({
 
           {resource.mailing_address && (
             <div className="rounded-md bg-white px-3 py-2 shadow-sm">
-              <h4 className="text-sm font-semibold text-blue-900">Mailing Address</h4>
+              <h4 className="text-sm font-semibold text-blue-900">
+                {t('civics.registration.sections.mailingAddress')}
+              </h4>
               <address className="mt-1 whitespace-pre-wrap text-sm not-italic text-blue-800">
                 {resource.mailing_address}
               </address>
@@ -162,13 +172,17 @@ export function VoterRegistrationCTA({
 
           {resource.election_office_name && (
             <p className="text-sm text-blue-900">
-              Election office: {resource.election_office_name}
+              {t('civics.registration.sections.electionOffice', {
+                office: resource.election_office_name,
+              })}
             </p>
           )}
 
           {resource.sources && resource.sources.length > 0 && (
             <p className="text-xs uppercase tracking-wide text-blue-700">
-              Sources: {resource.sources.map((source) => source.replace(/_/g, ' ')).join(', ')}
+              {t('civics.registration.sections.sources', {
+                sources: resource.sources.map((source) => source.replace(/_/g, ' ')).join(', '),
+              })}
             </p>
           )}
         </div>
@@ -176,16 +190,16 @@ export function VoterRegistrationCTA({
 
       {!isLoading && !error && !resource && (
         <div className="rounded-md border border-blue-100 bg-white px-3 py-3 text-sm text-blue-900 shadow-sm">
-          We could not find a voter registration resource for {formattedState}. Visit{' '}
+          {t('civics.registration.empty.prefix', { state: formattedState })}{' '}
           <a
             href="https://vote.gov"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-blue-700 underline"
           >
-            Vote.gov
+            {t('civics.registration.empty.voteGov')}
           </a>{' '}
-          for the latest instructions.
+          {t('civics.registration.empty.suffix')}
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
+
 import { PerformanceMonitor } from '@/lib/utils/performance-monitor';
 
 // Mock window.performance
@@ -80,7 +81,7 @@ describe('PerformanceMonitor - Monitoring Status', () => {
     it('should return empty object in non-browser environment', () => {
       // Create a new monitor in a context without window
       const originalWindow = (global as any).window;
-      (global as any).window = undefined;
+      delete (global as any).window;
 
       const newMonitor = new PerformanceMonitor();
       const metrics = newMonitor.getMetrics();

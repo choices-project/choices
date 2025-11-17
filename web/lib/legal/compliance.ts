@@ -668,7 +668,7 @@ export class CommunicationComplianceManager {
       requestId: request.id,
       userId,
       requestType: request.type,
-      timestamp: request.timestamp
+      timestamp: request.requestedAt
     });
   }
 

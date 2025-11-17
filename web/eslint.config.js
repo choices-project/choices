@@ -34,8 +34,11 @@ export default [
       'app/(app)/layout.tsx',
       'app/providers.tsx',
       'app/auth/page.tsx',
-      'components/shared/LanguageSelector.tsx',
+      'app/(app)/candidates/**/*.{ts,tsx}',
+      'components/shared/**/*.{ts,tsx}',
       'features/onboarding/components/**/*.{ts,tsx}',
+      'features/civics/**/*.{ts,tsx}',
+      'features/contact/**/*.{ts,tsx}',
     ],
     plugins: {
       formatjs,
@@ -69,6 +72,7 @@ export default [
       '@typescript-eslint': typescriptEslint,
       'unused-imports': unusedImports,
       'boundaries': boundaries,
+      import: importPlugin,
     },
     settings: {
       'boundaries/elements': [
@@ -116,6 +120,51 @@ export default [
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      'import/order': [
+        'error',
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'object',
+            'type',
+          ],
+          pathGroups: [
+            {
+              pattern: '@/app/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@/features/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/components/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/lib/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/hooks/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          'newlines-between': 'always',
+        },
+      ],
       'formatjs/no-literal-string-in-jsx': 'off',
 
       // Console logging - enforce use of logger
@@ -409,9 +458,15 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
       'import/no-extraneous-dependencies': 'off',
+      'import/order': 'off',
+      'import/newline-after-import': 'off',
+      'import/extensions': 'off',
+      'import/first': 'off',
       'no-console': 'off',
       'unused-imports/no-unused-imports': 'off',
+      'unused-imports/no-unused-vars': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',

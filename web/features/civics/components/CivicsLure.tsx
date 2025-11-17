@@ -302,6 +302,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
     });
   }, [dateFormatter, locationRepresentatives, t]);
 
+  const dashPlaceholder = t('common.placeholders.emDash');
   const totalLocalRepresentatives = locationRepresentatives.length;
   const totalActivities = useMemo(
     () =>
@@ -402,7 +403,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
 
       {representativeError && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {representativeError}
+          {t('civics.lure.errors.representatives', { message: representativeError })}
         </div>
       )}
 
@@ -416,7 +417,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
             </span>
           </div>
           <div className="text-2xl font-bold text-blue-600">
-            {isLoading ? '—' : numberFormatter.format(totalLocalRepresentatives)}
+            {isLoading ? dashPlaceholder : numberFormatter.format(totalLocalRepresentatives)}
           </div>
           <div className="text-sm text-gray-500">
             {t('civics.lure.stats.candidates.caption', {
@@ -434,7 +435,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
             </span>
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {isLoading ? '—' : numberFormatter.format(totalActivities)}
+            {isLoading ? dashPlaceholder : numberFormatter.format(totalActivities)}
           </div>
           <div className="text-sm text-gray-500">
             {t('civics.lure.stats.activities.caption')}

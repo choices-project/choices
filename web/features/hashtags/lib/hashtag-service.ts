@@ -855,14 +855,14 @@ export async function getHashtagAnalytics(
       .select('id')
       .eq('id', hashtagId)
       .single();
-    
+
     if (hashtagError || !hashtag) {
       return {
         success: false,
         error: 'Hashtag not found'
       };
     }
-    
+
     // Import the analytics function from hashtag-analytics.ts
     const { calculateHashtagAnalytics } = await import('./hashtag-analytics');
     const analytics = await calculateHashtagAnalytics(hashtagId, period);
@@ -923,7 +923,6 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
  * Validate hashtag name
  */
 export async function validateHashtagName(name: string): Promise<HashtagApiResponse<HashtagValidation>> {
-  const supabase = await ensureSupabaseClient();
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
     const errors: string[] = [];
@@ -938,24 +937,18 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
     if (normalizedName.length > 50) {
       errors.push('Hashtag must be less than 50 characters');
     }
-    
-    // Check if hashtag already exists using supabase
-    const { data: existing } = await supabase
-      .from('hashtags')
-      .select('id, name')
-      .eq('name', normalizedName)
-      .single();
-    
-    if (existing) {
-      warnings.push('Hashtag already exists');
-    }
 
     if (!/^[a-z0-9_]+$/.test(normalizedName)) {
       errors.push('Hashtag can only contain letters, numbers, and underscores');
     }
 
-    const existing = await getHashtagByName(normalizedName);
-    const isAvailable = !existing.success || !existing.data;
+    // Check if hashtag already exists using getHashtagByName
+    const existingHashtag = await getHashtagByName(normalizedName);
+    const isAvailable = !existingHashtag.success || !existingHashtag.data;
+
+    if (!isAvailable) {
+      warnings.push('Hashtag already exists');
+    }
 
     const availability: HashtagValidation['availability'] = {
       is_available: errors.length === 0 && isAvailable,

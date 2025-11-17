@@ -21,12 +21,14 @@ test.describe('Auth – real backend', () => {
   });
 
   test('existing test user can sign in via /auth', async ({ page }) => {
-    test.skip(!regularEmail || !regularPassword, 'E2E_USER_* credentials are not configured');
+    if (!regularEmail || !regularPassword) {
+      test.skip('E2E_USER_* credentials are not configured');
+    }
 
     await loginTestUser(page, {
-      email: regularEmail!,
-      password: regularPassword!,
-      username: regularEmail!.split('@')[0] ?? 'e2e-user',
+      email: regularEmail,
+      password: regularPassword,
+      username: regularEmail.split('@')[0] ?? 'e2e-user',
     });
 
     await waitForPageReady(page);
@@ -43,12 +45,14 @@ test.describe('Auth – real backend', () => {
   });
 
   test('admin credentials unlock admin routes', async ({ page }) => {
-    test.skip(!adminEmail || !adminPassword, 'E2E_ADMIN_* credentials are not configured');
+    if (!adminEmail || !adminPassword) {
+      test.skip('E2E_ADMIN_* credentials are not configured');
+    }
 
     await loginAsAdmin(page, {
-      email: adminEmail!,
-      password: adminPassword!,
-      username: adminEmail!.split('@')[0] ?? 'e2e-admin',
+      email: adminEmail,
+      password: adminPassword,
+      username: adminEmail.split('@')[0] ?? 'e2e-admin',
     });
 
     await waitForPageReady(page);

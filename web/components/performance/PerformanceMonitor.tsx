@@ -14,7 +14,7 @@
 'use client';
 
 import { Activity, Clock, Database, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,19 +74,21 @@ export default function PerformanceMonitor({
   
   // Update metrics when performance data changes
   useEffect(() => {
-    if (isMonitoring && typeof window !== 'undefined') {
-      const updateInterval = setInterval(() => {
-        const newMetrics: Partial<PerformanceMetrics> = {
-          dashboardLoadTime: performance.now(),
-          apiResponseTime: 0, // Would be updated from actual API calls
-          cacheHitRate: 0, // Would be updated from cache stats
-          errors: 0 // Would be updated from error tracking
-        };
-        updateMetrics(newMetrics);
-      }, 5000); // Update every 5 seconds
-      
-      return () => clearInterval(updateInterval);
+    if (!isMonitoring || typeof window === 'undefined') {
+      return;
     }
+    
+    const updateInterval = setInterval(() => {
+      const newMetrics: Partial<PerformanceMetrics> = {
+        dashboardLoadTime: performance.now(),
+        apiResponseTime: 0, // Would be updated from actual API calls
+        cacheHitRate: 0, // Would be updated from cache stats
+        errors: 0 // Would be updated from error tracking
+      };
+      updateMetrics(newMetrics);
+    }, 5000); // Update every 5 seconds
+    
+    return () => clearInterval(updateInterval);
   }, [isMonitoring, updateMetrics]);
 
   // Get performance status color

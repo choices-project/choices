@@ -61,7 +61,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return successResponse({ recorded: false, reason: 'bot' });
     }
 
-    // Persist analytics event according to typed schema (best-effort)
+    // Persist analytics event according to typed schema
+    // event_data is Json type which accepts Record<string, unknown>
     const payload: TablesInsert<'analytics_events'> = {
       event_type: 'share',
       event_data: {
@@ -69,13 +70,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         poll_id,
         placement: placement ?? 'unknown',
         content_type: content_type ?? 'poll'
-      } as unknown as any,
+      } as Record<string, unknown>,
       user_agent: userAgent,
       referrer: request.headers.get('referer'),
       // ip_address is unknown-typed; omit to avoid type issues across environments
       created_at: new Date().toISOString()
     };
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('analytics_events')
       .insert(payload);
     if (error) {
@@ -105,7 +106,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Build query for share analytics
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-    let query = (supabase as any)
+    let query = supabase
       .from('analytics_events')
       .select('*')
       .eq('event_type', 'share')
@@ -132,9 +133,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const platformBreakdown: Record<string, number> = {};
     const pollShares: Record<string, number> = {};
 
-    shareEvents?.forEach((event: any) => {
-      const eventPlatform = event.event_data?.platform || 'unknown';
-      const eventPollId = event.event_data?.poll_id;
+    shareEvents?.forEach((event) => {
+      const eventData = event.event_data as Record<string, unknown> | null;
+      const eventPlatform = (eventData?.platform as string) || 'unknown';
+      const eventPollId = eventData?.poll_id as string | undefined;
 
       platformBreakdown[eventPlatform] = (platformBreakdown[eventPlatform] || 0) + 1;
 

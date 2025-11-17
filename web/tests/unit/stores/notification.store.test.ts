@@ -10,6 +10,13 @@ import {
 } from '@/lib/stores/notificationStore';
 import logger from '@/lib/utils/logger';
 
+const expectDefined = <T>(value: T | undefined, context: string): T => {
+  if (value === undefined) {
+    throw new Error(`Expected ${context} to be defined`);
+  }
+  return value;
+};
+
 const createTestNotificationStore = () =>
   create<NotificationStore>()(immer(notificationStoreCreator));
 
@@ -59,13 +66,13 @@ describe('notificationStore', () => {
     });
 
     const [notification] = notificationStore.getState().notifications;
+    const storedNotification = expectDefined(notification, 'notification');
 
-    expect(notification).toBeDefined();
-    expect(notification!.id).toMatch(/^notification_/);
-    expect(typeof notification!.timestamp).toBe('string');
-    expect(notification!.read).toBe(false);
-    expect(notification).not.toHaveProperty('actions');
-    expect(notification).not.toHaveProperty('duration');
+    expect(storedNotification.id).toMatch(/^notification_/);
+    expect(typeof storedNotification.timestamp).toBe('string');
+    expect(storedNotification.read).toBe(false);
+    expect(storedNotification).not.toHaveProperty('actions');
+    expect(storedNotification).not.toHaveProperty('duration');
   });
 
   it('resets settings back to defaults after overrides', () => {

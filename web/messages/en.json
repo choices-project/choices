@@ -3,7 +3,35 @@
     "language": "Language"
   },
   "common": {
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "actions": {
+      "cancel": "Cancel",
+      "retry": "Retry"
+    },
+    "progressiveDisclosure": {
+      "expand": "Expand content",
+      "collapse": "Collapse content"
+    },
+    "placeholders": {
+      "emDash": "—"
+    },
+    "theme": {
+      "label": "Theme",
+      "select": "Select theme",
+      "options": "Theme options",
+      "changed": "Theme changed to {theme}"
+    },
+    "devices": {
+      "title": "Your Devices",
+      "listLabel": "Device list",
+      "loading": "Loading devices...",
+      "loadFailed": "Failed to load devices",
+      "empty": "No devices found",
+      "add": "Add Device"
+    },
+    "messages": {
+      "dismiss": "Dismiss message"
+    }
   },
   "navigation": {
     "home": "Home",
@@ -18,6 +46,78 @@
       "live": {
         "changed": "Language set to {language}.",
         "error": "Unable to change language. Please try again."
+      }
+    },
+    "mobileMenu": {
+      "open": "Open mobile navigation menu",
+      "close": "Close mobile navigation menu"
+    },
+    "menu": {
+      "title": "Menu",
+      "close": "Close menu",
+      "profile": "My Profile",
+      "settings": "Settings",
+      "contribute": "Help Build Democracy",
+      "badgeNew": "New",
+      "userFallback": "User",
+      "contribute": {
+        "title": "Help Build Democracy",
+        "description": "This is an open source project fighting for democracy.",
+        "mission": "Every contribution helps level the playing field and expose \"bought off\" politicians.",
+        "financialNote": {
+          "label": "Note:",
+          "text": "We're exploring ethical ways to accept financial contributions. For now, we focus on code and community contributions to keep the platform truly independent."
+        },
+        "code": {
+          "title": "Code Development",
+          "description": "Help build features and fix bugs",
+          "skills": {
+            "react": "React",
+            "typescript": "TypeScript",
+            "nodejs": "Node.js"
+          }
+        },
+        "documentation": {
+          "title": "Documentation",
+          "description": "Help others understand the platform",
+          "skills": {
+            "writing": "Writing",
+            "technicalDocs": "Technical docs",
+            "tutorials": "Tutorials"
+          }
+        },
+        "testing": {
+          "title": "Testing & QA",
+          "description": "Help ensure quality",
+          "skills": {
+            "testing": "Testing",
+            "qa": "QA",
+            "userFeedback": "User feedback"
+          }
+        },
+        "community": {
+          "title": "Community Building",
+          "description": "Help grow our community",
+          "skills": {
+            "community": "Community",
+            "socialMedia": "Social media",
+            "events": "Events"
+          }
+        },
+        "sharing": {
+          "title": "Sharing & Outreach",
+          "description": "Help spread the word",
+          "skills": {
+            "socialMedia": "Social media",
+            "contentCreation": "Content creation",
+            "outreach": "Outreach"
+          }
+        }
+      },
+      "settings": {
+        "privacy": "Privacy Settings",
+        "notifications": "Notifications",
+        "account": "Account Settings"
       }
     }
   },
@@ -796,6 +896,407 @@
         "optionSummary": "{option}: {votes} votes ({percentage}%), {uniqueVoters} unique voters.",
         "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}"
       }
+    },
+    "create": {
+      "form": {
+        "title": "Create New Poll",
+        "closeAria": "Close create poll form",
+        "fields": {
+          "title": {
+            "label": "Poll Title",
+            "placeholder": "Enter your poll question...",
+            "counter": "{current}/{max} characters"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Add more context to your poll...",
+            "counter": "{current}/{max} characters"
+          },
+          "category": {
+            "label": "Category",
+            "placeholder": "e.g., Politics, Technology, Entertainment..."
+          },
+          "privacy": {
+            "label": "Privacy Level",
+            "getRecommendation": "Get Recommendation"
+          },
+          "options": {
+            "label": "Poll Options",
+            "optionPlaceholder": "Option {number}",
+            "counter": "{current}/{max} options",
+            "optionCounter": "{current}/{max} characters",
+            "approachingLimit": "Approaching limit",
+            "add": "Add Option"
+          },
+          "tags": {
+            "label": "Tags",
+            "placeholder": "Add a tag...",
+            "counter": "{current}/{max} selected",
+            "add": "Add"
+          }
+        },
+        "buttons": {
+          "create": "Create Poll",
+          "creating": "Creating..."
+        }
+      },
+      "privacy": {
+        "public": "Public – anyone can discover and vote",
+        "private": "Private – only people with the link can participate",
+        "unlisted": "Unlisted – hidden from search but open to anyone with the link"
+      },
+      "votingMethod": {
+        "single": "Single choice",
+        "multiple": "Multiple selection",
+        "approval": "Approval voting",
+        "ranked": "Ranked choice"
+      },
+      "notifications": {
+        "tooManyTags": {
+          "title": "Too many tags",
+          "message": "You can add up to {max} tags."
+        },
+        "signInRequired": {
+          "title": "Sign in required",
+          "message": "Please sign in to publish your poll."
+        },
+        "accessDenied": {
+          "title": "Access denied",
+          "message": "You do not have permission to create polls on this account."
+        },
+        "rateLimit": {
+          "title": "Slow down",
+          "message": "You are creating polls too quickly. Please wait a moment and try again."
+        },
+        "validationErrors": {
+          "title": "Check the highlighted fields"
+        },
+        "creationFailed": {
+          "title": "Unable to create poll",
+          "message": "Please try again in a moment."
+        },
+        "pollCreated": {
+          "title": "Poll created",
+          "message": "Share your poll to start collecting votes."
+        }
+      },
+      "share": {
+        "dialog": {
+          "liveOpen": "Share dialog opened for {title}.",
+          "liveOpenFallback": "Share dialog opened."
+        },
+        "notifications": {
+          "linkCopied": {
+            "title": "Link copied",
+            "message": "Share the link with your audience to start collecting votes."
+          },
+          "copyFailed": {
+            "title": "Unable to copy link",
+            "message": "Please copy the link manually."
+          }
+        }
+      },
+      "wizard": {
+        "details": {
+          "title": {
+            "label": "Poll title",
+            "placeholder": "Where should we focus next quarter's budget?",
+            "hint": "Keep it short, action-oriented, and easy to scan."
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Explain the context, stakes, or background so voters can make an informed decision.",
+            "hint": "Help voters understand why this poll matters. Include relevant context and goals."
+          }
+        },
+        "options": {
+          "label": "Poll options",
+          "hint": "Provide at least two clear, distinct choices so voters can differentiate at a glance.",
+          "optionPlaceholder": "Option {number}",
+          "optionAria": "Option {number}",
+          "removeAria": "Remove option {number}",
+          "maxHint": "You can add up to {max} options.",
+          "add": "Add option"
+        },
+        "audience": {
+          "category": {
+            "label": "Category",
+            "hint": "Categorize your poll so the right people can discover it."
+          },
+          "tags": {
+            "label": "Tags",
+            "hint": "Add keywords so your poll shows up in relevant searches.",
+            "placeholder": "Add a tag",
+            "add": "Add",
+            "maxHint": "You can add up to {max} tags.",
+            "removeAria": "Remove tag {tag}"
+          },
+          "settings": {
+            "legend": "Participation & privacy",
+            "allowMultipleVotes": {
+              "label": "Allow multiple votes",
+              "description": "Enable if voters should be able to support more than one option."
+            },
+            "allowAnonymousVotes": {
+              "label": "Allow anonymous votes",
+              "description": "Disable this if you need to know exactly who participated."
+            },
+            "requireAuthentication": {
+              "label": "Require sign-in to vote",
+              "description": "Ensure voters are authenticated before submitting a response."
+            },
+            "showResults": {
+              "label": "Show results in real time",
+              "description": "Disable to hide results until the poll closes."
+            },
+            "allowComments": {
+              "label": "Allow comments",
+              "description": "Collect qualitative feedback alongside quantitative votes."
+            }
+          },
+          "privacy": {
+            "label": "Privacy level",
+            "hint": "Change who can discover and participate in this poll."
+          },
+          "votingMethod": {
+            "label": "Voting method",
+            "hint": "Choose the mechanics that best fit how you want to evaluate responses."
+          }
+        },
+        "review": {
+          "title": "Preview your poll",
+          "description": "Review everything voters will see before you publish.",
+          "untitled": "Untitled poll",
+          "noDescription": "Add a description to help voters understand the context.",
+          "optionsHeading": "Options",
+          "privacy": "Privacy",
+          "votingMethod": "Voting method",
+          "multipleVotes": "Multiple votes",
+          "anonymousVotes": "Anonymous votes",
+          "requireSignIn": "Require sign-in",
+          "comments": "Comments",
+          "enabled": "Enabled",
+          "disabled": "Disabled",
+          "allowed": "Allowed",
+          "yes": "Yes",
+          "no": "No"
+        },
+        "progress": {
+          "ariaLabel": "Poll creation progress"
+        }
+      },
+      "page": {
+        "title": "Create a new poll",
+        "subtitle": "Guide your audience through a clear decision. Fill out each step to describe the poll, add options, and set participation rules.",
+        "errorSummary": {
+          "title": "Resolve these items before continuing"
+        },
+        "buttons": {
+          "previous": "Previous",
+          "next": "Next",
+          "publish": "Publish poll",
+          "creating": "Creating…"
+        }
+      },
+      "share": {
+        "dialog": {
+          "title": "Share your poll",
+          "description": "Help voters discover \"{title}\" by sharing the link below.",
+          "yourPoll": "your poll",
+          "pollTitle": "Poll title",
+          "privacy": "Privacy",
+          "votingMethod": "Voting method",
+          "category": "Category",
+          "nextMilestone": "Next milestone",
+          "milestoneVotes": "{count, plural, one {# vote} other {# votes}}",
+          "pollLink": "Poll link",
+          "copied": "Copied",
+          "copyLink": "Copy link",
+          "linkCopiedAria": "Share link copied to clipboard.",
+          "linkCopyHintAria": "Press copy to place the share link on your clipboard.",
+          "buttons": {
+            "viewPoll": "View poll",
+            "viewAnalytics": "View analytics",
+            "emailLink": "Email link",
+            "shareOnX": "Share on X",
+            "createAnother": "Create another poll",
+            "done": "Done"
+          },
+          "email": {
+            "subject": "Check out this poll"
+          },
+          "x": {
+            "tweet": "Vote now: {title} {url}"
+          },
+          "milestones": {
+            "title": "Milestone alerts",
+            "description": "Receive in-app alerts when your poll reaches key vote counts.",
+            "enabled": "{current}/{total} enabled",
+            "notifyAt": "Notify me at {count, plural, one {# vote} other {# votes}}",
+            "itemDescription": "Sends an alert when the poll crosses {count, plural, one {# vote} other {# votes}} so you can celebrate or share again."
+          }
+        }
+      },
+      "view": {
+        "privacy": {
+          "public": "Public",
+          "private": "Private",
+          "unlisted": "Unlisted"
+        },
+        "votingMethod": {
+          "single": "Single choice",
+          "multiple": "Multiple selection",
+          "approval": "Approval voting",
+          "ranked": "Ranked choice",
+          "quadratic": "Quadratic voting"
+        },
+        "breadcrumbs": {
+          "home": "Home",
+          "dashboard": "Dashboard",
+          "polls": "Polls",
+          "pollDetail": "Poll Detail"
+        },
+        "errors": {
+          "loadResultsFailed": "Failed to load poll results. Please try again later.",
+          "loadDataFailed": "Failed to load poll data",
+          "voteFailed": "Failed to vote"
+        },
+        "status": {
+          "closed": {
+            "title": "Poll has closed",
+            "description": "Results are read-only. Reach out to the poll owner if you believe this poll should be reopened.",
+            "label": "Closed"
+          },
+          "notOpen": {
+            "title": "Poll not yet open",
+            "description": "This poll is in draft or scheduled mode. The owner can publish it to start collecting votes."
+          },
+          "active": {
+            "label": "Active"
+          },
+          "draft": {
+            "label": "Draft"
+          },
+          "signInRequired": {
+            "title": "Sign in to vote",
+            "description": "We need to verify your account before recording a vote. Sign in, then come back to participate."
+          },
+          "votingRestricted": {
+            "title": "Voting restricted",
+            "description": "This poll is limited to a specific audience. If you should have access, ask the poll owner to add you or adjust privacy."
+          }
+        },
+        "options": {
+          "fallback": "Option {number}",
+          "voteCount": "{votes, number} votes ({percentage}%)"
+        },
+        "notifications": {
+          "voteRecorded": {
+            "title": "Vote recorded",
+            "message": "Thanks for participating!"
+          },
+          "voteFailed": {
+            "title": "Unable to vote"
+          },
+          "linkCopied": {
+            "title": "Link copied",
+            "message": "Share the link to bring more voters in."
+          },
+          "copyFailed": {
+            "title": "Unable to copy link",
+            "message": "Please copy the link manually."
+          }
+        },
+        "buttons": {
+          "share": "Share",
+          "analytics": "Analytics",
+          "printSummary": "Print summary",
+          "vote": "Vote",
+          "voting": "Voting…",
+          "voted": "Voted"
+        },
+        "loading": "Updating results…",
+        "leadingOption": {
+          "label": "Leading option",
+          "votes": "{votes, number} votes ({percentage}% of {total, number} total)"
+        },
+        "stats": {
+          "totalVotes": "Total votes",
+          "participation": "Participation",
+          "status": "Status"
+        },
+        "milestones": {
+          "label": "Milestone alerts",
+          "empty": "Choose the vote counts you want to be notified about. We will alert you when your poll reaches those milestones.",
+          "tracking": "Tracking {milestones} votes.",
+          "nextUp": "Next up: {count, number} votes. Encourage your audience to participate!",
+          "achieved": "Already achieved",
+          "votesBadge": "{count, plural, one {# vote} other {# votes}}",
+          "itemLabel": "{count, plural, one {# vote} other {# votes}}",
+          "itemDescription": "Notify me when this poll reaches {count, plural, one {# vote} other {# votes}}.",
+          "toggleAria": "Toggle milestone notification for {count, plural, one {# vote} other {# votes}}"
+        },
+        "created": "Created {date}"
+      },
+      "postCloseBanner": {
+        "status": {
+          "closed": {
+            "title": "Poll Closed",
+            "description": "This poll has been closed and is no longer accepting votes.",
+            "badge": "Closed"
+          },
+          "locked": {
+            "title": "Poll Locked",
+            "description": "This poll has been locked and results are final.",
+            "badge": "Locked"
+          },
+          "postClose": {
+            "title": "Post-Close Voting Active",
+            "description": "This poll is in post-close mode. Votes are being tracked separately.",
+            "badge": "Post-Close"
+          }
+        },
+        "baselineEstablished": "Baseline established: {date}",
+        "lockedAt": "Locked at: {date}",
+        "postCloseAvailable": "Post-close voting is available",
+        "buttons": {
+          "enablePostClose": "Enable Post-Close",
+          "lockPoll": "Lock Poll"
+        }
+      },
+      "share": {
+        "title": "Share This Poll",
+        "defaultTitle": "Check out this poll!",
+        "nativeShareText": "Check out this poll!",
+        "nativeShare": "Share via System",
+        "directLink": {
+          "label": "Direct Link"
+        },
+        "copy": "Copy",
+        "copied": "Copied!",
+        "social": {
+          "twitter": "Twitter",
+          "facebook": "Facebook",
+          "linkedin": "Linkedin",
+          "email": "Email"
+        },
+        "emailBody": "Check out this poll: {url}",
+        "qrCode": {
+          "title": "QR Code",
+          "show": "Show QR Code",
+          "hide": "Hide QR Code",
+          "alt": "QR Code for poll",
+          "generating": "Generating QR Code...",
+          "scanHint": "Scan to open poll on mobile device",
+          "download": "Download QR",
+          "copyLink": "Copy Link"
+        },
+        "embed": {
+          "title": "Embed Poll",
+          "codeLabel": "Embed Code",
+          "copyCode": "Copy Embed Code"
+        }
+      }
     }
   },
   "feeds": {
@@ -1086,6 +1587,74 @@
     }
   },
   "civics": {
+    "attribution": {
+      "footer": {
+        "heading": "Data Sources:",
+        "lastUpdated": "Last updated: {date}"
+      },
+      "badge": {
+        "more": "+{count} more"
+      }
+    },
+    "addressLookup": {
+      "form": {
+        "label": "Enter your address to find your representatives",
+        "placeholder": "123 Main St, City, State 12345"
+      },
+      "privacy": {
+        "heading": "Privacy first:",
+        "copy": "We don't store your address. We keep a one-way fingerprint and a rough map square so we can draw anonymous stats. No one can turn that back into your home."
+      },
+      "actions": {
+        "differentAddressButton": "Voting from a different address?",
+        "differentAddressHelper": "Use \"different address\" for this search. Same privacy rules—nothing is stored.",
+        "submit": {
+          "default": "Find My Representatives",
+          "loading": "Looking up..."
+        }
+      },
+      "prompts": {
+        "differentAddress": "Enter your voting address (this will be used for representative lookup only):"
+      },
+      "errors": {
+        "addressRequired": "Please enter an address",
+        "noRepresentatives": "We're unable to find representatives for that address yet. Try another location.",
+        "lookupFailed": "We couldn't run the lookup. Please try again."
+      },
+      "status": {
+        "privacyProtected": "Privacy Protected"
+      }
+    },
+    "countdown": {
+      "badge": {
+        "loading": "Checking elections…",
+        "error": "Election data unavailable",
+        "empty": "No upcoming elections recorded",
+        "additional": "(+{count})",
+        "countdown": {
+          "today": "Election today",
+          "tomorrow": "In 1 day",
+          "inDays": "In {count} days"
+        }
+      },
+      "card": {
+        "title": "Upcoming elections",
+        "description": "Stay ready with key dates tied to your divisions.",
+        "loading": "Fetching the latest election calendar…",
+        "error": "Unable to load upcoming elections.",
+        "empty": "No elections on file yet — check back soon.",
+        "remaining": "+{count} {count, plural, one {additional election} other {additional elections}} tracked"
+      },
+      "notifications": {
+        "titleFallback": "Upcoming election",
+        "message": "Election on {date}",
+        "countdown": {
+          "today": "Election day",
+          "tomorrow": "Election tomorrow",
+          "inDays": "Election in {count} days"
+        }
+      }
+    },
     "lure": {
       "header": {
         "title": "Ready to vote on something that actually matters? 🗳️",
@@ -1171,6 +1740,9 @@
         "privacy": "100% private",
         "access": "Equal access"
       },
+      "errors": {
+        "representatives": "We couldn’t update your civic info. {message}"
+      },
       "live": {
         "locationUpdated": "Civic insights updated for {location}.",
         "representativesLoaded": "{count, plural, one {# local representative synced.} other {# local representatives synced.}}",
@@ -1189,6 +1761,14 @@
         "addBookmark": "Add this item to bookmarks",
         "removeBookmark": "Remove this item from bookmarks"
       },
+      "actions": {
+        "like": "Like this item",
+        "unlike": "Unlike this item",
+        "comment": "Comment on this item",
+        "share": "Share this item",
+        "addBookmark": "Add this item to bookmarks",
+        "removeBookmark": "Remove this item from bookmarks"
+      },
       "analytics": {
         "views": "Views",
         "engagement": "Engagement",
@@ -1199,6 +1779,815 @@
         "down": "Trending down {change}%"
       },
       "lastUpdated": "Updated {time}"
+    },
+    "representatives": {
+      "card": {
+        "district": "District {district}",
+        "committees": {
+          "heading": "Committees",
+          "item": "{role}: {name}",
+          "more": "+{count} more committees"
+        },
+        "contact": {
+          "website": "Website",
+          "button": "Contact"
+        },
+        "dataQuality": {
+          "label": "Data quality"
+        },
+        "actions": {
+          "follow": "Follow",
+          "unfollow": "Unfollow",
+          "following": "Following...",
+          "unfollowing": "Unfollowing..."
+        },
+        "errors": {
+          "follow": "{message}"
+        }
+      },
+      "list": {
+        "loading": "Loading representatives…",
+        "error": "Error: {error}",
+        "empty": {
+          "title": "No representatives found",
+          "subtitle": "Try adjusting your search criteria or location."
+        }
+      },
+      "search": {
+        "title": "Find representatives",
+        "inputs": {
+          "query": "Search by name...",
+          "location": "Enter your address..."
+        },
+        "buttons": {
+          "search": "Search",
+          "searching": "Searching…",
+          "find": "Find my reps",
+          "apply": "Apply filters"
+        },
+        "advanced": {
+          "toggle": "Advanced filters",
+          "clearAll": "Clear all",
+          "common": {
+            "all": "All options"
+          },
+          "state": {
+            "label": "State",
+            "placeholder": "All states"
+          },
+          "party": {
+            "label": "Party",
+            "placeholder": "All parties",
+            "democratic": "Democratic",
+            "republican": "Republican",
+            "independent": "Independent",
+            "green": "Green",
+            "libertarian": "Libertarian"
+          },
+          "office": {
+            "label": "Office",
+            "placeholder": "All offices",
+            "senator": "Senator",
+            "representative": "Representative",
+            "governor": "Governor",
+            "stateSenator": "State Senator",
+            "stateRepresentative": "State Representative"
+          },
+          "level": {
+            "label": "Level",
+            "placeholder": "All levels",
+            "federal": "Federal",
+            "state": "State",
+            "local": "Local"
+          }
+        },
+        "states": {
+          "CA": "California",
+          "NY": "New York",
+          "TX": "Texas",
+          "FL": "Florida",
+          "IL": "Illinois"
+        }
+      }
+    },
+    "navigation": {
+      "header": {
+        "title": "Civics",
+        "subtitle": "Your democratic voice"
+      },
+      "links": {
+        "representatives": "My Representatives",
+        "updateLocation": "Update Location"
+      },
+      "mobileMenu": {
+        "open": "Open civics navigation menu",
+        "close": "Close civics navigation menu",
+        "regionLabel": "Civics navigation options",
+        "currentLocation": "Current location",
+        "unknownLocation": "Location not set yet",
+        "editAddress": "Change address",
+        "accessibilityHint": "Selecting any option will close this menu."
+      },
+      "modal": {
+        "title": "Update Your Location",
+        "description": "Enter your new address to see updated representatives.",
+        "addressLabel": "Your Address",
+        "addressPlaceholder": "123 Main St, City, State 12345",
+        "submit": "Update Location",
+        "submitLoading": "Updating..."
+      },
+      "errors": {
+        "fetchFailed": "Unable to fetch representatives for that address."
+      }
+    },
+    "privacy": {
+      "badge": {
+        "featureDisabled": "Feature disabled",
+        "checking": "Checking…",
+        "status": {
+          "healthy": "Privacy protections active",
+          "warning": "Privacy protections need attention",
+          "error": "Privacy check failed",
+          "disabled": "Privacy protections disabled"
+        }
+      }
+    },
+    "touchInteractions": {
+      "surface": {
+        "label": "Touch interaction surface. Use swipe, pinch, or tap gestures.",
+        "disabled": "Touch controls are disabled."
+      },
+      "live": {
+        "touchStart": "Touch engagement started.",
+        "touchEnd": "Touch ended.",
+        "touchCancel": "Touch cancelled.",
+        "tap": "Tap detected.",
+        "swipeLeft": "Swiped left.",
+        "swipeRight": "Swiped right.",
+        "swipeUp": "Swiped up.",
+        "swipeDown": "Swiped down.",
+        "pinchIn": "Pinch in detected.",
+        "pinchOut": "Pinch out detected.",
+        "longPress": "Long press detected."
+      }
+    },
+    "registration": {
+      "heading": "Register to vote in {state}",
+      "updated": "Updated {date}",
+      "loadingAria": "Loading voter registration resources",
+      "buttons": {
+        "online": "Start Online Registration",
+        "mailForm": "Download Registration Form",
+        "status": "Check Registration Status",
+        "learn": "Learn About Registration"
+      },
+      "sections": {
+        "mailingAddress": "Mailing Address",
+        "electionOffice": "Election office: {office}",
+        "sources": "Sources: {sources}"
+      },
+      "empty": {
+        "prefix": "We couldn’t find a voter registration resource for {state}. Visit",
+        "suffix": "for the latest instructions.",
+        "voteGov": "Vote.gov"
+      }
+    },
+    "actions": {
+      "card": {
+        "type": {
+          "petition": "Petition",
+          "campaign": "Campaign",
+          "survey": "Survey",
+          "event": "Event",
+          "protest": "Protest",
+          "meeting": "Meeting"
+        },
+        "urgency": {
+          "low": "Low urgency",
+          "medium": "Moderate urgency",
+          "high": "High urgency",
+          "critical": "Critical urgency"
+        },
+        "badges": {
+          "draft": "Draft"
+        },
+        "signatures": "{current} / {required} signatures",
+        "percentage": "{value}%",
+        "metadata": {
+          "ended": "Ended",
+          "endsOn": "Ends {date}"
+        },
+        "statusMessages": {
+          "completed": "This action has been completed.",
+          "cancelled": "This action has been cancelled.",
+          "paused": "This action is currently paused.",
+          "expired": "This action has ended."
+        },
+        "buttons": {
+          "viewDetails": "View details",
+          "sign": "Sign",
+          "signing": "Signing...",
+          "signed": "Signed"
+        }
+      },
+      "list": {
+        "loading": "Loading civic actions…",
+        "loadingMore": "Loading…",
+        "empty": "No civic actions found.",
+        "errors": {
+          "fetch": "Failed to fetch civic actions.",
+          "generic": "An unexpected error occurred.",
+          "sign": "Failed to sign action.",
+          "display": "Error: {error}"
+        },
+        "buttons": {
+          "create": "Create action",
+          "loadMore": "Load more"
+        }
+      },
+      "create": {
+        "header": {
+          "title": "Create civic action",
+          "description": "Start a petition, campaign, or other civic engagement action."
+        },
+        "fields": {
+          "commonCounter": "{current}/{max} characters",
+          "title": {
+            "label": "Title",
+            "placeholder": "e.g., Support climate action legislation"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Describe your civic action..."
+          },
+          "actionType": {
+            "label": "Action type",
+            "placeholder": "Select an action type"
+          },
+          "urgency": {
+            "label": "Urgency level",
+            "placeholder": "Select urgency"
+          },
+          "category": {
+            "label": "Category",
+            "placeholder": "e.g., Environment, Healthcare, Education"
+          },
+          "signatures": {
+            "label": "Target signatures",
+            "placeholder": "1000"
+          },
+          "endDate": {
+            "label": "End date (optional)"
+          },
+          "targetState": {
+            "label": "Target state (optional)",
+            "placeholder": "CA"
+          },
+          "targetDistrict": {
+            "label": "Target district (optional)",
+            "placeholder": "12"
+          },
+          "visibility": {
+            "label": "Make this action public"
+          }
+        },
+        "actionTypes": {
+          "petition": "Petition",
+          "campaign": "Campaign",
+          "survey": "Survey",
+          "event": "Event",
+          "protest": "Protest",
+          "meeting": "Meeting"
+        },
+        "urgencyLevels": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "critical": "Critical"
+        },
+        "validation": {
+          "titleRequired": "Title is required.",
+          "titleMax": "Title must be 200 characters or less.",
+          "descriptionMax": "Description must be 5000 characters or less.",
+          "signaturesRange": "Target signatures must be between 1 and 1,000,000.",
+          "endDateFuture": "End date must be in the future."
+        },
+        "errors": {
+          "submitRequest": "Failed to create civic action.",
+          "generic": "An error occurred."
+        },
+        "buttons": {
+          "create": "Create action",
+          "creating": "Creating..."
+        }
+      }
+    }
+  },
+  "contact": {
+    "representatives": {
+      "featureDisabled": "Contact system is currently disabled. This feature will be available soon.",
+      "authRequired": "Please log in to contact your representatives.",
+      "header": {
+        "title": "Contact Your Representatives",
+        "subtitle": "Send messages directly to your elected officials",
+        "count": "{formattedCount} {count, plural, one {representative} other {representatives}}"
+      },
+      "elections": {
+        "title": "Upcoming elections for your districts",
+        "loading": "Loading election calendar…",
+        "error": "Unable to load elections right now.",
+        "date": "({date})",
+        "more": "+{count} more elections on file",
+        "countdown": {
+          "today": "Next election is today!",
+          "inDays": "Next election in {formattedCount} {count, plural, one {day} other {days}}."
+        }
+      },
+      "actions": {
+        "message": "Message"
+      },
+      "threads": {
+        "loading": "Loading recent conversations…",
+        "title": "Recent Messages",
+        "count": "{formattedCount} {count, plural, one {message} other {messages}}",
+        "noMessages": "No messages yet"
+      }
+    },
+    "modal": {
+      "a11y": {
+        "liveOpen": "Contact {name} dialog opened.",
+        "liveUnavailable": "Contact feature unavailable dialog opened."
+      },
+      "disabled": {
+        "title": "Contact System Disabled",
+        "description": "Contact system is currently disabled. This feature will be available soon."
+      },
+      "header": {
+        "title": "Contact {name}",
+        "subtitle": "{office}"
+      },
+      "elections": {
+        "title": "Upcoming elections linked to this representative",
+        "loading": "Polling election calendar…",
+        "error": "Unable to load elections right now.",
+        "date": "({date})",
+        "more": "+{count} more election(s) tracked",
+        "countdown": {
+          "today": "Next election is today!",
+          "inDays": "Next election in {formattedCount} {count, plural, one {day} other {days}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Use a template",
+          "active": "Using: {title}"
+        },
+        "ariaLabel": "Message templates",
+        "instructions": "Select a template:",
+        "clear": "Clear template",
+        "fillLabel": "Fill in template details:",
+        "validation": {
+          "missing": "Missing required fields: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Subject",
+          "placeholder": "What is this message about?",
+          "required": "Subject is required"
+        },
+        "message": {
+          "label": "Message",
+          "placeholder": "Type your message here...",
+          "required": "Message is required",
+          "count": "{current} / {max} characters"
+        }
+      },
+      "errors": {
+        "missingFields": "Please fill in both subject and message.",
+        "sendFailed": "Failed to send message."
+      },
+      "success": "Message sent successfully!",
+      "footer": {
+        "responseTime": "Messages are typically responded to within 2-3 business days"
+      },
+      "actions": {
+        "close": "Close",
+        "closeAria": "Close contact modal",
+        "send": "Send message",
+        "sending": "Sending...",
+        "sendAria": "Send message",
+        "sendingAria": "Sending message..."
+      }
+    },
+    "bulkModal": {
+      "a11y": {
+        "liveOpen": "Bulk contact dialog opened. {count} selected.",
+        "liveUnavailable": "Contact feature unavailable dialog opened."
+      },
+      "disabled": {
+        "title": "Contact System Disabled",
+        "description": "Contact system is currently disabled. This feature will be available soon."
+      },
+      "header": {
+        "title": "Contact multiple representatives",
+        "description": "Send the same message to {formattedCount} {count, plural, one {representative} other {representatives}}."
+      },
+      "selection": {
+        "heading": "Select representatives ({formattedCount} selected)"
+      },
+      "elections": {
+        "title": "Upcoming elections for selected divisions",
+        "loading": "Loading election calendar…",
+        "error": "Unable to load elections right now.",
+        "date": "({date})",
+        "more": "+{count} additional election(s)",
+        "countdown": {
+          "today": "Next election is today!",
+          "inDays": "Next election in {formattedCount} {count, plural, one {day} other {days}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Use a template",
+          "active": "Using: {title}"
+        },
+        "ariaLabel": "Message templates",
+        "instructions": "Select a template:",
+        "clear": "Clear template",
+        "fillLabel": "Fill in template details:",
+        "validation": {
+          "missing": "Missing required fields: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Subject",
+          "placeholder": "What is this message about?",
+          "required": "Subject is required"
+        },
+        "message": {
+          "label": "Message",
+          "placeholder": "Type your message here...",
+          "required": "Message is required",
+          "count": "{current} / {max} characters"
+        }
+      },
+      "errors": {
+        "missingFields": "Please fill in both subject and message.",
+        "noRepresentatives": "Please select at least one representative.",
+        "partial": "Sent to {successCount} of {total} representatives. Some failed.",
+        "allFailed": "Failed to send to all representatives.",
+        "sendFailed": "Failed to send messages."
+      },
+      "success": "Messages sent successfully to all {formattedCount} selected representatives!",
+      "results": {
+        "title": "Send results",
+        "failureFallback": "Unknown error"
+      },
+      "footer": {
+        "selection": "{formattedCount} {count, plural, one {representative} other {representatives}} selected"
+      },
+      "actions": {
+        "close": "Close dialog",
+        "closeAria": "Close bulk contact modal",
+        "send": "Send",
+        "sendLabel": "Send to all ({formattedCount})",
+        "sendingLabel": "Sending…",
+        "sendAria": "Send message to {formattedCount} {count, plural, one {representative} other {representatives}}",
+        "sendingAria": "Sending messages to {formattedCount} {count, plural, one {representative} other {representatives}}"
+      }
+    },
+    "templates": {
+      "support-bill": {
+        "title": "Support for Legislation",
+        "description": "Express support for a specific bill or policy proposal",
+        "placeholders": {
+          "billName": {
+            "label": "Bill Name",
+            "example": "Climate Action Act"
+          },
+          "billNumber": {
+            "label": "Bill Number",
+            "example": "H.R. 1234"
+          },
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "personalStatement": {
+            "label": "Personal Statement",
+            "example": "As a concerned citizen, I believe..."
+          },
+          "reason1": {
+            "label": "Reason 1",
+            "example": "It addresses climate change"
+          },
+          "reason2": {
+            "label": "Reason 2",
+            "example": "It creates jobs"
+          },
+          "reason3": {
+            "label": "Reason 3",
+            "example": "It protects the environment"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userAddress": {
+            "label": "Your Address",
+            "example": "123 Main St, City, State ZIP"
+          }
+        }
+      },
+      "oppose-bill": {
+        "title": "Opposition to Legislation",
+        "description": "Express opposition to a specific bill or policy proposal",
+        "placeholders": {
+          "billName": {
+            "label": "Bill Name",
+            "example": "Regulatory Reform Act"
+          },
+          "billNumber": {
+            "label": "Bill Number",
+            "example": "H.R. 5678"
+          },
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "personalStatement": {
+            "label": "Personal Statement",
+            "example": "I am concerned that..."
+          },
+          "concern1": {
+            "label": "Concern 1",
+            "example": "It may harm the environment"
+          },
+          "concern2": {
+            "label": "Concern 2",
+            "example": "It lacks sufficient safeguards"
+          },
+          "concern3": {
+            "label": "Concern 3",
+            "example": "It may impact vulnerable communities"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userAddress": {
+            "label": "Your Address",
+            "example": "123 Main St, City, State ZIP"
+          }
+        }
+      },
+      "general-question": {
+        "title": "General Question",
+        "description": "Ask a general question about policy or representation",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "topic": {
+            "label": "Topic",
+            "example": "Healthcare Reform"
+          },
+          "question": {
+            "label": "Your Question",
+            "example": "What is your position on..."
+          },
+          "additionalContext": {
+            "label": "Additional Context",
+            "example": "This is important to me because..."
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userEmail": {
+            "label": "Your Email",
+            "example": "john@example.com"
+          }
+        }
+      },
+      "constituent-service": {
+        "title": "Constituent Service Request",
+        "description": "Request help with a government service or issue",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "issue": {
+            "label": "Issue Summary",
+            "example": "Social Security Benefits"
+          },
+          "issueDescription": {
+            "label": "Issue Description",
+            "example": "I have been waiting for..."
+          },
+          "attempt1": {
+            "label": "Attempt 1",
+            "example": "Contacted the agency directly"
+          },
+          "attempt2": {
+            "label": "Attempt 2",
+            "example": "Submitted required documentation"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userContactInfo": {
+            "label": "Contact Information",
+            "example": "Phone: 555-1234, Email: john@example.com"
+          }
+        }
+      },
+      "thank-you": {
+        "title": "Thank You Message",
+        "description": "Thank your representative for their work or vote",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "action": {
+            "label": "Action",
+            "example": "voting in favor of the Climate Action Act"
+          },
+          "reason": {
+            "label": "Why You're Thankful",
+            "example": "This legislation is important to our community..."
+          },
+          "actionType": {
+            "label": "Action Type",
+            "example": "vote"
+          },
+          "value": {
+            "label": "Value",
+            "example": "environmental protection"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          }
+        }
+      },
+      "policy-feedback": {
+        "title": "Policy Feedback",
+        "description": "Provide feedback on a specific policy or issue",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "policyTopic": {
+            "label": "Policy Topic",
+            "example": "Healthcare Reform"
+          },
+          "feedback": {
+            "label": "Your Feedback",
+            "example": "I support this approach because..."
+          },
+          "recommendation": {
+            "label": "Your Recommendation",
+            "example": "we should prioritize..."
+          },
+          "additionalThoughts": {
+            "label": "Additional Thoughts",
+            "example": "I also wanted to mention..."
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          }
+        }
+      }
+    }
+  },
+  "candidates": {
+    "profile": {
+      "status": {
+        "notFound": "Candidate not found.",
+        "loading": "Loading…"
+      },
+      "labels": {
+        "prospectiveCandidate": "Prospective Candidate",
+        "statusVerified": "Verified",
+        "statusPending": "In Verification",
+        "public": "Your profile is public.",
+        "private": "Your profile is private (preview only)."
+      },
+      "actions": {
+        "togglePublicTitle": "Toggle public visibility",
+        "publish": "Publish Profile",
+        "unpublish": "Unpublish Profile"
+      },
+      "verification": {
+        "tooltip": "Verify with your official email",
+        "codeSent": "Verification code sent to your official email. Enter it below.",
+        "requestFailed": "Could not send verification code.",
+        "requestError": "Failed to send verification code. Please try again.",
+        "complete": "✅ Verification complete.",
+        "failed": "❌ Verification failed. Please try again.",
+        "buttons": {
+          "request": "Verify Official Email",
+          "loading": "Verifying…",
+          "submit": "Submit Code",
+          "submitLoading": "Submitting…"
+        },
+        "input": {
+          "placeholder": "Enter 6-digit code",
+          "note": "Code expires in 15 minutes. You have 5 attempts per code."
+        },
+        "error": {
+          "expired": "⏰ This code has expired. Please request a new one.",
+          "locked": "🔒 Too many failed attempts. Please request a new code.",
+          "alreadyUsed": "⚠️ This code has already been used. Please request a new one.",
+          "invalid": "Invalid code.",
+          "invalidWithAttempts": "Invalid code. ({count, plural, one {{count} attempt remaining} other {{count} attempts remaining}})",
+          "general": "Invalid code."
+        }
+      },
+      "edit": {
+        "bioLabel": "Bio",
+        "bioPlaceholder": "Tell voters about you…",
+        "websiteLabel": "Website",
+        "websitePlaceholder": "https://yourcampaign.com",
+        "socialLabel": "Social (key → URL, one per line)",
+        "socialPlaceholder": "twitter: https://x.com/you",
+        "success": "Profile updated.",
+        "error": "Failed to update profile.",
+        "saveButton": "Save Changes",
+        "saveLoading": "Saving…"
+      },
+      "links": {
+        "websiteLabel": "Website:",
+        "selfProvidedTitle": "Self-provided link",
+        "selfProvidedBadge": "Self-provided"
+      },
+      "navigation": {
+        "backToApp": "Back to app"
+      },
+      "correction": {
+        "linkLabel": "Suggest a correction",
+        "badge": "Help keep this profile accurate",
+        "dialogTitle": "Suggest a correction",
+        "dialogDescription": "Flag inaccurate or outdated information so our team can review it quickly.",
+        "issueLabel": "What needs attention?",
+        "issueTypes": {
+          "info": "Biography or issue positions",
+          "contact": "Contact / website links",
+          "verification": "Impersonation or identity issue",
+          "other": "Something else"
+        },
+        "detailsLabel": "Details",
+        "detailsPlaceholder": "Describe the correction you are suggesting. Include the current text, what it should be, and any relevant context.",
+        "detailsHelp": "Minimum 20 characters.",
+        "contactLabel": "Contact email (optional)",
+        "contactDescription": "We will only reach out if we need clarification.",
+        "sourceLabel": "Source or link (optional)",
+        "sourceDescription": "Share a public link that backs up your correction.",
+        "contactPlaceholder": "you@example.com",
+        "sourcePlaceholder": "https://example.org/source",
+        "feedbackTitle": "Correction: {name}",
+        "feedbackDescription": "[{issue}] {details}\n\nSource: {source}\nContact: {contact}",
+        "missingValue": "n/a",
+        "submit": "Submit correction",
+        "submitting": "Submitting…",
+        "success": "Thanks! Our moderation team will review your correction shortly.",
+        "error": "We couldn’t submit that correction. Please try again.",
+        "detailsRequired": "Please provide at least 20 characters so we can understand the correction.",
+        "close": "Close correction dialog"
+      }
     }
   },
   "auth": {

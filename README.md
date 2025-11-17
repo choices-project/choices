@@ -99,13 +99,24 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 
 ## 🔐 Environment & Email (Quick)
 
-Set the following in your hosting environment:
+**Status:** ✅ All critical environment variables are configured in Vercel.
 
-- `NEXT_PUBLIC_APP_URL` – e.g., `https://choices-app.com`
-- `EMAIL_FROM` – e.g., `verify@choices-app.com`
-- `RESEND_API_KEY` – Resend production key
-- `ADMIN_MONITORING_KEY` – strong random string (for admin endpoints)
-- (Optional) `CRON_SECRET` – if you trigger job endpoints
+**Required Variables (All Configured):**
+- `NEXT_PUBLIC_SUPABASE_URL` – Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` – Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY` – Supabase service role key
+- `UPSTASH_REDIS_REST_URL` – Upstash Redis URL (rate limiting)
+- `UPSTASH_REDIS_REST_TOKEN` – Upstash Redis token
+- `RESEND_API_KEY` – Resend API key (email service)
+- `RESEND_FROM_EMAIL` – Email from address (currently test email; update to verified domain for production)
+- `CRON_SECRET` – Secret for cron job authentication
+- `ADMIN_MONITORING_KEY` – Admin endpoint security key
+- `NEXT_PUBLIC_BASE_URL` – Application base URL
+
+**Complete Documentation:**
+- Full list: `docs/ENVIRONMENT_VARIABLES.md`
+- Current status: `ENV_VARS_STATUS.md`
+- Email setup: `scratch/final_work_TODO/EMAIL_FROM_SETUP.md`
 
 If you don’t have a domain yet, see the freemium/sandbox guidance in [email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md).
 

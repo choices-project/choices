@@ -703,78 +703,9 @@ export function withPerformanceMonitoring<T extends unknown[], R>(
   }
 }
 
-// Database connection pool management
-export class ConnectionPoolManager {
-  // Pool placeholder for future connection pool implementation
-  // TODO: Initialize actual connection pool when database connection pooling is implemented
-  private pool: unknown = null
-  private metrics = {
-    totalConnections: 0,
-    activeConnections: 0,
-    idleConnections: 0,
-    waitingConnections: 0
-  }
-
-  constructor() {
-    this.initializePool()
-  }
-
-  private initializePool() {
-    // Initialize connection pool with monitoring
-    this.updateMetrics()
-
-    // Monitor pool health every 30 seconds
-    setInterval(() => {
-      this.updateMetrics()
-      this.checkPoolHealth()
-    }, 30000)
-  }
-
-  private updateMetrics() {
-    // Update connection pool metrics
-    // This would integrate with the actual connection pool (this.pool)
-    // For now, using mock metrics until pool is implemented
-    if (this.pool === null) {
-      logger.debug('Connection pool not yet initialized, using mock metrics')
-    }
-    this.metrics = {
-      totalConnections: 10,
-      activeConnections: 2,
-      idleConnections: 8,
-      waitingConnections: 0
-    }
-  }
-
-  private checkPoolHealth() {
-    const { activeConnections, totalConnections } = this.metrics
-    const utilizationRate = (activeConnections / totalConnections) * 100
-
-    if (utilizationRate > 80) {
-      logger.warn(`High connection pool utilization: ${utilizationRate.toFixed(1)}%`)
-    }
-
-    if (this.metrics.waitingConnections > 0) {
-      logger.warn(`Connection pool has ${this.metrics.waitingConnections} waiting connections`)
-    }
-  }
-
-  getMetrics() {
-    return { ...this.metrics }
-  }
-
-  getHealth() {
-    const { activeConnections, totalConnections, waitingConnections } = this.metrics
-    const utilizationRate = (activeConnections / totalConnections) * 100
-
-    return {
-      status: waitingConnections > 0 ? 'overloaded' : utilizationRate > 80 ? 'high' : 'healthy',
-      utilizationRate: Math.round(utilizationRate),
-      metrics: this.metrics
-    }
-  }
-}
-
-export const connectionPoolManager = new ConnectionPoolManager()
+// Supabase already manages connection pooling for hosted Postgres.
+// For app code we rely on the shared Supabase clients instead of
+// maintaining an additional pool abstraction.
 
 // Export optimized client - lazy loaded to prevent build-time execution
 let _optimizedSupabase: SupabaseClient | null = null

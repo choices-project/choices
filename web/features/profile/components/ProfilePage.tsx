@@ -12,9 +12,10 @@ import {
   Settings,
   Shield,
   User,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -78,6 +79,10 @@ export default function ProfilePage({
   const finalLoading = isLoading || isUserLoading;
   const finalError = error;
   const canEditProfile = _canEdit || _isOwnProfile;
+  const exportDialogTitleId = useId();
+  const exportDialogDescriptionId = useId();
+  const exportDialogRef = useRef<HTMLDivElement | null>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
   const handleNavigate = useCallback(
     (path: string) => {
@@ -122,6 +127,31 @@ export default function ProfilePage({
       logger.error('Profile export failed', err instanceof Error ? err : new Error(String(err)));
     }
   }, [exportProfile]);
+
+  useEffect(() => {
+    if (!showExportConfirm) {
+      previouslyFocusedElement.current?.focus();
+      return undefined;
+    }
+
+    previouslyFocusedElement.current = document.activeElement as HTMLElement | null;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowExportConfirm(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    const focusable = exportDialogRef.current?.querySelector<HTMLElement>(
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    focusable?.focus();
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showExportConfirm]);
 
   if (!isAuthenticated && _isOwnProfile && !isUserLoading) {
     return (
@@ -369,42 +399,67 @@ export default function ProfilePage({
 
       {/* Export Confirmation Modal */}
       {showExportConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Export Your Data</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              This will download a JSON file containing all your profile data,
-              preferences, and activity history.
-            </p>
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleExportData}
-                disabled={isExporting}
-                className="flex-1"
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Data
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-25 z-40"
+            role="presentation"
+            aria-hidden="true"
+            onClick={() => setShowExportConfirm(false)}
+            data-testid="profile-export-overlay"
+          />
+          <div
+            className="fixed inset-0 flex items-center justify-center z-50 px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={exportDialogTitleId}
+            aria-describedby={exportDialogDescriptionId}
+          >
+            <div
+              ref={exportDialogRef}
+              className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            >
+              <button
+                type="button"
                 onClick={() => setShowExportConfirm(false)}
-                disabled={isExporting}
-                className="flex-1"
+                aria-label="Close export dialog"
+                className="absolute right-4 top-4 rounded-full p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Cancel
-              </Button>
+                <X className="h-4 w-4" />
+              </button>
+              <h3 id={exportDialogTitleId} className="text-lg font-semibold mb-4">Export Your Data</h3>
+              <p id={exportDialogDescriptionId} className="text-sm text-gray-600 mb-6">
+                This will download a JSON file containing all your profile data, preferences, and activity history.
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="flex-1"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Data
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExportConfirm(false)}
+                  disabled={isExporting}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Loading Overlay */}

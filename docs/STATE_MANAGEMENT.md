@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: November 10, 2025_
+_Last updated: January 2026_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -21,10 +21,11 @@ Every store under `web/lib/stores` should expose:
 
 1. `createInitial<Store>State()` — returns a plain object seeded with initial values.
 2. `create<Store>Actions(set, get)` — actions grouped by responsibility, free of browser side-effects.
-3. `<store>Creator` — combines initial state + actions; never call `create()` inside the module.
-4. `use<Store>` selectors — e.g. `useProfileStore`, `useProfile`, `useProfileActions`.
-5. Optional helpers — `reset`, `partialize`, domain-specific utils.
-6. Barrel re-exports — ensure selectors, action hooks, and types are surfaced through `web/lib/stores/index.ts` so feature code imports from `'@/lib/stores'` (e.g. the polls/voting stores now ship only from the barrel).
+3. `<store>Creator` — typed `StateCreator` that merges state/actions; never call `create()` inside the module.
+4. Selector bundles — colocate selectors under `const <store>Select = { ... } as const`.
+5. Hook bundles — expose `use<Thing>` selector hooks plus memoized `use<Thing>Actions`.
+6. Optional helpers — `reset`, `partialize`, domain-specific utils.
+7. Barrel re-exports — ensure selectors, action hooks, and types are surfaced through `web/lib/stores/index.ts` so feature code imports from `'@/lib/stores'`.
 
 ```ts
 export type NotificationStore = NotificationState & NotificationActions;
@@ -37,8 +38,68 @@ export const useNotificationStore = create<NotificationStore>()(
 );
 
 export const useNotifications = () => useNotificationStore(notificationSelectors.notifications);
-export const useNotificationActions = () => { /* memoized action hook */ };
+export const useNotificationActions = () => {
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  const removeNotification = useNotificationStore((state) => state.removeNotification);
+  // ... other actions
+  
+  return useMemo(
+    () => ({
+      addNotification,
+      removeNotification,
+      // ... other actions
+    }),
+    [addNotification, removeNotification, /* ... other dependencies */]
+  );
+};
 ```
+
+---
+
+## Selector Bundles & Hook Conventions (2026 Refresh)
+
+- Group selectors under a `const <store>Select = { ... } as const` object and export typed helper hooks. Reference implementations live in `web/lib/stores/analyticsStore.ts`, `notificationStore.ts`, and `profileStore.ts`.
+
+```ts
+export const analyticsSelect = {
+  summary: (state: AnalyticsStore) => state.summary,
+  filters: (state: AnalyticsStore) => state.filters,
+  loading: (state: AnalyticsStore) => state.loading,
+} as const;
+
+export const useAnalyticsSummary = () => useAnalyticsStore(analyticsSelect.summary);
+export const useAnalyticsFilters = () => useAnalyticsStore(analyticsSelect.filters);
+```
+
+- Memoize action bundles via `useMemo` so the returned object remains referentially stable (`useProfileActions`, `useAnalyticsActions`, etc.).
+- When a feature surface needs multiple selectors/actions, expose a domain-specific hook (e.g., `features/analytics/hooks/useEnhancedAnalytics.ts`).
+- Tests should lock selector shape with the existing integration suites (`web/tests/integration/stores/*selector-verification*.test.ts`) to catch accidental regressions.
+
+---
+
+## Store Creator Template
+
+- Alias the creator type with explicit middleware ordering. This keeps TS happy when composing `devtools`, `persist`, `immer`, telemetry wrappers, etc.
+
+```ts
+type AppStoreCreator = StateCreator<
+  AppStore,
+  [['zustand/devtools', never], ['zustand/persist', PersistOptions<AppStore>], ['zustand/immer', never]]
+>;
+
+export const appStoreCreator: AppStoreCreator = (set, get) =>
+  Object.assign(createInitialAppState(), createAppActions(set, get));
+
+export const useAppStore = create<AppStore>()(
+  devtools(
+    persist(immer(appStoreCreator), { name: 'app-store', storage: createSafeStorage() }),
+    { name: 'AppStore' }
+  )
+);
+```
+
+- When multiple stores share the same middleware stack (analytics/performance, notification/pwa, etc.), extract a helper under `web/lib/stores/utils/` so telemetry/devtools wiring lives in one place.
+- Tests should instantiate stores via the creator plus helper middleware to ensure the same ordering used in production (see `web/tests/integration/stores/app-store-selector-verification.test.ts` for the pattern).
 
 ---
 
@@ -49,6 +110,31 @@ export const useNotificationActions = () => { /* memoized action hook */ };
 3. Keep `partialize` payloads narrow: store only the fields required to restore state after reload.
 4. Avoid side-effects inside Immer producers; schedule timers or network calls outside the `set()` callback.
 
+### Persistence with `partialize`
+
+When using `persist` middleware, use `partialize` to control what gets saved to storage. This reduces payload size and prevents storing sensitive or transient data:
+
+```ts
+const persistConfig = {
+  name: 'app-store',
+  storage: createSafeStorage(),
+  partialize: (state: AppStore) => ({
+    theme: state.theme,
+    sidebarCollapsed: state.sidebarCollapsed,
+    sidebarWidth: state.sidebarWidth,
+    settings: state.settings,
+    // Exclude: isLoading, error, modalStack, etc.
+  }),
+};
+```
+
+**Rules for `partialize`:**
+- Include only user preferences and UI state that should persist across sessions
+- Exclude loading states, errors, temporary UI state (modals, toasts), and computed values
+- Exclude sensitive data (tokens, PII) unless explicitly required
+- Keep payloads small (< 10KB) for performance
+- Test persistence/restoration in both unit tests and E2E harnesses
+
 ---
 
 ## Action Hooks vs. Raw State Access
@@ -57,6 +143,39 @@ export const useNotificationActions = () => { /* memoized action hook */ };
 - Avoid `use<Store>(state => state)` in components—it forces full re-renders and breaks modularity.
 - When a component truly needs multiple slices/actions from the same store, compose them with `useShallow` (from `zustand/react/shallow`) so React only re-renders when one of the selected fields changes. See the profile feature (`web/features/profile/hooks/use-profile.ts`) for the canonical pattern.
 - Tests may use `use<Store>Store.getState()` directly when instantiating local stores, but production code should not.
+
+### Action Hook Memoization Pattern
+
+Action hooks should use `useMemo` to prevent unnecessary re-renders. Zustand actions are stable references, but wrapping them in `useMemo` ensures the returned object is also stable:
+
+```ts
+export const useNotificationActions = () => {
+  // Select each action individually - Zustand provides stable references
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  const removeNotification = useNotificationStore((state) => state.removeNotification);
+  const markAsRead = useNotificationStore((state) => state.markAsRead);
+  // ... other actions
+
+  // Memoize the returned object to prevent unnecessary re-renders
+  return useMemo(
+    () => ({
+      addNotification,
+      removeNotification,
+      markAsRead,
+      // ... other actions
+    }),
+    [addNotification, removeNotification, markAsRead /* ... all action dependencies */]
+  );
+};
+```
+
+**Why this matters:**
+- Zustand actions are stable, but the object containing them is recreated on each render
+- Without `useMemo`, components using `useNotificationActions()` will re-render even when actions haven't changed
+- This pattern ensures optimal performance and prevents cascading re-renders
+
+**Alternative for simple cases:**
+If a store has only a few actions, you can return them directly without `useMemo`, but the memoized pattern is preferred for consistency and future-proofing.
 
 ### Shared Helpers
 
@@ -106,6 +225,161 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 4. **Testing** — add/refresh unit + integration suites; build Playwright harness if the store drives UI interactions.
 5. **Docs & checklist** — mark progress in `docs/STATE_MANAGEMENT.md` (this guide) and `docs/ROADMAP_SINGLE_SOURCE.md` instead of `scratch/*`. Add or update examples here if new patterns emerge.
 6. **Election alerts** — civics features that surface countdowns should call `useElectionCountdown` with `notify`, `notificationSource`, and threshold metadata so the hook can dedupe per election/division and dispatch through `notificationStoreUtils.createElectionNotification`.
+
+## Migration Guide: Legacy Stores → Modernized Pattern
+
+This guide helps migrate stores from legacy patterns to the modernized creator pattern.
+
+### Step 1: Extract Initial State
+
+**Before:**
+```ts
+export const useMyStore = create<MyStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        count: 0,
+        name: '',
+        isLoading: false,
+        // ... all state inline
+      }),
+      { name: 'my-store' }
+    )
+  )
+);
+```
+
+**After:**
+```ts
+export const createInitialMyState = (): MyState => ({
+  count: 0,
+  name: '',
+  isLoading: false,
+  error: null,
+});
+
+export const initialMyState: MyState = createInitialMyState();
+```
+
+### Step 2: Extract Actions
+
+**Before:**
+```ts
+export const useMyStore = create<MyStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        ...initialState,
+        increment: () => set((state) => ({ count: state.count + 1 })),
+        setName: (name: string) => set({ name }),
+      }),
+      { name: 'my-store' }
+    )
+  )
+);
+```
+
+**After:**
+```ts
+export const createMyActions = (
+  set: StoreApi<MyStore>['setState'],
+  get: StoreApi<MyStore>['getState']
+): MyActions => ({
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  setName: (name: string) => set({ name }),
+  ...createBaseStoreActions(set), // Use shared helpers
+});
+
+type MyStoreCreator = StateCreator<
+  MyStore,
+  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
+>;
+```
+
+### Step 3: Create Store Creator
+
+**After:**
+```ts
+export const myStoreCreator: MyStoreCreator = (set, get) =>
+  Object.assign(createInitialMyState(), createMyActions(set, get));
+
+export const useMyStore = create<MyStore>()(
+  devtools(
+    persist(
+      immer(myStoreCreator),
+      { name: 'my-store', storage: createSafeStorage() }
+    ),
+    { name: 'MyStore' }
+  )
+);
+```
+
+### Step 4: Add Selectors and Action Hooks
+
+**After:**
+```ts
+export const mySelectors = {
+  count: (state: MyStore) => state.count,
+  name: (state: MyStore) => state.name,
+  isLoading: (state: MyStore) => state.isLoading,
+} as const;
+
+export const useMyCount = () => useMyStore(mySelectors.count);
+export const useMyName = () => useMyStore(mySelectors.name);
+export const useMyActions = () => {
+  const increment = useMyStore((state) => state.increment);
+  const setName = useMyStore((state) => state.setName);
+  
+  return useMemo(
+    () => ({ increment, setName }),
+    [increment, setName]
+  );
+};
+```
+
+For grouped selections, wrap `useShallow`:
+
+```ts
+export const useMyCounts = () =>
+  useMyStore(
+    useShallow((state) => ({
+      count: state.count,
+      pending: state.pending,
+    }))
+  );
+```
+
+### Step 5: Update Consumers
+
+**Before:**
+```tsx
+function MyComponent() {
+  const { count, increment } = useMyStore();
+  // or
+  const count = useMyStore((state) => state.count);
+  const increment = useMyStore((state) => state.increment);
+}
+```
+
+**After:**
+```tsx
+function MyComponent() {
+  const count = useMyCount();
+  const { increment } = useMyActions();
+  // or for multiple values:
+  const { count, name } = useMyStore(
+    useShallow((state) => ({ count: state.count, name: state.name }))
+  );
+}
+```
+
+### Common Pitfalls
+
+1. **Don't call `create()` inside the module** — use the creator pattern instead
+2. **Don't use `getState()` in React components** — use selectors or action hooks
+3. **Don't forget `useMemo` in action hooks** — prevents unnecessary re-renders
+4. **Don't persist everything** — use `partialize` to exclude transient state
+5. **Don't skip tests** — add unit, integration, and E2E tests for modernized stores
 
 ---
 

@@ -26,6 +26,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+import type { CivicAction } from '@/types/database';
 import type { TrustTier } from '@/types/features/analytics';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -155,6 +156,16 @@ export type RepresentativeData = {
   contact_frequency: number;
 }
 
+type CivicActionRecord = CivicAction & {
+  urgency_level?: UrgencyLevel | null;
+  target_representatives?: number[] | null;
+  current_signatures?: number | null;
+  required_signatures?: number | null;
+  metadata?: Record<string, unknown> | null;
+  is_public?: boolean | null;
+  end_date?: string | null;
+};
+
 /**
  * Civic engagement metrics for community impact analysis
  *
@@ -231,41 +242,82 @@ export async function createSophisticatedCivicAction(
 ): Promise<SophisticatedCivicAction | null> {
   assertCivicEngagementEnabled('createSophisticatedCivicAction');
   try {
-    // category column added in November 2025 migration
-    const civicAction: any = {
-      id: crypto.randomUUID(),
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Failed to get Supabase client for creating civic action');
+      return null;
+    }
+
+    // Prepare insert data
+    const insertData: Record<string, unknown> = {
       title: actionData.title,
       description: actionData.description,
       action_type: actionData.actionType,
       category: actionData.category,
       urgency_level: actionData.urgencyLevel,
       target_representatives: actionData.targetRepresentatives,
-      signature_count: 0,
-      target_signatures: actionData.targetSignatures,
+      current_signatures: 0,
+      required_signatures: actionData.targetSignatures,
       status: 'active',
       is_public: actionData.isPublic,
       created_by: userId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       metadata: {
         created_via: 'web_platform',
-        user_agent: navigator.userAgent,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
         ip_address: 'tracked_separately'
       }
     };
+
     if (actionData.endDate) {
-      civicAction.end_date = actionData.endDate;
+      insertData.end_date = actionData.endDate;
+    }
+
+    // Insert into database
+    const { data: civicAction, error } = await supabase
+      .from('civic_actions')
+      .insert(insertData as unknown as CivicAction)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Error creating sophisticated civic action in database:', error);
+      return null;
+    }
+
+    // Map database result to SophisticatedCivicAction type
+    const actionRecord = civicAction as CivicActionRecord;
+
+    const result: SophisticatedCivicAction = {
+      id: civicAction.id,
+      title: civicAction.title,
+      description: civicAction.description ?? '',
+      action_type: civicAction.action_type as CivicActionType,
+      category: civicAction.category ?? '',
+      urgency_level: (actionRecord.urgency_level as UrgencyLevel) ?? 'medium',
+      target_representatives: actionRecord.target_representatives ?? [],
+      signature_count: actionRecord.current_signatures ?? 0,
+      target_signatures: actionRecord.required_signatures ?? 0,
+      status: civicAction.status as ActionStatus,
+      is_public: actionRecord.is_public ?? true,
+      created_by: civicAction.created_by,
+      created_at: civicAction.created_at ?? new Date().toISOString(),
+      updated_at: civicAction.updated_at ?? new Date().toISOString(),
+      metadata: (actionRecord.metadata as Record<string, unknown>) ?? {},
+    };
+
+    if (actionRecord.end_date) {
+      result.end_date = actionRecord.end_date;
     }
 
     logger.info('Sophisticated civic action created', {
-      actionId: civicAction.id,
-      title: civicAction.title,
-      actionType: civicAction.action_type,
-      urgencyLevel: civicAction.urgency_level,
+      actionId: result.id,
+      title: result.title,
+      actionType: result.action_type,
+      urgencyLevel: result.urgency_level,
       userId
     });
 
-    return civicAction;
+    return result;
   } catch (error) {
     logger.error('Error creating sophisticated civic action:', error);
     return null;
@@ -286,43 +338,77 @@ export async function getRepresentativesByLocation(
     minTrustScore?: number;
     maxContactFrequency?: number;
     includeInactive?: boolean;
+    limit?: number;
   } = {}
 ): Promise<RepresentativeData[]> {
   assertCivicEngagementEnabled('getRepresentativesByLocation');
   try {
-    // In a real implementation, this would query the representatives_core table
-    // with sophisticated filtering based on trust scores, contact frequency, etc.
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Failed to get Supabase client for fetching representatives');
+      return [];
+    }
 
     logger.info('Fetching representatives by location', {
       location,
       filters
     });
 
-    // Mock data for demonstration
-    const representatives: RepresentativeData[] = [
-      {
-        id: 1,
-        name: "Senator Jane Smith",
-        title: "U.S. Senator",
-        party: "Democratic",
-        state: location.state,
-        district: location.district ?? "At-Large",
-        contact_info: {
-          email: "jane.smith@senate.gov",
-          phone: "(202) 224-1234"
-        },
-        social_media: {
-          twitter: "@SenJaneSmith",
-          website: "https://janesmith.senate.gov"
-        },
-        trust_score: 85,
-        responsiveness_score: 78,
-        civic_engagement_score: 92,
-        contact_frequency: 2
-      }
-    ];
+    // Build query for representatives_core table
+    let query = supabase
+      .from('representatives_core')
+      .select('id, name, office, party, state, district');
 
-    return representatives;
+    // Apply location filters
+    if (location.state) {
+      query = query.eq('state', location.state);
+    }
+    if (location.district) {
+      query = query.eq('district', location.district);
+    }
+
+    // Apply party filter
+    if (filters.party) {
+      query = query.eq('party', filters.party);
+    }
+
+    const resultLimit = filters.limit ?? 50;
+    const { data: representatives, error } = await query.limit(resultLimit);
+
+    if (error) {
+      logger.error('Error fetching representatives from database:', error);
+      return [];
+    }
+
+    if (!representatives || representatives.length === 0) {
+      logger.info('No representatives found for location', { location });
+      return [];
+    }
+
+    // Map to RepresentativeData format
+    // Note: Some fields like trust_score, responsiveness_score, etc. would need
+    // to be calculated or fetched from other tables in a full implementation
+    const result: RepresentativeData[] = representatives.map((rep: any) => {
+      const contactInfo: RepresentativeData['contact_info'] = {};
+      const socialMedia: RepresentativeData['social_media'] = {};
+
+      return {
+        id: rep.id,
+        name: rep.name ?? 'Unknown',
+        title: rep.office ?? 'Representative',
+        party: rep.party ?? 'Unknown',
+        state: rep.state ?? location.state,
+        district: rep.district ?? location.district ?? 'At-Large',
+        contact_info: contactInfo,
+        social_media: socialMedia,
+        trust_score: 50,
+        responsiveness_score: 50,
+        civic_engagement_score: 50,
+        contact_frequency: 0,
+      };
+    });
+
+    return result;
   } catch (error) {
     logger.error('Error fetching representatives:', error);
     return [];
@@ -374,7 +460,62 @@ export async function trackRepresentativeContact(
 ): Promise<boolean> {
   assertCivicEngagementEnabled('trackRepresentativeContact');
   try {
-    // Track the contact in analytics
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Failed to get Supabase client for tracking contact');
+      return false;
+    }
+
+    // Verify representative exists
+    const { data: representative, error: repError } = await supabase
+      .from('representatives_core')
+      .select('id')
+      .eq('id', representativeId)
+      .single();
+
+    if (repError || !representative) {
+      logger.warn('Representative not found for contact tracking', { representativeId });
+      return false;
+    }
+
+    // Create contact_messages record
+    const { error: messageError } = await supabase
+      .from('contact_messages')
+      .insert({
+        user_id: userId,
+        representative_id: representativeId,
+        subject: contactData.subject,
+        message: contactData.message,
+        status: 'draft', // Will be updated when actually sent
+        metadata: {
+          method: contactData.method,
+          priority: contactData.priority,
+          related_action_id: contactData.relatedActionId,
+        },
+      });
+
+    if (messageError) {
+      logger.error('Error creating contact message record:', messageError);
+      return false;
+    }
+
+    // Track analytics event
+    try {
+      await supabase.from('analytics_events').insert({
+        event_type: 'representative_contact',
+        user_id: userId,
+        event_data: {
+          representative_id: representativeId,
+          method: contactData.method,
+          priority: contactData.priority,
+          related_action_id: contactData.relatedActionId,
+        },
+      });
+    } catch (analyticsError) {
+      // Non-blocking: log but don't fail
+      logger.warn('Failed to track analytics for representative contact', analyticsError);
+    }
+
     logger.info('Representative contact tracked', {
       representativeId,
       method: contactData.method,
@@ -382,12 +523,6 @@ export async function trackRepresentativeContact(
       userId,
       relatedActionId: contactData.relatedActionId
     });
-
-    // In a real implementation, this would:
-    // 1. Create a contact_messages record
-    // 2. Update representative contact frequency
-    // 3. Track analytics events
-    // 4. Send notifications if needed
 
     return true;
   } catch (error) {
@@ -436,18 +571,18 @@ export async function getTrendingCivicActions(
         target_state,
         target_district,
         target_office
-      `)
-      .eq('status', 'active')
-      .order('current_signatures', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      `);
 
-    // Apply category filter if provided
     if (category) {
       query = query.eq('category', category);
     }
 
-    const { data: actions, error } = await query;
+    query = query
+      .eq('status', 'active')
+      .order('current_signatures', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    const { data: actions, error } = await query.limit(limit);
 
     if (error) {
       logger.error('Error fetching trending civic actions from database', error);

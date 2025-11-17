@@ -20,8 +20,28 @@ import { getMS } from '../../setup';
 
 // Mock the logger
 jest.mock('@/lib/utils/logger', () => ({
-  devLog: jest.fn()
+  devLog: jest.fn(),
+  logger: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+  }
 }));
+
+// Mock the rate limiter
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn().mockResolvedValue({
+      allowed: true,
+      remaining: 10,
+      resetTime: Date.now() + 900000,
+      totalHits: 0,
+      retryAfter: undefined
+    })
+  }
+}));
+
 const mockSetup = getMS();
 const { when, client: mockSupabaseClient } = mockSetup;
 

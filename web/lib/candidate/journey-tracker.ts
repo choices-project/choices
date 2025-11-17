@@ -7,6 +7,8 @@
  * @created 2025-01-30
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export type JourneyStage = 
   | 'declared'           // Just declared candidacy
   | 'preparing'          // Gathering documents, understanding requirements
@@ -320,7 +322,7 @@ export function calculateProgress(progress: JourneyProgress, checklist: JourneyC
   
   // Log progress calculation for analytics (using progress parameter for context)
   if (process.env.NODE_ENV === 'development') {
-    console.debug('Journey progress calculated', {
+    logger.debug('Journey progress calculated', {
       userId: progress.userId,
       platformId: progress.platformId,
       currentStage: progress.currentStage,

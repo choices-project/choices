@@ -39,7 +39,7 @@ export class OpenStatesApiError extends Error {
     this.retryable = retryable;
     this.details = details ?? {};
     
-    // Use withOptional to handle optional statusCode property
+    // Handle optional statusCode property with explicit conditional
     if (statusCode !== undefined) {
       this.statusCode = statusCode;
     }

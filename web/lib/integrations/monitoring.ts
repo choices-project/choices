@@ -375,15 +375,14 @@ export class IntegrationMonitor {
     // Update current metrics with response time and error type
     currentMetrics.requests.total++;
     if (responseTime > 0) {
-      currentMetrics.responseTime.total += responseTime;
-      currentMetrics.responseTime.count++;
-      currentMetrics.responseTime.avg = currentMetrics.responseTime.total / currentMetrics.responseTime.count;
-      if (responseTime > currentMetrics.responseTime.max) {
-        currentMetrics.responseTime.max = responseTime;
+      // Track response time in the responseTimes array for percentile calculations
+      const responseTimes = this.responseTimes.get(apiName) ?? [];
+      responseTimes.push(responseTime);
+      // Keep only last 1000 response times for memory efficiency
+      if (responseTimes.length > 1000) {
+        responseTimes.shift();
       }
-      if (currentMetrics.responseTime.min === 0 || responseTime < currentMetrics.responseTime.min) {
-        currentMetrics.responseTime.min = responseTime;
-      }
+      this.responseTimes.set(apiName, responseTimes);
     }
 
     if (success) {
@@ -391,12 +390,26 @@ export class IntegrationMonitor {
     } else {
       currentMetrics.requests.failed++;
       // Track error type for failed requests
-      if (errorType) {
-        if (!currentMetrics.errors) {
-          currentMetrics.errors = {};
-        }
-        currentMetrics.errors[errorType] = (currentMetrics.errors[errorType] || 0) + 1;
+      // Note: errors object is already initialized in createNewMetrics, so we just update it
+      // Ensure errors object exists (should already exist from createNewMetrics)
+      if (!currentMetrics.errors) {
+        currentMetrics.errors = {
+          total: 0,
+          byType: {},
+          byStatusCode: {}
+        };
       }
+
+      // Track error type if provided
+      if (errorType) {
+        currentMetrics.errors.byType[errorType] = (currentMetrics.errors.byType[errorType] || 0) + 1;
+      }
+
+      // Track status code if provided
+      if (statusCode) {
+        currentMetrics.errors.byStatusCode[statusCode] = (currentMetrics.errors.byStatusCode[statusCode] || 0) + 1;
+      }
+
       if (statusCode === 429) {
         currentMetrics.requests.rateLimited++;
       }
@@ -420,12 +433,18 @@ export class IntegrationMonitor {
     }
 
     // Update error metrics
+    // Note: errors.total should equal requests.failed (one error per failed request)
+    // The errorMap tracks error types and status codes separately, but the total
+    // should be based on the number of failed requests, not the sum of error map entries
+    currentMetrics.errors.total = currentMetrics.requests.failed;
+    
     const errorMap = this.errorCounts.get(apiName);
     if (errorMap) {
-      currentMetrics.errors.total = Array.from(errorMap.values()).reduce((sum, count) => sum + count, 0);
+      // Extract error types (non-status entries)
       currentMetrics.errors.byType = Object.fromEntries(
         Array.from(errorMap.entries()).filter(([key]) => !key.startsWith('status_'))
       );
+      // Extract status codes (status_ prefixed entries)
       currentMetrics.errors.byStatusCode = Object.fromEntries(
         Array.from(errorMap.entries())
           .filter(([key]) => key.startsWith('status_'))
