@@ -201,8 +201,8 @@ describe('widgetStore keyboard helpers', () => {
     const minimumSize = requireWidgetSize(widget.minSize, 'widget.minSize');
     expect(result).toEqual({ w: minimumSize.w, h: minimumSize.h });
     expect(getWidget(widget.id)?.size).toEqual({
-      w: minSize.w,
-      h: minSize.h,
+      w: minimumSize.w,
+      h: minimumSize.h,
     });
 
     // Attempt to exceed maximum width.
@@ -215,7 +215,7 @@ describe('widgetStore keyboard helpers', () => {
     expect(result).toEqual({ w: expectedWidth, h: minimumSize.h });
     expect(getWidget(widget.id)?.size).toEqual({
       w: expectedWidth,
-      h: minSize.h,
+      h: minimumSize.h,
     });
   });
 });
