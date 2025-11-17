@@ -65,6 +65,7 @@
     "prepush": "node ./scripts/run-with-timeout.js 600 npm run types:ci && node ./scripts/run-with-timeout.js 300 npm run lint:strict",
     "lint:staged": "node ./scripts/run-with-timeout.js 300 eslint --cache --max-warnings=0",
     "security-check": "grep -r \"select('\\*')\" . --include='*.ts' --include='*.tsx' --exclude-dir=node_modules --exclude-dir=.next || echo 'No security issues found'",
+    "check:next-security": "npm run security-check",
     "performance-check": "npm run lint -- --max-warnings=0 --rule 'no-unused-vars: error' || echo 'Performance warnings found (non-blocking)'",
     "ci:install": "npm ci --ignore-scripts --userconfig .npmrc.ci",
     "audit:high": "npm audit --audit-level=high",
