@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import ProfilePage from '@/features/profile/components/ProfilePage';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import { useUserStore } from '@/lib/stores/userStore';
-import type { ProfilePreferences, PrivacySettings, UserProfile } from '@/types/profile';
+import type { ProfileExportData, ProfilePreferences, PrivacySettings, UserProfile } from '@/types/profile';
 
 const HARNESS_PRIVACY: PrivacySettings = {
   collectLocationData: false,
@@ -100,11 +100,13 @@ export default function ProfileAccessibilityHarness() {
     profileStore.setExporting(false);
     profileStore.setUploadingAvatar(false);
     profileStore.updateProfileCompleteness();
-    profileStore.exportProfile = async () => ({
+    profileStore.exportProfile = async (): Promise<ProfileExportData | null> => ({
       profile: HARNESS_PROFILE,
       preferences: HARNESS_PREFERENCES,
-      generatedAt: new Date().toISOString(),
-      format: 'json',
+      // Required by ProfileExportData — provide empty arrays / defaults for the harness
+      activity: [],
+      votes: [],
+      comments: [],
     });
 
     const userStore = useUserStore.getState();
