@@ -56,7 +56,7 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   const env = validateEnvironment()
 
   // Dynamically import next/headers to avoid build-time errors when imported from pages/
-  let cookieStore: Awaited<ReturnType<typeof import('next/headers').cookies>> | undefined
+  let cookieStore: Awaited<ReturnType<typeof import('next/headers')['cookies']>> | undefined
   try {
     const { cookies } = await import('next/headers')
     cookieStore = cookies()
