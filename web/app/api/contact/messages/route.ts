@@ -111,11 +111,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Validate and sanitize inputs
     if (!representativeId || !subject || !content) {
-      const missing: Record<string, string> = {}
-      if (!representativeId) missing.representativeId = 'Representative ID is required'
-      if (!subject) missing.subject = 'Subject is required'
-      if (!content) missing.content = 'Content is required'
-      return validationError(missing, 'Representative ID, subject, and content are required')
+      const missing: Record<string, string> = {};
+      if (!representativeId) missing.representativeId = 'Representative ID is required';
+      if (!subject) missing.subject = 'Subject is required';
+      if (!content) missing.content = 'Content is required';
+      return validationError(missing, 'Representative ID, subject, and content are required');
     }
 
     // Validate representative ID

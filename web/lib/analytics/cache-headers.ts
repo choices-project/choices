@@ -54,7 +54,7 @@ export function applyAnalyticsCacheHeaders(
     options.cacheKey ??
     `${Date.now()}:${Math.random().toString(36).slice(2)}`;
 
-  const hash = createHash('sha1').update(etagBase).digest('hex');
+  const hash = createHash('sha256').update(etagBase).digest('hex');
   response.headers.set('ETag', quoteETag(hash));
 
   return response;

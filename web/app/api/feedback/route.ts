@@ -135,16 +135,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-  const supabasePromise = getSupabaseServerClient();
-  if (!supabasePromise) {
+  const supabaseClient = await getSupabaseServerClient();
+  if (!supabaseClient) {
     devLog('Supabase not configured - using mock response');
     return successResponse(
       buildFeedbackResponse(`mock-${Date.now()}`, userJourney),
       { source: 'mock', mode: 'degraded' }
     );
   }
-
-  const supabaseClient = await supabasePromise;
 
   const {
     data: { user },
@@ -345,8 +343,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return validationError({ offset: 'Offset must be zero or greater' });
   }
 
-  const supabasePromise = getSupabaseServerClient();
-  if (!supabasePromise) {
+  const supabaseClient = await getSupabaseServerClient();
+  if (!supabaseClient) {
     devLog('Supabase not configured - using mock response');
     return successResponse(
       {
@@ -357,8 +355,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       { source: 'mock', mode: 'degraded' }
     );
   }
-
-  const supabaseClient = await supabasePromise;
 
   let query = supabaseClient
     .from('feedback')

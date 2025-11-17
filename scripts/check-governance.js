@@ -6,7 +6,8 @@
  * Use GOVERNANCE_BYPASS=1 to skip (e.g., when applying upstream patches).
  */
 
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
+const shellQuote = require('shell-quote');
 
 if (process.env.GOVERNANCE_BYPASS === '1') {
   process.exit(0);
@@ -14,7 +15,17 @@ if (process.env.GOVERNANCE_BYPASS === '1') {
 
 function runDiff(command) {
   try {
-    const stdout = execSync(command, { stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+    let cmd, args;
+    if (typeof command === 'string') {
+      const parsed = shellQuote.parse(command);
+      cmd = parsed[0];
+      args = parsed.slice(1);
+    } else if (Array.isArray(command)) {
+      [cmd, ...args] = command;
+    } else {
+      throw new Error('Invalid command format');
+    }
+    const stdout = execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
     if (!stdout) {
       return [];
     }
