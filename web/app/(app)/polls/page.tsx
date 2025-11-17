@@ -109,7 +109,7 @@ export default function PollsPage() {
       setSidebarActiveSection(null);
       setBreadcrumbs([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
 
   useEffect(() => {
     if (initializedRef.current) {

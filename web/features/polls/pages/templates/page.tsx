@@ -3,7 +3,7 @@
 
 import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
