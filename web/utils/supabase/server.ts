@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 
 import { logger } from '@/lib/utils/logger'
 import type { Database } from '@/types/supabase'
@@ -49,15 +48,17 @@ const validateEnvironment = () => {
 }
 
 /**
- * SSR-safe factory. No top-level import of supabase-js or ssr.
- * We dynamically import only at call time in Node.
+ * SSR-safe factory. No top-level import of supabase-js, ssr, or next/headers.
+ * We dynamically import only at call time in Node to avoid build-time errors.
  */
 export async function getSupabaseServerClient(): Promise<SupabaseClient<Database>> {
   assertRunningOnServer('getSupabaseServerClient')
   const env = validateEnvironment()
 
-  let cookieStore: ReturnType<typeof cookies> | undefined
+  // Dynamically import next/headers to avoid build-time errors when imported from pages/
+  let cookieStore: Awaited<ReturnType<typeof import('next/headers').cookies>> | undefined
   try {
+    const { cookies } = await import('next/headers')
     cookieStore = cookies()
   } catch {
     // During build or static rendering, cookies() may be unavailable.
