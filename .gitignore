@@ -118,6 +118,10 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# API testing documentation (may contain test keys)
+**/API_TESTING_SUMMARY.md
+**/*TESTING_SUMMARY*.md
+
 # Supabase
 supabase/.branches
 supabase/.temp
