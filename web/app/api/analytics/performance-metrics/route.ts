@@ -10,7 +10,7 @@ import {
 import { anonymizeIP, getSecurityConfig } from '@/lib/core/security/config';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import logger from '@/lib/utils/logger';
-import type { TablesInsert } from '@/types/supabase';
+import type { Json, TablesInsert } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -277,7 +277,7 @@ const getClientIp = (request: NextRequest): string => {
   const xForwardedFor = request.headers.get('x-forwarded-for');
   if (xForwardedFor) {
     const forwarded = xForwardedFor.split(',').map((ip) => ip.trim()).filter(Boolean);
-    if (forwarded.length > 0) {
+    if (forwarded.length > 0 && forwarded[0]) {
       return forwarded[0];
     }
   }
@@ -301,16 +301,17 @@ const parseDocument = (document: unknown) => {
 
   try {
     return JSON.parse(document) as Record<string, unknown>;
-  } catch (error) {
+  } catch {
     throw new Error('invalid_document');
   }
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const ipAddress = getClientIp(request);
+  const userAgent = request.headers.get('user-agent');
   const rateLimitResult = await apiRateLimiter.checkLimit(ipAddress, ENDPOINT_KEY, {
     ...SYNC_RATE_LIMIT,
-    userAgent: request.headers.get('user-agent') ?? undefined,
+    ...(userAgent ? { userAgent } : {}),
   });
 
   if (!rateLimitResult.allowed) {
@@ -370,11 +371,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   let userId: string | null = null;
-  let sessionId: string | null = null;
   try {
     const { data: authData } = await supabase.auth.getUser();
     userId = authData?.user?.id ?? null;
-    sessionId = authData?.session?.id ?? null;
+    // Session is not available from getUser(), we'll use the sessionId from payload
   } catch (error) {
     logger.warn('Performance metrics ingestion: unable to fetch user session', error);
   }
@@ -408,11 +408,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const anonymizedIp = SECURITY_CONFIG.privacy.anonymizeIPs ? anonymizeIP(ipAddress) : ipAddress;
   const requestSessionId =
-    typeof payload.sessionId === 'string' ? payload.sessionId : sessionId ?? null;
+    typeof payload.sessionId === 'string' ? payload.sessionId : null;
 
   const insertPayload: TablesInsert<'analytics_events'> = {
     event_type: 'performance_metric',
-    event_data: eventData,
+    event_data: eventData as Json,
     created_at: new Date().toISOString(),
     user_agent: request.headers.get('user-agent'),
     referrer: request.headers.get('referer'),

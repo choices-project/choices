@@ -24,12 +24,12 @@ const ROTATION_SCHEDULE = {
 
 const SECRETS_FILE = join(process.cwd(), '.secrets-rotation.json');
 
-interface SecretRotationRecord {
+type SecretRotationRecord = {
   secretName: string;
   lastRotation: string; // ISO date string
   nextRotation: string; // ISO date string
   maxAgeDays: number;
-}
+};
 
 function loadRotationRecords(): Record<string, SecretRotationRecord> {
   if (!existsSync(SECRETS_FILE)) {
@@ -86,6 +86,7 @@ function formatDate(date: Date): string {
 }
 
 function main(): void {
+  // eslint-disable-next-line no-console
   console.log('🔐 Secret Rotation Checker\n');
 
   const records = loadRotationRecords();
@@ -107,6 +108,7 @@ function main(): void {
         maxAgeDays,
       };
       updates[secretName] = record;
+      // eslint-disable-next-line no-console
       console.log(`📝 Initialized tracking for ${secretName}`);
       continue;
     }
@@ -132,10 +134,15 @@ function main(): void {
     const statusEmoji = status === 'overdue' ? '🔴' : status === 'due_soon' ? '🟡' : '🟢';
     const statusText = status === 'overdue' ? 'OVERDUE' : status === 'due_soon' ? 'DUE SOON' : 'OK';
 
+    // eslint-disable-next-line no-console
     console.log(`${statusEmoji} ${secretName}:`);
+    // eslint-disable-next-line no-console
     console.log(`   Age: ${ageDays} days (max: ${maxAgeDays} days)`);
+    // eslint-disable-next-line no-console
     console.log(`   Last rotation: ${formatDate(new Date(record.lastRotation))}`);
+    // eslint-disable-next-line no-console
     console.log(`   Next rotation: ${formatDate(new Date(record.nextRotation))}`);
+    // eslint-disable-next-line no-console
     console.log(`   Status: ${statusText}`);
 
     if (status === 'overdue') {
@@ -144,6 +151,7 @@ function main(): void {
         status: 'overdue',
         message: `${secretName} is ${ageDays} days old (${ageDays - maxAgeDays} days overdue). Rotation required immediately.`,
       });
+      // eslint-disable-next-line no-console
       console.log(`   ⚠️  ACTION REQUIRED: Rotation is overdue!`);
     } else if (status === 'due_soon') {
       alerts.push({
@@ -151,9 +159,11 @@ function main(): void {
         status: 'due_soon',
         message: `${secretName} will be due for rotation in ${daysUntilDue} days.`,
       });
+      // eslint-disable-next-line no-console
       console.log(`   ⚠️  Rotation due in ${daysUntilDue} days`);
     }
 
+    // eslint-disable-next-line no-console
     console.log('');
   }
 
@@ -161,17 +171,21 @@ function main(): void {
   saveRotationRecords(updates);
 
   // Summary
+  // eslint-disable-next-line no-console
   console.log('📊 Summary:');
   const overdueCount = alerts.filter((a) => a.status === 'overdue').length;
   const dueSoonCount = alerts.filter((a) => a.status === 'due_soon').length;
 
   if (overdueCount > 0) {
+    // eslint-disable-next-line no-console
     console.log(`🔴 ${overdueCount} secret(s) OVERDUE for rotation`);
   }
   if (dueSoonCount > 0) {
+    // eslint-disable-next-line no-console
     console.log(`🟡 ${dueSoonCount} secret(s) due for rotation soon`);
   }
   if (overdueCount === 0 && dueSoonCount === 0) {
+    // eslint-disable-next-line no-console
     console.log('🟢 All secrets are within rotation schedule');
   }
 
@@ -187,6 +201,7 @@ function main(): void {
     process.exit(0);
   }
 
+  // eslint-disable-next-line no-console
   console.log('\n✅ All secrets are within rotation schedule');
   process.exit(0);
 }

@@ -117,7 +117,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         // Format daily data
         const daily = dailyActivity.map((activity, dayIndex) => ({
-          day: dayNames[dayIndex],
+          day: dayNames[dayIndex] ?? 'Unknown',
           activity,
           dayIndex
         }));
@@ -142,6 +142,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const peakDay = daily.length > 0
           ? daily.reduce((max, curr) => (curr.activity > max.activity ? curr : max), defaultDay)
           : defaultDay;
+        
+        // Ensure all undefined values are converted to null for JsonValue compatibility
 
         const avgActivity = (votes?.length ?? 0) / days;
 
@@ -154,10 +156,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         return {
           hourly,
-          daily,
+          daily: daily.map(d => ({ ...d, day: d.day ?? null })),
           velocity,
           peakHour: peakHour.hour,
-          peakDay: peakDay.day,
+          peakDay: peakDay.day ?? null,
           avgActivity,
           generatedAt: new Date().toISOString()
         };

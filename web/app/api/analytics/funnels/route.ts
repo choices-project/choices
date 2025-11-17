@@ -325,9 +325,8 @@ function normalizeFunnel(
     };
   });
 
-  const completionRate = steps.length
-    ? steps[steps.length - 1].conversionRate
-    : 0;
+  const lastStep = steps.length > 0 ? steps[steps.length - 1] : undefined;
+  const completionRate = lastStep?.conversionRate ?? 0;
 
   const insights = buildFunnelInsights(steps);
 
@@ -347,15 +346,21 @@ function buildFunnelInsights(steps: NormalizedFunnelStep[]): string[] {
 
   const insights: string[] = [];
   const completion = steps[steps.length - 1];
+  if (completion) {
+    insights.push(`Completion rate: ${completion.conversionRate.toFixed(1)}%`);
+  }
 
-  insights.push(`Completion rate: ${completion.conversionRate.toFixed(1)}%`);
-
+  const firstStep = steps[0];
+  const secondStep = steps[1];
+  if (!firstStep) {
+    return insights;
+  }
   const largestDrop = steps
     .slice(1)
     .reduce(
-      (acc, step) =>
+      (acc: NormalizedFunnelStep, step) =>
         step.dropOffRate > acc.dropOffRate ? step : acc,
-      steps[1] ?? steps[0]
+      secondStep ?? firstStep
     );
 
   if (largestDrop && largestDrop.dropOffRate > 0) {

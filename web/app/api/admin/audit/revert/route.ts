@@ -71,9 +71,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     request.headers.get('x-real-ip') ??
     'unknown';
+  const userAgent = request.headers.get('user-agent');
   const rateLimitResult = await apiRateLimiter.checkLimit(clientIp, 'admin:audit:revert', {
     ...REVERT_RATE_LIMIT,
-    userAgent: request.headers.get('user-agent') ?? undefined,
+    ...(userAgent ? { userAgent } : {}),
   });
 
   if (!rateLimitResult.allowed) {

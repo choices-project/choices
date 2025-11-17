@@ -65,9 +65,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     request.headers.get('x-real-ip') ??
     'unknown';
+  const userAgent = request.headers.get('user-agent');
   const rateLimitResult = await apiRateLimiter.checkLimit(clientIp, 'admin:candidates:stats', {
     ...ADMIN_STATS_RATE_LIMIT,
-    userAgent: request.headers.get('user-agent') ?? undefined,
+    ...(userAgent ? { userAgent } : {}),
   });
 
   if (!rateLimitResult.allowed) {
@@ -117,7 +118,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Process status breakdown
     let statusBreakdown: Record<string, number> = {};
     if (statusResult.status === 'fulfilled' && Array.isArray(statusResult.value.data)) {
-      statusBreakdown = statusResult.value.data.reduce<Record<string, number>>((acc, r: any) => {
+      statusBreakdown = (statusResult.value.data as Array<{ filing_status?: string | null; count?: number | null }>).reduce<Record<string, number>>((acc, r) => {
         const k = String(r.filing_status ?? 'unknown');
         acc[k] = (acc[k] ?? 0) + Number(r.count ?? 0);
         return acc;

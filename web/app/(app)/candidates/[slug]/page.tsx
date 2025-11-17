@@ -225,7 +225,7 @@ export default function CandidatePage({ params }: { params: { slug: string } }) 
                       errorMessage = js?.error ?? t('candidates.profile.verification.error.general');
                     }
                     setFlash({
-                      message: errorMessage,
+                      message: errorMessage ?? t('candidates.profile.verification.error.general'),
                       tone: 'error',
                     });
                   }
@@ -408,7 +408,7 @@ export default function CandidatePage({ params }: { params: { slug: string } }) 
 type SuggestCorrectionSectionProps = {
   candidateName: string;
   candidateSlug: string;
-  t: ReturnType<typeof useI18n>;
+  t: (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string;
 };
 
 type IssueType = 'info' | 'contact' | 'verification' | 'other';

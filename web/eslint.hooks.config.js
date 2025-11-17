@@ -1,6 +1,6 @@
 import reactHooks from 'eslint-plugin-react-hooks';
 
-import baseConfig from './eslint.config.js';
+import baseConfig from './eslint.config';
 
 export default [
   {
