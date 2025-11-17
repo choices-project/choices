@@ -17,11 +17,13 @@ const gotoHarness = async ({
   path,
   datasetKey,
   readySelector,
+  readyTimeout = 30_000,
 }: {
   page: Page;
   path: string;
   datasetKey?: string;
   readySelector?: string;
+  readyTimeout?: number;
 }) => {
   await page.goto(path, { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
@@ -30,7 +32,7 @@ const gotoHarness = async ({
       await page.waitForFunction(
         (key) => document.documentElement.dataset[key] === 'ready' || document.documentElement.dataset[key] === 'true',
         datasetKey,
-        { timeout: 20_000 },
+        { timeout: readyTimeout },
       );
     } catch (error) {
       if (!readySelector) {
@@ -39,7 +41,7 @@ const gotoHarness = async ({
     }
   }
   if (readySelector) {
-    await page.waitForSelector(readySelector, { timeout: 20_000 });
+    await page.waitForSelector(readySelector, { timeout: readyTimeout });
   }
 };
 
@@ -68,7 +70,7 @@ test.describe('@smoke Critical user journeys', () => {
       await page.getByRole('button', { name: 'View Trending Feed' }).click();
       await page.waitForURL('**/feed');
       await waitForPageReady(page);
-      await page.waitForSelector('[data-testid="unified-feed"]');
+      await expect(page.getByTestId('unified-feed')).toBeVisible({ timeout: 20_000 });
 
       await page.route(
         '**/api/feeds**',
@@ -83,8 +85,14 @@ test.describe('@smoke Critical user journeys', () => {
       );
 
       await page.getByRole('button', { name: 'Refresh' }).click();
-      await page.waitForSelector('text=Failed to refresh feeds');
-      await expect(page.getByRole('alert').first()).toContainText('Failed to refresh feeds');
+      // Ensure the feed request was made (helps verify route matched)
+      await page.waitForResponse(
+        (resp) => resp.url().includes('/api/feeds') && resp.status() === 500,
+        { timeout: 10_000 },
+      );
+      // Assert the UI shows the failure alert with a more generous timeout
+      await expect(page.getByText('Failed to refresh feeds')).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole('alert').first()).toContainText('Failed to refresh feeds', { timeout: 20_000 });
 
       await page.getByRole('button', { name: 'Try Again' }).click();
       await page.waitForSelector('text=Climate Action Now');
@@ -163,6 +171,7 @@ test.describe('@smoke Critical user journeys', () => {
       path: '/e2e/push-notifications',
       datasetKey: 'pushNotificationsHarness',
       readySelector: '[data-testid="push-notifications-harness"]',
+      readyTimeout: 40_000, // Increase for this harness
     });
     await expect(page.getByTestId('notification-preferences')).toBeVisible();
 

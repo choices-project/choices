@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useI18n } from '@/hooks/useI18n';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
 import { devLog } from '@/lib/utils/logger';
 
@@ -226,12 +227,26 @@ const SAMPLETEMPLATES: PollTemplate[] = [
 ];
 
 export default function PollTemplatesPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PollCategory | 'all'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'rating' | 'name'>('popular');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [templates, _setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
+
+  const sortOptions = useMemo(() => ({
+    popular: t('polls.templates.sort.popular'),
+    recent: t('polls.templates.sort.recent'),
+    rating: t('polls.templates.sort.rating'),
+    name: t('polls.templates.sort.name'),
+  }), [t]);
+
+  const difficultyLabels = useMemo(() => ({
+    beginner: t('polls.templates.difficulty.beginner'),
+    intermediate: t('polls.templates.difficulty.intermediate'),
+    advanced: t('polls.templates.difficulty.advanced'),
+  }), [t]);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -281,13 +296,17 @@ export default function PollTemplatesPage() {
     }
   };
 
+  const getDifficultyLabel = (difficulty: string) => {
+    return difficultyLabels[difficulty as keyof typeof difficultyLabels] ?? difficulty;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Poll Templates</h1>
-          <p className="text-gray-600 mt-2">Choose from our collection of pre-built poll templates to get started quickly</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('polls.templates.title')}</h1>
+          <p className="text-gray-600 mt-2">{t('polls.templates.subtitle')}</p>
         </div>
 
         {/* Search and Filters */}
@@ -296,7 +315,7 @@ export default function PollTemplatesPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search templates..."
+                placeholder={t('polls.templates.search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -308,7 +327,7 @@ export default function PollTemplatesPage() {
                 onChange={(e) => setSelectedCategory(e.target.value as PollCategory | 'all')}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t('polls.templates.categories.all')}</option>
                 {TEMPLATECATEGORIES.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name} ({category.templateCount})
@@ -320,10 +339,10 @@ export default function PollTemplatesPage() {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="popular">Most Popular</option>
-                <option value="recent">Recently Added</option>
-                <option value="rating">Highest Rated</option>
-                <option value="name">Name A-Z</option>
+                <option value="popular">{sortOptions.popular}</option>
+                <option value="recent">{sortOptions.recent}</option>
+                <option value="rating">{sortOptions.rating}</option>
+                <option value="name">{sortOptions.name}</option>
               </select>
               <Button
                 variant="outline"
@@ -347,7 +366,7 @@ export default function PollTemplatesPage() {
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
             >
-              All Templates
+              {t('polls.templates.categories.allTemplates')}
             </button>
             {TEMPLATECATEGORIES.map((category) => (
               <button
@@ -368,7 +387,7 @@ export default function PollTemplatesPage() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing {sortedTemplates.length} of {templates.length} templates
+            {t('polls.templates.resultsCount', { showing: sortedTemplates.length, total: templates.length })}
           </p>
         </div>
 
@@ -385,18 +404,18 @@ export default function PollTemplatesPage() {
                     </CardDescription>
                   </div>
                   <Badge className={getDifficultyColor(template.difficulty)}>
-                    {template.difficulty}
+                    {getDifficultyLabel(template.difficulty)}
                   </Badge>
                 </div>
                 
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {template.estimatedTime} min
+                    {t('polls.templates.metadata.estimatedTime', { minutes: template.estimatedTime })}
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
-                    {template.usageCount.toLocaleString()}
+                    {t('polls.templates.metadata.usageCount', { count: template.usageCount })}
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-yellow-500" />
@@ -422,11 +441,12 @@ export default function PollTemplatesPage() {
                     className="flex-1"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Use Template
+                    {t('polls.templates.actions.use')}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => previewTemplate(template)}
+                    aria-label={t('polls.templates.actions.preview')}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -440,15 +460,15 @@ export default function PollTemplatesPage() {
         {sortedTemplates.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('polls.templates.empty.title')}</h3>
             <p className="text-gray-600 mb-4">
-              Try adjusting your search or filter criteria
+              {t('polls.templates.empty.message')}
             </p>
             <Button onClick={() => {
               setSearchQuery('');
               setSelectedCategory('all');
             }}>
-              Clear Filters
+              {t('polls.templates.empty.clearFilters')}
             </Button>
           </div>
         )}

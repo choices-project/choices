@@ -100,9 +100,9 @@ export default function PollsPage() {
     setCurrentRoute('/polls');
     setSidebarActiveSection('polls');
     setBreadcrumbs([
-      { label: 'Home', href: '/' },
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Polls', href: '/polls' },
+      { label: t('polls.page.breadcrumbs.home'), href: '/' },
+      { label: t('polls.page.breadcrumbs.dashboard'), href: '/dashboard' },
+      { label: t('polls.page.breadcrumbs.polls'), href: '/polls' },
     ]);
 
     return () => {

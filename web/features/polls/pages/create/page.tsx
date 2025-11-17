@@ -864,13 +864,13 @@ export default function CreatePollPage() {
             ref={errorSummaryRef}
             tabIndex={-1}
             variant="destructive"
-            className="mb-6"
+            className="mb-6 border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950"
             aria-live="assertive"
             aria-atomic="true"
           >
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{t('polls.create.page.errorSummary.title')}</AlertTitle>
-            <AlertDescription>
+            <AlertTitle className="text-red-900 dark:text-red-100">{t('polls.create.page.errorSummary.title')}</AlertTitle>
+            <AlertDescription className="text-red-800 dark:text-red-200">
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                 {errorMessages.map(({ id, message }) => (
                   <li key={id}>{message}</li>

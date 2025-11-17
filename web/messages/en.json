@@ -1369,6 +1369,96 @@
           "view": "View",
           "vote": "Vote"
         }
+      },
+      "page": {
+        "title": "Polls",
+        "subtitle": "Discover and participate in community polls",
+        "breadcrumbs": {
+          "home": "Home",
+          "dashboard": "Dashboard",
+          "polls": "Polls"
+        },
+        "empty": {
+          "title": "No polls found",
+          "filters": "No polls match your search or filter criteria. Try adjusting your filters.",
+          "ctaMessage": "Get started by creating your first poll!"
+        },
+        "cta": {
+          "create": "Create Poll",
+          "view": "View",
+          "results": "Results"
+        },
+        "metadata": {
+          "votes": "{count, plural, one {# vote} other {# votes}}"
+        },
+        "pagination": {
+          "showing": "Showing {start} to {end} of {total} polls",
+          "pageLabel": "Page {current} of {total}",
+          "previous": "Previous",
+          "next": "Next"
+        }
+      },
+      "filters": {
+        "search": {
+          "placeholder": "Search polls...",
+          "ariaLabel": "Search polls"
+        },
+        "hashtags": {
+          "label": "Filter by hashtags",
+          "addPlaceholder": "Add hashtag...",
+          "addAria": "Add hashtag filter",
+          "remove": "Remove hashtag {hashtag}"
+        },
+        "status": {
+          "all": "All",
+          "active": "Active",
+          "closed": "Closed",
+          "trending": "Trending"
+        },
+        "trending": {
+          "heading": "Trending",
+          "headingWithCount": "Trending ({count})",
+          "count": "{count, plural, one {# trending} other {# trending}}"
+        },
+        "categories": {
+          "label": "Categories"
+        }
+      },
+      "templates": {
+        "title": "Poll Templates",
+        "subtitle": "Choose from our collection of pre-built poll templates to get started quickly",
+        "search": {
+          "placeholder": "Search templates..."
+        },
+        "categories": {
+          "all": "All Categories",
+          "allTemplates": "All Templates"
+        },
+        "sort": {
+          "popular": "Most Popular",
+          "recent": "Recently Added",
+          "rating": "Highest Rated",
+          "name": "Name A-Z"
+        },
+        "difficulty": {
+          "beginner": "Beginner",
+          "intermediate": "Intermediate",
+          "advanced": "Advanced"
+        },
+        "metadata": {
+          "estimatedTime": "{minutes} min",
+          "usageCount": "{count, number} uses"
+        },
+        "resultsCount": "Showing {showing} of {total} templates",
+        "actions": {
+          "use": "Use Template",
+          "preview": "Preview template"
+        },
+        "empty": {
+          "title": "No templates found",
+          "message": "Try adjusting your search or filter criteria",
+          "clearFilters": "Clear Filters"
+        }
       }
     }
   },

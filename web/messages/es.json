@@ -2538,6 +2538,96 @@
           "view": "Ver",
           "vote": "Votar"
         }
+      },
+      "page": {
+        "title": "Encuestas",
+        "subtitle": "Descubre y participa en encuestas de la comunidad",
+        "breadcrumbs": {
+          "home": "Inicio",
+          "dashboard": "Panel",
+          "polls": "Encuestas"
+        },
+        "empty": {
+          "title": "No se encontraron encuestas",
+          "filters": "No hay encuestas que coincidan con tu búsqueda o criterios de filtro. Intenta ajustar tus filtros.",
+          "ctaMessage": "¡Comienza creando tu primera encuesta!"
+        },
+        "cta": {
+          "create": "Crear Encuesta",
+          "view": "Ver",
+          "results": "Resultados"
+        },
+        "metadata": {
+          "votes": "{count, plural, one {# voto} other {# votos}}"
+        },
+        "pagination": {
+          "showing": "Mostrando {start} a {end} de {total} encuestas",
+          "pageLabel": "Página {current} de {total}",
+          "previous": "Anterior",
+          "next": "Siguiente"
+        }
+      },
+      "filters": {
+        "search": {
+          "placeholder": "Buscar encuestas...",
+          "ariaLabel": "Buscar encuestas"
+        },
+        "hashtags": {
+          "label": "Filtrar por etiquetas",
+          "addPlaceholder": "Agregar etiqueta...",
+          "addAria": "Agregar filtro de etiqueta",
+          "remove": "Eliminar etiqueta {hashtag}"
+        },
+        "status": {
+          "all": "Todas",
+          "active": "Activas",
+          "closed": "Cerradas",
+          "trending": "Tendencias"
+        },
+        "trending": {
+          "heading": "Tendencias",
+          "headingWithCount": "Tendencias ({count})",
+          "count": "{count, plural, one {# tendencia} other {# tendencias}}"
+        },
+        "categories": {
+          "label": "Categorías"
+        }
+      },
+      "templates": {
+        "title": "Plantillas de Encuestas",
+        "subtitle": "Elige de nuestra colección de plantillas de encuestas preconstruidas para comenzar rápidamente",
+        "search": {
+          "placeholder": "Buscar plantillas..."
+        },
+        "categories": {
+          "all": "Todas las Categorías",
+          "allTemplates": "Todas las Plantillas"
+        },
+        "sort": {
+          "popular": "Más Populares",
+          "recent": "Agregadas Recientemente",
+          "rating": "Mejor Calificadas",
+          "name": "Nombre A-Z"
+        },
+        "difficulty": {
+          "beginner": "Principiante",
+          "intermediate": "Intermedio",
+          "advanced": "Avanzado"
+        },
+        "metadata": {
+          "estimatedTime": "{minutes} min",
+          "usageCount": "{count, number} usos"
+        },
+        "resultsCount": "Mostrando {showing} de {total} plantillas",
+        "actions": {
+          "use": "Usar Plantilla",
+          "preview": "Vista previa de la plantilla"
+        },
+        "empty": {
+          "title": "No se encontraron plantillas",
+          "message": "Intenta ajustar tu búsqueda o criterios de filtro",
+          "clearFilters": "Limpiar Filtros"
+        }
       }
     }
   },
