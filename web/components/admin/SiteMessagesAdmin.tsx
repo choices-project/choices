@@ -582,7 +582,7 @@ export default function SiteMessagesAdmin({
                       type: message.type,
                       priority: message.priority,
                       is_active: message.is_active,
-                      expires_at: message.expires_at
+                      ...(message.expires_at ? { expires_at: message.expires_at } : {})
                     })
                     setShowCreateForm(false) // Close create form if open
                   }}

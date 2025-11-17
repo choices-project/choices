@@ -310,6 +310,7 @@ export type Database = {
           created_at: string
           email: string
           expires_at: string
+          failed_attempts: number
           id: string
           used_at: string | null
           user_id: string
@@ -320,6 +321,7 @@ export type Database = {
           created_at?: string
           email: string
           expires_at: string
+          failed_attempts?: number
           id?: string
           used_at?: string | null
           user_id: string
@@ -330,6 +332,7 @@ export type Database = {
           created_at?: string
           email?: string
           expires_at?: string
+          failed_attempts?: number
           id?: string
           used_at?: string | null
           user_id?: string
@@ -673,6 +676,8 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
+          is_public: boolean
+          metadata: Json | null
           offline_synced: boolean | null
           required_signatures: number | null
           start_date: string | null
@@ -680,9 +685,11 @@ export type Database = {
           target_district: string | null
           target_office: string | null
           target_representative_id: number | null
+          target_representatives: number[] | null
           target_state: string | null
           title: string
           updated_at: string | null
+          urgency_level: string
         }
         Insert: {
           action_type: string
@@ -693,6 +700,8 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
+          metadata?: Json | null
           offline_synced?: boolean | null
           required_signatures?: number | null
           start_date?: string | null
@@ -700,9 +709,11 @@ export type Database = {
           target_district?: string | null
           target_office?: string | null
           target_representative_id?: number | null
+          target_representatives?: number[] | null
           target_state?: string | null
           title: string
           updated_at?: string | null
+          urgency_level?: string
         }
         Update: {
           action_type?: string
@@ -713,6 +724,8 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
+          metadata?: Json | null
           offline_synced?: boolean | null
           required_signatures?: number | null
           start_date?: string | null
@@ -720,9 +733,11 @@ export type Database = {
           target_district?: string | null
           target_office?: string | null
           target_representative_id?: number | null
+          target_representatives?: number[] | null
           target_state?: string | null
           title?: string
           updated_at?: string | null
+          urgency_level?: string
         }
         Relationships: []
       }
@@ -898,6 +913,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      device_flow: {
+        Row: {
+          client_ip: string
+          completed_at: string | null
+          created_at: string
+          device_code: string
+          error_message: string | null
+          expires_at: string
+          id: string
+          provider: string
+          redirect_to: string | null
+          scopes: string[] | null
+          status: string
+          updated_at: string
+          user_code: string
+          user_id: string | null
+        }
+        Insert: {
+          client_ip: string
+          completed_at?: string | null
+          created_at?: string
+          device_code: string
+          error_message?: string | null
+          expires_at: string
+          id?: string
+          provider: string
+          redirect_to?: string | null
+          scopes?: string[] | null
+          status?: string
+          updated_at?: string
+          user_code: string
+          user_id?: string | null
+        }
+        Update: {
+          client_ip?: string
+          completed_at?: string | null
+          created_at?: string
+          device_code?: string
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          provider?: string
+          redirect_to?: string | null
+          scopes?: string[] | null
+          status?: string
+          updated_at?: string
+          user_code?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       feature_usage: {
         Row: {
@@ -4430,6 +4496,7 @@ export type Database = {
           table_name: string
         }[]
       }
+      cleanup_expired_device_flows: { Args: never; Returns: number }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       cleanup_idempotency_keys: { Args: never; Returns: number }
       cleanup_inactive_sessions: { Args: never; Returns: number }

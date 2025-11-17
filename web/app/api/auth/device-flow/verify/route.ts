@@ -103,16 +103,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Look up device flow record by user code
   const supabase = await getSupabaseServerClient();
   // Type assertion to avoid deep type inference issues with .single()
-  const query = supabase
+  const { data: deviceFlow, error: fetchError } = await (supabase
     .from('device_flow')
     .select('*')
     .eq('user_code', normalizedUserCode)
     .eq('provider', provider)
-    .single() as Promise<{
+    .single() as unknown as Promise<{
       data: DeviceFlowRecord | null;
       error: any;
-    }>;
-  const { data: deviceFlow, error: fetchError } = await query;
+    }>);
 
   if (fetchError || !deviceFlow) {
     logger.warn('Device flow not found for user code', {
@@ -130,7 +129,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     await (supabase
       .from('device_flow')
       .update({ status: 'expired' })
-      .eq('user_code', normalizedUserCode) as any);
+      .eq('user_code', normalizedUserCode) as unknown as Promise<{ error: any }>);
 
     const response: VerifyResponse = {
       success: false,
@@ -179,7 +178,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       user_id: user.id,
       completed_at: new Date().toISOString(),
     })
-    .eq('user_code', normalizedUserCode) as any);
+    .eq('user_code', normalizedUserCode) as unknown as Promise<{ error: any }>);
 
   if (updateError) {
     logger.error('Failed to complete device flow', { error: updateError });

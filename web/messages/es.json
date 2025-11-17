@@ -2465,6 +2465,79 @@
           "codeLabel": "Código de Inserción",
           "copyCode": "Copiar Código de Inserción"
         }
+      },
+      "results": {
+        "heading": "Resultados",
+        "refreshing": "Actualizando resultados de la encuesta...",
+        "summary": "Resultados de la encuesta: {totalVotes, number} votos totales. Opción líder: {topOption} con {topVotes, number} votos ({topPercentage}%).",
+        "status": {
+          "ended": "Encuesta Finalizada",
+          "active": "Activa",
+          "ongoing": "En Curso"
+        },
+        "error": {
+          "title": "Error al cargar los resultados de la encuesta",
+          "retry": "Intentar de Nuevo"
+        },
+        "empty": "No hay resultados de encuesta disponibles",
+        "type": "Tipo: {type}",
+        "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
+        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}",
+        "performance": {
+          "title": "Métricas de Rendimiento",
+          "loadTime": "Tiempo de Carga",
+          "cacheHit": "Acierto de Caché",
+          "yes": "Sí",
+          "no": "No",
+          "cacheSize": "Tamaño de Caché",
+          "items": "{count, plural, one {# elemento} other {# elementos}}",
+          "cacheKeys": "Claves de Caché"
+        },
+        "privacy": {
+          "title": "Protección de Privacidad",
+          "kAnonymity": "K-Anonimato: {status}",
+          "satisfied": "Satisfecho",
+          "notMet": "No Cumplido",
+          "budget": "Presupuesto: {value} ε"
+        },
+        "votingStatus": {
+          "title": "Estado de Votación",
+          "canVote": "Puede Votar",
+          "cannotVote": "No Puede Votar",
+          "hasVoted": "Ha Votado",
+          "notVoted": "No Ha Votado"
+        }
+      },
+      "card": {
+        "untitled": "Encuesta Sin Título",
+        "unknownCreator": "Desconocido",
+        "createdBy": "Creada por {name}",
+        "createdOn": "Creada el {date}",
+        "endsOn": "Termina el {date} a las {time}",
+        "optionsHeading": "Opciones",
+        "optionItem": "{index}. {option}",
+        "moreOptions": "+{count, plural, one {# opción más} other {# opciones más}}",
+        "votes": "{count, plural, one {# voto} other {# votos}}",
+        "participation": "{count, plural, one {# participante} other {# participantes}}",
+        "votingMethod": {
+          "single": "Selección única",
+          "approval": "Votación por aprobación",
+          "ranked": "Voto preferencial",
+          "quadratic": "Votación cuadrática",
+          "range": "Votación por rango",
+          "multiple": "Selección múltiple",
+          "unknown": "Desconocido"
+        },
+        "status": {
+          "active": "Activa",
+          "closed": "Cerrada",
+          "draft": "Borrador",
+          "archived": "Archivada"
+        },
+        "actions": {
+          "view": "Ver",
+          "vote": "Votar"
+        }
       }
     }
   },

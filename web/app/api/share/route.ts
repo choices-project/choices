@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
-import type { TablesInsert } from '@/types/supabase';
+import type { Json, TablesInsert } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -70,7 +70,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         poll_id,
         placement: placement ?? 'unknown',
         content_type: content_type ?? 'poll'
-      } as Record<string, unknown>,
+      } as Json,
       user_agent: userAgent,
       referrer: request.headers.get('referer'),
       // ip_address is unknown-typed; omit to avoid type issues across environments

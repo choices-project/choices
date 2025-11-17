@@ -215,7 +215,7 @@ export function CivicActionList({
             key={action.id}
             action={action}
             onSign={handleSign}
-            onView={onView}
+            {...(onView ? { onView } : {})}
             signed={signedActions.has(action.id)}
           />
         ))}

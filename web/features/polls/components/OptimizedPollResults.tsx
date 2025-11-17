@@ -104,14 +104,14 @@ export default function OptimizedPollResults({
     if (!results) return null
     
     const statusConfig = {
-      ended: { label: 'Poll Ended', color: 'text-red-600', bgColor: 'bg-red-50' },
-      active: { label: 'Active', color: 'text-green-600', bgColor: 'bg-green-50' },
-      ongoing: { label: 'Ongoing', color: 'text-blue-600', bgColor: 'bg-blue-50' }
+      ended: { label: t('polls.results.status.ended'), color: 'text-red-600', bgColor: 'bg-red-50' },
+      active: { label: t('polls.results.status.active'), color: 'text-green-600', bgColor: 'bg-green-50' },
+      ongoing: { label: t('polls.results.status.ongoing'), color: 'text-blue-600', bgColor: 'bg-blue-50' }
     }
     
     const config = statusConfig[results.pollStatus as keyof typeof statusConfig]
     return config
-  }, [results])
+  }, [results, t])
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -165,7 +165,7 @@ export default function OptimizedPollResults({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error loading poll results</h3>
+            <h3 className="text-sm font-medium text-red-800">{t('polls.results.error.title')}</h3>
             <p className="text-sm text-red-700 mt-1">{error}</p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function OptimizedPollResults({
             onClick={handleRefresh}
             className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
           >
-            Try Again
+            {t('polls.results.error.retry')}
           </button>
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function OptimizedPollResults({
   if (!results) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No poll results available</p>
+        <p className="text-gray-500">{t('polls.results.empty')}</p>
       </div>
     )
   }
@@ -194,24 +194,24 @@ export default function OptimizedPollResults({
       {/* Performance Metrics (if enabled) */}
       {showPerformanceMetrics && performanceMetrics && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-blue-800 mb-2">Performance Metrics</h4>
+          <h4 className="text-sm font-medium text-blue-800 mb-2">{t('polls.results.performance.title')}</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-blue-600">Load Time:</span>
+              <span className="text-blue-600">{t('polls.results.performance.loadTime')}:</span>
               <span className="ml-2 font-mono">{performanceMetrics.loadTime.toFixed(2)}ms</span>
             </div>
             <div>
-              <span className="text-blue-600">Cache Hit:</span>
-              <span className="ml-2">{performanceMetrics.cacheHit ? 'Yes' : 'No'}</span>
+              <span className="text-blue-600">{t('polls.results.performance.cacheHit')}:</span>
+              <span className="ml-2">{performanceMetrics.cacheHit ? t('polls.results.performance.yes') : t('polls.results.performance.no')}</span>
             </div>
             {cacheStats && (
               <>
                 <div>
-                  <span className="text-blue-600">Cache Size:</span>
-                  <span className="ml-2">{cacheStats.size} items</span>
+                  <span className="text-blue-600">{t('polls.results.performance.cacheSize')}:</span>
+                  <span className="ml-2">{t('polls.results.performance.items', { count: cacheStats.size })}</span>
                 </div>
                 <div>
-                  <span className="text-blue-600">Cache Keys:</span>
+                  <span className="text-blue-600">{t('polls.results.performance.cacheKeys')}:</span>
                   <span className="ml-2">{cacheStats.keys.length}</span>
                 </div>
               </>
@@ -224,14 +224,14 @@ export default function OptimizedPollResults({
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">{results.pollTitle}</h2>
         <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span>Type: {results.pollType}</span>
+          <span>{t('polls.results.type', { type: results.pollType })}</span>
           {pollStatusDisplay && (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${pollStatusDisplay.bgColor} ${pollStatusDisplay.color}`}>
               {pollStatusDisplay.label}
             </span>
           )}
-          <span>{totalVotes} total votes</span>
-          <span>{results.uniqueVoters} unique voters</span>
+          <span>{t('polls.results.totalVotes', { count: totalVotes })}</span>
+          <span>{t('polls.results.uniqueVoters', { count: results.uniqueVoters })}</span>
         </div>
       </div>
 
@@ -242,15 +242,15 @@ export default function OptimizedPollResults({
             <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            <span className="text-sm font-medium text-gray-700">Privacy Protection</span>
+            <span className="text-sm font-medium text-gray-700">{t('polls.results.privacy.title')}</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
             <span className={`px-2 py-1 rounded-full ${results.kAnonymitySatisfied ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-              K-Anonymity: {results.kAnonymitySatisfied ? 'Satisfied' : 'Not Met'}
+              {t('polls.results.privacy.kAnonymity', { status: results.kAnonymitySatisfied ? t('polls.results.privacy.satisfied') : t('polls.results.privacy.notMet') })}
             </span>
             {userId && (
               <span className="text-gray-600">
-                Budget: {results.privacyBudgetRemaining?.toFixed(2) ?? '0.00'} ε
+                {t('polls.results.privacy.budget', { value: results.privacyBudgetRemaining?.toFixed(2) ?? '0.00' })}
               </span>
             )}
           </div>
@@ -264,14 +264,14 @@ export default function OptimizedPollResults({
             <svg className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-sm font-medium text-blue-700">Voting Status</span>
+            <span className="text-sm font-medium text-blue-700">{t('polls.results.votingStatus.title')}</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
             <span className={`px-2 py-1 rounded-full ${results.canVote ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-              {results.canVote ? 'Can Vote' : 'Cannot Vote'}
+              {results.canVote ? t('polls.results.votingStatus.canVote') : t('polls.results.votingStatus.cannotVote')}
             </span>
             <span className={`px-2 py-1 rounded-full ${results.hasVoted ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-              {results.hasVoted ? 'Has Voted' : 'Not Voted'}
+              {results.hasVoted ? t('polls.results.votingStatus.hasVoted') : t('polls.results.votingStatus.notVoted')}
             </span>
           </div>
         </div>

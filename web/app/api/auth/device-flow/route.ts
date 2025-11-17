@@ -112,7 +112,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       client_ip: ip,
       redirect_to: redirectTo || null,
       scopes: scopes || [],
-    }) as any);
+    }) as unknown as Promise<{ error: any }>);
 
   if (insertError) {
     logger.error('Failed to create device flow record', { error: insertError });

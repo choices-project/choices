@@ -47,7 +47,7 @@ export default function GlobalNavigation() {
   const { t } = useI18n();
 
   // Auth integration via context
-  const { user, loading: authLoading, signOut: authSignOut } = useAuth();
+  const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const isAuthenticated = Boolean(user);
   const isLoading = authLoading;
 

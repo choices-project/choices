@@ -81,15 +81,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Look up device flow record
   const supabase = await getSupabaseServerClient();
   // Type assertion to avoid deep type inference issues with .single()
-  const query = supabase
+  const { data: deviceFlow, error: fetchError } = await (supabase
     .from('device_flow')
     .select('*')
     .eq('device_code', deviceCode)
-    .single() as Promise<{
+    .single() as unknown as Promise<{
       data: DeviceFlowRecord | null;
       error: any;
-    }>;
-  const { data: deviceFlow, error: fetchError } = await query;
+    }>);
 
   if (fetchError || !deviceFlow) {
     logger.warn('Device flow not found', { deviceCode: deviceCode.substring(0, 8) + '...' });
@@ -122,7 +121,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     await (supabase
       .from('device_flow')
       .update({ status: 'expired' })
-      .eq('device_code', deviceCode) as any);
+      .eq('device_code', deviceCode) as unknown as Promise<{ error: any }>);
 
     const response: PollResponse = {
       success: false,

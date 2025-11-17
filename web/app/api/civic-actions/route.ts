@@ -41,7 +41,7 @@ const createCivicActionSchema = z.object({
   end_date: z.string().datetime().optional(),
   is_public: z.boolean().default(true),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const listQuerySchema = z.object({
@@ -76,7 +76,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   
   const parsedQuery = listQuerySchema.safeParse(queryParams);
   if (!parsedQuery.success) {
-    return validationError(parsedQuery.error.flatten().fieldErrors, 'Invalid query parameters');
+    const fieldErrors = parsedQuery.error.flatten().fieldErrors;
+    const stringErrors: Record<string, string> = {};
+    for (const [key, value] of Object.entries(fieldErrors)) {
+      stringErrors[key] = Array.isArray(value) ? value[0] ?? 'Invalid value' : value ?? 'Invalid value';
+    }
+    return validationError(stringErrors, 'Invalid query parameters');
   }
 
   const {
@@ -194,8 +199,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const validationResult = createCivicActionSchema.safeParse(parsedBody.data);
   if (!validationResult.success) {
+    const fieldErrors = validationResult.error.flatten().fieldErrors;
+    const stringErrors: Record<string, string> = {};
+    for (const [key, value] of Object.entries(fieldErrors)) {
+      stringErrors[key] = Array.isArray(value) ? value[0] ?? 'Invalid value' : value ?? 'Invalid value';
+    }
     return validationError(
-      validationResult.error.flatten().fieldErrors,
+      stringErrors,
       'Invalid request data'
     );
   }

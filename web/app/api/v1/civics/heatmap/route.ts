@@ -21,7 +21,7 @@ import type { NextRequest } from 'next/server';
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
 import { withErrorHandling, forbiddenError, successResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
-import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
+import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey, type JsonValue } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -57,6 +57,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       cacheKey,
       CACHE_TTL.DISTRICT_HEATMAP,
       async () => {
+        type HeatmapResult = {
+          heatmap: Array<{
+            district_id: string;
+            district_name: string;
+            state: string;
+            level: string;
+            engagement_count: number;
+            representative_count: number;
+          }>;
+          k_anonymity: number;
+          generated_at: string;
+        };
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
@@ -155,19 +167,33 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       minCount
     });
 
-        return {
+        const heatmapResult: HeatmapResult = {
           heatmap,
           k_anonymity: minCount,
           generated_at: new Date().toISOString()
         };
+        return heatmapResult as unknown as JsonValue;
       }
     );
 
+    type HeatmapResponse = {
+      heatmap: Array<{
+        district_id: string;
+        district_name: string;
+        state: string;
+        level: string;
+        engagement_count: number;
+        representative_count: number;
+      }>;
+      kAnonymity: number;
+      generatedAt: string;
+    };
+    const responseData = result as HeatmapResponse | null;
     return successResponse(
       {
-        heatmap: result?.heatmap ?? [],
-        kAnonymity: result?.k_anonymity ?? minCount,
-        generatedAt: result?.generated_at ?? new Date().toISOString()
+        heatmap: responseData?.heatmap ?? [],
+        kAnonymity: responseData?.k_anonymity ?? minCount,
+        generatedAt: responseData?.generated_at ?? new Date().toISOString()
       },
       {
         cache: {

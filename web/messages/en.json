@@ -1296,6 +1296,79 @@
           "codeLabel": "Embed Code",
           "copyCode": "Copy Embed Code"
         }
+      },
+      "results": {
+        "heading": "Results",
+        "refreshing": "Refreshing poll results...",
+        "summary": "Poll results: {totalVotes, number} total votes. Leading option: {topOption} with {topVotes, number} votes ({topPercentage}%).",
+        "status": {
+          "ended": "Poll Ended",
+          "active": "Active",
+          "ongoing": "Ongoing"
+        },
+        "error": {
+          "title": "Error loading poll results",
+          "retry": "Try Again"
+        },
+        "empty": "No poll results available",
+        "type": "Type: {type}",
+        "totalVotes": "{count, plural, one {# total vote} other {# total votes}}",
+        "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}",
+        "performance": {
+          "title": "Performance Metrics",
+          "loadTime": "Load Time",
+          "cacheHit": "Cache Hit",
+          "yes": "Yes",
+          "no": "No",
+          "cacheSize": "Cache Size",
+          "items": "{count, plural, one {# item} other {# items}}",
+          "cacheKeys": "Cache Keys"
+        },
+        "privacy": {
+          "title": "Privacy Protection",
+          "kAnonymity": "K-Anonymity: {status}",
+          "satisfied": "Satisfied",
+          "notMet": "Not Met",
+          "budget": "Budget: {value} ε"
+        },
+        "votingStatus": {
+          "title": "Voting Status",
+          "canVote": "Can Vote",
+          "cannotVote": "Cannot Vote",
+          "hasVoted": "Has Voted",
+          "notVoted": "Not Voted"
+        }
+      },
+      "card": {
+        "untitled": "Untitled Poll",
+        "unknownCreator": "Unknown",
+        "createdBy": "Created by {name}",
+        "createdOn": "Created on {date}",
+        "endsOn": "Ends on {date} at {time}",
+        "optionsHeading": "Options",
+        "optionItem": "{index}. {option}",
+        "moreOptions": "+{count, plural, one {# more option} other {# more options}}",
+        "votes": "{count, plural, one {# vote} other {# votes}}",
+        "participation": "{count, plural, one {# participant} other {# participants}}",
+        "votingMethod": {
+          "single": "Single choice",
+          "approval": "Approval voting",
+          "ranked": "Ranked choice",
+          "quadratic": "Quadratic voting",
+          "range": "Range voting",
+          "multiple": "Multiple selection",
+          "unknown": "Unknown"
+        },
+        "status": {
+          "active": "Active",
+          "closed": "Closed",
+          "draft": "Draft",
+          "archived": "Archived"
+        },
+        "actions": {
+          "view": "View",
+          "vote": "Vote"
+        }
       }
     }
   },
