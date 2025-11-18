@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
+import { waitForPageReady } from '../helpers/e2e-setup';
 
 const POLL_ID = 'harness-poll';
+const HARNESS_NAV_TIMEOUT = 90_000;
 const RESULTS_ROUTE = new RegExp(`/api/polls/${POLL_ID}/results$`);
 const VOTE_ROUTE = new RegExp(`/api/polls/${POLL_ID}/vote$`);
 const CANCEL_ROUTE = new RegExp(`/api/voting/records/vote-harness$`);
@@ -15,7 +16,7 @@ const getEventCount = async (page: Page, action: string) => {
   }, action);
 };
 
-test.describe('Poll viewer harness', () => {
+test.describe('@axe Poll viewer harness', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'clipboard', {
@@ -74,12 +75,18 @@ test.describe('Poll viewer harness', () => {
   });
 
   test('emits analytics for viewing, sharing, and voting', async ({ page }) => {
-    await page.goto(`/e2e/poll-run/${POLL_ID}`);
+    await page.goto(`/e2e/poll-run/${POLL_ID}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: HARNESS_NAV_TIMEOUT,
+    });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
     await runAxeAudit(page, 'poll run initial state');
 
-    await page.getByRole('button', { name: /Share/i }).click();
+    const shareButton = page.getByRole('button', { name: /Share/i });
+    await expect(shareButton).toBeVisible({ timeout: 10_000 });
+    await shareButton.click();
+    await page.waitForTimeout(500); // Wait for dialog to open
     await runAxeAudit(page, 'poll share dialog');
     await expect.poll(() => getEventCount(page, 'detail_copy_link')).toBeGreaterThan(0);
 

@@ -3,6 +3,7 @@
 import { act, render, screen } from '@testing-library/react';
 import React from 'react';
 
+import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import {
   useNotifications,
   useNotificationStore,
@@ -131,6 +132,84 @@ describe('notification store integration', () => {
 
     expect(screen.queryByText('Info Title')).not.toBeInTheDocument();
     expect(screen.queryByText('Info body')).not.toBeInTheDocument();
+  });
+
+  it('deduplicates election notifications and tracks lifecycle analytics', () => {
+    const trackEvent = jest.fn();
+
+    act(() => {
+      useAnalyticsStore.setState((state) => ({
+        ...state,
+        trackingEnabled: true,
+        preferences: { ...state.preferences, trackingEnabled: true },
+        trackEvent
+      }));
+    });
+
+    const baseNotification = {
+      title: 'Upcoming Election',
+      message: 'Election in five days',
+      countdownLabel: 'Election in 5 days',
+      electionId: '2026-ca-primary',
+      divisionId: 'ocd-division/country:us/state:ca',
+      electionDate: '2026-06-05',
+      daysUntil: 5,
+      representativeNames: ['Alex Official'],
+      source: 'dashboard' as const,
+      notificationType: 'info' as const
+    };
+
+    act(() => {
+      notificationStoreUtils.createElectionNotification(baseNotification);
+    });
+
+    let notifications = useNotificationStore.getState().notifications;
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.context?.kind).toBe('election');
+    expect(trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: 'notifications.election.delivered',
+        event_data: expect.objectContaining({
+          election_id: '2026-ca-primary',
+          division_id: 'ocd-division/country:us/state:ca'
+        })
+      })
+    );
+
+    trackEvent.mockClear();
+
+    act(() => {
+      notificationStoreUtils.createElectionNotification({
+        ...baseNotification,
+        message: 'Election in four days',
+        countdownLabel: 'Election in 4 days',
+        daysUntil: 4
+      });
+    });
+
+    notifications = useNotificationStore.getState().notifications;
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.message).toBe('Election in four days');
+    expect(trackEvent).not.toHaveBeenCalled();
+
+    const notificationId = notifications[0]?.id;
+    trackEvent.mockClear();
+
+    act(() => {
+      if (notificationId) {
+        useNotificationStore.getState().markAsRead(notificationId);
+      }
+    });
+
+    expect(trackEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: 'notifications.election.opened',
+        event_data: expect.objectContaining({
+          election_id: '2026-ca-primary',
+          division_id: 'ocd-division/country:us/state:ca'
+        })
+      })
+    );
   });
 });
 

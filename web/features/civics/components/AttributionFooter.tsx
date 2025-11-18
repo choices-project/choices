@@ -3,6 +3,8 @@
 import { ExternalLink, Database, CheckCircle } from 'lucide-react';
 import React from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
+
 type AttributionFooterProps = {
   sources: Array<{
     name: string;
@@ -13,9 +15,18 @@ type AttributionFooterProps = {
 }
 
 export function AttributionFooter({ sources, className = '' }: AttributionFooterProps) {
+  const { t, currentLanguage } = useI18n();
   if (sources?.length === 0) {
     return null;
   }
+  const dateFormatter = new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+  const lastUpdatedLabel = t('civics.attribution.footer.lastUpdated', {
+    date: dateFormatter.format(new Date()),
+  });
 
   const getSourceIcon = (type: string) => {
     switch (type) {
@@ -57,7 +68,9 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
     <div className={`mt-4 pt-3 border-t border-gray-200 ${className}`}>
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center gap-2">
-          <span className="font-medium">Data Sources:</span>
+          <span className="font-medium">
+            {t('civics.attribution.footer.heading')}
+          </span>
           <div className="flex items-center gap-3">
             {sources.map((source, index) => (
               <div key={index} className="flex items-center gap-1">
@@ -81,9 +94,7 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
             ))}
           </div>
         </div>
-        <div className="text-xs text-gray-400">
-          Last updated: {new Date().toLocaleDateString()}
-        </div>
+        <div className="text-xs text-gray-400">{lastUpdatedLabel}</div>
       </div>
     </div>
   );
@@ -91,6 +102,7 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
 
 // Compact version for cards
 export function AttributionBadge({ sources, className = '' }: AttributionFooterProps) {
+  const { t } = useI18n();
   if (sources?.length === 0) {
     return null;
   }
@@ -124,7 +136,9 @@ export function AttributionBadge({ sources, className = '' }: AttributionFooterP
       )}
       {sources.length > 1 && (
         <span className="text-xs text-gray-500">
-          +{sources.length - 1} more
+          {t('civics.attribution.badge.more', {
+            count: sources.length - 1,
+          })}
         </span>
       )}
     </div>
@@ -133,13 +147,16 @@ export function AttributionBadge({ sources, className = '' }: AttributionFooterP
 
 // API response attribution component
 export function APIAttribution({ sources, className = '' }: AttributionFooterProps) {
+  const { t } = useI18n();
   if (sources?.length === 0) {
     return null;
   }
 
   return (
     <div className={`text-xs text-gray-500 ${className}`}>
-      <div className="font-medium mb-1">Data Sources:</div>
+      <div className="font-medium mb-1">
+        {t('civics.attribution.footer.heading')}
+      </div>
       <ul className="space-y-1">
         {sources.map((source, index) => (
           <li key={index} className="flex items-center gap-2">

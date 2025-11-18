@@ -6,7 +6,6 @@
  */
 
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { GoogleCivicApiError } from './client';
@@ -24,7 +23,7 @@ export class GoogleCivicErrorHandler {
       backoffMultiplier: 2,
       retryableStatusCodes: [408, 429, 500, 502, 503, 504],
     };
-    this.retryConfig = withOptional(base, retryConfig ?? {});
+    this.retryConfig = { ...base, ...(retryConfig ?? {}) };
   }
 
   /**
@@ -201,14 +200,14 @@ export class GoogleCivicErrorHandler {
     operation: () => Promise<T>,
     context?: ErrorContext
   ): Promise<T> {
-    let lastError: GoogleCivicApiError;
+    let lastError: GoogleCivicApiError | null = null;
     
     for (let attempt = 1; attempt <= this.retryConfig.maxAttempts; attempt++) {
       try {
         logger.debug('Executing Google Civic API operation', { attempt, context });
         return await operation();
       } catch (error) {
-        const contextWithAttempt: ErrorContext = withOptional(context ?? ({} as ErrorContext), { attempt });
+        const contextWithAttempt: ErrorContext = { ...(context ?? ({} as ErrorContext)), attempt };
         lastError = this.handleError(error, contextWithAttempt);
         
         // If not retryable or last attempt, throw immediately
@@ -233,7 +232,7 @@ export class GoogleCivicErrorHandler {
       }
     }
 
-    throw lastError!;
+    throw lastError ?? new GoogleCivicApiError('Unknown error after retries', 500, { context });
   }
 
   /**

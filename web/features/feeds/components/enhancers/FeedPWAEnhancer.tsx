@@ -62,6 +62,8 @@ export default function FeedPWAEnhancer({
         return () => clearTimeout(timer);
       }
     }
+    
+    return undefined;
   }, [enableInstallPrompt, isInstalled]);
 
   const handleInstallDismiss = useCallback(() => {

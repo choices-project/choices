@@ -6,7 +6,6 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
@@ -79,46 +78,28 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }, undefined, 201);
 });
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check if PWA feature is enabled
-    if (!isFeatureEnabled('PWA')) {
-      return NextResponse.json({
-        success: false,
-        error: 'PWA feature is disabled'
-      }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const deviceId = searchParams.get('deviceId');
-
-    if (!deviceId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Device ID is required'
-      }, { status: 400 });
-    }
-
-    // Get sync status for device
-    const syncStatus = await getSyncStatus(deviceId);
-
-    return NextResponse.json({
-      success: true,
-      deviceId,
-      syncStatus,
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    logger.error('PWA: Failed to get sync status:', error instanceof Error ? error : new Error(String(error)));
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to get sync status',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  // Check if PWA feature is enabled
+  if (!isFeatureEnabled('PWA')) {
+    return forbiddenError('PWA feature is disabled');
   }
-}
+
+  const { searchParams } = new URL(request.url);
+  const deviceId = searchParams.get('deviceId');
+
+  if (!deviceId) {
+    return validationError({ deviceId: 'Device ID is required' });
+  }
+
+  // Get sync status for device
+  const syncStatus = await getSyncStatus(deviceId);
+
+  return successResponse({
+    deviceId,
+    syncStatus,
+    timestamp: new Date().toISOString()
+  });
+});
 
 /**
  * Process a single offline vote

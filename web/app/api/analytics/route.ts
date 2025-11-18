@@ -13,10 +13,16 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
-import { withErrorHandling, successResponse } from '@/lib/api';
+import {
+  withErrorHandling,
+  successResponse,
+  authError,
+  forbiddenError,
+  validationError,
+  errorResponse,
+} from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -80,23 +86,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           logger.error('Error fetching active users:', usersError);
         }
 
-        return NextResponse.json({
-          totalPolls: totalPolls ?? 0,
-          totalVotes,
-          activeUsers: activeUsers ?? 0,
+        return successResponse({
+          stats: {
+            totalPolls: totalPolls ?? 0,
+            totalVotes,
+            activeUsers: activeUsers ?? 0,
+          },
+          type: 'public',
           generatedAt: new Date().toISOString(),
-          type: 'public'
         });
 
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error('Error in public stats API:', err);
-        return NextResponse.json({
-          totalPolls: 0,
-          totalVotes: 0,
-          activeUsers: 0,
-          error: 'Failed to fetch public statistics'
-        }, { status: 500 });
+        return errorResponse('Failed to fetch public statistics', 500);
       }
     }
 
@@ -105,54 +108,41 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // Check for user authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
-          return NextResponse.json(
-            { error: 'Authentication required for analytics summary' },
-            { status: 401 }
-          );
+        if (authFetchError || !user) {
+          return authError('Authentication required for analytics summary');
         }
 
         const analyticsService = AnalyticsService.getInstance();
         const summary = await analyticsService.getAnalyticsSummary();
 
-        return NextResponse.json({
-          success: true,
-          data: summary,
+        return successResponse({
+          summary,
           generatedAt: new Date().toISOString(),
           type: 'summary',
-          user_id: user.id
+          userId: user.id,
         });
 
       } catch (error) {
         logger.error('Error getting analytics summary', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to get analytics summary' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to get analytics summary', 500);
       }
     }
 
     // Poll-specific analytics (requires admin auth)
     if (type === 'poll') {
       if (!id) {
-        return NextResponse.json(
-          { error: 'Poll ID is required for poll analytics' },
-          { status: 400 }
-        );
+        return validationError({ pollId: 'Poll ID is required for poll analytics' });
       }
 
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
-          return NextResponse.json(
-            { error: 'Authentication required for poll analytics' },
-            { status: 401 }
-          );
+        if (authFetchError || !user) {
+          return authError('Authentication required for poll analytics');
         }
 
         // Check if user is admin by querying the user_profiles table
@@ -165,55 +155,42 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const isAdmin = profile?.is_admin ?? false;
 
         if (!isAdmin) {
-          return NextResponse.json(
-            { error: 'Admin access required for poll analytics' },
-            { status: 403 }
-          );
+          return forbiddenError('Admin access required for poll analytics');
         }
 
         const analyticsService = AnalyticsService.getInstance();
         const pollAnalytics = await analyticsService.getPollAnalytics(id);
 
-        return NextResponse.json({
-          success: true,
-          data: pollAnalytics,
+        return successResponse({
+          poll: pollAnalytics,
           generatedAt: new Date().toISOString(),
           type: 'poll',
           pollId: id,
-          admin_user: {
+          adminUser: {
             id: user.id,
-            email: user.email
-          }
+            email: user.email,
+          },
         });
 
       } catch (error) {
         logger.error('Error getting poll analytics', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to get poll analytics' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to get poll analytics', 500);
       }
     }
 
     // User-specific analytics (requires admin auth)
     if (type === 'user') {
       if (!id) {
-        return NextResponse.json(
-          { error: 'User ID is required for user analytics' },
-          { status: 400 }
-        );
+        return validationError({ userId: 'User ID is required for user analytics' });
       }
 
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
-          return NextResponse.json(
-            { error: 'Authentication required for user analytics' },
-            { status: 401 }
-          );
+        if (authFetchError || !user) {
+          return authError('Authentication required for user analytics');
         }
 
         // Check if user is admin by querying the user_profiles table
@@ -226,33 +203,26 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const isAdmin = profile?.is_admin ?? false;
 
         if (!isAdmin) {
-          return NextResponse.json(
-            { error: 'Admin access required for user analytics' },
-            { status: 403 }
-          );
+          return forbiddenError('Admin access required for user analytics');
         }
 
         const analyticsService = AnalyticsService.getInstance();
         const userAnalytics = await analyticsService.getUserAnalytics(id);
 
-        return NextResponse.json({
-          success: true,
-          data: userAnalytics,
+        return successResponse({
+          userAnalytics,
           generatedAt: new Date().toISOString(),
           type: 'user',
           userId: id,
-          admin_user: {
+          adminUser: {
             id: user.id,
-            email: user.email
-          }
+            email: user.email,
+          },
         });
 
       } catch (error) {
         logger.error('Error getting user analytics', error instanceof Error ? error : new Error(String(error)));
-        return NextResponse.json(
-          { error: 'Failed to get user analytics' },
-          { status: 500 }
-        );
+        return errorResponse('Failed to get user analytics', 500);
       }
     }
 
@@ -261,13 +231,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       try {
         // SECURITY: Always require real authentication - no bypass
         const supabase = await getSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user }, error: authFetchError } = await supabase.auth.getUser();
 
-        if (authError || !user) {
-          return NextResponse.json(
-            { error: 'Authentication required for general analytics' },
-            { status: 401 }
-          );
+        if (authFetchError || !user) {
+          return authError('Authentication required for general analytics');
         }
 
         // Check if user is admin by querying the user_profiles table
@@ -280,53 +247,48 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const isAdmin = profile?.is_admin ?? false;
 
         if (!isAdmin) {
-          return NextResponse.json(
-            { error: 'Admin access required for general analytics' },
-            { status: 403 }
-          );
+          return forbiddenError('Admin access required for general analytics');
         }
 
         // Get analytics data directly
         const analyticsService = AnalyticsService.getInstance();
         const analyticsData = await analyticsService.getAnalyticsSummary();
 
-        return NextResponse.json({
-          ...analyticsData,
+        return successResponse({
+          analytics: analyticsData,
           generatedAt: new Date().toISOString(),
           performance: {
             queryOptimized: true,
-            cacheEnabled: true
+            cacheEnabled: true,
           },
           type: 'general',
           period,
-          admin_user: {
+          adminUser: {
             id: user.id,
-            email: user.email
-          }
+            email: user.email,
+          },
         });
 
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error('Analytics API error:', err);
 
-        return NextResponse.json(
-          { message: 'Internal server error' },
-          { status: 500 }
-        );
+        return errorResponse('Internal server error', 500);
       }
     }
 
   // Invalid type parameter
-  return successResponse({
-    error: 'Invalid type parameter. Valid types: general, public, summary, poll, user',
-    generatedAt: new Date().toISOString()
+  return validationError({
+    type: 'Invalid type parameter. Valid types: general, public, summary, poll, user'
   });
 });
 
 // Handle unsupported methods
 export function POST() {
-  return NextResponse.json({
-    error: 'Method not allowed. Use GET for analytics queries.',
-    generatedAt: new Date().toISOString()
-  }, { status: 405 });
+  return errorResponse(
+    'Method not allowed. Use GET for analytics queries.',
+    405,
+    undefined,
+    'METHOD_NOT_ALLOWED'
+  );
 }

@@ -122,6 +122,14 @@ class FeedbackTracker {
   }
 
   private generateSessionId(): string {
+    // Use cryptographically secure random number generator
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const array = new Uint8Array(9);
+      crypto.getRandomValues(array);
+      const randomPart = Array.from(array, byte => byte.toString(36)).join('').slice(0, 9);
+      return `session_${Date.now()}_${randomPart}`;
+    }
+    // Fallback for environments without crypto
     return `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
@@ -305,7 +313,8 @@ class FeedbackTracker {
     const trackedFetch: typeof window.fetch = async (...args) => {
       const startTime = Date.now();
       try {
-        const response = await this.originalFetch!(...args);
+        const fetchImpl = this.originalFetch ?? window.fetch;
+        const response = await fetchImpl(...args);
         const duration = Date.now() - startTime;
         this.recordNetworkRequest(this.buildNetworkRequest(args, response.status, duration));
         return response;

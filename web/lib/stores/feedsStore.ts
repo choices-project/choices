@@ -19,11 +19,11 @@ import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
+import type { PrivacySettings } from '@/types/profile';
 
 import { createBaseStoreActions } from './baseStoreActions';
-import { createSafeStorage } from './storage';
 import { fetchFeedsFromApi, parseFeedSearchPayload } from './services/feedsService';
-import type { PrivacySettings } from '@/types/profile';
+import { createSafeStorage } from './storage';
 import type {
   FeedCategory,
   FeedFilters,
@@ -38,7 +38,6 @@ import type {
   FeedsActions,
   ResetFeedsStateOptions,
   FeedUpdateInput,
-  FeedInteractionPayload,
 } from './types/feeds';
 
 const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => {
@@ -262,6 +261,13 @@ const withFeedAnalyticsConsent = async <T>(
   return handler();
 };
 
+const showFeedSuccessToast = async (title: string, message: string, privacySettings: PrivacySettings | null) => {
+  if (hasFeedActivityConsent(privacySettings)) {
+    const { notificationStoreUtils } = await import('./notificationStore');
+    notificationStoreUtils.createSuccess(title, message, 3000);
+  }
+};
+
 type FeedsStoreCreator = StateCreator<
   FeedsStore,
   [['zustand/immer', never], ['zustand/persist', unknown], ['zustand/devtools', never]]
@@ -312,6 +318,31 @@ const applyFeedMutation = (
   );
 };
 
+const deriveTotalAvailableFeeds = (payload: FeedsApiPayload, fallback: number) =>
+  payload.pagination?.total ?? payload.count ?? fallback;
+
+const deriveHasMoreFeeds = (
+  payload: FeedsApiPayload,
+  requestedLimit: number,
+  appendedCount: number,
+  nextLength: number,
+): boolean => {
+  if (typeof payload.pagination?.hasMore === 'boolean') {
+    return payload.pagination.hasMore;
+  }
+
+  const total = deriveTotalAvailableFeeds(payload, nextLength);
+  if (total > nextLength) {
+    return true;
+  }
+
+  if (payload.feeds.length === 0 || appendedCount <= 0) {
+    return false;
+  }
+
+  return payload.feeds.length === requestedLimit;
+};
+
 const createFeedsActions = (
   set: Parameters<FeedsStoreCreator>[0],
   get: Parameters<FeedsStoreCreator>[1]
@@ -357,18 +388,30 @@ const createFeedsActions = (
 
       try {
         const currentState = get();
+        const limit = currentState.preferences.itemsPerPage;
         const payload = await fetchFeedsFromApi({
           category: currentState.selectedCategory,
           district: currentState.filters.district ?? null,
-          limit: currentState.preferences.itemsPerPage,
+          limit,
+          offset: 0,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           state.feeds = payload.feeds;
           state.filteredFeeds = filterFeeds(payload.feeds, state.filters);
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > payload.feeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            payload.feeds.length,
+          );
+          const appendedCount = state.feeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            state.feeds.length,
+          );
           state.isRefreshing = false;
         });
 
@@ -377,6 +420,13 @@ const createFeedsActions = (
           category: payload.filters.category,
           district: payload.filters.district,
         });
+
+        // Success-toast analytics wiring
+        await showFeedSuccessToast(
+          'Feeds Refreshed',
+          `Loaded ${payload.count} feeds`,
+          get().privacySettings
+        );
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         baseActions.setError(errorMessage);
@@ -399,21 +449,32 @@ const createFeedsActions = (
       baseActions.setLoading(true);
 
       try {
-        const limit =
-          currentState.feeds.length + currentState.preferences.itemsPerPage;
+        const limit = currentState.preferences.itemsPerPage;
+        const offset = currentState.feeds.length;
         const payload = await fetchFeedsFromApi({
           category: currentState.selectedCategory,
           district: currentState.filters.district ?? null,
           limit,
+          offset,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           const mergedFeeds = mergeUniqueFeeds(state.feeds, payload.feeds);
           state.feeds = mergedFeeds;
           state.filteredFeeds = filterFeeds(mergedFeeds, state.filters);
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > mergedFeeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            Math.max(mergedFeeds.length, state.totalAvailableFeeds),
+          );
+          const appendedCount = mergedFeeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            mergedFeeds.length,
+          );
         });
 
         logger.info('More feeds loaded', {
@@ -712,25 +773,44 @@ const createFeedsActions = (
 
       try {
         const currentState = get();
+        const limit = currentState.preferences.itemsPerPage;
         const payload = await fetchFeedsFromApi({
           category: category ?? currentState.selectedCategory,
           district: currentState.filters.district ?? null,
-          limit: currentState.preferences.itemsPerPage,
+          limit,
+          offset: 0,
           sort: mapSortPreferenceToParam(currentState.preferences.sortBy),
         });
 
         setState((state) => {
+          const previousLength = state.feeds.length;
           state.feeds = payload.feeds;
           state.filteredFeeds = filterFeeds(payload.feeds, state.filters);
           state.selectedCategory = category ?? currentState.selectedCategory ?? null;
-          state.totalAvailableFeeds = payload.count;
-          state.hasMoreFeeds = payload.count > payload.feeds.length;
+          state.totalAvailableFeeds = deriveTotalAvailableFeeds(
+            payload,
+            payload.feeds.length,
+          );
+          const appendedCount = state.feeds.length - previousLength;
+          state.hasMoreFeeds = deriveHasMoreFeeds(
+            payload,
+            limit,
+            appendedCount,
+            state.feeds.length,
+          );
         });
 
         logger.info('Feeds loaded', {
           category: payload.filters.category,
           count: payload.count,
         });
+
+        // Success-toast analytics wiring
+        await showFeedSuccessToast(
+          'Feeds Loaded',
+          `Loaded ${payload.count} feeds`,
+          get().privacySettings
+        );
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         setState((state) => {
@@ -756,17 +836,29 @@ const createFeedsActions = (
           headers: { Accept: 'application/json' },
         });
 
-        if (!response.success) {
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              data?: unknown;
+              categories?: unknown;
+            }
+          | null;
+
+        if (!response.ok || payload?.success === false) {
           throw new Error('Failed to load categories');
         }
 
-        const raw = response.data;
+        const raw = payload?.data ?? payload?.categories ?? payload;
+        const rawObject =
+          raw && typeof raw === 'object'
+            ? (raw as { data?: unknown; categories?: unknown })
+            : undefined;
         const categories = Array.isArray(raw)
           ? raw
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : Array.isArray(raw?.categories)
-              ? raw.categories
+          : Array.isArray(rawObject?.data)
+            ? rawObject?.data
+            : Array.isArray(rawObject?.categories)
+              ? rawObject?.categories
               : [];
 
         if (!Array.isArray(categories)) {
@@ -804,7 +896,9 @@ const createFeedsActions = (
           body: JSON.stringify({ feedId, interaction }),
         });
 
-        if (!response.success) {
+        const payload = (await response.json().catch(() => null)) as { success?: boolean } | null;
+
+        if (!response.ok || payload?.success === false) {
           throw new Error('Failed to save user interaction');
         }
 

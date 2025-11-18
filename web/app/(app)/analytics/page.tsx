@@ -19,6 +19,7 @@ import {
   useAnalyticsError,
   useAnalyticsActions
 } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 
 type AnalyticsView = {
   id: string;
@@ -87,6 +88,7 @@ export default function AnalyticsPage() {
   const error = useAnalyticsError();
   const analyticsActions = useAnalyticsActions();
   const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions;
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   
   // Feature flags - these would come from app store in a real implementation
   const analyticsEnabled = true;
@@ -152,6 +154,21 @@ export default function AnalyticsPage() {
       enabled: analyticsEnabled && aiFeaturesEnabled
     }
   ];
+
+  useEffect(() => {
+    setCurrentRoute('/analytics');
+    setSidebarActiveSection('analytics');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Analytics', href: '/analytics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   // Track page view when component mounts
   useEffect(() => {

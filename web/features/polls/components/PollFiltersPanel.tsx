@@ -8,12 +8,10 @@ import {
   useHashtagActions,
   useHashtagStats,
   useTrendingHashtags,
-} from '@/lib/stores';
-import {
+
   usePollFilters,
   usePollSearch,
-  usePollsActions,
-} from '@/lib/stores';
+  usePollsActions} from '@/lib/stores';
 import type { PollsActions } from '@/lib/stores/pollsStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
@@ -43,6 +41,20 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
   const { t, currentLanguage } = useI18n();
   const filters = usePollFilters();
   const search = usePollSearch();
+  const defaultActions = usePollsActions();
+  const computedActions = useMemo(
+    () =>
+      actions ?? {
+        loadPolls: defaultActions.loadPolls,
+        setFilters: defaultActions.setFilters,
+        setTrendingOnly: defaultActions.setTrendingOnly,
+        setCurrentPage: defaultActions.setCurrentPage,
+        setSearchQuery: defaultActions.setSearchQuery,
+        searchPolls: defaultActions.searchPolls,
+        clearSearch: defaultActions.clearSearch,
+      },
+    [actions, defaultActions],
+  );
   const {
     loadPolls,
     setFilters,
@@ -51,23 +63,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
     setSearchQuery,
     searchPolls,
     clearSearch,
-  } = useMemo(
-    () =>
-      actions ??
-      (() => {
-        const defaultActions = usePollsActions();
-        return {
-          loadPolls: defaultActions.loadPolls,
-          setFilters: defaultActions.setFilters,
-          setTrendingOnly: defaultActions.setTrendingOnly,
-          setCurrentPage: defaultActions.setCurrentPage,
-          setSearchQuery: defaultActions.setSearchQuery,
-          searchPolls: defaultActions.searchPolls,
-          clearSearch: defaultActions.clearSearch,
-        };
-      })(),
-    [actions],
-  );
+  } = computedActions;
 
   const trendingHashtags = useTrendingHashtags();
   const hashtagStats = useHashtagStats();

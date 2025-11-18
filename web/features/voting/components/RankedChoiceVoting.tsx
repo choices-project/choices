@@ -4,8 +4,8 @@ import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { AccessibleRankingInterface } from '@/components/accessible/RankingInterface';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useVotingIsVoting } from '@/features/voting/lib/store';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 import type { PollOption } from '../types';
 

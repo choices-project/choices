@@ -58,17 +58,20 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
           const isRecommended = recommendedLevel === level;
 
           return (
-            <div
+            <button
+              type="button"
               key={level}
               className={`
-                relative p-4 border rounded-lg cursor-pointer transition-all
+                relative p-4 border rounded-lg transition-all text-left w-full
                 ${isSelected 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200 hover:border-gray-300'
                 }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
               onClick={() => !disabled && onChange(level)}
+              aria-pressed={isSelected}
+              disabled={disabled}
             >
               {/* Selection indicator */}
               {isSelected && (
@@ -123,7 +126,7 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
                   </ul>
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
       </div>

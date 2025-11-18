@@ -17,52 +17,62 @@ import React from 'react';
 
 import { useSystemMetrics } from '@/features/admin/lib/hooks';
 import { useAdminSidebarCollapsed, useAdminActions } from '@/lib/stores';
+import { useSidebarActiveSection } from '@/lib/stores/appStore';
 
 const navigationItems = [
   {
     name: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
+    section: 'admin-dashboard',
   },
   {
     name: 'Users',
     href: '/admin/users',
     icon: Users,
+    section: 'admin-users',
   },
   {
     name: 'Feedback',
     href: '/admin/feedback',
     icon: MessageCircle,
+    section: 'admin-feedback',
   },
   {
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+    section: 'admin-analytics',
   },
   {
     name: 'Performance',
     href: '/admin/performance',
     icon: Zap,
+    section: 'admin-performance',
   },
   {
     name: 'System',
     href: '/admin/system',
     icon: Settings,
+    section: 'admin-system',
   },
   {
     name: 'Site Messages',
     href: '/admin/site-messages',
     icon: MessageCircle,
+    section: 'admin-site-messages',
   },
   {
     name: 'Feature Flags',
     href: '/admin/feature-flags',
     icon: Flag,
+    section: 'admin-feature-flags',
   },
 ];
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const activeSection = useSidebarActiveSection();
   const sidebarCollapsed = useAdminSidebarCollapsed();
   const { toggleSidebar } = useAdminActions();
   const { data: metrics } = useSystemMetrics();
@@ -115,8 +125,11 @@ export const Sidebar: React.FC = () => {
           className="mt-6 px-3"
         >
           <ul className="space-y-2">
-            {navigationItems.map((item: { name: string; href: string; icon: React.ComponentType }) => {
-              const isActive = pathname === item.href;
+            {navigationItems.map((item: { name: string; href: string; icon: React.ComponentType; section?: string }) => {
+              const matchesSection = activeSection && item.section
+                ? item.section === activeSection
+                : false;
+              const isActive = matchesSection || pathname === item.href;
               return (
                 <li key={item.name}>
                   <Link

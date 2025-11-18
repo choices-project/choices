@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true
+  },
+  "include": [
+    "web/types/**/*.ts",
+    "web/lib/stores/profileStore.ts",
+    "web/features/profile/**/*.ts",
+    "web/app/api/analytics/**/*.ts",
+    "web/features/analytics/**/*.ts",
+    "web/lib/cache/analytics-cache.ts",
+    "web/lib/utils/civic-actions-integration.ts",
+    "web/lib/utils/sophisticated-civic-engagement.ts",
+    "web/app/api/contact/**/*.ts",
+    "web/app/api/feeds/**/*.ts",
+    "web/features/feeds/**/*.ts",
+    "web/lib/stores/feedsStore.ts"
+  ]
+}
+

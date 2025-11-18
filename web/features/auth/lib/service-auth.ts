@@ -24,8 +24,12 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
     }
 
     // Verify the service key by creating a client and testing it
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      return NextResponse.json({ error: 'Supabase URL not configured' }, { status: 500 });
+    }
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       serviceKey,
       { auth: { persistSession: false } }
     );
@@ -52,8 +56,10 @@ export async function isServiceKeyValid(): Promise<boolean> {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return false;
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return false;
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       serviceKey,
       { auth: { persistSession: false } }
     );

@@ -1,12 +1,12 @@
 import type { NextRequest} from 'next/server';
 
-import { withErrorHandling, successResponse, notFoundError, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, notFoundError, validationError, errorResponse } from '@/lib/api';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
     const pollId = params.id;
@@ -16,6 +16,9 @@ export const GET = withErrorHandling(async (
     }
 
     const supabaseClient = await getSupabaseServerClient();
+    if (!supabaseClient) {
+      return errorResponse('Database not available', 500);
+    }
 
     const { data: poll, error } = await supabaseClient
       .from('polls')

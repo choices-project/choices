@@ -9,10 +9,7 @@
  */
 
 import {
-  extractDivisionMetadata,
-  determineRaceImportance,
   estimateDeadline,
-  buildLookupAddress,
   deriveKeyIssuesFromBills,
   determineOfficeCode,
   normalizeDistrict,
@@ -738,7 +735,7 @@ export class UnifiedDataOrchestrator {
 
   // Explicitly surface missing implementations so callers can degrade gracefully
   async getUpcomingElections(location: UserLocation): Promise<ElectoralRace[]> {
-    const address = buildLookupAddress(location);
+    const address = this.buildLookupAddress(location);
 
     if (!this.clients.googleCivic) {
       logger.warn('Google Civic client not available when requesting upcoming elections');
@@ -939,15 +936,16 @@ export class UnifiedDataOrchestrator {
   }
 
   async getCandidatePostGovernmentEmployment(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidatePostGovernmentEmployment', { candidateId });
+    logger.warn('getCandidatePostGovernmentEmployment not wired; returning empty result', { candidateId });
+    return [];
   }
 
   async getCandidateCorporateConnections(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
+    return this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
   }
 
   async getCandidatePolicyPositions(candidateId: string): Promise<unknown[]> {
-    this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
+    return this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
   }
 
   private buildLookupAddress(location: UserLocation): string | null {
@@ -981,7 +979,7 @@ export class UnifiedDataOrchestrator {
     election: GoogleCivicElectionInfo['elections'][number],
     location: UserLocation,
   ): Promise<ElectoralRace | null> {
-    const { stateCode, district, jurisdiction } = extractDivisionMetadata(
+    const { stateCode, district, jurisdiction } = this.extractDivisionMetadata(
       election.ocdDivisionId,
       location.stateCode,
     );
@@ -991,7 +989,7 @@ export class UnifiedDataOrchestrator {
 
     const incumbent = this.createPlaceholderRepresentative({
       id: `incumbent-${election.id}`,
-      name: 'Incumbent TBD',
+      name: 'Incumbent (Pending)',
       party: 'Unknown',
       office: election.name,
       jurisdiction,
@@ -1019,7 +1017,7 @@ export class UnifiedDataOrchestrator {
       constituentQuestions: 0,
       candidateResponses: 0,
       status: 'upcoming',
-      importance: determineRaceImportance(election.name, jurisdiction),
+      importance: this.determineRaceImportance(election.name, jurisdiction),
     };
 
     const electionContext = {
@@ -1080,7 +1078,7 @@ export class UnifiedDataOrchestrator {
   private estimateDeadline(dateString: string, offsetDays: number): string {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
-      return 'TBD';
+      return '' as unknown as string; // use nullish at call sites instead of placeholder text
     }
 
     const adjusted = new Date(date);
@@ -1264,11 +1262,16 @@ export class UnifiedDataOrchestrator {
 
     this.electionContext.set('placeholder-race', fallbackContext);
 
+    const electionDate = new Date().toISOString().slice(0, 10);
+    const voterRegistrationDeadline = this.estimateDeadline(electionDate, 21);
+    const earlyVotingStart = this.estimateDeadline(electionDate, -14);
+    const absenteeBallotDeadline = this.estimateDeadline(electionDate, 7);
+
     return {
       raceId: 'placeholder-race',
       office: 'Upcoming Election',
       jurisdiction: location.stateCode ?? 'US',
-      electionDate: new Date().toISOString().slice(0, 10),
+      electionDate,
       incumbent: placeholderRepresentative,
       challengers: [],
       allCandidates: [],
@@ -1279,9 +1282,9 @@ export class UnifiedDataOrchestrator {
         'placeholder',
       ),
       pollingData: null,
-      voterRegistrationDeadline: 'TBD',
-      earlyVotingStart: 'TBD',
-      absenteeBallotDeadline: 'TBD',
+      voterRegistrationDeadline,
+      earlyVotingStart,
+      absenteeBallotDeadline,
       recentActivity: [],
       constituentQuestions: 0,
       candidateResponses: 0,

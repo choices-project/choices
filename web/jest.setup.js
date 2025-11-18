@@ -10,7 +10,9 @@ process.env.NEXTAUTH_URL = 'http://localhost:3000';
 require('whatwg-fetch');
 
 // Polyfill TextEncoder/TextDecoder early so they are available for any modules imported during setup.
+const { webcrypto } = require('crypto');
 const { TextEncoder, TextDecoder } = require('util');
+
 if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder;
 }
@@ -19,7 +21,6 @@ if (typeof global.TextDecoder === 'undefined') {
 }
 
 // Ensure Web Crypto API is present before tests run (required by Supabase + WebAuthn flows).
-const { webcrypto } = require('crypto');
 if (typeof global.crypto === 'undefined') {
   global.crypto = webcrypto;
 }
@@ -36,7 +37,7 @@ try {
   if (typeof global.WritableStream === 'undefined' && WritableStream) {
     global.WritableStream = WritableStream;
   }
-} catch (_) {
+} catch {
   // stream/web is available in supported Node versions; ignore if unavailable.
 }
 

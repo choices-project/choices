@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
 import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 
@@ -75,7 +74,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   } = options;
 
   // const featureFlags = useFeatureFlags();
-  const _featureFlags = { flags: {}, isLoading: false };
+  const featureFlags: { flags: { analytics?: boolean; aiFeatures?: boolean }; isLoading: boolean } = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,9 +82,14 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
   const [filters, setFilters] = useState<AnalyticsFilters>(defaultFilters);
 
-  // Check feature flags
-  const analyticsEnabled = isFeatureEnabled('analytics');
-  const aiFeaturesEnabled = isFeatureEnabled('aiFeatures');
+  // Check feature flags - use featureFlags if available
+  const analyticsEnabled = featureFlags.flags?.analytics ?? isFeatureEnabled('analytics');
+  const aiFeaturesEnabled = featureFlags.flags?.aiFeatures ?? isFeatureEnabled('aiFeatures');
+  
+  // Log feature flag status for debugging
+  if (process.env.NODE_ENV === 'development' && featureFlags.isLoading) {
+    devLog('Feature flags loading', { analyticsEnabled, aiFeaturesEnabled });
+  }
 
   const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
     if (!analyticsEnabled) {
@@ -97,7 +101,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       setLoading(true);
       setError(null);
 
-      const requestFilters = withOptional(filters, customFilters);
+      const requestFilters = { ...filters, ...(customFilters ?? {}) };
       const queryParams = new URLSearchParams({
         period: requestFilters.dateRange ?? '7d'
       });
@@ -132,12 +136,14 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // Auto-refresh effect
   useEffect(() => {
-    if (analyticsEnabled && autoRefreshEnabled) {
-      fetchData();
-      
-      const interval = setInterval(fetchData, refreshInterval);
-      return () => clearInterval(interval);
+    if (!analyticsEnabled || !autoRefreshEnabled) {
+      return;
     }
+    
+    fetchData();
+    
+    const interval = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(interval);
   }, [analyticsEnabled, autoRefreshEnabled, refreshInterval, fetchData]);
 
   // Initial data fetch
@@ -324,7 +330,7 @@ export function useOverviewAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchOverview
   };
 }
@@ -333,11 +339,11 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   const analytics = useAnalytics(options);
   
   const fetchTrends = useCallback((dateRange?: string) => {
-    return analytics.fetchData('trends', withOptional({}, { dateRange }));
+    return analytics.fetchData('trends', { ...(dateRange ? { dateRange } : {}) });
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchTrends
   };
 }
@@ -350,7 +356,7 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics]);
   
   return {
-    ...withOptional(analytics),
+    ...analytics,
     fetchPerformance
   };
 }

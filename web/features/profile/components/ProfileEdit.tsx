@@ -43,7 +43,6 @@ import type {
   PrivacySettingKey,
   PrivacySettingValue,
 } from '@/lib/stores/userStore';
-import { withOptional } from '@/lib/util/objects';
 import { PROFILE_DEFAULTS } from '@/types/profile';
 import type {
   ProfileUpdateData,
@@ -119,15 +118,14 @@ const basePrivacyDefaults: Partial<PrivacySettings> = {
   profile_visibility: 'public',
 };
 
-const defaultPrivacySettings: Partial<PrivacySettings> = withOptional(
-  basePrivacyDefaults,
-  PROFILE_DEFAULTS.privacy_settings ?? {},
-);
+const defaultPrivacySettings: Partial<PrivacySettings> = {
+  ...basePrivacyDefaults,
+  ...(PROFILE_DEFAULTS.privacy_settings ?? {}),
+};
 
-const defaultDemographics: ProfileDemographics = withOptional(
-  {} as ProfileDemographics,
-  PROFILE_DEFAULTS.demographics ?? {},
-);
+const defaultDemographics: ProfileDemographics = {
+  ...(PROFILE_DEFAULTS.demographics ?? {}),
+} as ProfileDemographics;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -153,7 +151,7 @@ const toParticipationStyle = (
 
 const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
   if (!isRecord(value)) {
-    return withOptional(defaultPrivacySettings);
+    return { ...defaultPrivacySettings };
   }
 
   const extras: Partial<PrivacySettings> = {};
@@ -165,14 +163,14 @@ const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
     }
   });
 
-  return withOptional(defaultPrivacySettings, extras);
+  return { ...defaultPrivacySettings, ...extras };
 };
 
 const parseDemographics = (value: unknown): ProfileDemographics => {
   if (!isRecord(value)) {
-    return withOptional(defaultDemographics);
+    return { ...defaultDemographics };
   }
-  return withOptional(defaultDemographics, value as ProfileDemographics);
+  return { ...defaultDemographics, ...(value as ProfileDemographics) };
 };
 
 const buildInitialFormData = (
@@ -180,18 +178,16 @@ const buildInitialFormData = (
 ): ProfileUpdateData => {
   const participationStyle = toParticipationStyle(userProfile?.participation_style);
 
-  return withOptional(
-    {
-      display_name: userProfile?.display_name ?? '',
-      bio: userProfile?.bio ?? '',
-      username: userProfile?.username ?? '',
-      primary_concerns: toStringArray(userProfile?.primary_concerns ?? []),
-      community_focus: toStringArray(userProfile?.community_focus ?? []),
-      privacy_settings: parsePrivacySettings(userProfile?.privacy_settings),
-      demographics: parseDemographics(userProfile?.demographics),
-    },
-    participationStyle ? { participation_style: participationStyle } : undefined,
-  );
+  return {
+    display_name: userProfile?.display_name ?? '',
+    bio: userProfile?.bio ?? '',
+    username: userProfile?.username ?? '',
+    primary_concerns: toStringArray(userProfile?.primary_concerns ?? []),
+    community_focus: toStringArray(userProfile?.community_focus ?? []),
+    privacy_settings: parsePrivacySettings(userProfile?.privacy_settings),
+    demographics: parseDemographics(userProfile?.demographics),
+    ...(participationStyle ? { participation_style: participationStyle } : {}),
+  };
 };
 
 const buildProfileUpdatePayload = (draft: ProfileEditDraft): ProfileUpdateData => {
@@ -271,7 +267,7 @@ export default function ProfileEdit({
   const draft = profileDraft ?? fallbackDraft;
 
   const privacySettings = useMemo(
-    () => withOptional(defaultPrivacySettings, draft.privacy_settings ?? {}),
+    () => ({ ...defaultPrivacySettings, ...(draft.privacy_settings ?? {}) }),
     [draft.privacy_settings],
   );
 

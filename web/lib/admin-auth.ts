@@ -5,8 +5,9 @@
  * Only the service role (you) can grant admin access.
  */
 
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 
+import { authError } from '@/lib/api';
 import logger from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -74,6 +75,6 @@ export async function requireAdminOr401(): Promise<NextResponse | null> {
     await requireAdminUser();
     return null;
   } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return authError('Admin authentication required');
   }
 }

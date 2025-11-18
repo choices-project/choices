@@ -7,14 +7,19 @@ import {
   validationError,
   notFoundError,
   authError,
+  parseBody,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient, type Database } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import type { Database } from '@/utils/supabase/types'
 
 // Use generated types from Supabase - automatically stays in sync with your database schema
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+type LoginRequestBody = {
+  email?: string;
+  password?: string;
+};
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
     // CSRF protection is handled by Next.js middleware in production
@@ -26,7 +31,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const rateLimitResult = await apiRateLimiter.checkLimit(
       ip,
       '/api/auth/login',
-      withOptional({}, { userAgent })
+      { ...(userAgent ? { userAgent } : {}) }
     );
     
     if (!rateLimitResult.allowed) {
@@ -34,16 +39,27 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Validate request
-    const body = await request.json()
-    const { email, password } = body
+    const parsedBody = await parseBody<LoginRequestBody>(request)
+    if (!parsedBody.success) {
+      return parsedBody.error
+    }
+    const { email, password } = parsedBody.data
 
     // Validate required fields
-    if (!email || !password) {
-      return validationError(
-        { email: !email ? 'Email is required' : '', password: !password ? 'Password is required' : '' },
-        'Email and password are required'
-      );
+    const missingFields: Record<string, string> = {}
+    if (!email) {
+      missingFields.email = 'Email is required'
     }
+    if (!password) {
+      missingFields.password = 'Password is required'
+    }
+    if (Object.keys(missingFields).length > 0) {
+      return validationError(missingFields, 'Email and password are required')
+    }
+
+    const normalizedEmail = (email ?? '').toLowerCase().trim()
+
+    const normalizedPassword = password ?? ''
 
     // Use Supabase Auth for authentication
     const supabaseClient = await getSupabaseServerClient()
@@ -52,12 +68,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Sign in with Supabase Auth
     const { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
-      password
+      email: normalizedEmail,
+      password: normalizedPassword
     })
 
     if (signInError || !authData.user) {
-      logger.warn('Login failed', { email, error: signInError?.message })
+      logger.warn('Login failed', { email: normalizedEmail, error: signInError?.message })
       return authError('Invalid email or password');
     }
 

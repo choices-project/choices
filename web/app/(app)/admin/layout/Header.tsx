@@ -109,22 +109,15 @@ export const Header: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {notifications.slice(0, 5).map((notification) => (
-                    <div
+                    <button
                       key={notification.id}
-                      className={`p-3 rounded-md cursor-pointer transition-colors ${
+                      type="button"
+                      className={`w-full text-left p-3 rounded-md transition-colors ${
                         notification.read
                           ? 'bg-gray-50 hover:bg-gray-100'
                           : 'bg-blue-50 hover:bg-blue-100'
                       }`}
                       onClick={() => markAdminNotificationAsRead(notification.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          markAdminNotificationAsRead(notification.id)
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
                       aria-label={`Mark notification "${notification.title}" as read`}
                     >
                       <div className="flex items-start justify-between">
@@ -143,7 +136,7 @@ export const Header: React.FC = () => {
                           <div className="w-2 h-2 bg-blue-500 rounded-full ml-2" />
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -169,14 +162,12 @@ export const Header: React.FC = () => {
           {isUserMenuOpen && (
             <ul
               className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
-              role="menu"
               aria-label="Account options"
             >
               <li>
                 <button
                   className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                   onClick={closeUserMenu}
-                  role="menuitem"
                 >
                   <User className="h-4 w-4 mr-3" aria-hidden="true" />
                   Profile
@@ -186,7 +177,6 @@ export const Header: React.FC = () => {
                 <button
                   className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                   onClick={closeUserMenu}
-                  role="menuitem"
                 >
                   <Settings className="h-4 w-4 mr-3" aria-hidden="true" />
                   Settings
@@ -197,7 +187,6 @@ export const Header: React.FC = () => {
                 <button
                   className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                   onClick={handleLogout}
-                  role="menuitem"
                 >
                   <LogOut className="h-4 w-4 mr-3" aria-hidden="true" />
                   Sign out

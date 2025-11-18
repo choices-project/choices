@@ -18,8 +18,9 @@ import { immer } from 'zustand/middleware/immer';
 import type { AdminNotification, NewAdminNotification } from '@/features/admin/types';
 import { logger } from '@/lib/utils/logger';
 
+import { useAnalyticsStore } from './analyticsStore';
 import { createSafeStorage } from './storage';
-import type { BaseStore, Notification } from './types';
+import type { BaseStore, Notification, ElectionNotificationContext } from './types';
 
 export type NotificationSettings = {
   position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
@@ -94,6 +95,54 @@ const createNotificationId = () =>
 const createAdminNotificationId = () =>
   `admin_notification_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
+const isElectionNotification = (
+  notification: Notification
+): notification is Notification & { context: ElectionNotificationContext } =>
+  notification.context?.kind === 'election';
+
+const trackElectionNotificationEvent = (
+  phase: 'delivered' | 'opened',
+  notification: Notification & { context: ElectionNotificationContext }
+) => {
+  try {
+    const analyticsState = useAnalyticsStore.getState();
+    const { trackEvent, sessionId } = analyticsState;
+
+    if (typeof trackEvent !== 'function') {
+      return;
+    }
+
+    trackEvent({
+      event_type: `notifications.election.${phase}`,
+      session_id: sessionId,
+      event_data: {
+        election_id: notification.context.electionId,
+        division_id: notification.context.divisionId,
+        days_until: notification.context.daysUntil,
+        source: notification.context.source ?? 'unknown'
+      },
+      created_at: new Date().toISOString(),
+      type: 'notification',
+      category: 'civics',
+      action: `election_${phase}`,
+      label: notification.context.countdownLabel ?? notification.title,
+      metadata: {
+        electionDate: notification.context.electionDate,
+        representativeNames: notification.context.representativeNames ?? [],
+        notificationId: notification.id,
+        ...(notification.metadata ? { notificationMetadata: notification.metadata } : {}),
+        ...(notification.context.metadata ? { contextMetadata: notification.context.metadata } : {})
+      }
+    });
+  } catch (error) {
+    logger.warn('Failed to track election notification analytics event', {
+      phase,
+      notificationId: notification.id,
+      error
+    });
+  }
+};
+
 const buildNotification = (
   payload: Omit<Notification, 'id' | 'timestamp' | 'read'>
 ): Notification => {
@@ -115,6 +164,15 @@ const buildNotification = (
   }
   if (payload.persistent !== undefined) {
     overrides.persistent = payload.persistent;
+  }
+  if (payload.context) {
+    overrides.context = payload.context;
+  }
+  if (payload.source) {
+    overrides.source = payload.source;
+  }
+  if (payload.metadata) {
+    overrides.metadata = payload.metadata;
   }
 
   return { ...base, ...overrides };
@@ -271,17 +329,74 @@ export const createNotificationActions = (
 
     addNotification: (payload) => {
       const notification = buildNotification(payload);
+      let analyticsTargetId: string | null = null;
+      let shouldSchedule = true;
 
       setState((state) => {
+        if (isElectionNotification(notification)) {
+          const existingIndex = state.notifications.findIndex(
+            (existing) =>
+              isElectionNotification(existing) &&
+              existing.context.electionId === notification.context.electionId &&
+              existing.context.divisionId === notification.context.divisionId
+          );
+
+          if (existingIndex !== -1) {
+            const existing = state.notifications[existingIndex];
+          if (!existing) {
+            return;
+          }
+            existing.title = notification.title;
+            existing.message = notification.message;
+            existing.timestamp = notification.timestamp;
+            existing.read = false;
+            if (typeof notification.duration === 'number') {
+              existing.duration = notification.duration;
+            }
+            if (typeof notification.persistent === 'boolean') {
+              existing.persistent = notification.persistent;
+            }
+            if (notification.actions) {
+              existing.actions = notification.actions;
+            }
+            if (notification.context) {
+              existing.context = notification.context;
+            }
+            if (notification.metadata) {
+              existing.metadata = notification.metadata;
+            }
+            existing.source = notification.source ?? existing.source ?? 'civics';
+            analyticsTargetId = existing.id;
+            state.unreadCount = calculateUnread(state.notifications);
+            shouldSchedule = false;
+            return;
+          }
+        }
+
         const nextQueue = state.settings.enableStacking
           ? [notification, ...state.notifications]
           : [notification];
 
         state.notifications = nextQueue.slice(0, state.settings.maxNotifications);
         state.unreadCount = calculateUnread(state.notifications);
+        analyticsTargetId = notification.id;
       });
 
-      scheduleNotificationEffects(notification, get, (id) => get().removeNotification(id));
+      if (analyticsTargetId) {
+        const storedNotification = get().notifications.find(
+          (item) => item.id === analyticsTargetId
+        );
+
+        if (storedNotification) {
+          if (shouldSchedule) {
+            scheduleNotificationEffects(storedNotification, get, (id) => get().removeNotification(id));
+
+            if (isElectionNotification(storedNotification)) {
+              trackElectionNotificationEvent('delivered', storedNotification);
+            }
+          }
+        }
+      }
     },
 
     removeNotification: (id) => {
@@ -295,22 +410,54 @@ export const createNotificationActions = (
     },
 
     markAsRead: (id) => {
+      let analyticsTargetId: string | null = null;
+
       setState((state) => {
         const target = state.notifications.find((notification) => notification.id === id);
         if (target && !target.read) {
+          if (isElectionNotification(target)) {
+            analyticsTargetId = target.id;
+          }
           target.read = true;
           state.unreadCount = calculateUnread(state.notifications);
         }
       });
+
+      if (analyticsTargetId) {
+        const storedNotification = get().notifications.find(
+          (notification) => notification.id === analyticsTargetId
+        );
+
+        if (storedNotification && isElectionNotification(storedNotification)) {
+          trackElectionNotificationEvent('opened', storedNotification);
+        }
+      }
     },
 
     markAllAsRead: () => {
+      const analyticsIds: string[] = [];
+
       setState((state) => {
         state.notifications.forEach((notification) => {
-          notification.read = true;
+          if (!notification.read) {
+            if (isElectionNotification(notification)) {
+              analyticsIds.push(notification.id);
+            }
+            notification.read = true;
+          }
         });
         state.unreadCount = 0;
       });
+
+      if (analyticsIds.length > 0) {
+        const storedNotifications = get().notifications.filter((notification) =>
+          analyticsIds.includes(notification.id)
+        );
+
+        storedNotifications
+          .filter(isElectionNotification)
+          .forEach((notification) => trackElectionNotificationEvent('opened', notification));
+      }
     },
 
     clearAll: () => {
@@ -559,6 +706,15 @@ export const useNotificationsByType = (type: Notification['type']) =>
 export const useUnreadNotifications = () =>
   useNotificationStore((state) => state.getUnreadNotifications());
 
+export const useElectionNotifications = () => {
+  const notifications = useNotificationStore(notificationSelectors.notifications);
+
+  return useMemo(
+    () => notifications.filter(isElectionNotification),
+    [notifications]
+  );
+};
+
 export const useNotificationPosition = () =>
   useNotificationStore((state) => state.settings.position);
 export const useNotificationDuration = () =>
@@ -576,6 +732,22 @@ export const useUnreadAdminNotifications = () =>
     state.adminNotifications.filter((notification) => !notification.read)
   );
 
+export type CreateElectionNotificationOptions = {
+  title: string;
+  message: string;
+  countdownLabel: string;
+  electionId: string;
+  divisionId: string;
+  electionDate: string;
+  daysUntil: number;
+  representativeNames?: string[];
+  source?: ElectionNotificationContext['source'];
+  duration?: number;
+  persistent?: boolean;
+  metadata?: Record<string, unknown>;
+  notificationType?: Notification['type'];
+};
+
 export const notificationStoreUtils = {
   createSuccess: (title: string, message: string, duration?: number) => {
     useNotificationStore.getState().addNotification({
@@ -586,12 +758,32 @@ export const notificationStoreUtils = {
     });
   },
 
+  createSuccessWithSettings: (title: string, message: string) => {
+    const state = useNotificationStore.getState();
+    state.addNotification({
+      type: 'success',
+      title,
+      message,
+      duration: state.settings.duration,
+    });
+  },
+
   createError: (title: string, message: string, duration?: number) => {
     useNotificationStore.getState().addNotification({
       type: 'error',
       title,
       message,
       duration: duration ?? 0
+    });
+  },
+
+  createErrorWithSettings: (title: string, message: string) => {
+    const state = useNotificationStore.getState();
+    state.addNotification({
+      type: 'error',
+      title,
+      message,
+      duration: state.settings.duration,
     });
   },
 
@@ -620,6 +812,50 @@ export const notificationStoreUtils = {
       message,
       duration: 0,
       persistent: true
+    });
+  },
+
+  createElectionNotification: ({
+    title,
+    message,
+    countdownLabel,
+    electionId,
+    divisionId,
+    electionDate,
+    daysUntil,
+    representativeNames,
+    source = 'automation',
+    duration,
+    persistent,
+    metadata,
+    notificationType = 'info'
+  }: CreateElectionNotificationOptions) => {
+    const shouldPersist = persistent ?? daysUntil <= 1;
+
+    useNotificationStore.getState().addNotification({
+      type: notificationType,
+      title,
+      message,
+      duration:
+        typeof duration === 'number'
+          ? duration
+          : shouldPersist
+            ? 0
+            : defaultNotificationSettings.duration,
+      persistent: shouldPersist,
+      source: 'civics',
+      metadata: metadata ?? {},
+      context: {
+        kind: 'election',
+        electionId,
+        divisionId,
+        electionDate,
+        daysUntil,
+        countdownLabel,
+        representativeNames,
+        source,
+        metadata: metadata ?? {}
+      }
     });
   },
 

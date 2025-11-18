@@ -22,6 +22,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 type Thread = {
@@ -42,6 +43,7 @@ type Thread = {
 };
 
 export default function ContactHistoryPage() {
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +79,21 @@ export default function ContactHistoryPage() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    setCurrentRoute('/contact/history');
+    setSidebarActiveSection('contact');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'History', href: '/contact/history' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     void fetchThreads();

@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 export default function ProfilePage() {
@@ -21,6 +22,22 @@ export default function ProfilePage() {
   const { profile, isLoading: profileLoading, profileError, refetch } = useProfileData();
   const { exportProfile, isExporting } = useProfileExport();
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
+  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+
+  useEffect(() => {
+    setCurrentRoute('/profile');
+    setSidebarActiveSection('profile');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Profile', href: '/profile' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!isUserLoading && !isAuthenticated) {

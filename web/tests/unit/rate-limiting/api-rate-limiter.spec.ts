@@ -1,4 +1,3 @@
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter'
 
 jest.mock('@/lib/rate-limiting/upstash-rate-limiter', () => ({
@@ -8,7 +7,17 @@ jest.mock('@/lib/rate-limiting/upstash-rate-limiter', () => ({
   }
 }))
 
+const { apiRateLimiter } = jest.requireActual<typeof import('@/lib/rate-limiting/api-rate-limiter')>(
+  '@/lib/rate-limiting/api-rate-limiter',
+);
+
 describe('apiRateLimiter facade', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Make recordViolationExternal return a promise so the implementation's check passes
+    (upstashRateLimiter.recordViolationExternal as jest.Mock).mockResolvedValue(undefined);
+  });
+
   it('records violation on disallow', async () => {
     (upstashRateLimiter.checkLimit as jest.Mock).mockResolvedValue({
       allowed: false, remaining: 0, resetTime: Date.now(), totalHits: 51, retryAfter: 900

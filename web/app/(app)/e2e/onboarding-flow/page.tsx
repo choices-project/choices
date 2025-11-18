@@ -56,6 +56,26 @@ type OnboardingHarnessWindow = typeof window & {
 const useDisplayJson = (value: unknown) =>
   useMemo(() => JSON.stringify(value ?? null, null, 2) ?? 'null', [value]);
 
+type ScrollableJsonProps = {
+  label: string;
+  dataTestId: string;
+  value: string;
+};
+
+const ScrollableJson = ({ label, dataTestId, value }: ScrollableJsonProps) => (
+  <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
+    <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>{label}</h3>
+    <pre
+      data-testid={dataTestId}
+      className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
+      role='region'
+      aria-label={`${label} JSON output`}
+    >
+      {value}
+    </pre>
+  </article>
+);
+
 const DEFAULT_AUTH: Required<AuthStepInput> = {
   method: 'email',
   email: 'playwright@example.com',
@@ -283,51 +303,15 @@ export default function OnboardingFlowHarnessPage() {
       </section>
 
       <section className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-        <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
-          <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>Step Data</h3>
-          <pre
-            data-testid='onboarding-flow-step-data'
-            className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs'
-          >
-            {stepDataJson}
-          </pre>
-        </article>
-        <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
-          <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>Auth Data</h3>
-          <pre
-            data-testid='onboarding-flow-auth-data'
-            className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs'
-          >
-            {authDataJson}
-          </pre>
-        </article>
-        <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
-          <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>Profile Data</h3>
-          <pre
-            data-testid='onboarding-flow-profile-data'
-            className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs'
-          >
-            {profileDataJson}
-          </pre>
-        </article>
-        <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
-          <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>Values Data</h3>
-          <pre
-            data-testid='onboarding-flow-values-data'
-            className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs'
-          >
-            {valuesDataJson}
-          </pre>
-        </article>
-        <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
-          <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>Preferences Data</h3>
-          <pre
-            data-testid='onboarding-flow-preferences-data'
-            className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs'
-          >
-            {preferencesDataJson}
-          </pre>
-        </article>
+        <ScrollableJson label='Step Data' dataTestId='onboarding-flow-step-data' value={stepDataJson} />
+        <ScrollableJson label='Auth Data' dataTestId='onboarding-flow-auth-data' value={authDataJson} />
+        <ScrollableJson label='Profile Data' dataTestId='onboarding-flow-profile-data' value={profileDataJson} />
+        <ScrollableJson label='Values Data' dataTestId='onboarding-flow-values-data' value={valuesDataJson} />
+        <ScrollableJson
+          label='Preferences Data'
+          dataTestId='onboarding-flow-preferences-data'
+          value={preferencesDataJson}
+        />
       </section>
     </main>
   );

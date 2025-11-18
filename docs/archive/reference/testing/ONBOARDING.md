@@ -1,6 +1,6 @@
 # Onboarding Testing Playbook
 
-_Last updated: 2025-11-12_
+_Last updated: 2025-11-13_
 
 This document outlines the test strategy for the onboarding journey now that the authentication harness is stable.
 
@@ -16,28 +16,24 @@ This document outlines the test strategy for the onboarding journey now that the
 ## 2. Playwright Plan
 
 ### 2.1 Harness (`/app/(app)/e2e/onboarding-flow/page.tsx`)
-- Expose onboarding helpers via `window.__onboardingHarness`:
+- Exposes helpers via `window.__onboardingFlowHarness`:
+  - `reset()`
   - `startOnboarding(seedData?)`
-  - `completeAuthStep(method)`
-  - `fillProfile(details)`
-  - `submitOnboarding()`
-  - `resetStores()`
-- Provide read-only selectors for assertions:
-  - `onboardingProgress`, `currentStep`, `profileDraft`, `userStoreSnapshot`.
-- Surface E2E sentinels (`data-testid="onboarding-harness-ready"`).
+  - `completeAuthStep(input?)`
+  - `fillProfileStep(input?)`
+  - `setValuesStep(input?)`
+  - `completePrivacyStep(input?)`
+  - `finish()`
+  - `snapshot()`
+- Provides read-only selectors for assertions (`currentStep`, `progress`, `isCompleted`, `authData`, `profileData`, `valuesData`, `preferencesData`).
+- Sets E2E sentinels on `<html>` (`data-onboarding-flow-ready`, `data-onboarding-flow-step`, `data-onboarding-flow-status`).
+- **Accessibility guardrail (2025-11-13):** JSON panels are now focusable `pre` elements with `role="region"` and `tabIndex={0}` to satisfy axe `scrollable-region-focusable`. Preserve this pattern when editing the harness.
 
 ### 2.2 Spec (`web/tests/e2e/specs/onboarding-flow.spec.ts`)
-1. **Happy Path**
-   - Assumes user authenticated via auth harness.
-   - Completes auth setup (magic link simulated), fills profile, observes redirect to dashboard sentinel.
-2. **Skip Auth Step**
-   - Chooses “Skip for now”, verifies warning modal, ensures onboarding completion still persists.
-3. **Profile Validation Errors**
-   - Submits empty profile, asserts error summary surfaced and store error flags set.
-4. **Passkey Path**
-   - Calls `passkeyAPI.beginRegister` stub, ensures userStore biometric flags propagate through onboarding summary.
-5. **Reset / Retry**
-   - Uses harness `resetStores` to simulate rerun, ensures onboarding restarts at step one.
+- Ships as a11y-first regression:
+  1. **Standard completion** — uses helpers to play through auth → profile → values → privacy, then runs axe against the completion state.
+  2. **Custom seed data** — seeds alternative profile/values/preference data and verifies axe stays green.
+- Additional scenarios (skip auth step, validation errors, passkey path, reset/retry) remain backlog items; add them once we have bandwidth and mock coverage.
 
 ### 2.3 MSW Fixtures
 - Extend `web/tests/msw/` with:
@@ -63,15 +59,15 @@ This document outlines the test strategy for the onboarding journey now that the
 
 ## 4. Telemetry & Rollback Hooks
 - Update `docs/testing/AUTH.md` once onboarding Playwright spec is chained, noting combined run command.
-- Ensure telemetry expectations (completed onboarding metric, profile completion events) are tracked in `plan-auth-onboarding-consolidated.md`.
+- Ensure telemetry expectations (completed onboarding metric, profile completion events) are tracked in `plan-gpt5-codex-independent.md`.
 - Rollback: note that disabling passkeys now documented in `docs/operations/passkey-rollback-playbook.md`; mirror approach for onboarding if new feature flags introduced.
 
 ---
 
 ## 5. Next Actions
-1. Scaffold onboarding harness page and expose helpers.
-2. Author MSW handlers (`onboardingHandlers.ts`) and wire into `setupExternalAPIMocks`.
-3. Create Playwright spec skeleton with scenarios above.
+1. Maintain harness helpers + accessibility guarantees (focusable JSON panels).
+2. Author MSW onboarding handlers and enable them in `setupExternalAPIMocks` (still todo).
+3. Expand Playwright coverage for skip/auth error states once handlers land.
 4. Backfill RTL coverage for remaining onboarding steps.
-5. Integrate spec into CI once green locally.
+5. Integrate spec into CI once feeds/dashboard regression is cleared.
 

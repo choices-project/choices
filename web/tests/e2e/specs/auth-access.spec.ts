@@ -83,7 +83,7 @@ async function stubWebAuthn(page: Page) {
 }
 
 test.describe('Auth access harness', () => {
-  let cleanupMocks: (() => Promise<void>) | undefined;
+  let cleanupMocks: (() => Promise<void>) | null = null;
 
   test.beforeEach(async ({ page }) => {
     cleanupMocks = await setupExternalAPIMocks(page, { auth: true });
@@ -93,7 +93,7 @@ test.describe('Auth access harness', () => {
   test.afterEach(async () => {
     if (cleanupMocks) {
       await cleanupMocks();
-      cleanupMocks = undefined;
+      cleanupMocks = null;
     }
   });
 
@@ -137,6 +137,21 @@ test.describe('Auth access harness', () => {
     await expect(page.getByText('Authentication Successful!')).toBeVisible();
     await expect(page.getByTestId('auth-access-success')).toHaveText('true');
     await expect(page.getByTestId('auth-access-error')).toHaveText('none');
+  });
+
+  test('shows an error when password login fails (harness mode)', async ({ page }) => {
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
+
+    await page.getByTestId('auth-toggle').click();
+    await page.waitForTimeout(300);
+
+    await page.getByTestId('login-email').fill('test-user@example.com');
+    await page.getByTestId('login-password').fill('TestPassword123!');
+    await page.getByTestId('login-submit').click();
+
+    await expect(page).toHaveURL(/\/auth/, { timeout: 15_000 });
   });
 });
 

@@ -26,9 +26,11 @@ import {
   HeartIcon as HeartSolidIcon,
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import { useAnalyticsActions, useFeedsActions, useFeedById } from '@/lib/stores';
+ 
 
 import type { EngagementData } from '../lib/types/civics-types';
 
@@ -53,6 +55,7 @@ export default function EngagementMetrics({
   enableHaptics = false,
   className = ''
 }: EngagementMetricsProps) {
+  const { t, currentLanguage } = useI18n();
   const [metrics, setMetrics] = useState<EngagementData>(initialMetrics);
   const [engagementHistory, setEngagementHistory] = useState<number[]>(() => {
     const totalEngagement = initialMetrics.likes + initialMetrics.comments + initialMetrics.shares;
@@ -69,6 +72,30 @@ export default function EngagementMetrics({
   const isLiked = storeFeed ? storeFeed.userInteraction.liked : localLiked;
   const isBookmarked = storeFeed ? storeFeed.userInteraction.bookmarked : localBookmarked;
 
+  const compactNumberFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage ?? undefined, {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage ?? undefined, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+        hour: 'numeric',
+        minute: 'numeric',
+      }),
+    [currentLanguage],
+  );
+
   useEffect(() => {
     if (!storeFeed) {
       return;
@@ -76,11 +103,18 @@ export default function EngagementMetrics({
 
     setMetrics((previous) => ({
       ...previous,
-      likes: storeFeed.engagement.likes,
-      shares: storeFeed.engagement.shares,
-      comments: storeFeed.engagement.comments,
-      views: storeFeed.engagement.views,
-      lastUpdated: new Date(storeFeed.updatedAt ?? storeFeed.publishedAt ?? previous.lastUpdated)
+      likes: storeFeed.engagement.likes ?? previous.likes,
+      shares: storeFeed.engagement.shares ?? previous.shares,
+      comments: storeFeed.engagement.comments ?? previous.comments,
+      bookmarks: storeFeed.engagement.bookmarks ?? previous.bookmarks,
+      views: storeFeed.engagement.views ?? previous.views,
+      engagementRate:
+        storeFeed.engagement.engagementRate ??
+        previous.engagementRate ??
+        0,
+      lastUpdated: new Date(
+        storeFeed.updatedAt ?? storeFeed.publishedAt ?? previous.lastUpdated,
+      ),
     }));
 
     const totalEngagement =
@@ -124,7 +158,7 @@ export default function EngagementMetrics({
         const updated = {
           ...previous,
           likes: nextLikes,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         };
         onEngagement?.('likes', itemId, nextLikes);
         return updated;
@@ -178,7 +212,7 @@ export default function EngagementMetrics({
         const updated = {
           ...previous,
           bookmarks: nextBookmarks,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         };
         onEngagement?.('bookmarks', itemId, nextBookmarks);
         return updated;
@@ -222,7 +256,7 @@ export default function EngagementMetrics({
         const updated = {
           ...previous,
           shares: nextShares,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         };
         onEngagement?.('shares', itemId, nextShares);
         return updated;
@@ -257,7 +291,7 @@ export default function EngagementMetrics({
       const updated = {
         ...previous,
         comments: nextComments,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
       onEngagement?.('comments', itemId, nextComments);
       return updated;
@@ -276,12 +310,10 @@ export default function EngagementMetrics({
     trackUserAction
   ]);
 
-  // Format numbers
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toString();
-  };
+  const formatNumber = useCallback(
+    (value: number) => compactNumberFormatter.format(value),
+    [compactNumberFormatter],
+  );
 
   // Get engagement rate color
   const getEngagementRateColor = (rate: number) => {
@@ -319,7 +351,7 @@ export default function EngagementMetrics({
                 ? 'text-red-500' 
                 : 'text-gray-500 hover:text-red-500'
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-            aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
+            aria-label={isLiked ? t('civics.engagement.actions.unlike') : t('civics.engagement.actions.like')}
           >
             {isLiked ? (
               <HeartSolidIcon className="w-5 h-5" />
@@ -337,7 +369,7 @@ export default function EngagementMetrics({
             className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            aria-label="Comment on this post"
+            aria-label={t('civics.engagement.actions.comment')}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
             <span className="text-sm font-medium">
@@ -351,7 +383,7 @@ export default function EngagementMetrics({
             className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            aria-label="Share this post"
+            aria-label={t('civics.engagement.actions.share')}
           >
             <ShareIcon className="w-5 h-5" />
             <span className="text-sm font-medium">
@@ -369,7 +401,11 @@ export default function EngagementMetrics({
                 ? 'text-blue-500' 
                 : 'text-gray-500 hover:text-blue-500'
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-            aria-label={`${isBookmarked ? 'Remove from' : 'Add to'} bookmarks`}
+            aria-label={
+              isBookmarked
+                ? t('civics.engagement.actions.removeBookmark')
+                : t('civics.engagement.actions.addBookmark')
+            }
           >
             {isBookmarked ? (
               <BookmarkSolidIcon className="w-5 h-5" />
@@ -387,7 +423,7 @@ export default function EngagementMetrics({
             <div className="text-center">
               <div className="flex items-center justify-center space-x-1 text-sm text-gray-500">
                 <EyeIcon className="w-4 h-4" />
-                <span>Views</span>
+                <span>{t('civics.engagement.analytics.views')}</span>
               </div>
               <p className="text-lg font-semibold text-gray-900">
                 {formatNumber(metrics.views ?? 0)}
@@ -397,14 +433,16 @@ export default function EngagementMetrics({
             <div className="text-center">
               <div className="flex items-center justify-center space-x-1 text-sm text-gray-500">
                 <ChartBarIcon className="w-4 h-4" />
-                <span>Engagement</span>
+                <span>{t('civics.engagement.analytics.engagement')}</span>
               </div>
               <p className={`text-lg font-semibold ${
                 metrics.engagementRate 
                   ? getEngagementRateColor(metrics.engagementRate)
                   : 'text-gray-900'
               }`}>
-                {metrics.engagementRate ? `${metrics.engagementRate.toFixed(1)}%` : 'N/A'}
+                {metrics.engagementRate != null
+                  ? `${percentFormatter.format(metrics.engagementRate)}%`
+                  : t('civics.engagement.analytics.notAvailable')}
               </p>
             </div>
           </div>
@@ -421,7 +459,13 @@ export default function EngagementMetrics({
             <span className={`text-sm font-medium ${
               trending.direction === 'up' ? 'text-green-600' : 'text-red-600'
             }`}>
-              {trending.direction === 'up' ? 'Trending up' : 'Trending down'} {trending.change.toFixed(1)}%
+              {trending.direction === 'up'
+                ? t('civics.engagement.trending.up', {
+                    change: percentFormatter.format(trending.change),
+                  })
+                : t('civics.engagement.trending.down', {
+                    change: percentFormatter.format(trending.change),
+                  })}
             </span>
           </div>
         </div>
@@ -431,7 +475,9 @@ export default function EngagementMetrics({
       <div className="flex items-center justify-center space-x-1 text-xs text-gray-400">
         <ClockIcon className="w-3 h-3" />
         <span>
-          Updated {new Date(metrics.lastUpdated).toLocaleTimeString()}
+          {t('civics.engagement.lastUpdated', {
+            time: timeFormatter.format(new Date(metrics.lastUpdated)),
+          })}
         </span>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { withErrorHandling, successResponse, notFoundError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 export const POST = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ alertId: string }> }
 ) => {
   const { alertId } = await params;

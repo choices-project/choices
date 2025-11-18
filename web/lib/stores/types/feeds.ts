@@ -46,7 +46,9 @@ export type FeedEngagement = {
   likes: number;
   shares: number;
   comments: number;
+  bookmarks: number;
   views: number;
+  engagementRate?: number;
 };
 
 export type FeedUserInteraction = {
@@ -298,6 +300,12 @@ export type FeedsApiPayload = {
     category: string;
     district: string | null;
     sort: string;
+  };
+  pagination?: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
   };
 };
 

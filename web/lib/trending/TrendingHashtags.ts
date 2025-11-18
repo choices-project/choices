@@ -70,7 +70,12 @@ export class TrendingHashtagsTracker {
   /**
    * Track multiple hashtag usages (e.g., from onboarding)
    */
-  async trackMultipleHashtags(hashtags: string[], userId: string, source: HashtagUsage['source']): Promise<void> {
+  async trackMultipleHashtags(
+    hashtags: string[],
+    userId: string,
+    source: HashtagUsage['source'],
+    metadata?: HashtagUsage['metadata']
+  ): Promise<void> {
     const timestamp = new Date().toISOString();
     
     for (const hashtag of hashtags) {
@@ -78,7 +83,8 @@ export class TrendingHashtagsTracker {
         hashtag: hashtag.toLowerCase().trim(),
         userId,
         timestamp,
-        source
+        source,
+        ...(metadata ? { metadata } : {})
       });
     }
   }

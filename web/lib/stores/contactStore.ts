@@ -11,6 +11,7 @@
  * Sensitive messaging data is not persisted locally to limit exposure of PII.
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -256,6 +257,9 @@ const normaliseMessage = (message: any, fallbackThreadId: string): ContactMessag
   };
 };
 
+const extractPayload = <T = Record<string, unknown>>(raw: any): T =>
+  ((raw && typeof raw === 'object' && 'data' in raw ? raw.data : raw) ?? {}) as T;
+
 const sortThreadsByRecency = (threads: ContactThread[]): void => {
   threads.sort((a, b) => {
     const getTimestamp = (thread: ContactThread) => {
@@ -348,6 +352,13 @@ const buildMessagesQuery = (threadId: string, options: FetchMessagesOptions = {}
   return queryString ? `?${queryString}` : '';
 };
 
+const generateOptimisticId = () => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto && typeof crypto.randomUUID === 'function') {
+    return `optimistic-${crypto.randomUUID()}`;
+  }
+  return `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const createContactActions = (
   set: Parameters<ContactStoreCreator>[0],
   get: Parameters<ContactStoreCreator>[1],
@@ -388,13 +399,14 @@ const createContactActions = (
       const query = buildThreadsQuery(restOptions);
       const response = await fetch(`/api/contact/threads${query}`);
       const data = await response.json();
+      const payload = extractPayload<{ threads?: any[]; pagination?: ContactPagination }>(data);
 
-      if (!response.ok || !data?.success) {
+      if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact threads');
       }
 
-      const normalisedThreads = Array.isArray(data.threads)
-        ? (data.threads as any[]).map(normaliseThread)
+      const normalisedThreads = Array.isArray(payload.threads)
+        ? (payload.threads as any[]).map(normaliseThread)
         : [];
 
       setState((draft) => {
@@ -439,11 +451,15 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
+      const payload = extractPayload<{ thread?: any; threadId?: string; existingThreadId?: string }>(data);
 
       if (response.status === 409) {
         await fetchThreads({ force: true });
         const existingThreadId: string | undefined =
-          data?.existingThreadId ?? data?.threadId ?? data?.thread?.id;
+          data?.details?.existingThreadId ??
+          payload.existingThreadId ??
+          payload.threadId ??
+          payload.thread?.id;
         const existingThread =
           (existingThreadId ? get().threadsById[existingThreadId] : undefined) ??
           get().threads.find(
@@ -463,11 +479,11 @@ const createContactActions = (
         };
       }
 
-      if (!response.ok || !data?.success || !data?.thread) {
+      if (!response.ok || data?.success !== true || !payload.thread) {
         throw new Error(data?.error ?? 'Failed to create thread');
       }
 
-      const thread = normaliseThread(data.thread);
+      const thread = normaliseThread(payload.thread);
       upsertThreads([thread]);
       baseActions.clearError();
 
@@ -490,7 +506,6 @@ const createContactActions = (
   const fetchMessages: ContactActions['fetchMessages'] = async (threadId, options = {}) => {
     const { append = false, force = false, ...restOptions } = options;
     const state = get();
-    const meta = state.messagesMetaByThreadId[threadId];
 
     if (state.messagesLoadingByThreadId[threadId] && !force) {
       return state.messagesByThreadId[threadId] ?? [];
@@ -505,23 +520,24 @@ const createContactActions = (
       const query = buildMessagesQuery(threadId, restOptions);
       const response = await fetch(`/api/contact/messages${query}`);
       const data = await response.json();
+      const payload = extractPayload<{ messages?: any[]; pagination?: ContactPagination }>(data);
 
-      if (!response.ok || !data?.success) {
+      if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact messages');
       }
 
-      const normalisedMessages = Array.isArray(data.messages)
-        ? (data.messages as any[]).map((message) => normaliseMessage(message, threadId))
+      const normalisedMessages = Array.isArray(payload.messages)
+        ? (payload.messages as any[]).map((message) => normaliseMessage(message, threadId))
         : [];
 
       setState((draft) => {
         const existingMessages = draft.messagesByThreadId[threadId] ?? [];
         draft.messagesByThreadId[threadId] = mergeMessages(existingMessages, normalisedMessages, append);
         draft.messagesMetaByThreadId[threadId] = {
-          total: data.pagination?.total ?? normalisedMessages.length,
-          limit: data.pagination?.limit ?? restOptions.limit ?? 50,
-          offset: data.pagination?.offset ?? restOptions.offset ?? 0,
-          hasMore: Boolean(data.pagination?.hasMore),
+          total: payload.pagination?.total ?? normalisedMessages.length,
+          limit: payload.pagination?.limit ?? restOptions.limit ?? 50,
+          offset: payload.pagination?.offset ?? restOptions.offset ?? 0,
+          hasMore: Boolean(payload.pagination?.hasMore),
           lastFetchedAt: Date.now(),
         };
       });
@@ -543,9 +559,50 @@ const createContactActions = (
   };
 
   const sendMessage: ContactActions['sendMessage'] = async (input) => {
+    const optimisticId = generateOptimisticId();
+    const optimisticCreatedAt = new Date().toISOString();
+
     setState((draft) => {
       draft.isSendingMessage = true;
       draft.error = null;
+
+      const optimisticMessage: ContactMessage = {
+        id: optimisticId,
+        threadId: input.threadId,
+        senderId: String(input.representativeId ?? 'me'),
+        recipientId: input.representativeId,
+        subject: input.subject,
+        content: input.content,
+        status: 'sent',
+        priority: input.priority ?? 'normal',
+        messageType: input.messageType ?? 'text',
+        attachments: input.attachments ?? [],
+        createdAt: optimisticCreatedAt,
+        updatedAt: null,
+        readAt: null,
+        repliedAt: null,
+      };
+
+      const existingMessages = draft.messagesByThreadId[input.threadId] ?? [];
+      draft.messagesByThreadId[input.threadId] = mergeMessages(existingMessages, [optimisticMessage], true);
+
+      const thread = draft.threadsById[input.threadId];
+      if (thread) {
+        thread.lastMessageAt = optimisticCreatedAt;
+        thread.messageCount = Number.isFinite(thread.messageCount)
+          ? thread.messageCount + 1
+          : (draft.messagesByThreadId[input.threadId]?.length ?? 1);
+        thread.updatedAt = optimisticCreatedAt;
+      }
+
+      const meta = draft.messagesMetaByThreadId[input.threadId];
+      draft.messagesMetaByThreadId[input.threadId] = {
+        total: (meta?.total ?? existingMessages.length) + 1,
+        limit: meta?.limit ?? existingMessages.length + 1,
+        offset: 0,
+        hasMore: meta?.hasMore ?? false,
+        lastFetchedAt: Date.now(),
+      };
     });
 
     try {
@@ -567,17 +624,22 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
+      const payload = extractPayload<{ message?: any; threadId?: string }>(data);
 
-      if (!response.ok || !data?.success || !data?.message) {
-        throw new Error(data?.error ?? 'Failed to send contact message');
+      if (!response.ok || data?.success !== true || !payload.message) {
+        throw new Error('Failed to send contact message');
       }
 
-      const normalisedMessage = normaliseMessage(data.message, data.threadId ?? input.threadId);
+      const normalisedMessage = normaliseMessage(
+        payload.message,
+        payload.threadId ?? input.threadId
+      );
 
       setState((draft) => {
         const threadId = normalisedMessage.threadId;
         const existingMessages = draft.messagesByThreadId[threadId] ?? [];
-        const updatedMessages = mergeMessages(existingMessages, [normalisedMessage], true);
+        const withoutOptimistic = existingMessages.filter((message) => message.id !== optimisticId);
+        const updatedMessages = mergeMessages(withoutOptimistic, [normalisedMessage], true);
         draft.messagesByThreadId[threadId] = updatedMessages;
 
         const thread = draft.threadsById[threadId];
@@ -611,6 +673,30 @@ const createContactActions = (
       const message =
         error instanceof Error ? error.message : 'Unknown error sending contact message';
       baseActions.setError(message);
+
+      setState((draft) => {
+        const messages = draft.messagesByThreadId[input.threadId];
+        if (messages) {
+          draft.messagesByThreadId[input.threadId] = messages.filter((msg) => msg.id !== optimisticId);
+        }
+
+        const thread = draft.threadsById[input.threadId];
+        if (thread && Number.isFinite(thread.messageCount)) {
+          thread.messageCount = Math.max(0, thread.messageCount - 1);
+        }
+
+        if (draft.messagesMetaByThreadId[input.threadId]) {
+          const prev = draft.messagesMetaByThreadId[input.threadId];
+          draft.messagesMetaByThreadId[input.threadId] = {
+            total: Math.max(0, ((prev?.total ?? 1) - 1)),
+            lastFetchedAt: Date.now(),
+            limit: prev?.limit ?? 50,
+            offset: prev?.offset ?? 0,
+            hasMore: prev?.hasMore ?? false,
+          };
+        }
+      });
+
       throw error;
     } finally {
       setState((draft) => {
@@ -700,14 +786,17 @@ export const useContactActions = () => {
   const clearThreadMessages = useContactStore((state) => state.clearThreadMessages);
   const resetContactState = useContactStore((state) => state.resetContactState);
 
-  return {
-    fetchThreads,
-    createThread,
-    fetchMessages,
-    sendMessage,
-    clearThreadMessages,
-    resetContactState,
-  };
+  return useMemo(
+    () => ({
+      fetchThreads,
+      createThread,
+      fetchMessages,
+      sendMessage,
+      clearThreadMessages,
+      resetContactState,
+    }),
+    [fetchThreads, createThread, fetchMessages, sendMessage, clearThreadMessages, resetContactState]
+  );
 };
 
 

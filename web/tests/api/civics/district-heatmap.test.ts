@@ -171,14 +171,14 @@ describe('GET /api/v1/civics/heatmap', () => {
     const response = await GET(buildRequest('http://localhost/api/v1/civics/heatmap?state=CA&level=federal'));
     const payload = await response.json();
 
-    expect(payload.ok).toBe(true);
-    expect(payload.heatmap).toHaveLength(1);
-    expect(payload.heatmap[0]).toMatchObject({
+    expect(payload.success).toBe(true);
+    expect(payload.data?.heatmap).toHaveLength(1);
+    expect(payload.data?.heatmap?.[0]).toMatchObject({
       district_id: 'CA-12',
       state: 'CA',
       level: 'federal',
     });
-    expect(payload._cache).toMatchObject({ hit: false });
+    expect(payload.metadata?.cache).toMatchObject({ hit: false });
     expect(mockCanAccessAnalytics).toHaveBeenCalledWith(expect.any(Object), false);
     expect(mockLogAnalyticsAccess).toHaveBeenCalledWith(expect.any(Object), 'district-heatmap-api', true);
   });
@@ -224,8 +224,8 @@ describe('GET /api/v1/civics/heatmap', () => {
     const response = await GET(buildRequest('http://localhost/api/v1/civics/heatmap'));
     const payload = await response.json();
 
-    expect(payload.heatmap).toEqual([]);
-    expect(payload._cache.hit).toBe(true);
+    expect(payload.data?.heatmap).toEqual([]);
+    expect(payload.metadata?.cache?.hit).toBe(true);
   });
 });
 

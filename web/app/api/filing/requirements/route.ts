@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { 
@@ -38,11 +37,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const requirement = getFilingRequirements(levelParam, office, state)
 
     if (!requirement) {
-      return NextResponse.json({
+      return successResponse({
         found: false,
         message: `Filing requirements not found for ${office}${state ? ` in ${state}` : ''}. This may be a custom office or requirements need to be added.`,
         suggestion: 'Check with your local election authority for filing requirements.'
-      })
+      });
     }
 
     // Calculate deadline if election date provided

@@ -10,7 +10,6 @@
 
 import { NextResponse } from 'next/server';
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 
 import type {
@@ -35,16 +34,11 @@ export function successResponse<T>(
   metadata?: Partial<ApiMetadata>,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T>> {
-  const metadataPayload = withOptional(
-    { timestamp: new Date().toISOString() },
-    metadata
-  );
-
   return NextResponse.json(
     {
       success: true,
       data,
-      metadata: metadataPayload,
+      metadata: mergeMetadataWithTimestamp(metadata),
     },
     { status }
   );
@@ -98,16 +92,11 @@ export function successWithMeta<T>(
   customMetadata: Record<string, any>,
   status: number = 200
 ): NextResponse<ApiSuccessResponse<T>> {
-  const metadataPayload = withOptional(
-    { timestamp: new Date().toISOString() },
-    customMetadata
-  );
-
   return NextResponse.json(
     {
       success: true,
       data,
-      metadata: metadataPayload,
+      metadata: mergeMetadataWithTimestamp(customMetadata),
     },
     { status }
   );
@@ -391,7 +380,7 @@ export function sanitizeResponse<T extends Record<string, any>>(
   data: T,
   removeFields: string[] = []
 ): Omit<T, typeof removeFields[number]> {
-  const sanitized = withOptional(data);
+  const sanitized = cloneWithoutUndefined(data);
 
   for (const field of removeFields) {
     delete sanitized[field];
@@ -419,6 +408,31 @@ export function toCamelCase<T extends Record<string, any>>(
 
   return result;
 }
+
+const mergeMetadataWithTimestamp = (
+  metadata?: Partial<ApiMetadata> | Record<string, any>,
+): ApiMetadata => {
+  const base: ApiMetadata = { timestamp: new Date().toISOString() };
+  if (!metadata) {
+    return base;
+  }
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value !== undefined) {
+      base[key] = value;
+    }
+  }
+  return base;
+};
+
+const cloneWithoutUndefined = <T extends Record<string, any>>(data: T): T => {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result as T;
+};
 
 /**
  * Convert camelCase keys to snake_case

@@ -8,7 +8,17 @@ import type { ZodError, ZodSchema } from 'zod';
 
 import { logger } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
+function mergeDefined<T extends object, U extends object>(base: T, extras?: U): T & Partial<U> {
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  if (extras) {
+    for (const [k, v] of Object.entries(extras as Record<string, unknown>)) {
+      if (v !== undefined) {
+        out[k] = v;
+      }
+    }
+  }
+  return out as T & Partial<U>;
+}
 
 /**
  * Result of a validation operation
@@ -37,7 +47,7 @@ export type ValidationOptions = {
 }
 
 function mergeOptions(options: ValidationOptions | undefined, extras: ValidationOptions): ValidationOptions {
-  return withOptional(withOptional(options ?? {}), extras);
+  return mergeDefined(mergeDefined(options ?? {}), extras);
 }
 
 /**
@@ -73,10 +83,7 @@ export function safeParse<T>(
     const result = schema.safeParse(data);
 
     if (result.success) {
-      return withOptional(
-        { success: true },
-        { data: result.data }
-      );
+      return mergeDefined({ success: true as const }, { data: result.data });
     } else {
       const errorMessage = `Validation failed: ${result.error.issues.map(issue =>
         `${issue.path.join('.')}: ${issue.message}`
@@ -94,10 +101,7 @@ export function safeParse<T>(
         throw new Error(errorMessage);
       }
 
-      return withOptional(
-        { success: false },
-        { error: errorMessage, details: result.error }
-      );
+      return mergeDefined({ success: false as const }, { error: errorMessage, details: result.error });
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
@@ -113,10 +117,7 @@ export function safeParse<T>(
       throw error;
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return mergeDefined({ success: false as const }, { error: errorMessage });
   }
 }
 
@@ -229,10 +230,7 @@ export function validateDatabaseResponse<T>(
       });
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return mergeDefined({ success: false as const }, { error: errorMessage });
   }
 
   return safeParse(schema, response.data, options);
@@ -269,13 +267,11 @@ export function validateMultipleResponses<T>(
     });
   }
 
-  return withOptional(
-    { success: validItems.length > 0 },
-    {
-      data: validItems,
-      error: errors.length > 0 ? errors.join('; ') : undefined
-    }
-  );
+  if (validItems.length > 0) {
+    return { success: true, data: validItems };
+  }
+  const errorMessage = errors.join('; ');
+  return errorMessage ? { success: false, error: errorMessage } : { success: false };
 }
 
 /**
@@ -297,21 +293,19 @@ export function validateAndTransform<T, U>(
   const validationResult = safeParse(schema, data, options);
 
   if (!validationResult.success || validationResult.data === undefined) {
-    return withOptional(
-      { success: false },
-      {
-        error: validationResult.error,
-        details: validationResult.details
-      }
-    );
+    const failure: ValidationResult<U> = { success: false };
+    if (validationResult.error !== undefined) {
+      failure.error = validationResult.error;
+    }
+    if (validationResult.details !== undefined) {
+      failure.details = validationResult.details as unknown as ZodError;
+    }
+    return failure;
   }
 
   try {
     const transformed = transform(validationResult.data);
-    return withOptional(
-      { success: true },
-      { data: transformed }
-    );
+    return mergeDefined({ success: true as const }, { data: transformed });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Transform failed';
 
@@ -322,10 +316,7 @@ export function validateAndTransform<T, U>(
       });
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return mergeDefined({ success: false as const }, { error: errorMessage });
   }
 }
 
@@ -357,11 +348,9 @@ export function validateBatch<T extends Record<string, unknown>>(
     });
   }
 
-  return withOptional(
-    { success: errors.length === 0 },
-    {
-      data: result as T,
-      error: errors.length > 0 ? errors.join('; ') : undefined
-    }
-  );
+  if (errors.length === 0) {
+    return { success: true, data: result as T };
+  }
+  const errorMessage = errors.join('; ');
+  return errorMessage ? { success: false, error: errorMessage } : { success: false };
 }

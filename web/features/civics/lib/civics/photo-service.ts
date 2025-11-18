@@ -133,10 +133,45 @@ export class CivicsPhotoService {
    */
   private async getWikipediaPhoto(name: string): Promise<RepresentativePhoto | null> {
     try {
-      // This would integrate with Wikipedia API
-      // For now, return null as placeholder
-      devLog('Wikipedia photo lookup not implemented yet', { name });
-      return null;
+      // MediaWiki API: search page, then get pageimage/thumbnail
+      const apiBase = 'https://en.wikipedia.org/w/api.php';
+      const searchParams = new URLSearchParams({
+        action: 'query',
+        format: 'json',
+        origin: '*',
+        prop: 'pageimages',
+        piprop: 'thumbnail|original',
+        pithumbsize: '512',
+        generator: 'search',
+        gsrsearch: name,
+        gsrlimit: '1'
+      });
+
+      const response = await fetch(`${apiBase}?${searchParams.toString()}`);
+      if (!response.ok) {
+        devLog('Wikipedia API HTTP error', { status: response.status });
+        return null;
+      }
+      const data = (await response.json()) as any;
+      const pages = data?.query?.pages;
+      if (!pages || typeof pages !== 'object') {
+        return null;
+      }
+      const first = Object.values(pages)[0] as any;
+      const thumb = first?.thumbnail?.source ?? first?.original?.source;
+      if (!thumb || typeof thumb !== 'string') {
+        return null;
+      }
+
+      return {
+        url: thumb,
+        source: 'wikipedia',
+        quality: 'medium',
+        license: 'Varies (Wikipedia)',
+        attribution: first?.title,
+        isOfficial: false,
+        lastUpdated: new Date().toISOString()
+      };
     } catch (error) {
       devLog('Error getting Wikipedia photo', { name, error });
       return null;

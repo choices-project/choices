@@ -16,12 +16,12 @@
  * Status: ✅ Production-ready
  */
 
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/analytics/lib/privacyFilters';
-import { withErrorHandling, forbiddenError } from '@/lib/api';
+import { withErrorHandling, forbiddenError, successResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
-import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
+import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey, type JsonValue } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -57,6 +57,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       cacheKey,
       CACHE_TTL.DISTRICT_HEATMAP,
       async () => {
+        type HeatmapResult = {
+          heatmap: Array<{
+            district_id: string;
+            district_name: string;
+            state: string;
+            level: string;
+            engagement_count: number;
+            representative_count: number;
+          }>;
+          k_anonymity: number;
+          generated_at: string;
+        };
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
@@ -87,7 +99,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       if (!districtGroups.has(districtKey)) {
         districtGroups.set(districtKey, []);
       }
-      districtGroups.get(districtKey)!.push(u);
+      const group = districtGroups.get(districtKey);
+      if (group) {
+        group.push(u);
+      }
     });
 
     // Get civic actions count per district
@@ -133,7 +148,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         return {
           district_id: districtKey,
           district_name: `${state} District ${districtNum}`,
-          state,
+          state: state ?? 'Unknown',
           level: levelFilter,
           engagement_count: engagementCount,
           representative_count: repCount
@@ -152,22 +167,40 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       minCount
     });
 
-        return {
-          ok: true,
+        const heatmapResult: HeatmapResult = {
           heatmap,
           k_anonymity: minCount,
           generated_at: new Date().toISOString()
         };
+        return heatmapResult as unknown as JsonValue;
       }
     );
 
-    // Return with cache metadata
-    return NextResponse.json({
-      ...result,
-      _cache: {
-        hit: fromCache,
-        ttl: CACHE_TTL.DISTRICT_HEATMAP,
-        key: cacheKey
+    type HeatmapResponse = {
+      heatmap: Array<{
+        district_id: string;
+        district_name: string;
+        state: string;
+        level: string;
+        engagement_count: number;
+        representative_count: number;
+      }>;
+      k_anonymity: number;
+      generated_at: string;
+    };
+    const responseData = result as HeatmapResponse | null;
+    return successResponse(
+      {
+        heatmap: responseData?.heatmap ?? [],
+        kAnonymity: responseData?.k_anonymity ?? minCount,
+        generatedAt: responseData?.generated_at ?? new Date().toISOString()
+      },
+      {
+        cache: {
+          hit: fromCache,
+          ttl: CACHE_TTL.DISTRICT_HEATMAP,
+          key: cacheKey
+        }
       }
-    });
+    );
 });

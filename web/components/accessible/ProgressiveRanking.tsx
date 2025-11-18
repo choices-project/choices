@@ -456,13 +456,14 @@ function CandidateCard({
   return (
     <div
       className={`candidate-card ${focused ? 'focused' : ''} ${isRanked ? 'ranked' : ''}`}
-      role="listitem"
+      role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={() => onSelectionToggle(candidate.id)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       aria-label={`${candidate.name}, currently ranked ${rank}`}
+      aria-pressed={isRanked}
       data-selected={isRanked}
     >
       <div className="candidate-info">

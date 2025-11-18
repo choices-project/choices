@@ -13,6 +13,7 @@ import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/hooks/useI18n';
 import logger from '@/lib/utils/logger';
 import type { Representative, RepresentativeListProps } from '@/types/representative';
 
@@ -29,6 +30,7 @@ export function RepresentativeList({
   onRepresentativeClick,
   className = ''
 }: RepresentativeListProps) {
+  const { t } = useI18n();
   const handleContact = onRepresentativeContact ?? ((rep: Representative) => {
     logger.info('Contact:', rep.name);
   });
@@ -43,7 +45,7 @@ export function RepresentativeList({
         <div className="flex items-center justify-center p-8">
           <Skeleton className="h-8 w-8 rounded-full" />
         </div>
-        <p className="mt-4 text-gray-600">Loading representatives...</p>
+        <p className="mt-4 text-gray-600">{t('civics.representatives.list.loading')}</p>
       </div>
     );
   }
@@ -54,7 +56,7 @@ export function RepresentativeList({
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {error}
+            {t('civics.representatives.list.error', { error })}
           </AlertDescription>
         </Alert>
       </div>
@@ -65,9 +67,11 @@ export function RepresentativeList({
     return (
       <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
         <Users className="w-12 h-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No representatives found</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          {t('civics.representatives.list.empty.title')}
+        </h3>
         <p className="text-gray-600 text-center">
-          Try adjusting your search criteria or location.
+          {t('civics.representatives.list.empty.subtitle')}
         </p>
       </div>
     );
@@ -112,6 +116,7 @@ export function RepresentativeGrid({
   onRepresentativeClick,
   className = ''
 }: RepresentativeListProps) {
+  const { t } = useI18n();
   const handleContact = onRepresentativeContact ?? ((rep: Representative) => {
     logger.info('Contact:', rep.name);
   });
@@ -138,7 +143,7 @@ export function RepresentativeGrid({
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {error}
+            {t('civics.representatives.list.error', { error })}
           </AlertDescription>
         </Alert>
       </div>
@@ -149,9 +154,11 @@ export function RepresentativeGrid({
     return (
       <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
         <Users className="w-12 h-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No representatives found</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          {t('civics.representatives.list.empty.title')}
+        </h3>
         <p className="text-gray-600 text-center">
-          Try adjusting your search criteria or location.
+          {t('civics.representatives.list.empty.subtitle')}
         </p>
       </div>
     );

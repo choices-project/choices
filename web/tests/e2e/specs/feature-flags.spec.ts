@@ -1,4 +1,13 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+const MUTABLE_FLAG = 'SOCIAL_SHARING';
+
+const gotoAdminHarness = async (page: Page) => {
+  await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('[data-testid="admin-store-harness"]');
+  await page.waitForFunction(() => Boolean((window as any).__adminStoreHarness));
+};
 
 const ALWAYS_ON_FLAGS = [
   'PWA',
@@ -49,6 +58,61 @@ test.describe('Feature flag guarantees', () => {
       expect(payload.success).toBe(false);
       expect(payload.error).toMatch(/Failed to update feature flag/);
     }
+  });
+
+  test('mutable flag can be toggled via API and reset', async ({ request }) => {
+    const enableResponse = await request.patch('/api/feature-flags', {
+      data: { flagId: MUTABLE_FLAG, enabled: true },
+    });
+    expect(enableResponse.ok()).toBeTruthy();
+    const enablePayload = await enableResponse.json();
+    expect(enablePayload.success).toBeTruthy();
+    expect(enablePayload.flags[MUTABLE_FLAG]).toBe(true);
+
+    const disableResponse = await request.patch('/api/feature-flags', {
+      data: { flagId: MUTABLE_FLAG, enabled: false },
+    });
+    expect(disableResponse.ok()).toBeTruthy();
+    const disablePayload = await disableResponse.json();
+    expect(disablePayload.success).toBeTruthy();
+    expect(disablePayload.flags[MUTABLE_FLAG]).toBe(false);
+  });
+});
+
+test.describe('Admin feature flag harness', () => {
+  test('exposes enable/disable helpers that update harness snapshot', async ({ page }) => {
+    await gotoAdminHarness(page);
+    await page.evaluate(() => window.__adminStoreHarness?.resetAdminState());
+
+    // Ensure flag disabled
+    await page.evaluate((flag) => window.__adminStoreHarness?.disableFeatureFlag(flag), MUTABLE_FLAG);
+    await expect(page.locator('[data-testid="admin-feature-flags-enabled"]')).not.toContainText(MUTABLE_FLAG);
+
+    const enableResult = await page.evaluate(
+      (flag) => window.__adminStoreHarness?.enableFeatureFlag(flag),
+      MUTABLE_FLAG
+    );
+    expect(enableResult).toBeTruthy();
+    await expect(page.locator('[data-testid="admin-feature-flags-enabled"]')).toContainText(MUTABLE_FLAG);
+
+    const snapshot = await page.evaluate(() => window.__adminStoreHarness?.getSnapshot());
+    expect(snapshot?.featureFlags.enabledFlags).toContain(MUTABLE_FLAG);
+  });
+
+  test('disabling a flag via harness surfaces in disabled list', async ({ page }) => {
+    await gotoAdminHarness(page);
+    await page.evaluate(() => window.__adminStoreHarness?.resetAdminState());
+
+    await page.evaluate((flag) => window.__adminStoreHarness?.enableFeatureFlag(flag), MUTABLE_FLAG);
+    await expect(page.locator('[data-testid="admin-feature-flags-enabled"]')).toContainText(MUTABLE_FLAG);
+
+    const disabled = await page.evaluate(
+      (flag) => window.__adminStoreHarness?.disableFeatureFlag(flag),
+      MUTABLE_FLAG
+    );
+    expect(disabled).toBeTruthy();
+
+    await expect(page.locator('[data-testid="admin-feature-flags-disabled"]')).toContainText(MUTABLE_FLAG);
   });
 });
 

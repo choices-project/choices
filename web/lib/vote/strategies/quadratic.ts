@@ -10,7 +10,6 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -151,7 +150,7 @@ export class QuadraticStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return withOptional({
+      return {
         success: true,
         message: 'Vote submitted successfully',
         pollId,
@@ -164,27 +163,26 @@ export class QuadraticStrategy implements VotingStrategy {
           totalSpent,
           totalCredits: poll.votingConfig.quadraticCredits ?? 100,
           remainingCredits: (poll.votingConfig.quadraticCredits ?? 100) - (totalSpent)
-        }
-      }, {
-        privacyLevel
-      });
+        },
+        ...(privacyLevel !== undefined ? { privacyLevel } : {}),
+      };
 
     } catch (error) {
       devLog('Quadratic vote processing error:', error);
-      return withOptional({
-        success: false,
+      const base = {
+        success: false as const,
         message: error instanceof Error ? error.message : 'Vote processing failed',
         pollId: request.pollId,
         responseTime: 0,
         metadata: {
-          votingMethod: 'quadratic',
+          votingMethod: 'quadratic' as const,
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }, {
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel
-      });
+        },
+      };
+      return {
+        ...base,
+        ...(request.privacyLevel !== undefined ? { privacyLevel: request.privacyLevel } : {}),
+      };
     }
   }
 
@@ -253,21 +251,17 @@ export class QuadraticStrategy implements VotingStrategy {
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          quadraticScores,
-          quadraticSpending,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
+      const results: PollResults = {
+        winnerVotes,
+        winnerPercentage,
+        quadraticScores,
+        quadraticSpending,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0,
+        ...(winner !== undefined ? { winner } : {}),
+      };
 
       const resultsData: ResultsData = {
         pollId: poll.id,

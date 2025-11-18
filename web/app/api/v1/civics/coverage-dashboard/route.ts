@@ -49,7 +49,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .eq('valid_to', 'infinity');
 
     if (coverageError) {
-      throw coverageError;
+      return errorResponse('Failed to load coverage data', 502, { reason: coverageError.message });
     }
 
     // Calculate coverage by source
@@ -95,7 +95,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .from('civics_fec_minimal')
       .select('person_id', { count: 'exact', head: true });
     if (fecError) {
-      throw fecError;
+      return errorResponse('Failed to load FEC mapping stats', 502, { reason: fecError.message });
     }
 
     const { error: federalError, count: federalCount } = await supabase
@@ -104,7 +104,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .eq('level', 'federal')
       .eq('valid_to', 'infinity');
     if (federalError) {
-      throw federalError;
+      return errorResponse('Failed to load federal representative counts', 502, { reason: federalError.message });
     }
 
     const fecMappingRate = (federalCount && federalCount > 0)
@@ -119,7 +119,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .eq('valid_to', 'infinity')
       .not('contact', 'is', null);
     if (contactError) {
-      throw contactError;
+      return errorResponse('Failed to load contact enrichment stats', 502, { reason: contactError.message });
     }
 
     const contactEnrichmentRate = (federalCount && federalCount > 0)

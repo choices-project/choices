@@ -1,9 +1,9 @@
 /**
  * OpenSecrets API Client
- * 
+ *
  * Enhanced campaign finance and lobbying data
  * Rate limits: 1,000 requests/day
- * 
+ *
  * @author Agent E
  * @date 2025-01-15
  */
@@ -168,9 +168,9 @@ export class OpenSecretsClient {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+
     const msUntilMidnight = tomorrow.getTime() - now.getTime();
-    
+
     setTimeout(() => {
       this.dailyRequestCount = 0;
       this.lastDailyReset = Date.now();
@@ -188,7 +188,7 @@ export class OpenSecretsClient {
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
     url.searchParams.set('apikey', this.config.apiKey);
     url.searchParams.set('output', 'json');
-    
+
     // Add query parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -197,7 +197,7 @@ export class OpenSecretsClient {
     });
 
     const startTime = Date.now();
-    
+
     try {
       logger.debug('Making OpenSecrets API request', {
         endpoint,
@@ -258,7 +258,7 @@ export class OpenSecretsClient {
 
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       if (error instanceof OpenSecretsApiError) {
         throw error;
       }
@@ -285,7 +285,15 @@ export class OpenSecretsClient {
 
   private checkRateLimits(): void {
     const now = Date.now();
-    
+
+    // Check if daily reset is needed (24 hours have passed since last reset)
+    const timeSinceLastReset = now - this.lastDailyReset;
+    if (timeSinceLastReset >= 24 * 60 * 60 * 1000) {
+      this.dailyRequestCount = 0;
+      this.lastDailyReset = now;
+      logger.debug('Daily request counter reset', { lastReset: this.lastDailyReset });
+    }
+
     // Check daily limit
     if (this.dailyRequestCount >= this.config.rateLimit.requestsPerDay) {
       throw new OpenSecretsApiError(
@@ -316,7 +324,7 @@ export class OpenSecretsClient {
 
   // Contribution information
   async getTopContributors(cid: string, cycle: number): Promise<OpenSecretsApiResponse<OpenSecretsContributor>> {
-    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsContributor>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsContributor>>('/getOrgs', {
       method: 'candContrib',
       cid,
       cycle
@@ -324,7 +332,7 @@ export class OpenSecretsClient {
   }
 
   async getTopIndustries(cid: string, cycle: number): Promise<OpenSecretsApiResponse<OpenSecretsIndustry>> {
-    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsIndustry>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsIndustry>>('/getOrgs', {
       method: 'candIndustry',
       cid,
       cycle
@@ -332,7 +340,7 @@ export class OpenSecretsClient {
   }
 
   async getCandidateSummary(cid: string, cycle: number): Promise<OpenSecretsApiResponse<unknown>> {
-    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', {
       method: 'candSummary',
       cid,
       cycle
@@ -341,7 +349,7 @@ export class OpenSecretsClient {
 
   // Lobbying information
   async getLobbyingByClient(clientId: string, year: number): Promise<OpenSecretsApiResponse<OpenSecretsLobbying>> {
-    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsLobbying>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsLobbying>>('/getOrgs', {
       method: 'lobbying',
       id: clientId,
       year
@@ -349,7 +357,7 @@ export class OpenSecretsClient {
   }
 
   async getLobbyingByIssue(issue: string, year: number): Promise<OpenSecretsApiResponse<OpenSecretsLobbying>> {
-    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsLobbying>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsLobbying>>('/getOrgs', {
       method: 'lobbying',
       issue,
       year
@@ -362,7 +370,7 @@ export class OpenSecretsClient {
   }
 
   async getBillsBySubject(subject: string, congress: number): Promise<OpenSecretsApiResponse<OpenSecretsBill>> {
-    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsBill>>('/getBills', { 
+    return await this.makeRequest<OpenSecretsApiResponse<OpenSecretsBill>>('/getBills', {
       subject,
       congress
     });
@@ -370,14 +378,14 @@ export class OpenSecretsClient {
 
   // Organization information
   async getOrganization(orgId: string): Promise<OpenSecretsApiResponse<unknown>> {
-    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', {
       method: 'orgSummary',
       id: orgId
     });
   }
 
   async getOrganizationContributions(orgId: string, cycle: number): Promise<OpenSecretsApiResponse<unknown>> {
-    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', { 
+    return await this.makeRequest<OpenSecretsApiResponse<unknown>>('/getOrgs', {
       method: 'orgContrib',
       id: orgId,
       cycle
@@ -424,7 +432,7 @@ export class OpenSecretsClient {
  */
 export function createOpenSecretsClient(): OpenSecretsClient {
   const apiKey = process.env.OPENSECRETS_API_KEY;
-  
+
   if (!apiKey) {
     throw new OpenSecretsApiError('OPENSECRETS_API_KEY environment variable is required', 500);
   }

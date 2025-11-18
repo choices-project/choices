@@ -13,18 +13,18 @@ export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = React.useState<string>('')
   const [success, setSuccess] = React.useState(false)
-  
+
   // Read URL parameter directly from window.location (works even during SSR/hydration)
   // This avoids useSearchParams which can cause hydration issues
   const getInitialMethod = (): 'password' | 'passkey' => {
     if (typeof window === 'undefined') return 'passkey'
-    
+
     // Check URL parameter first (most reliable for E2E)
     const params = new URLSearchParams(window.location.search)
     if (params.get('method') === 'password') {
       return 'password'
     }
-    
+
     // Check localStorage for E2E test override
     try {
       const e2eMethod = localStorage.getItem('e2e-registration-method')
@@ -34,39 +34,39 @@ export default function RegisterPage() {
     } catch {
       // localStorage might not be available during SSR
     }
-    
+
     return 'passkey'
   }
-  
+
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>(getInitialMethod())
   const [hydrated, setHydrated] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
-  
+
   React.useEffect(() => {
     // Set hydrated and mounted state after component mounts
     // This only runs on the client side after React hydrates
     setHydrated(true)
     setMounted(true)
-    
+
     // For E2E tests, also check localStorage to default to password mode
     if (typeof window !== 'undefined') {
       // Check URL parameter (re-check in case it changed)
       const params = new URLSearchParams(window.location.search)
       const urlMethod = params.get('method')
-      
+
       // Debug logging for E2E tests
       if (process.env.NODE_ENV !== 'production' || typeof window !== 'undefined') {
         logger.debug('[RegisterPage] URL params', { search: window.location.search });
         logger.debug('[RegisterPage] method param from URL', { urlMethod });
         logger.debug('[RegisterPage] localStorage e2e-registration-method', { value: localStorage.getItem('e2e-registration-method') });
       }
-      
+
       if (urlMethod === 'password') {
         logger.debug('[RegisterPage] Setting registrationMethod to password from URL param (useEffect)');
         setRegistrationMethod('password')
         return
       }
-      
+
       // Check localStorage for E2E test override
       try {
         const e2eMethod = localStorage.getItem('e2e-registration-method')
@@ -86,11 +86,20 @@ export default function RegisterPage() {
     setError('')
 
     const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const _username = String(fd.get('username') ?? '').trim()
-    const _email = String(fd.get('email') ?? '').trim()
+    const username = String(fd.get('username') ?? '').trim()
+    const email = String(fd.get('email') ?? '').trim()
     const password = String(fd.get('password') ?? '')
     const confirm = String(fd.get('confirmPassword') ?? '')
 
+    // Validate inputs
+    if (!username || username.length < 3) {
+      setError('Username must be at least 3 characters')
+      return
+    }
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
     if (password !== confirm) {
       setError('Passwords do not match')
       return
@@ -101,9 +110,9 @@ export default function RegisterPage() {
     }
 
     // Call server action - it will redirect on success
-    const result = await serverRegister(fd, { 
-      ipAddress: '', 
-      userAgent: '', 
+    const result = await serverRegister(fd, {
+      ipAddress: '',
+      userAgent: '',
       userId: ''
     })
     if (!result.ok) {
@@ -126,23 +135,23 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Hydration sentinel so the test can safely proceed */}
-        <div 
-          data-testid="register-hydrated" 
-          data-hydrated={hydrated ? 'true' : 'false'} 
-          aria-hidden="true" 
+        <div
+          data-testid="register-hydrated"
+          data-hydrated={hydrated ? 'true' : 'false'}
+          aria-hidden="true"
           style={{ display: 'none' }}
         >
           {hydrated ? 'hydrated' : 'not-hydrated'}
         </div>
         {/* Visible hydration indicator for E2E tests - always render but with conditional content */}
-        <div 
-          data-testid="register-mounted" 
+        <div
+          data-testid="register-mounted"
           data-mounted={mounted ? 'true' : 'false'}
           style={{ position: 'absolute', left: '-9999px', visibility: 'hidden' }}
         >
           {mounted ? 'mounted' : 'not-mounted'}
         </div>
-        
+
         <div className="text-center">
           <h1 className="mt-6 text-4xl font-extrabold text-gray-900">
             Create your account
@@ -157,7 +166,7 @@ export default function RegisterPage() {
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-4">Choose how you&apos;d like to sign up:</p>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-3">
             {/* Passkey Registration Option - Primary (always enabled) */}
             <button
@@ -231,7 +240,7 @@ export default function RegisterPage() {
           {error && (
             <p role="alert" data-testid="register-error" className="text-red-600 text-sm">{error}</p>
           )}
-          
+
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
               <div className="flex">
@@ -293,7 +302,7 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
-            
+
             {success && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
                 <div className="flex">
@@ -333,7 +342,7 @@ export default function RegisterPage() {
                 onSuccess={handlePasskeySuccess}
                 onError={(error: string) => setError(error)}
               />
-              
+
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}

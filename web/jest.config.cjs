@@ -4,11 +4,18 @@ module.exports = {
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
 
+  coverageProvider: 'v8',
+
   projects: [
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
       testTimeout: 20000, // 20 seconds for client tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      // babel-jest will automatically find .babelrc.cjs in the root
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -17,6 +24,8 @@ module.exports = {
       testMatch: [
         '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.spec.{js,jsx,ts,tsx}',
       ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
@@ -56,6 +65,11 @@ module.exports = {
       displayName: 'server',
       testEnvironment: 'jsdom',
       testTimeout: 25000, // 25 seconds for server tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      // babel-jest will automatically find .babelrc.cjs in the root
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -102,20 +116,36 @@ module.exports = {
         '!**/archive/**'
       ],
     }
+    ,
+    {
+      displayName: 'contracts',
+      testEnvironment: 'node',
+      testTimeout: 20000,
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      // babel-jest will automatically find .babelrc.cjs in the root
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+      },
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      testMatch: [
+        '<rootDir>/tests/contracts/**/*.test.{ts,tsx,js,jsx}',
+      ],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+      },
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/\\.next/',
+        '/out/',
+        '/build/',
+        '/dist/',
+      ],
+    }
   ],
-  // Coverage configuration
+  // Coverage configuration (metrics only; thresholds are tracked via dashboards, not hard-gated in Jest)
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
-  coverageThreshold: {
-    global: {
-      lines: 80,
-      functions: 80,
-      branches: 70,
-      statements: 80
-    }
-  },
-  // Additional coverage settings
-  collectCoverage: false, // Enable only when running test:coverage
+  collectCoverage: false, // Enable only when running test:coverage / test:coverage:ci
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/.next/',

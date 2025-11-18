@@ -4,7 +4,8 @@ import { useCallback, useEffect } from 'react';
 import { useNotificationActions } from '@/lib/stores';
 
 type PollCreatedDetail = {
-  id: string;
+  id?: string;
+  pollId?: string;
   title?: string;
 };
 
@@ -22,24 +23,25 @@ export const usePollCreatedListener = () => {
         return;
       }
 
-      const { id, title } = event.detail ?? {};
-      if (!id) {
+      const detail = event.detail ?? {};
+      const resolvedId = detail.pollId ?? detail.id;
+      if (!resolvedId) {
         return;
       }
 
       addNotification({
         type: 'success',
         title: 'Poll published',
-        message: `${title ?? 'Your poll'} is live. Share it or review analytics right away.`,
+        message: `${detail.title ?? 'Your poll'} is live. Share it or review analytics right away.`,
         duration: 6000,
         actions: [
           {
             label: 'View poll',
-            action: () => router.push(`/polls/${id}`),
+            action: () => router.push(`/polls/${resolvedId}`),
           },
           {
             label: 'View analytics',
-            action: () => router.push(`/polls/analytics?pollId=${id}`),
+            action: () => router.push(`/polls/analytics?pollId=${resolvedId}`),
           },
         ],
       });

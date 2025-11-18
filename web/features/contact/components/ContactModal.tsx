@@ -25,14 +25,14 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
-import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
-import { withOptional } from '@/lib/util/objects';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useI18n } from '@/hooks/useI18n';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import { useContactMessages, useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 
 type ContactModalProps = {
@@ -54,8 +54,9 @@ export default function ContactModal({
   isOpen,
   onClose,
   representative,
-  userId
+  userId: _userId
 }: ContactModalProps) {
+  const { t, currentLanguage } = useI18n();
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +95,7 @@ export default function ContactModal({
   } = useContactThreads();
 
   const {
-    divisionIds: representativeDivisionIds,
+    divisionIds: _representativeDivisionIds,
     elections: representativeElections,
     loading: electionLoading,
     error: electionError,
@@ -105,6 +106,10 @@ export default function ContactModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const subjectInputRef = useRef<HTMLInputElement>(null);
 
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
   const handleClose = useCallback(() => {
     trackCtaEvent('civics_representative_contact_modal_close', {
       hadDraftContent: message.trim().length > 0,
@@ -113,14 +118,16 @@ export default function ContactModal({
     onClose();
   }, [message, onClose, success, trackCtaEvent]);
 
+  const dialogLiveMessage = contactSystemEnabled
+    ? t('contact.modal.a11y.liveOpen', { name: representative.name })
+    : t('contact.modal.a11y.liveUnavailable');
+
   useAccessibleDialog({
     isOpen,
     dialogRef,
     ...(contactSystemEnabled ? { initialFocusRef: subjectInputRef, ariaLabelId: 'contact-modal-title' } : {}),
     onClose: handleClose,
-    liveMessage: contactSystemEnabled
-      ? `Contact ${representative.name} dialog opened.`
-      : 'Contact feature unavailable dialog opened.',
+    liveMessage: dialogLiveMessage,
   });
 
   // Reset state when modal opens/closes
@@ -153,7 +160,7 @@ export default function ContactModal({
       });
       setLocalTemplateValues(initialValues);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, localTemplateValues]);
 
   // Apply filled template when it's ready
   useEffect(() => {
@@ -170,7 +177,7 @@ export default function ContactModal({
 
   const handleSendMessage = useCallback(async () => {
     if (!message.trim() || !subject.trim()) {
-      setError('Please fill in both subject and message');
+      setError(t('contact.modal.errors.missingFields'));
       return;
     }
 
@@ -216,9 +223,10 @@ export default function ContactModal({
       }, 2000);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send message');
+      const fallbackError = t('contact.modal.errors.sendFailed');
+      setError(err instanceof Error ? err.message : fallbackError);
       trackCtaEvent('civics_representative_contact_send_error', {
-        errorMessage: err instanceof Error ? err.message : 'Unknown error',
+        errorMessage: err instanceof Error ? err.message : fallbackError,
         usedTemplateId: selectedTemplate?.id ?? null,
       });
     } finally {
@@ -234,6 +242,7 @@ export default function ContactModal({
     handleClose,
     selectedTemplate?.id,
     trackCtaEvent,
+    t,
   ]);
 
   if (!isOpen) return null;
@@ -252,17 +261,17 @@ export default function ContactModal({
             <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" aria-hidden="true" />
           </div>
           <h2 id="contact-disabled-title" className="text-yellow-800 font-semibold">
-            Contact System Disabled
+            {t('contact.modal.disabled.title')}
           </h2>
           <p className="text-yellow-800">
-            Contact system is currently disabled. This feature will be available soon.
+            {t('contact.modal.disabled.description')}
           </p>
           <button
             onClick={handleClose}
             className="mt-2 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
             type="button"
           >
-            Close
+            {t('contact.modal.actions.close')}
           </button>
         </div>
       </div>
@@ -285,15 +294,17 @@ export default function ContactModal({
             <ChatBubbleLeftRightIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
             <div>
               <h2 id="contact-modal-title" className="text-lg font-semibold text-gray-900">
-                Contact {representative.name}
+                {t('contact.modal.header.title', { name: representative.name })}
               </h2>
-              <p id="contact-modal-description" className="text-sm text-gray-600">{representative.office}</p>
+              <p id="contact-modal-description" className="text-sm text-gray-600">
+                {t('contact.modal.header.subtitle', { office: representative.office })}
+              </p>
             </div>
           </div>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
-            aria-label="Close contact modal"
+            aria-label={t('contact.modal.actions.closeAria')}
             type="button"
           >
             <XMarkIcon className="h-6 w-6" aria-hidden="true" />
@@ -330,11 +341,11 @@ export default function ContactModal({
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold flex items-center gap-2">
                 <ClockIcon className="h-5 w-5 text-blue-500" />
-                Upcoming elections linked to this representative
+                {t('contact.modal.elections.title')}
               </p>
-              {electionLoading && <p>Polling election calendar…</p>}
+              {electionLoading && <p>{t('contact.modal.elections.loading')}</p>}
               {electionError && !electionLoading && (
-                <p className="text-red-600">Unable to load elections right now.</p>
+                <p className="text-red-600">{t('contact.modal.elections.error')}</p>
               )}
               {!electionLoading && !electionError && representativeElections.length > 0 && (
                 <ul className="space-y-1 text-blue-700">
@@ -344,19 +355,28 @@ export default function ContactModal({
                       <span>
                         <span className="font-medium">{election.name}</span>
                         <span className="ml-1">
-                          ({formatElectionDate(election.election_day)})
+                          {t('contact.modal.elections.date', {
+                            date: formatElectionDate(election.election_day, currentLanguage),
+                          })}
                         </span>
                       </span>
                     </li>
                   ))}
                   {representativeElections.length > 3 && (
-                    <li>+{representativeElections.length - 3} more election(s) tracked</li>
+                    <li>
+                      {t('contact.modal.elections.more', {
+                        count: numberFormatter.format(representativeElections.length - 3),
+                      })}
+                    </li>
                   )}
                   {daysUntilNextElection != null && (
                     <li className="text-xs text-blue-700">
-                      Next election {daysUntilNextElection === 0
-                        ? 'is today!'
-                        : `in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                      {daysUntilNextElection === 0
+                        ? t('contact.modal.elections.countdown.today')
+                        : t('contact.modal.elections.countdown.inDays', {
+                            count: daysUntilNextElection,
+                            formattedCount: numberFormatter.format(daysUntilNextElection),
+                          })}
                     </li>
                   )}
                 </ul>
@@ -374,7 +394,11 @@ export default function ContactModal({
               type="button"
             >
               <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />
-              <span>{selectedTemplate ? `Using: ${selectedTemplate.title}` : 'Use a Template'}</span>
+              <span>
+                {selectedTemplate
+                  ? t('contact.modal.templates.toggle.active', { title: selectedTemplate.title })
+                  : t('contact.modal.templates.toggle.inactive')}
+              </span>
             </button>
 
             {showTemplates && (
@@ -382,9 +406,11 @@ export default function ContactModal({
                 id="template-selector"
                 className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto"
                 role="listbox"
-                aria-label="Message templates"
+                aria-label={t('contact.modal.templates.ariaLabel')}
               >
-                <p className="text-xs font-medium text-gray-700 mb-3">Select a template:</p>
+                <p className="text-xs font-medium text-gray-700 mb-3">
+                  {t('contact.modal.templates.instructions')}
+                </p>
                 <div className="space-y-2">
                   {Object.entries(templatesByCategory).map(([category, templates]) => (
                     <div key={category}>
@@ -427,7 +453,7 @@ export default function ContactModal({
                     }}
                     className="mt-3 text-xs text-gray-600 hover:text-gray-800"
                   >
-                    Clear template
+                    {t('contact.modal.templates.clear')}
                   </button>
                 )}
               </div>
@@ -436,7 +462,9 @@ export default function ContactModal({
             {/* Template Placeholders Form */}
             {selectedTemplate && showTemplates && (
               <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                <p className="text-sm font-medium text-blue-900 mb-3">Fill in template details:</p>
+                <p className="text-sm font-medium text-blue-900 mb-3">
+                  {t('contact.modal.templates.fillLabel')}
+                </p>
                 <div className="space-y-3">
                   {selectedTemplate.placeholders.map(placeholder => (
                     <div key={placeholder.key}>
@@ -450,7 +478,7 @@ export default function ContactModal({
                         onChange={(e) => {
                           const value = e.target.value;
                           updateTemplateValue(placeholder.key, value);
-                          setLocalTemplateValues(prev => withOptional(prev, { [placeholder.key]: value }));
+                          setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -460,7 +488,9 @@ export default function ContactModal({
                 </div>
                 {validation.missing.length > 0 && (
                   <p className="mt-2 text-xs text-red-600">
-                    Missing required fields: {validation.missing.join(', ')}
+                    {t('contact.modal.templates.validation.missing', {
+                      fields: validation.missing.join(', '),
+                    })}
                   </p>
                 )}
               </div>
@@ -471,14 +501,14 @@ export default function ContactModal({
           <div className="space-y-4">
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                Subject
+                {t('contact.modal.form.subject.label')}
               </label>
               <input
                 type="text"
                 id="subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="What is this message about?"
+                placeholder={t('contact.modal.form.subject.placeholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isLoading || !!filledTemplate}
                 aria-required="true"
@@ -489,20 +519,20 @@ export default function ContactModal({
               />
               {error && !subject.trim() && (
                 <p id="subject-error" className="mt-1 text-xs text-red-600" role="alert">
-                  Subject is required
+                  {t('contact.modal.form.subject.required')}
                 </p>
               )}
             </div>
 
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                Message
+                {t('contact.modal.form.message.label')}
               </label>
               <textarea
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message here..."
+                placeholder={t('contact.modal.form.message.placeholder')}
                 rows={6}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isLoading}
@@ -514,11 +544,14 @@ export default function ContactModal({
               <div className="mt-1 flex justify-between items-center">
                 {error && !message.trim() && (
                   <p id="message-error" className="text-xs text-red-600" role="alert">
-                    Message is required
+                    {t('contact.modal.form.message.required')}
                   </p>
                 )}
                 <span className={`text-xs ml-auto ${message.length > 9500 ? 'text-red-600' : 'text-gray-500'}`}>
-                  {message.length} / 10,000 characters
+                  {t('contact.modal.form.message.count', {
+                    current: numberFormatter.format(message.length),
+                    max: numberFormatter.format(10000),
+                  })}
                 </span>
               </div>
             </div>
@@ -543,7 +576,7 @@ export default function ContactModal({
               aria-live="polite"
             >
               <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
-              <span className="text-sm">Message sent successfully!</span>
+              <span className="text-sm">{t('contact.modal.success')}</span>
             </div>
           )}
         </div>
@@ -552,7 +585,7 @@ export default function ContactModal({
         <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <ClockIcon className="h-4 w-4" />
-            <span>Messages are typically responded to within 2-3 business days</span>
+          <span>{t('contact.modal.footer.responseTime')}</span>
           </div>
           <div className="flex space-x-3">
             <button
@@ -560,24 +593,28 @@ export default function ContactModal({
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
               disabled={isLoading}
             >
-              Cancel
+            {t('common.actions.cancel')}
             </button>
             <button
               onClick={handleSendMessage}
               disabled={isLoading || !message.trim() || !subject.trim()}
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-busy={isLoading}
-              aria-label={isLoading ? 'Sending message...' : 'Send message'}
+            aria-busy={isLoading}
+            aria-label={
+              isLoading
+                ? t('contact.modal.actions.sendingAria')
+                : t('contact.modal.actions.sendAria')
+            }
             >
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true" />
-                  <span>Sending...</span>
+                <span>{t('contact.modal.actions.sending')}</span>
                 </>
               ) : (
                 <>
                   <PaperAirplaneIcon className="h-4 w-4" aria-hidden="true" />
-                  <span>Send Message</span>
+                <span>{t('contact.modal.actions.send')}</span>
                 </>
               )}
             </button>

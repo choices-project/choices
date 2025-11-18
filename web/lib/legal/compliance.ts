@@ -4,19 +4,18 @@
 
 import logger from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
-// 
+//
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
 // and COPPA for the Ranked Choice Democracy Revolution platform.
-// 
+//
 // Features:
 // - TCPA compliance for SMS communications
 // - CAN-SPAM compliance for email communications
 // - COPPA compliance for minors
 // - Consent management and tracking
 // - Data subject rights implementation
-// 
+//
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
 // ============================================================================
@@ -130,13 +129,13 @@ export class CommunicationComplianceManager {
 
       // Include opt-out instructions
       const compliantMessage = `${message}\n\nReply STOP to opt out.`;
-      
+
       // Send via compliant SMS provider
       await this.smsProvider.send(phoneNumber, compliantMessage);
-      
+
       // Log the communication
       await this.logCommunication('sms', phoneNumber, userId, compliantMessage);
-      
+
       return true;
     } catch (error) {
       logger.error('SMS sending failed:', error);
@@ -164,7 +163,7 @@ export class CommunicationComplianceManager {
    * @param context - Additional context
    */
   async recordConsent(
-    userId: string, 
+    userId: string,
     type: 'sms' | 'email' | 'analytics' | 'marketing',
     granted: boolean,
     context: {
@@ -176,7 +175,7 @@ export class CommunicationComplianceManager {
     } = {}
   ): Promise<void> {
     const consentKey = `${userId}:${type}`;
-    
+
     const consentRecord: ConsentRecord = {
       userId,
       type,
@@ -192,7 +191,7 @@ export class CommunicationComplianceManager {
     };
 
     this.consentRegistry.set(consentKey, consentRecord);
-    
+
     // Log consent change
     logger.info(`Consent recorded: ${userId} ${type} ${granted ? 'granted' : 'denied'}`);
   }
@@ -218,7 +217,7 @@ export class CommunicationComplianceManager {
 
       // Generate unsubscribe link
       const unsubscribeLink = await this.generateUnsubscribeLink(email);
-      
+
       // Create compliant email
       const compliantEmail = {
         to: email,
@@ -232,10 +231,10 @@ export class CommunicationComplianceManager {
 
       // Send via compliant email provider
       await this.emailProvider.send(compliantEmail);
-      
+
       // Log the communication
       await this.logCommunication('email', email, userId, body);
-      
+
       return true;
     } catch (error) {
       logger.error('Email sending failed:', error);
@@ -335,13 +334,13 @@ export class CommunicationComplianceManager {
     try {
       // Send parental consent request
       const consentToken = await this.generateParentalConsentToken(childUserId, parentEmail);
-      
+
       // Send consent request email to parent
       await this.sendParentalConsentEmail(parentEmail, consentToken);
-      
+
       // Store pending consent request
       await this.storePendingConsent(childUserId, parentEmail, consentToken);
-      
+
       return true;
     } catch (error) {
       logger.error('Parental consent verification failed:', error);
@@ -415,31 +414,26 @@ export class CommunicationComplianceManager {
    * @returns Promise<string> - Request ID
    */
   async submitDataSubjectRequest(
-    userId: string, 
+    userId: string,
     type: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction' | 'objection',
     details: any
   ): Promise<string> {
     const requestId = this.generateRequestId();
-    
-    const request: DataSubjectRequest = withOptional(
-      {
-        id: requestId,
-        type,
-        status: 'pending' as const,
-        requestedAt: new Date(),
-        legalBasis: this.getLegalBasisForRequest(type)
-      },
-      {
-        response: undefined
-      }
-    );
+
+    const request: DataSubjectRequest = {
+      id: requestId,
+      type,
+      status: 'pending' as const,
+      requestedAt: new Date(),
+      legalBasis: this.getLegalBasisForRequest(type)
+    };
 
     // Store request
     await this.storeDataSubjectRequest(userId, request);
-    
+
     // Process request based on type
     await this.processDataSubjectRequest(requestId, type, details);
-    
+
     return requestId;
   }
 
@@ -454,25 +448,25 @@ export class CommunicationComplianceManager {
   async runComplianceAudit(): Promise<ComplianceAudit> {
     const violations: ComplianceViolation[] = [];
     const recommendations: string[] = [];
-    
+
     // Check TCPA compliance
     const tcpaviolations = await this.auditTCPACompliance();
     violations.push(...tcpaviolations);
-    
+
     // Check CAN-SPAM compliance
     const canSpamViolations = await this.auditCANSPAMCompliance();
     violations.push(...canSpamViolations);
-    
+
     // Check COPPA compliance
     const coppaViolations = await this.auditCOPPACompliance();
     violations.push(...coppaViolations);
-    
+
     // Generate recommendations
     recommendations.push(...this.generateComplianceRecommendations(violations));
-    
+
     // Calculate compliance score
     const complianceScore = this.calculateComplianceScore(violations);
-    
+
     return {
       timestamp: new Date(),
       complianceScore,
@@ -520,7 +514,7 @@ export class CommunicationComplianceManager {
       'analytics': 30 * 24 * 60 * 60 * 1000, // 30 days
       'marketing': 365 * 24 * 60 * 60 * 1000 // 1 year
     };
-    
+
     return retentionPeriods[type] ?? 365 * 24 * 60 * 60 * 1000;
   }
 
@@ -621,9 +615,9 @@ export class CommunicationComplianceManager {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
-    return { 
-      childUserId: `child_${Math.abs(tokenHash)}`, 
-      parentEmail: `parent${Math.abs(tokenHash)}@example.com` 
+    return {
+      childUserId: `child_${Math.abs(tokenHash)}`,
+      parentEmail: `parent${Math.abs(tokenHash)}@example.com`
     };
   }
 
@@ -664,13 +658,18 @@ export class CommunicationComplianceManager {
       'restriction': 'legitimate_interest',
       'objection': 'legitimate_interest'
     };
-    
+
     return legalBases[type] ?? 'consent';
   }
 
   private async storeDataSubjectRequest(userId: string, request: DataSubjectRequest): Promise<void> {
-    // Store data subject request
-    logger.info(`Data subject request stored: ${request.id}`);
+    // Store data subject request with user context for audit trail
+    logger.info('Data subject request stored', {
+      requestId: request.id,
+      userId,
+      requestType: request.type,
+      timestamp: request.requestedAt
+    });
   }
 
   private async processDataSubjectRequest(requestId: string, type: string, details: any): Promise<void> {
@@ -697,7 +696,7 @@ export class CommunicationComplianceManager {
 
   private generateComplianceRecommendations(violations: ComplianceViolation[]): string[] {
     const recommendations: string[] = [];
-    
+
     if (violations.length === 0) {
       recommendations.push('No compliance violations found');
     } else {
@@ -706,20 +705,20 @@ export class CommunicationComplianceManager {
         recommendations.push(`- ${violation.type}: ${violation.remediation}`);
       });
     }
-    
+
     return recommendations;
   }
 
   private calculateComplianceScore(violations: ComplianceViolation[]): number {
     if (violations.length === 0) return 100;
-    
+
     const criticalViolations = violations.filter(v => v.severity === 'critical').length;
     const highViolations = violations.filter(v => v.severity === 'high').length;
     const mediumViolations = violations.filter(v => v.severity === 'medium').length;
     const lowViolations = violations.filter(v => v.severity === 'low').length;
-    
+
     const score = 100 - (criticalViolations * 25) - (highViolations * 15) - (mediumViolations * 10) - (lowViolations * 5);
-    
+
     return Math.max(0, score);
   }
 }

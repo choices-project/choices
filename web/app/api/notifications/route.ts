@@ -19,7 +19,6 @@ import {
   successResponse,
   authError,
   errorResponse,
-  validationError,
   notFoundError,
   parseBody
 } from '@/lib/api';
@@ -45,6 +44,10 @@ const NotificationSchema = z.object({
   priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
   action_url: z.string().url().optional(),
   metadata: z.record(z.string(), z.any()).optional()
+});
+
+const NotificationMarkReadSchema = z.object({
+  notificationId: z.string().min(1, 'Notification ID is required')
 });
 
 /**
@@ -171,12 +174,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 // PUT /api/notifications - Mark notification as read
 export const PUT = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
-  const body = await request.json();
-  const { notificationId } = body;
-
-  if (!notificationId) {
-    return validationError({ notificationId: 'Notification ID is required' });
+  const bodyResult = await parseBody(request, NotificationMarkReadSchema);
+  if (!bodyResult.success) {
+    return bodyResult.error;
   }
+  const { notificationId } = bodyResult.data;
 
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();

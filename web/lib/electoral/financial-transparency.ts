@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Campaign Finance Transparency & "Bought Off" Indicator System
  *
@@ -68,7 +67,7 @@ type IndustryInfluence = {
 
 type ConflictOfInterest = {
   issue: string;
-  conflict_type: string;
+  conflictType: 'business' | 'family' | 'financial' | 'employment';
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   disclosure: boolean;
@@ -402,7 +401,11 @@ export class FinancialTransparencySystem {
       if (!this.influenceAnalyses.has(candidateId)) {
         this.influenceAnalyses.set(candidateId, []);
       }
-      this.influenceAnalyses.get(candidateId)!.push(analysis);
+      const analyses = this.influenceAnalyses.get(candidateId);
+      if (analyses) {
+        analyses.push(analysis);
+        this.influenceAnalyses.set(candidateId, analyses);
+      }
 
       logger.info('Issue influence analysis completed', {
         candidateId,
@@ -442,15 +445,15 @@ export class FinancialTransparencySystem {
           agency: service.agency,
           startDate: service.start_date,
           endDate: service.end_date,
-          salary: service.salary
+          salary: service.salary ?? 0
         })),
         postGovernmentEmployment: postGovernmentEmployment.map(employment => ({
           employer: employment.employer,
           position: employment.position,
           startDate: employment.start_date,
           industry: employment.industry,
-          salary: employment.salary,
-          lobbying: employment.lobbying
+          salary: employment.salary ?? 0,
+          lobbying: employment.lobbying ?? false
         })),
         revolvingDoorScore
       };
@@ -492,21 +495,21 @@ export class FinancialTransparencySystem {
         corporateConnections: corporateConnections.map(conn => ({
           company: conn.company,
           industry: conn.industry,
-          connectionType: conn.connection_type,
+          connectionType: conn.connectionType,
           ...(conn.amount !== undefined && { amount: conn.amount }),
-          startDate: conn.start_date,
-          ...(conn.end_date !== undefined && { endDate: conn.end_date })
+          startDate: conn.startDate,
+          ...(conn.endDate !== undefined && { endDate: conn.endDate })
         })),
         industryInfluence: industryInfluence.map(influence => ({
           industry: influence.industry,
-          totalContributions: influence.total_contributions,
-          influenceScore: influence.influence_score,
-          keyCompanies: influence.key_companies,
-          policyImpact: influence.policy_impact
+          totalContributions: influence.totalContributions,
+          influenceScore: influence.influenceScore,
+          keyCompanies: influence.keyCompanies,
+          policyImpact: influence.policyImpact
         })),
         conflictsOfInterest: conflictsOfInterest.map(conflict => ({
           issue: conflict.issue,
-          conflictType: conflict.conflict_type,
+          conflictType: conflict.conflictType,
           description: conflict.description,
           severity: conflict.severity,
           disclosure: conflict.disclosure
@@ -545,13 +548,20 @@ export class FinancialTransparencySystem {
     industry: string;
     influenceScore: number;
   }>> {
-    return contributors.map(contributor => ({
-      name: contributor.name,
-      amount: contributor.amount,
-      type: contributor.type,
-      industry: contributor.industry ?? 'Unknown',
-      influenceScore: contributor.influenceScore
-    }));
+    return contributors.map(contributor => {
+      // Calculate or validate influence score if missing or invalid
+      const calculatedScore = contributor.influenceScore > 0 
+        ? contributor.influenceScore 
+        : this.calculateContributorInfluenceScore(contributor);
+      
+      return {
+        name: contributor.name,
+        amount: contributor.amount,
+        type: contributor.type,
+        industry: contributor.industry ?? 'Unknown',
+        influenceScore: calculatedScore
+      };
+    });
   }
 
   private calculateContributorInfluenceScore(contributor: {
@@ -1141,7 +1151,8 @@ export class FinancialTransparencySystem {
       if (hasGovernmentService) {
         transitions++;
         // Higher salary increase = higher revolving door risk
-        const salaryIncrease = employment.salary > 0 ? Math.min(employment.salary / 100000, 50) : 0;
+        const salary = employment.salary ?? 0;
+        const salaryIncrease = salary > 0 ? Math.min(salary / 100000, 50) : 0;
         score += salaryIncrease;
       }
     }
@@ -1227,17 +1238,17 @@ export class FinancialTransparencySystem {
           return {
             company: (conn.company as string) ?? 'Unknown Company',
             industry: (conn.industry as string) ?? 'Unknown Industry',
-            connection_type: (conn.connection_type as 'donation' | 'employment' | 'board_member' | 'consultant') ?? 'donation',
+            connectionType: (conn.connection_type as 'donation' | 'employment' | 'board_member' | 'consultant') ?? 'donation',
             ...(conn.amount !== undefined && { amount: conn.amount as number }),
-            start_date: (conn.start_date as string) ?? '',
-            ...(conn.end_date !== undefined && { end_date: conn.end_date as string })
+            startDate: (conn.start_date as string) ?? '',
+            ...(conn.end_date !== undefined && { endDate: conn.end_date as string })
           };
         }
         return {
           company: 'Unknown Company',
           industry: 'Unknown Industry',
-          connection_type: 'donation' as const,
-          start_date: ''
+          connectionType: 'donation' as const,
+          startDate: ''
         };
       });
     } catch (error) {
@@ -1275,9 +1286,9 @@ export class FinancialTransparencySystem {
 
     for (const [industry, connections] of Object.entries(industryMap)) {
       const totalFinancialInterest = connections.reduce((sum, conn) => sum + (conn.amount ?? 0), 0);
-      const boardMembers = connections.filter(conn => conn.connection_type === 'board_member').length;
-      const consultants = connections.filter(conn => conn.connection_type === 'consultant').length;
-      const shareholders = connections.filter(conn => conn.connection_type === 'donation').length;
+      const boardMembers = connections.filter(conn => conn.connectionType === 'board_member').length;
+      const consultants = connections.filter(conn => conn.connectionType === 'consultant').length;
+      const shareholders = connections.filter(conn => conn.connectionType === 'donation').length;
 
       const influenceScore = this.calculateIndustryInfluenceScore(
         totalFinancialInterest,
@@ -1289,14 +1300,14 @@ export class FinancialTransparencySystem {
 
       influences.push({
         industry,
-        total_contributions: totalFinancialInterest,
-        influence_score: influenceScore,
-        key_companies: connections.map(conn => conn.company),
-        policy_impact: [] // Would be populated with actual policy impact analysis
+        totalContributions: totalFinancialInterest,
+        influenceScore,
+        keyCompanies: connections.map(conn => conn.company),
+        policyImpact: [] // Would be populated with actual policy impact analysis
       });
     }
 
-    return influences.sort((a, b) => b.influence_score - a.influence_score);
+    return influences.sort((a, b) => b.influenceScore - a.influenceScore);
   }
 
   private async identifyConflictsOfInterest(candidateId: string, corporateConnections: CorporateConnection[]): Promise<ConflictOfInterest[]> {
@@ -1323,7 +1334,7 @@ export class FinancialTransparencySystem {
           if (conflictScore > 30) { // Threshold for significant conflict
             conflicts.push({
               issue: industry,
-              conflict_type: this.determineConflictType(connection),
+              conflictType: this.determineConflictType(connection),
               description: this.generateConflictDescription(connection, industry, relevantVotes.length),
               severity: this.determineRiskLevel(conflictScore) === 'high' ? 'high' :
                        this.determineRiskLevel(conflictScore) === 'medium' ? 'medium' : 'low',
@@ -1464,17 +1475,17 @@ export class FinancialTransparencySystem {
     score += relevantPolicies.length * 3;
 
     // Add points for connection types
-    if (connection.connection_type === 'board_member') score += 15;
-    if (connection.connection_type === 'consultant') score += 10;
-    if (connection.connection_type === 'donation') score += 5;
+    if (connection.connectionType === 'board_member') score += 15;
+    if (connection.connectionType === 'consultant') score += 10;
+    if (connection.connectionType === 'donation') score += 5;
 
     return Math.min(score, 100);
   }
 
   private determineConflictType(connection: CorporateConnection): 'financial' | 'employment' | 'family' | 'business' {
-    if (connection.connection_type === 'board_member') return 'employment';
-    if (connection.connection_type === 'consultant') return 'employment';
-    if (connection.connection_type === 'donation') return 'financial';
+    if (connection.connectionType === 'board_member') return 'employment';
+    if (connection.connectionType === 'consultant') return 'employment';
+    if (connection.connectionType === 'donation') return 'financial';
     return 'business';
   }
 
@@ -1483,7 +1494,7 @@ export class FinancialTransparencySystem {
     industry: string,
     relevantVotes: number
   ): string {
-    return `Candidate has ${connection.connection_type} relationship with ${connection.company} in the ${industry} industry, with ${relevantVotes} relevant votes on industry-related legislation.`;
+    return `Candidate has ${connection.connectionType} relationship with ${connection.company} in the ${industry} industry, with ${relevantVotes} relevant votes on industry-related legislation.`;
   }
 }
 

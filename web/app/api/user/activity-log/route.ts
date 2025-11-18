@@ -15,9 +15,13 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, authError, errorResponse } from '@/lib/api';
+import {
+  withErrorHandling,
+  authError,
+  errorResponse,
+  paginatedResponse,
+} from '@/lib/api';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -46,19 +50,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Get query parameters
   const searchParams = request.nextUrl.searchParams;
-  const limit = Math.min(
-    parseInt(searchParams.get('limit') || '50'),
-    200 // Maximum 200 results for user endpoint
-  );
-  const offset = parseInt(searchParams.get('offset') || '0');
+  const limitParam = Number.parseInt(searchParams.get('limit') || '', 10);
+  const offsetParam = Number.parseInt(searchParams.get('offset') || '', 10);
 
-  const startDate = searchParams.get('startDate')
-    ? new Date(searchParams.get('startDate')!)
-    : undefined;
+  const limit = Number.isFinite(limitParam)
+    ? Math.min(Math.max(limitParam, 1), 200)
+    : 50;
+  const offset = Number.isFinite(offsetParam) && offsetParam > 0 ? offsetParam : 0;
+
+  const startDateParam = searchParams.get('startDate');
+  const startDate = startDateParam ? new Date(startDateParam) : undefined;
   
-  const endDate = searchParams.get('endDate')
-    ? new Date(searchParams.get('endDate')!)
-    : undefined;
+  const endDateParam = searchParams.get('endDate');
+  const endDate = endDateParam ? new Date(endDateParam) : undefined;
 
   // Create audit log service
   const auditLog = createAuditLogService(supabase);
@@ -74,29 +78,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Fetch logs
   const allLogs = await auditLog.search(filters);
-  
+
   // Apply offset
   const paginatedLogs = allLogs.slice(offset, offset + limit);
 
-  // Return user-friendly format
-  return NextResponse.json({
-    success: true,
-    activity: paginatedLogs.map(log => ({
-      id: log.id,
-      timestamp: log.created_at,
-      event: log.event_name,
-      type: log.event_type,
-      resource: log.resource,
-      action: log.action,
-      details: log.metadata,
-      ip_address: log.ip_address
-    })),
-    pagination: {
-      limit,
-      offset,
-      total: allLogs.length,
-      hasMore: allLogs.length > offset + limit
-    }
+  const activityEntries = paginatedLogs.map((log) => ({
+    id: log.id,
+    timestamp: log.created_at,
+    event: log.event_name,
+    type: log.event_type,
+    resource: log.resource,
+    action: log.action,
+    details: log.metadata,
+    ip_address: log.ip_address,
+  }));
+
+  return paginatedResponse(activityEntries, {
+    total: allLogs.length,
+    limit,
+    offset,
   });
 });
 

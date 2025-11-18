@@ -1,26 +1,27 @@
 # Feature Readiness Tracker
 
-This document captures the features that still require engineering work before they can be considered production-ready. It is based on the current flag inventory in `web/lib/core/feature-flags.ts`, exploratory code review, and the latest implementation state of each area.
+_Last updated: January 2026 (reflects analytics + civics milestones shipped in G/F roadmap phases)._
 
-| Feature | Flag Key | Current State | Key References | Notes / Next Steps |
+This table mirrors the live flag inventory in `web/lib/core/feature-flags.ts`. Treat it as the “what ships when” planner for Product/Eng. Execution minutiae continue to live in `docs/ROADMAP_SINGLE_SOURCE.md`.
+
+| Feature | Flag Key | Current State | Evidence | Next Steps |
 | --- | --- | --- | --- | --- |
-| Automated Poll Generation | `AUTOMATED_POLLS` | Not implemented | – | No API or UI scaffolding detected. Requires product definition. |
+| Automated Poll Generation | `AUTOMATED_POLLS` | Not started | – | No API or UI scaffolding detected. Requires product definition. |
 | Advanced Privacy (ZK / DP) | `ADVANCED_PRIVACY` | Concept only | – | No differential privacy or ZKP pipelines present. Remove flag or scope a privacy initiative. |
-| Social Sharing (Master) | `SOCIAL_SHARING` | **Partial** | `web/app/api/share/route.ts`, `web/features/polls/components/PollShare.tsx` | API logs events only; nothing is persisted. UI opens share URLs but lacks analytics, fallback UX, or civics integration. Needs Supabase persistence + admin dashboards. |
-| Social Sharing – Polls | `SOCIAL_SHARING_POLLS` | Partial (rides on master flag) | Same as above | Enable only after master feature writes analytics and exposes metrics. |
+| Social Sharing (Master) | `SOCIAL_SHARING` | Partial (API + poll UI) | `web/app/api/share/route.ts`, `web/features/polls/components/PollShare.tsx` | Persist analytics events (Supabase table + dashboard) and design civics-specific affordances before flipping on by default. |
+| Social Sharing – Polls | `SOCIAL_SHARING_POLLS` | Inherits master flag | Same as above | Enable only when master feature has observability + moderation hooks. |
 | Social Sharing – Civics | `SOCIAL_SHARING_CIVICS` | Not implemented | – | No civics-specific sharing surfaces. Decide whether to keep the flag. |
-| Social Sharing – Visual | `SOCIAL_SHARING_VISUAL` | Not implemented | – | No OG/video/image generation pipeline. Remove or plan dedicated project. |
-| Social Sharing – OpenGraph | `SOCIAL_SHARING_OG` | Not implemented | – | No dynamic OG image service. Needs infra decision. |
+| Social Sharing – Visual / OG | `SOCIAL_SHARING_VISUAL`, `SOCIAL_SHARING_OG` | Not implemented | – | No OG/video/image generation pipeline. Remove or plan dedicated project. |
 | Social Signup (OAuth) | `SOCIAL_SIGNUP` | Not implemented | Auth flows rely on email + WebAuthn only | Add dedicated OAuth controllers, Supabase provider config, and onboarding UX. |
-| Contact Information System | `CONTACT_INFORMATION_SYSTEM` | Prototype APIs exist, data incomplete | `web/app/api/contact/*` | Endpoints exist but no consumer UI beyond admin. Clarify scope (CRM vs. MVP) and complete ingestion + notification flows. |
+| Contact Information System | `CONTACT_INFORMATION_SYSTEM` | Alpha: APIs + ingestion complete, UI pending | `docs/CONTACT_SYSTEM_SCOPE.md`, `docs/CONTACT_SYSTEM_COMPLETION.md`, `web/app/api/contact/*` | Ship admin UI + notification hooks; add MSW fixtures and Playwright coverage before graduating to beta. |
 | Civics Testing Strategy | `CIVICS_TESTING_STRATEGY` | Not implemented | – | No automated validation for civics datasets. Needs definition. |
-| Device Flow Auth | `DEVICE_FLOW_AUTH` | Not implemented | – | Separate from WebAuthn. Requires OAuth 2.0 Device Authorization Grant handlers, polling UX, rate limiting, and Supabase token issuance. |
-| Performance Optimization Suite | `PERFORMANCE_OPTIMIZATION` | Partially implemented | `web/lib/performance/*`, `web/lib/core/database/optimizer.ts` | Plenty of utilities exist but many callers are unused. Audit actual adoption before enabling globally. |
-| Push Notifications | `PUSH_NOTIFICATIONS` | Backend scaffolding only | `web/app/api/pwa/notifications/*`, `web/features/pwa/components` | Routes exist but client opt-in + delivery guarantees remain unfinished. Needs testing + product sign-off. |
-| Themes / Dark Mode | `THEMES` | Not implemented | – | No theme provider or tokens. Remove flag or schedule UX project. |
-| Accessibility Enhancements | `ACCESSIBILITY` | Not implemented | – | Accessibility work is ongoing but not behind a flag. Replace with concrete tasks (e.g., axe audits). |
-| Internationalisation | `INTERNATIONALIZATION` | **In progress** | `web/app/layout.tsx`, `web/hooks/useI18n.ts`, `web/messages/*.json` | `next-intl` provider, locale middleware, and `LanguageSelector` ship with `en`/`es`. Finish extraction tooling & lint (`npm run i18n:extract`) and expand catalogue coverage before enabling flag. |
-| Civic Engagement v2 | `CIVIC_ENGAGEMENT_V2` | WIP module gated behind flag | `web/lib/utils/sophisticated-civic-engagement.ts`, `web/lib/core/feature-flags.ts` | Helpers exist but require Supabase integration, UI surfacing, and QA. |
+| Device Flow Auth | `DEVICE_FLOW_AUTH` | Developer Preview | `docs/DEVICE_FLOW_AUTH.md`, `web/app/api/auth/device-flow/*`, `web/components/auth/DeviceFlowAuth.tsx` | Add Supabase polling UX, finalize rate limiting, and wire E2E tests (`tests/e2e/specs/push-notifications.spec.ts` currently covers notification tie‑ins only). |
+| Performance Optimization Suite | `PERFORMANCE_OPTIMIZATION` | Partially adopted | `web/lib/performance/*`, `web/components/performance/PerformanceMonitor.tsx` | Audit consumers and decide which dashboards opt-in by default. |
+| Push Notifications | `PUSH_NOTIFICATIONS` | Beta (Admin + PWA client shipped) | `docs/PUSH_NOTIFICATIONS_*.md`, `web/app/api/pwa/notifications/*`, `web/features/pwa/components/NotificationPreferences.tsx`, `tests/e2e/specs/push-notifications.spec.ts` | Complete staged delivery + analytics backfill before rolling out broadly. |
+| Accessibility Enhancements | `ACCESSIBILITY` | In QA (dashboards compliant) | `docs/TESTING.md` (NVDA checklist), `web/features/analytics/components/{PollHeatmap,DemographicsChart,TemporalAnalysisChart}.tsx` | Finish keyboard-navigation sweep for legacy feature-flag wrappers; keep axe CI green via `npm run test:e2e:axe`. |
+| Internationalisation | `INTERNATIONALIZATION` | In progress (en/es coverage) | `web/app/layout.tsx`, `web/hooks/useI18n.ts`, `components/shared/LanguageSelector.tsx` | Expand locale catalogue, document copy freeze, and wire CI extraction (`npm run i18n:extract`) before enabling. |
+| Civic Engagement v2 | `CIVIC_ENGAGEMENT_V2` | Beta (service + docs live, UI pending) | `docs/CIVIC_ENGAGEMENT_V2_*.md`, `web/lib/utils/sophisticated-civic-engagement.ts`, Supabase migrations in `supabase/migrations/2025-01-22_001_enhance_civic_actions_v2.sql` | Surface metrics in admin dashboard and complete integration tests. |
+| Analytics – Demographic Insights / Funnels / KPI | `ANALYTICS` | Shipped | `web/app/api/analytics/{funnels,kpi,trust-tiers}` + widgets, `docs/ANALYTICS_PIPELINE.md` | Keep Redis cache TTLs tuned; add additional chart exports as requested. |
 
 ## Always-On Capabilities
 
@@ -32,15 +33,13 @@ The following flags were moved into `ALWAYS_ENABLED_FLAGS` because the applicati
 - `CANDIDATE_ACCOUNTABILITY`, `CANDIDATE_CARDS`, `ALTERNATIVE_CANDIDATES`
 - `FEATURE_DB_OPTIMIZATION_SUITE`, `ANALYTICS`, `WEBAUTHN`
 
-When planning future work, rely on the real toggles listed in the table above and remove dormant flags rather than carrying long-term technical debt.
-
 These capabilities surface in the admin dashboard as **Locked** entries—attempting to toggle them is blocked at both the API and UI layers.
 
 ## Suggested Next Steps
 
-1. **Prioritise Social Sharing** – It has the most scaffolding in place and offers immediate user value once persistence + reporting land.
-2. **Decide on OAuth Device Flow vs. WebAuthn Enhancements** – Treat them as separate projects, keeping security implications in mind.
-3. **Audit Remaining Flags Each Quarter** – Delete placeholders that do not have a concrete owner or plan.
-4. **Use This Document as the Source of Truth** – Update it whenever a project ships or a flag changes ownership.
+1. **Push Notifications GA** – Validate staged delivery + failure analytics, then graduate the flag.
+2. **Contact System UI** – Build the admin front-end + notifications to close the loop on the API work.
+3. **Device Flow + OAuth** – Pair the new API routes with Supabase provider config and onboarding copy.
+4. **Quarterly Flag Review** – Delete placeholders with no owner; keep this document aligned with each release cycle.
 
 

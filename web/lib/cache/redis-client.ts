@@ -8,7 +8,6 @@
  * Agent D - Database Specialist
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 // Redis client types
@@ -190,9 +189,17 @@ export class RedisClient {
 
       this.client.on('reconnecting', () => {
         this.connectionAttempts++
-        logger.info('Redis client reconnecting', {
-          attempt: this.connectionAttempts
-        })
+        if (this.connectionAttempts >= this.maxConnectionAttempts) {
+          logger.error('Redis connection attempts exceeded maximum', {
+            attempts: this.connectionAttempts,
+            maxAttempts: this.maxConnectionAttempts
+          })
+        } else {
+          logger.info('Redis client reconnecting', {
+            attempt: this.connectionAttempts,
+            maxAttempts: this.maxConnectionAttempts
+          })
+        }
       })
 
       // Connect to Redis
@@ -302,16 +309,14 @@ export class RedisClient {
     }
 
     try {
-      const entry: CacheEntry<T> = withOptional(
-        {
-          data: value,
-          expiresAt: Date.now() + (ttlSeconds * 1000),
-          createdAt: Date.now(),
-          hitCount: 0,
-          tags,
-        },
-        metadata ?? {}
-      )
+      const entry: CacheEntry<T> = {
+        data: value,
+        expiresAt: Date.now() + (ttlSeconds * 1000),
+        createdAt: Date.now(),
+        hitCount: 0,
+        tags,
+        ...(metadata ? { metadata } : {})
+      }
 
       await this.client.set(key, JSON.stringify(entry), { ex: ttlSeconds })
 

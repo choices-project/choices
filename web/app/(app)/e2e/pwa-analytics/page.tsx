@@ -193,7 +193,12 @@ export default function PWAAnalyticsHarnessPage() {
     harness.reset?.();
 
     return () => {
-      delete window.__pwaQueueHarness;
+      if (window.__pwaQueueHarness === harness) {
+        // Prefer delete over assigning undefined to satisfy lint rules
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - global augmentation
+        delete window.__pwaQueueHarness;
+      }
     };
   }, []);
 

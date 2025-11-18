@@ -14,7 +14,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
@@ -22,21 +22,22 @@ import type {
   UserDemographics,
   PrivacyPreferences,
   ProfileData,
-  ValuesData,
 } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
 import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
   useUserLoading,
+  useUserActions,
   useOnboardingStep,
   useOnboardingData,
   useOnboardingActions,
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
-import { withOptional } from '@/lib/util/objects';
+// withOptional removed in favor of explicit merges
 import logger from '@/lib/utils/logger';
 import type { ProfileDemographics } from '@/types/profile';
 
@@ -189,11 +190,10 @@ const PrivacyStep: React.FC<{
                 type="checkbox"
                 checked={privacy.location_sharing === 'quantized'}
                 onChange={(e) =>
-                  setPrivacy(
-                    withOptional(privacy, {
-                      location_sharing: e.target.checked ? 'quantized' : 'disabled',
-                    }),
-                  )
+                  setPrivacy({
+                    ...privacy,
+                    location_sharing: e.target.checked ? 'quantized' : 'disabled',
+                  })
                 }
                 className="w-5 h-5 text-blue-600 rounded"
               />
@@ -206,11 +206,10 @@ const PrivacyStep: React.FC<{
                 type="checkbox"
                 checked={privacy.demographic_sharing === 'enabled'}
                 onChange={(e) =>
-                  setPrivacy(
-                    withOptional(privacy, {
-                      demographic_sharing: e.target.checked ? 'enabled' : 'disabled',
-                    }),
-                  )
+                  setPrivacy({
+                    ...privacy,
+                    demographic_sharing: e.target.checked ? 'enabled' : 'disabled',
+                  })
                 }
                 className="w-5 h-5 text-blue-600 rounded"
               />
@@ -223,11 +222,10 @@ const PrivacyStep: React.FC<{
                 type="checkbox"
                 checked={privacy.analytics_sharing === 'enabled'}
                 onChange={(e) =>
-                  setPrivacy(
-                    withOptional(privacy, {
-                      analytics_sharing: e.target.checked ? 'enabled' : 'limited',
-                    }),
-                  )
+                  setPrivacy({
+                    ...privacy,
+                    analytics_sharing: e.target.checked ? 'enabled' : 'limited',
+                  })
                 }
                 className="w-5 h-5 text-blue-600 rounded"
               />
@@ -322,15 +320,15 @@ const DemographicsStep: React.FC<{
               autoSave={true}
               onDistrictSaved={(district) => {
                 // Update demographics with district info
-                setDemographics(
-                  withOptional(demographics, {
-                    location: withOptional(demographics.location ?? DEFAULT_DEMOGRAPHICS.location, {
-                      state: district.state,
-                      ...(district.district ? { district: district.district } : {}),
-                      quantized: true,
-                    }),
-                  }),
-                );
+                setDemographics({
+                  ...demographics,
+                  location: {
+                    ...(demographics.location ?? DEFAULT_DEMOGRAPHICS.location),
+                    state: district.state,
+                    ...(district.district ? { district: district.district } : {}),
+                    quantized: true,
+                  },
+                });
               }}
             />
 
@@ -364,11 +362,10 @@ const DemographicsStep: React.FC<{
                 <select
                   value={demographics.age_range ?? ''}
                   onChange={(e) =>
-                    setDemographics(
-                      withOptional(demographics, {
-                        age_range: e.target.value as UserDemographics['age_range'],
-                      }),
-                    )
+                    setDemographics({
+                      ...demographics,
+                      age_range: e.target.value as UserDemographics['age_range'],
+                    })
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -387,11 +384,10 @@ const DemographicsStep: React.FC<{
                 <select
                   value={demographics.education ?? ''}
                   onChange={(e) =>
-                    setDemographics(
-                      withOptional(demographics, {
-                        education: e.target.value as UserDemographics['education'],
-                      }),
-                    )
+                    setDemographics({
+                      ...demographics,
+                      education: e.target.value as UserDemographics['education'],
+                    })
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -410,11 +406,10 @@ const DemographicsStep: React.FC<{
                 <select
                   value={demographics.political_engagement ?? ''}
                   onChange={(e) =>
-                    setDemographics(
-                      withOptional(demographics, {
-                        political_engagement: e.target.value as UserDemographics['political_engagement'],
-                      }),
-                    )
+                    setDemographics({
+                      ...demographics,
+                      political_engagement: e.target.value as UserDemographics['political_engagement'],
+                    })
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -695,14 +690,12 @@ const ProfileStep: React.FC<{
   const participationStyle = (profile?.participationStyle ?? 'observer') as 'observer' | 'contributor' | 'leader';
 
   const handleNext = () => {
-    onUpdate(
-      withOptional({} as ProfileData, {
-        displayName,
-        bio,
-        participationStyle,
-        profileSetupCompleted: true,
-      }),
-    );
+    onUpdate({
+      displayName,
+      bio,
+      participationStyle,
+      profileSetupCompleted: true,
+    });
     onNext();
   };
 
@@ -728,12 +721,10 @@ const ProfileStep: React.FC<{
           <input
             type="text"
             value={displayName}
-            onChange={(e) =>
-              onUpdate(
-                withOptional({} as ProfileData, {
-                  displayName: e.target.value,
-                }),
-              )
+              onChange={(e) =>
+              onUpdate({
+                displayName: e.target.value,
+              })
             }
             placeholder="Enter your display name"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -747,12 +738,10 @@ const ProfileStep: React.FC<{
           </label>
           <textarea
             value={bio}
-            onChange={(e) =>
-              onUpdate(
-                withOptional({} as ProfileData, {
-                  bio: e.target.value,
-                }),
-              )
+              onChange={(e) =>
+              onUpdate({
+                bio: e.target.value,
+              })
             }
             placeholder="Share a brief description about yourself (optional)"
             rows={3}
@@ -777,12 +766,10 @@ const ProfileStep: React.FC<{
                   name="participation"
                   value={option.value}
                   checked={participationStyle === option.value}
-                  onChange={(e) =>
-                    onUpdate(
-                      withOptional({} as ProfileData, {
-                        participationStyle: e.target.value as 'observer' | 'contributor' | 'leader',
-                      }),
-                    )
+                    onChange={(e) =>
+                    onUpdate({
+                      participationStyle: e.target.value as 'observer' | 'contributor' | 'leader',
+                    })
                   }
                   className="h-4 w-4 text-blue-600"
                 />
@@ -945,6 +932,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   const { t } = useI18n();
   const currentStep = useOnboardingStep();
   const onboardingData = useOnboardingData();
+  const isFlowCompleted = onboardingData?.isCompleted ?? false;
   const stepLabels = useMemo(
     () => [
       t('onboarding.labels.welcome'),
@@ -959,7 +947,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   const totalSteps = stepLabels.length || 6;
   const profileStepData = useMemo<ProfileData>(() => {
     const extras = onboardingData?.profileData ?? undefined;
-    return withOptional(DEFAULT_PROFILE_DATA, extras);
+    return { ...DEFAULT_PROFILE_DATA, ...(extras ?? {}) };
   }, [onboardingData?.profileData]);
   const valuesData = onboardingData?.valuesData;
   const demographicsData = useMemo<UserDemographics>(() => {
@@ -967,14 +955,17 @@ const BalancedOnboardingFlow: React.FC = () => {
       valuesData?.demographics != null
         ? {
             ...valuesData.demographics,
-            location: withOptional(DEFAULT_DEMOGRAPHICS.location, valuesData.demographics.location ?? {}),
+            location: {
+              ...DEFAULT_DEMOGRAPHICS.location,
+              ...(valuesData.demographics.location ?? {}),
+            },
           }
         : undefined;
-    return withOptional(DEFAULT_DEMOGRAPHICS, extras);
+    return { ...DEFAULT_DEMOGRAPHICS, ...(extras ?? {}) };
   }, [valuesData?.demographics]);
   const privacyData = useMemo<PrivacyPreferences>(() => {
     const extras = onboardingData?.preferencesData ?? undefined;
-    return withOptional(DEFAULT_PRIVACY, extras);
+    return { ...DEFAULT_PRIVACY, ...(extras ?? {}) };
   }, [onboardingData?.preferencesData]);
   const {
     nextStep,
@@ -988,6 +979,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     restartOnboarding,
     clearAllData,
   } = useOnboardingActions();
+  const { signOut: resetUserState } = useUserActions();
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
@@ -995,6 +987,10 @@ const BalancedOnboardingFlow: React.FC = () => {
   const isLoading = useUserLoading();
   const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { updateProfile } = useProfileUpdate();
+  const mainRegionRef = useRef<HTMLElement | null>(null);
+  const previousStepRef = useRef<number>(-1);
+  const previousErrorRef = useRef<string | null>(null);
+  const [liveAnnouncement, setLiveAnnouncement] = useState('');
 
   useEffect(() => {
     restartOnboarding();
@@ -1019,6 +1015,42 @@ const BalancedOnboardingFlow: React.FC = () => {
       }
     };
   }, [currentStep]);
+
+  useEffect(() => {
+    if (previousStepRef.current === currentStep) {
+      return;
+    }
+    previousStepRef.current = currentStep;
+    const announcement = t('onboarding.progress.live.step', {
+      current: currentStep + 1,
+      total: totalSteps,
+      label: stepLabels[currentStep] ?? stepLabels[0],
+    });
+    setLiveAnnouncement(announcement);
+    ScreenReaderSupport.announce(announcement, 'polite');
+    if (mainRegionRef.current) {
+      mainRegionRef.current.focus();
+    }
+  }, [currentStep, stepLabels, totalSteps, t]);
+
+  useEffect(() => {
+    if (!error || previousErrorRef.current === error) {
+      return;
+    }
+    previousErrorRef.current = error;
+    const message = t('onboarding.progress.live.error', { message: error });
+    setLiveAnnouncement(message);
+    ScreenReaderSupport.announce(message, 'assertive');
+  }, [error, t]);
+
+  useEffect(() => {
+    if (!isFlowCompleted) {
+      return;
+    }
+    const completionMessage = t('onboarding.progress.live.completed');
+    setLiveAnnouncement(completionMessage);
+    ScreenReaderSupport.announce(completionMessage, 'polite');
+  }, [isFlowCompleted, t]);
 
   // Check if user has already completed onboarding
   useEffect(() => {
@@ -1054,6 +1086,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleSkip = () => {
+    resetUserState();
     skipOnboarding();
     goToStep(5);
   };
@@ -1088,20 +1121,19 @@ const BalancedOnboardingFlow: React.FC = () => {
     const demographics = valuesData?.demographics;
     let demographicsPayload: ProfileDemographics | undefined;
     if (demographics) {
-      const locationPayload = withOptional(
-        { state: demographics.location.state },
-        demographics.location.district ? { district: demographics.location.district } : undefined,
-      );
-      const metadataPayload = withOptional({} as Record<string, unknown>, {
-        age_range: demographics.age_range || undefined,
-        education: demographics.education || undefined,
-        political_engagement: demographics.political_engagement || undefined,
-        preferred_contact: demographics.preferred_contact || undefined,
-      });
-      demographicsPayload = withOptional(
-        { location: locationPayload },
-        Object.keys(metadataPayload).length ? { metadata: metadataPayload } : undefined,
-      ) as ProfileDemographics;
+      const locationPayload = {
+        state: demographics.location.state,
+        ...(demographics.location.district ? { district: demographics.location.district } : {}),
+      };
+      const metadataPayload: Record<string, unknown> = {};
+      if (demographics.age_range) metadataPayload.age_range = demographics.age_range;
+      if (demographics.education) metadataPayload.education = demographics.education;
+      if (demographics.political_engagement) metadataPayload.political_engagement = demographics.political_engagement;
+      if (demographics.preferred_contact) metadataPayload.preferred_contact = demographics.preferred_contact;
+      demographicsPayload = {
+        location: locationPayload,
+        ...(Object.keys(metadataPayload).length ? { metadata: metadataPayload } : {}),
+      } as ProfileDemographics;
     }
 
     try {
@@ -1165,7 +1197,15 @@ const BalancedOnboardingFlow: React.FC = () => {
         </div>
       </nav>
 
-      <main role="main" aria-label="Onboarding flow" aria-live="polite">
+      <main
+        role="main"
+        aria-label="Onboarding flow"
+        ref={mainRegionRef}
+        tabIndex={-1}
+      >
+        <div aria-live="polite" className="sr-only" data-testid="onboarding-live-message">
+          {liveAnnouncement}
+        </div>
 
       {currentStep === 0 && (
         <WelcomeStep onNext={handleNext} onSkip={handleSkip} />
@@ -1185,7 +1225,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           onSkip={handleNext}
           demographics={demographicsData}
           setDemographics={(updated) =>
-            updateValuesData(withOptional({} as ValuesData, { demographics: updated }))
+            updateValuesData({ demographics: updated })
           }
         />
       )}

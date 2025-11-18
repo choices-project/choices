@@ -3,15 +3,15 @@ import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import boundaries from 'eslint-plugin-boundaries';
 import eslintComments from 'eslint-plugin-eslint-comments';
-import importPlugin from 'eslint-plugin-import';
 import formatjs from 'eslint-plugin-formatjs';
+import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
-const hasLegacyCopy = true;
+const hasLegacyCopy = false;
 
 export default [
   // Global environment
@@ -34,8 +34,13 @@ export default [
       'app/(app)/layout.tsx',
       'app/providers.tsx',
       'app/auth/page.tsx',
-      'components/shared/LanguageSelector.tsx',
-      'features/onboarding/components/**/*.{ts,tsx}',
+      'app/(app)/candidates/**/*.{ts,tsx}',
+      'components/shared/**/*.{ts,tsx}',
+      'features/onboarding/**/*.{ts,tsx}',
+      'features/civics/**/*.{ts,tsx}',
+      'features/contact/**/*.{ts,tsx}',
+      'features/polls/**/*.{ts,tsx}',
+      'features/feeds/**/*.{ts,tsx}',
     ],
     plugins: {
       formatjs,
@@ -69,6 +74,7 @@ export default [
       '@typescript-eslint': typescriptEslint,
       'unused-imports': unusedImports,
       'boundaries': boundaries,
+      import: importPlugin,
     },
     settings: {
       'boundaries/elements': [
@@ -101,7 +107,7 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off', // Handled in type-aware config below
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'error',
       'prefer-const': 'error',
       '@typescript-eslint/no-var-requires': 'error',
       '@typescript-eslint/no-empty-function': 'warn',
@@ -116,6 +122,51 @@ export default [
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      'import/order': [
+        'error',
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'object',
+            'type',
+          ],
+          pathGroups: [
+            {
+              pattern: '@/app/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@/features/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/components/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/lib/**',
+              group: 'internal',
+              position: 'after',
+            },
+            {
+              pattern: '@/hooks/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          'newlines-between': 'always',
+        },
+      ],
       'formatjs/no-literal-string-in-jsx': 'off',
 
       // Console logging - enforce use of logger
@@ -142,6 +193,13 @@ export default [
           { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
           { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
           { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
+          { group: ['@/lib/util/objects', '@/lib/util/objects.*'], message: 'withOptional is deprecated. Use explicit builders/conditional spreads.' },
+          // Prevent reintroduction of removed/legacy HTTP/CORS/CSRF utilities
+          { group: ['@/lib/utils/http', '@/lib/utils/http.*', '@/lib/http', '@/lib/http.*'], message: 'Use "@/lib/http/origin" (canonical).' },
+          { group: ['@/lib/utils/cors', '@/lib/utils/cors.*'], message: 'Use CORS helpers in "@/lib/api/response-utils".' },
+          { group: ['@/lib/utils/csrf', '@/lib/utils/csrf.*', '@/lib/utils/csrf-fetch', '@/lib/utils/csrf-fetch.*'], message: 'CSRF utilities were removed; use standard Next.js patterns and auth middleware.' },
+          // Prevent using duplicate trending implementation
+          { group: ['@/features/feeds/lib/TrendingHashtags', '@/features/feeds/lib/TrendingHashtags.*'], message: 'Use "@/lib/trending/TrendingHashtags" (canonical).' },
         ],
       }],
 
@@ -155,10 +213,6 @@ export default [
         {
           selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
           message: 'Use conditional spread or delete, not = undefined.'
-        },
-        {
-          selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]',
-          message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.'
         }
       ],
     },
@@ -404,9 +458,17 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/consistent-type-definitions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
       'import/no-extraneous-dependencies': 'off',
+      'import/order': 'off',
+      'import/newline-after-import': 'off',
+      'import/extensions': 'off',
+      'import/first': 'off',
       'no-console': 'off',
       'unused-imports/no-unused-imports': 'off',
+      'unused-imports/no-unused-vars': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -515,6 +577,7 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'archive/**',
+      'tests/archive/**',
       'archive-*/**',
       'app/archive-*/**',
       '_reports/**',

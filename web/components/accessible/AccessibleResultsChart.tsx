@@ -19,6 +19,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+import '@/styles/accessibility.css';
+
 import screenReaderSupport from '../../lib/accessibility/screen-reader';
 
 // ============================================================================
@@ -112,32 +114,34 @@ export function AccessibleResultsChart({
 
   useEffect(() => {
     // Only run on client side
-    if (typeof window !== 'undefined') {
-      // Check for reduced motion preference
-      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      setPrefersReducedMotion(reducedMotionQuery.matches);
-      
-      const handleReducedMotionChange = (e: MediaQueryListEvent) => {
-        setPrefersReducedMotion(e.matches);
-      };
-      
-      reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
-      
-      // Check for high contrast preference
-      const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
-      setPrefersHighContrast(highContrastQuery.matches);
-      
-      const handleHighContrastChange = (e: MediaQueryListEvent) => {
-        setPrefersHighContrast(e.matches);
-      };
-      
-      highContrastQuery.addEventListener('change', handleHighContrastChange);
-      
-      return () => {
-        reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
-        highContrastQuery.removeEventListener('change', handleHighContrastChange);
-      };
+    if (typeof window === 'undefined') {
+      return;
     }
+    
+    // Check for reduced motion preference
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(reducedMotionQuery.matches);
+    
+    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+    
+    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+    
+    // Check for high contrast preference
+    const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
+    setPrefersHighContrast(highContrastQuery.matches);
+    
+    const handleHighContrastChange = (e: MediaQueryListEvent) => {
+      setPrefersHighContrast(e.matches);
+    };
+    
+    highContrastQuery.addEventListener('change', handleHighContrastChange);
+    
+    return () => {
+      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+      highContrastQuery.removeEventListener('change', handleHighContrastChange);
+    };
   }, []);
 
   // ============================================================================
@@ -250,7 +254,7 @@ export function AccessibleResultsChart({
     <div 
       ref={chartRef}
       className={`accessible-results-chart ${className}`}
-      role="img"
+      role="group"
       aria-label={ariaLabel}
     >
       {/* Chart Title */}
@@ -298,7 +302,7 @@ export function AccessibleResultsChart({
       </table>
       
       {/* Visual Chart */}
-      <div className="chart-container" aria-hidden="true">
+      <div className="chart-container">
         <div className="chart-bars">
           {chartData.map((item, index) => (
             <div

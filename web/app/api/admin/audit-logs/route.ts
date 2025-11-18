@@ -16,9 +16,8 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, authError, errorResponse } from '@/lib/api';
+import { withErrorHandling, authError, errorResponse, forbiddenError, successResponse } from '@/lib/api';
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -59,10 +58,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         }
       );
 
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
+      return forbiddenError('Admin access required');
     }
 
     // Log successful access
@@ -87,18 +83,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Return statistics if requested
     if (wantsStats) {
-      const startDate = searchParams.get('startDate') 
-        ? new Date(searchParams.get('startDate')!)
+      const startDateParam = searchParams.get('startDate');
+      const startDate = startDateParam
+        ? new Date(startDateParam)
         : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
       
-      const endDate = searchParams.get('endDate')
-        ? new Date(searchParams.get('endDate')!)
+      const endDateParam = searchParams.get('endDate');
+      const endDate = endDateParam
+        ? new Date(endDateParam)
         : new Date();
 
       const stats = await auditLog.getStats(startDate, endDate);
 
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         stats,
         period: {
           start: startDate.toISOString(),
@@ -118,12 +115,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     );
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const startDate = searchParams.get('startDate')
-      ? new Date(searchParams.get('startDate')!)
+    const startDateParam = searchParams.get('startDate');
+    const startDate = startDateParam
+      ? new Date(startDateParam)
       : undefined;
     
-    const endDate = searchParams.get('endDate')
-      ? new Date(searchParams.get('endDate')!)
+    const endDateParam = searchParams.get('endDate');
+    const endDate = endDateParam
+      ? new Date(endDateParam)
       : undefined;
 
     // Build filters
@@ -144,8 +143,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Apply offset manually (Supabase search doesn't support offset in RPC)
     const paginatedLogs = logs.slice(offset, offset + limit);
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       logs: paginatedLogs,
       pagination: {
         limit,

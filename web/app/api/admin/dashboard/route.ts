@@ -1,6 +1,12 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
+import {
+  authError,
+  errorResponse,
+  forbiddenError,
+  successResponse,
+  withErrorHandling,
+} from '@/lib/api';
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
@@ -81,177 +87,132 @@ type AdminDashboardData = {
  * GET /api/admin/dashboard
  * GET /api/admin/dashboard?include=overview,analytics&cache=false
  */
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   const startTime = Date.now();
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const include = searchParams.get('include') ?? 'all';
-    const includeArray = include.split(',').map(item => item.trim());
-    const useCache = searchParams.get('cache') !== 'false';
+  const { searchParams } = new URL(request.url);
+  const include = searchParams.get('include') ?? 'all';
+  const includeArray = include.split(',').map((item) => item.trim());
+  const useCache = searchParams.get('cache') !== 'false';
 
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
-    // Authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      // Log failed authentication attempt
-      const auditLog = createAuditLogService(supabase);
-      await auditLog.logSecurityEvent(
-        'Unauthorized Dashboard Access',
-        'warning',
-        '/api/admin/dashboard',
-        {
-          ipAddress: request.headers.get('x-forwarded-for') || undefined,
-          userAgent: request.headers.get('user-agent') || undefined,
-          metadata: { reason: 'no_auth' }
-        }
-      );
-      
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-    // Check if user is admin by querying the user_profiles table
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('user_id', user.id)
-      .single();
-
-    const isAdmin = profile?.is_admin ?? false;
-
-    if (!isAdmin) {
-      // Log forbidden access attempt
-      await logAnalyticsAccessToDatabase(
-        supabase,
-        user,
-        '/api/admin/dashboard',
-        false,
-        {
-          ipAddress: request.headers.get('x-forwarded-for') || undefined,
-          userAgent: request.headers.get('user-agent') || undefined,
-          metadata: { 
-            reason: 'not_admin',
-            user_email: user.email
-          }
-        }
-      );
-      
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-    
-    // Log successful admin dashboard access
-    await logAnalyticsAccessToDatabase(
-      supabase,
-      user,
-      '/api/admin/dashboard',
-      true,
-      {
-        ipAddress: request.headers.get('x-forwarded-for') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
-        metadata: {
-          includes: includeArray,
-          use_cache: useCache,
-          admin_email: user.email
-        }
-      }
-    );
-
-    const _adminId = user.id;
-    const cache = await getRedisClient();
-    const cacheKey = 'admin:dashboard';
-    const cacheTTLSeconds = 60 * 5;
-
-    // Check cache first
-    if (useCache) {
-      const cachedData = await cache.get<AdminDashboardData>(cacheKey);
-      if (cachedData) {
-        const loadTime = Date.now() - startTime;
-        logger.info('Admin dashboard loaded from cache', { loadTime });
-        return NextResponse.json({
-          ...cachedData,
-          fromCache: true,
-          loadTime
-        });
-      }
-    }
-
-    logger.debug('Loading admin dashboard data from database');
-
-    // Load all data in parallel for maximum performance
-    const [
-      overview,
-      analytics,
-      systemHealth,
-      recentActivity
-    ] = await Promise.all([
-      loadAdminOverview(supabase),
-      includeArray.includes('analytics') ? loadAdminAnalytics(supabase) : Promise.resolve(null),
-      includeArray.includes('health') ? loadSystemHealth(supabase) : Promise.resolve(null),
-      includeArray.includes('activity') ? loadRecentActivity(supabase) : Promise.resolve(null)
-    ]);
-
-    const dashboardData: AdminDashboardData = {
-      admin_user: {
-        id: user.id,
-        email: user.email ?? '',
-        name: user.email?.split('@')[0] ?? 'Admin'
-      },
-      overview,
-      analytics: {
-        user_growth: (analytics as any)?.user_growth ?? [],
-        poll_activity: (analytics as any)?.poll_activity ?? [],
-        top_categories: (analytics as any)?.top_categories ?? []
-      },
-      system_health: {
-        status: (systemHealth as any)?.status ?? 'unknown',
-        database_latency_ms: (systemHealth as any)?.database_latency_ms ?? 0,
-        uptime_percentage: (systemHealth as any)?.uptime_percentage ?? 0,
-        last_health_check: (systemHealth as any)?.last_health_check ?? new Date().toISOString()
-      },
-      recent_activity: {
-        new_users: (recentActivity as any)?.new_users ?? [],
-        recent_polls: (recentActivity as any)?.recent_polls ?? [],
-        recent_votes: (recentActivity as any)?.recent_votes ?? []
-      },
-      generatedAt: new Date().toISOString()
-    };
-
-    // Cache the result
-    if (useCache) {
-      await cache.set(cacheKey, dashboardData, cacheTTLSeconds);
-    }
-
-    const loadTime = Date.now() - startTime;
-    logger.info('Admin dashboard loaded', { loadTime });
-
-    return NextResponse.json({
-      ...dashboardData,
-      fromCache: false,
-      loadTime
+  if (userError || !user) {
+    const auditLog = createAuditLogService(supabase);
+    await auditLog.logSecurityEvent('Unauthorized Dashboard Access', 'warning', '/api/admin/dashboard', {
+      ipAddress: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: { reason: 'no_auth' },
     });
 
-  } catch (error) {
-    logger.error('Optimized admin dashboard API error:', error instanceof Error ? error : new Error(String(error)));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return authError('Authentication required');
   }
-}
+
+  const { data: profile } = await supabase.from('user_profiles').select('is_admin').eq('user_id', user.id).single();
+  const isAdmin = profile?.is_admin ?? false;
+
+  if (!isAdmin) {
+    await logAnalyticsAccessToDatabase(supabase, user, '/api/admin/dashboard', false, {
+      ipAddress: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: {
+        reason: 'not_admin',
+        user_email: user.email,
+      },
+    });
+
+    return forbiddenError('Admin access required');
+  }
+
+  await logAnalyticsAccessToDatabase(supabase, user, '/api/admin/dashboard', true, {
+    ipAddress: request.headers.get('x-forwarded-for') || undefined,
+    userAgent: request.headers.get('user-agent') || undefined,
+    metadata: {
+      includes: includeArray,
+      use_cache: useCache,
+      admin_email: user.email,
+    },
+  });
+
+  const cache = await getRedisClient();
+  const cacheKey = 'admin:dashboard';
+  const cacheTTLSeconds = 60 * 5;
+
+  if (useCache && cache) {
+    const cachedData = await cache.get<AdminDashboardData>(cacheKey);
+    if (cachedData) {
+      const loadTime = Date.now() - startTime;
+      logger.info('Admin dashboard loaded from cache', { loadTime });
+      return successResponse(
+        {
+          dashboard: cachedData,
+          fromCache: true,
+          loadTime,
+        },
+        { source: 'cache' }
+      );
+    }
+  }
+
+  logger.debug('Loading admin dashboard data from database');
+
+  const [overview, analytics, systemHealth, recentActivity] = await Promise.all([
+    loadAdminOverview(supabase),
+    includeArray.includes('analytics') ? loadAdminAnalytics(supabase) : Promise.resolve(null),
+    includeArray.includes('health') ? loadSystemHealth(supabase) : Promise.resolve(null),
+    includeArray.includes('activity') ? loadRecentActivity(supabase) : Promise.resolve(null),
+  ]);
+
+  const dashboardData: AdminDashboardData = {
+    admin_user: {
+      id: user.id,
+      email: user.email ?? '',
+      name: user.email?.split('@')[0] ?? 'Admin',
+    },
+    overview,
+    analytics: {
+      user_growth: (analytics as any)?.user_growth ?? [],
+      poll_activity: (analytics as any)?.poll_activity ?? [],
+      top_categories: (analytics as any)?.top_categories ?? [],
+    },
+    system_health: {
+      status: (systemHealth as any)?.status ?? 'unknown',
+      database_latency_ms: (systemHealth as any)?.database_latency_ms ?? 0,
+      uptime_percentage: (systemHealth as any)?.uptime_percentage ?? 0,
+      last_health_check: (systemHealth as any)?.last_health_check ?? new Date().toISOString(),
+    },
+    recent_activity: {
+      new_users: (recentActivity as any)?.new_users ?? [],
+      recent_polls: (recentActivity as any)?.recent_polls ?? [],
+      recent_votes: (recentActivity as any)?.recent_votes ?? [],
+    },
+    generatedAt: new Date().toISOString(),
+  };
+
+  if (useCache && cache) {
+    await cache.set(cacheKey, dashboardData, cacheTTLSeconds);
+  }
+
+  const loadTime = Date.now() - startTime;
+  logger.info('Admin dashboard loaded', { loadTime });
+
+  return successResponse(
+    {
+      dashboard: dashboardData,
+      fromCache: false,
+      loadTime,
+    },
+    { source: 'database' }
+  );
+});
 
 /**
  * Load admin overview statistics with optimized queries
@@ -364,7 +325,7 @@ async function loadAdminAnalytics(_supabase: any) {
 async function loadSystemHealth(supabase: any) {
   const cacheKey = 'admin:system_health';
   const cache = await getRedisClient();
-  const _cacheTTLSeconds = 60;
+  // Cache TTL: 60 seconds (not currently used but available for future cache.set calls)
 
   // Check cache first
   const cached = await cache.get(cacheKey);

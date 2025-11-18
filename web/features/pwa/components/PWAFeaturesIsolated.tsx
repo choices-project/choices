@@ -10,7 +10,7 @@ type PWAFeaturesIsolatedProps = {
 
 /**
  * Isolated PWA Features Component
- * 
+ *
  * A completely isolated version that doesn't use complex Zustand stores to avoid infinite loops.
  * This component provides PWA feature information for E2E testing without causing React infinite loops.
  */
@@ -20,23 +20,25 @@ export default function PWAFeaturesIsolated({ className = '', showDetails: _show
 
   useEffect(() => {
     // Only run on client side
-    if (typeof window !== 'undefined') {
-      // Check if PWA is supported
-      setIsSupported('serviceWorker' in navigator && 'PushManager' in window)
-      
-      // Set initial online status
-      setIsOnline(navigator.onLine)
-      
-      const handleOnline = () => setIsOnline(true)
-      const handleOffline = () => setIsOnline(false)
-      
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-      
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Check if PWA is supported
+    setIsSupported('serviceWorker' in navigator && 'PushManager' in window)
+
+    // Set initial online status
+    setIsOnline(navigator.onLine)
+
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
   }, [])
 

@@ -10,10 +10,11 @@ import {
   useUserError,
   useUserLoading,
   useUserActions,
+  useUserStore,
 } from '@/features/auth/lib/store';
 import { useI18n } from '@/hooks/useI18n';
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,8 @@ export default function AuthPage() {
     setError: setAuthError,
     clearError: clearAuthError,
   } = useUserActions();
+  const initializeAuth = useUserStore((state) => state.initializeAuth);
+  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
 
   // Form state
@@ -77,6 +80,24 @@ export default function AuthPage() {
     logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
   };
 
+  const syncSupabaseSession = React.useCallback(async () => {
+    try {
+      const supabase = await getSupabaseBrowserClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        initializeAuth(session.user, session, true);
+        setSessionAndDerived(session);
+      } else {
+        initializeAuth(null, null, false);
+      }
+    } catch (error) {
+      logger.error('Auth page failed to synchronize Supabase session', error);
+    }
+  }, [initializeAuth, setSessionAndDerived]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,18 +130,15 @@ export default function AuthPage() {
     try {
       setAuthLoading(true);
       if (isSignUp) {
-        // Create context object for security
-        const context: ServerActionContext = {
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-        };
-
+        // Note: registerUser API doesn't currently accept ServerActionContext
+        // Security context (IP, user agent) is handled server-side via headers
         const result = await registerUser({
           email: formData.email,
           username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),
           password: formData.password,
-          context,
         });
         if (result.ok) {
+          await syncSupabaseSession();
           setMessage(t('auth.success.accountCreated'));
           setTimeout(() => {
             router.push('/onboarding');
@@ -135,6 +153,7 @@ export default function AuthPage() {
             email: formData.email,
             password: formData.password,
           });
+          await syncSupabaseSession();
           // If we reach here, loginAction did not throw an error,
           // but it also handles redirection internally.
           // We might not see this message if redirection happens immediately.
@@ -216,7 +235,7 @@ export default function AuthPage() {
               {/* Error Summary */}
               <div data-testid="error-summary" className="bg-red-50 border border-red-200 rounded-md p-4 hidden" role="alert">
                 <p className="text-sm text-red-700">{t('auth.form.errorSummaryTitle')}</p>
-                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: 3 })}</div>
+                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
               </div>
 
               {/* Rate Limit Message */}
@@ -225,7 +244,12 @@ export default function AuthPage() {
               </div>
 
           {message && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4" data-testid="auth-success">
+            <div
+              className="bg-green-50 border border-green-200 rounded-md p-4"
+              data-testid="auth-success"
+              role="status"
+              aria-live="polite"
+            >
               <div className="flex">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
                 <div className="ml-3">
@@ -316,10 +340,11 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                       aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+                      aria-pressed={showPassword}
+                      aria-controls="password"
                       data-testid="password-toggle"
-                      tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -358,10 +383,11 @@ export default function AuthPage() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                         aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-                        data-testid="password-toggle"
-                        tabIndex={-1}
+                        aria-pressed={showConfirmPassword}
+                        aria-controls="confirmPassword"
+                        data-testid="confirm-password-toggle"
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>

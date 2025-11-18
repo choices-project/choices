@@ -11,10 +11,10 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { requireTrustedOrigin } from '@/lib/http/origin';
+// eslint-disable-next-line no-restricted-imports -- canonical path required by security policy
+import { requireTrustedOrigin } from "@/lib/http/origin";
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
-import { withOptional } from '@/lib/util/objects';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -178,13 +178,12 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         );
       }
 
-      const authUser: AuthUser = withOptional({
+      const authUser: AuthUser = {
         id: user.id,
         email: user.email ?? '',
-        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier ?? 'T1' : 'T1'
-      }, {
-        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      });
+        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier ?? 'T1' : 'T1',
+        username: profile && !('error' in profile) ? (profile as UserProfile).username ?? null : null
+      };
 
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
@@ -263,20 +262,19 @@ export function withAuth(
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('username, is_admin')
-      .eq('user_id', String(user!.id))
+      .eq('user_id', String(user?.id ?? ''))
       .single();
 
     const isAdmin = profile && !('error' in profile) ? (profile as any).is_admin : false;
     const username = profile && !('error' in profile) ? (profile as any).username : null;
     
     const context: AuthContext = {
-      user: withOptional({
-        id: user!.id,
-        email: user!.email || '',
-        trust_tier: isAdmin ? 'T3' : 'T1'
-      }, {
-        username
-      }),
+      user: {
+        id: user ? user.id : '',
+        email: user?.email || '',
+        trust_tier: isAdmin ? 'T3' : 'T1',
+        ...(username ? { username } : {})
+      },
       supabase
     };
 

@@ -1,5 +1,6 @@
+import { normalizeTrustTier } from '@/lib/trust/trust-tiers'
 import { devLog } from '@/lib/utils/logger'
-import type { Database } from '@/types/database'
+// Database types are used directly when needed
 import type {
   TrustTier,
   TrustTierScore,
@@ -14,8 +15,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Use database types for actual schema
 
-type _TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
-type _UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
+// Database row types are used directly from Database type when needed
 type TrustTierAnalyticsFactors = {
   confidence_level?: number;
   data_quality_score?: number;
@@ -70,7 +70,6 @@ type CivicDatabaseEntryUpsertPayload = {
   trust_tier_upgrade_date: string | null;
 };
 
-type ErrorWithCode = Error & { code?: string };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -142,7 +141,11 @@ const parseTrustTierAnalyticsRow = (value: unknown): TrustTierAnalyticsRecord | 
   }
 
   const record = value as Record<string, unknown>;
-  const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : null;
+  const trustTierValue = record.trust_tier;
+  const trustTier =
+    typeof trustTierValue === 'string' || typeof trustTierValue === 'number'
+      ? normalizeTrustTier(trustTierValue)
+      : null;
   const userId = typeof record.user_id === 'string' ? record.user_id : null;
 
   if (!trustTier || !userId) {
@@ -172,7 +175,11 @@ const parseTrustTierHistory = (value: unknown): TrustTierHistoryEntry[] => {
     }
 
     const record = candidate as Record<string, unknown>;
-    const trustTier = typeof record.trust_tier === 'string' ? (record.trust_tier as TrustTier) : undefined;
+    const trustTierValue = record.trust_tier;
+    const trustTier =
+      typeof trustTierValue === 'string' || typeof trustTierValue === 'number'
+        ? normalizeTrustTier(trustTierValue)
+        : undefined;
     const upgradeDate = typeof record.upgrade_date === 'string' ? record.upgrade_date : undefined;
     const reason = typeof record.reason === 'string' ? record.reason : undefined;
     const verificationMethods = toStringArray(record.verification_methods) ?? [];
@@ -199,7 +206,10 @@ const parseCivicDatabaseEntry = (value: unknown): CivicDatabaseEntrySnapshot | n
 
   return {
     id: typeof record.id === 'string' ? record.id : 'unknown',
-    current_trust_tier: typeof record.current_trust_tier === 'string' ? (record.current_trust_tier as TrustTier) : null,
+    current_trust_tier:
+      typeof record.current_trust_tier === 'string' || typeof record.current_trust_tier === 'number'
+        ? normalizeTrustTier(record.current_trust_tier)
+        : null,
     trust_tier_history: parseTrustTierHistory(record.trust_tier_history),
     trust_tier_upgrade_date: typeof record.trust_tier_upgrade_date === 'string' ? record.trust_tier_upgrade_date : null
   };
@@ -262,8 +272,10 @@ export class AnalyticsService {
 
       // Calculate verification factors
       const biometric_verified = (biometricCreds?.length ?? 0) > 0
-      const phone_verified = user && 'trust_tier' in user ? (user.trust_tier === 'T2' || user.trust_tier === 'T3') : false
-      const identity_verified = user && 'trust_tier' in user ? user.trust_tier === 'T3' : false
+      const currentTrustTier =
+        user && 'trust_tier' in user ? normalizeTrustTier(user.trust_tier) : 'T0'
+      const phone_verified = currentTrustTier === 'T2' || currentTrustTier === 'T3'
+      const identity_verified = currentTrustTier === 'T3'
       const voting_history_count = votingHistory ?? 0
 
       // Calculate score using database function
@@ -284,7 +296,10 @@ export class AnalyticsService {
         throw new Error('Failed to determine trust tier')
       }
 
-      const trust_tier = Array.isArray(tierResult) && tierResult.length > 0 ? tierResult[0] as TrustTier : 'T1' as TrustTier
+      const trust_tier =
+        Array.isArray(tierResult) && tierResult.length > 0
+          ? normalizeTrustTier(tierResult[0])
+          : currentTrustTier
 
       return {
         score,
@@ -420,7 +435,7 @@ export class AnalyticsService {
       } catch (rpcError: unknown) {
         // Gracefully handle missing function
         if (rpcError instanceof Error && rpcError.message?.includes('does not exist')) {
-          devLog('Warning: update_poll_demographic_insights function not implemented. Database migration needed.')
+          devLog('Warning: update_poll_demographic_insights function not available. Skipping (environment mismatch).')
           return
         }
         throw rpcError
@@ -537,7 +552,7 @@ export class AnalyticsService {
         // Gracefully handle missing table
         const message = tableError instanceof Error ? tableError.message : ''
         if (message.includes('does not exist') || getErrorCode(tableError) === '42P01') {
-          devLog('Warning: civic_database_entries table not implemented. Database migration needed.')
+          devLog('Warning: civic_database_entries table unavailable. Skipping (environment mismatch).')
           return
         }
         throw tableError
@@ -666,7 +681,48 @@ export class AnalyticsService {
         throw new Error('Poll not found')
       }
 
-      // Get poll analytics from votes table
+      // Prefer precomputed demographic insights
+      const { data: precomputed, error: preError } = await supabase
+        .from('poll_demographic_insights')
+        .select('*')
+        .eq('poll_id', pollId)
+        .maybeSingle()
+
+      if (!preError && precomputed) {
+        const trustTierBreakdown = (precomputed.trust_tier_breakdown ?? { T0: 0, T1: 0, T2: 0, T3: 0 }) as Record<TrustTier, number>
+        const demographicInsights: PollDemographicInsights = {
+          id: pollData.id,
+          poll_id: pollData.id,
+          total_responses: precomputed.total_responses ?? 0,
+          trust_tier_breakdown: trustTierBreakdown,
+          age_group_breakdown: (precomputed.age_group_breakdown ?? {}) as Record<string, number>,
+          geographic_breakdown: (precomputed.geographic_breakdown ?? {}) as Record<string, number>,
+          education_breakdown: (precomputed.education_breakdown ?? {}) as Record<string, number>,
+          income_breakdown: (precomputed.income_breakdown ?? {}) as Record<string, number>,
+          political_breakdown: (precomputed.political_breakdown ?? {}) as Record<string, number>,
+          average_confidence_level: Number(precomputed.average_confidence_level ?? 0),
+          data_quality_distribution: (precomputed.data_quality_distribution ?? {}) as Record<string, number>,
+          verification_method_distribution: (precomputed.verification_method_distribution ?? {}) as Record<string, number>,
+          trust_tier_by_demographic: (precomputed.trust_tier_by_demographic ?? {}) as Record<string, Record<TrustTier, number>>,
+          demographic_by_trust_tier: (precomputed.demographic_by_trust_tier ?? { T0: {}, T1: {}, T2: {}, T3: {} }) as Record<TrustTier, Record<string, number>>,
+          created_at: precomputed.created_at ?? pollData.created_at ?? new Date().toISOString(),
+          updated_at: precomputed.updated_at ?? new Date().toISOString()
+        }
+
+        return {
+          poll_id: pollId,
+          total_responses: demographicInsights.total_responses,
+          trust_tier_breakdown: trustTierBreakdown,
+          demographic_insights: demographicInsights,
+          data_quality_score: Number(demographicInsights.average_confidence_level), // ensure number
+          confidence_level: Number(demographicInsights.average_confidence_level),
+          response_trends: {
+            daily_responses: await this.getDailyResponseTrends(pollId)
+          }
+        }
+      }
+
+      // Fallback: compute from votes table
       const { data: votesData, error: votesError } = await supabase
         .from('votes')
         .select('trust_tier, vote_status, created_at')
@@ -740,8 +796,8 @@ export class AnalyticsService {
         total_responses,
         trust_tier_breakdown: trustTierBreakdown,
         demographic_insights: demographicInsights,
-        data_quality_score,
-        confidence_level,
+        data_quality_score: Number(data_quality_score),
+        confidence_level: Number(confidence_level),
         response_trends: {
           daily_responses: await this.getDailyResponseTrends(pollId)
         }

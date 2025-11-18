@@ -256,6 +256,8 @@ export type VotingActions = {
   castVote: (ballotId: string, contestId: string, selections: string[]) => Promise<void>;
   updateVote: (recordId: string, selections: string[]) => Promise<void>;
   cancelVote: (recordId: string) => Promise<void>;
+  confirmVote: (recordId: string) => Promise<void>;
+  undoVote: (recordId: string) => Promise<void>;
 
   // Search and filtering
   searchVoting: (query: string) => Promise<void>;
@@ -629,6 +631,85 @@ export const createVotingActions = (
       throw error;
     } finally {
       setVoting(false);
+    }
+  },
+
+  confirmVote: async (recordId) => {
+    const { setUpdating, setError } = get();
+
+    try {
+      setUpdating(true);
+      setError(null);
+
+      const response = await fetch(`/api/voting/records/${recordId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to confirm vote');
+      }
+
+      const votingRecord = (await response.json()) as VotingRecord;
+
+      set((state) => ({
+        votingRecords: state.votingRecords.map((record) =>
+          record.id === recordId ? mergeVotingRecord(record, votingRecord) : record
+        ),
+      }));
+
+      logger.info('Vote confirmed successfully', { recordId });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      logger.error('Failed to confirm vote:', error instanceof Error ? error : new Error(errorMessage));
+      throw error;
+    } finally {
+      setUpdating(false);
+    }
+  },
+
+  undoVote: async (recordId) => {
+    const { setUpdating, setError } = get();
+
+    try {
+      setUpdating(true);
+      setError(null);
+
+      // First, get the original vote to restore
+      const record = get().votingRecords.find((r) => r.id === recordId);
+      if (!record) {
+        throw new Error('Vote record not found');
+      }
+
+      // Attempt to undo the vote via API
+      const response = await fetch(`/api/voting/records/${recordId}/undo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        // If undo is not supported, we still remove it locally as fallback
+        logger.warn('Undo not supported by API, removing locally', { recordId });
+        set((state) => ({
+          votingRecords: state.votingRecords.filter((r) => r.id !== recordId),
+        }));
+        return;
+      }
+
+      // Remove from records if undo was successful
+      set((state) => ({
+        votingRecords: state.votingRecords.filter((r) => r.id !== recordId),
+      }));
+
+      logger.info('Vote undone successfully', { recordId });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(errorMessage);
+      logger.error('Failed to undo vote:', error instanceof Error ? error : new Error(errorMessage));
+      throw error;
+    } finally {
+      setUpdating(false);
     }
   },
 
@@ -1056,6 +1137,8 @@ export const useVotingActions = () =>
       castVote: state.castVote,
       updateVote: state.updateVote,
       cancelVote: state.cancelVote,
+      confirmVote: state.confirmVote,
+      undoVote: state.undoVote,
       searchVoting: state.searchVoting,
       setSearchQuery: state.setSearchQuery,
       clearSearch: state.clearSearch,

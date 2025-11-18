@@ -24,9 +24,16 @@ function parseAcceptLanguage(header: string | null): string[] {
     .split(',')
     .map((part) => {
       const [localePart, qValue] = part.trim().split(';q=');
+      if (!localePart) {
+        return null;
+      }
       const quality = qValue ? Number.parseFloat(qValue) : 1;
       return { locale: localePart.toLowerCase(), quality };
     })
+    .filter(
+      (entry): entry is { locale: string; quality: number } =>
+        entry !== null && Boolean(entry.locale),
+    )
     .sort((a, b) => b.quality - a.quality)
     .map(({ locale }) => locale);
 }

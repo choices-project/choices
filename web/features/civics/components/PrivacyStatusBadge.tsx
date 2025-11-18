@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-
+import { useI18n } from '@/hooks/useI18n';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import logger from '@/lib/utils/logger';
 
@@ -47,8 +47,18 @@ type PrivacyStatus = {
  */
 export function PrivacyStatusBadge() {
   // All React Hooks must be called at the top level, before any conditional returns
+  const { t } = useI18n();
   const [status, setStatus] = useState<PrivacyStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const defaultMessage = useMemo(
+    () => ({
+      healthy: t('civics.privacy.badge.status.healthy'),
+      warning: t('civics.privacy.badge.status.warning'),
+      error: t('civics.privacy.badge.status.error'),
+      disabled: t('civics.privacy.badge.status.disabled'),
+    }),
+    [t],
+  );
 
   useEffect(() => {
     const checkPrivacyStatus = async () => {
@@ -58,9 +68,10 @@ export function PrivacyStatusBadge() {
           const response = await fetch('/api/health?type=civics');
           if (response.ok) {
             const data = await response.json();
+            const nextStatus: PrivacyStatus['status'] = data.status || 'healthy';
             setStatus({
-              status: data.status || 'healthy',
-              message: data.message || 'Privacy protections active',
+              status: nextStatus,
+              message: data.message || defaultMessage[nextStatus],
               details: data.checks || {
                 pepper: true,
                 rls: true,
@@ -75,7 +86,7 @@ export function PrivacyStatusBadge() {
           logger.warn('Health check API not available, using fallback status:', error);
           setStatus({
             status: 'healthy',
-            message: 'Privacy protections active',
+            message: defaultMessage.healthy,
             details: {
               pepper: true,
               rls: true,
@@ -86,7 +97,7 @@ export function PrivacyStatusBadge() {
       } catch {
         setStatus({
           status: 'error',
-          message: 'Privacy check failed'
+          message: defaultMessage.error
         });
       } finally {
         setIsLoading(false);
@@ -94,14 +105,14 @@ export function PrivacyStatusBadge() {
     };
 
     checkPrivacyStatus();
-  }, []);
+  }, [defaultMessage]);
 
   // Feature flag check - don't render if disabled
   if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
     return (
       <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
         <div className="w-2 h-2 rounded-full bg-gray-500 mr-1" />
-        Feature Disabled
+        {t('civics.privacy.badge.featureDisabled')}
       </div>
     );
   }
@@ -110,7 +121,7 @@ export function PrivacyStatusBadge() {
     return (
       <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
         <div className="w-2 h-2 rounded-full bg-yellow-500 mr-1 animate-pulse" />
-        Checking...
+        {t('civics.privacy.badge.checking')}
       </div>
     );
   }

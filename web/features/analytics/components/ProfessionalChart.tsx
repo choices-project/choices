@@ -5,8 +5,9 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { 
   useAnalyticsChartData, 
   useAnalyticsChartMaxValue, 
@@ -63,6 +64,7 @@ export function ProfessionalChart({
   maxValue
 }: ProfessionalChartProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const summaryAnnouncementRef = useRef<string | null>(null);
   
   // Get analytics store actions and state
   const analyticsActions = useAnalyticsActions()
@@ -97,6 +99,34 @@ export function ProfessionalChart({
 
   const sortedData = processedData()
   const maxValueCalculated = chartMaxValue
+
+  const summaryMessage = useMemo(() => {
+    if (!sortedData.length) {
+      return ''
+    }
+
+    const [top] = sortedData
+    const trendChange = chartShowTrends && top.previousValue ? top.value - top.previousValue : 0
+    const direction =
+      chartShowTrends && top.previousValue
+        ? trendChange > 0
+          ? `up ${Math.abs(trendChange).toFixed(1)} points`
+          : trendChange < 0
+            ? `down ${Math.abs(trendChange).toFixed(1)} points`
+            : 'unchanged'
+        : ''
+
+    return `Top segment ${top.name} at ${top.value} percent${direction ? `, ${direction}` : ''}.`
+  }, [chartShowTrends, sortedData])
+
+  useEffect(() => {
+    if (!summaryMessage || summaryAnnouncementRef.current === summaryMessage) {
+      return
+    }
+
+    ScreenReaderSupport.announce(summaryMessage, 'polite')
+    summaryAnnouncementRef.current = summaryMessage
+  }, [summaryMessage])
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -278,6 +308,15 @@ export function ProfessionalChart({
           {subtitle && (
             <p className="text-sm text-gray-600">{subtitle}</p>
           )}
+          {summaryMessage ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="mt-2 text-sm text-gray-600"
+            >
+              {summaryMessage}
+            </p>
+          ) : null}
         </div>
       )}
 

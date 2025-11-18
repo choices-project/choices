@@ -1,16 +1,46 @@
 /**
  * PWA Push Notification Subscription API
- * 
+ *
  * Handles push notification subscriptions for PWA users.
  * This enables users to receive notifications for new polls, results, etc.
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
+import {
+  withErrorHandling,
+  successResponse,
+  forbiddenError,
+  validationError,
+  errorResponse,
+  notFoundError,
+} from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+import type { Json } from '@/types/supabase';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+type SubscriptionPreferences = {
+  newPolls: boolean;
+  pollResults: boolean;
+  systemUpdates: boolean;
+  weeklyDigest: boolean;
+  [key: string]: unknown;
+};
+
+const DEFAULT_PREFERENCES: SubscriptionPreferences = {
+  newPolls: true,
+  pollResults: true,
+  systemUpdates: false,
+  weeklyDigest: true
+};
+
+const normalizePreferences = (
+  preferences: unknown
+): SubscriptionPreferences => ({
+  ...DEFAULT_PREFERENCES,
+  ...(typeof preferences === 'object' && preferences !== null ? preferences : {})
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +56,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ subscription: 'Invalid subscription data' });
   }
 
+  if (!userId || typeof userId !== 'string') {
+    return validationError({ userId: 'User ID is required' });
+  }
+
     logger.info(`PWA: Registering push notification subscription for user ${userId}`);
 
   const isValidSubscription = await validateSubscription(subscription);
@@ -33,27 +67,70 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ subscription: 'Invalid subscription format' });
   }
 
-    // Store subscription in database
-    const subscriptionId = await storeSubscription({
-      userId,
-      subscription,
-      preferences: preferences || {
-        newPolls: true,
-        pollResults: true,
-        systemUpdates: false,
-        weeklyDigest: true
-      },
-      createdAt: new Date().toISOString(),
-      isActive: true
-    });
+  const supabase = await getSupabaseServerClient();
 
-    logger.info(`PWA: Push notification subscription registered with ID ${subscriptionId}`);
+  const activePreferences = normalizePreferences(preferences);
+  const preferencesJson = activePreferences as unknown as Json;
+  const subscriptionJson = subscription as unknown as Json;
+  const subscriptionRecord = {
+    endpoint: subscription.endpoint,
+    subscription_data: subscriptionJson,
+    auth_key: subscription.keys?.auth ?? null,
+    p256dh_key: subscription.keys?.p256dh ?? null,
+    user_id: userId,
+    preferences: preferencesJson,
+    is_active: true,
+    deactivated_at: null,
+    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString()
+  };
 
-  return successResponse({
-    subscriptionId,
-    message: 'Push notifications enabled successfully',
-    timestamp: new Date().toISOString()
-  }, undefined, 201);
+  const existing = await supabase
+    .from('push_subscriptions')
+    .select('id, created_at')
+    .eq('endpoint', subscription.endpoint)
+    .maybeSingle();
+
+  if (existing.error) {
+    logger.error('PWA: Failed to lookup existing push subscription', existing.error);
+    return errorResponse('Failed to register subscription', 500);
+  }
+
+  let upsertResult;
+  if (existing.data?.id) {
+    upsertResult = await supabase
+      .from('push_subscriptions')
+      .update({
+        ...subscriptionRecord,
+        created_at: existing.data.created_at ?? subscriptionRecord.created_at
+      })
+      .eq('id', existing.data.id)
+      .select('id')
+      .single();
+  } else {
+    upsertResult = await supabase
+      .from('push_subscriptions')
+      .insert(subscriptionRecord)
+      .select('id')
+      .single();
+  }
+
+  if (upsertResult.error || !upsertResult.data) {
+    logger.error('PWA: Failed to persist push subscription', upsertResult.error ?? {});
+    return errorResponse('Failed to register subscription', 500);
+  }
+
+  logger.info(`PWA: Push notification subscription registered with ID ${upsertResult.data.id}`);
+
+  return successResponse(
+    {
+      subscriptionId: upsertResult.data.id,
+      message: 'Push notifications enabled successfully',
+      timestamp: new Date().toISOString()
+    },
+    undefined,
+    201
+  );
 });
 
 export const DELETE = withErrorHandling(async (request: NextRequest) => {
@@ -66,7 +143,7 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
   const subscriptionId = searchParams.get('subscriptionId');
 
   if (!userId && !subscriptionId) {
-    return validationError({ 
+    return validationError({
       userId: 'Either userId or subscriptionId is required',
       subscriptionId: 'Either userId or subscriptionId is required'
     });
@@ -74,17 +151,13 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
 
     logger.info(`PWA: Unsubscribing push notifications for user ${userId ?? subscriptionId}`);
 
-    // Remove subscription from database
-    const removed = await removeSubscription(userId, subscriptionId);
+  const removed = await removeSubscription(userId, subscriptionId);
 
-    if (!removed) {
-      return NextResponse.json({
-        success: false,
-        error: 'Subscription not found'
-      }, { status: 404 });
-    }
+  if (!removed) {
+    return notFoundError('Subscription not found');
+  }
 
-    logger.info(`PWA: Push notification subscription removed`);
+  logger.info(`PWA: Push notification subscription removed`);
 
   return successResponse({
     message: 'Push notifications disabled successfully',
@@ -92,7 +165,7 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
   });
 });
 
-export const GET2 = withErrorHandling(async (request: NextRequest) => {
+export const GET = withErrorHandling(async (request: NextRequest) => {
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }
@@ -131,7 +204,6 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   logger.info(`PWA: Updating notification preferences for user ${userId}`);
 
   const updated = await updateNotificationPreferences(userId, preferences);
-
   if (!updated) {
     return errorResponse('Failed to update preferences', 500);
   }
@@ -147,47 +219,83 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
  */
 async function validateSubscription(subscription: any): Promise<boolean> {
   // Basic validation of subscription object
-  return !!(subscription?.endpoint && 
-           typeof subscription.endpoint === 'string' &&
-           subscription.keys?.p256dh &&
-           subscription.keys.auth);
+  return !!(
+    subscription?.endpoint &&
+    typeof subscription.endpoint === 'string' &&
+    subscription.keys?.p256dh &&
+    subscription.keys.auth
+  );
 }
 
 /**
  * Store push subscription in database
  */
-async function storeSubscription(data: any): Promise<string> {
-  // This would typically store in your database
-  // For now, we'll return a mock subscription ID
-  const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  logger.info(`PWA: Storing subscription ${subscriptionId} for user ${data.userId}`);
-  
-  return subscriptionId;
-}
+// Deprecated helper removed; Supabase persistence is used directly in handlers.
 
 /**
  * Remove push subscription from database
  */
 async function removeSubscription(userId?: string | null, subscriptionId?: string | null): Promise<boolean> {
-  // This would typically remove from your database
-  logger.info(`PWA: Removing subscription for user ${userId ?? subscriptionId}`);
-  
-  return true;
+  const supabase = await getSupabaseServerClient();
+
+  const now = new Date().toISOString();
+
+  let query = supabase
+    .from('push_subscriptions')
+    .update({ is_active: false, deactivated_at: now, updated_at: now })
+    .eq('is_active', true);
+
+  if (subscriptionId) {
+    query = query.eq('id', subscriptionId);
+  }
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query.select('id');
+
+  if (error) {
+    logger.error('PWA: Failed to remove push subscription', error);
+    return false;
+  }
+
+  return Array.isArray(data) && data.length > 0;
 }
 
 /**
  * Get notification preferences for user
  */
 async function getNotificationPreferences(userId: string): Promise<any> {
-  // This would typically query your database
-  logger.debug('Getting notification preferences for user', { userId });
+  const supabase = await getSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from('push_subscriptions')
+    .select('preferences, updated_at')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    logger.error('PWA: Failed to fetch push notification preferences', error);
+    return {
+      ...DEFAULT_PREFERENCES,
+      lastUpdated: null
+    };
+  }
+
+  if (!data) {
+    return {
+      ...DEFAULT_PREFERENCES,
+      lastUpdated: null
+    };
+  }
+
   return {
-    newPolls: true,
-    pollResults: true,
-    systemUpdates: false,
-    weeklyDigest: true,
-    lastUpdated: new Date().toISOString()
+    ...normalizePreferences(data.preferences),
+    lastUpdated: data.updated_at ?? null
   };
 }
 
@@ -195,8 +303,24 @@ async function getNotificationPreferences(userId: string): Promise<any> {
  * Update notification preferences for user
  */
 async function updateNotificationPreferences(userId: string, preferences: any): Promise<boolean> {
-  // This would typically update your database
-  logger.info(`PWA: Updating preferences for user ${userId}:`, preferences);
-  
-  return true;
+  const supabase = await getSupabaseServerClient();
+  const normalized = normalizePreferences(preferences);
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('push_subscriptions')
+    .update({
+      preferences: normalized as unknown as Json,
+      updated_at: now
+    })
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .select('id');
+
+  if (error) {
+    logger.error('PWA: Failed to update push notification preferences', error);
+    return false;
+  }
+
+  return Boolean(data && data.length > 0);
 }

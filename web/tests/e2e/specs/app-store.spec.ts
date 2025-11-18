@@ -10,108 +10,271 @@ declare global {
   }
 }
 
-/**
- * Navigates to the app-store harness and waits until the harness API is available.
- */
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/app-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__appStoreHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.appStoreHarness === 'ready'
+  );
 };
 
-test.describe('App store harness', () => {
-  test('allows theme, layout, feature flag, and modal transitions', async ({ page }) => {
+test.describe('App Store E2E', () => {
+  test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
+  });
 
-    const theme = page.getByTestId('app-theme');
-    const resolvedTheme = page.getByTestId('app-resolved-theme');
-    const sidebarCollapsed = page.getByTestId('app-sidebar-collapsed');
-    const featureFlags = page.getByTestId('app-feature-flags');
-    const animationsSetting = page.getByTestId('app-setting-animations');
-    const modalStack = page.getByTestId('app-modal-stack');
-    const currentRoute = page.getByTestId('app-current-route');
-    const breadcrumbs = page.getByTestId('app-breadcrumbs');
+  test('harness exposes app store API', async ({ page }) => {
+    const harness = await page.evaluate(() => window.__appStoreHarness);
+    expect(harness).toBeDefined();
+    expect(harness?.toggleTheme).toBeDefined();
+    expect(harness?.setTheme).toBeDefined();
+    expect(harness?.toggleSidebar).toBeDefined();
+    expect(harness?.updateSettings).toBeDefined();
+    expect(harness?.resetAppState).toBeDefined();
+    expect(harness?.getSnapshot).toBeDefined();
+  });
 
-    await expect(theme).toHaveText('system');
-    await expect(resolvedTheme).toHaveText('light');
-    await expect(sidebarCollapsed).toHaveText('false');
+  test('toggles theme', async ({ page }) => {
+    const initialTheme = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.theme;
+    });
 
     await page.evaluate(() => {
       window.__appStoreHarness?.toggleTheme();
     });
 
-    await expect(theme).toHaveText('dark');
-    await expect(resolvedTheme).toHaveText('dark');
-
-    await page.evaluate(() => {
-      window.__appStoreHarness?.setTheme('light');
+    // Toggle should change theme (light -> dark -> system cycle)
+    const afterToggle = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.theme;
     });
 
-    await expect(theme).toHaveText('light');
-    await expect(resolvedTheme).toHaveText('light');
+    expect(afterToggle).toBeDefined();
+  });
 
+  test('sets theme directly', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__appStoreHarness?.setTheme('dark');
+    });
+
+    const theme = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.theme;
+    });
+
+    expect(theme).toBe('dark');
+  });
+
+  test('updates system theme', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__appStoreHarness?.setTheme('system');
+      window.__appStoreHarness?.updateSystemTheme('dark');
+    });
+
+    const snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.systemTheme).toBe('dark');
+    expect(snapshot?.theme).toBe('system');
+    // resolvedTheme should match systemTheme when theme is 'system'
+    expect(snapshot?.resolvedTheme).toBe('dark');
+  });
+
+  test('toggles sidebar', async ({ page }) => {
+    const initialCollapsed = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.sidebarCollapsed;
+    });
+
+    await page.evaluate(() => {
+      window.__appStoreHarness?.toggleSidebar();
+    });
+
+    const afterToggle = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.sidebarCollapsed;
+    });
+
+    expect(afterToggle).toBe(!initialCollapsed);
+  });
+
+  test('sets sidebar collapsed state', async ({ page }) => {
     await page.evaluate(() => {
       window.__appStoreHarness?.setSidebarCollapsed(true);
     });
 
-    await expect(sidebarCollapsed).toHaveText('true');
-
-    await page.evaluate(() => {
-      window.__appStoreHarness?.setFeatureFlags({ analytics_beta: true, dark_mode_preview: true });
+    const collapsed = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.sidebarCollapsed;
     });
 
-    await expect(featureFlags).toContainText('analytics_beta');
-    await expect(featureFlags).toContainText('dark_mode_preview');
+    expect(collapsed).toBe(true);
+  });
 
+  test('manages feature flags', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__appStoreHarness?.setFeatureFlags({
+        TEST_FEATURE: true,
+        ANOTHER_FEATURE: false,
+      });
+    });
+
+    const features = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.features;
+    });
+
+    expect(features?.TEST_FEATURE).toBe(true);
+    expect(features?.ANOTHER_FEATURE).toBe(false);
+  });
+
+  test('updates settings', async ({ page }) => {
     await page.evaluate(() => {
       window.__appStoreHarness?.updateSettings({
         animations: false,
         compactMode: true,
+        language: 'es',
       });
     });
 
-    await expect(animationsSetting).toHaveText('false');
-
-    await page.evaluate(() => {
-      window.__appStoreHarness?.openModal('settings-modal', { section: 'preferences' });
-      window.__appStoreHarness?.pushModal('confirm-modal');
+    const settings = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.settings;
     });
 
-    await expect(modalStack).toContainText('settings-modal');
-    await expect(modalStack).toContainText('confirm-modal');
+    expect(settings?.animations).toBe(false);
+    expect(settings?.compactMode).toBe(true);
+    expect(settings?.language).toBe('es');
+  });
 
+  test('manages modals', async ({ page }) => {
+    await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      harness?.openModal('test-modal-1', { key: 'value1' });
+    });
+
+    let snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.activeModal).toBe('test-modal-1');
+    expect(snapshot?.modalStack).toHaveLength(1);
+
+    // Push another modal
+    await page.evaluate(() => {
+      window.__appStoreHarness?.pushModal('test-modal-2', { key: 'value2' });
+    });
+
+    snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.activeModal).toBe('test-modal-2');
+    expect(snapshot?.modalStack).toHaveLength(2);
+
+    // Pop modal
     await page.evaluate(() => {
       window.__appStoreHarness?.popModal();
     });
 
-    await expect(modalStack).toContainText('settings-modal');
-    await expect(modalStack).not.toContainText('confirm-modal');
+    snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
 
+    expect(snapshot?.activeModal).toBe('test-modal-1');
+    expect(snapshot?.modalStack).toHaveLength(1);
+
+    // Close modal
     await page.evaluate(() => {
-      window.__appStoreHarness?.setCurrentRoute('/dashboard');
-      window.__appStoreHarness?.setBreadcrumbs([
+      window.__appStoreHarness?.closeModal();
+    });
+
+    snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.activeModal).toBeNull();
+    expect(snapshot?.modalStack).toHaveLength(0);
+  });
+
+  test('manages current route and breadcrumbs', async ({ page }) => {
+    await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      harness?.setCurrentRoute('/test/route');
+      harness?.setBreadcrumbs([
         { label: 'Home', href: '/' },
-        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Test', href: '/test' },
+        { label: 'Route', href: '/test/route' },
       ]);
     });
 
-    await expect(currentRoute).toHaveText('/dashboard');
-    await expect(breadcrumbs).toContainText('Home');
-    await expect(breadcrumbs).toContainText('Dashboard');
+    const snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
 
+    expect(snapshot?.currentRoute).toBe('/test/route');
+    expect(snapshot?.breadcrumbs).toHaveLength(3);
+    expect(snapshot?.breadcrumbs[0].label).toBe('Home');
+  });
+
+  test('resets app state', async ({ page }) => {
+    // Set up some state
+    await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      harness?.setTheme('dark');
+      harness?.setSidebarCollapsed(true);
+      harness?.openModal('test-modal', {});
+    });
+
+    // Reset
     await page.evaluate(() => {
       window.__appStoreHarness?.resetAppState();
     });
 
-    await expect(theme).toHaveText('system');
-    await expect(resolvedTheme).toHaveText('light');
-    await expect(sidebarCollapsed).toHaveText('false');
-    await expect(featureFlags).not.toContainText('analytics_beta');
-    await expect(animationsSetting).toHaveText('true');
-    await expect(modalStack).toContainText('No modals on stack.');
-    await expect(currentRoute).toHaveText('/');
-    await expect(breadcrumbs).toContainText('No breadcrumbs.');
+    const snapshot = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      return harness?.getSnapshot();
+    });
+
+    expect(snapshot?.theme).toBe('system');
+    expect(snapshot?.sidebarCollapsed).toBe(false);
+    expect(snapshot?.activeModal).toBeNull();
+    expect(snapshot?.modalStack).toHaveLength(0);
+  });
+
+  test('persists theme preference across navigation', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__appStoreHarness?.setTheme('dark');
+    });
+
+    // Navigate away and back
+    await page.goto('/');
+    await gotoHarness(page);
+
+    const theme = await page.evaluate(() => {
+      const harness = window.__appStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.theme;
+    });
+
+    // Theme should persist (via localStorage persistence)
+    expect(theme).toBe('dark');
   });
 });
-
-

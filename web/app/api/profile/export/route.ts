@@ -245,16 +245,53 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       }
     };
 
-  logger.info('Data export completed successfully', {
-    userId,
-    categoriesIncluded: Object.keys(exportData).length - 1, // -1 for summary
-    totalDataPoints: totalDataPoints,
-    privacyOptIns: exportData.summary.privacyOptIns
-  });
+    const categoriesIncluded = Object.keys(exportData).filter((key) => key !== 'summary').length;
+    const categoriesWithData = Object.entries(exportData).reduce((count, [key, value]) => {
+      if (key === 'summary') {
+        return count;
+      }
 
-  return successResponse(exportData, {
-    exportedAt: new Date().toISOString(),
-    categoriesIncluded: Object.keys(exportData).length - 1,
-    totalDataPoints
-  });
+      if (Array.isArray(value)) {
+        return value.length > 0 ? count + 1 : count;
+      }
+
+      if (value && typeof value === 'object') {
+        return Object.keys(value).length > 0 ? count + 1 : count;
+      }
+
+      return value !== undefined && value !== null ? count + 1 : count;
+    }, 0);
+
+    exportData.summary = {
+      ...exportData.summary,
+      categoriesIncluded,
+      categoriesWithData
+    };
+
+    const exportedAt = new Date().toISOString();
+    const filename = `choices-profile-export-${userId}-${exportedAt.split('T')[0]}.json`;
+
+    logger.info('Data export completed successfully', {
+      userId,
+      categoriesIncluded,
+      categoriesWithData,
+      totalDataPoints: totalDataPoints,
+      privacyOptIns: exportData.summary.privacyOptIns,
+      filename
+    });
+
+    const response = successResponse(exportData, {
+      exportedAt,
+      categoriesIncluded,
+      categoriesWithData,
+      totalDataPoints,
+      filename,
+      contentType: 'application/json'
+    });
+
+    response.headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+    response.headers.set('Content-Type', 'application/json; charset=utf-8');
+    response.headers.set('Cache-Control', 'no-store');
+
+    return response;
 });

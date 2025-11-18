@@ -6,15 +6,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
+import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/schema';
+import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import type { PollWizardSettings } from '@/lib/polls/types';
 import { useNotificationActions } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 const MAX_OPTIONS = 10;
 const MAX_TAG_LENGTH = 50;
@@ -28,7 +30,18 @@ type ShareInfo = {
   durationMs?: number;
 };
 
+type BooleanSettingKey = Extract<
+  keyof PollWizardSettings,
+  | 'allowMultipleVotes'
+  | 'allowAnonymousVotes'
+  | 'showResults'
+  | 'allowComments'
+  | 'requireAuthentication'
+  | 'preventDuplicateVotes'
+>;
+
 export function AccessiblePollWizard() {
+  const { t } = useI18n();
   const {
     data,
     errors,
@@ -123,6 +136,15 @@ export function AccessiblePollWizard() {
     },
     [steps],
   );
+
+  const booleanSettingConfigs = useMemo<Array<{ key: BooleanSettingKey; label: string }>>(() => [
+    { key: 'allowMultipleVotes', label: t('polls.create.wizard.audience.settings.allowMultipleVotes.label') },
+    { key: 'allowAnonymousVotes', label: t('polls.create.wizard.audience.settings.allowAnonymousVotes.label') },
+    { key: 'showResults', label: t('polls.create.wizard.audience.settings.showResults.label') },
+    { key: 'allowComments', label: t('polls.create.wizard.audience.settings.allowComments.label') },
+    { key: 'requireAuthentication', label: t('polls.create.wizard.audience.settings.requireAuthentication.label') },
+    { key: 'preventDuplicateVotes', label: t('polls.create.wizard.audience.settings.preventDuplicateVotes.label') },
+  ], [t]);
 
   const currentStepLabel = useMemo(() => resolveStepLabel(currentStep), [currentStep, resolveStepLabel]);
   const stepPositionLabel = useMemo(
@@ -324,41 +346,54 @@ export function AccessiblePollWizard() {
     setSubmissionResult(result);
 
     if (result.success) {
-      const detail = { pollId: result.pollId, title: result.title };
+      const pollData = result.data ?? {
+        pollId: result.pollId,
+        title: result.title,
+        status: result.status,
+      };
+
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('choices:poll-created', { detail }));
+        window.dispatchEvent(
+          new CustomEvent('choices:poll-created', {
+            detail: {
+              id: pollData.pollId,
+              pollId: pollData.pollId,
+              title: pollData.title ?? data.title,
+            },
+          }),
+        );
       }
 
       addNotification({
         type: 'success',
         title: 'Poll created',
-        message: result.message ?? `"${result.title}" is live for voters.`,
+        message: result.message ?? `"${pollData.title}" is live for voters.`,
       });
-      ScreenReaderSupport.announce(`Poll created successfully. "${result.title}" is live for voters.`, 'polite');
+      ScreenReaderSupport.announce(`Poll created successfully. "${pollData.title}" is live for voters.`, 'polite');
 
       logger.info('Poll created successfully', {
-        pollId: result.pollId,
-        title: result.title,
+        pollId: pollData.pollId,
+        title: pollData.title,
         category: data.category,
-        status: result.status,
+        status: pollData.status,
         durationMs: result.durationMs,
       });
       recordPollEvent('poll_created', {
         category: 'poll_creation',
-        label: result.pollId,
+        label: pollData.pollId,
         metadata: {
-          pollId: result.pollId,
-          status: result.status,
+          pollId: pollData.pollId,
+          status: pollData.status,
           durationMs: result.durationMs,
         },
       });
 
       setShareInfo({
-        pollId: result.pollId,
-        title: result.title,
+        pollId: pollData.pollId,
+        title: pollData.title,
         privacyLevel: data.settings.privacyLevel,
         category: data.category,
-        status: result.status,
+        status: pollData.status,
         ...(result.durationMs !== undefined ? { durationMs: result.durationMs } : {}),
       });
       setHasCopiedShareLink(false);
@@ -512,7 +547,7 @@ export function AccessiblePollWizard() {
       return `${window.location.origin}/polls/${shareInfo.pollId}`;
     }
     return '';
-  }, [shareInfo?.pollId]);
+  }, [shareInfo]);
 
   const isShareOpen = Boolean(shareInfo);
 
@@ -651,9 +686,9 @@ export function AccessiblePollWizard() {
         Keep option labels short and unique. Avoid duplicating choices.
       </p>
 
-      <div className="space-y-3" role="list" aria-labelledby="poll-options-heading" aria-describedby="poll-options-help poll-options-meta">
+      <div className="space-y-3" aria-labelledby="poll-options-heading" aria-describedby="poll-options-help poll-options-meta">
         {data.options.map((option, index) => (
-          <div key={`option-${index}`} className="space-y-1" role="listitem">
+          <div key={`option-${index}`} className="space-y-1">
             <div className="flex gap-2">
               <input
                 id={`poll-option-${index}`}
@@ -726,32 +761,33 @@ export function AccessiblePollWizard() {
       <p id="poll-category-help" className="text-xs text-gray-500">
         Pick the option that best describes your topic. Only one category can be active at a time.
       </p>
-      <div className="grid gap-3 sm:grid-cols-2" role="list" aria-label="Poll categories" aria-describedby="poll-category-help">
+      <ul className="grid gap-3 sm:grid-cols-2" aria-describedby="poll-category-help">
         {categories.map((category) => {
           const isSelected = data.category === category.id;
           return (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => handleCategorySelect(category.id)}
-              className={`rounded-lg border p-4 text-left transition ${
-                isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-              aria-pressed={isSelected}
-              aria-label={`Category ${category.name}`}
-              aria-describedby={`category-${category.id}-description`}
-            >
-              <div className="text-2xl" aria-hidden="true">
-                {category.icon}
-              </div>
-              <div className="mt-2 font-medium text-gray-900">{category.name}</div>
-              <p id={`category-${category.id}-description`} className="text-sm text-gray-600">
-                {category.description}
-              </p>
-            </button>
+            <li key={category.id}>
+              <button
+                type="button"
+                onClick={() => handleCategorySelect(category.id)}
+                className={`w-full rounded-lg border p-4 text-left transition ${
+                  isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                }`}
+                aria-pressed={isSelected}
+                aria-label={`Category ${category.name}`}
+                aria-describedby={`category-${category.id}-description`}
+              >
+                <div className="text-2xl" aria-hidden="true">
+                  {category.icon}
+                </div>
+                <div className="mt-2 font-medium text-gray-900">{category.name}</div>
+                <p id={`category-${category.id}-description`} className="text-sm text-gray-600">
+                  {category.description}
+                </p>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
       <div aria-labelledby="poll-tags-label">
         <div className="mb-2 flex items-center justify-between">
@@ -812,12 +848,11 @@ export function AccessiblePollWizard() {
         </div>
 
         {data.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2" role="list" aria-label="Selected tags">
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Selected tags">
             {data.tags.map((tag) => (
               <span
                 key={tag}
                 className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-sm text-blue-800"
-                role="listitem"
               >
                 {tag}
                 <button
@@ -881,60 +916,27 @@ export function AccessiblePollWizard() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow multiple votes</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowMultipleVotes}
-              onChange={(event) => handleBooleanSettingChange('allowMultipleVotes', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow anonymous votes</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowAnonymousVotes}
-              onChange={(event) => handleBooleanSettingChange('allowAnonymousVotes', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Show results before close</span>
-            <input
-              type="checkbox"
-              checked={data.settings.showResults}
-              onChange={(event) => handleBooleanSettingChange('showResults', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Allow comments</span>
-            <input
-              type="checkbox"
-              checked={data.settings.allowComments}
-              onChange={(event) => handleBooleanSettingChange('allowComments', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Require authentication</span>
-            <input
-              type="checkbox"
-              checked={data.settings.requireAuthentication}
-              onChange={(event) => handleBooleanSettingChange('requireAuthentication', event.target.checked)}
-              className="rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <span>Enable notifications</span>
-            <input
-              type="checkbox"
-              checked={data.settings.enableNotifications}
-              onChange={(event) => handleBooleanSettingChange('enableNotifications', event.target.checked)}
-              className="rounded"
-            />
-          </label>
+          {booleanSettingConfigs.map(({ key, label }) => {
+            const inputId = `poll-setting-${key}`;
+            return (
+              <label
+                key={key}
+                htmlFor={inputId}
+                className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm"
+              >
+                <span>{label}</span>
+                <input
+                  id={inputId}
+                  type="checkbox"
+                  checked={Boolean(data.settings[key])}
+                  onChange={(event) =>
+                    handleBooleanSettingChange(key, event.target.checked)
+                  }
+                  className="rounded"
+                />
+              </label>
+            );
+          })}
         </div>
       </section>
 
@@ -948,11 +950,11 @@ export function AccessiblePollWizard() {
             <p className="mt-1 text-sm text-gray-600">{data.description || 'Add context to help voters decide.'}</p>
           </div>
 
-          <div className="space-y-2" role="list" aria-label="Preview options">
+          <div className="space-y-2" aria-label="Preview options">
             {data.options
               .filter((option) => option.trim().length > 0)
               .map((option, index) => (
-                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-gray-700" role="listitem">
+                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-gray-700">
                   <input type="radio" disabled className="text-blue-600 focus:ring-0" aria-hidden="true" />
                   <span>{option}</span>
                 </div>
@@ -1025,7 +1027,7 @@ export function AccessiblePollWizard() {
               <CheckCircle2 className="mt-0.5 h-5 w-5" />
               <div>
                 <p className="font-medium">Poll published!</p>
-                <p>Your poll “{submissionResult.title}” is ready for voters.</p>
+                <p>Your poll “{submissionResult.data?.title ?? submissionResult.title}” is ready for voters.</p>
               </div>
             </div>
           )}
@@ -1047,6 +1049,7 @@ export function AccessiblePollWizard() {
               <div
                 className="h-full rounded-full bg-blue-500 transition-all"
                 role="progressbar"
+                aria-labelledby="poll-progress-heading"
                 aria-valuenow={progressPercent}
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -1055,7 +1058,7 @@ export function AccessiblePollWizard() {
               />
             </div>
             <nav className="mt-4" aria-label="Poll creation steps">
-              <ol className="flex flex-wrap gap-3" role="list">
+              <ol className="flex flex-wrap gap-3">
                 {steps.map((step) => (
                   <li key={step.id}>
                     <span

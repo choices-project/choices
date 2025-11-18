@@ -1,9 +1,9 @@
 /**
  * @fileoverview Offline Voting Component
- * 
+ *
  * Displays offline votes for a specific poll.
  * Shows votes queued while offline with timestamps.
- * 
+ *
  * @author Choices Platform Team
  * @migrated Zustand migration complete - November 4, 2025
  */
@@ -14,7 +14,6 @@ import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react';
 
 import { isOfflineVoteAction, usePWAOffline } from '@/lib/stores/pwaStore'
-import { logger } from '@/lib/utils/logger'
 import type { OfflineVoteRecord } from '@/types/pwa';
 
 type OfflineVotingProps = {
@@ -26,11 +25,11 @@ type OfflineVotingProps = {
 
 /**
  * Offline Voting Component
- * 
+ *
  * Displays votes queued for a specific poll while offline.
  * Filters store's queued actions to show only votes for this poll.
  * Falls back to demo votes if no real votes exist.
- * 
+ *
  * @param props - Component props
  * @returns Offline voting UI or null if no votes
  */
@@ -41,8 +40,7 @@ type OfflineVoteDisplay = OfflineVoteRecord & {
 export default function OfflineVoting({ pollId, className = '' }: OfflineVotingProps) {
   const offline = usePWAOffline();
   const [offlineVotes, setOfflineVotes] = useState<OfflineVoteDisplay[]>([])
-  const [_isVoting, setIsVoting] = useState(false)
-  
+
   // Get real offline votes for this poll from store
   const pollVotes = useMemo(
     () =>
@@ -77,23 +75,8 @@ export default function OfflineVoting({ pollId, className = '' }: OfflineVotingP
     }
   }, [pollId, pollVotes])
 
-  const _handleVote = (choice: number) => {
-    setIsVoting(true)
-    try {
-      // Simulate storing offline vote
-      const newVote = {
-        id: Date.now().toString(),
-        pollId,
-        choice,
-        timestamp: Date.now()
-      }
-      setOfflineVotes(prev => [...prev, newVote])
-    } catch (error) {
-      logger.error('Vote failed:', error instanceof Error ? error : new Error(String(error)))
-    } finally {
-      setIsVoting(false)
-    }
-  }
+  // Note: handleVote removed - this component is read-only and displays queued votes
+  // Votes are created through the voting interface, not this display component
 
   if (offlineVotes.length === 0) {
     return null

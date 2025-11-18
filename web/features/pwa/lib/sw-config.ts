@@ -1,8 +1,8 @@
 /**
  * @fileoverview Service Worker Configuration
- * 
+ *
  * Centralized configuration for service worker behavior and caching strategies.
- * 
+ *
  * @author Choices Platform Team
  */
 
@@ -19,7 +19,7 @@ export const SW_VERSION = 'v1.0.0';
 export const CACHE_CONFIG = {
   version: SW_VERSION,
   prefix: 'choices-pwa',
-  
+
   /**
    * Individual cache names
    */
@@ -29,17 +29,17 @@ export const CACHE_CONFIG = {
     api: `choices-pwa-${SW_VERSION}-api`,
     images: `choices-pwa-${SW_VERSION}-images`,
   },
-  
+
   /**
    * Maximum age for cached items (in milliseconds)
    */
   maxAge: {
     static: 7 * 24 * 60 * 60 * 1000,      // 7 days
-    dynamic: 24 * 60 * 60 * 1000,         // 1 day  
+    dynamic: 24 * 60 * 60 * 1000,         // 1 day
     api: 5 * 60 * 1000,                   // 5 minutes
     images: 30 * 24 * 60 * 60 * 1000,     // 30 days
   },
-  
+
   /**
    * Maximum number of entries per cache
    */
@@ -120,7 +120,7 @@ export const BACKGROUND_SYNC_CONFIG = {
     contacts: 'sync-contacts',
     profile: 'sync-profile',
   },
-  
+
   /**
    * Retry configuration
    */
@@ -139,8 +139,8 @@ export const PUSH_CONFIG = {
    * This should be generated and stored in environment variables
    * For now, using placeholder - MUST BE REPLACED in production
    */
-  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-  
+  vapidPublicKey: process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? '',
+
   /**
    * Default notification options
    */
@@ -150,7 +150,7 @@ export const PUSH_CONFIG = {
     vibrate: [200, 100, 200],
     requireInteraction: false,
   },
-  
+
   /**
    * Notification categories with custom icons
    */
@@ -182,17 +182,17 @@ export const INSTALL_PROMPT_CONFIG = {
    * Minimum visits before showing install prompt
    */
   minVisits: 3,
-  
+
   /**
    * Minimum time on site (ms) before showing prompt
    */
   minTimeOnSite: 2 * 60 * 1000, // 2 minutes
-  
+
   /**
    * Days to wait before showing prompt again after dismissal
    */
   dismissCooldown: 7,
-  
+
   /**
    * Storage key for tracking prompt dismissals
    */
@@ -207,12 +207,12 @@ export const OFFLINE_QUEUE_CONFIG = {
    * Maximum number of actions to queue
    */
   maxQueueSize: 50,
-  
+
   /**
    * Storage key for offline queue
    */
   storageKey: 'pwa-offline-queue',
-  
+
   /**
    * Maximum age for queued items (ms)
    */
@@ -232,9 +232,9 @@ export const DEV_CONFIG = {
    * Enable service worker in development
    * @default false
    */
-  enableInDev: process.env.NODE_ENV === 'development' && 
+  enableInDev: process.env.NODE_ENV === 'development' &&
                 process.env.NEXT_PUBLIC_PWA_DEV === 'true',
-  
+
   /**
    * Log all service worker events
    */

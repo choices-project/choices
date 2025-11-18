@@ -53,10 +53,13 @@ export default function VotingStoreHarnessPage() {
       getSnapshot: () => getVotingState(),
     };
 
-    window.__votingStoreHarness = harness;
+    // Type cast needed due to strict function types mismatch between
+    // harness type (specific types) and test global type (unknown[])
+    (window as any).__votingStoreHarness = harness;
     return () => {
-      if (window.__votingStoreHarness === harness) {
-        window.__votingStoreHarness = undefined;
+      if ((window as any).__votingStoreHarness === harness) {
+        // Prefer delete over assigning undefined to satisfy lint rules
+        delete (window as any).__votingStoreHarness;
       }
     };
   }, [clearAllTimers, clearTimer, registerTimer, reset, setBallots, setElections, setVotingRecords]);

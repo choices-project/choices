@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
 import { createFECClient } from '@/lib/integrations/fec'
@@ -45,13 +44,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const fecClient = createFECClient()
     const fecCandidate = await fecClient.verifyCandidate(fecId)
 
-    if (!fecCandidate) {
-      return NextResponse.json({
-        success: false,
-        verified: false,
-        message: 'Candidate not found in FEC database'
-      })
-    }
+  if (!fecCandidate) {
+    return validationError(
+      { fecId: 'Candidate not found in FEC database' },
+      'Candidate not found in FEC database'
+    );
+  }
 
     // Check if candidate is active
     const isActive = await fecClient.isCandidateActive(fecId)

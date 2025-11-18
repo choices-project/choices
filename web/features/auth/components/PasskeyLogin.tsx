@@ -103,7 +103,7 @@ export function PasskeyLogin({
     } finally {
       setIsAuthenticating(false);
     }
-  }, [checkPlatformAuthenticator, isWebAuthnSupported, onError, onSuccess]);
+  }, [checkPlatformAuthenticator, isWebAuthnSupported, onError, onSuccess, setBiometricError, setBiometricSuccess]);
 
   const getAuthenticatorIcon = React.useCallback(() => {
     if (typeof window === 'undefined') return <Shield className="h-6 w-6" />;

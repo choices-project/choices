@@ -22,7 +22,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 
 import LanguageSelector from '@/components/shared/LanguageSelector';
+import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import logger from '@/lib/utils/logger';
 
@@ -44,11 +46,10 @@ export default function GlobalNavigation() {
   const mobileMenuId = 'global-navigation-mobile-menu';
   const { t } = useI18n();
 
-  // Auth stubs to avoid build-time hook resolution issues
-  const user: { id?: string; email?: string; [key: string]: unknown } | null = null;
-  const _signOut: (() => Promise<void>) | null = null;
-  const isLoading = false;
-  const _isAuthenticated = false;
+  // Auth integration via context
+  const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
+  const isAuthenticated = Boolean(user);
+  const isLoading = authLoading;
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((open) => !open);
@@ -61,10 +62,11 @@ export default function GlobalNavigation() {
   const handleLogout = useCallback(async () => {
     try {
       closeMobileMenu();
+      await authSignOut();
     } catch (error) {
       logger.error('Logout failed:', error);
     }
-  }, [closeMobileMenu]);
+  }, [authSignOut, closeMobileMenu]);
 
   const isActive = useCallback(
     (path: string) => pathname === path,
@@ -90,6 +92,8 @@ export default function GlobalNavigation() {
       previouslyFocusedElementRef.current.focus();
       previouslyFocusedElementRef.current = null;
     }
+    
+    return undefined;
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
@@ -156,192 +160,202 @@ export default function GlobalNavigation() {
       <nav className="bg-white" aria-label="Primary navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-          {/* Logo and Brand */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
-              <Shield className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">Choices</span>
-            </Link>
-          </div>
+            {/* Logo and Brand */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
+                <Shield className="h-8 w-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">Choices</span>
+              </Link>
+            </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  data-testid={item.href === '/polls' ? 'polls-nav' : item.href === '/dashboard' ? 'dashboard-nav' : item.href === '/' ? 'home-nav' : undefined}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex md:items-center md:space-x-8">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    data-testid={
+                      item.href === '/polls'
+                        ? 'polls-nav'
+                        : item.href === '/dashboard'
+                          ? 'dashboard-nav'
+                          : item.href === '/'
+                            ? 'home-nav'
+                            : undefined
+                    }
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive(item.href)
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
 
-          {/* Desktop Auth Section */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
-            <LanguageSelector variant="compact" />
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/profile"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/profile')
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <User className="h-4 w-4" />
-                  <span>{t('navigation.profile')}</span>
-                </Link>
-                <Link
-                  href="/account/privacy"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/account/privacy')
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>{t('navigation.settings')}</span>
-                </Link>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>{t('navigation.logout')}</span>
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/login">{t('navigation.login')}</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="/register">{t('navigation.register')}</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              ref={mobileMenuButtonRef}
-              variant="ghost"
-              size="sm"
-              onClick={toggleMobileMenu}
-              className="p-2"
-              aria-label={isMobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
-              data-testid="mobile-menu"
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="global-navigation-mobile-menu"
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
+            {/* Desktop Auth Section */}
+            <div className="hidden md:flex md:items-center md:space-x-4">
+              <ThemeSelector variant="compact" />
+              <LanguageSelector variant="compact" />
+              {user && isAuthenticated ? (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/profile"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive('/profile')
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{t('navigation.profile')}</span>
+                  </Link>
+                  <Link
+                    href="/account/privacy"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive('/account/privacy')
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>{t('navigation.settings')}</span>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-1"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>{t('navigation.logout')}</span>
+                  </Button>
+                </div>
               ) : (
-                <Menu className="h-6 w-6" />
+                <div className="flex items-center space-x-4">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/login">{t('navigation.login')}</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link href="/register">{t('navigation.register')}</Link>
+                  </Button>
+                </div>
               )}
-            </Button>
-          </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <Button
+                ref={mobileMenuButtonRef}
+                variant="ghost"
+                size="sm"
+                onClick={toggleMobileMenu}
+                className="p-2"
+                aria-label={
+                  isMobileMenuOpen
+                    ? t('navigation.mobileMenu.close')
+                    : t('navigation.mobileMenu.open')
+                }
+                data-testid="mobile-menu"
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="global-navigation-mobile-menu"
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
             <div className="md:hidden" id={mobileMenuId}>
               <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
-              {/* Mobile Navigation Items */}
-              {navigationItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMobileMenu}
-                    data-testid={
-                      item.href === '/polls'
-                        ? 'polls-nav'
-                        : item.href === '/dashboard'
-                        ? 'dashboard-nav'
-                        : item.href === '/'
-                        ? 'home-nav'
-                        : undefined
-                    }
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                      isActive(item.href)
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                    }`}
-                    ref={index === 0 ? firstMobileNavLinkRef : undefined}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-
-              <div className="pt-4 border-t border-gray-200">
-                <LanguageSelector />
-              </div>
-
-              {/* Mobile Auth Section */}
-              <div className="pt-4 border-t border-gray-200">
-                {user ? (
-                  <div className="space-y-2">
+                {/* Mobile Navigation Items */}
+                {navigationItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
                     <Link
-                      href="/profile"
+                      key={item.href}
+                      href={item.href}
                       onClick={closeMobileMenu}
+                      data-testid={
+                        item.href === '/polls'
+                          ? 'polls-nav'
+                          : item.href === '/dashboard'
+                            ? 'dashboard-nav'
+                            : item.href === '/'
+                              ? 'home-nav'
+                              : undefined
+                      }
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                        isActive('/profile')
+                        isActive(item.href)
                           ? 'text-blue-600 bg-blue-50'
                           : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                       }`}
+                      ref={index === 0 ? firstMobileNavLinkRef : undefined}
                     >
-                      <User className="h-5 w-5" />
-                      <span>Profile</span>
+                      <Icon className="h-5 w-5" />
+                      <span>{item.label}</span>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="flex w-full items-center space-x-2"
-                      data-testid="logout-button"
-                    >
-                      <LogOut className="h-5 w-5" />
-                      <span>Logout</span>
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Button asChild variant="outline" size="sm" className="w-full">
-                      <Link href="/login" onClick={closeMobileMenu}>
-                        Sign In
+                  );
+                })}
+
+                <div className="pt-4 border-t border-gray-200 space-y-4">
+                  <ThemeSelector />
+                  <LanguageSelector />
+                </div>
+
+                {/* Mobile Auth Section */}
+                <div className="pt-4 border-t border-gray-200">
+                  {user && isAuthenticated ? (
+                    <div className="space-y-2">
+                      <Link
+                        href="/profile"
+                        onClick={closeMobileMenu}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                          isActive('/profile')
+                            ? 'text-blue-600 bg-blue-50'
+                            : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <User className="h-5 w-5" />
+                        <span>{t('navigation.profile')}</span>
                       </Link>
-                    </Button>
-                    <Button asChild size="sm" className="w-full">
-                      <Link href="/register" onClick={closeMobileMenu}>
-                        Get Started
-                      </Link>
-                    </Button>
-                  </div>
-                )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="flex w-full items-center space-x-2"
+                        data-testid="logout-button"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span>{t('navigation.logout')}</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button asChild variant="outline" size="sm" className="w-full">
+                        <Link href="/login" onClick={closeMobileMenu}>
+                          {t('navigation.login')}
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm" className="w-full">
+                        <Link href="/register" onClick={closeMobileMenu}>
+                          {t('navigation.register')}
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </nav>
+          )}
+        </div>
+      </nav>
   </div>
   );
 }

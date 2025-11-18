@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
 
 type FeedItem = {
@@ -92,11 +93,11 @@ export default function FeedCore({
   onLoadMore,
   hasMore = false
 }: FeedCoreProps) {
+  const { t } = useI18n();
   const [hashtagInput, setHashtagInput] = useState('');
   const [activeTab, setActiveTab] = useState('feed');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   
@@ -147,17 +148,7 @@ export default function FeedCore({
     };
   }, [onLoadMore, hasMore, isLoading, isClient]);
 
-  // Scroll to top button visibility
-  useEffect(() => {
-    if (!isClient) return;
-
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isClient]);
+ 
 
   // Pull-to-refresh
   useEffect(() => {
@@ -220,9 +211,7 @@ export default function FeedCore({
     }
   }, [isDarkMode]);
 
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+ 
 
   const handleHashtagSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -250,10 +239,12 @@ export default function FeedCore({
       <div className={cn('unified-feed', className)} data-testid="unified-feed">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-red-600">Error Loading Feed</h3>
+            <h3 className="text-lg font-semibold text-red-600">
+              {t('feeds.core.error.title')}
+            </h3>
             <p className="text-gray-600">{error}</p>
             <Button onClick={onRefresh} className="mt-4">
-              Try Again
+              {t('feeds.core.error.retry')}
             </Button>
           </div>
         </div>
@@ -274,26 +265,32 @@ export default function FeedCore({
           style={{ top: Math.min(pullDistance - 40, 60) }}
         >
           <div className="bg-primary text-primary-foreground rounded-full p-2 shadow-lg">
-            {pullDistance > 80 ? '↓ Release to refresh' : '↓ Pull to refresh'}
+            {pullDistance > 80
+              ? t('feeds.core.pullToRefresh.release')
+              : t('feeds.core.pullToRefresh.pull')}
           </div>
         </div>
       )}
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Unified Feed</h1>
+        <h1 className="text-3xl font-bold">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
           {isClient && (
             <Button
               variant="outline"
               size="icon"
               onClick={toggleDarkMode}
-              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={
+                isDarkMode
+                  ? t('feeds.core.themeToggle.light')
+                  : t('feeds.core.themeToggle.dark')
+              }
             >
               {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
             </Button>
           )}
           <Button onClick={onRefresh} disabled={isLoading}>
-            {isLoading ? 'Refreshing...' : 'Refresh'}
+            {isLoading ? t('feeds.core.header.refreshing') : t('feeds.core.header.refresh')}
           </Button>
         </div>
       </div>
@@ -303,7 +300,7 @@ export default function FeedCore({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <HashtagIcon className="w-5 h-5" />
-            Content Filters
+            {t('feeds.core.filters.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -313,20 +310,28 @@ export default function FeedCore({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium">Your District: {userDistrict}</span>
+                  <span className="text-sm font-medium">
+                    {t('feeds.core.filters.districtLabel', { district: userDistrict })}
+                  </span>
                 </div>
                 <Button
                   variant={districtFilterEnabled ? "default" : "outline"}
                   size="sm"
                   onClick={onDistrictFilterToggle}
-                  aria-label={districtFilterEnabled ? 'Disable district filter' : 'Enable district filter'}
+                  aria-label={
+                    districtFilterEnabled
+                      ? t('feeds.core.filters.districtDisable')
+                      : t('feeds.core.filters.districtEnable')
+                  }
                 >
-                  {districtFilterEnabled ? '✓ Filtered' : 'Filter by District'}
+                  {districtFilterEnabled
+                    ? t('feeds.core.filters.districtToggleOn')
+                    : t('feeds.core.filters.districtToggleOff')}
                 </Button>
               </div>
               {districtFilterEnabled && (
                 <p className="text-xs text-gray-600 mt-2">
-                  Showing content for {userDistrict} and platform-wide items
+                  {t('feeds.core.filters.districtHelper', { district: userDistrict })}
                 </p>
               )}
             </div>
@@ -336,10 +341,10 @@ export default function FeedCore({
           <form onSubmit={handleHashtagSubmit} className="mb-4">
             <Input
               type="text"
-              placeholder="Add hashtags to filter (e.g., climate)"
+              placeholder={t('feeds.core.filters.hashtagPlaceholder')}
               value={hashtagInput}
               onChange={(e) => setHashtagInput(e.target.value)}
-              aria-label="Filter by hashtag"
+              aria-label={t('feeds.core.filters.hashtagAria')}
             />
           </form>
 
@@ -352,7 +357,7 @@ export default function FeedCore({
                   <button
                     onClick={() => onHashtagRemove(tag)}
                     className="ml-2 hover:text-red-500"
-                    aria-label={`Remove ${tag} filter`}
+                    aria-label={t('feeds.core.filters.selectedRemoveAria', { tag })}
                   >
                     ×
                   </button>
@@ -364,7 +369,9 @@ export default function FeedCore({
           {/* Trending Hashtags */}
           {trendingHashtags.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold mb-2">Trending Hashtags</h4>
+              <h4 className="text-sm font-semibold mb-2">
+                {t('feeds.core.filters.trendingHeading')}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {trendingHashtags.slice(0, 10).map(tag => (
                   <Button
@@ -385,9 +392,15 @@ export default function FeedCore({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="feed" data-testid="feed-tab">Feed</TabsTrigger>
-          <TabsTrigger value="polls" data-testid="polls-tab">Polls</TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="analytics-tab">Analytics</TabsTrigger>
+          <TabsTrigger value="feed" data-testid="feed-tab">
+            {t('feeds.core.tabs.feed')}
+          </TabsTrigger>
+          <TabsTrigger value="polls" data-testid="polls-tab">
+            {t('feeds.core.tabs.polls')}
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="analytics-tab">
+            {t('feeds.core.tabs.analytics')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="feed" id="feed-panel" role="tabpanel">
@@ -395,9 +408,9 @@ export default function FeedCore({
           {feeds.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600">
-                {selectedHashtags.length > 0 
-                  ? 'No content matches your filters' 
-                  : 'No feeds available'}
+                {selectedHashtags.length > 0
+                  ? t('feeds.core.empty.filters')
+                  : t('feeds.core.empty.default')}
               </p>
             </div>
           ) : (
@@ -439,14 +452,14 @@ export default function FeedCore({
                         size="sm"
                         onClick={() => onBookmark(feed.id)}
                       >
-                        🔖 Bookmark
+                        🔖 {t('feeds.core.actions.bookmark')}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onShare(feed.id)}
                       >
-                        🔗 Share
+                        🔗 {t('feeds.core.actions.share')}
                       </Button>
                     </div>
                   </CardContent>
@@ -458,21 +471,21 @@ export default function FeedCore({
 
         <TabsContent value="polls" id="polls-panel" role="tabpanel">
           <div className="text-center py-12">
-            <p className="text-gray-600">Polls view coming soon</p>
+            <p className="text-gray-600">{t('feeds.core.empty.polls')}</p>
           </div>
         </TabsContent>
 
         <TabsContent value="analytics" id="analytics-panel" role="tabpanel">
           <div className="text-center py-12">
-            <p className="text-gray-600">Analytics not available</p>
+            <p className="text-gray-600">{t('feeds.core.empty.analytics')}</p>
           </div>
         </TabsContent>
       </Tabs>
 
       {/* Status indicators */}
       <div className="flex justify-between items-center text-sm text-gray-500 mt-4">
-        <span>Online</span>
-        <span>{feeds.length} items</span>
+        <span>{t('feeds.core.status.online')}</span>
+        <span>{t('feeds.core.status.items', { count: feeds.length })}</span>
       </div>
 
       {/* Accessibility */}

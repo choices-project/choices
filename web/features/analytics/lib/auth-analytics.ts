@@ -14,7 +14,6 @@
  * @since 2024-12-27
  */
 
-import { withOptional } from '@/lib/util/objects'
 import { logger } from '@/lib/utils/logger'
 
 // Analytics event types
@@ -219,7 +218,10 @@ export class AuthAnalytics {
     if (options.riskScore !== undefined) optionalData.riskScore = options.riskScore;
     if (options.metadata) optionalData.metadata = options.metadata;
     
-    const event = withOptional(baseEvent, optionalData) as AuthEvent;
+    const event: AuthEvent = {
+      ...(baseEvent as AuthEvent),
+      ...(optionalData as Partial<AuthEvent>),
+    };
 
     // Add to events
     this.events.push(event)
@@ -356,7 +358,9 @@ export class AuthAnalytics {
     }
 
     if (event.duration) {
-      const durations = this.events.filter(e => e.duration).map(e => e.duration!)
+      const durations = this.events
+        .map(e => e.duration)
+        .filter((d): d is number => typeof d === 'number')
       this.performanceMetrics.averageResponseTime = durations.reduce((a, b) => a + b, 0) / durations.length
       
       // Calculate percentiles
@@ -378,7 +382,9 @@ export class AuthAnalytics {
       const methodSuccesses = methodEvents.filter(e => e.success).length
       this.performanceMetrics.methodBreakdown[event.authMethod].successRate = methodSuccesses / methodEvents.length
       
-      const methodDurations = methodEvents.filter(e => e.duration).map(e => e.duration!)
+      const methodDurations = methodEvents
+        .map(e => e.duration)
+        .filter((d): d is number => typeof d === 'number')
       if (methodDurations.length > 0) {
         this.performanceMetrics.methodBreakdown[event.authMethod].averageTime = methodDurations.reduce((a, b) => a + b, 0) / methodDurations.length
       }

@@ -105,7 +105,12 @@ export async function safeJsonWithRetry<T>(
     await new Promise(resolve => setTimeout(resolve, delay));
   }
   
-  return lastError!;
+  return lastError ?? {
+    ok: false,
+    code: 'NETWORK',
+    message: 'Unknown network error',
+    details: {}
+  };
 }
 
 

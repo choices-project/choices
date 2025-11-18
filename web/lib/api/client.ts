@@ -8,8 +8,6 @@
  * Status: ✅ ACTIVE
  */
 
-import { withOptional } from '@/lib/util/objects';
-
 import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from './types';
 
 // ============================================================================
@@ -120,11 +118,11 @@ export async function apiClient<T = any>(
       });
     }
 
-    const baseRequestInit = withOptional({}, fetchOptions as Record<string, unknown>) as RequestInit;
-    const requestInit = withOptional(baseRequestInit, {
+    const requestInit: RequestInit = {
+      ...fetchOptions,
       signal: controller.signal,
-      headers
-    }) as RequestInit;
+      headers,
+    };
 
     const response = await fetchWithRetry(
       `${baseUrl}${url}`,
@@ -235,12 +233,7 @@ export async function post<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  const extras = withOptional(
-    { method: 'POST' } as Record<string, unknown>,
-    body ? { body: JSON.stringify(body) } : undefined
-  );
-
-  return apiClient<T>(url, mergeClientOptions(options, extras));
+  return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('POST', body)));
 }
 
 /**
@@ -251,12 +244,7 @@ export async function put<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  const extras = withOptional(
-    { method: 'PUT' } as Record<string, unknown>,
-    body ? { body: JSON.stringify(body) } : undefined
-  );
-
-  return apiClient<T>(url, mergeClientOptions(options, extras));
+  return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('PUT', body)));
 }
 
 /**
@@ -267,12 +255,7 @@ export async function patch<T = any>(
   body?: any,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
-  const extras = withOptional(
-    { method: 'PATCH' } as Record<string, unknown>,
-    body ? { body: JSON.stringify(body) } : undefined
-  );
-
-  return apiClient<T>(url, mergeClientOptions(options, extras));
+  return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('PATCH', body)));
 }
 
 /**
@@ -320,12 +303,13 @@ export function createMutationFn<TResult, TVariables = void>(
   return async (variables: TVariables): Promise<TResult> => {
     const finalUrl = typeof url === 'function' ? url(variables) : url;
 
-    const extras = withOptional(
-      { method } as Record<string, unknown>,
-      method !== 'DELETE' ? { body: JSON.stringify(variables) } : undefined
+    return apiClient<TResult>(
+      finalUrl,
+      mergeClientOptions(
+        options,
+        method !== 'DELETE' ? buildMethodOptions(method, variables) : { method }
+      ),
     );
-
-    return apiClient<TResult>(finalUrl, mergeClientOptions(options, extras));
   };
 }
 
@@ -333,9 +317,24 @@ function mergeClientOptions(
   options: ApiClientOptions | undefined,
   extras: Record<string, unknown>
 ): ApiClientOptions {
-  const baseOptions = withOptional({}, (options ?? {}) as Record<string, unknown>) as ApiClientOptions;
-  return withOptional(baseOptions, extras) as ApiClientOptions;
+  const baseOptions: Record<string, unknown> = { ...(options ?? {}) };
+  for (const [key, value] of Object.entries(extras)) {
+    if (value !== undefined) {
+      baseOptions[key] = value;
+    } else {
+      delete baseOptions[key];
+    }
+  }
+  return baseOptions as ApiClientOptions;
 }
+
+const buildMethodOptions = (method: string, body?: unknown): Record<string, unknown> => {
+  const result: Record<string, unknown> = { method };
+  if (body !== undefined && body !== null) {
+    result.body = JSON.stringify(body);
+  }
+  return result;
+};
 
 // ============================================================================
 // SPECIALIZED API CLIENTS

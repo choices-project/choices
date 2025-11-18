@@ -20,6 +20,7 @@
     "state:sync:social": "npm run build --silent && node build/scripts/state/sync-social.js",
     "state:sync:photos": "npm run build --silent && node build/scripts/state/sync-photos.js",
     "state:sync:data-sources": "npm run build --silent && node build/scripts/state/sync-data-sources.js",
+    "state:sync:voter-registration": "npm run build --silent && node build/scripts/state/sync-voter-registration.js",
     "state:sync:google-civic": "npm run build --silent && node build/scripts/state/sync-google-civic.js",
     "state:sync:google-elections": "npm run build --silent && node build/scripts/state/sync-google-elections.js",
     "state:sync:divisions": "npm run build --silent && node build/scripts/state/sync-divisions.js",

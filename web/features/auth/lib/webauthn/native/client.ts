@@ -161,6 +161,32 @@ type WebAuthnResult<TData = Record<string, unknown>> = {
   data?: TData;
 };
 
+type ApiEnvelope<T> =
+  | { success: true; data: T; metadata?: Record<string, unknown> }
+  | { success: false; error: string; code?: string; details?: unknown; metadata?: Record<string, unknown> };
+
+const extractApiData = <T>(payload: unknown): T => {
+  if (payload && typeof payload === 'object' && 'success' in payload) {
+    const envelope = payload as ApiEnvelope<T>;
+    if (envelope.success) {
+      return envelope.data;
+    }
+    throw new Error(envelope.error ?? 'Request failed');
+  }
+  return payload as T;
+};
+
+const extractApiResult = <T>(payload: unknown): { data?: T; error?: string } => {
+  if (payload && typeof payload === 'object' && 'success' in payload) {
+    const envelope = payload as ApiEnvelope<T>;
+    if (envelope.success) {
+      return { data: envelope.data };
+    }
+    return { error: envelope.error ?? 'Request failed' };
+  }
+  return { data: payload as T };
+};
+
 /**
  * Create public key credential for registration
  */
@@ -261,7 +287,7 @@ export async function beginRegister(
   options?: BeginRegisterOptions
 ): Promise<WebAuthnResult> {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/native/register/options', {
+    const rawOptions = await fetcher('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -272,9 +298,7 @@ export async function beginRegister(
       }),
     }).then(r => r.json());
 
-    if (opts.error) {
-      throw new Error(opts.error);
-    }
+    const opts = extractApiData<any>(rawOptions);
 
     // Convert server options to native WebAuthn options
     const nativeOptions: PublicKeyCredentialCreationOptions = {
@@ -303,7 +327,7 @@ export async function beginRegister(
 
     const credential = await createCredential(nativeOptions);
     
-    const result = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
+    const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -311,7 +335,13 @@ export async function beginRegister(
       body: JSON.stringify(credential),
     }).then(r => r.json());
 
-    return { success: !result.error, error: result.error, data: result };
+    const verifyResult = extractApiResult<any>(verifyPayload);
+
+    if (verifyResult.error) {
+      return { success: false, error: verifyResult.error };
+    }
+
+    return { success: true, data: verifyResult.data };
 
   } catch (error) {
     logger.error('WebAuthn registration error', error instanceof Error ? error : new Error(String(error)));
@@ -330,7 +360,7 @@ export async function beginAuthenticate(
   options?: BeginAuthenticateOptions
 ): Promise<WebAuthnResult> {
   try {
-    const opts = await fetcher('/api/v1/auth/webauthn/native/authenticate/options', {
+    const rawOptions = await fetcher('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -341,9 +371,7 @@ export async function beginAuthenticate(
       }),
     }).then(r => r.json());
 
-    if (opts.error) {
-      throw new Error(opts.error);
-    }
+    const opts = extractApiData<any>(rawOptions);
 
     // Convert server options to native WebAuthn options
     const nativeOptions: PublicKeyCredentialRequestOptions = {
@@ -361,7 +389,7 @@ export async function beginAuthenticate(
 
     const assertion = await getCredential(nativeOptions);
     
-    const result = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
+    const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -369,7 +397,13 @@ export async function beginAuthenticate(
       body: JSON.stringify(assertion),
     }).then(r => r.json());
 
-    return { success: !result.error, error: result.error, data: result };
+    const verifyResult = extractApiResult<any>(verifyPayload);
+
+    if (verifyResult.error) {
+      return { success: false, error: verifyResult.error };
+    }
+
+    return { success: true, data: verifyResult.data };
 
   } catch (error) {
     logger.error('WebAuthn authentication error', error instanceof Error ? error : new Error(String(error)));

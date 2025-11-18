@@ -24,7 +24,7 @@ import {
   Shield,
   Filter
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   PieChart,
   Pie,
@@ -42,8 +42,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 import { useAnalyticsActions, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
+
+const fallbackLabel = (value: string, fallback: string): string => {
+  if (!value) return fallback;
+  if (value.startsWith('analytics.')) {
+    return fallback;
+  }
+  return value;
+};
 
 type TrustTierData = {
   tier: string;
@@ -96,8 +112,19 @@ export default function DemographicsChart({
   className = '',
   defaultTab = 'trust'
 }: DemographicsChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
+  const cardHeadingId = useId();
+  const cardDescriptionId = useId();
+  const privacyHeadingId = useId();
+  const trustSummaryId = useId();
+  const ageSummaryId = useId();
+  const districtSummaryId = useId();
+  const educationSummaryId = useId();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchDemographics } = useAnalyticsActions();
   const demographics = useAnalyticsDemographics();
   const data = demographics.data;
@@ -110,9 +137,316 @@ export default function DemographicsChart({
     });
   }, [fetchDemographics]);
 
+  const tabLabels = useMemo(
+    () => ({
+      trust: t('analytics.demographics.tabsLabels.trust'),
+      age: t('analytics.demographics.tabsLabels.age'),
+      district: t('analytics.demographics.tabsLabels.district'),
+      education: t('analytics.demographics.tabsLabels.education'),
+    }),
+    [t],
+  );
+
+  const tabShortLabels = useMemo(
+    () => ({
+      trust: t('analytics.demographics.tabsShort.trust'),
+      age: t('analytics.demographics.tabsShort.age'),
+      district: t('analytics.demographics.tabsShort.district'),
+      education: t('analytics.demographics.tabsShort.education'),
+    }),
+    [t],
+  );
+
+  const tabAnnouncements = useMemo(
+    () => ({
+      trust: t('analytics.demographics.tabAnnouncements.trust'),
+      age: t('analytics.demographics.tabAnnouncements.age'),
+      district: t('analytics.demographics.tabAnnouncements.district'),
+      education: t('analytics.demographics.tabAnnouncements.education'),
+    }),
+    [t],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: typeof activeTab) => {
+      setActiveTab(tab);
+      const announcement = tabAnnouncements[tab];
+      if (announcement) {
+        ScreenReaderSupport.announce(announcement, 'polite');
+      }
+    },
+    [tabAnnouncements],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce('Refreshing demographics data.', 'polite');
+    void refreshDemographics();
+  }, [refreshDemographics]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const axisLabels = useMemo(
+    () => ({
+      userCount: fallbackLabel(t('analytics.demographics.axes.userCount'), 'User count'),
+      ageGroups: fallbackLabel(t('analytics.demographics.axes.ageGroups'), 'Age group'),
+      districts: fallbackLabel(t('analytics.demographics.axes.districts'), 'District'),
+      education: fallbackLabel(t('analytics.demographics.axes.educationLevels'), 'Education level'),
+    }),
+    [t],
+  );
+
+  const trustColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'tier', label: t('analytics.tables.columns.tier') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const ageColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'ageGroup', label: t('analytics.tables.columns.ageGroup') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const districtColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'district', label: t('analytics.tables.columns.district') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const educationColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'education', label: t('analytics.tables.columns.education') },
+      { key: 'count', label: t('analytics.tables.columns.count'), isNumeric: true },
+      { key: 'percentage', label: t('analytics.tables.columns.percentage'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const trustRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.trustTiers.map((tier) => ({
+            id: tier.tier,
+            cells: {
+              tier: tier.tier,
+              count: formatNumber(tier.count),
+              percentage: formatPercent(tier.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const ageRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.ageGroups.map((group) => ({
+            id: group.ageGroup,
+            cells: {
+              ageGroup: group.ageGroup,
+              count: formatNumber(group.count),
+              percentage: formatPercent(group.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const districtRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.districts.map((district) => ({
+            id: district.district,
+            cells: {
+              district: district.district,
+              count: formatNumber(district.count),
+              percentage: formatPercent(district.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const educationRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.education.map((edu) => ({
+            id: edu.level,
+            cells: {
+              education: edu.level,
+              count: formatNumber(edu.count),
+              percentage: formatPercent(edu.percentage),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent],
+  );
+
+  const optedInCount = useMemo(
+    () => (data ? data.totalUsers - data.privacyOptOuts : 0),
+    [data],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      data
+        ? t('analytics.demographics.summaryIntro', {
+            total: formatNumber(data.totalUsers),
+            optedIn: formatNumber(optedInCount),
+            optedOut: formatNumber(data.privacyOptOuts),
+            threshold: formatNumber(data.k_anonymity),
+          })
+        : '',
+    [data, formatNumber, optedInCount, t],
+  );
+
   useEffect(() => {
     void refreshDemographics();
   }, [refreshDemographics]);
+
+  useEffect(() => {
+    if (!summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [summaryIntro]);
+
+  const summaryCards = useMemo(
+    () => {
+      if (!data) {
+        return [];
+      }
+      return [
+        {
+          id: 'demographics-total',
+          label: t('analytics.demographics.summaryCards.totalUsers'),
+          value: formatNumber(data.totalUsers),
+          sr: t('analytics.demographics.summaryCards.sr.totalUsers', {
+            total: formatNumber(data.totalUsers),
+          }),
+        },
+        {
+          id: 'demographics-opted-in',
+          label: t('analytics.demographics.summaryCards.optedIn'),
+          value: formatNumber(optedInCount),
+          sr: t('analytics.demographics.summaryCards.sr.optedIn', {
+            count: formatNumber(optedInCount),
+          }),
+        },
+        {
+          id: 'demographics-opted-out',
+          label: t('analytics.demographics.summaryCards.optedOut'),
+          value: formatNumber(data.privacyOptOuts),
+          sr: t('analytics.demographics.summaryCards.sr.optedOut', {
+            count: formatNumber(data.privacyOptOuts),
+          }),
+        },
+        {
+          id: 'demographics-privacy-level',
+          label: t('analytics.demographics.summaryCards.privacyLevel'),
+          value: t('analytics.demographics.summaryCards.privacyValue', {
+            threshold: formatNumber(data.k_anonymity),
+          }),
+          sr: t('analytics.demographics.summaryCards.sr.privacyLevel', {
+            threshold: formatNumber(data.k_anonymity),
+          }),
+        },
+      ];
+    },
+    [data, optedInCount, t, formatNumber],
+  );
+
+  const trustSummaryText = useMemo(() => {
+    if (!data || data.trustTiers.length === 0) {
+      return '';
+    }
+    const topTier = data.trustTiers.reduce((best, tier) =>
+      tier.count > best.count ? tier : best,
+    );
+    return `${topTier.tier} leads participation with ${formatNumber(topTier.count)} users (${formatPercent(topTier.percentage)} of opted-in voters).`;
+  }, [data, formatNumber, formatPercent]);
+
+  const ageSummaryText = useMemo(() => {
+    if (!data || data.ageGroups.length === 0) {
+      return '';
+    }
+    const topGroup = data.ageGroups.reduce((best, group) =>
+      group.count > best.count ? group : best,
+    );
+    return `${topGroup.ageGroup} is the largest age band with ${formatNumber(topGroup.count)} users (${formatPercent(topGroup.percentage)} of opted-in voters).`;
+  }, [data, formatNumber, formatPercent]);
+
+  const districtSummaryText = useMemo(() => {
+    if (!data || data.districts.length === 0) {
+      return '';
+    }
+    const topDistrict = data.districts.reduce((best, district) =>
+      district.count > best.count ? district : best,
+    );
+    return `${topDistrict.district} has the most verified participants with ${formatNumber(topDistrict.count)} users (${formatPercent(topDistrict.percentage)} of visible districts).`;
+  }, [data, formatNumber, formatPercent]);
+
+  const educationSummaryText = useMemo(() => {
+    if (!data || data.education.length === 0) {
+      return '';
+    }
+    const topEducation = data.education.reduce((best, edu) =>
+      edu.count > best.count ? edu : best,
+    );
+    return `${topEducation.level} is the most common education level with ${formatNumber(topEducation.count)} users (${topEducation.percentage}% of opted-in voters).`;
+  }, [data, formatNumber]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Demographics data may be limited. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -201,105 +535,165 @@ export default function DemographicsChart({
   if (!data) return null;
 
   return (
-    <Card className={className}>
+    <Card
+      className={className}
+      role="region"
+      aria-labelledby={cardHeadingId}
+      aria-describedby={cardDescriptionId}
+    >
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
-            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+            <CardTitle id={cardHeadingId} className="flex items-center gap-2 text-xl md:text-2xl">
               <Users className="h-5 w-5" />
-              Demographics Breakdown
+              {t('analytics.demographics.cardTitle')}
             </CardTitle>
-            <p className="text-xs md:text-sm text-gray-600 mt-1">
-              {isMobile ? `K-anonymity: ${data.k_anonymity}` : `User demographics with privacy protections (K-anonymity: ${data.k_anonymity})`}
+            <p id={cardDescriptionId} className="text-xs md:text-sm text-gray-600 mt-1">
+              {isMobile
+                ? t('analytics.demographics.cardDescriptionMobile', {
+                    threshold: formatNumber(data.k_anonymity),
+                  })
+                : t('analytics.demographics.cardDescriptionDesktop', {
+                    threshold: formatNumber(data.k_anonymity),
+                  })}
             </p>
           </div>
-          <Button
-            onClick={handleExport}
-            disabled={!data}
-            size={isMobile ? "sm" : "default"}
-            variant="outline"
-            className="min-h-[44px]"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleRefresh}
+              size={isMobile ? "sm" : "default"}
+              variant="outline"
+              className="min-h-[44px]"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('analytics.buttons.refresh')}
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={!data}
+              size={isMobile ? "sm" : "default"}
+              variant="outline"
+              className="min-h-[44px]"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t('analytics.buttons.export')}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {/* Privacy Notice */}
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-          <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-xs text-blue-800">
-            <p className="font-semibold mb-1">Privacy Protected Data</p>
-            <p>
-              • Only includes users who opted in to analytics collection<br />
-              • Categories with fewer than {data.k_anonymity} users are hidden<br />
-              • {data.privacyOptOuts} users opted out and are excluded
+        <div
+          className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2"
+          role="note"
+          aria-labelledby={privacyHeadingId}
+        >
+          <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <div className="text-xs text-blue-800 space-y-1">
+            <p id={privacyHeadingId} className="font-semibold">
+              {t('analytics.demographics.privacy.title')}
             </p>
+            <ul className="list-disc list-inside space-y-0.5">
+              <li>{t('analytics.demographics.privacy.line1')}</li>
+              <li>
+                {t('analytics.demographics.privacy.line2', {
+                  threshold: formatNumber(data.k_anonymity),
+                })}
+              </li>
+              <li>
+                {t('analytics.demographics.privacy.line3', {
+                  optedOut: formatNumber(data.privacyOptOuts),
+                })}
+              </li>
+            </ul>
           </div>
         </div>
 
         {/* Summary Stats - Responsive Grid */}
-        <div className="mb-4 md:mb-6 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <div className="text-center p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
-            <p className="text-xs md:text-sm text-gray-600">Total Users</p>
-            <p className="text-xl md:text-2xl font-bold text-gray-900">{data.totalUsers.toLocaleString()}</p>
+        {summaryCards.length > 0 && (
+          <div className="mb-4 md:mb-6 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {summaryCards.map((card) => (
+              <div key={card.id} className="text-center p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg" role="group" aria-labelledby={`${card.id}-label`} aria-describedby={`${card.id}-value`}>
+                <p id={`${card.id}-label`} className="text-xs md:text-sm text-gray-600">
+                  {card.label}
+                </p>
+                <p id={`${card.id}-value`} className="text-xl md:text-2xl font-bold text-gray-900">
+                  {card.value}
+                </p>
+                <p className="sr-only">{card.sr}</p>
+              </div>
+            ))}
           </div>
-          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-            <p className="text-xs md:text-sm text-gray-600">Opted In</p>
-            <p className="text-xl md:text-2xl font-bold text-blue-700">
-              {(data.totalUsers - data.privacyOptOuts).toLocaleString()}
-            </p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">
-            <p className="text-xs md:text-sm text-gray-600">Opted Out</p>
-            <p className="text-xl md:text-2xl font-bold text-yellow-700">{data.privacyOptOuts.toLocaleString()}</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-            <p className="text-xs md:text-sm text-gray-600">Privacy Level</p>
-            <p className="text-xl md:text-2xl font-bold text-green-700">K-{data.k_anonymity}</p>
-          </div>
-        </div>
+        )}
 
         {/* Tabs - Responsive Layout */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => handleTabChange(v as typeof activeTab)}
+          aria-label={t('analytics.demographics.tabsGroupLabel')}
+        >
           <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4'}`}>
             <TabsTrigger value="trust" className={isMobile ? "text-xs" : ""}>
-              {isMobile ? 'Trust' : 'Trust Tiers'}
+              {isMobile ? tabShortLabels.trust : tabLabels.trust}
             </TabsTrigger>
             <TabsTrigger value="age" className={isMobile ? "text-xs" : ""}>
-              {isMobile ? 'Age' : 'Age Groups'}
+              {isMobile ? tabShortLabels.age : tabLabels.age}
             </TabsTrigger>
-            <TabsTrigger value="district" className={isMobile ? "text-xs" : ""}>Districts</TabsTrigger>
+            <TabsTrigger value="district" className={isMobile ? "text-xs" : ""}>
+              {isMobile ? tabShortLabels.district : tabLabels.district}
+            </TabsTrigger>
             <TabsTrigger value="education" className={isMobile ? "text-xs" : ""}>
-              {isMobile ? 'Edu' : 'Education'}
+              {isMobile ? tabShortLabels.education : tabLabels.education}
             </TabsTrigger>
           </TabsList>
 
           {/* Trust Tiers Tab */}
-          <TabsContent value="trust" className="mt-4 md:mt-6">
+          <TabsContent
+            value="trust"
+            className="mt-4 md:mt-6"
+            role="region"
+            aria-labelledby={`${summarySectionId}-trust-heading`}
+          >
+            <p id={`${summarySectionId}-trust-heading`} className="sr-only">
+              {tabLabels.trust}
+            </p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Pie Chart */}
               <div>
                 <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-3 md:mb-4">Distribution</h3>
-                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
-                  <PieChart>
-                    <Pie
-                      data={data.trustTiers}
-                      dataKey="count"
-                      nameKey="tier"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({ tier, percentage }) => `${tier}: ${percentage}%`}
+                <div
+                  role="group"
+                  aria-labelledby={`${summarySectionId}-trust-heading`}
+                  aria-describedby={trustSummaryText ? trustSummaryId : undefined}
+                >
+                  <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                    <PieChart>
+                      <Pie
+                        data={data.trustTiers}
+                        dataKey="count"
+                        nameKey="tier"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ tier, percentage }) => `${tier}: ${percentage}%`}
+                      >
+                        {data.trustTiers.map((_entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS.trust[index % COLORS.trust.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {trustSummaryText ? (
+                    <p
+                      id={trustSummaryId}
+                      className="mt-2 text-xs text-muted-foreground"
+                      aria-live="polite"
                     >
-                      {data.trustTiers.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS.trust[index % COLORS.trust.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                      {trustSummaryText}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
               {/* Stats */}
@@ -327,101 +721,181 @@ export default function DemographicsChart({
           </TabsContent>
 
           {/* Age Groups Tab */}
-          <TabsContent value="age" className="mt-4 md:mt-6">
-            <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
-              <BarChart data={data.ageGroups} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="ageGroup" 
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis 
-                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    const data = payload[0]?.payload;
-                    if (!data) return null;
-                    return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold text-gray-900">{data.ageGroup}</p>
-                        <p className="text-sm text-gray-600">
-                          Count: <span className="font-medium">{data.count.toLocaleString()}</span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Percentage: <span className="font-medium">{data.percentage}%</span>
-                        </p>
-                      </div>
-                    );
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="count" name="User Count">
-                  {data.ageGroups.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.age[index % COLORS.age.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <TabsContent
+            value="age"
+            className="mt-4 md:mt-6"
+            role="region"
+            aria-labelledby={`${summarySectionId}-age-heading`}
+          >
+            <p id={`${summarySectionId}-age-heading`} className="sr-only">
+              {tabLabels.age}
+            </p>
+            <div
+              role="group"
+              aria-labelledby={`${summarySectionId}-age-heading`}
+              aria-describedby={ageSummaryText ? ageSummaryId : undefined}
+            >
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
+                <BarChart data={data.ageGroups} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="ageGroup" 
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: axisLabels.ageGroups,
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
+                  />
+                  <YAxis 
+                    label={{
+                      value: axisLabels.userCount,
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
+                      return (
+                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                          <p className="font-semibold text-gray-900">{data.ageGroup}</p>
+                          <p className="text-sm text-gray-600">
+                            Count: <span className="font-medium">{data.count.toLocaleString()}</span>
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Percentage: <span className="font-medium">{data.percentage}%</span>
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="count" name={axisLabels.userCount}>
+                    {data.ageGroups.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS.age[index % COLORS.age.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              {ageSummaryText ? (
+                <p
+                  id={ageSummaryId}
+                  className="mt-2 text-sm text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {ageSummaryText}
+                </p>
+              ) : null}
+            </div>
           </TabsContent>
 
           {/* Districts Tab */}
-          <TabsContent value="district" className="mt-4 md:mt-6">
+          <TabsContent
+            value="district"
+            className="mt-4 md:mt-6"
+            role="region"
+            aria-labelledby={`${summarySectionId}-district-heading`}
+          >
+            <p id={`${summarySectionId}-district-heading`} className="sr-only">
+              {tabLabels.district}
+            </p>
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
               <Filter className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-yellow-800">
                 Showing top 10 districts only. Districts with fewer than {data.k_anonymity} users are hidden.
               </p>
             </div>
-            <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
-              <BarChart data={data.districts} margin={isMobile ? { top: 10, right: 5, left: 0, bottom: 80 } : { top: 20, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="district"
-                  angle={-45}
-                  textAnchor="end"
-                  height={isMobile ? 90 : 80}
-                  tick={{ fontSize: isMobile ? 9 : 12 }}
-                />
-                <YAxis 
-                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    const data = payload[0]?.payload;
-                    if (!data) return null;
-                    return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold text-gray-900">{data.district}</p>
-                        <p className="text-sm text-gray-600">
-                          Count: <span className="font-medium">{data.count.toLocaleString()}</span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Percentage: <span className="font-medium">{data.percentage}%</span>
-                        </p>
-                      </div>
-                    );
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="count" name="User Count">
-                  {data.districts.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.district[index % COLORS.district.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div
+              role="group"
+              aria-labelledby={`${summarySectionId}-district-heading`}
+              aria-describedby={districtSummaryText ? districtSummaryId : undefined}
+            >
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
+                <BarChart data={data.districts} margin={isMobile ? { top: 10, right: 5, left: 0, bottom: 80 } : { top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="district"
+                    angle={-45}
+                    textAnchor="end"
+                    height={isMobile ? 90 : 80}
+                    tick={{ fontSize: isMobile ? 9 : 12 }}
+                    label={{
+                      value: axisLabels.districts,
+                      position: 'insideBottom',
+                      offset: -(isMobile ? 70 : 50),
+                      style: { fontSize: isMobile ? 9 : 12 },
+                    }}
+                  />
+                  <YAxis 
+                    label={{
+                      value: axisLabels.userCount,
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
+                      return (
+                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                          <p className="font-semibold text-gray-900">{data.district}</p>
+                          <p className="text-sm text-gray-600">
+                            Count: <span className="font-medium">{data.count.toLocaleString()}</span>
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Percentage: <span className="font-medium">{data.percentage}%</span>
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="count" name={axisLabels.userCount}>
+                    {data.districts.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS.district[index % COLORS.district.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              {districtSummaryText ? (
+                <p
+                  id={districtSummaryId}
+                  className="mt-2 text-sm text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {districtSummaryText}
+                </p>
+              ) : null}
+            </div>
           </TabsContent>
 
           {/* Education Tab */}
-          <TabsContent value="education" className="mt-4 md:mt-6">
+          <TabsContent
+            value="education"
+            className="mt-4 md:mt-6"
+            role="region"
+            aria-labelledby={`${summarySectionId}-education-heading`}
+          >
+            <p id={`${summarySectionId}-education-heading`} className="sr-only">
+              {tabLabels.education}
+            </p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Pie Chart */}
-              <div>
+              <div
+                role="group"
+                aria-labelledby={`${summarySectionId}-education-heading`}
+                aria-describedby={educationSummaryText ? educationSummaryId : undefined}
+              >
                 <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-3 md:mb-4">Distribution</h3>
                 <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
                   <PieChart>
@@ -434,13 +908,22 @@ export default function DemographicsChart({
                       outerRadius={100}
                       label={({ level, percentage }) => `${level}: ${percentage}%`}
                     >
-                      {data.education.map((entry, index) => (
+                      {data.education.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS.education[index % COLORS.education.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+                {educationSummaryText ? (
+                  <p
+                    id={educationSummaryId}
+                    className="mt-2 text-xs text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {educationSummaryText}
+                  </p>
+                ) : null}
               </div>
 
               {/* Stats */}
@@ -482,6 +965,59 @@ export default function DemographicsChart({
             Refresh Data
           </Button>
         </div>
+
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          {summaryIntro ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-foreground"
+            >
+              {summaryIntro}
+            </p>
+          ) : null}
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-trust`}
+            title={t('analytics.demographics.tables.trust.title')}
+            description={t('analytics.demographics.tables.trust.description')}
+            columns={trustColumns}
+            rows={trustRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-age`}
+            title={t('analytics.demographics.tables.age.title')}
+            description={t('analytics.demographics.tables.age.description')}
+            columns={ageColumns}
+            rows={ageRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-districts`}
+            title={t('analytics.demographics.tables.district.title')}
+            description={t('analytics.demographics.tables.district.description')}
+            columns={districtColumns}
+            rows={districtRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-education`}
+            title={t('analytics.demographics.tables.education.title')}
+            description={t('analytics.demographics.tables.education.description')}
+            columns={educationColumns}
+            rows={educationRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );

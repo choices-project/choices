@@ -9,7 +9,6 @@
  * Status: ✅ ACTIVE
  */
 
-import { withOptional } from '@/lib/util/objects';
 import type { PrivacySettings } from '@/types/profile';
 
 import { logger } from './logger';
@@ -217,7 +216,13 @@ export function mergePrivacySettings(
     return defaults;
   }
 
-  return withOptional(defaults, current);
+  const result: Record<string, unknown> = { ...defaults };
+  for (const [k, v] of Object.entries(current)) {
+    if (v !== undefined) {
+      result[k] = v;
+    }
+  }
+  return result as PrivacySettings;
 }
 
 /**
@@ -289,11 +294,12 @@ export function logPrivacyViolation(
   details?: Record<string, unknown>
 ): void {
   if (process.env.NODE_ENV === 'development') {
-    logger.warn('🚨 PRIVACY VIOLATION DETECTED', withOptional({
+    logger.warn('🚨 PRIVACY VIOLATION DETECTED', {
       location,
       dataType,
       message: 'Data collected without privacy check',
-    }, details));
+      ...(details ?? {}),
+    });
   }
 }
 

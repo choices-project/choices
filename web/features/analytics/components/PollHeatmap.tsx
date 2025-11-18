@@ -1,9 +1,9 @@
 /**
  * PollHeatmap Component
- * 
+ *
  * Visualizes poll engagement data in a heatmap format.
  * Shows which polls are getting the most engagement and when.
- * 
+ *
  * Features:
  * - Poll engagement intensity visualization
  * - Time-based patterns (which polls are hot right now)
@@ -12,7 +12,7 @@
  * - Color-coded intensity (cool → warm → hot)
  * - CSV export functionality
  * - Admin-only access
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -26,15 +26,15 @@ import {
   Filter,
   Flame
 } from 'lucide-react';
-import React, { useEffect, useCallback } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import React, { useEffect, useCallback, useMemo, useId, useRef } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   Cell
 } from 'recharts';
@@ -43,7 +43,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PollHeatmapFilters } from '@/features/analytics/types/analytics';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useAnalyticsActions, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
 
 type PollHeatmapEntry = {
   poll_id: string;
@@ -62,7 +70,7 @@ type PollHeatmapProps = {
   defaultLimit?: number;
 };
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'All Categories',
   'Politics',
   'Environment',
@@ -71,7 +79,7 @@ const CATEGORIES = [
   'Education',
   'Economy',
   'Social Issues',
-  'Other'
+  'Other',
 ];
 
 /**
@@ -80,9 +88,9 @@ const CATEGORIES = [
  */
 const getEngagementColor = (score: number, maxScore: number): string => {
   if (maxScore === 0) return '#3b82f6'; // blue-500
-  
+
   const ratio = score / maxScore;
-  
+
   if (ratio < 0.25) {
     // Cool - Blue to Cyan
     return `hsl(${200 + ratio * 40}, 80%, 50%)`;
@@ -114,8 +122,11 @@ const getEngagementEmoji = (score: number, maxScore: number): string => {
 export default function PollHeatmap({
   className = '',
   defaultCategory = 'All Categories',
-  defaultLimit = 20
+  defaultLimit = 20,
 }: PollHeatmapProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
+  const chartRegionId = useId();
   const { fetchPollHeatmap } = useAnalyticsActions();
   const pollHeatmap = useAnalyticsPollHeatmap();
   const data = pollHeatmap.data;
@@ -123,12 +134,73 @@ export default function PollHeatmap({
   const error = pollHeatmap.error;
   const selectedCategory = pollHeatmap.meta.category ?? defaultCategory;
   const limit = pollHeatmap.meta.limit ?? defaultLimit;
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
 
   const loadPollHeatmap = useCallback(async (filters?: Partial<PollHeatmapFilters>) => {
     await fetchPollHeatmap(filters, {
       fallback: (resolvedFilters) => generateMockData(resolvedFilters.limit, resolvedFilters.category),
     });
   }, [fetchPollHeatmap]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const decimalFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatDecimal = useCallback(
+    (value: number) => decimalFormatter.format(value),
+    [decimalFormatter],
+  );
+
+  const tableColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'title', label: t('analytics.tables.columns.poll') },
+      { key: 'category', label: t('analytics.tables.columns.category') },
+      {
+        key: 'engagement',
+        label: t('analytics.tables.columns.engagementScore'),
+        isNumeric: true,
+      },
+      { key: 'votes', label: t('analytics.tables.columns.votes'), isNumeric: true },
+      {
+        key: 'uniqueVoters',
+        label: t('analytics.tables.columns.uniqueVoters'),
+        isNumeric: true,
+      },
+      { key: 'status', label: t('analytics.tables.columns.status') },
+    ],
+    [t],
+  );
+
+  const tableRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data.map((poll) => ({
+        id: poll.poll_id,
+        cells: {
+          title: poll.title,
+          category: poll.category,
+          engagement: formatDecimal(poll.engagement_score),
+          votes: formatNumber(poll.total_votes),
+          uniqueVoters: formatNumber(poll.unique_voters),
+          status: poll.is_active ? t('analytics.tables.statuses.active') : t('analytics.tables.statuses.closed'),
+        },
+      })),
+    [data, formatDecimal, formatNumber, t],
+  );
 
   useEffect(() => {
     void fetchPollHeatmap(
@@ -138,6 +210,14 @@ export default function PollHeatmap({
       }
     );
   }, [defaultCategory, defaultLimit, fetchPollHeatmap]);
+
+  const handleFilterChange = useCallback(
+    (filters: Partial<PollHeatmapFilters>, announcement: string) => {
+      ScreenReaderSupport.announce(announcement, 'polite');
+      void loadPollHeatmap(filters);
+    },
+    [loadPollHeatmap],
+  );
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -163,11 +243,11 @@ export default function PollHeatmap({
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `poll-heatmap-${Date.now()}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -175,7 +255,7 @@ export default function PollHeatmap({
 
   // Calculate statistics
   const totalVotes = data.reduce((sum, p) => sum + p.total_votes, 0);
-  const avgEngagement = data.length > 0 
+  const avgEngagement = data.length > 0
     ? data.reduce((sum, p) => sum + p.engagement_score, 0) / data.length
     : 0;
   const activePolls = data.filter(p => p.is_active).length;
@@ -189,6 +269,69 @@ export default function PollHeatmap({
   }));
 
   const maxEngagement = Math.max(...data.map(d => d.engagement_score), 0);
+
+  const topPoll = useMemo<PollHeatmapEntry | null>(() => {
+    if (data.length === 0) {
+      return null;
+    }
+
+    return data.reduce<PollHeatmapEntry | null>((best, poll) => {
+      if (!best || poll.engagement_score > best.engagement_score) {
+        return poll;
+      }
+      return best;
+    }, data[0] ?? null);
+  }, [data]);
+
+  const summaryIntro = useMemo(() => {
+    const summaryTotals = {
+      total: formatNumber(totalVotes),
+      active: formatNumber(activePolls),
+    };
+
+    if (data.length === 0) {
+      return t('analytics.heatmap.summaryFallback', summaryTotals);
+    }
+
+    if (topPoll) {
+      return t('analytics.heatmap.summaryIntro', {
+        ...summaryTotals,
+        topPoll: topPoll.title,
+        engagement: formatDecimal(topPoll.engagement_score),
+      });
+    }
+
+    return t('analytics.heatmap.summaryFallback', summaryTotals);
+  }, [activePolls, data.length, formatDecimal, formatNumber, t, topPoll, totalVotes]);
+
+  const chartSummaryText = useMemo(() => summaryIntro, [summaryIntro]);
+
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(`Poll heatmap data is using fallback values. ${error}`, 'assertive');
+    previousErrorRef.current = error;
+  }, [error]);
 
   // Loading state
   if (isLoading) {
@@ -245,11 +388,14 @@ export default function PollHeatmap({
               value={selectedCategory}
               onChange={(e) => {
                 const category = e.target.value;
-                void loadPollHeatmap({ category });
+                handleFilterChange(
+                  { category },
+                  `Category filter set to ${category}`,
+                );
               }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {CATEGORIES.map(category => (
+              {DEFAULT_CATEGORIES.map((category: string) => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
@@ -261,7 +407,10 @@ export default function PollHeatmap({
               value={limit}
               onChange={(e) => {
                 const newLimit = parseInt(e.target.value, 10);
-                void loadPollHeatmap({ limit: newLimit });
+                handleFilterChange(
+                  { limit: newLimit },
+                  `Showing top ${newLimit} polls.`,
+                );
               }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -273,6 +422,7 @@ export default function PollHeatmap({
 
           <Button
             onClick={() => {
+              ScreenReaderSupport.announce('Refreshing poll engagement heatmap data.', 'polite');
               void loadPollHeatmap();
             }}
             size="sm"
@@ -297,15 +447,15 @@ export default function PollHeatmap({
         <div className="mb-6 grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Votes</p>
-            <p className="text-2xl font-bold text-blue-700">{totalVotes.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-700">{formatNumber(totalVotes)}</p>
           </div>
           <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
             <p className="text-sm text-gray-600">Avg Engagement</p>
-            <p className="text-2xl font-bold text-orange-700">{avgEngagement.toFixed(1)}</p>
+            <p className="text-2xl font-bold text-orange-700">{formatDecimal(avgEngagement)}</p>
           </div>
           <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
             <p className="text-sm text-gray-600">Active Polls</p>
-            <p className="text-2xl font-bold text-green-700">{activePolls}</p>
+            <p className="text-2xl font-bold text-green-700">{formatNumber(activePolls)}</p>
           </div>
         </div>
 
@@ -337,21 +487,38 @@ export default function PollHeatmap({
             <p className="text-sm">Try selecting a different category</p>
           </div>
         ) : (
-          <div className="h-96">
+          <div
+            className="h-96"
+            role="group"
+            aria-labelledby={`${chartRegionId}-title`}
+            aria-describedby={`${chartRegionId}-summary`}
+          >
+            <p id={`${chartRegionId}-title`} className="sr-only">
+              Poll engagement heatmap
+            </p>
+            <p id={`${chartRegionId}-summary`} className="sr-only" aria-live="polite">
+              {chartSummaryText}
+            </p>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={100}
                   tick={{ fontSize: 11 }}
+                  label={{
+                    value: 'Poll titles (sorted by engagement)',
+                    position: 'insideBottom',
+                    offset: -60,
+                    style: { fontSize: 11 },
+                  }}
                 />
-                <YAxis 
-                  label={{ value: 'Engagement Score', angle: -90, position: 'insideLeft' }}
+                <YAxis
+                  label={{ value: 'Engagement score', angle: -90, position: 'insideLeft' }}
                 />
-                <Tooltip 
+                <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) return null;
                     const poll = payload[0]?.payload?.fullData;
@@ -390,14 +557,17 @@ export default function PollHeatmap({
                 <Legend />
                 <Bar dataKey="engagement" name="Engagement Score">
                   {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={getEngagementColor(entry.engagement, maxEngagement)}
                     />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
+              {chartSummaryText}
+            </p>
           </div>
         )}
 
@@ -407,12 +577,13 @@ export default function PollHeatmap({
             <h3 className="text-sm font-semibold text-gray-900 mb-3">🏆 Top 5 Most Engaged Polls</h3>
             <div className="space-y-2">
               {data
+                .slice()
                 .sort((a, b) => b.engagement_score - a.engagement_score)
                 .slice(0, 5)
                 .map((poll, index) => {
                   const emoji = getEngagementEmoji(poll.engagement_score, maxEngagement);
                   return (
-                    <div 
+                    <div
                       key={poll.poll_id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
@@ -428,8 +599,12 @@ export default function PollHeatmap({
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-4">
-                        <p className="text-lg font-bold text-gray-900">{poll.engagement_score.toFixed(1)}</p>
-                        <p className="text-xs text-gray-500">{poll.total_votes} votes</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          {formatDecimal(poll.engagement_score)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatNumber(poll.total_votes)} {t('analytics.heatmap.topPolls.votesLabel')}
+                        </p>
                       </div>
                     </div>
                   );
@@ -437,6 +612,35 @@ export default function PollHeatmap({
             </div>
           </div>
         )}
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          <p
+            role="status"
+            aria-live="polite"
+            className={`text-sm ${data.length === 0 ? 'text-muted-foreground' : 'text-foreground'}`}
+          >
+            {summaryIntro}
+          </p>
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-polls`}
+            title={t('analytics.heatmap.table.title')}
+            description={t('analytics.heatmap.table.description')}
+            columns={tableColumns}
+            rows={tableRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );

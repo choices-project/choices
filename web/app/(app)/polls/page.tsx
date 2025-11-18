@@ -6,6 +6,8 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
+import { useI18n } from '@/hooks/useI18n';
+import { useAppActions } from '@/lib/stores/appStore';
 import {
   useFilteredPollCards,
   usePollFilters,
@@ -15,10 +17,10 @@ import {
   usePollsError,
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
-import { useI18n } from '@/hooks/useI18n';
 
 export default function PollsPage() {
   const { t, currentLanguage } = useI18n();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
   const error = usePollsError();
@@ -30,9 +32,6 @@ export default function PollsPage() {
     setFilters,
     setTrendingOnly,
     setCurrentPage,
-    setSearchQuery,
-    searchPolls,
-    clearSearch,
   } = usePollsActions();
 
   const initializedRef = useRef(false);
@@ -57,7 +56,7 @@ export default function PollsPage() {
   const formatVoteCount = useCallback(
     (value: number) =>
       t('polls.page.metadata.votes', {
-        count: value,
+        count: String(value),
         formattedCount: numberFormatter.format(value),
       }),
     [numberFormatter, t],
@@ -98,6 +97,21 @@ export default function PollsPage() {
   );
 
   useEffect(() => {
+    setCurrentRoute('/polls');
+    setSidebarActiveSection('polls');
+    setBreadcrumbs([
+      { label: t('polls.page.breadcrumbs.home'), href: '/' },
+      { label: t('polls.page.breadcrumbs.dashboard'), href: '/dashboard' },
+      { label: t('polls.page.breadcrumbs.polls'), href: '/polls' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
+
+  useEffect(() => {
     if (initializedRef.current) {
       return;
     }
@@ -120,79 +134,7 @@ export default function PollsPage() {
     }
     return 'all';
   }, [filters.status, filters.trendingOnly]);
-
-  const handleFilterChange = useCallback((nextFilter: 'all' | 'active' | 'closed' | 'trending') => {
-    let status: string[] = [];
-    let nextTrending = false;
-
-    switch (nextFilter) {
-      case 'active':
-        status = ['active'];
-        break;
-      case 'closed':
-        status = ['closed'];
-        break;
-      case 'trending':
-        nextTrending = true;
-        break;
-      case 'all':
-      default:
-        status = [];
-        break;
-    }
-
-    setCurrentPage(1);
-    setTrendingOnly(nextTrending);
-    setFilters({ status });
-    void loadPolls();
-  }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
-
-  const handleCategoryChange = useCallback((categoryId: string) => {
-    const category = categoryId === 'all' ? [] : [categoryId];
-    setCurrentPage(1);
-    setFilters({ category });
-    void loadPolls();
-  }, [loadPolls, setCurrentPage, setFilters]);
-
-  const handleHashtagSelect = useCallback((hashtag: string) => {
-    const normalized = hashtag.replace(/^#/, '');
-    if (filters.tags.includes(normalized)) {
-      return;
-    }
-    const tags = [...filters.tags, normalized];
-    setCurrentPage(1);
-    setFilters({ tags });
-    void loadPolls();
-  }, [loadPolls, filters.tags, setCurrentPage, setFilters]);
-
-  const handleHashtagRemove = useCallback((hashtag: string) => {
-    const tags = filters.tags.filter((tag) => tag !== hashtag);
-    setCurrentPage(1);
-    setFilters({ tags });
-    void loadPolls();
-  }, [loadPolls, filters.tags, setCurrentPage, setFilters]);
-
-  const handleSearchSubmit = useCallback((value: string) => {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) {
-      void clearSearch();
-      return;
-    }
-    setSearchQuery(trimmed);
-    setCurrentPage(1);
-    void searchPolls(trimmed);
-  }, [clearSearch, searchPolls, setCurrentPage, setSearchQuery]);
-
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      handleSearchSubmit((event.target as HTMLInputElement).value);
-    }
-  };
+ 
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -258,7 +200,7 @@ export default function PollsPage() {
                 {typeof poll.trendingPosition === 'number' && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                     <Flame className="h-3 w-3 mr-1" />
-                    {t('polls.page.trendingBadge', { position: poll.trendingPosition })}
+                    {t('polls.page.trendingBadge', { position: String(poll.trendingPosition) })}
                   </span>
                 )}
               </div>

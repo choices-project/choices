@@ -32,7 +32,12 @@ export default function CandidateDashboardPage() {
           setPlatforms(data.platforms || [])
         }
       })
-      .catch(console.error)
+      .catch((error) => {
+        logger.error(
+          'Failed to load candidate platforms',
+          error instanceof Error ? error : new Error(String(error))
+        )
+      })
       .finally(() => setLoading(false))
   }, [isAuthenticated, router])
 

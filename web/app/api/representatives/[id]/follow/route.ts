@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
@@ -37,7 +37,7 @@ export const POST = withErrorHandling(async (
 
     // Check if already following
     const { data: existing } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .select('id')
       .eq('user_id', user.id)
       .eq('representative_id', representativeId)
@@ -46,13 +46,14 @@ export const POST = withErrorHandling(async (
   if (existing) {
     return successResponse({
       message: 'Already following this representative',
-      following: true
+      following: true,
+      follow: existing
     });
   }
 
     // Insert follow relationship
     const { data: followData, error: followError } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .insert({
         user_id: user.id,
         representative_id: representativeId,
@@ -76,13 +77,13 @@ export const POST = withErrorHandling(async (
 
   return successResponse({
     message: 'Successfully followed representative',
-    data: followData,
+    follow: followData,
     following: true
   }, undefined, 201);
 });
 
 export const DELETE = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
@@ -101,7 +102,7 @@ export const DELETE = withErrorHandling(async (
 
     // Delete follow relationship
     const { error: unfollowError } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .delete()
       .eq('user_id', user.id)
       .eq('representative_id', representativeId);
@@ -123,7 +124,7 @@ export const DELETE = withErrorHandling(async (
 });
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   const representativeId = parseInt(params.id);
@@ -142,7 +143,7 @@ export const GET = withErrorHandling(async (
 
     // Check if following
     const { data: followData, error: followError } = await (supabase as any)
-      .from('user_followed_representatives')
+      .from('representative_follows')
       .select('*')
       .eq('user_id', user.id)
       .eq('representative_id', representativeId)
@@ -155,7 +156,7 @@ export const GET = withErrorHandling(async (
 
   return successResponse({
     following: !!followData,
-    data: followData ?? null
+    follow: followData ?? null
   });
 });
 

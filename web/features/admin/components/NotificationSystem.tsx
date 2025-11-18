@@ -13,12 +13,12 @@
 import React, { useEffect, useRef } from 'react';
 
 import type { AdminNotification } from '@/features/admin/types';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useNotificationAdminNotifications,
   useNotificationAdminUnreadCount,
   useNotificationActions,
 } from '@/lib/stores';
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 
 /**
  * Hook to use admin notification system
@@ -114,7 +114,14 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
         notification.read ? 'opacity-75' : ''
       }`}
       onClick={handleClick}
-      role={priority === 'assertive' ? 'alert' : 'status'}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       aria-live={priority}
       aria-atomic="true"
     >

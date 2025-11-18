@@ -5,14 +5,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import type * as NavigationModule from 'next/navigation';
 import React from 'react';
 
+import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountdownUtils';
 import PersonalDashboard from '@/features/dashboard/components/PersonalDashboard';
 import type * as ProfileHooksModule from '@/features/profile/hooks/use-profile';
 import type * as StoresModule from '@/lib/stores';
 import type * as ProfileStoreModule from '@/lib/stores/profileStore';
 import type * as RepresentativeStoreModule from '@/lib/stores/representativeStore';
-import type * as CountdownUtilsModule from '@/features/civics/utils/civicsCountdownUtils';
 import type { DashboardPreferences } from '@/types/profile';
 import type { Representative } from '@/types/representative';
+
+jest.mock('@/hooks/useI18n', () => ({
+  useI18n: jest.fn(),
+}));
 
 jest.mock('@/components/shared/FeatureWrapper', () => ({
   FeatureWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -54,6 +58,7 @@ jest.mock('@/lib/stores', () => {
     useHashtagLoading: jest.fn(),
     useHashtagError: jest.fn(),
     useRepresentativeDivisions: jest.fn(() => []),
+    useUserActions: jest.fn(),
   };
 });
 
@@ -107,17 +112,48 @@ type MockedCountdownUtilsModule = {
   [K in keyof CountdownUtilsModule]: jest.Mock;
 };
 
+type MockedI18nModule = {
+  useI18n: jest.Mock;
+};
+
 const mockedProfileHooks = jest.requireMock('@/features/profile/hooks/use-profile') as MockedProfileModule;
 const mockedStores = jest.requireMock('@/lib/stores') as MockedStoresModule;
 const mockedNavigation = jest.requireMock('next/navigation') as MockedNavigationModule;
 const mockedProfileStore = jest.requireMock('@/lib/stores/profileStore') as MockedProfileStoreModule;
 const mockedRepresentativeStore = jest.requireMock('@/lib/stores/representativeStore') as MockedRepresentativeStoreModule;
 const mockedCountdownUtils = jest.requireMock('@/features/civics/utils/civicsCountdownUtils') as MockedCountdownUtilsModule;
+const mockedI18n = jest.requireMock('@/hooks/useI18n') as MockedI18nModule;
+
+// Use the real English catalogue so test expectations keep pace with i18n updates
+const englishMessages = require('../../../../messages/en.json') as Record<string, unknown>;
+
+const resolveMessage = (messages: Record<string, unknown>, key: string): string | undefined =>
+  key.split('.').reduce<unknown>((acc, segment) => {
+    if (acc && typeof acc === 'object' && segment in (acc as Record<string, unknown>)) {
+      return (acc as Record<string, unknown>)[segment];
+    }
+    return undefined;
+  }, messages) as string | undefined;
+
+const translate = (key: string, params?: Record<string, string | number>): string => {
+  const raw = resolveMessage(englishMessages, key);
+  if (typeof raw !== 'string') {
+    return key;
+  }
+  if (!params) {
+    return raw;
+  }
+  return raw.replace(/\{(\w+)\}/g, (_match, param: string) => {
+    const value = params[param];
+    return value === undefined || value === null ? '' : String(value);
+  });
+};
 
 const mockRouterReplace = jest.fn();
 const mockLoadPolls = jest.fn().mockResolvedValue(undefined);
 const mockGetTrendingHashtags = jest.fn().mockResolvedValue(undefined);
 const mockGetUserRepresentatives = jest.fn().mockResolvedValue([]);
+const mockSignOut = jest.fn();
 
 const hashtagActionsState = {
   getTrendingHashtags: (...args: Parameters<typeof mockGetTrendingHashtags>) =>
@@ -215,6 +251,7 @@ function mockHooks(options: MockOptions = {}) {
   mockedStores.useHashtagActions.mockReturnValue(hashtagActionsState);
   mockedStores.useHashtagLoading.mockReturnValue(hashtagLoadingState);
   mockedStores.useHashtagError.mockReturnValue(hashtagErrorState);
+  mockedStores.useUserActions.mockReturnValue({ signOut: mockSignOut });
  
    mockedNavigation.useRouter.mockReturnValue({
      replace: mockRouterReplace,
@@ -272,6 +309,13 @@ describe('PersonalDashboard', () => {
     mockGetUserRepresentatives.mockReset();
     mockGetUserRepresentatives.mockResolvedValue([]);
     profileStoreState.updatePreferences.mockClear();
+    mockSignOut.mockReset();
+    mockedI18n.useI18n.mockReturnValue({
+      t: translate,
+      currentLanguage: 'en',
+      changeLanguage: jest.fn(),
+      isReady: true,
+    });
   });
 
   it('redirects unauthenticated users to the auth page and shows sign-in prompt', () => {
@@ -281,6 +325,7 @@ describe('PersonalDashboard', () => {
 
     expect(mockRouterReplace).toHaveBeenCalledWith('/auth?redirectTo=/dashboard');
     expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
+    expect(mockSignOut).toHaveBeenCalled();
   });
 
   it('shows loading skeleton while auth/profile are loading', () => {
@@ -323,7 +368,7 @@ describe('PersonalDashboard', () => {
      expect(mockGetUserRepresentatives).toHaveBeenCalled();
    });
 
-  it('renders election countdown card for representatives when data is available', () => {
+  it('renders election countdown card for representatives when data is available', async () => {
     const profile: ProfileValue = {
       id: 'user-1',
       display_name: 'Sam Civic',
@@ -370,8 +415,10 @@ describe('PersonalDashboard', () => {
 
     render(<PersonalDashboard />);
 
-    expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
-    expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
+      expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    });
   });
 });

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/utils/logger';
+
 // ============================================================================
 // PHASE 3: SCREEN READER SUPPORT
 // ============================================================================
@@ -21,7 +23,6 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-import { withOptional } from '../util/objects';
 
 export type ScreenReaderAnnouncement = {
   message: string;
@@ -229,10 +230,7 @@ export class ScreenReaderSupport {
     }
     
     // Set focus
-    const focusOptions = withOptional(
-      {},
-      { preventScroll: options.preventScroll }
-    );
+    const focusOptions = options.preventScroll ? { preventScroll: true } : {};
     element.focus(focusOptions);
     
     // Announce focus change if requested
@@ -444,6 +442,44 @@ export class ScreenReaderSupport {
     liveRegion.textContent = announcement.message;
     const duration = announcement.duration ?? 1000;
     
+    if (typeof window !== 'undefined') {
+      const hook = (window as typeof window & {
+        __onScreenReaderAnnounce?: (data: {
+          message: string;
+          priority: 'polite' | 'assertive';
+          id?: string;
+          duration?: number;
+          timestamp: number;
+        }) => void;
+      }).__onScreenReaderAnnounce;
+      const payload: {
+        message: string;
+        priority: 'polite' | 'assertive';
+        id?: string;
+        duration?: number;
+        timestamp: number;
+      } = {
+        message: announcement.message,
+        priority: announcement.priority,
+        duration,
+        timestamp: Date.now(),
+      };
+
+      if (announcement.id) {
+        payload.id = announcement.id;
+      }
+
+      hook?.(payload);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      logger.warn('[ScreenReaderSupport] announcement debug', {
+        message: announcement.message,
+        priority: announcement.priority,
+        id: announcement.id,
+      });
+    }
+    
     // Clear after announcement
     setTimeout(() => {
       liveRegion.textContent = '';
@@ -546,10 +582,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
  * @param announce - Optional announcement
  */
 export function focusElement(element: HTMLElement, announce?: string): void {
-  const options = withOptional(
-    {},
-    { announce }
-  );
+  const options = announce !== undefined ? { announce } : {};
   ScreenReaderSupport.setFocus(element, options);
 }
 

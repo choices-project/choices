@@ -17,7 +17,6 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import {
   PrivacyAwareQueryBuilder,
@@ -25,7 +24,7 @@ import {
   K_ANONYMITY_THRESHOLD,
   privacyAwareAggregate
 } from '@/features/analytics/lib/privacyFilters';
-import { withErrorHandling, forbiddenError } from '@/lib/api';
+import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
@@ -46,6 +45,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
   logAnalyticsAccess(user, 'demographics-api', true);
 
+  try {
     // Generate cache key
     const cacheKey = generateCacheKey(CACHE_PREFIX.DEMOGRAPHICS);
 
@@ -57,56 +57,55 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
-    // Get opted-in users with demographics
-    const { users, totalUsers, optedInCount, optedOutCount } =
-      await queryBuilder.getDemographics();
+        // Get opted-in users with demographics
+        const { users, totalUsers, optedInCount, optedOutCount } =
+          await queryBuilder.getDemographics();
 
-    // Process Trust Tiers
-    const trustTierCounts = new Map<string, number>();
-    users.forEach(u => {
-      const tier = u.trust_tier ?? 'T0';
-      trustTierCounts.set(tier, (trustTierCounts.get(tier) ?? 0) + 1);
-    });
+        // Process Trust Tiers
+        const trustTierCounts = new Map<string, number>();
+        users.forEach(u => {
+          const tier = u.trust_tier ?? 'T0';
+          trustTierCounts.set(tier, (trustTierCounts.get(tier) ?? 0) + 1);
+        });
 
-    const trustTiers = Array.from(trustTierCounts.entries()).map(([tier, count]) => ({
-      tier,
-      count,
-      percentage: parseFloat(((count / optedInCount) * 100).toFixed(1))
-    }));
+        const trustTiers = Array.from(trustTierCounts.entries()).map(([tier, count]) => ({
+          tier,
+          count,
+          percentage: parseFloat(((count / optedInCount) * 100).toFixed(1))
+        }));
 
-    // Apply k-anonymity
-    const filteredTrustTiers = applyKAnonymity(trustTiers, K_ANONYMITY_THRESHOLD, 'count');
+        // Apply k-anonymity
+        const filteredTrustTiers = applyKAnonymity(trustTiers, K_ANONYMITY_THRESHOLD, 'count');
 
-    // Process Age Groups
-    const ageGroups = privacyAwareAggregate(
-      users.map(u => ({
-        age: extractAgeGroup(u.demographics)
-      })),
-      'age',
-      K_ANONYMITY_THRESHOLD
-    );
+        // Process Age Groups
+        const ageGroups = privacyAwareAggregate(
+          users.map(u => ({
+            age: extractAgeGroup(u.demographics)
+          })),
+          'age',
+          K_ANONYMITY_THRESHOLD
+        );
 
-    // Process Districts (top 10 only)
-    const districts = privacyAwareAggregate(
-      users.map(u => ({
-        district: extractDistrict(u.demographics)
-      })),
-      'district',
-      K_ANONYMITY_THRESHOLD
-    ).slice(0, 10);
+        // Process Districts (top 10 only)
+        const districts = privacyAwareAggregate(
+          users.map(u => ({
+            district: extractDistrict(u.demographics)
+          })),
+          'district',
+          K_ANONYMITY_THRESHOLD
+        ).slice(0, 10);
 
-    // Process Education
-    const education = privacyAwareAggregate(
-      users.map(u => ({
-        education: extractEducation(u.demographics)
-      })),
-      'education',
-      K_ANONYMITY_THRESHOLD
-    );
+        // Process Education
+        const education = privacyAwareAggregate(
+          users.map(u => ({
+            education: extractEducation(u.demographics)
+          })),
+          'education',
+          K_ANONYMITY_THRESHOLD
+        );
 
         // Return privacy-protected results
         return {
-          ok: true,
           trustTiers: filteredTrustTiers.map(t => ({
             tier: t.tier,
             count: t.count,
@@ -136,13 +135,23 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
     logger.info('Demographics data served', { fromCache });
 
-    return NextResponse.json({
-      ...result,
-      _cache: {
+    return successResponse({
+      trustTiers: result.trustTiers,
+      ageGroups: result.ageGroups,
+      districts: result.districts,
+      education: result.education,
+      totalUsers: result.totalUsers,
+      privacyOptOuts: result.privacyOptOuts,
+      k_anonymity: result.k_anonymity,
+      cache: {
         hit: fromCache,
         ttl: CACHE_TTL.DEMOGRAPHICS
       }
     });
+  } catch (error) {
+    logger.error('Demographics analytics error', error instanceof Error ? error : new Error(String(error)));
+    return errorResponse('Failed to load demographic analytics', 500);
+  }
 });
 
 /**

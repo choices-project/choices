@@ -14,8 +14,9 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import { createAutoRefreshTimer, createPerformanceMonitor } from '@/lib/performance/performanceMonitorService';
-import { withOptional } from '@/lib/util/objects';
+import logger from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -108,6 +109,10 @@ export type PerformanceState = {
   lastRefresh: Date | null;
   autoRefresh: boolean;
   refreshInterval: number;
+  lastSyncedAt: Date | null;
+  isSyncing: boolean;
+  syncEnabled: boolean;
+  syncError: string | null;
 };
 
 export type PerformanceActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
@@ -137,9 +142,36 @@ export type PerformanceActions = Pick<BaseStore, 'setLoading' | 'setError' | 'cl
   performDatabaseMaintenance: () => Promise<void>;
   initialize: () => void;
   resetPerformanceState: () => void;
+  syncMetrics: () => Promise<void>;
+  setSyncEnabled: (enabled: boolean) => void;
 };
 
 export type PerformanceStore = PerformanceState & PerformanceActions;
+
+const METRIC_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+const MIN_SYNC_BATCH = 25;
+const MAX_BUFFERED_METRICS = 200;
+
+const shouldAutoSyncMetrics = (state: PerformanceStore): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  if (!state.syncEnabled || state.isSyncing) {
+    return false;
+  }
+
+  if (state.metrics.length >= MAX_BUFFERED_METRICS) {
+    return true;
+  }
+
+  if (!state.lastSyncedAt) {
+    return state.metrics.length >= MIN_SYNC_BATCH;
+  }
+
+  return state.metrics.length >= MIN_SYNC_BATCH &&
+    Date.now() - state.lastSyncedAt.getTime() >= METRIC_SYNC_INTERVAL_MS;
+};
 
 const defaultPerformanceThresholds: PerformanceThresholds = {
   navigation: {
@@ -176,6 +208,10 @@ export const createInitialPerformanceState = (): PerformanceState => ({
   lastRefresh: null,
   autoRefresh: true,
   refreshInterval: 30000,
+  lastSyncedAt: null,
+  isSyncing: false,
+  syncEnabled: true,
+  syncError: null,
 });
 
 export const initialPerformanceState: PerformanceState = createInitialPerformanceState();
@@ -280,7 +316,9 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
         // Actions - Metrics
         recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => {
           const id = `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedMetric = withOptional(metric);
+          const sanitizedMetric = Object.fromEntries(
+            Object.entries(metric).filter(([, v]) => v !== undefined)
+          ) as typeof metric;
           const newMetric = Object.assign({}, sanitizedMetric, {
             id,
             timestamp: new Date(),
@@ -300,6 +338,11 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           if (checkThresholds) {
             checkThresholds();
           }
+
+          const currentState = get();
+          if (shouldAutoSyncMetrics(currentState)) {
+            void currentState.syncMetrics();
+          }
         },
 
         recordNavigationMetric: (
@@ -307,16 +350,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           value: number,
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'navigation',
               name,
               value,
               unit: 'ms',
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
         },
@@ -326,16 +367,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           value: number,
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'resource',
               name,
               value,
               unit: 'ms',
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
         },
@@ -346,18 +385,76 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
           unit: PerformanceMetric['unit'] = 'ms',
           metadata?: Record<string, unknown>,
         ) => {
-          const payload = withOptional<Omit<PerformanceMetric, 'id' | 'timestamp'>>(
-            {
+          const payload = {
               type: 'custom',
               name,
               value,
               unit,
               url: typeof window !== 'undefined' ? window.location.href : '',
-            },
-            { metadata },
-          );
+              ...(metadata ? { metadata } : {}),
+            } as Omit<PerformanceMetric, 'id' | 'timestamp'>;
 
           get().recordMetric(payload);
+        },
+
+        syncMetrics: async () => {
+          if (typeof window === 'undefined') {
+            return;
+          }
+
+          const state = get();
+          if (!state.syncEnabled || state.isSyncing || state.metrics.length === 0) {
+            return;
+          }
+
+          set((draft) => {
+            draft.isSyncing = true;
+            draft.syncError = null;
+          });
+
+          try {
+            const payload = {
+              document: performanceMetrics.exportMetrics(),
+              page: window.location.pathname,
+              sessionId: state.reports[state.reports.length - 1]?.id,
+              meta: {
+                bufferedMetrics: state.metrics.length,
+                cacheStats: state.cacheStats,
+                lastRefresh: state.lastRefresh?.toISOString() ?? null,
+              },
+            };
+
+            const response = await fetch('/api/analytics/performance-metrics', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+              const message = await response.text().catch(() => null);
+              throw new Error(message || `Failed to sync metrics (${response.status})`);
+            }
+
+            set((draft) => {
+              draft.isSyncing = false;
+              draft.syncError = null;
+              draft.lastSyncedAt = new Date();
+            });
+          } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('performanceStore.syncMetrics failed', err);
+            set((draft) => {
+              draft.isSyncing = false;
+              draft.syncError = err.message;
+            });
+          }
+        },
+
+        setSyncEnabled: (enabled: boolean) => {
+          set((state) => {
+            state.syncEnabled = enabled;
+          });
         },
 
         clearMetrics: () => {
@@ -369,7 +466,9 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
         // Actions - Alerts
         createAlert: (alert: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>) => {
           const id = `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const sanitizedAlert = withOptional(alert);
+          const sanitizedAlert = Object.fromEntries(
+            Object.entries(alert).filter(([, v]) => v !== undefined)
+          ) as typeof alert;
           const newAlert = Object.assign({}, sanitizedAlert, {
             id,
             timestamp: new Date(),
@@ -852,6 +951,8 @@ export const usePerformanceActions = () => {
   const refreshMaterializedViews = usePerformanceStore((state) => state.refreshMaterializedViews);
   const performDatabaseMaintenance = usePerformanceStore((state) => state.performDatabaseMaintenance);
   const resetPerformanceState = usePerformanceStore((state) => state.resetPerformanceState);
+  const syncMetrics = usePerformanceStore((state) => state.syncMetrics);
+  const setSyncEnabled = usePerformanceStore((state) => state.setSyncEnabled);
 
   return useMemo(
     () => ({
@@ -884,6 +985,8 @@ export const usePerformanceActions = () => {
       refreshMaterializedViews,
       performDatabaseMaintenance,
       resetPerformanceState,
+      syncMetrics,
+      setSyncEnabled,
     }),
     [
       recordMetric,
@@ -914,7 +1017,9 @@ export const usePerformanceActions = () => {
       loadDatabasePerformance,
       refreshMaterializedViews,
       performDatabaseMaintenance,
-    resetPerformanceState,
+      resetPerformanceState,
+      syncMetrics,
+      setSyncEnabled,
     ],
   );
 };

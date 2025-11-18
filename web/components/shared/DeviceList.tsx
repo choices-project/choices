@@ -4,6 +4,7 @@ import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucid
 import QRCode from 'qrcode'
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 
+import { useI18n } from '@/hooks/useI18n'
 import logger from '@/lib/utils/logger'
 
 type Device = {
@@ -51,6 +52,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   hasError = false,
   onRetry,
 }) => {
+  const { t } = useI18n()
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null)
   const [showQRCode, setShowQRCode] = useState<string | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
@@ -126,7 +128,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       >
         <div className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-          <span className="ml-2">Loading devices...</span>
+          <span className="ml-2">{t('common.devices.loading')}</span>
         </div>
       </div>
     )
@@ -140,13 +142,13 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         data-testid="device-list"
       >
         <div className="flex flex-col items-center justify-center p-8">
-          <span className="text-red-600 mb-4">Failed to load devices</span>
+          <span className="text-red-600 mb-4">{t('common.devices.loadFailed')}</span>
           <button
             onClick={handleRetry}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             data-testid="retry-button"
           >
-            Retry
+            {t('common.actions.retry')}
           </button>
         </div>
       </div>
@@ -161,7 +163,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         data-testid="device-list"
       >
         <div className="flex flex-col items-center justify-center p-8">
-          <span className="text-gray-500 mb-4">No devices found</span>
+          <span className="text-gray-500 mb-4">{t('common.devices.empty')}</span>
           {onAddDevice && (
             <button
               onClick={handleAddDevice}
@@ -169,7 +171,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
               data-testid="add-device-button"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Device
+              {t('common.devices.add')}
             </button>
           )}
         </div>
@@ -182,11 +184,11 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       className={`device-list ${className}`}
       data-testid="device-list"
       role="list"
-      aria-label="Device list"
+      aria-label={t('common.devices.listLabel')}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Your Devices</h3>
+        <h3 className="text-lg font-semibold">{t('common.devices.title')}</h3>
         {onAddDevice && (
           <button
             onClick={handleAddDevice}
@@ -194,7 +196,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             data-testid="add-device-button"
           >
             <Plus className="w-4 h-4 mr-1" />
-            Add Device
+            {t('common.devices.add')}
           </button>
         )}
       </div>
@@ -202,19 +204,13 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       {/* Device List */}
       <div className="space-y-3">
         {memoizedDevices.map((device) => (
-          <div
+          <button
             key={device.id}
             className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
               selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
             }`}
             data-testid="device-item"
-            role="listitem"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setSelectedDevice(device.id)
-              }
-            }}
+            type="button"
             onClick={() => setSelectedDevice(device.id)}
           >
             {/* Device Info */}
@@ -263,7 +259,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 </button>
               )}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 

@@ -1,11 +1,11 @@
 'use client'
 
-import { 
-  CheckCircle, 
-  AlertCircle, 
-  Clock, 
-  FileText, 
-  DollarSign, 
+import {
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  FileText,
+  DollarSign,
   ExternalLink,
   HelpCircle,
   MapPin,
@@ -76,12 +76,12 @@ type FilingAssistantProps = {
   className?: string
 }
 
-export function FilingAssistant({ 
-  level, 
-  office, 
-  state, 
+export function FilingAssistant({
+  level,
+  office,
+  state,
   electionDate,
-  className = '' 
+  className = ''
 }: FilingAssistantProps) {
   const [requirements, setRequirements] = useState<FilingRequirement | null>(null)
   const [loading, setLoading] = useState(true)
@@ -100,7 +100,8 @@ export function FilingAssistant({
 
         const response = await fetch(`/api/filing/requirements?${params.toString()}`)
         const data = await response.json()
-        setRequirements(data)
+        const payload = (data?.data ?? data) as FilingRequirement
+        setRequirements(payload)
       } catch (error) {
         logger.error('Failed to fetch filing requirements:', error)
       } finally {
@@ -150,6 +151,22 @@ export function FilingAssistant({
   }
 
   const req = requirements.requirement
+  // Defensive defaults for API variants missing some fields
+  if (!req.authority) {
+    req.authority = {
+      name: 'your jurisdiction',
+      website: ''
+    } as any
+  }
+  if (!req.filingFees) {
+    req.filingFees = { amount: 0, currency: 'USD', acceptedMethods: [] } as any
+  }
+  if (!req.submissionMethods) {
+    req.submissionMethods = { online: false, paper: false, inPerson: false } as any
+  }
+  if (!req.helpfulLinks) {
+    req.helpfulLinks = {} as any
+  }
   const deadlineDate = req.calculatedDeadline ? new Date(req.calculatedDeadline) : null
   const isDeadlineSoon = deadlineDate && deadlineDate < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
   const isDeadlinePast = deadlineDate && deadlineDate < new Date()
@@ -182,10 +199,10 @@ export function FilingAssistant({
           {/* Deadline Warning */}
           {deadlineDate && (
             <div className={`border rounded-lg p-4 ${
-              isDeadlinePast 
-                ? 'bg-red-50 border-red-200' 
-                : isDeadlineSoon 
-                ? 'bg-yellow-50 border-yellow-200' 
+              isDeadlinePast
+                ? 'bg-red-50 border-red-200'
+                : isDeadlineSoon
+                ? 'bg-yellow-50 border-yellow-200'
                 : 'bg-blue-50 border-blue-200'
             }`}>
               <div className="flex items-start">
@@ -209,11 +226,11 @@ export function FilingAssistant({
                     <p className={`font-medium mt-2 ${
                       isDeadlinePast ? 'text-red-800' : 'text-yellow-800'
                     }`}>
-                      Deadline: {deadlineDate.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
+                      Deadline: {deadlineDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
                       })}
                       {req.deadlines.filingDeadline.note && (
                         <span className="block text-xs mt-1 font-normal">
@@ -276,12 +293,12 @@ export function FilingAssistant({
               <div className="space-y-2">
                 {req.checklist.map((item, index) => (
                   <div key={index} className="flex items-start">
-                    <input 
-                      type="checkbox" 
-                      className="mt-1 mr-3" 
+                    <input
+                      type="checkbox"
+                      className="mt-1 mr-3"
                       id={`checklist-${index}`}
                     />
-                    <label 
+                    <label
                       htmlFor={`checklist-${index}`}
                       className="text-sm flex-1"
                     >
@@ -332,9 +349,9 @@ export function FilingAssistant({
                     size="sm"
                     asChild
                   >
-                    <a 
-                      href={req.submissionMethods.onlineUrl} 
-                      target="_blank" 
+                    <a
+                      href={req.submissionMethods.onlineUrl}
+                      target="_blank"
                       rel="noopener"
                       className="flex items-center"
                     >
@@ -377,9 +394,9 @@ export function FilingAssistant({
             <div className="space-y-2 text-sm">
               <div className="flex items-center">
                 <ExternalLink className="w-4 h-4 mr-2 text-gray-400" />
-                <a 
-                  href={req.authority.website} 
-                  target="_blank" 
+                <a
+                  href={req.authority.website}
+                  target="_blank"
                   rel="noopener"
                   className="text-blue-600 hover:underline"
                 >
@@ -411,7 +428,7 @@ export function FilingAssistant({
               <h4 className="font-semibold mb-2">Additional Resources</h4>
               <div className="space-y-2">
                 {req.helpfulLinks.filingGuide && (
-                  <a 
+                  <a
                     href={req.helpfulLinks.filingGuide}
                     target="_blank"
                     rel="noopener"
@@ -422,7 +439,7 @@ export function FilingAssistant({
                   </a>
                 )}
                 {req.helpfulLinks.formLibrary && (
-                  <a 
+                  <a
                     href={req.helpfulLinks.formLibrary}
                     target="_blank"
                     rel="noopener"
@@ -433,7 +450,7 @@ export function FilingAssistant({
                   </a>
                 )}
                 {req.helpfulLinks.candidateGuide && (
-                  <a 
+                  <a
                     href={req.helpfulLinks.candidateGuide}
                     target="_blank"
                     rel="noopener"
@@ -478,4 +495,6 @@ export function FilingAssistant({
     </Card>
   )
 }
+
+export default FilingAssistant
 

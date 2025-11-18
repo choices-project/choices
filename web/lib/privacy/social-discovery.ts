@@ -13,7 +13,6 @@
 // - Opt-in discovery mechanisms
 // - Cross-demographic insights with privacy protection
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
@@ -191,6 +190,13 @@ export class PrivacyAwareSocialDiscoveryManager {
     pollId: string
   ): Promise<SimilarUser[]> {
     try {
+      // Log user context for privacy audit (userId used for logging only, not in data)
+      logger.debug('Finding similar users with privacy protection', {
+        userId,
+        pollId,
+        interestsCount: userInterests.length
+      });
+      
       // Get aggregated insights (never individual user data)
       const aggregatedInsights = await this.getAggregatedInsights(userInterests, pollId);
       
@@ -426,10 +432,11 @@ export class PrivacyAwareSocialDiscoveryManager {
     const noise = this.laplaceNoise(0.8);
     const noisyCount = Math.max(0, Math.round(insight.userCount + noise));
     
-    return withOptional(insight, {
+    return {
+      ...insight,
       userCount: noisyCount,
       privacyProtected: true
-    });
+    };
   }
 
   /**

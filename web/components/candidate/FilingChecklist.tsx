@@ -80,14 +80,13 @@ export function FilingChecklist({
                   )}
                 </button>
                 <div className="flex-1">
-                  <label
-                    className={`text-sm cursor-pointer ${
+                  <span
+                    className={`text-sm ${
                       isChecked ? 'text-green-800 line-through' : 'text-gray-900'
                     }`}
-                    onClick={() => toggleItem(item.id)}
                   >
                     {item.label}
-                  </label>
+                  </span>
                   {item.action && (
                     <div className="mt-2">
                       {item.action.type === 'link' && item.action.url && (

@@ -178,7 +178,11 @@ export class CivicsIntegrationService {
         };
         if (committee.start_date) committeeData.start_date = committee.start_date;
         if (committee.end_date) committeeData.end_date = committee.end_date;
-        committeeMap.get(repId)!.push(committeeData);
+        const existing = committeeMap.get(repId);
+        if (existing) {
+          existing.push(committeeData);
+          committeeMap.set(repId, existing);
+        }
       }
 
       return committeeMap;
@@ -237,7 +241,11 @@ export class CivicsIntegrationService {
           crosswalkMap.set(repId, []);
         }
 
-        crosswalkMap.get(repId)!.push(item);
+        const existing = crosswalkMap.get(repId);
+        if (existing) {
+          existing.push(item);
+          crosswalkMap.set(repId, existing);
+        }
       }
 
       return crosswalkMap;
@@ -253,8 +261,16 @@ export class CivicsIntegrationService {
   private transformRepresentative(
     rep: any,
     committees: Map<number, RepresentativeCommittee[]>,
-    crosswalk: Map<number, any[]>
+    crosswalk: Map<number, any[]>,
+    overrides?: Map<number, {
+      profile_photo_url?: string | null;
+      socials?: Record<string, string> | null;
+      short_bio?: string | null;
+      campaign_website?: string | null;
+      press_contact?: string | null;
+    }>
   ): Representative {
+    const ov = overrides?.get(rep.id);
     return {
       id: rep.id,
       name: rep.name,
@@ -267,7 +283,7 @@ export class CivicsIntegrationService {
       // Contact Information
       primary_email: rep.primary_email,
       primary_phone: rep.primary_phone,
-      primary_website: rep.primary_website,
+      primary_website: ov?.campaign_website ?? rep.primary_website,
 
       // Social Media
       twitter_handle: rep.twitter_handle,
@@ -284,7 +300,7 @@ export class CivicsIntegrationService {
       congress_gov_id: rep.congress_gov_id,
 
       // Additional Info
-      primary_photo_url: rep.primary_photo_url,
+      primary_photo_url: ov?.profile_photo_url ?? rep.primary_photo_url,
       term_start_date: rep.term_start_date,
       term_end_date: rep.term_end_date,
       next_election_date: rep.next_election_date,
@@ -388,14 +404,45 @@ export class CivicsIntegrationService {
       // Get committee and crosswalk data
       const committees = await this.getCommitteeData([id]);
       const crosswalk = await this.getCrosswalkData([id]);
+      // Get overrides
+      const overrides = await this.getOverridesData([id]);
 
-      const transformed = this.transformRepresentative(representative, committees, crosswalk);
+      const transformed = this.transformRepresentative(representative, committees, crosswalk, overrides);
       this.setCachedData(cacheKey, transformed);
       return transformed;
 
     } catch (error) {
       logger.error('Error fetching representative by ID:', error);
       return null;
+    }
+  }
+
+  private async getOverridesData(representativeIds: number[]): Promise<Map<number, any>> {
+    try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase || representativeIds.length === 0) {
+        return new Map();
+      }
+      const { data, error } = await supabase
+        .from('representative_overrides')
+        .select('representative_id, profile_photo_url, socials, short_bio, campaign_website, press_contact')
+        .in('representative_id', representativeIds);
+      if (error || !Array.isArray(data)) {
+        return new Map();
+      }
+      const map = new Map<number, any>();
+      for (const row of data) {
+        map.set(row.representative_id, {
+          profile_photo_url: row.profile_photo_url ?? null,
+          socials: (row.socials ?? null) as Record<string, string> | null,
+          short_bio: row.short_bio ?? null,
+          campaign_website: row.campaign_website ?? null,
+          press_contact: row.press_contact ?? null,
+        });
+      }
+      return map;
+    } catch {
+      return new Map();
     }
   }
 

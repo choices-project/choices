@@ -21,7 +21,6 @@ import type {
   TrendDataPoint,
   TrustTierComparisonData,
 } from '@/features/analytics/types/analytics';
-import { logger } from '@/lib/utils/logger';
 import {
   fetchAnalyticsDemographics,
   fetchAnalyticsPollHeatmap,
@@ -31,6 +30,7 @@ import {
   generateAnalyticsReport,
   sendAnalyticsEvents,
 } from '@/lib/analytics/services/analyticsService';
+import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -244,8 +244,17 @@ const MAX_EVENTS = 1000;
 const createEventId = () =>
   `event_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
-const createSessionId = () =>
-  `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+const createSessionId = (): string => {
+  // Use cryptographically secure random number generator
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(9);
+    crypto.getRandomValues(array);
+    const randomPart = Array.from(array, byte => byte.toString(36)).join('').slice(0, 9);
+    return `session_${Date.now()}_${randomPart}`;
+  }
+  // Fallback for environments without crypto (should not happen in browser/Node)
+  return `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+};
 
 const createDefaultPreferences = (): AnalyticsPreferences => ({
   trackingEnabled: false,
@@ -619,6 +628,17 @@ export const createAnalyticsActions = (
     },
 
     sendAnalytics: async () => {
+      if (!shouldTrack()) {
+        logger.info('Analytics send skipped - tracking disabled by user consent settings');
+        return;
+      }
+
+      const pendingEvents = get().events;
+      if (pendingEvents.length === 0) {
+        logger.debug('Analytics send skipped - no events queued');
+        return;
+      }
+
       setState((draft) => {
         draft.isSending = true;
         draft.error = null;

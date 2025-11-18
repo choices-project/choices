@@ -78,19 +78,25 @@ export class UserEncryption {
     
     return {
       encryptedData: encrypted,
-      salt: this.salt!,
+      salt: this.salt ?? new Uint8Array(),
       iv: iv
     };
   }
 
   /**
    * Decrypt data using the user's key
+   * 
+   * Note: The salt parameter is part of the API signature for consistency with encryption,
+   * but is not used here since the key is already derived from the salt during key generation.
    */
-  async decryptData(encryptedData: ArrayBuffer, salt: Uint8Array, iv: Uint8Array): Promise<DecryptionResult> {
+  async decryptData(encryptedData: ArrayBuffer, _salt: Uint8Array, iv: Uint8Array): Promise<DecryptionResult> {
     try {
       if (!this.userKey) {
         throw new Error('User key not initialized. Call generateUserKey first.');
       }
+
+      // Salt is not used here as the key is already derived from salt during key generation
+      // The salt parameter is kept for API consistency with encryption methods
 
       const decrypted = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: new Uint8Array(iv) },

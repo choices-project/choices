@@ -218,7 +218,7 @@ export function validateAddressInput(address: string): { valid: boolean; error?:
   }
   
   // Basic character validation (allow letters, numbers, spaces, common punctuation)
-  if (!/^[a-zA-Z0-9\s\.,\-#]+$/.test(address)) {
+  if (!/^[a-zA-Z0-9\s.,#-]+$/.test(address)) {
     return { valid: false, error: 'Invalid characters in address' };
   }
   

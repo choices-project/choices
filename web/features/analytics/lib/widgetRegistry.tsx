@@ -30,6 +30,9 @@ const DemographicsChart = lazy(() => import('../components/DemographicsChart'));
 const TemporalAnalysisChart = lazy(() => import('../components/TemporalAnalysisChart'));
 const TrustTierComparisonChart = lazy(() => import('../components/TrustTierComparisonChart'));
 const PWAOfflineQueueWidget = lazy(() => import('../components/widgets/PWAOfflineQueueWidget'));
+const ElectionNotificationWidget = lazy(() => import('../components/widgets/ElectionNotificationWidget'));
+const FunnelWidget = lazy(() => import('../components/widgets/FunnelWidget'));
+const KpiCardWidget = lazy(() => import('../components/widgets/KpiCard'));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -154,6 +157,9 @@ const DemographicsChartWidget: FC<WidgetProps> = () => <DemographicsChart />;
 const TemporalAnalysisWidget: FC<WidgetProps> = () => <TemporalAnalysisChart />;
 const TrustTierComparisonWidget: FC<WidgetProps> = () => <TrustTierComparisonChart />;
 const PWAOfflineQueueAnalyticsWidget: FC<WidgetProps> = (props) => <PWAOfflineQueueWidget {...props} />;
+const ElectionNotificationAnalyticsWidget: FC<WidgetProps> = (props) => <ElectionNotificationWidget {...props} />;
+const FunnelAnalyticsWidget: FC<WidgetProps> = (props) => <FunnelWidget {...props} />;
+const KpiAnalyticsWidget: FC<WidgetProps> = (props) => <KpiCardWidget {...props} />;
 
 // ---------------------------------------------------------------------------
 // Widget registry entries
@@ -189,7 +195,6 @@ const registryEntries: WidgetRegistryEntry[] = [
       position: { x: 0, y: 0 },
       size: { w: 6, h: 4 },
       minSize: { w: 4, h: 3 },
-      maxSize: { w: 8, h: 6 },
       settings: {
         refreshInterval: 300_000,
         filters: {
@@ -228,7 +233,6 @@ const registryEntries: WidgetRegistryEntry[] = [
       position: { x: 0, y: 0 },
       size: { w: 6, h: 4 },
       minSize: { w: 4, h: 3 },
-      maxSize: { w: 8, h: 6 },
       settings: {
         refreshInterval: 300_000,
         filters: {
@@ -383,7 +387,7 @@ const registryEntries: WidgetRegistryEntry[] = [
     {
       type: 'kpi-card',
       name: 'KPI Card',
-      description: 'Single key performance indicator display',
+      description: 'Display a single KPI with trend deltas',
       icon: '📊',
       category: 'general',
       defaultSize: { w: 3, h: 2 },
@@ -392,16 +396,17 @@ const registryEntries: WidgetRegistryEntry[] = [
         resizable: true,
         draggable: true,
         configurable: true,
-        exportable: true,
+        exportable: false,
       },
       dataSource: '/api/analytics/kpi',
       supportedExports: [],
-      requiredPermission: 'T2',
+      requiredPermission: 'admin',
       dataRequirements: {
-        permissions: ['T2'],
+        adminOnly: true,
+        permissions: ['admin'],
       },
     },
-    createPlaceholderWidget('Configure KPI source to enable this widget.'),
+    KpiAnalyticsWidget,
     {
       position: { x: 0, y: 0 },
       size: { w: 3, h: 2 },
@@ -409,7 +414,7 @@ const registryEntries: WidgetRegistryEntry[] = [
       settings: {
         refreshInterval: 60_000,
         filters: {
-          metric: 'total_users',
+          metric: 'dau',
         },
       },
     }
@@ -449,6 +454,42 @@ const registryEntries: WidgetRegistryEntry[] = [
   ),
   createWidgetEntry(
     {
+      type: 'funnel',
+      name: 'Conversion Funnel',
+      description: 'Track onboarding, poll creation, or civic-action funnels',
+      icon: '🪣',
+      category: 'engagement',
+      defaultSize: { w: 4, h: 4 },
+      minSize: { w: 3, h: 3 },
+      capabilities: {
+        resizable: true,
+        draggable: true,
+        configurable: true,
+        exportable: false,
+      },
+      dataSource: '/api/analytics/funnels',
+      supportedExports: [],
+      requiredPermission: 'admin',
+      dataRequirements: {
+        adminOnly: true,
+        permissions: ['admin'],
+      },
+    },
+    FunnelAnalyticsWidget,
+    {
+      position: { x: 0, y: 0 },
+      size: { w: 4, h: 4 },
+      minSize: { w: 3, h: 3 },
+      settings: {
+        refreshInterval: 300_000,
+        filters: {
+          funnel: 'onboarding',
+        },
+      },
+    }
+  ),
+  createWidgetEntry(
+    {
       type: 'pwa-offline-queue',
       name: 'PWA Offline Queue',
       description: 'Real-time insight into pending offline actions and background sync health.',
@@ -474,6 +515,41 @@ const registryEntries: WidgetRegistryEntry[] = [
       size: { w: 4, h: 3 },
       settings: {
         refreshInterval: 30_000,
+      },
+    }
+  ),
+  createWidgetEntry(
+    {
+      type: 'election-notifications',
+      name: 'Election Notification Engagement',
+      description: 'Delivered vs opened election alerts across civics surfaces.',
+      icon: '🗳️',
+      category: 'engagement',
+      defaultSize: { w: 6, h: 4 },
+      minSize: { w: 4, h: 3 },
+      maxSize: { w: 8, h: 6 },
+      capabilities: {
+        resizable: true,
+        draggable: true,
+        configurable: true,
+        exportable: false,
+      },
+      dataSource: '/api/analytics/election-notifications',
+      tags: ['notifications', 'civics', 'engagement'],
+      requiredPermission: 'admin',
+      dataRequirements: {
+        adminOnly: true,
+        permissions: ['admin'],
+        features: ['ANALYTICS'],
+      },
+    },
+    ElectionNotificationAnalyticsWidget,
+    {
+      position: { x: 0, y: 0 },
+      size: { w: 6, h: 4 },
+      minSize: { w: 4, h: 3 },
+      settings: {
+        refreshInterval: 300,
       },
     }
   ),

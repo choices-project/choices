@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { AdminLayout } from '@/app/(app)/admin/layout/AdminLayout';
 import FontProvider from '@/components/shared/FontProvider';

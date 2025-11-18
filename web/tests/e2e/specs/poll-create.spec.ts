@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { expect, test } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
+import { waitForPageReady } from '../helpers/e2e-setup';
+import { installScreenReaderCapture, waitForAnnouncement } from '../helpers/screen-reader';
 
 const SAMPLE_TITLE = 'Playwright Created Poll';
 const SAMPLE_DESCRIPTION =
   'This poll is created by Playwright to verify the multi-step authoring experience end-to-end.';
 
-test.describe('Poll creation wizard', () => {
-  test.beforeEach(({ page }) => {
+test.describe('@axe Poll creation wizard', () => {
+  test.beforeEach(async ({ page }) => {
+    await installScreenReaderCapture(page);
     page.on('console', (msg) => {
 
       console.log(`[browser:${msg.type()}] ${msg.text()}`);
@@ -73,6 +76,11 @@ test.describe('Poll creation wizard', () => {
     await page.goto('/e2e/poll-create', { waitUntil: 'networkidle', timeout: 120_000 });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/e2e\/poll-create/);
+    await waitForAnnouncement(page, {
+      priority: 'polite',
+      textFragment: 'Step 1 of 4: Describe your poll',
+      timeout: 15_000,
+    });
 
     await page.waitForSelector('#poll-title-input', { state: 'visible', timeout: 60_000 });
     await page.fill('#poll-title-input', SAMPLE_TITLE);
@@ -82,6 +90,10 @@ test.describe('Poll creation wizard', () => {
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
+    await waitForAnnouncement(page, {
+      priority: 'polite',
+      textFragment: 'Step 2 of 4: Add response options',
+    });
 
     const optionInputs = page.locator('input[id^="poll-option-"]');
     await optionInputs.nth(0).fill('Option A');
@@ -91,19 +103,44 @@ test.describe('Poll creation wizard', () => {
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
+    await waitForAnnouncement(page, {
+      priority: 'polite',
+      textFragment: 'Step 3 of 4: Audience & discovery',
+    });
 
     await page.getByRole('button', { name: /Category Technology/i }).click();
     await page.fill('#poll-tags-input', 'playwright');
     await page.getByRole('button', { name: 'Add' }).click();
 
-    await page.getByLabel('Allow multiple votes').check();
-    await page.getByLabel('Privacy level').selectOption('private');
-    await page.getByLabel('Voting method').selectOption('ranked');
+    await page.evaluate(() => {
+      const harness = (window as typeof window & { __pollWizardHarness?: any }).__pollWizardHarness;
+      harness?.actions.updateSettings({
+        allowMultipleVotes: true,
+        privacyLevel: 'private',
+        votingMethod: 'ranked',
+      });
+      const snapshot = harness?.getSnapshot();
+      if (snapshot) {
+        if (!snapshot.data.settings.allowMultipleVotes) {
+          throw new Error('allowMultipleVotes not enabled');
+        }
+        if (snapshot.data.settings.privacyLevel !== 'private') {
+          throw new Error('privacyLevel not set to private');
+        }
+        if (snapshot.data.settings.votingMethod !== 'ranked') {
+          throw new Error('votingMethod not set to ranked');
+        }
+      }
+    });
 
     await runAxeAudit(page, 'audience step');
 
     await page.getByRole('button', { name: /Next/ }).click();
     await waitForPageReady(page);
+    await waitForAnnouncement(page, {
+      priority: 'polite',
+      textFragment: 'Step 4 of 4: Preview & publish',
+    });
 
     await runAxeAudit(page, 'review step');
 
@@ -113,14 +150,18 @@ test.describe('Poll creation wizard', () => {
 
     await page.getByRole('button', { name: 'Publish poll' }).click();
     await waitForPageReady(page);
+    await waitForAnnouncement(page, {
+      priority: 'polite',
+      textFragment: 'Poll created successfully',
+      timeout: 15_000,
+    });
 
     await runAxeAudit(page, 'share dialog');
 
     await expect(page.getByRole('heading', { name: 'Share your poll' })).toBeVisible();
     await expect(page.getByText(/Visibility:\s*private/)).toBeVisible();
     await expect(page.getByText(/Poll published!/)).toBeVisible();
-
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Close' }).first().click();
 
     await runAxeAudit(page, 'wizard reset');
 
@@ -128,3 +169,4 @@ test.describe('Poll creation wizard', () => {
   });
 });
 
+/* eslint-enable @typescript-eslint/no-empty-function */

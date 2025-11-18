@@ -326,8 +326,8 @@ class PWAAnalytics {
     const offlineUsageRate = totalSessions > 0 ? offlineSessions / totalSessions : 0;
 
     const offlineDurations = offlineEvents
-      .filter(e => e.offlineDuration)
-      .map(e => e.offlineDuration!);
+      .filter(e => typeof e.offlineDuration === 'number')
+      .map(e => e.offlineDuration as number);
     const averageOfflineSessionDuration = offlineDurations.length > 0
       ? offlineDurations.reduce((a, b) => a + b, 0) / offlineDurations.length
       : 0;
@@ -391,7 +391,10 @@ class PWAAnalytics {
         });
       }
 
-      const data = platformData.get(platform)!;
+      const data = platformData.get(platform);
+      if (!data) {
+        return;
+      }
 
       if ('installSource' in event) {
         if (event.eventType === 'app_installed') data.installations++;

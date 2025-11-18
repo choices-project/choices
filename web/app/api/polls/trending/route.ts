@@ -1,6 +1,6 @@
 import type { NextRequest} from 'next/server';
 
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -8,10 +8,29 @@ export const dynamic = 'force-dynamic'
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') ?? '3')
-    
+    const limitParam = searchParams.get('limit')
+    const limit = (() => {
+      if (limitParam === null) return 3
+      const parsed = Number(limitParam)
+      if (!Number.isFinite(parsed) || !Number.isInteger(parsed)) {
+        return null
+      }
+      if (parsed < 1 || parsed > 25) {
+        return null
+      }
+      return parsed
+    })()
+
+    if (limit === null) {
+      return validationError({ limit: 'limit must be an integer between 1 and 25.' })
+    }
+
     const supabase = await getSupabaseServerClient()
-    
+    if (!supabase) {
+      logger.error('Supabase not configured for trending polls')
+      return errorResponse('Database not available', 500)
+    }
+
     // Get trending polls (most votes in last 7 days)
     const { data: polls, error } = await supabase
       .from('polls')
@@ -56,7 +75,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       })) ?? []
     })) ?? []
     
-  return successResponse({ polls: transformedPolls });
+  return successResponse(
+    { polls: transformedPolls },
+    {
+      pagination: {
+        limit,
+        offset: 0,
+        total: transformedPolls.length,
+        hasMore: transformedPolls.length === limit,
+        page: 1,
+        totalPages: 1,
+      },
+      window: '7d',
+    },
+  );
 });
 
 function getTimeRemaining(endDate: string | null): string {

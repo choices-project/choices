@@ -47,6 +47,9 @@ import {
   useNotificationAdminNotifications,
 } from '@/lib/stores';
 
+import { NotificationContainer } from './NotificationSystem';
+import ShareAnalyticsPanel from './ShareAnalyticsPanel';
+
 type ComprehensiveAdminDashboardProps = {
   className?: string;
 };
@@ -100,8 +103,24 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    const start = performance.now();
     try {
       await Promise.all([refreshData(), getTrendingHashtags(undefined, 6)]);
+      addAdminNotification({
+        type: 'success',
+        title: 'Dashboard refreshed',
+        message: `Latest data loaded in ${Math.round(performance.now() - start)}ms.`,
+        read: false,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to refresh admin data.';
+      addAdminNotification({
+        type: 'error',
+        title: 'Refresh failed',
+        message,
+        read: false,
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -203,7 +222,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
   if (loading) {
     return (
-      <div className={`space-y-6 ${className}`}>
+      <>
+        <NotificationContainer />
+        <div className={`space-y-6 ${className}`}>
         <Skeleton className="h-12 w-1/3" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, index) => (
@@ -211,21 +232,27 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           ))}
         </div>
         <Skeleton className="h-96 w-full" />
-      </div>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className={className}>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <>
+        <NotificationContainer />
+        <Alert variant="destructive" className={className}>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </>
     );
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <>
+      <NotificationContainer />
+      <div className={`space-y-6 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Comprehensive Admin Dashboard</h1>
@@ -303,7 +330,10 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   <span>Daily active items</span>
                   <span className="font-medium">{analytics.engagement.dailyActiveUsers}</span>
                 </div>
-                <Progress value={analytics.engagement.participationRate} />
+                <Progress 
+                  value={analytics.engagement.participationRate}
+                  aria-label={`Participation rate: ${analytics.engagement.participationRate.toFixed(1)}%`}
+                />
                 <p className="text-xs text-gray-500">
                   Participation rate {analytics.engagement.participationRate.toFixed(1)}%
                 </p>
@@ -374,24 +404,36 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   <span>Uptime</span>
                   <span className="font-medium">{analytics.systemHealth.uptime.toFixed(1)}%</span>
                 </div>
-                <Progress value={analytics.systemHealth.uptime} />
+                <Progress 
+                  value={analytics.systemHealth.uptime}
+                  aria-label={`System uptime: ${analytics.systemHealth.uptime.toFixed(1)}%`}
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Response Time</span>
                   <span className="font-medium">{analytics.systemHealth.responseTime.toFixed(0)}ms</span>
                 </div>
-                <Progress value={Math.max(0, 100 - analytics.systemHealth.responseTime / 10)} />
+                <Progress 
+                  value={Math.max(0, 100 - analytics.systemHealth.responseTime / 10)}
+                  aria-label={`Response time performance: ${Math.max(0, 100 - analytics.systemHealth.responseTime / 10).toFixed(1)}%`}
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Error Rate</span>
                   <span className="font-medium">{analytics.systemHealth.errorRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={analytics.systemHealth.errorRate} />
+                <Progress 
+                  value={analytics.systemHealth.errorRate}
+                  aria-label={`System error rate: ${analytics.systemHealth.errorRate.toFixed(1)}%`}
+                />
               </div>
             </CardContent>
           </Card>
+
+          {/* Share Analytics */}
+          <ShareAnalyticsPanel refreshInterval={60000} />
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-6">
@@ -682,21 +724,30 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                     <span>CPU</span>
                     <span className="font-medium">{systemMetrics?.cpu_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.cpu_usage ?? 0} />
+                  <Progress 
+                    value={systemMetrics?.cpu_usage ?? 0}
+                    aria-label={`CPU usage: ${systemMetrics?.cpu_usage ?? 0}%`}
+                  />
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>Memory</span>
                     <span className="font-medium">{systemMetrics?.memory_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.memory_usage ?? 0} />
+                  <Progress 
+                    value={systemMetrics?.memory_usage ?? 0}
+                    aria-label={`Memory usage: ${systemMetrics?.memory_usage ?? 0}%`}
+                  />
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>Disk</span>
                     <span className="font-medium">{systemMetrics?.disk_usage ?? 0}%</span>
                   </div>
-                  <Progress value={systemMetrics?.disk_usage ?? 0} />
+                  <Progress 
+                    value={systemMetrics?.disk_usage ?? 0}
+                    aria-label={`Disk usage: ${systemMetrics?.disk_usage ?? 0}%`}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -778,7 +829,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -62,7 +62,7 @@ export function HashtagInput({
       try {
         await getSuggestions(inputValue);
         setShowSuggestionsList(true);
-      } catch (error) {
+      } catch {
         // errors surface via store
       } finally {
         setIsLoading(false);
@@ -85,40 +85,36 @@ export function HashtagInput({
     setValidationError(null);
   };
 
-  // Handle hashtag validation and addition
-  const handleAddHashtag = async (hashtagText: string) => {
+  // Handle hashtag validation and addition (memoized)
+  const handleAddHashtag = useCallback(async (hashtagText: string) => {
     const normalizedHashtag = hashtagText.startsWith('#')
       ? hashtagText.slice(1)
       : hashtagText;
 
     if (!normalizedHashtag.trim()) return;
 
-    // Validate hashtag
     const validation = await validateHashtagName(normalizedHashtag);
     if (!validation || !validation.is_valid) {
       setValidationError(validation?.errors?.[0] ?? 'Invalid hashtag');
       return;
     }
 
-    // Check if already exists
     if (value.includes(normalizedHashtag)) {
       setValidationError('Hashtag already added');
       return;
     }
 
-    // Check max hashtags
     if (value.length >= maxHashtags) {
       setValidationError(`Maximum ${maxHashtags} hashtags allowed`);
       return;
     }
 
-    // Add hashtag
     const newHashtags = [...value, normalizedHashtag];
     onChange(newHashtags);
     setInputValue('');
     setShowSuggestionsList(false);
     setValidationError(null);
-  };
+  }, [maxHashtags, onChange, validateHashtagName, value]);
 
   // Handle suggestion selection
   const handleSuggestionClick = useCallback(

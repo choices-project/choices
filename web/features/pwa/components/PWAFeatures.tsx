@@ -27,8 +27,8 @@ type PWAFeaturesProps = {
 export default function PWAFeatures({ className = '', showDetails = false }: PWAFeaturesProps) {
   const installation = usePWAInstallation();
   const offline = usePWAOffline();
-  const _loading = usePWALoading();
-  const _error = usePWAError();
+  const loading = usePWALoading();
+  const error = usePWAError();
   const pwaActions = usePWAActions();
   const pwa = useMemo(() => pwaActions as unknown as {
     setOnlineStatus: (online: boolean) => void;
@@ -44,13 +44,13 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
       pwa.setOnlineStatus(true);
     }
-  }, [pwa.setOnlineStatus]);
+  }, [pwa]);
 
   const handleOffline = useCallback(() => {
     if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
       pwa.setOnlineStatus(false);
     }
-  }, [pwa.setOnlineStatus]);
+  }, [pwa]);
 
   useEffect(() => {
     // Only run on client side and sync with Zustand store
@@ -66,7 +66,9 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         window.removeEventListener('offline', handleOffline);
       }
     }
-  }, [handleOnline, handleOffline, pwa.setOnlineStatus]) // Stable dependencies
+    
+    return undefined;
+  }, [handleOnline, handleOffline, pwa]) // Stable dependencies
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }
@@ -83,6 +85,29 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
   // If PWA is already installed and no features are available, don't render
   if (safeInstallation.isInstalled && !safeInstallation.canInstall) {
     return null
+  }
+
+  // Show loading state if PWA is loading
+  if (loading) {
+    return (
+      <div className={`space-y-4 ${className}`} data-testid="pwa-features">
+        <div className="animate-pulse bg-gray-100 rounded-lg p-4">
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if PWA has errors
+  if (error) {
+    return (
+      <div className={`space-y-4 ${className}`} data-testid="pwa-features">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -243,10 +268,10 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       </div>
 
       {/* Focusable Elements */}
-      <div data-testid="pwa-first-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-first-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         First Focusable Element
       </div>
-      <div data-testid="pwa-second-focusable" tabIndex={0} className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <div data-testid="pwa-second-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
         Second Focusable Element
       </div>
 

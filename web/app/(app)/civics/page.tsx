@@ -19,8 +19,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
-import { useIsMobile } from '@/lib/stores/appStore';
-import { withOptional } from '@/lib/util/objects';
+import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
@@ -47,13 +46,13 @@ export default function Civics2Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('federal');
-  const [_likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
   const isMobile = useIsMobile();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {
@@ -85,6 +84,20 @@ export default function Civics2Page() {
     loadRepresentatives();
   }, [loadRepresentatives]);
 
+  useEffect(() => {
+    setCurrentRoute('/civics');
+    setSidebarActiveSection('civics');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Civics', href: '/civics' },
+    ]);
+
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
   // Initialize client-side state
   useEffect(() => {
     // Mobile detection
@@ -97,18 +110,6 @@ export default function Civics2Page() {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  const _handleLike = (id: string) => {
-    setLikedRepresentatives(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const handleFollow = (id: string) => {
     setFollowedRepresentatives(prev => {
@@ -125,11 +126,6 @@ export default function Civics2Page() {
   const handleContact = (id: string, type: string) => {
     // Contact functionality
     logger.info('Contacting representative', { id, type });
-  };
-
-  const _handleShare = (representative: SuperiorRepresentativeData) => {
-    // Share functionality
-    logger.info('Sharing representative', { name: representative.name });
   };
 
   const filteredRepresentatives = representatives.filter(rep => {
@@ -411,7 +407,7 @@ export default function Civics2Page() {
               }`}>
                 {filteredRepresentatives.map((representative) => {
                   // Transform SuperiorRepresentativeData to Representative
-                  const transformedRep: Representative = withOptional({
+                  const transformedRep: Representative = {
                     id: parseInt(representative.id) ?? 0,
                     name: representative.name,
                     party: representative.party,
@@ -424,19 +420,18 @@ export default function Civics2Page() {
                     data_sources: representative.dataSource ?? [],
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
-                    last_verified: representative.lastVerified ?? new Date().toISOString()
-                  }, {
-                    district: representative.district,
-                    primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value,
-                    primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value,
-                    primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value,
-                    twitter_handle: representative.twitter,
-                    facebook_url: representative.facebook,
-                    primary_photo_url: representative.photoUrl ?? representative.photo,
-                    term_start_date: representative.termStart,
-                    term_end_date: representative.termEnd,
-                    next_election_date: representative.nextElection
-                  });
+                    last_verified: representative.lastVerified ?? new Date().toISOString(),
+                    ...(representative.district ? { district: representative.district } : {}),
+                    primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value ?? '',
+                    primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value ?? '',
+                    primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value ?? '',
+                    ...(representative.twitter ? { twitter_handle: representative.twitter } : {}),
+                    ...(representative.facebook ? { facebook_url: representative.facebook } : {}),
+                    ...(representative.photoUrl ?? representative.photo ? { primary_photo_url: representative.photoUrl ?? representative.photo } : {}),
+                    ...(representative.termStart ? { term_start_date: representative.termStart } : {}),
+                    ...(representative.termEnd ? { term_end_date: representative.termEnd } : {}),
+                    ...(representative.nextElection ? { next_election_date: representative.nextElection } : {}),
+                  };
 
                   return (
                     <RepresentativeCard

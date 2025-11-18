@@ -6,8 +6,8 @@
  */
 
 // Re-export your generated Database types or table interfaces here
-// Import from the current Supabase server types
-export type { Database } from '@/utils/supabase/server';
+// Import from the types-only module (safe for client components)
+export type { Database } from '@/utils/supabase/types';
 
 // Common database utility types
 export type DatabaseConfig = {

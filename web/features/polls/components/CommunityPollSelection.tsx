@@ -8,8 +8,9 @@ import {
   Award,
   Zap,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   usePolls,
   usePollsActions,
@@ -65,18 +66,8 @@ const estimateEngagement = (totalVotes: number) => {
   return 'low';
 };
 
-const formatWeek = (dateString: string) => {
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return 'This Week';
-  }
-  const weekStart = new Date(date);
-  weekStart.setDate(date.getDate() - date.getDay());
-  const isoDate = weekStart.toISOString().split('T')[0];
-  return isoDate ?? 'This Week';
-};
-
 export default function CommunityPollSelection() {
+  const { t } = useI18n();
   const [selectedWeek, setSelectedWeek] = useState('current');
   const [viewMode, setViewMode] = useState<'trending' | 'selected' | 'analytics'>('trending');
 
@@ -129,6 +120,20 @@ export default function CommunityPollSelection() {
     });
   }, [polls]);
 
+  const formatWeek = useCallback(
+    (dateString: string) => {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) {
+        return t('polls.community.week.current');
+      }
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      const isoDate = weekStart.toISOString().split('T')[0];
+      return isoDate ?? t('polls.community.week.current');
+    },
+    [t],
+  );
+
   const weeklySelections: WeeklySelection[] = useMemo(() => {
     if (!pollSuggestions.length) {
       return [];
@@ -161,7 +166,7 @@ export default function CommunityPollSelection() {
         };
       })
       .sort((a, b) => (a.week < b.week ? 1 : -1));
-  }, [pollSuggestions]);
+  }, [pollSuggestions, formatWeek]);
 
   const categories = useMemo(() => {
     const derived = pollSuggestions.reduce<Record<string, { id: string; name: string; icon: string; color: string }>>(
@@ -222,22 +227,22 @@ export default function CommunityPollSelection() {
     <div className="space-y-6">
       {/* Selection Criteria */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">How We Select Featured Polls</h3>
+        <h3 className="font-semibold text-blue-900 mb-2">{t('polls.community.selection.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
           <div>
-            <h4 className="font-medium mb-1">Community Engagement</h4>
+            <h4 className="font-medium mb-1">{t('polls.community.selection.engagement.title')}</h4>
             <ul className="space-y-1">
-              <li>• High vote count (500+ votes)</li>
-              <li>• Strong trending score (70+)</li>
-              <li>• Active discussion and sharing</li>
+              <li>• {t('polls.community.selection.engagement.highVotes')}</li>
+              <li>• {t('polls.community.selection.engagement.strongScore')}</li>
+              <li>• {t('polls.community.selection.engagement.activeDiscussion')}</li>
             </ul>
           </div>
           <div>
-            <h4 className="font-medium mb-1">Platform Considerations</h4>
+            <h4 className="font-medium mb-1">{t('polls.community.selection.platform.title')}</h4>
             <ul className="space-y-1">
-              <li>• Cost-effective to implement</li>
-              <li>• Broad demographic appeal</li>
-              <li>• Timely and relevant content</li>
+              <li>• {t('polls.community.selection.platform.costEffective')}</li>
+              <li>• {t('polls.community.selection.platform.broadAppeal')}</li>
+              <li>• {t('polls.community.selection.platform.timelyContent')}</li>
             </ul>
           </div>
         </div>
@@ -245,7 +250,7 @@ export default function CommunityPollSelection() {
 
       {/* Trending Suggestions */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Trending Poll Suggestions</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('polls.community.trending.title')}</h3>
         {pollSuggestions
           .slice()
           .sort((a, b) => b.trendingScore - a.trendingScore)
@@ -263,9 +268,9 @@ export default function CommunityPollSelection() {
                   <p className="text-sm text-gray-600 mb-3">{suggestion.description}</p>
 
                   <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
-                    <span>Suggested by {suggestion.suggestedBy}</span>
+                    <span>{t('polls.community.suggestion.suggestedBy', { name: suggestion.suggestedBy })}</span>
                     <span>•</span>
-                    <span>{suggestion.votes} votes</span>
+                    <span>{t('polls.community.suggestion.votes', { count: suggestion.votes })}</span>
                     <span>•</span>
                     <span>{suggestion.createdAt}</span>
                   </div>
@@ -281,11 +286,11 @@ export default function CommunityPollSelection() {
                     </span>
 
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getCostColor(suggestion.estimatedCost)}`}>
-                      {suggestion.estimatedCost} cost
+                      {t('polls.community.suggestion.cost', { level: suggestion.estimatedCost })}
                     </span>
 
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getEngagementColor(suggestion.expectedEngagement)}`}>
-                      {suggestion.expectedEngagement} engagement
+                      {t('polls.community.suggestion.engagement', { level: suggestion.expectedEngagement })}
                     </span>
                   </div>
                 </div>
@@ -293,11 +298,11 @@ export default function CommunityPollSelection() {
                 <div className="flex flex-col space-y-2">
                   <button className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
                     <Heart className="w-4 h-4" />
-                    <span>Vote</span>
+                    <span>{t('polls.community.actions.vote')}</span>
                   </button>
                   <button className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
                     <CheckCircle className="w-4 h-4" />
-                    <span>Approve</span>
+                    <span>{t('polls.community.actions.approve')}</span>
                   </button>
                 </div>
               </div>
@@ -313,16 +318,16 @@ export default function CommunityPollSelection() {
         <div key={selection.week} className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-                Week of {selection.week}
+                {t('polls.community.selected.weekOf', { week: formatWeek(selection.week) })}
             </h3>
             <div className="flex items-center space-x-1 text-sm text-gray-500">
               <Users className="w-4 h-4" />
-              <span>{selection.totalVotes} total votes</span>
+              <span>{t('polls.community.selected.totalVotes', { count: selection.totalVotes })}</span>
             </div>
           </div>
 
           <div className="mb-4">
-            <h4 className="font-medium text-gray-900 mb-2">Selection Criteria</h4>
+            <h4 className="font-medium text-gray-900 mb-2">{t('polls.community.selected.criteria.title')}</h4>
             <ul className="text-sm text-gray-600 space-y-1">
               {selection.selectionCriteria.map((criteria, index) => (
                 <li key={`criteria-${criteria}-${index}`}>• {criteria}</li>
@@ -331,7 +336,7 @@ export default function CommunityPollSelection() {
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Selected Polls</h4>
+            <h4 className="font-medium text-gray-900">{t('polls.community.selected.polls.title')}</h4>
             {selection.selectedPolls.map((poll) => (
               <div
                 key={poll.id}
@@ -342,11 +347,11 @@ export default function CommunityPollSelection() {
                 </div>
                 <div className="flex-1">
                   <h5 className="font-medium text-gray-900">{poll.title}</h5>
-                  <p className="text-sm text-gray-600">{poll.votes} votes</p>
+                  <p className="text-sm text-gray-600">{t('polls.community.selected.polls.votes', { count: poll.votes })}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-green-600">Featured</div>
-                  <div className="text-xs text-gray-500">Live Now</div>
+                  <div className="text-sm font-medium text-green-600">{t('polls.community.selected.polls.featured')}</div>
+                  <div className="text-xs text-gray-500">{t('polls.community.selected.polls.liveNow')}</div>
                 </div>
               </div>
             ))}
@@ -368,35 +373,35 @@ export default function CommunityPollSelection() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-gray-900">Total Suggestions</span>
+            <span className="font-semibold text-gray-900">{t('polls.community.analytics.totalSuggestions')}</span>
           </div>
           <div className="text-2xl font-bold text-blue-600">{analytics.total ?? pollSuggestions.length}</div>
-          <div className="text-sm text-gray-500">Currently published</div>
+          <div className="text-sm text-gray-500">{t('polls.community.analytics.currentlyPublished')}</div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-gray-900">Community Votes</span>
+            <span className="font-semibold text-gray-900">{t('polls.community.analytics.communityVotes')}</span>
           </div>
           <div className="text-2xl font-bold text-green-600">
             {(analytics.totalVotes ?? pollSuggestions.reduce((sum, poll) => sum + poll.votes, 0)).toLocaleString()}
           </div>
-          <div className="text-sm text-gray-500">Across featured polls</div>
+          <div className="text-sm text-gray-500">{t('polls.community.analytics.acrossFeatured')}</div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Award className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900">Featured Polls</span>
+            <span className="font-semibold text-gray-900">{t('polls.community.analytics.featuredPolls')}</span>
           </div>
           <div className="text-2xl font-bold text-purple-600">{featuredPollCount}</div>
-          <div className="text-sm text-gray-500">This week</div>
+          <div className="text-sm text-gray-500">{t('polls.community.analytics.thisWeek')}</div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('polls.community.analytics.categoryBreakdown')}</h3>
         <div className="space-y-3">
           {categories.map((category) => {
             const count = pollSuggestions.filter((poll) => poll.category === category.id).length;
@@ -431,17 +436,17 @@ export default function CommunityPollSelection() {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Community Poll Selection
+          {t('polls.community.title')}
         </h1>
         <p className="text-gray-600">
-          See what polls the community wants and how we select featured polls
+          {t('polls.community.subtitle')}
         </p>
       </div>
 
       {/* Week Selection */}
       <div className="mb-6">
         <label htmlFor="week-select" className="block text-sm font-medium text-gray-700 mb-2">
-          Select Week
+          {t('polls.community.week.select')}
         </label>
         <select
           id="week-select"
@@ -449,10 +454,10 @@ export default function CommunityPollSelection() {
           onChange={(e) => setSelectedWeek(e.target.value)}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="current">Current Week</option>
-          <option value="last">Last Week</option>
-          <option value="two-weeks-ago">Two Weeks Ago</option>
-          <option value="three-weeks-ago">Three Weeks Ago</option>
+          <option value="current">{t('polls.community.week.current')}</option>
+          <option value="last">{t('polls.community.week.last')}</option>
+          <option value="two-weeks-ago">{t('polls.community.week.twoWeeksAgo')}</option>
+          <option value="three-weeks-ago">{t('polls.community.week.threeWeeksAgo')}</option>
         </select>
       </div>
 
@@ -467,7 +472,7 @@ export default function CommunityPollSelection() {
           }`}
         >
           <TrendingUp className="w-4 h-4 inline mr-2" />
-          Trending Suggestions
+          {t('polls.community.tabs.trending')}
         </button>
         <button
           onClick={() => setViewMode('selected')}
@@ -478,7 +483,7 @@ export default function CommunityPollSelection() {
           }`}
         >
           <CheckCircle className="w-4 h-4 inline mr-2" />
-          Selected Polls
+          {t('polls.community.tabs.selected')}
         </button>
         <button
           onClick={() => setViewMode('analytics')}
@@ -489,7 +494,7 @@ export default function CommunityPollSelection() {
           }`}
         >
           <Zap className="w-4 h-4 inline mr-2" />
-          Analytics
+          {t('polls.community.tabs.analytics')}
         </button>
       </div>
 

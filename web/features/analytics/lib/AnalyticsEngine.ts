@@ -9,7 +9,6 @@
  * Updated: November 03, 2025
  */
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 /// <reference types="node" />
@@ -50,12 +49,12 @@ export class AnalyticsEngine {
   private eventListenersInitialized = false;
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
-    this.config = withOptional({
+    this.config = {
       enabled: true,
       debug: false,
       batchSize: 50,
       flushInterval: 60000 // 1 minute
-    }, config as Record<string, unknown>) as AnalyticsConfig;
+    , ...(config as Record<string, unknown>)} as AnalyticsConfig;
 
     if (this.config.enabled) {
       this.startFlushTimer();
@@ -211,11 +210,12 @@ export class AnalyticsEngine {
   track(event: AnalyticsEvent): void {
     if (!this.config.enabled) return;
 
-    const sanitizedEvent = withOptional(event as Record<string, unknown>) as AnalyticsEvent;
-    const fullEvent = withOptional(sanitizedEvent, {
+    const sanitizedEvent = { ...(event as Record<string, unknown>) } as AnalyticsEvent;
+    const fullEvent = {
+      ...sanitizedEvent,
       timestamp: event.timestamp ?? Date.now(),
       sessionId: event.sessionId ?? this.getSessionId()
-    }) as AnalyticsEvent;
+    } as AnalyticsEvent;
 
     this.events.push(fullEvent);
 
@@ -240,7 +240,7 @@ export class AnalyticsEngine {
    * Get feature usage statistics
    */
   getFeatureUsage(): Record<string, number> {
-    return withOptional({}, this.featureUsage) as Record<string, number>;
+    return { ...this.featureUsage } as Record<string, number>;
   }
 
   /**
@@ -321,7 +321,15 @@ export class AnalyticsEngine {
     
     let sessionId = sessionStorage.getItem('analytics-session-id');
     if (!sessionId) {
-      sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Use cryptographically secure random number generator
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(9);
+        crypto.getRandomValues(array);
+        const randomPart = Array.from(array, byte => byte.toString(36)).join('').slice(0, 9);
+        sessionId = `session-${Date.now()}-${randomPart}`;
+      } else {
+        sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      }
       sessionStorage.setItem('analytics-session-id', sessionId);
     }
     return sessionId;
@@ -337,7 +345,7 @@ export class AnalyticsEngine {
       this.startFlushTimer();
     } else if (!enabled && this.flushTimer) {
       clearInterval(this.flushTimer);
-      this.flushTimer = undefined;
+      this.flushTimer = undefined as unknown as NodeJS.Timeout | undefined;
     }
   }
 

@@ -47,9 +47,13 @@ export async function notifyHashtagTrending(
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error ?? 'Failed to create notification');
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result?.success !== true) {
+      const message =
+        (result?.error ?? result?.details ?? result?.message) ??
+        'Failed to create notification';
+      throw new Error(message);
     }
 
     logger.info(`Sent trending notification for #${hashtagName} to user ${userId}`);
@@ -76,22 +80,44 @@ export async function shouldNotifyHashtagTrending(
   hashtagId: string
 ): Promise<boolean> {
   try {
-    // Check for recent notifications (last 24 hours)
-    const response = await fetch(`/api/notifications?unread_only=false&limit=100`);
+    // Check for recent notifications (last 24 hours) for this user
+    const response = await fetch(`/api/notifications?unread_only=false&limit=100&user_id=${userId}`);
     
     if (!response.ok) {
       return true;  // If can't check, allow notification
     }
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || data?.success !== true) {
+      return true;  // If can't check, allow notification
+    }
+
+    const payload = (data.data ?? {}) as {
+      notifications?: Array<{
+        notification_type?: string;
+        metadata?: Record<string, unknown>;
+        created_at?: string;
+      }>;
+    };
+
     const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
 
     // Check if already notified about this hashtag in last 24 hours
-    const recentNotification = data.notifications?.find((n: any) => 
-      n.notification_type === 'hashtag_trending' &&
-      n.metadata?.hashtag_id === hashtagId &&
-      new Date(n.created_at).getTime() > twentyFourHoursAgo
-    );
+    const recentNotification = payload.notifications?.find((n) => {
+      if (n.notification_type !== 'hashtag_trending') {
+        return false;
+      }
+      if (n.metadata?.hashtag_id !== hashtagId) {
+        return false;
+      }
+      if (!n.created_at) {
+        return false;
+      }
+
+      const createdAtMs = new Date(n.created_at).getTime();
+      return Number.isFinite(createdAtMs) && createdAtMs > twentyFourHoursAgo;
+    });
 
     return !recentNotification;  // Notify if no recent notification
 

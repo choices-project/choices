@@ -4,13 +4,17 @@ import {
   setupExternalAPIMocks,
   waitForPageReady,
 } from '../helpers/e2e-setup';
+import {
+  installScreenReaderCapture,
+  waitForAnnouncement,
+} from '../helpers/screen-reader';
 
 type HarnessWindow = Window & {
   __notificationHarnessRef?: {
     clearAll: () => void;
     updateSettings: (settings: Record<string, unknown>) => void;
     getSnapshot: () => {
-      notifications: Array<{ id: string; type: string; message?: string }>;
+      notifications: Array<{ id: string; type?: string; title?: string; message?: string }>;
     };
   };
   __notificationStoreHarness?: {
@@ -43,10 +47,6 @@ test.describe('Dashboard Journey', () => {
     test.setTimeout(120_000);
     await page.setDefaultNavigationTimeout(60_000);
     await page.setDefaultTimeout(40_000);
-    test.fixme(
-      true,
-      'Dashboard journey harness currently triggers a React "Maximum update depth exceeded" runtime error; unblock once PersonalDashboard stabilises.',
-    );
     const consoleMessages: string[] = [];
     page.on('console', (msg) => {
       consoleMessages.push(`${msg.type()}: ${msg.text()}`);
@@ -58,6 +58,7 @@ test.describe('Dashboard Journey', () => {
       auth: true,
       civics: true,
     });
+    await installScreenReaderCapture(page);
 
     try {
       // Navigate to the dashboard journey harness and wait for stores to hydrate
@@ -70,6 +71,15 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
       await expect(page.getByTestId('personal-analytics')).toBeVisible();
       await expect(page.getByTestId('dashboard-settings')).toBeVisible();
+      
+      // Wait for feeds-live-message to be attached before asserting text
+      // This element may not be present if FeedDataProvider isn't used on the dashboard
+      const feedsLiveMessage = page.getByTestId('feeds-live-message');
+      const elementCount = await feedsLiveMessage.count();
+      if (elementCount > 0) {
+        await feedsLiveMessage.waitFor({ state: 'attached', timeout: 15_000 });
+        await expect(feedsLiveMessage).not.toHaveText('', { timeout: 10_000 });
+      }
 
       const representativesCard = page.locator('[data-testid="representatives-card"]');
       await expect(representativesCard).toHaveCount(1);
@@ -148,8 +158,18 @@ test.describe('Dashboard Journey', () => {
           .notifications.some((notification) => notification.message?.includes('Failed to refresh feeds'));
       });
 
+      await waitForAnnouncement(page, {
+        priority: 'assertive',
+        textFragment: 'Failed to refresh feeds',
+      });
+
+      const toastAlert = page
+        .getByRole('alert')
+        .filter({ hasText: 'Feed update failed' });
+      await expect(toastAlert).toBeVisible();
+      await expect(toastAlert).toContainText('Failed to refresh feeds');
+
       await expect(page.getByText('Error Loading Feed')).toBeVisible();
-      await expect(page.getByText('Failed to refresh feeds')).toBeVisible();
 
       // Recover to confirm feed resumes after the error
       await page.getByRole('button', { name: 'Try Again' }).click();
@@ -162,6 +182,20 @@ test.describe('Dashboard Journey', () => {
         return harness.getSnapshot().notifications.map((notification) => notification.message ?? '');
       });
       expect(notificationMessages.some((message) => message.includes('Failed to refresh feeds'))).toBeTruthy();
+      const notificationTitles = await page.evaluate(() => {
+        const w = window as HarnessWindow;
+        const harness = w.__notificationHarnessRef;
+        if (!harness) return [] as string[];
+        return harness.getSnapshot().notifications.map((notification) => notification.title ?? '');
+      });
+      expect(notificationTitles).toContain('Feed update failed');
+      const notificationTypes = await page.evaluate(() => {
+        const w = window as HarnessWindow;
+        const harness = w.__notificationHarnessRef;
+        if (!harness) return [] as string[];
+        return harness.getSnapshot().notifications.map((notification) => notification.type ?? '');
+      });
+      expect(notificationTypes).toContain('error');
 
       // Head back to the dashboard and ensure preferences remain persisted
       await page.goto('/e2e/dashboard-journey');
@@ -172,7 +206,7 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
     } finally {
       if (consoleMessages.length) {
-        // eslint-disable-next-line no-console
+         
         console.log('[dashboard-journey console]', consoleMessages.join('\n'));
       }
       await cleanupMocks();

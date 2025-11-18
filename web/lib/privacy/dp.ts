@@ -14,7 +14,6 @@
 // - Privacy-aware data aggregation
 // - Budget allocation and monitoring
 
-import { withOptional } from '@/lib/util/objects';
 import logger from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
@@ -328,20 +327,22 @@ export class DifferentialPrivacyManager {
           // Apply differential privacy to the count
           const dpResult = this.dpCount(value.count, this.config.defaultEpsilon);
           
-          filtered[key] = withOptional(value, {
+          filtered[key] = {
+            ...value,
             count: dpResult.noisyCount,
             originalCount: value.count,
             privacyProtected: true,
             epsilon: dpResult.epsilon,
             confidence: dpResult.confidence
-          });
+          };
         } else {
           // Suppress the breakdown
-          filtered[key] = withOptional(value, {
+          filtered[key] = {
+            ...value,
             count: 0,
             suppressed: true,
             reason: kAnonymityResult.reason
-          });
+          };
         }
       } else {
         filtered[key] = value;
@@ -414,7 +415,11 @@ export class DifferentialPrivacyManager {
         operations: []
       });
     }
-    return this.budgets.get(pollId)!;
+    const budget = this.budgets.get(pollId);
+    if (!budget) {
+      throw new Error('Failed to initialize epsilon budget');
+    }
+    return budget;
   }
 
   private calculateConfidence(epsilon: number): number {

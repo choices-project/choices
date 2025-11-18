@@ -1,9 +1,9 @@
 /**
  * Performance Monitoring Utilities
- * 
+ *
  * Provides utilities for monitoring and optimizing performance metrics
  * including Core Web Vitals, memory usage, and bundle analysis.
- * 
+ *
  * Created: January 27, 2025
  * Status: ✅ ACTIVE
  */
@@ -16,18 +16,18 @@ export type PerformanceMetrics = {
   lcp: number; // Largest Contentful Paint
   fid: number; // First Input Delay
   cls: number; // Cumulative Layout Shift
-  
+
   // Loading Performance
   fcp: number; // First Contentful Paint
   tti: number; // Time to Interactive
   tbt: number; // Total Blocking Time
-  
+
   // Resource Performance
   jsBundleSize: number;
   cssBundleSize: number;
   imageCount: number;
   totalRequests: number;
-  
+
   // Memory Performance
   memoryUsage: {
     usedJSHeapSize: number;
@@ -69,6 +69,7 @@ export class PerformanceMonitor {
   private isMonitoring = false;
 
   constructor() {
+    this.isMonitoring = true;
     this.initializeObservers();
   }
 
@@ -76,7 +77,10 @@ export class PerformanceMonitor {
    * Initialize performance observers
    */
   private initializeObservers(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      this.isMonitoring = false;
+      return;
+    }
 
     // LCP Observer
     if ('PerformanceObserver' in window) {
@@ -156,10 +160,17 @@ export class PerformanceMonitor {
   }
 
   /**
+   * Get monitoring status
+   */
+  getMonitoringStatus(): boolean {
+    return this.isMonitoring;
+  }
+
+  /**
    * Get current performance metrics
    */
   getMetrics(): Partial<PerformanceMetrics> {
-    if (typeof window === 'undefined') return {};
+    if (typeof window === 'undefined' || !this.isMonitoring) return {};
 
     // Get memory usage
     if ('memory' in performance) {
@@ -371,6 +382,7 @@ export function usePerformanceMonitor() {
       const interval = setInterval(updateMetrics, 1000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isMonitoring, updateMetrics]);
 
   return {

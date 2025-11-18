@@ -19,10 +19,8 @@ export type PollEventMetadataFactory =
  * Shared hook that records poll-specific analytics events while respecting consent.
  */
 export const useRecordPollEvent = (baseMetadata?: PollEventMetadataFactory) => {
-  const { trackEvent, sessionId } = useAnalyticsStore((state) => ({
-    trackEvent: state.trackEvent,
-    sessionId: state.sessionId,
-  }));
+  const trackEvent = useAnalyticsStore((state) => state.trackEvent);
+  const sessionId = useAnalyticsStore((state) => state.sessionId);
 
   return useCallback(
     (action: string, options: PollEventOptions = {}) => {

@@ -1,6 +1,7 @@
-import { defineConfig, devices } from '@playwright/test';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Minimal Playwright configuration for the rebuilt E2E suite.

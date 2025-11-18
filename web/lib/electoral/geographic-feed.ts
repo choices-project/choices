@@ -9,7 +9,9 @@
  */
 
 import { NotImplementedError } from '@/lib/errors';
+import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
@@ -20,7 +22,7 @@ import type {
   CampaignFinance,
   Activity
 } from '../types/electoral-unified';
-import { withOptional } from '../util/objects';
+// withOptional removed - using explicit builders
 
 import type { ElectoralRace as SchemaElectoralRace } from './schemas';
 
@@ -78,6 +80,368 @@ export class GeographicElectoralFeed {
     this.orchestrator = createUnifiedDataOrchestrator();
   }
 
+  // Best-effort analytics logger (non-blocking)
+  private async logAnalytics(metricName: string, dimensions: Record<string, unknown>) {
+    try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) return;
+      await (supabase as any)
+        .from('platform_analytics')
+        .insert({
+          metric_name: metricName,
+          metric_value: 1,
+          metric_type: 'counter',
+          dimensions,
+          category: 'civics',
+          source: 'geographic_feed'
+        });
+    } catch {
+      // swallow
+    }
+  }
+
+  // Local helpers (avoid depending on orchestrator internals)
+  private resolveStateCode(location: UserLocation): string | null {
+    if (location.stateCode) {
+      return location.stateCode.toUpperCase();
+    }
+    const federalDistrict = (location as any).federal?.house?.district as string | undefined;
+    if (federalDistrict && federalDistrict.includes('-')) {
+      const code = federalDistrict.split('-')[0];
+      return code ? code.toUpperCase() : null;
+    }
+    return null;
+  }
+
+  private estimateDeadline(dateString: string, offsetDays: number): string {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return formatISODateOnly(nowISO());
+    }
+    const adjusted = new Date(date);
+    adjusted.setUTCDate(date.getUTCDate() - offsetDays);
+    return adjusted.toISOString().slice(0, 10);
+  }
+
+  /**
+   * DB-first: Fetch upcoming elections from our comprehensive civics database
+   */
+  private async fetchUpcomingElectionsFromDB(location: UserLocation): Promise<ElectoralRace[]> {
+    try {
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        return [];
+      }
+
+      const stateCode = location.stateCode ?? this.resolveStateCode(location) ?? null;
+      const today = formatISODateOnly(nowISO());
+
+      // civic_elections schema (columns): election_id, name, ocd_division_id, election_day, fetched_at, raw_payload
+      let query = (supabase as any)
+        .from('civic_elections')
+        .select('election_id, name, ocd_division_id, election_day')
+        .gte('election_day', today)
+        .order('election_day', { ascending: true })
+        .limit(50);
+
+      if (stateCode) {
+        // Filter by state in division when possible
+        query = query.like('ocd_division_id', `%state:${stateCode.toUpperCase()}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        logger.error('DB elections query failed', { error, stateCode, today });
+        return [];
+      }
+
+      const rows = Array.isArray(data) ? data : [];
+
+      // Prefetch representatives mapped to divisions for these elections
+      const divisionIds: string[] = Array.from(
+        new Set(
+          rows
+            .map((r: any) => String(r.ocd_division_id ?? ''))
+            .filter((d) => d.length > 0),
+        ),
+      );
+
+      const divisionToReps = new Map<string, Array<{ id: number; name: string; party: string | null; office: string }>>();
+      if (divisionIds.length > 0) {
+        try {
+          const { data: repRows, error: repErr } = await (supabase as any)
+            .from('representative_divisions')
+            .select('division_id, representative:representatives_core(id, name, party, office)')
+            .in('division_id', divisionIds)
+            .limit(5000);
+          if (!repErr && Array.isArray(repRows)) {
+            for (const row of repRows as Array<{ division_id?: string; representative?: { id: number; name: string; party: string | null; office: string } }>) {
+              const key = String(row.division_id ?? '');
+              if (!key) continue;
+              if (!divisionToReps.has(key)) {
+                divisionToReps.set(key, []);
+              }
+              if (row.representative) {
+                const list = divisionToReps.get(key);
+                if (list) {
+                  list.push({
+                  id: row.representative.id,
+                  name: row.representative.name,
+                  party: row.representative.party ?? null,
+                  office: row.representative.office,
+                  });
+                  divisionToReps.set(key, list);
+                }
+              }
+            }
+          } else if (repErr) {
+            logger.warn('representative_divisions prefetch failed', { error: repErr.message });
+          }
+        } catch (e) {
+          logger.warn('representative_divisions prefetch exception', { error: e instanceof Error ? e.message : 'unknown' });
+        }
+      }
+
+      // Prefetch campaign finance for these representatives
+      const allRepIds = Array.from(divisionToReps.values()).flat().map((r) => r.id);
+      const uniqueRepIds = Array.from(new Set(allRepIds));
+      const repIdToFinance = new Map<number, {
+        total_raised: number | null;
+        total_spent: number | null;
+        small_donor_percentage: number | null;
+        sources: string[] | null;
+        updated_at: string | null;
+        cycle: number | null;
+      }>();
+      if (uniqueRepIds.length > 0) {
+        try {
+          const { data: finRows, error: finErr } = await (supabase as any)
+            .from('representative_campaign_finance')
+            .select('representative_id, total_raised, total_spent, small_donor_percentage, sources, updated_at, cycle')
+            .in('representative_id', uniqueRepIds)
+            .limit(5000);
+          if (!finErr && Array.isArray(finRows)) {
+            for (const row of finRows as Array<{
+              representative_id: number | null;
+              total_raised: number | null;
+              total_spent: number | null;
+              small_donor_percentage: number | null;
+              sources: string[] | null;
+              updated_at: string | null;
+              cycle: number | null;
+            }>) {
+              if (row.representative_id != null) {
+                repIdToFinance.set(row.representative_id, {
+                  total_raised: row.total_raised,
+                  total_spent: row.total_spent,
+                  small_donor_percentage: row.small_donor_percentage,
+                  sources: row.sources,
+                  updated_at: row.updated_at,
+                  cycle: row.cycle,
+                });
+              }
+            }
+          } else if (finErr) {
+            logger.warn('representative_campaign_finance prefetch failed', { error: finErr.message });
+          }
+        } catch (e) {
+          logger.warn('representative_campaign_finance prefetch exception', { error: e instanceof Error ? e.message : 'unknown' });
+        }
+      }
+
+      // Prefetch public candidate profiles related to these divisions (best-effort)
+      type CandidateProfileRow = {
+        id: string;
+        slug: string;
+        display_name: string;
+        office: string | null;
+        jurisdiction: string | null;
+        party: string | null;
+        website: string | null;
+        social: Record<string, string> | null;
+        filing_status: 'not_started' | 'in_progress' | 'filed' | 'verified';
+        representative_id: number | null;
+      };
+      let publicCandidates: CandidateProfileRow[] = [];
+      try {
+        const { data: candRows, error: candErr } = await (supabase as any)
+          .from('candidate_profiles')
+          .select('id, slug, display_name, office, jurisdiction, party, website, social, filing_status, representative_id')
+          .eq('is_public', true)
+          .limit(5000);
+        if (!candErr && Array.isArray(candRows)) {
+          publicCandidates = candRows as CandidateProfileRow[];
+        } else if (candErr) {
+          logger.warn('candidate_profiles prefetch failed', { error: candErr.message });
+        }
+      } catch (e) {
+        logger.warn('candidate_profiles prefetch exception', { error: e instanceof Error ? e.message : 'unknown' });
+      }
+
+      const races: ElectoralRace[] = rows.map((row: any) => {
+        const electionDate = String(row.election_day ?? today);
+        const divisionId = String(row.ocd_division_id ?? (stateCode ? `ocd-division/country:us/state:${stateCode}` : 'ocd-division/country:us'));
+        const reps = divisionToReps.get(divisionId) ?? [];
+        const incumbentBasic = reps[0];
+
+        const makeFinance = (repId: string, repNumericId?: number): CampaignFinance => {
+          const f = repNumericId != null ? repIdToFinance.get(repNumericId) : undefined;
+          return {
+            id: `finance-${repId}-${row.election_id}`,
+            representativeId: repId,
+            cycle: f?.cycle ?? new Date(electionDate).getUTCFullYear(),
+            totalRaised: f?.total_raised ?? 0,
+            individualContributions: 0,
+            pacContributions: 0,
+            corporateContributions: 0,
+            unionContributions: 0,
+            selfFunding: 0,
+            smallDonorPercentage: f?.small_donor_percentage ?? 0,
+            topContributors: [],
+            independenceScore: 0,
+            corporateInfluence: 0,
+            pacInfluence: 0,
+            smallDonorInfluence: 0,
+            totalSpent: f?.total_spent ?? 0,
+            advertising: 0,
+            staff: 0,
+            travel: 0,
+            fundraising: 0,
+            sources: Array.isArray(f?.sources) ? (f?.sources as string[]) : ['db'],
+            lastUpdated: f?.updated_at ?? nowISO(),
+            dataQuality: f ? 'high' : 'medium',
+          };
+        };
+
+        const incumbent: Representative = incumbentBasic
+          ? {
+              id: String(incumbentBasic.id),
+              name: incumbentBasic.name,
+              party: incumbentBasic.party ?? 'Unknown',
+              office: incumbentBasic.office ?? String(row.name ?? 'Election'),
+              jurisdiction: divisionId,
+              socialMedia: {},
+              votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },
+              campaignFinance: makeFinance(String(incumbentBasic.id), incumbentBasic.id),
+              engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+              walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+              recentActivity: [],
+              platform: []
+            }
+          : {
+              id: `incumbent-${row.election_id}`,
+              name: 'Incumbent',
+              party: 'Unknown',
+              office: String(row.name ?? 'Election'),
+              jurisdiction: divisionId,
+              socialMedia: {},
+              votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },
+              campaignFinance: makeFinance(`incumbent-${row.election_id}`),
+              engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+              walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+              recentActivity: [],
+              platform: []
+            };
+
+        // Derive challengers from the rest of reps in the division
+        const challengerBasics = reps.slice(1);
+        const repChallengers: Representative[] = challengerBasics.map((c) => ({
+          id: String(c.id),
+          name: c.name,
+          party: c.party ?? 'Unknown',
+          office: c.office,
+          jurisdiction: divisionId,
+          socialMedia: {},
+          votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },
+          campaignFinance: makeFinance(String(c.id), c.id),
+          engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+          walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+          recentActivity: [],
+          platform: [],
+        }));
+
+        // Add public candidate profiles as challengers when office/jurisdiction align
+        const candidateChallengers: Representative[] = publicCandidates
+          .filter((cp) => {
+            // Match by jurisdiction or by state code seen in divisionId; also approximate by office name
+            const j = (cp.jurisdiction ?? '').toLowerCase();
+            const o = (cp.office ?? '').toLowerCase();
+            const div = divisionId.toLowerCase();
+            const nameMatch = String(row.name ?? '').toLowerCase();
+            const officeMatch = o.length > 0 && (nameMatch.includes(o) || o.includes(nameMatch));
+            const divisionMatch = j.length > 0 && (div.includes(j) || j.includes(div));
+            return divisionMatch || officeMatch;
+          })
+          .map((cp) => {
+            const repId = cp.representative_id != null ? String(cp.representative_id) : `candidate:${cp.id}`;
+            return {
+              id: repId,
+              name: cp.display_name,
+              party: cp.party ?? 'Unknown',
+              office: String(cp.office ?? row.name ?? 'Candidate'),
+              jurisdiction: divisionId,
+              email: '',
+              phone: '',
+              website: cp.website ?? '',
+              socialMedia: cp.social ?? {},
+              votingRecord: {
+                totalVotes: 0,
+                partyLineVotes: 0,
+                constituentAlignment: 0,
+                keyVotes: [],
+              },
+              campaignFinance: makeFinance(repId, cp.representative_id ?? undefined),
+              engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+              walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+              recentActivity: [],
+              platform: [],
+            } as Representative;
+          });
+
+        const challengers = [...repChallengers];
+        // Merge in candidates, avoiding duplicates by id
+        const seenIds = new Set(challengers.map((c) => c.id));
+        for (const c of candidateChallengers) {
+          if (!seenIds.has(c.id) && c.id !== incumbent.id) {
+            challengers.push(c);
+            seenIds.add(c.id);
+          }
+        }
+
+        // Deadlines are not in civic_elections; estimate conservatively
+        const voterReg = this.estimateDeadline(electionDate, 21);
+        const earlyVote = this.estimateDeadline(electionDate, -14);
+        const absentee = this.estimateDeadline(electionDate, 7);
+
+        return {
+          raceId: String(row.election_id),
+          office: String(row.name ?? 'Election'),
+          jurisdiction: divisionId,
+          electionDate,
+          incumbent,
+          challengers,
+          allCandidates: [],
+          keyIssues: [],
+          campaignFinance: incumbent.campaignFinance,
+          pollingData: null,
+          voterRegistrationDeadline: voterReg,
+          earlyVotingStart: earlyVote,
+          absenteeBallotDeadline: absentee,
+          recentActivity: [],
+          constituentQuestions: 0,
+          candidateResponses: 0,
+          status: 'upcoming',
+          importance: 'medium'
+        } as ElectoralRace;
+      });
+
+      return races;
+    } catch (error) {
+      logger.error('Failed DB-first elections fetch', { error });
+      return [];
+    }
+  }
+
   /**
    * Generate comprehensive electoral feed for user location
    */
@@ -113,7 +477,7 @@ export class GeographicElectoralFeed {
       const feed: ElectoralFeed = {
         userId,
         location,
-        generatedAt: new Date().toISOString(),
+        generatedAt: nowISO(),
         currentOfficials,
         upcomingElections,
         activeRaces,
@@ -141,33 +505,68 @@ export class GeographicElectoralFeed {
    * Resolve location input to comprehensive jurisdiction data
    */
   private async resolveLocation(locationInput: { zipCode?: string; address?: string; coordinates?: { lat: number; lng: number } }): Promise<UserLocation> {
-    // This would integrate with Google Civic API or similar geocoding service
-    // For now, return a mock structure
+    // Prefer real geocoding via LocationService when possible
+    try {
+      const { locationService } = await import('../services/location-service');
+      const geocodeTarget =
+        locationInput.address ??
+        (locationInput.zipCode ? String(locationInput.zipCode) : undefined);
 
-    const location: UserLocation = {
+      let geo = null as Awaited<ReturnType<typeof locationService.geocodeAddress>> | null;
+      if (geocodeTarget) {
+        geo = await locationService.geocodeAddress(geocodeTarget);
+      } else if (locationInput.coordinates) {
+        geo = await locationService.findRepresentativesByCoordinates(
+          locationInput.coordinates.lat,
+          locationInput.coordinates.lng,
+        )?.then((res) => res?.location ?? null);
+      }
+
+      if (geo) {
+        const stateCode = geo.state;
+        const district = geo.district ? `${stateCode}-${geo.district}` : undefined;
+        const result: UserLocation = {
+          ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
+          ...(locationInput.address && { address: locationInput.address }),
+          ...(locationInput.coordinates && { coordinates: locationInput.coordinates }),
+          stateCode,
+          // Leave jurisdictional reps empty at this stage; will be filled by orchestrator calls
+          federal: {
+            house: { district: district ?? '', representative: '' },
+            senate: { senators: [] }
+          },
+          state: {
+            governor: '',
+            legislature: {
+              house: { district: '', representative: '' },
+              senate: { district: '', representative: '' }
+            }
+          },
+          local: {
+            county: { executive: '', commissioners: [] },
+            city: { mayor: '', council: [] },
+            school: { board: [] }
+          }
+        };
+        return result;
+      }
+    } catch {
+      // fall through to mock if imports or calls fail
+    }
+
+    // Fallback mock structure (only if real geocoding unavailable)
+    return {
       ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
       ...(locationInput.address && { address: locationInput.address }),
       ...(locationInput.coordinates && { coordinates: locationInput.coordinates }),
       stateCode: 'CA',
-      federal: {
-        house: { district: 'CA-12', representative: 'Nancy Pelosi' },
-        senate: { senators: ['Dianne Feinstein', 'Alex Padilla'] }
-      },
+      federal: { house: { district: 'CA-12', representative: '' }, senate: { senators: [] } },
       state: {
-        governor: 'Gavin Newsom',
-        legislature: {
-          house: { district: 'CA-17', representative: 'David Chiu' },
-          senate: { district: 'CA-11', representative: 'Scott Wiener' }
-        }
+        governor: '',
+        legislature: { house: { district: '', representative: '' }, senate: { district: '', representative: '' } }
       },
-      local: {
-        county: { executive: 'London Breed', commissioners: [] },
-        city: { mayor: 'London Breed', council: [] },
-        school: { board: [] }
-      }
+      local: { county: { executive: '', commissioners: [] }, city: { mayor: '', council: [] }, school: { board: [] } }
     };
-
-    return location;
   }
 
   /**
@@ -221,7 +620,13 @@ export class GeographicElectoralFeed {
     try {
       logger.info('Getting upcoming elections for location', { location: this.getLocationSummary(location) });
 
-      // Get election data from orchestrator
+      // 1) DB-first: use comprehensive civics database
+      const dbRaces = await this.fetchUpcomingElectionsFromDB(location);
+      if (dbRaces.length > 0) {
+        return dbRaces;
+      }
+
+      // 2) Orchestrator fallback when DB has no records
       const orchestrator = await createUnifiedDataOrchestrator();
       const electionData = await orchestrator.getUpcomingElections(location);
 
@@ -249,20 +654,23 @@ export class GeographicElectoralFeed {
 
       // Fallback to mock data if no real data available
 
-      logger.warn('Orchestrator returned no election data; using fallback', {
-        location: this.getLocationSummary(location)
-      });
+      const summary = this.getLocationSummary(location);
+      logger.warn('Orchestrator returned no election data; using fallback', { location: summary });
+      void this.logAnalytics('elections_fallback', { reason: 'empty', ...summary });
       return [await this.getMockElectoralRace()];
     } catch (error) {
       if (error instanceof NotImplementedError) {
+        const summary = this.getLocationSummary(location);
         logger.warn('Upcoming election pipeline not implemented, falling back to mock data', {
-          location: this.getLocationSummary(location),
+          location: summary,
           reason: error.message
         });
+        void this.logAnalytics('elections_fallback', { reason: 'not_implemented', ...summary });
         return [await this.getMockElectoralRace()];
       }
 
       logger.error('Failed to get upcoming elections', { error });
+      void this.logAnalytics('elections_fallback', { reason: 'error', error: error instanceof Error ? error.message : String(error) });
       return [await this.getMockElectoralRace()];
     }
   }
@@ -308,8 +716,10 @@ export class GeographicElectoralFeed {
               raceId: race.raceId,
               reason: error.message
             });
+            void this.logAnalytics('campaign_enrichment_fallback', { reason: 'not_implemented', raceId: race.raceId });
           } else {
             logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
+            void this.logAnalytics('campaign_enrichment_fallback', { reason: 'error', raceId: race.raceId, error: error instanceof Error ? error.message : String(error) });
           }
         }
 
@@ -321,6 +731,7 @@ export class GeographicElectoralFeed {
       return enrichedRaces;
     } catch (error) {
       logger.error('Failed to get active races', { error });
+      void this.logAnalytics('campaign_enrichment_fallback', { reason: 'outer_error', error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }
@@ -353,7 +764,7 @@ export class GeographicElectoralFeed {
             location: this.getLocationSummary(location),
             reason: error.message
           });
-          issueData = undefined;
+          issueData = [];
         } else {
           throw error;
         }
@@ -419,6 +830,21 @@ export class GeographicElectoralFeed {
   ): Promise<Array<{ type: 'question' | 'endorsement' | 'concern' | 'suggestion'; target: string; description: string; urgency: 'high' | 'medium' | 'low' }>> {
     const opportunities = [];
 
+    // Log location context for engagement opportunities
+    logger.debug('Generating engagement opportunities', {
+      location: {
+        state: location.state,
+        city: location.city,
+        zipCode: location.zipCode
+      },
+      officialsCount: {
+        federal: currentOfficials.federal.length,
+        state: currentOfficials.state.length,
+        local: currentOfficials.local.length
+      },
+      activeRacesCount: activeRaces.length
+    });
+
     // Add opportunities based on current officials
     for (const official of Object.values(currentOfficials).flat()) {
       if (official && typeof official === 'object' && 'name' in official) {
@@ -463,8 +889,7 @@ export class GeographicElectoralFeed {
     // Calculate "Walk the Talk" score
     const walkTheTalkScore = await this.calculateWalkTheTalkScore(representative.id);
 
-    return withOptional(
-      {
+    return {
         id: representative.id,
         name: representative.name,
         party: representative.party,
@@ -495,14 +920,12 @@ export class GeographicElectoralFeed {
         publicStatements: 0
       },
         walk_the_talk_score: walkTheTalkScore
-      },
-      {
-        district: representative.district,
-        email: representative.email,
-        phone: representative.phone,
-        website: representative.website
-      }
-    );
+      ,
+      ...(representative.district ? { district: representative.district } : {}),
+      ...(representative.email ? { email: representative.email } : {}),
+      ...(representative.phone ? { phone: representative.phone } : {}),
+      ...(representative.website ? { website: representative.website } : {}),
+    };
   }
 
   /**
@@ -763,36 +1186,38 @@ export class GeographicElectoralFeed {
     const template = await this.getMockElectoralRace();
 
     const campaignFinance = race.campaignFinance
-      ? withOptional(template.campaignFinance, {
+      ? {
+          ...template.campaignFinance,
           totalRaised: race.campaignFinance.raised,
           totalSpent: race.campaignFinance.spent,
-          individualContributions: race.campaignFinance.individualContributions,
-          pacContributions: race.campaignFinance.pacContributions,
-          selfFunding: race.campaignFinance.selfFunding ?? race.campaignFinance.cash,
+          individualContributions: race.campaignFinance.individualContributions ?? 0,
+          pacContributions: race.campaignFinance.pacContributions ?? 0,
+          selfFunding: race.campaignFinance.selfFunding ?? race.campaignFinance.cash ?? 0,
           sources: template.campaignFinance.sources.includes('schema')
             ? template.campaignFinance.sources
             : [...template.campaignFinance.sources, 'schema'],
-          lastUpdated: race.campaignFinance.lastUpdated,
-        })
+          lastUpdated: race.campaignFinance.lastUpdated ?? new Date().toISOString(),
+        }
       : template.campaignFinance;
 
-    return withOptional(template, {
+    return {
+      ...template,
       raceId: race.raceId,
       office: race.office,
-      jurisdiction: race.jurisdiction,
+      jurisdiction: race.jurisdiction ?? 'US',
       electionDate: race.electionDate,
       keyIssues: race.keyIssues.length > 0 ? race.keyIssues : template.keyIssues,
       campaignFinance,
       pollingData: race.pollingData,
-      voterRegistrationDeadline: race.voterRegistrationDeadline,
-      earlyVotingStart: race.earlyVotingStart,
-      absenteeBallotDeadline: race.absenteeBallotDeadline,
+      voterRegistrationDeadline: race.voterRegistrationDeadline ?? this.estimateDeadline(race.electionDate, 21),
+      earlyVotingStart: race.earlyVotingStart ?? this.estimateDeadline(race.electionDate, -14),
+      absenteeBallotDeadline: race.absenteeBallotDeadline ?? this.estimateDeadline(race.electionDate, 7),
       recentActivity: template.recentActivity,
       constituentQuestions: race.constituentQuestions,
       candidateResponses: race.candidateResponses,
       status: race.status,
       importance: race.importance,
-    });
+    };
   }
 }
 

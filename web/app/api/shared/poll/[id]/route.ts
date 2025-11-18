@@ -1,15 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, notFoundError } from '@/lib/api';
+import { withErrorHandling, successResponse, notFoundError, toCamelCase } from '@/lib/api';
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase environment variables are not configured');
+    }
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      supabaseUrl,
+      supabaseKey
     );
 
     // Await params in Next.js 15
@@ -46,8 +51,23 @@ export const GET = withErrorHandling(async (
         p_trust_tier: null // All tiers
       });
 
-  return successResponse({
-    ...poll,
-    results: results ?? []
-  });
+  const normalizedResults = Array.isArray(results)
+    ? results.map((result: Record<string, any>) => toCamelCase(result))
+    : [];
+
+  const normalizedPoll = {
+    id: poll.id,
+    question: poll.question,
+    createdAt: poll.created_at,
+    isPublic: poll.is_public,
+    isShareable: poll.is_shareable,
+    options: (poll.poll_options ?? []).map((option: any) => ({
+      id: option.id,
+      text: option.text,
+      createdAt: option.created_at,
+    })),
+    results: normalizedResults,
+  };
+
+  return successResponse({ poll: normalizedPoll });
 });

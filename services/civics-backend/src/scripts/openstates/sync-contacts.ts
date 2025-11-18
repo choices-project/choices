@@ -128,19 +128,47 @@ async function main() {
   );
 
   let succeeded = 0;
+  let totalAdded = 0;
+  let totalSkipped = 0;
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
   for (const rep of eligible) {
     try {
-      await syncRepresentativeContacts(rep);
-      succeeded += 1;
+      const result = await syncRepresentativeContacts(rep);
+      if (result.success) {
+        succeeded += 1;
+        totalAdded += result.contactsAdded;
+        totalSkipped += result.contactsSkipped;
+        if (result.warnings.length > 0) {
+          warnings.push(...result.warnings.map((w) => `${rep.name}: ${w}`));
+        }
+      } else {
+        errors.push(`${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown'}): ${result.errors.join('; ')}`);
+        totalSkipped += result.contactsSkipped;
+      }
     } catch (error) {
-      console.error(
-        `Failed to sync contacts for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}):`,
-        (error as Error).message,
-      );
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      errors.push(`${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}): ${errorMessage}`);
     }
   }
 
-  console.log(`✅ Contact sync complete (${succeeded}/${eligible.length}).`);
+  console.log(`✅ Contact sync complete (${succeeded}/${eligible.length} succeeded).`);
+  console.log(`   Contacts added: ${totalAdded}, skipped: ${totalSkipped}`);
+  if (warnings.length > 0) {
+    console.log(`   Warnings: ${warnings.length}`);
+    warnings.slice(0, 5).forEach((w) => console.log(`     - ${w}`));
+    if (warnings.length > 5) {
+      console.log(`     ... and ${warnings.length - 5} more warnings`);
+    }
+  }
+  if (errors.length > 0) {
+    console.log(`   Errors: ${errors.length}`);
+    errors.slice(0, 5).forEach((e) => console.error(`     - ${e}`));
+    if (errors.length > 5) {
+      console.error(`     ... and ${errors.length - 5} more errors`);
+    }
+  }
 }
 
 main().catch((error) => {

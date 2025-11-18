@@ -1,13 +1,12 @@
 /**
  * API Rate Limiting Utilities
- * 
+ *
  * Comprehensive rate limiting system that respects external API quotas
  * and implements proper backoff strategies for good API citizenship.
  */
 
 import { logger } from '@/lib/utils/logger';
 
-import { withOptional } from '../util/objects';
 
 export type RateLimitConfig = {
   requestsPerSecond: number;
@@ -110,7 +109,7 @@ export class RateLimiter {
    */
   async waitForRateLimit(): Promise<void> {
     const now = Date.now();
-    
+
     // Clean up old entries periodically
     if (now - this.lastCleanup > 300000) { // 5 minutes
       this.cleanupOldEntries();
@@ -158,7 +157,7 @@ export class RateLimiter {
     // Check second limit
     const secondKey = Math.floor(now / 1000).toString();
     const requestsThisSecond = this.requestHistory.get(secondKey)?.length ?? 0;
-    
+
     if (requestsThisSecond >= this.config.requestsPerSecond) {
       const waitTime = 1000 - (now % 1000); // Wait until next second
       logger.debug('Second rate limit exceeded, waiting', {
@@ -176,7 +175,7 @@ export class RateLimiter {
   recordRequest(): void {
     const now = Date.now();
     const secondKey = Math.floor(now / 1000).toString();
-    
+
     // Add to request history
     if (!this.requestHistory.has(secondKey)) {
       this.requestHistory.set(secondKey, []);
@@ -234,15 +233,11 @@ export class RateLimiter {
     const nextHourReset = 3600000 - (now % 3600000);
     const nextDayReset = this.usageMetrics.nextResetTime.getTime() - now;
 
-    return withOptional(
-      {
-        remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
-        resetTime: Math.min(nextHourReset, nextDayReset)
-      },
-      {
-        retryAfter: this.usageMetrics.quotaExceeded ? nextHourReset : undefined
-      }
-    );
+    return {
+      remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
+      resetTime: Math.min(nextHourReset, nextDayReset),
+      ...(this.usageMetrics.quotaExceeded ? { retryAfter: nextHourReset } : {}),
+    };
   }
 
   /**
@@ -349,7 +344,7 @@ export function withRateLimit<T extends unknown[], R>(
 ) {
   return async (...args: T): Promise<R> => {
     await rateLimiter.waitForRateLimit();
-    
+
     try {
       const result = await fn(...args);
       rateLimiter.recordRequest();
@@ -357,7 +352,7 @@ export function withRateLimit<T extends unknown[], R>(
     } catch (error) {
       // Check if it's a rate limit error
       if (error instanceof Error && (
-        error.message.includes('429') || 
+        error.message.includes('429') ||
         error.message.includes('rate limit') ||
         error.message.includes('quota exceeded')
       )) {
@@ -417,7 +412,7 @@ export class ApiUsageMonitor {
     for (const [apiName, rateLimiter] of this.rateLimiters) {
       const metrics = rateLimiter.getUsageMetrics();
       const status = rateLimiter.getRateLimitStatus();
-      
+
       // Warn at 80% of hourly limit
       const hourlyThreshold = 0.8;
       const hourlyLimits = {
@@ -426,7 +421,7 @@ export class ApiUsageMonitor {
         'congress-gov': CONGRESS_GOV_RATE_LIMITS.requestsPerHour,
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerHour
       };
-      
+
       if (metrics.requestsThisHour >= hourlyThreshold * (hourlyLimits[apiName as keyof typeof hourlyLimits] ?? 1000)) {
         logger.warn('API quota warning', {
           apiName,
@@ -443,8 +438,16 @@ export class ApiUsageMonitor {
         'congress-gov': CONGRESS_GOV_RATE_LIMITS.requestsPerDay,
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerDay
       };
-      
+
       if (metrics.requestsToday >= dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] ?? 10000)) {
+        // Store alert for monitoring and notification systems
+        this.alerts.push({
+          apiName,
+          threshold: dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] ?? 10000),
+          current: metrics.requestsToday,
+          timestamp: new Date()
+        });
+
         logger.error('API quota alert', {
           apiName,
           requestsToday: metrics.requestsToday,
@@ -453,6 +456,23 @@ export class ApiUsageMonitor {
         });
       }
     }
+
+    // Clean up old alerts (keep only last 100)
+    if (this.alerts.length > 100) {
+      this.alerts = this.alerts.slice(-100);
+    }
+  }
+
+  /**
+   * Get recent alerts
+   */
+  getRecentAlerts(limit: number = 10): Array<{
+    apiName: string;
+    threshold: number;
+    current: number;
+    timestamp: Date;
+  }> {
+    return this.alerts.slice(-limit);
   }
 }
 

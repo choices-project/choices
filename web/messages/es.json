@@ -3,6 +3,57 @@
     "language": "Idioma"
   },
   "feeds": {
+    "core": {
+      "error": {
+        "title": "Error al cargar el feed",
+        "retry": "Intentar de nuevo"
+      },
+      "pullToRefresh": {
+        "pull": "↓ Desliza para actualizar",
+        "release": "↓ Suelta para actualizar"
+      },
+      "header": {
+        "title": "Feed unificado",
+        "refresh": "Actualizar",
+        "refreshing": "Actualizando..."
+      },
+      "themeToggle": {
+        "light": "Cambiar a modo claro",
+        "dark": "Cambiar a modo oscuro"
+      },
+      "filters": {
+        "title": "Filtros de contenido",
+        "districtLabel": "Tu distrito: {district}",
+        "districtToggleOn": "✓ Filtrado",
+        "districtToggleOff": "Filtrar por distrito",
+        "districtDisable": "Desactivar filtro por distrito",
+        "districtEnable": "Activar filtro por distrito",
+        "districtHelper": "Mostrando contenido para {district} y elementos de toda la plataforma",
+        "hashtagPlaceholder": "Añade hashtags para filtrar (p. ej., climate)",
+        "hashtagAria": "Filtrar por hashtag",
+        "trendingHeading": "Hashtags en tendencia",
+        "selectedRemoveAria": "Quitar filtro {tag}"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "polls": "Encuestas",
+        "analytics": "Analítica"
+      },
+      "empty": {
+        "filters": "Ningún contenido coincide con tus filtros",
+        "default": "No hay feeds disponibles",
+        "polls": "La vista de encuestas estará disponible pronto",
+        "analytics": "La analítica no está disponible"
+      },
+      "actions": {
+        "bookmark": "Guardar",
+        "share": "Compartir"
+      },
+      "status": {
+        "online": "En línea",
+        "items": "{count, plural, one {{count} elemento} other {{count} elementos}}"
+      }
+    },
     "infiniteScroll": {
       "loadingMore": "Cargando más...",
       "end": {
@@ -15,6 +66,10 @@
       },
       "refreshing": "Actualizando...",
       "scrollToTopAria": "Volver al inicio"
+    },
+    "live": {
+      "initialLoad": "{count, plural, one {Feed cargado con # actualización.} other {Feed cargado con # actualizaciones.}}",
+      "newItems": "{count, plural, one {# actualización nueva en el feed.} other {# actualizaciones nuevas en el feed.}}"
     },
     "hashtagPolls": {
       "error": {
@@ -83,10 +138,1149 @@
           "yesterday": "Ayer"
         }
       }
+    },
+    "provider": {
+      "notifications": {
+        "error": {
+          "title": "Error al actualizar el feed"
+        }
+      },
+      "errors": {
+        "loadFeeds": {
+          "short": "No se pudieron cargar los feeds",
+          "message": "No pudimos cargar tus feeds. Inténtalo de nuevo.",
+          "withReason": "No se pudieron cargar los feeds: {error}"
+        },
+        "likeFeed": {
+          "short": "No se pudo registrar el me gusta",
+          "message": "No pudimos actualizar tu reacción. Inténtalo de nuevo."
+        },
+        "bookmarkFeed": {
+          "short": "No se pudo guardar en marcadores",
+          "message": "No pudimos actualizar tus marcadores. Inténtalo de nuevo."
+        },
+        "refreshFeeds": {
+          "short": "No se pudieron actualizar los feeds",
+          "message": "No pudimos actualizar tus feeds. Inténtalo de nuevo.",
+          "withReason": "No se pudieron actualizar los feeds: {error}"
+        },
+        "loadMoreFeeds": {
+          "short": "No se pudieron cargar más feeds",
+          "message": "No pudimos cargar más elementos. Inténtalo de nuevo.",
+          "withReason": "No se pudieron cargar más feeds: {error}"
+        }
+      }
+    },
+    "actions": {
+      "card": {
+        "type": {
+          "petition": "Petición",
+          "campaign": "Campaña",
+          "survey": "Encuesta",
+          "event": "Evento",
+          "protest": "Protesta",
+          "meeting": "Reunión"
+        },
+        "urgency": {
+          "low": "Baja urgencia",
+          "medium": "Urgencia moderada",
+          "high": "Alta urgencia",
+          "critical": "Urgencia crítica"
+        },
+        "badges": {
+          "draft": "Borrador"
+        },
+        "signatures": "{current} / {required} firmas",
+        "percentage": "{value}%",
+        "metadata": {
+          "ended": "Finalizado",
+          "endsOn": "Finaliza el {date}"
+        },
+        "statusMessages": {
+          "completed": "Esta acción se ha completado.",
+          "cancelled": "Esta acción se ha cancelado.",
+          "paused": "Esta acción está en pausa.",
+          "expired": "Esta acción ha finalizado."
+        },
+        "buttons": {
+          "viewDetails": "Ver detalles",
+          "sign": "Firmar",
+          "signing": "Firmando...",
+          "signed": "Firmado"
+        }
+      },
+      "list": {
+        "loading": "Cargando acciones cívicas…",
+        "loadingMore": "Cargando…",
+        "empty": "No encontramos acciones cívicas.",
+        "errors": {
+          "fetch": "No se pudieron cargar las acciones cívicas.",
+          "generic": "Ocurrió un error inesperado.",
+          "sign": "No se pudo firmar la acción.",
+          "display": "Error: {error}"
+        },
+        "buttons": {
+          "create": "Crear acción",
+          "loadMore": "Cargar más"
+        }
+      }
+    }
+  },
+  "share": {
+    "dialog": {
+      "feedTitle": "Comparte esta actualización",
+      "description": "Ayuda a que otras personas participen en “{title}” copiando el enlace o compartiéndolo directamente.",
+      "urlLabel": "Enlace para compartir",
+      "urlDescription": "Copia y pega este enlace donde quieras compartirlo.",
+      "copy": "Copiar enlace",
+      "copied": "¡Copiado!",
+      "systemShare": "Compartir con el sistema",
+      "emailShare": "Compartir por correo",
+      "openSource": "Ver fuente",
+      "actionsHeading": "Opciones para compartir",
+      "metadataHeading": "Aspectos destacados",
+      "emailSubject": "Revisa esta actualización cívica: {title}",
+      "metadata": {
+        "source": "Fuente",
+        "author": "Autor/a",
+        "category": "Categoría",
+        "district": "Distrito",
+        "updated": "Última actualización",
+        "tags": "Etiquetas relacionadas"
+      },
+      "live": {
+        "opened": "Se abrió el diálogo para compartir {title}.",
+        "copied": "Enlace copiado al portapapeles.",
+        "copyError": "No se pudo copiar el enlace. Copia el enlace manualmente."
+      }
+    }
+  },
+  "dashboard": {
+    "personal": {
+      "signIn": {
+        "title": "Inicia sesión en tu cuenta",
+        "description": "Debes iniciar sesión para acceder a tu panel personal.",
+        "button": "Ir a Iniciar sesión"
+      },
+      "harness": {
+        "signIn": {
+          "title": "Inicia sesión en tu cuenta",
+          "description": "Debes iniciar sesión para acceder a tu panel personal.",
+          "button": "Ir a Iniciar sesión"
+        },
+        "header": {
+          "titleWithName": "Bienvenido de nuevo, {name}",
+          "titleFallback": "Tu panel",
+          "subtitle": "Modo harness: renderizado simplificado del panel para Playwright.",
+          "trendingButton": "Ver feed en tendencia",
+          "badge": "Harness"
+        },
+        "analytics": {
+          "title": "Analítica personal (Harness)",
+          "description": "Instantánea estática de analítica para verificación en harness."
+        },
+        "representatives": {
+          "title": "Tus representantes (Harness)",
+          "description": "Marcador simplificado que solo se muestra cuando la preferencia está activada.",
+          "empty": "Modo harness: detalles de representantes omitidos."
+        },
+        "settings": {
+          "title": "Configuración del panel",
+          "description": "Activa o desactiva módulos del panel.",
+          "fields": {
+            "quickActions": "Mostrar acciones rápidas",
+            "electedOfficials": "Mostrar representantes",
+            "recentActivity": "Mostrar actividad reciente",
+            "engagementScore": "Mostrar nivel de participación"
+          }
+        }
+      },
+      "header": {
+        "titleWithName": "Bienvenido de nuevo, {name}",
+        "titleFallback": "Tu panel",
+        "subtitleWithBio": "Aquí tienes un resumen de tu actividad cívica.",
+        "subtitleDefault": "Tu centro personal de participación cívica",
+        "refreshing": "Actualizando…",
+        "engagementBadge": "{score} nivel de participación"
+      },
+      "common": {
+        "refresh": "Actualizar"
+      },
+      "errors": {
+        "title": "Error al cargar el panel",
+        "generic": "Ocurrió un problema al cargar tu panel.",
+        "retry": "Intentar de nuevo"
+      },
+      "tabs": {
+        "overview": "Resumen",
+        "analytics": "Analítica"
+      },
+      "metrics": {
+        "totalVotes": "Votos totales",
+        "pollsCreated": "Encuestas creadas",
+        "activePolls": "Encuestas activas",
+        "pollVotes": "Votos en tus encuestas"
+      },
+      "quickActions": {
+        "title": "Acciones rápidas",
+        "description": "Tareas y accesos directos frecuentes",
+        "createPoll": {
+          "label": "Crear encuesta",
+          "description": "Inicia una encuesta nueva"
+        },
+        "updateProfile": {
+          "label": "Actualizar perfil",
+          "description": "Edita tu perfil"
+        },
+        "privacy": {
+          "label": "Privacidad y datos",
+          "description": "Administra tu privacidad"
+        },
+        "location": {
+          "label": "Configurar ubicación",
+          "description": "Actualiza tu ubicación"
+        },
+        "export": {
+          "label": "Exportar datos",
+          "description": "Descarga tus datos"
+        }
+      },
+      "engagement": {
+        "title": "Nivel de participación",
+        "description": "Tu participación cívica general",
+        "participationLevel": "Nivel de participación",
+        "participationValue": "{score}/100",
+        "context": "Según tu actividad de voto, creación de encuestas y participación"
+      },
+      "trending": {
+        "title": "Temas en tendencia",
+        "description": "Lo que la comunidad comenta en este momento",
+        "error": "{message}",
+        "empty": "Aún no hay temas en tendencia. Vuelve más tarde o explora el feed para descubrir nuevas conversaciones.",
+        "viewFeed": "Ver feed en tendencia"
+      },
+      "representatives": {
+        "title": "Tus representantes",
+        "description": "Actualizaciones de los funcionarios asociados a tu dirección",
+        "addAddress": "Agrega tu dirección para ver las elecciones de tu distrito.",
+        "countdown": {
+          "title": "Próximas elecciones",
+          "description": "Fechas clave vinculadas a tus divisiones guardadas.",
+          "ariaLabel": "Próximas elecciones para tus representantes"
+        },
+        "viewAll": "Ver todos los representantes",
+        "empty": "No se encontraron representantes para tu dirección guardada.",
+        "updateAddress": "Actualiza tu dirección"
+      },
+      "personalized": {
+        "title": "Contenido personalizado",
+        "description": "Contenido adaptado a tu ubicación y demografía",
+        "message": "¡El filtrado demográfico está activo! Personalizamos el contenido según tu ubicación e intereses.",
+        "updatePreferences": "Actualiza tus preferencias"
+      },
+      "settings": {
+        "title": "Configuración del panel",
+        "description": "Personaliza lo que quieres ver en tu panel",
+        "fields": {
+          "quickActions": {
+            "label": "Mostrar acciones rápidas",
+            "help": "Muestra accesos directos"
+          },
+          "electedOfficials": {
+            "label": "Mostrar representantes",
+            "help": "Muestra a tus representantes"
+          },
+          "recentActivity": {
+            "label": "Mostrar actividad reciente",
+            "help": "Muestra tus acciones recientes"
+          },
+          "engagementScore": {
+            "label": "Mostrar nivel de participación",
+            "help": "Muestra tu nivel de participación"
+          }
+        }
+      },
+      "analytics": {
+        "title": "Analítica personal",
+        "description": "Tus métricas y actividad cívica",
+        "details": {
+          "title": "Analítica detallada",
+          "description": "Análisis e información completos",
+          "votesOnPolls": "Votos en tus encuestas"
+        }
+      },
+      "recentActivity": {
+        "title": "Actividad reciente",
+        "description": "Tus acciones cívicas más recientes",
+        "items": {
+          "vote": "Votaste en una encuesta",
+          "poll": "Creaste: {title}"
+        },
+        "pollSummary": "{votes} votos • {date}"
+      },
+      "polls": {
+        "untitled": "Encuesta sin título"
+      }
+    }
+  },
+  "civics": {
+    "attribution": {
+      "footer": {
+        "heading": "Fuentes de datos:",
+        "lastUpdated": "Última actualización: {date}"
+      },
+      "badge": {
+        "more": "+{count} más"
+      }
+    },
+    "addressLookup": {
+      "form": {
+        "label": "Ingresa tu dirección para encontrar a tus representantes",
+        "placeholder": "Calle Principal 123, Ciudad, Estado 12345"
+      },
+      "privacy": {
+        "heading": "Privacidad ante todo:",
+        "copy": "No almacenamos tu dirección. Guardamos una huella unidireccional y un cuadrante aproximado para generar estadísticas anónimas. Nadie puede convertir eso en tu hogar."
+      },
+      "actions": {
+        "differentAddressButton": "¿Votas desde otra dirección?",
+        "differentAddressHelper": "Usa \"dirección diferente\" para esta búsqueda. Las mismas reglas de privacidad: no se guarda nada.",
+        "submit": {
+          "default": "Encontrar a mis representantes",
+          "loading": "Buscando..."
+        }
+      },
+      "prompts": {
+        "differentAddress": "Ingresa tu dirección de votación (solo se usará para buscar representantes):"
+      },
+      "errors": {
+        "addressRequired": "Ingresa una dirección",
+        "noRepresentatives": "Aún no podemos encontrar representantes para esa dirección. Intenta con otra ubicación.",
+        "lookupFailed": "No pudimos ejecutar la búsqueda. Inténtalo de nuevo."
+      },
+      "status": {
+        "privacyProtected": "Privacidad protegida"
+      }
+    },
+    "countdown": {
+      "badge": {
+        "loading": "Comprobando elecciones…",
+        "error": "Datos electorales no disponibles",
+        "empty": "No hay elecciones próximas registradas",
+        "additional": "(+{count})",
+        "countdown": {
+          "today": "Elección hoy",
+          "tomorrow": "En 1 día",
+          "inDays": "En {count} días"
+        }
+      },
+      "card": {
+        "title": "Próximas elecciones",
+        "description": "Mantente listo con fechas clave de tus divisiones.",
+        "loading": "Obteniendo el calendario electoral más reciente…",
+        "error": "No pudimos cargar las próximas elecciones.",
+        "empty": "Aún no tenemos elecciones registradas. Vuelve pronto.",
+        "remaining": "+{count} {count, plural, one {elección adicional} other {elecciones adicionales}} registradas"
+      },
+      "notifications": {
+        "titleFallback": "Próxima elección",
+        "message": "Elección el {date}",
+        "countdown": {
+          "today": "Día de la elección",
+          "tomorrow": "La elección es mañana",
+          "inDays": "La elección es en {count} días"
+        }
+      }
+    },
+    "navigation": {
+      "header": {
+        "title": "Cívica",
+        "subtitle": "Tu voz democrática"
+      },
+      "links": {
+        "representatives": "Mis representantes",
+        "updateLocation": "Actualizar ubicación"
+      },
+      "mobileMenu": {
+        "open": "Abrir menú de navegación cívica",
+        "close": "Cerrar menú de navegación cívica",
+        "regionLabel": "Opciones de navegación cívica",
+        "currentLocation": "Ubicación actual",
+        "unknownLocation": "Ubicación aún no configurada",
+        "editAddress": "Cambiar dirección",
+        "accessibilityHint": "Selecciona cualquier opción para cerrar este menú."
+      },
+      "modal": {
+        "title": "Actualiza tu ubicación",
+        "description": "Ingresa tu nueva dirección para ver representantes actualizados.",
+        "addressLabel": "Tu dirección",
+        "addressPlaceholder": "Calle Principal 123, Ciudad, Estado 12345",
+        "submit": "Actualizar ubicación",
+        "submitLoading": "Actualizando..."
+      },
+      "errors": {
+        "fetchFailed": "No pudimos obtener representantes para esa dirección."
+      }
+    },
+    "privacy": {
+      "badge": {
+        "featureDisabled": "Función deshabilitada",
+        "checking": "Comprobando…",
+        "status": {
+          "healthy": "Las protecciones de privacidad están activas",
+          "warning": "Las protecciones de privacidad requieren atención",
+          "error": "La verificación de privacidad falló",
+          "disabled": "Las protecciones de privacidad están deshabilitadas"
+        }
+      }
+    },
+    "touchInteractions": {
+      "surface": {
+        "label": "Zona de interacción táctil. Usa gestos de deslizamiento, pellizco o toque.",
+        "disabled": "Los controles táctiles están deshabilitados."
+      },
+      "live": {
+        "touchStart": "Interacción táctil iniciada.",
+        "touchEnd": "Interacción táctil finalizada.",
+        "touchCancel": "Interacción táctil cancelada.",
+        "tap": "Toque detectado.",
+        "swipeLeft": "Deslizaste hacia la izquierda.",
+        "swipeRight": "Deslizaste hacia la derecha.",
+        "swipeUp": "Deslizaste hacia arriba.",
+        "swipeDown": "Deslizaste hacia abajo.",
+        "pinchIn": "Pellizco hacia adentro detectado.",
+        "pinchOut": "Pellizco hacia afuera detectado.",
+        "longPress": "Pulsación prolongada detectada."
+      }
+    },
+    "registration": {
+      "heading": "Regístrate para votar en {state}",
+      "updated": "Actualizado {date}",
+      "loadingAria": "Cargando recursos de registro electoral",
+      "buttons": {
+        "online": "Iniciar registro en línea",
+        "mailForm": "Descargar formulario de registro",
+        "status": "Consultar estado de registro",
+        "learn": "Conoce cómo registrarte"
+      },
+      "sections": {
+        "mailingAddress": "Dirección postal",
+        "electionOffice": "Oficina electoral: {office}",
+        "sources": "Fuentes: {sources}"
+      },
+      "empty": {
+        "prefix": "No encontramos recursos de registro electoral para {state}. Visita",
+        "suffix": "para obtener las instrucciones más recientes.",
+        "voteGov": "Vote.gov"
+      }
+    },
+    "lure": {
+      "header": {
+        "title": "¿Listo para votar sobre algo que realmente importa? 🗳️",
+        "subtitle": "Mientras votas por Drag Race, descubre quién se postula en tu zona y quién realmente te representa."
+      },
+      "location": {
+        "label": "Tu zona:",
+        "updating": "Actualizando…"
+      },
+      "stats": {
+        "candidates": {
+          "title": "Candidaturas locales",
+          "caption": "{formattedCount} {count, plural, one {representante conectado} other {representantes conectados}}"
+        },
+        "activities": {
+          "title": "Temas activos",
+          "caption": "Actualizaciones cívicas registradas para tu distrito"
+        },
+        "following": {
+          "title": "Tu voz",
+          "caption": "Representantes que sigues"
+        },
+        "election": {
+          "title": "Próxima elección",
+          "addAddress": "Agrega tu dirección para ver las elecciones de tu distrito.",
+          "badge": {
+            "empty": "No hay elecciones registradas para tus divisiones.",
+            "loading": "Comprobando…",
+            "error": "Datos de elecciones no disponibles"
+          },
+          "future": "La próxima elección es en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "electionCard": {
+        "title": "Calendario electoral",
+        "description": "Fechas clave en tus divisiones.",
+        "ariaLabel": "Próximas elecciones para tus divisiones"
+      },
+      "candidates": {
+        "section": {
+          "title": "Tus candidaturas locales",
+          "subtitle": "Conoce a quienes te representan ahora mismo. La calidad de los datos y la verificación se actualizan en tiempo real."
+        },
+        "loading": "Cargando a tus representantes locales…",
+        "empty": "Seguimos sincronizando los datos de tus representantes locales. Intenta actualizar en un minuto.",
+        "challengerBadge": "Aspirante",
+        "dataQualityBadge": "{value}% calidad de datos",
+        "verification": {
+          "verified": "Registro verificado",
+          "pending": "En espera de verificación",
+          "failed": "Problemas de verificación"
+        },
+        "keyIssues": "Temas clave:",
+        "keyIssuesFallback": "En espera de actualizaciones",
+        "level": {
+          "unknown": "Distrito"
+        },
+        "officeFallback": "Distrito {level}",
+        "partyIndependent": "Independiente",
+        "activity": {
+          "lastUpdate": "Última actualización el {date}",
+          "none": "No hay actividad cívica reciente registrada"
+        }
+      },
+      "engagement": {
+        "didYouKnow": {
+          "title": "¿Sabías que…?",
+          "fallback": "Destacamos a los representantes más receptivos y transparentes de tu zona en cuanto se completa la verificación.",
+          "highlight": "{name} tiene una de las mejores calificaciones de calidad de datos en tu zona ({score}%). Los registros verificados significan actualizaciones confiables."
+        },
+        "dataQualityWatch": {
+          "title": "Alerta de calidad de datos",
+          "fallback": "Todos los registros de tus representantes locales se ven sólidos. Te avisaremos si algo requiere tu atención.",
+          "highlight": "{name} aún tiene verificación limitada ({score}% de calidad de datos). Entra para solicitar más información o señalar problemas."
+        }
+      },
+      "cta": {
+        "button": "Ver todas mis candidaturas locales",
+        "caption": "Haz preguntas, descubre quién financia a quién y haz oír tu voz"
+      },
+      "social": {
+        "voters": "Más de 10.000 votantes",
+        "privacy": "100% privado",
+        "access": "Acceso equitativo"
+      },
+      "errors": {
+        "representatives": "No pudimos actualizar tu información cívica. {message}"
+      },
+      "live": {
+        "locationUpdated": "Información cívica actualizada para {location}.",
+        "representativesLoaded": "{count, plural, one {# representante local sincronizado.} other {# representantes locales sincronizados.}}",
+        "nextElection": "Próxima elección {name} en {count, plural, =0 {hoy.} one {# día.} other {# días.}}",
+        "nextElectionToday": "La elección {name} es hoy.",
+        "unnamedElection": "tu próxima elección",
+        "error": "No pudimos actualizar la información cívica. {message}"
+      }
+    },
+    "engagement": {
+      "aria": {
+        "like": "Marcar me gusta en este contenido",
+        "unlike": "Quitar me gusta de este contenido",
+        "comment": "Comentar este contenido",
+        "share": "Compartir este contenido",
+        "addBookmark": "Agregar este contenido a marcadores",
+        "removeBookmark": "Quitar este contenido de marcadores"
+      },
+      "actions": {
+        "like": "Marcar me gusta en este contenido",
+        "unlike": "Quitar me gusta de este contenido",
+        "comment": "Comentar este contenido",
+        "share": "Compartir este contenido",
+        "addBookmark": "Agregar este contenido a marcadores",
+        "removeBookmark": "Quitar este contenido de marcadores"
+      },
+      "analytics": {
+        "views": "Vistas",
+        "engagement": "Interacción",
+        "notAvailable": "No disponible"
+      },
+      "trending": {
+        "up": "Tendencia al alza {change}%",
+        "down": "Tendencia a la baja {change}%"
+      },
+      "lastUpdated": "Actualizado {time}"
+    },
+    "representatives": {
+      "card": {
+        "district": "Distrito {district}",
+        "committees": {
+          "heading": "Comités",
+          "item": "{role}: {name}",
+          "more": "+{count} comités adicionales"
+        },
+        "contact": {
+          "website": "Sitio web",
+          "button": "Contactar"
+        },
+        "dataQuality": {
+          "label": "Calidad de datos"
+        },
+        "actions": {
+          "follow": "Seguir",
+          "unfollow": "Dejar de seguir",
+          "following": "Siguiendo...",
+          "unfollowing": "Dejando de seguir..."
+        },
+        "errors": {
+          "follow": "{message}"
+        }
+      },
+      "list": {
+        "loading": "Cargando representantes…",
+        "error": "Error: {error}",
+        "empty": {
+          "title": "No encontramos representantes",
+          "subtitle": "Ajusta tus criterios de búsqueda o ubicación."
+        }
+      },
+      "search": {
+        "title": "Buscar representantes",
+        "inputs": {
+          "query": "Busca por nombre...",
+          "location": "Ingresa tu dirección..."
+        },
+        "buttons": {
+          "search": "Buscar",
+          "searching": "Buscando…",
+          "find": "Encontrar representantes",
+          "apply": "Aplicar filtros"
+        },
+        "advanced": {
+          "toggle": "Filtros avanzados",
+          "clearAll": "Limpiar todo",
+  "common": {
+            "all": "Todas las opciones"
+          },
+          "state": {
+            "label": "Estado",
+            "placeholder": "Todos los estados"
+          },
+          "party": {
+            "label": "Partido",
+            "placeholder": "Todos los partidos",
+            "democratic": "Demócrata",
+            "republican": "Republicano",
+            "independent": "Independiente",
+            "green": "Verde",
+            "libertarian": "Libertario"
+          },
+          "office": {
+            "label": "Cargo",
+            "placeholder": "Todos los cargos",
+            "senator": "Senador",
+            "representative": "Representante",
+            "governor": "Gobernador",
+            "stateSenator": "Senador estatal",
+            "stateRepresentative": "Representante estatal"
+          },
+          "level": {
+            "label": "Nivel",
+            "placeholder": "Todos los niveles",
+            "federal": "Federal",
+            "state": "Estatal",
+            "local": "Local"
+          }
+        },
+        "states": {
+          "CA": "California",
+          "NY": "Nueva York",
+          "TX": "Texas",
+          "FL": "Florida",
+          "IL": "Illinois"
+        }
+      }
+    },
+    "actions": {
+      "card": {
+        "type": {
+          "petition": "Petición",
+          "campaign": "Campaña",
+          "survey": "Encuesta",
+          "event": "Evento",
+          "protest": "Protesta",
+          "meeting": "Reunión"
+        },
+        "urgency": {
+          "low": "Baja urgencia",
+          "medium": "Urgencia moderada",
+          "high": "Alta urgencia",
+          "critical": "Urgencia crítica"
+        },
+        "badges": {
+          "draft": "Borrador"
+        },
+        "signatures": "{current} / {required} firmas",
+        "percentage": "{value}%",
+        "metadata": {
+          "ended": "Finalizado",
+          "endsOn": "Finaliza el {date}"
+        },
+        "statusMessages": {
+          "completed": "Esta acción se ha completado.",
+          "cancelled": "Esta acción se ha cancelado.",
+          "paused": "Esta acción está en pausa.",
+          "expired": "Esta acción ha finalizado."
+        },
+        "buttons": {
+          "viewDetails": "Ver detalles",
+          "sign": "Firmar",
+          "signing": "Firmando...",
+          "signed": "Firmado"
+        }
+      },
+      "list": {
+        "loading": "Cargando acciones cívicas…",
+        "loadingMore": "Cargando…",
+        "empty": "No encontramos acciones cívicas.",
+        "errors": {
+          "fetch": "No se pudieron cargar las acciones cívicas.",
+          "generic": "Ocurrió un error inesperado.",
+          "sign": "No se pudo firmar la acción.",
+          "display": "Error: {error}"
+        },
+        "buttons": {
+          "create": "Crear acción",
+          "loadMore": "Cargar más"
+        }
+      },
+      "create": {
+        "header": {
+          "title": "Crear acción cívica",
+          "description": "Inicia una petición, campaña u otra acción de participación cívica."
+        },
+        "fields": {
+          "commonCounter": "{current}/{max} caracteres",
+          "title": {
+            "label": "Título",
+            "placeholder": "Ej.: Apoyar la legislación climática"
+          },
+          "description": {
+            "label": "Descripción",
+            "placeholder": "Describe tu acción cívica..."
+          },
+          "actionType": {
+            "label": "Tipo de acción",
+            "placeholder": "Selecciona un tipo de acción"
+          },
+          "urgency": {
+            "label": "Nivel de urgencia",
+            "placeholder": "Selecciona la urgencia"
+          },
+          "category": {
+            "label": "Categoría",
+            "placeholder": "Ej.: Medio ambiente, Salud, Educación"
+          },
+          "signatures": {
+            "label": "Firmas objetivo",
+            "placeholder": "1000"
+          },
+          "endDate": {
+            "label": "Fecha de cierre (opcional)"
+          },
+          "targetState": {
+            "label": "Estado objetivo (opcional)",
+            "placeholder": "CA"
+          },
+          "targetDistrict": {
+            "label": "Distrito objetivo (opcional)",
+            "placeholder": "12"
+          },
+          "visibility": {
+            "label": "Hacer pública esta acción"
+          }
+        },
+        "actionTypes": {
+          "petition": "Petición",
+          "campaign": "Campaña",
+          "survey": "Encuesta",
+          "event": "Evento",
+          "protest": "Protesta",
+          "meeting": "Reunión"
+        },
+        "urgencyLevels": {
+          "low": "Baja",
+          "medium": "Media",
+          "high": "Alta",
+          "critical": "Crítica"
+        },
+        "validation": {
+          "titleRequired": "El título es obligatorio.",
+          "titleMax": "El título no puede superar los 200 caracteres.",
+          "descriptionMax": "La descripción no puede superar los 5000 caracteres.",
+          "signaturesRange": "Las firmas objetivo deben estar entre 1 y 1 000 000.",
+          "endDateFuture": "La fecha de cierre debe estar en el futuro."
+        },
+        "errors": {
+          "submitRequest": "No se pudo crear la acción cívica.",
+          "generic": "Ocurrió un error."
+        },
+        "buttons": {
+          "create": "Crear acción",
+          "creating": "Creando..."
+        }
+      }
+    },
+    "templates": {
+      "support-bill": {
+        "title": "Apoyo a la Legislación",
+        "description": "Expresar apoyo a un proyecto de ley o propuesta de política específica",
+        "placeholders": {
+          "billName": {
+            "label": "Nombre del Proyecto de Ley",
+            "example": "Ley de Acción Climática"
+          },
+          "billNumber": {
+            "label": "Número del Proyecto de Ley",
+            "example": "H.R. 1234"
+          },
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "personalStatement": {
+            "label": "Declaración Personal",
+            "example": "Como ciudadano preocupado, creo que..."
+          },
+          "reason1": {
+            "label": "Razón 1",
+            "example": "Aborda el cambio climático"
+          },
+          "reason2": {
+            "label": "Razón 2",
+            "example": "Crea empleos"
+          },
+          "reason3": {
+            "label": "Razón 3",
+            "example": "Protege el medio ambiente"
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          },
+          "userAddress": {
+            "label": "Tu Dirección",
+            "example": "Calle Principal 123, Ciudad, Estado 12345"
+          }
+        }
+      },
+      "oppose-bill": {
+        "title": "Oposición a la Legislación",
+        "description": "Expresar oposición a un proyecto de ley o propuesta de política específica",
+        "placeholders": {
+          "billName": {
+            "label": "Nombre del Proyecto de Ley",
+            "example": "Ley de Reforma Regulatoria"
+          },
+          "billNumber": {
+            "label": "Número del Proyecto de Ley",
+            "example": "H.R. 5678"
+          },
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "personalStatement": {
+            "label": "Declaración Personal",
+            "example": "Me preocupa que..."
+          },
+          "concern1": {
+            "label": "Preocupación 1",
+            "example": "Puede dañar el medio ambiente"
+          },
+          "concern2": {
+            "label": "Preocupación 2",
+            "example": "Carece de salvaguardas suficientes"
+          },
+          "concern3": {
+            "label": "Preocupación 3",
+            "example": "Puede afectar a comunidades vulnerables"
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          },
+          "userAddress": {
+            "label": "Tu Dirección",
+            "example": "Calle Principal 123, Ciudad, Estado 12345"
+          }
+        }
+      },
+      "general-question": {
+        "title": "Pregunta General",
+        "description": "Hacer una pregunta general sobre política o representación",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "topic": {
+            "label": "Tema",
+            "example": "Reforma de Salud"
+          },
+          "question": {
+            "label": "Tu Pregunta",
+            "example": "¿Cuál es tu posición sobre..."
+          },
+          "additionalContext": {
+            "label": "Contexto Adicional",
+            "example": "Esto es importante para mí porque..."
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          },
+          "userEmail": {
+            "label": "Tu Correo Electrónico",
+            "example": "juan@ejemplo.com"
+          }
+        }
+      },
+      "constituent-service": {
+        "title": "Solicitud de Servicio al Ciudadano",
+        "description": "Solicitar ayuda con un servicio gubernamental o problema",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "issue": {
+            "label": "Resumen del Problema",
+            "example": "Beneficios de Seguridad Social"
+          },
+          "issueDescription": {
+            "label": "Descripción del Problema",
+            "example": "He estado esperando..."
+          },
+          "attempt1": {
+            "label": "Intento 1",
+            "example": "Contacté directamente a la agencia"
+          },
+          "attempt2": {
+            "label": "Intento 2",
+            "example": "Presenté la documentación requerida"
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          },
+          "userContactInfo": {
+            "label": "Información de Contacto",
+            "example": "Teléfono: 555-1234, Correo: juan@ejemplo.com"
+          }
+        }
+      },
+      "thank-you": {
+        "title": "Mensaje de Agradecimiento",
+        "description": "Agradecer a tu representante por su trabajo o voto",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "action": {
+            "label": "Acción",
+            "example": "votar a favor de la Ley de Acción Climática"
+          },
+          "reason": {
+            "label": "Por Qué Estás Agradecido",
+            "example": "Esta legislación es importante para nuestra comunidad..."
+          },
+          "actionType": {
+            "label": "Tipo de Acción",
+            "example": "voto"
+          },
+          "value": {
+            "label": "Valor",
+            "example": "protección ambiental"
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          }
+        }
+      },
+      "policy-feedback": {
+        "title": "Comentarios sobre Política",
+        "description": "Proporcionar comentarios sobre una política o tema específico",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Título del Representante",
+            "example": "Representante"
+          },
+          "representativeLastName": {
+            "label": "Apellido del Representante",
+            "example": "García"
+          },
+          "policyTopic": {
+            "label": "Tema de Política",
+            "example": "Reforma de Salud"
+          },
+          "feedback": {
+            "label": "Tus Comentarios",
+            "example": "Apoyo este enfoque porque..."
+          },
+          "recommendation": {
+            "label": "Tu Recomendación",
+            "example": "deberíamos priorizar..."
+          },
+          "additionalThoughts": {
+            "label": "Pensamientos Adicionales",
+            "example": "También quería mencionar..."
+          },
+          "userName": {
+            "label": "Tu Nombre",
+            "example": "Juan Pérez"
+          }
+        }
+      }
+    }
+  },
+  "candidates": {
+    "profile": {
+      "status": {
+        "notFound": "No se encontró a la candidatura.",
+        "loading": "Cargando…"
+      },
+      "labels": {
+        "prospectiveCandidate": "Candidatura prospecto",
+        "statusVerified": "Verificada",
+        "statusPending": "En verificación",
+        "public": "Tu perfil es público.",
+        "private": "Tu perfil es privado (solo vista previa)."
+      },
+      "actions": {
+        "togglePublicTitle": "Cambiar visibilidad pública",
+        "publish": "Publicar perfil",
+        "unpublish": "Ocultar perfil"
+      },
+      "verification": {
+        "tooltip": "Verifica con tu correo oficial",
+        "codeSent": "Enviamos un código de verificación a tu correo oficial. Escríbelo abajo.",
+        "requestFailed": "No pudimos enviar el código de verificación.",
+        "requestError": "Error al enviar el código de verificación. Inténtalo de nuevo.",
+        "complete": "✅ Verificación completada.",
+        "failed": "❌ La verificación falló. Inténtalo otra vez.",
+        "buttons": {
+          "request": "Verificar correo oficial",
+          "loading": "Verificando…",
+          "submit": "Enviar código",
+          "submitLoading": "Enviando…"
+        },
+        "input": {
+          "placeholder": "Ingresa el código de 6 dígitos",
+          "note": "El código vence en 15 minutos. Tienes 5 intentos por código."
+        },
+        "error": {
+          "expired": "⏰ Este código expiró. Solicita uno nuevo.",
+          "locked": "🔒 Demasiados intentos fallidos. Solicita un nuevo código.",
+          "alreadyUsed": "⚠️ Este código ya se usó. Solicita uno nuevo.",
+          "invalid": "Código no válido.",
+          "invalidWithAttempts": "Código no válido. ({count, plural, one {{count} intento restante} other {{count} intentos restantes}})",
+          "general": "Código no válido."
+        }
+      },
+      "edit": {
+        "bioLabel": "Biografía",
+        "bioPlaceholder": "Cuéntales a los votantes sobre ti…",
+        "websiteLabel": "Sitio web",
+        "websitePlaceholder": "https://tucampaña.com",
+        "socialLabel": "Redes (clave → URL, una por línea)",
+        "socialPlaceholder": "twitter: https://x.com/tú",
+        "success": "Perfil actualizado.",
+        "error": "No se pudo actualizar el perfil.",
+        "saveButton": "Guardar cambios",
+        "saveLoading": "Guardando…"
+      },
+      "links": {
+        "websiteLabel": "Sitio web:",
+        "selfProvidedTitle": "Enlace proporcionado por la candidatura",
+        "selfProvidedBadge": "Autodeclarado"
+      },
+      "navigation": {
+        "backToApp": "Volver a la app"
+      },
+      "correction": {
+        "linkLabel": "Sugerir una corrección",
+        "badge": "Ayuda a mantener este perfil actualizado",
+        "dialogTitle": "Sugerir una corrección",
+        "dialogDescription": "Señala información incorrecta o desactualizada para que nuestro equipo la revise.",
+        "issueLabel": "¿Qué necesita atención?",
+        "issueTypes": {
+          "info": "Biografía o posturas",
+          "contact": "Contacto o enlaces",
+          "verification": "Problemas de identidad",
+          "other": "Otro"
+        },
+        "detailsLabel": "Detalles",
+        "detailsPlaceholder": "Describe la corrección propuesta. Incluye el texto actual, lo que debería decir y contexto adicional.",
+        "detailsHelp": "Al menos 20 caracteres.",
+        "contactLabel": "Correo de contacto (opcional)",
+        "contactDescription": "Solo lo usaremos si necesitamos más información.",
+        "sourceLabel": "Fuente o enlace (opcional)",
+        "sourceDescription": "Comparte un enlace público que respalde la corrección.",
+        "contactPlaceholder": "tu@correo.com",
+        "sourcePlaceholder": "https://ejemplo.org/fuente",
+        "feedbackTitle": "Corrección: {name}",
+        "feedbackDescription": "[{issue}] {details}\n\nFuente: {source}\nContacto: {contact}",
+        "missingValue": "n/d",
+        "submit": "Enviar corrección",
+        "submitting": "Enviando…",
+        "success": "¡Gracias! Nuestro equipo revisará tu corrección.",
+        "error": "No pudimos enviar la corrección. Inténtalo nuevamente.",
+        "detailsRequired": "Proporciona al menos 20 caracteres para entender la corrección.",
+        "close": "Cerrar"
+      }
     }
   },
   "common": {
-    "skipToContent": "Saltar al contenido principal"
+    "skipToContent": "Saltar al contenido principal",
+    "actions": {
+      "cancel": "Cancelar",
+      "retry": "Reintentar"
+    },
+    "progressiveDisclosure": {
+      "expand": "Expandir contenido",
+      "collapse": "Contraer contenido"
+    },
+    "placeholders": {
+      "emDash": "—"
+    },
+    "theme": {
+      "label": "Tema",
+      "select": "Seleccionar tema",
+      "options": "Opciones de tema",
+      "changed": "Tema cambiado a {theme}"
+    },
+    "devices": {
+      "title": "Tus Dispositivos",
+      "listLabel": "Lista de dispositivos",
+      "loading": "Cargando dispositivos...",
+      "loadFailed": "No se pudieron cargar los dispositivos",
+      "empty": "No se encontraron dispositivos",
+      "add": "Agregar Dispositivo"
+    },
+    "messages": {
+      "dismiss": "Descartar mensaje"
+    }
   },
   "navigation": {
     "home": "Inicio",
@@ -96,7 +1290,609 @@
     "settings": "Configuración",
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
-    "register": "Crear cuenta"
+    "register": "Crear cuenta",
+    "languageSelector": {
+      "live": {
+        "changed": "Idioma establecido en {language}.",
+        "error": "No se pudo cambiar el idioma. Inténtalo de nuevo."
+      }
+    },
+    "mobileMenu": {
+      "open": "Abrir menú de navegación móvil",
+      "close": "Cerrar menú de navegación móvil"
+    },
+    "menu": {
+      "title": "Menú",
+      "close": "Cerrar menú",
+      "profile": "Mi Perfil",
+      "settings": "Configuración",
+      "contribute": "Ayuda a Construir la Democracia",
+      "badgeNew": "Nuevo",
+      "userFallback": "Usuario",
+      "contribute": {
+        "title": "Ayuda a Construir la Democracia",
+        "description": "Este es un proyecto de código abierto que lucha por la democracia.",
+        "mission": "Cada contribución ayuda a nivelar el campo de juego y exponer a políticos \"comprados\".",
+        "financialNote": {
+          "label": "Nota:",
+          "text": "Estamos explorando formas éticas de aceptar contribuciones financieras. Por ahora, nos enfocamos en contribuciones de código y comunidad para mantener la plataforma verdaderamente independiente."
+        },
+        "code": {
+          "title": "Desarrollo de Código",
+          "description": "Ayuda a construir funciones y corregir errores",
+          "skills": {
+            "react": "React",
+            "typescript": "TypeScript",
+            "nodejs": "Node.js"
+          }
+        },
+        "documentation": {
+          "title": "Documentación",
+          "description": "Ayuda a otros a entender la plataforma",
+          "skills": {
+            "writing": "Escritura",
+            "technicalDocs": "Documentación técnica",
+            "tutorials": "Tutoriales"
+          }
+        },
+        "testing": {
+          "title": "Pruebas y Control de Calidad",
+          "description": "Ayuda a asegurar la calidad",
+          "skills": {
+            "testing": "Pruebas",
+            "qa": "Control de calidad",
+            "userFeedback": "Comentarios de usuarios"
+          }
+        },
+        "community": {
+          "title": "Construcción de Comunidad",
+          "description": "Ayuda a hacer crecer nuestra comunidad",
+          "skills": {
+            "community": "Comunidad",
+            "socialMedia": "Redes sociales",
+            "events": "Eventos"
+          }
+        },
+        "sharing": {
+          "title": "Compartir y Difusión",
+          "description": "Ayuda a correr la voz",
+          "skills": {
+            "socialMedia": "Redes sociales",
+            "contentCreation": "Creación de contenido",
+            "outreach": "Difusión"
+          }
+        }
+      },
+      "settings": {
+        "privacy": "Configuración de Privacidad",
+        "notifications": "Notificaciones",
+        "account": "Configuración de Cuenta"
+      }
+    }
+  },
+  "analytics": {
+    "heading": {
+      "title": "Tablero de análisis",
+      "mobile": "Monitoreo e información",
+      "desktop": "Monitoreo del sistema • Inteligencia empresarial • Información de usuarios",
+      "lastUpdatedFull": "Actualizado: {time}",
+      "lastUpdatedShort": "• {time}"
+    },
+    "buttons": {
+      "showDetails": "Mostrar detalles",
+      "hideDetails": "Ocultar detalles",
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…",
+      "export": "Exportar datos"
+    },
+    "status": {
+      "loading": "Cargando análisis avanzados…",
+      "errorLabel": "Error",
+      "retry": "Reintentar",
+      "noData": "No hay datos de análisis disponibles.",
+      "loadData": "Cargar datos"
+    },
+    "badges": {
+      "adminAccess": "Acceso de administrador",
+      "newSchema": "Nuevo esquema habilitado",
+      "realTime": "Actualizaciones en tiempo real",
+      "enhancedInsights": "Información mejorada"
+    },
+    "tabs": {
+      "overview": "Resumen",
+      "overviewShort": "Resumen",
+      "trends": "Tendencias",
+      "heatmaps": "Mapas de calor",
+      "heatmapsShort": "Mapas de calor",
+      "demographics": "Demografía",
+      "demographicsShort": "Demografía",
+      "temporal": "Temporal",
+      "temporalShort": "Temporal",
+      "trust": "Niveles de confianza"
+    },
+    "tabDescriptions": {
+      "overview": "La pestaña Resumen destaca usuarios totales, encuestas, votos, puntaje de participación, salud del sistema y mensajes activos.",
+      "trends": "La pestaña Tendencias muestra gráficas interactivas y tablas resumidas de votos, participación y velocidad para el rango seleccionado.",
+      "heatmaps": "La pestaña Mapas de calor muestra mapas por distrito y encuesta con controles accesibles y resúmenes de participación geográfica.",
+      "demographics": "La pestaña Demografía lista niveles de confianza, edades, distritos y educación usando tablas accesibles.",
+      "temporal": "La pestaña Temporal grafica actividad por hora y día además de métricas de velocidad con tablas textuales.",
+      "trust": "La pestaña Niveles de confianza compara el rendimiento por nivel con resúmenes de participación, interacción y probabilidad de bots."
+    },
+    "live": {
+      "refreshing": "Actualizando datos de análisis",
+      "refreshed": "Análisis actualizados a las {time}"
+    },
+    "summaries": {
+      "overview": "{totalUsers} usuarios en total con {activeUsers} activos. {totalPolls} encuestas en total ({newPolls} nuevas en este período) y {totalVotes} votos totales ({newVotes} nuevos). Puntaje de participación {engagementScore} y puntaje de confianza {trustScore}."
+    },
+    "a11y": {
+      "tabChanged": "Contenido de la pestaña {tab} enfocado"
+    },
+    "tables": {
+      "heading": "Resumen accesible de datos",
+      "description": "Utiliza las tablas para revisar los datos de las gráficas con tecnología de asistencia.",
+      "columns": {
+        "tier": "Nivel",
+        "count": "Cantidad",
+        "percentage": "Porcentaje",
+        "ageGroup": "Grupo de edad",
+        "district": "Distrito",
+        "education": "Nivel educativo",
+        "date": "Fecha",
+        "votes": "Votos",
+        "participation": "Participación",
+        "velocity": "Velocidad",
+        "hour": "Hora",
+        "activity": "Actividad",
+        "percentOfPeak": "Porcentaje del pico",
+        "day": "Día",
+        "timestamp": "Hora",
+        "poll": "Encuesta",
+        "category": "Categoría",
+        "engagementScore": "Puntuación de participación",
+        "uniqueVoters": "Votantes únicos",
+        "status": "Estado",
+        "users": "Usuarios",
+        "participationRate": "Tasa de participación",
+        "completionRate": "Tasa de finalización",
+        "avgEngagement": "Prom. participación",
+        "botLikelihood": "Probabilidad de bot",
+        "avgPollsVoted": "Prom. encuestas votadas",
+        "avgTimeOnSite": "Prom. tiempo en el sitio (min)",
+        "state": "Estado",
+        "level": "Nivel",
+        "engagementCount": "Conteo de interacciones",
+        "representatives": "Representantes"
+      },
+      "statuses": {
+        "active": "Activa",
+        "closed": "Cerrada"
+      }
+    },
+    "demographics": {
+      "cardTitle": "Desglose demográfico",
+      "cardDescriptionMobile": "Anonimato K: {threshold}",
+      "cardDescriptionDesktop": "Demografía de usuarios con protecciones de privacidad (anonimato K: {threshold})",
+      "tabsGroupLabel": "Pestañas de datos demográficos",
+      "tabsLabels": {
+        "trust": "Niveles de confianza",
+        "age": "Grupos de edad",
+        "district": "Distritos",
+        "education": "Educación"
+      },
+      "tabsShort": {
+        "trust": "Confianza",
+        "age": "Edad",
+        "district": "Distritos",
+        "education": "Educ."
+      },
+      "tabAnnouncements": {
+        "trust": "Mostrando la distribución por nivel de confianza.",
+        "age": "Mostrando la distribución por grupo de edad.",
+        "district": "Mostrando la participación por distrito.",
+        "education": "Mostrando la distribución por nivel educativo."
+      },
+      "privacy": {
+        "title": "Datos protegidos por privacidad",
+        "line1": "Solo se incluyen usuarios que aceptaron la recopilación analítica.",
+        "line2": "Las categorías con menos de {threshold} usuarios se ocultan para mantener el anonimato.",
+        "line3": "{optedOut} usuarios rechazaron la recopilación y se excluyen."
+      },
+      "summaryCards": {
+        "totalUsers": "Usuarios totales",
+        "optedIn": "Con consentimiento",
+        "optedOut": "Sin consentimiento",
+        "privacyLevel": "Nivel de privacidad",
+        "privacyValue": "K-{threshold}",
+        "sr": {
+          "totalUsers": "{total} usuarios totales incluidos.",
+          "optedIn": "{count} usuarios con consentimiento.",
+          "optedOut": "{count} usuarios sin consentimiento.",
+          "privacyLevel": "Nivel de privacidad K-{threshold}."
+        }
+      },
+      "summaryIntro": "Mostrando {total} usuarios totales con {optedIn} con consentimiento y {optedOut} sin consentimiento. Las categorías ocultan grupos menores a {threshold} usuarios.",
+      "tables": {
+        "trust": {
+          "title": "Distribución por nivel de confianza",
+          "description": "Cantidad y porcentaje de usuarios por nivel de confianza."
+        },
+        "age": {
+          "title": "Distribución por edad",
+          "description": "Desglose por grupo de edad de los usuarios con consentimiento."
+        },
+        "district": {
+          "title": "Distritos principales",
+          "description": "Distritos principales por participación (máximo 10)."
+        },
+        "education": {
+          "title": "Niveles educativos",
+          "description": "Distribución del nivel educativo de los usuarios con consentimiento."
+        }
+      }
+    },
+    "trends": {
+      "ranges": {
+        "7d": "Últimos 7 días",
+        "30d": "Últimos 30 días",
+        "90d": "Últimos 90 días"
+      },
+      "chartTypes": {
+        "line": "Gráfica de líneas",
+        "area": "Gráfica de área"
+      },
+      "chart": {
+        "title": "Tendencias de actividad",
+        "description": "Muestra votos, participación y velocidad para {range} usando una vista {chartType}.",
+        "axes": {
+          "votes": "Votos / Velocidad",
+          "participation": "Tasa de participación (%)"
+        },
+        "summary": "El mayor número de votos ocurrió el {peakVotesDate} con {peakVotes} votos. La participación alcanzó su punto máximo el {peakParticipationDate} con {peakParticipation}. La tendencia de votos es {trendDirection} durante {range}."
+      },
+      "filters": {
+        "dateRange": "Seleccionar rango de fechas",
+        "chartType": "Seleccionar tipo de gráfica"
+      },
+      "announcements": {
+        "rangeChanged": "El rango de fechas cambió a {range}.",
+        "chartTypeChanged": "La vista de la gráfica cambió a {chartType}.",
+        "refresh": "Actualizando los datos de tendencias."
+      },
+      "trendDirections": {
+        "increasing": "ascendente",
+        "decreasing": "descendente",
+        "steady": "estable"
+      },
+      "summaryIntro": "Se registraron {totalVotes} votos en total. La participación promedio es {avgParticipation} con una velocidad promedio de {avgVelocity}.",
+      "table": {
+        "title": "Datos de tendencia por día",
+        "description": "Totales diarios de votos, participación y velocidad."
+      }
+    },
+    "temporal": {
+      "cardTitle": "Análisis temporal",
+      "cardDescription": "Patrones de actividad por hora del día y día de la semana.",
+      "errors": {
+        "noData": "No hay datos temporales disponibles."
+      },
+      "ranges": {
+        "7d": "Últimos 7 días",
+        "30d": "Últimos 30 días",
+        "90d": "Últimos 90 días"
+      },
+      "filters": {
+        "dateRange": "Selecciona un rango de fechas"
+      },
+      "announcements": {
+        "rangeChanged": "El rango temporal cambió a {range}.",
+        "refresh": "Actualizando los datos temporales."
+      },
+      "tabsGroupLabel": "Vistas de análisis temporal",
+      "tabsLabels": {
+        "hourly": "Patrón por hora",
+        "daily": "Patrón por día",
+        "velocity": "Velocidad de interacción"
+      },
+      "tabAnnouncements": {
+        "hourly": "Mostrando el mapa de calor por hora.",
+        "daily": "Mostrando la actividad por día de la semana.",
+        "velocity": "Mostrando la tendencia de velocidad."
+      },
+      "tabSummaries": {
+        "hourly": "La mayor actividad ocurre alrededor de las {peakHour}. La actividad promedio por franja es {avgActivity}.",
+        "daily": "El día con más interacción es {peakDay}. La actividad promedio por franja es {avgActivity}.",
+        "velocity": "La tendencia de velocidad es {trendDirection}. La última lectura en {lastTimestamp} es {lastVelocity}."
+      },
+      "velocityTrend": {
+        "increasing": "ascendente",
+        "decreasing": "descendente",
+        "steady": "estable"
+      },
+      "summaryIntro": "La mayor actividad ocurre a las {peakHour} del {peakDay}. La actividad promedio por franja horaria es {avgActivity}.",
+      "summaryCards": {
+        "peakHour": {
+          "label": "Hora pico",
+          "subtitle": "Momento de mayor actividad",
+          "sr": "Hora pico {value}."
+        },
+        "peakDay": {
+          "label": "Día pico",
+          "subtitle": "Día de mayor actividad",
+          "sr": "Día pico {value}."
+        },
+        "avgActivity": {
+          "label": "Actividad promedio",
+          "subtitle": "Por franja horaria",
+          "sr": "Actividad promedio {value} por franja."
+        }
+      },
+      "sections": {
+        "hourly": {
+          "title": "Patrón de 24 horas",
+          "description": "Muestra la participación durante todo el día (0 = medianoche, 12 = mediodía).",
+          "heatmapLabel": "Mapa de calor por hora que indica la intensidad de actividad.",
+          "legendLow": "Baja",
+          "legendHigh": "Alta"
+        },
+        "daily": {
+          "title": "Patrón por día de la semana",
+          "description": "Muestra la participación en cada día de la semana.",
+          "listTitle": "Participación por día",
+          "percentOfPeak": "{value}% del pico"
+        },
+        "velocity": {
+          "title": "Velocidad de participación",
+          "description": "Tasa de cambio de la participación en el tiempo."
+        }
+      },
+      "axes": {
+        "activityCount": "Conteo de actividad",
+        "velocity": "Velocidad (actividades/hora)"
+      },
+      "notes": {
+        "mockData": "Usando datos simulados para demostración. {error}"
+      },
+      "tables": {
+        "hourly": {
+          "title": "Actividad por hora",
+          "description": "Cantidad de actividad y porcentaje relativo a la hora pico."
+        },
+        "daily": {
+          "title": "Actividad por día",
+          "description": "Totales diarios y porcentaje relativo al día pico."
+        },
+        "velocity": {
+          "title": "Velocidad de participación",
+          "description": "Mediciones recientes de velocidad en actividades por hora."
+        }
+      }
+    },
+    "heatmap": {
+      "cardTitle": "Mapa de calor de participación",
+      "cardDescription": "Visualiza la intensidad de participación en las encuestas por categoría.",
+      "filters": {
+        "category": "Selecciona una categoría",
+        "limit": "Mostrar",
+        "topCount": "Top {count}"
+      },
+      "announcements": {
+        "categoryChanged": "Filtro de categoría establecido en {category}.",
+        "limitChanged": "Mostrando las {count} encuestas principales.",
+        "refresh": "Actualizando el mapa de calor de participación."
+      },
+      "summaryCards": {
+        "totalVotes": {
+          "label": "Votos totales",
+          "subtitle": "Encuestas seleccionadas",
+          "sr": "{value} votos en total en las encuestas seleccionadas."
+        },
+        "avgEngagement": {
+          "label": "Prom. participación",
+          "subtitle": "Puntaje promedio",
+          "sr": "Puntaje promedio de participación {value}."
+        },
+        "activePolls": {
+          "label": "Encuestas activas",
+          "subtitle": "En ejecución",
+          "sr": "{value} encuestas activas actualmente."
+        },
+        "topPoll": {
+          "label": "Encuesta destacada",
+          "subtitle": "Mayor participación",
+          "sr": "Encuesta destacada {title} con puntaje {engagement}."
+        }
+      },
+      "chart": {
+        "title": "Gráfica de participación",
+        "summary": "Mostrando {count} encuestas ordenadas por participación. La más alta es {topTitle} con puntaje {topEngagement}."
+      },
+      "summaryIntro": "{total} votos totales en {active} encuestas activas. {topPoll} lidera con una puntuación de {engagement}.",
+      "summaryFallback": "{total} votos totales en {active} encuestas activas.",
+      "table": {
+        "title": "Detalles de participación por encuesta",
+        "description": "Encuestas ordenadas por puntuación de participación con métricas adicionales."
+      },
+      "topPolls": {
+        "votesLabel": "votos"
+      }
+    },
+    "districts": {
+      "summaryIntro": "{totalDistricts} distritos cumplen con las salvaguardas de privacidad con {totalEngagement} interacciones totales. {topDistrict} ({topState}) lidera con {topEngagement} interacciones.",
+      "summaryFallback": "{totalDistricts} distritos cumplen con las salvaguardas de privacidad en esta vista.",
+      "table": {
+        "title": "Detalles de participación por distrito",
+        "description": "Distritos listados con estado, nivel, conteos de interacción y cobertura de representantes."
+      }
+    },
+    "trust": {
+      "cardTitle": "Comparación de niveles de confianza",
+      "cardDescription": "Compara métricas de comportamiento y participación entre niveles de confianza (T0-T3).",
+      "tabsGroupLabel": "Pestañas de visualización de niveles de confianza",
+      "tabsLabels": {
+        "participation": "Participación",
+        "engagement": "Interacción",
+        "radar": "Radar"
+      },
+      "tabAnnouncements": {
+        "participation": "Viendo tasas de participación y finalización por nivel de confianza.",
+        "engagement": "Viendo puntajes de interacción y probabilidad de bots por nivel de confianza.",
+        "radar": "Viendo comparación multi-métrica en radar entre niveles de confianza."
+      },
+      "sections": {
+        "participation": {
+          "title": "Tasas de Participación y Finalización",
+          "description": "Porcentaje de usuarios que participan y completan encuestas por nivel de confianza.",
+          "chartLabel": "Gráfico de barras mostrando tasas de participación y finalización para cada nivel de confianza. Eje X muestra niveles de confianza (T0-T3), eje Y muestra porcentaje.",
+          "detailedMetrics": "Métricas Detalladas",
+          "rateLabels": "Participación / Finalización"
+        },
+        "engagement": {
+          "title": "Interacción y Detección de Bots",
+          "description": "Puntajes promedio de interacción e indicadores de probabilidad de bots por nivel de confianza.",
+          "chartLabel": "Gráfico de barras mostrando puntajes promedio de interacción y porcentajes de probabilidad de bots para cada nivel de confianza. Eje X muestra niveles de confianza (T0-T3), eje Y muestra valores de puntaje."
+        },
+        "radar": {
+          "title": "Resumen Multi-Métrica",
+          "description": "Vista de radar comparativa entre métricas de participación, finalización, interacción y puntaje de confianza.",
+          "chartLabel": "Gráfico de radar comparando participación, finalización, interacción y puntajes de confianza entre todos los niveles de confianza. Cada nivel está representado por un polígono de color diferente."
+        }
+      },
+      "axes": {
+        "percentage": "Porcentaje (%)",
+        "score": "Puntaje"
+      },
+      "errors": {
+        "noData": "No hay datos de niveles de confianza disponibles"
+      },
+      "summaryCards": {
+        "totalUsers": {
+          "label": "Usuarios totales",
+          "subtitle": "Entre todos los niveles de confianza",
+          "sr": "{value} usuarios totales entre todos los niveles de confianza."
+        },
+        "strongestTier": {
+          "label": "Nivel más fuerte",
+          "subtitle": "Mayor interacción",
+          "sr": "{tier} muestra la mayor interacción ({engagement}) con participación en {participation}."
+        }
+      },
+      "summaryIntro": "{totalUsers} usuarios en total. {strongestTier} muestra la mayor participación ({engagement}) con una tasa de {participation}.",
+      "summaryFallback": "{totalUsers} usuarios en total entre todos los niveles de confianza.",
+      "table": {
+        "title": "Métricas por nivel de confianza",
+        "description": "Principales métricas por nivel de confianza, incluyendo participación, finalización y probabilidad de bots."
+      },
+      "usersSuffix": "usuarios",
+      "usersLabel": "Usuarios",
+      "refreshAnnouncement": "Actualizando datos de comparación de niveles de confianza.",
+      "errorAnnouncement": "Los datos de niveles de confianza pueden estar incompletos. {error}"
+    },
+    "overview": {
+      "metrics": {
+        "totalUsers": {
+          "title": "Usuarios totales",
+          "subtitle": "{active} usuarios activos",
+          "sr": "{total} usuarios totales con {active} activos."
+        },
+        "totalPolls": {
+          "title": "Encuestas totales",
+          "subtitle": "{newPolls} nuevas en este período",
+          "sr": "{total} encuestas totales con {newPolls} creadas en este período."
+        },
+        "totalVotes": {
+          "title": "Votos totales",
+          "subtitle": "{newVotes} nuevos en este período",
+          "sr": "{total} votos totales con {newVotes} registrados en este período."
+        },
+        "engagement": {
+          "title": "Puntaje de participación",
+          "subtitle": "Puntaje de confianza: {trustScore}",
+          "sr": "Puntaje de participación {engagement} con puntaje de confianza {trustScore}."
+        }
+      }
+    },
+    "overviewSections": {
+      "enhancedInsights": {
+        "title": "Información mejorada",
+        "description": "Analítica avanzada impulsada por el nuevo esquema."
+      },
+      "sessionAnalytics": {
+        "title": "Analítica de sesiones",
+        "description": "Seguimiento en tiempo real del comportamiento del usuario."
+      },
+      "systemHealth": {
+        "title": "Salud del sistema",
+        "description": "Monitoreo de servicios y estados de incidentes."
+      },
+      "siteMessages": {
+        "title": "Mensajes activos del sitio",
+        "description": "Anuncios que se muestran actualmente a los usuarios."
+      }
+    },
+    "widgets": {
+      "moveButton": "Mover",
+      "moveButtonAria": "Activar o desactivar el modo de movimiento con el teclado para este widget",
+      "resizeButton": "Redimensionar",
+      "resizeButtonAria": "Activar o desactivar el modo de redimensionado con el teclado para este widget",
+      "addWidget": "Agregar widget",
+      "defaultInstructions": "Pon el foco en este widget y usa los botones Mover o Redimensionar para ajustarlo con el teclado.",
+      "moveModeOn": "Modo de movimiento activado para {title}. Usa las flechas para cambiar de posición. Pulsa Enter para confirmar o Escape para cancelar.",
+      "moveModeOff": "Modo de movimiento desactivado.",
+      "moveModeInstructions": "Modo de movimiento activo. Usa las flechas para reposicionar el widget. Pulsa Enter para confirmar o Escape para cancelar.",
+      "resizeModeOn": "Modo de redimensionado activado para {title}. Usa las flechas para cambiar el tamaño. Pulsa Enter para confirmar o Escape para cancelar.",
+      "resizeModeOff": "Modo de redimensionado desactivado.",
+      "resizeModeInstructions": "Modo de redimensionado activo. Usa las flechas para cambiar el tamaño del widget. Pulsa Enter para confirmar o Escape para cancelar.",
+      "positionUpdate": "Widget movido a la columna {column}, fila {row}.",
+      "sizeUpdate": "El widget ahora mide {width} columnas por {height} filas.",
+      "editModeOn": "Modo de edición activado. Usa los botones Mover o Redimensionar en cada widget para ajustar el diseño con el teclado.",
+      "editModeOff": "Modo de edición desactivado.",
+      "overlayMoveHint": "Enfoca un widget y presiona M o usa el botón Mover para reposicionarlo con las flechas.",
+      "overlayResizeHint": "Presiona R o usa el botón Redimensionar para ajustar ancho y alto con las flechas.",
+      "shortcutDialog": {
+        "button": "Ayuda de teclado",
+        "title": "Atajos de teclado",
+        "intro": "Usa estos comandos para editar la cuadrícula de widgets rápidamente. Todos los atajos funcionan con modificadores de Mac (⌘) o Windows/Linux (Ctrl), a menos que se indique lo contrario.",
+        "items": {
+          "toggleEdit": {
+            "shortcut": "⌘/Ctrl + E",
+            "description": "Activa o desactiva el modo edición."
+          },
+          "toggleMove": {
+            "shortcut": "M (con el foco en un widget)",
+            "description": "Activa el modo mover para recolocar el widget seleccionado."
+          },
+          "toggleResize": {
+            "shortcut": "R (con el foco en un widget)",
+            "description": "Activa el modo redimensionar para ajustar el widget seleccionado."
+          },
+          "arrowMove": {
+            "shortcut": "Flechas (modo mover)",
+            "description": "Recoloca el widget. Mantén Shift para moverte dos columnas o filas."
+          },
+          "arrowResize": {
+            "shortcut": "Flechas (modo redimensionar)",
+            "description": "Ajusta el tamaño del widget. Mantén Shift para pasos más grandes."
+          },
+          "undo": {
+            "shortcut": "⌘/Ctrl + Z",
+            "description": "Deshace el último cambio."
+          },
+          "redo": {
+            "shortcut": "⌘/Ctrl + Shift + Z o Ctrl + Y",
+            "description": "Rehace el cambio deshecho anteriormente."
+          },
+          "save": {
+            "shortcut": "⌘/Ctrl + S",
+            "description": "Guarda el diseño actual."
+          },
+          "cancel": {
+            "shortcut": "Esc",
+            "description": "Sale de los modos mover/redimensionar o cancela acciones del modo edición."
+          }
+        }
+      }
+    }
   },
   "accessibility": {
     "loading": "Cargando Choices..."
@@ -112,7 +1908,12 @@
       "complete": "Finalizado"
     },
     "progress": {
-      "valueText": "Paso {current} de {total}: {label}"
+      "valueText": "Paso {current} de {total}: {label}",
+      "live": {
+        "step": "Paso {current} de {total}: {label}",
+        "completed": "Onboarding completado. Ya puedes explorar Choices.",
+        "error": "Error en onboarding: {message}"
+      }
     },
     "welcome": {
       "title": "Bienvenido a Choices",
@@ -209,6 +2010,472 @@
         "continue": "Continuar",
         "reminder": "Siempre podrás agregar esta información más adelante"
       }
+    },
+    "profile": {
+      "test": {
+        "title": "Configuración de Perfil",
+        "subtitle": "Configura la información de tu perfil"
+      },
+      "overview": {
+        "title": "Configura Tu Perfil",
+        "subtitle": "Ayúdanos a personalizar tu experiencia mientras mantienes el control. **Todo es opcional** - puedes omitir cualquier paso o cambiar la configuración más tarde.",
+        "whyWeAsk": "**Por qué lo pedimos:** Tu perfil nos ayuda a mostrarte candidatos y temas relevantes, pero nunca compartimos tu información personal. Tu privacidad está protegida con cifrado de extremo a extremo.",
+        "cards": {
+          "profile": {
+            "title": "Perfil",
+            "description": "Establece tu nombre para mostrar y la visibilidad de tu perfil",
+            "features": {
+              "chooseName": "Elegir nombre para mostrar",
+              "setVisibility": "Establecer nivel de visibilidad",
+              "controlPrivacy": "Controlar la privacidad"
+            }
+          },
+          "visibility": {
+            "title": "Visibilidad",
+            "description": "Controla quién puede ver tu perfil y actividad",
+            "features": {
+              "public": "Perfiles públicos",
+              "private": "Opciones privadas",
+              "anonymous": "Votación anónima"
+            }
+          },
+          "notifications": {
+            "title": "Notificaciones",
+            "description": "Elige cómo quieres ser notificado",
+            "features": {
+              "email": "Notificaciones por correo",
+              "push": "Notificaciones push",
+              "custom": "Preferencias personalizadas"
+            }
+          }
+        }
+      },
+      "profile": {
+        "title": "Tu Perfil",
+        "subtitle": "Configura la información básica de tu perfil",
+        "cardTitle": "Información del Perfil",
+        "cardDescription": "Esta información será visible para otros usuarios según tu configuración de privacidad"
+      },
+      "fields": {
+        "displayName": {
+          "label": "Nombre para Mostrar (Opcional)",
+          "placeholder": "Ingresa tu nombre para mostrar o déjalo en blanco",
+          "error": "El nombre para mostrar es obligatorio",
+          "howWeUse": "**Cómo lo usamos:** Muestra tu nombre cuando haces preguntas a candidatos o comentas sobre temas. Puedes usar tu nombre real, un seudónimo o dejarlo en blanco para permanecer anónimo."
+        },
+        "visibility": {
+          "label": "Visibilidad del Perfil",
+          "howWeUse": "**Cómo lo usamos:** Controla quién puede ver tu perfil y actividad. Elige lo que te resulte cómodo - siempre puedes cambiar esto más tarde."
+        }
+      },
+      "visibility": {
+        "public": {
+          "label": "Público",
+          "description": "Cualquiera puede ver tu perfil y actividad",
+          "badge": "Más Social"
+        },
+        "friendsOnly": {
+          "label": "Solo Amigos",
+          "description": "Solo las personas con las que te conectas pueden ver tu perfil",
+          "badge": "Equilibrado"
+        },
+        "private": {
+          "label": "Privado",
+          "description": "Solo tú puedes ver los detalles de tu perfil",
+          "badge": "Privado"
+        },
+        "anonymous": {
+          "label": "Anónimo",
+          "description": "Vota y participa sin revelar tu identidad",
+          "badge": "Más Privado"
+        }
+      },
+      "preferences": {
+        "title": "Preferencias de Notificaciones",
+        "subtitle": "Elige cómo quieres mantenerte actualizado",
+        "cardTitle": "Configuración de Notificaciones",
+        "cardDescription": "Controla cómo y cuándo recibes notificaciones",
+        "whyWeOffer": "**Por qué ofrecemos notificaciones:** Mantente actualizado sobre desarrollos políticos importantes, respuestas de candidatos a tus preguntas y nuevas funciones que te ayudan a participar en la democracia.",
+        "email": {
+          "label": "Notificaciones por Correo (Opcional)",
+          "description": "Recibe actualizaciones sobre respuestas de candidatos, noticias electorales y actualizaciones de la plataforma"
+        },
+        "push": {
+          "label": "Notificaciones del Navegador (Opcional)",
+          "description": "Recibe alertas en tiempo real cuando los candidatos respondan a tus preguntas"
+        },
+        "whatYoullReceive": {
+          "title": "Lo que recibirás:",
+          "candidateResponses": "Respuestas de candidatos a tus preguntas",
+          "campaignFinance": "Actualizaciones sobre transparencia en financiamiento de campañas",
+          "newCandidates": "Nuevos candidatos en tu área",
+          "electionDeadlines": "Fechas límite y eventos electorales importantes",
+          "platformUpdates": "Actualizaciones de la plataforma y nuevas funciones"
+        }
+      },
+      "complete": {
+        "title": "Resumen del Perfil",
+        "subtitle": "Revisa tu perfil y configuración de notificaciones",
+        "cardTitle": "Tu Configuración",
+        "displayName": "Nombre para Mostrar",
+        "notSet": "No establecido",
+        "visibility": "Visibilidad del Perfil",
+        "emailNotifications": "Notificaciones por Correo",
+        "pushNotifications": "Notificaciones Push",
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado"
+      },
+      "actions": {
+        "startSetup": "Comenzar Configuración",
+        "skip": "Omitir por ahora - Lo configuraré más tarde",
+        "back": "Volver",
+        "nextNotifications": "Siguiente: Notificaciones",
+        "reviewSettings": "Revisar Configuración",
+        "completeSetup": "Completar Configuración",
+        "continue": "Continuar"
+      }
+    },
+    "auth": {
+      "test": {
+        "title": "Configuración de Autenticación",
+        "subtitle": "Elige tu método de autenticación"
+      },
+      "overview": {
+        "title": "Protege Tu Cuenta",
+        "subtitle": "Elige cómo te gustaría autenticarte. Siempre puedes cambiar esto más tarde.",
+        "continueWith": "Continuar con {method}"
+      },
+      "setup": {
+        "title": "Configurar Autenticación",
+        "subtitle": "Completa la configuración de autenticación"
+      },
+      "options": {
+        "ariaLabel": "Seleccionar método de autenticación {method}",
+        "email": {
+          "title": "Correo",
+          "description": "Inicio de sesión seguro con verificación por correo",
+          "bullets": {
+            "noPassword": "No se necesita contraseña",
+            "magicLink": "Inicio de sesión con enlace mágico",
+            "secure": "Verificación segura"
+          }
+        },
+        "social": {
+          "title": "Inicio de Sesión Social",
+          "description": "Inicia sesión con Google o GitHub",
+          "bullets": {
+            "oneClick": "Inicio de sesión con un clic",
+            "trusted": "Proveedores confiables",
+            "enhanced": "Seguridad mejorada"
+          }
+        },
+        "webauthn": {
+          "title": "Clave de Acceso",
+          "description": "Autenticación biométrica segura",
+          "bullets": {
+            "biometric": "Huella dactilar/Reconocimiento facial",
+            "noPassword": "Sin contraseñas",
+            "maximum": "Máxima seguridad"
+          }
+        },
+        "anonymous": {
+          "title": "Anónimo",
+          "description": "Vota sin crear una cuenta",
+          "bullets": {
+            "noPersonal": "Sin información personal",
+            "maximum": "Máxima privacidad",
+            "limited": "Funciones limitadas"
+          }
+        },
+        "skip": {
+          "title": "Omitir por Ahora",
+          "description": "Configurar autenticación más tarde",
+          "bullets": {
+            "continue": "Continuar incorporación",
+            "setupLater": "Configurar más tarde",
+            "limited": "Acceso limitado"
+          }
+        }
+      },
+      "email": {
+        "cardTitle": "Autenticación por Correo",
+        "cardDescription": "Te enviaremos un enlace de inicio de sesión seguro",
+        "fields": {
+          "email": {
+            "label": "Dirección de Correo",
+            "placeholder": "tu@correo.com"
+          }
+        },
+        "validation": {
+          "required": "Por favor ingresa tu dirección de correo"
+        },
+        "errors": {
+          "sendFailed": "No se pudo enviar el correo de verificación"
+        },
+        "success": {
+          "checkEmail": "¡Revisa tu correo para el enlace de inicio de sesión!",
+          "sent": "Hemos enviado un enlace de inicio de sesión seguro a tu dirección de correo."
+        },
+        "actions": {
+          "sending": "Enviando...",
+          "sendLink": "Enviar Enlace de Inicio de Sesión"
+        }
+      },
+      "social": {
+        "google": "Google",
+        "github": "GitHub",
+        "cardTitle": "Autenticación Social",
+        "cardDescription": "Elige tu proveedor de inicio de sesión social preferido",
+        "actions": {
+          "continueWithGoogle": "Continuar con Google",
+          "continueWithGitHub": "Continuar con GitHub"
+        },
+        "errors": {
+          "signInFailed": "No se pudo iniciar sesión con {provider}"
+        }
+      },
+      "webauthn": {
+        "cardTitle": "Autenticación con Clave de Acceso",
+        "cardDescription": "Configura autenticación biométrica segura",
+        "benefits": {
+          "title": "Seguro y Conveniente",
+          "biometric": "Usa tu huella dactilar o reconocimiento facial",
+          "noPassword": "No hay contraseñas que recordar",
+          "crossDevice": "Funciona en todos tus dispositivos",
+          "maximum": "Máxima seguridad con privacidad"
+        },
+        "actions": {
+          "create": "Crear Clave de Acceso"
+        },
+        "success": {
+          "registered": "¡Clave de acceso registrada exitosamente!",
+          "canUse": "Ahora puedes usar tu autenticación biométrica para iniciar sesión."
+        }
+      },
+      "anonymous": {
+        "cardTitle": "Acceso Anónimo",
+        "cardDescription": "Puedes votar de forma anónima sin crear una cuenta",
+        "limitations": {
+          "title": "Funciones Limitadas",
+          "noPolls": "No se pueden crear encuestas",
+          "noPreferences": "No se pueden guardar preferencias",
+          "limitedAnalytics": "Acceso limitado a análisis",
+          "noResearch": "No se puede participar en investigaciones"
+        },
+        "actions": {
+          "continue": "Continuar de Forma Anónima"
+        }
+      },
+      "errors": {
+        "unexpected": "Ocurrió un error inesperado. Por favor intenta de nuevo.",
+        "serviceUnavailable": "Servicio de autenticación no disponible",
+        "dismiss": "Descartar"
+      },
+      "actions": {
+        "continue": "Continuar",
+        "back": "Volver"
+      }
+    },
+    "values": {
+      "title": "¿Qué te importa?",
+      "subtitle": "Selecciona hasta 5 temas que sean más importantes para ti. Esto nos ayuda a mostrarte encuestas relevantes y conectarte con personas afines.",
+      "concerns": {
+        "title": "Preocupaciones Principales ({count}/{max})"
+      },
+      "categories": {
+        "economic": {
+          "title": "Justicia Económica",
+          "concerns": {
+            "fairWages": "salarios justos",
+            "affordableHousing": "vivienda asequible",
+            "healthcareAccess": "acceso a la salud",
+            "educationFunding": "financiamiento educativo",
+            "smallBusinessSupport": "apoyo a pequeñas empresas",
+            "workerRights": "derechos laborales"
+          }
+        },
+        "environmental": {
+          "title": "Protección Ambiental",
+          "concerns": {
+            "climateAction": "acción climática",
+            "cleanEnergy": "energía limpia",
+            "conservation": "conservación",
+            "sustainableLiving": "vida sostenible",
+            "pollutionReduction": "reducción de contaminación"
+          }
+        },
+        "community": {
+          "title": "Bienestar Comunitario",
+          "concerns": {
+            "communitySafety": "seguridad comunitaria",
+            "mentalHealth": "salud mental",
+            "elderlyCare": "cuidado de ancianos",
+            "youthPrograms": "programas juveniles",
+            "disabilityRights": "derechos de discapacidad",
+            "immigrationReform": "reforma migratoria"
+          }
+        },
+        "systemic": {
+          "title": "Cambio Sistémico",
+          "concerns": {
+            "corporateAccountability": "responsabilidad corporativa",
+            "governmentTransparency": "transparencia gubernamental",
+            "campaignFinanceReform": "reforma de financiamiento de campañas",
+            "votingRights": "derechos de voto",
+            "mediaIntegrity": "integridad mediática"
+          }
+        }
+      },
+      "community": {
+        "title": "¿Dónde quieres tener un impacto?",
+        "local": {
+          "label": "Mi comunidad local",
+          "description": "Problemas de ciudad y vecindario"
+        },
+        "regional": {
+          "label": "Mi región/estado",
+          "description": "Preocupaciones estatales y regionales"
+        },
+        "national": {
+          "label": "Problemas nacionales",
+          "description": "Desafíos a nivel país"
+        },
+        "global": {
+          "label": "Desafíos globales",
+          "description": "Cooperación internacional"
+        }
+      },
+      "participation": {
+        "title": "¿Cómo te gustaría participar?",
+        "observer": {
+          "label": "Observador",
+          "description": "Prefiero observar y aprender de otros"
+        },
+        "contributor": {
+          "label": "Contribuidor",
+          "description": "Quiero contribuir ideas y sugerencias"
+        },
+        "leader": {
+          "label": "Líder",
+          "description": "Quiero ayudar a liderar discusiones e iniciativas"
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "continue": "Continuar"
+      },
+      "progress": "Paso {current} de {total}"
+    },
+    "interests": {
+      "title": "Tus Intereses",
+      "subtitle": "Selecciona los temas sobre los que quieres ver encuestas. Puedes cambiarlos en cualquier momento.",
+      "actions": {
+        "save": "Guardar",
+        "reset": "Restablecer"
+      },
+      "summary": {
+        "count": "{selected} de {total} seleccionados",
+        "allSelected": "Todos los intereses seleccionados",
+        "customSelection": "Selección personalizada",
+        "noneSelected": "Selecciona al menos un interés para mejores recomendaciones"
+      },
+      "options": {
+        "climateChange": "Cambio Climático",
+        "healthcare": "Salud",
+        "education": "Educación",
+        "economy": "Economía",
+        "immigration": "Migración",
+        "criminalJustice": "Justicia Penal",
+        "votingRights": "Derechos de Voto",
+        "technology": "Tecnología",
+        "foreignPolicy": "Política Exterior",
+        "socialSecurity": "Seguridad Social",
+        "gunControl": "Control de Armas",
+        "abortionRights": "Derechos Reproductivos",
+        "lgbtqRights": "Derechos LGBTQ+",
+        "racialJustice": "Justicia Racial",
+        "infrastructure": "Infraestructura"
+      },
+      "benefits": {
+        "title": "Cómo te ayuda:",
+        "items": {
+          "seePolls": "Mira encuestas sobre temas que te importan",
+          "personalizedContent": "Recibe recomendaciones personalizadas",
+          "findRepresentatives": "Encuentra representantes que compartan tus intereses",
+          "trackProgress": "Sigue el progreso de los temas que te importan"
+        }
+      }
+    },
+    "complete": {
+      "success": {
+        "title": "¡Bienvenido a Choices!",
+        "subtitle": "Ya estás listo para hacer oír tu voz.",
+        "celebration": "🎉 ¡Incorporación completada! +50 puntos obtenidos"
+      },
+      "summary": {
+        "title": "Resumen de Tu Perfil",
+        "userFallback": "Usuario",
+        "ready": "Listo para participar",
+        "valuesTitle": "Lo que te importa",
+        "communityTitle": "Enfoque comunitario",
+        "participationTitle": "Tu estilo de participación",
+        "privacy": {
+          "title": "Configuración de privacidad",
+          "shareProfile": "Compartir perfil públicamente",
+          "shareDemographics": "Compartir datos demográficos",
+          "allowAnalytics": "Permitir analíticas"
+        }
+      },
+      "participation": {
+        "observer": "Observador",
+        "contributor": "Contribuidor",
+        "leader": "Líder",
+        "default": "Participante"
+      },
+      "next": {
+        "title": "¿Qué sigue?",
+        "steps": {
+          "findCandidates": "Encuentra a tus candidatos locales y descubre quién realmente te representa",
+          "askQuestions": "Haz preguntas directamente a los candidatos y sigue sus respuestas",
+          "followMoney": "Ve quién financia a quién y detecta políticos \"comprados\"",
+          "connectVoters": "Conecta con otros votantes que se preocupan por la democracia"
+        }
+      },
+      "contribute": {
+        "title": "Ayuda a Construir la Revolución Democrática",
+        "subtitle": "Este es un proyecto de código abierto que lucha por la democracia. ¡Cada contribución ayuda a equilibrar el terreno!",
+        "code": {
+          "title": "Contribuciones de Código",
+          "description": "Ayúdanos a crear funciones, corregir errores y mejorar la plataforma",
+          "details": {
+            "frontend": "Frontend: React, TypeScript, Tailwind",
+            "backend": "Backend: Node.js, Supabase, PostgreSQL",
+            "apis": "APIs: Integración de datos gubernamentales",
+            "privacy": "Privacidad: Arquitectura de conocimiento cero"
+          },
+          "action": "Ver en GitHub"
+        },
+        "community": {
+          "title": "Otras Formas de Ayudar",
+          "description": "¿No eres desarrollador? ¡Hay otras maneras de contribuir!",
+          "details": {
+            "reportBugs": "Reporta errores y sugiere funciones",
+            "documentation": "Ayuda con la documentación",
+            "share": "Comparte con amigos y familia",
+            "test": "Prueba nuevas funciones"
+          },
+          "action": "Únete a la Comunidad"
+        },
+        "note": {
+          "label": "Nota:",
+          "message": "Estamos explorando formas éticas de aceptar contribuciones financieras. Por ahora nos enfocamos en contribuciones de código y comunidad para mantener la plataforma verdaderamente independiente."
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "complete": "Completar Configuración",
+        "saving": "Guardando tu perfil..."
+      }
     }
   },
   "polls": {
@@ -304,6 +2571,826 @@
         "previous": "Anterior",
         "next": "Siguiente",
         "pageLabel": "Página {current} de {total}"
+      },
+      "results": {
+        "heading": "Resultados",
+        "refreshing": "Actualizando resultados de la encuesta.",
+        "refresh": "Actualizar Resultados",
+        "refreshLabel": "Actualizar resultados de la encuesta",
+        "summary": "{totalVotes} votos totales. {topOption} lidera con {topVotes} votos ({topPercentage}%).",
+        "optionVotes": "{votes} votos ({percentage}%)",
+        "optionSummary": "{option}: {votes} votos ({percentage}%), {uniqueVoters} votantes únicos.",
+        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}"
+      }
+    },
+    "create": {
+      "form": {
+        "title": "Crear Nueva Encuesta",
+        "closeAria": "Cerrar formulario de crear encuesta",
+        "fields": {
+          "title": {
+            "label": "Título de la Encuesta",
+            "placeholder": "Ingresa tu pregunta de encuesta...",
+            "counter": "{current}/{max} caracteres"
+          },
+          "description": {
+            "label": "Descripción",
+            "placeholder": "Agrega más contexto a tu encuesta...",
+            "counter": "{current}/{max} caracteres"
+          },
+          "category": {
+            "label": "Categoría",
+            "placeholder": "p. ej., Política, Tecnología, Entretenimiento..."
+          },
+          "privacy": {
+            "label": "Nivel de Privacidad",
+            "getRecommendation": "Obtener Recomendación"
+          },
+          "options": {
+            "label": "Opciones de la Encuesta",
+            "optionPlaceholder": "Opción {number}",
+            "counter": "{current}/{max} opciones",
+            "optionCounter": "{current}/{max} caracteres",
+            "approachingLimit": "Acercándose al límite",
+            "add": "Agregar Opción"
+          },
+          "tags": {
+            "label": "Etiquetas",
+            "placeholder": "Agrega una etiqueta...",
+            "counter": "{current}/{max} seleccionadas",
+            "add": "Agregar"
+          }
+        },
+        "buttons": {
+          "create": "Crear Encuesta",
+          "creating": "Creando..."
+        }
+      },
+      "privacy": {
+        "public": "Público – cualquiera puede descubrir y votar",
+        "private": "Privado – solo las personas con el enlace pueden participar",
+        "unlisted": "No listado – oculto de la búsqueda pero abierto a cualquiera con el enlace"
+      },
+      "votingMethod": {
+        "single": "Selección única",
+        "multiple": "Selección múltiple",
+        "approval": "Votación por aprobación",
+        "ranked": "Voto preferencial"
+      },
+      "notifications": {
+        "tooManyTags": {
+          "title": "Demasiadas etiquetas",
+          "message": "Puedes agregar hasta {max} etiquetas."
+        },
+        "signInRequired": {
+          "title": "Inicio de sesión requerido",
+          "message": "Inicia sesión para publicar tu encuesta."
+        },
+        "accessDenied": {
+          "title": "Acceso denegado",
+          "message": "No tienes permiso para crear encuestas en esta cuenta."
+        },
+        "rateLimit": {
+          "title": "Más despacio",
+          "message": "Estás creando encuestas demasiado rápido. Espera un momento e inténtalo de nuevo."
+        },
+        "validationErrors": {
+          "title": "Revisa los campos resaltados"
+        },
+        "creationFailed": {
+          "title": "No se pudo crear la encuesta",
+          "message": "Inténtalo de nuevo en un momento."
+        },
+        "pollCreated": {
+          "title": "Encuesta creada",
+          "message": "Comparte tu encuesta para comenzar a recopilar votos."
+        }
+      },
+      "share": {
+        "dialog": {
+          "liveOpen": "Diálogo de compartir abierto para {title}.",
+          "liveOpenFallback": "Diálogo de compartir abierto."
+        },
+        "notifications": {
+          "linkCopied": {
+            "title": "Enlace copiado",
+            "message": "Comparte el enlace con tu audiencia para comenzar a recopilar votos."
+          },
+          "copyFailed": {
+            "title": "No se pudo copiar el enlace",
+            "message": "Copia el enlace manualmente."
+          }
+        }
+      },
+      "wizard": {
+        "details": {
+          "title": {
+            "label": "Título de la encuesta",
+            "placeholder": "¿En qué deberíamos enfocarnos el próximo trimestre?",
+            "hint": "Manténlo corto, orientado a la acción y fácil de escanear."
+          },
+          "description": {
+            "label": "Descripción",
+            "placeholder": "Explica el contexto, las apuestas o los antecedentes para que los votantes puedan tomar una decisión informada.",
+            "hint": "Ayuda a los votantes a entender por qué esta encuesta importa. Incluye contexto relevante y objetivos."
+          }
+        },
+        "options": {
+          "label": "Opciones de la encuesta",
+          "hint": "Proporciona al menos dos opciones claras y distintas para que los votantes puedan diferenciarlas de un vistazo.",
+          "optionPlaceholder": "Opción {number}",
+          "optionAria": "Opción {number}",
+          "removeAria": "Eliminar opción {number}",
+          "maxHint": "Puedes agregar hasta {max} opciones.",
+          "add": "Agregar opción"
+        },
+        "audience": {
+          "category": {
+            "label": "Categoría",
+            "hint": "Categoriza tu encuesta para que las personas adecuadas puedan descubrirla."
+          },
+          "tags": {
+            "label": "Etiquetas",
+            "hint": "Agrega palabras clave para que tu encuesta aparezca en búsquedas relevantes.",
+            "placeholder": "Agrega una etiqueta",
+            "add": "Agregar",
+            "maxHint": "Puedes agregar hasta {max} etiquetas.",
+            "removeAria": "Eliminar etiqueta {tag}"
+          },
+          "settings": {
+            "legend": "Participación y privacidad",
+            "allowMultipleVotes": {
+              "label": "Permitir múltiples votos",
+              "description": "Habilita si los votantes deben poder apoyar más de una opción."
+            },
+            "allowAnonymousVotes": {
+              "label": "Permitir votos anónimos",
+              "description": "Deshabilita esto si necesitas saber exactamente quién participó."
+            },
+            "requireAuthentication": {
+              "label": "Requerir inicio de sesión para votar",
+              "description": "Asegura que los votantes estén autenticados antes de enviar una respuesta."
+            },
+            "showResults": {
+              "label": "Mostrar resultados en tiempo real",
+              "description": "Deshabilita para ocultar los resultados hasta que la encuesta se cierre."
+            },
+            "allowComments": {
+              "label": "Permitir comentarios",
+              "description": "Recopila comentarios cualitativos junto con votos cuantitativos."
+            },
+            "preventDuplicateVotes": {
+              "label": "Prevenir votos duplicados",
+              "description": "Bloquea a los usuarios para que no voten múltiples veces en la misma encuesta."
+            }
+          },
+          "privacy": {
+            "label": "Nivel de privacidad",
+            "hint": "Cambia quién puede descubrir y participar en esta encuesta."
+          },
+          "votingMethod": {
+            "label": "Método de votación",
+            "hint": "Elige la mecánica que mejor se adapte a cómo quieres evaluar las respuestas."
+          }
+        },
+        "review": {
+          "title": "Vista previa de tu encuesta",
+          "description": "Revisa todo lo que los votantes verán antes de publicar.",
+          "untitled": "Encuesta sin título",
+          "noDescription": "Agrega una descripción para ayudar a los votantes a entender el contexto.",
+          "optionsHeading": "Opciones",
+          "privacy": "Privacidad",
+          "votingMethod": "Método de votación",
+          "multipleVotes": "Votos múltiples",
+          "anonymousVotes": "Votos anónimos",
+          "requireSignIn": "Requerir inicio de sesión",
+          "comments": "Comentarios",
+          "enabled": "Habilitado",
+          "disabled": "Deshabilitado",
+          "allowed": "Permitido",
+          "yes": "Sí",
+          "no": "No"
+        },
+        "progress": {
+          "ariaLabel": "Progreso de creación de encuesta"
+        }
+      },
+      "page": {
+        "title": "Crear una nueva encuesta",
+        "subtitle": "Guía a tu audiencia a través de una decisión clara. Completa cada paso para describir la encuesta, agregar opciones y establecer reglas de participación.",
+        "errorSummary": {
+          "title": "Resuelve estos elementos antes de continuar"
+        },
+        "buttons": {
+          "previous": "Anterior",
+          "next": "Siguiente",
+          "publish": "Publicar encuesta",
+          "creating": "Creando…"
+        }
+      },
+      "share": {
+        "dialog": {
+          "title": "Comparte tu encuesta",
+          "description": "Ayuda a los votantes a descubrir \"{title}\" compartiendo el enlace a continuación.",
+          "yourPoll": "tu encuesta",
+          "pollTitle": "Título de la encuesta",
+          "privacy": "Privacidad",
+          "votingMethod": "Método de votación",
+          "category": "Categoría",
+          "nextMilestone": "Próximo hito",
+          "milestoneVotes": "{count, plural, one {# voto} other {# votos}}",
+          "pollLink": "Enlace de la encuesta",
+          "copied": "Copiado",
+          "copyLink": "Copiar enlace",
+          "linkCopiedAria": "Enlace de compartir copiado al portapapeles.",
+          "linkCopyHintAria": "Presiona copiar para colocar el enlace de compartir en tu portapapeles.",
+          "buttons": {
+            "viewPoll": "Ver encuesta",
+            "viewAnalytics": "Ver análisis",
+            "emailLink": "Enlace por correo",
+            "shareOnX": "Compartir en X",
+            "createAnother": "Crear otra encuesta",
+            "done": "Hecho"
+          },
+          "email": {
+            "subject": "Mira esta encuesta"
+          },
+          "x": {
+            "tweet": "Vota ahora: {title} {url}"
+          },
+          "milestones": {
+            "title": "Alertas de hitos",
+            "description": "Recibe alertas en la aplicación cuando tu encuesta alcance conteos clave de votos.",
+            "enabled": "{current}/{total} habilitadas",
+            "notifyAt": "Notificarme a {count, plural, one {# voto} other {# votos}}",
+            "itemDescription": "Envía una alerta cuando la encuesta cruce {count, plural, one {# voto} other {# votos}} para que puedas celebrar o compartir de nuevo."
+          }
+        }
+      },
+      "view": {
+        "privacy": {
+          "public": "Público",
+          "private": "Privado",
+          "unlisted": "No listado"
+        },
+        "votingMethod": {
+          "single": "Selección única",
+          "multiple": "Selección múltiple",
+          "approval": "Votación por aprobación",
+          "ranked": "Voto preferencial",
+          "quadratic": "Votación cuadrática"
+        },
+        "breadcrumbs": {
+          "home": "Inicio",
+          "dashboard": "Panel",
+          "polls": "Encuestas",
+          "pollDetail": "Detalle de Encuesta"
+        },
+        "errors": {
+          "loadResultsFailed": "No se pudieron cargar los resultados de la encuesta. Inténtalo de nuevo más tarde.",
+          "loadDataFailed": "No se pudieron cargar los datos de la encuesta",
+          "voteFailed": "No se pudo votar"
+        },
+        "status": {
+          "closed": {
+            "title": "La encuesta ha cerrado",
+            "description": "Los resultados son de solo lectura. Contacta al propietario de la encuesta si crees que esta encuesta debería reabrirse.",
+            "label": "Cerrada"
+          },
+          "notOpen": {
+            "title": "La encuesta aún no está abierta",
+            "description": "Esta encuesta está en modo borrador o programada. El propietario puede publicarla para comenzar a recopilar votos."
+          },
+          "active": {
+            "label": "Activa"
+          },
+          "draft": {
+            "label": "Borrador"
+          },
+          "signInRequired": {
+            "title": "Inicia sesión para votar",
+            "description": "Necesitamos verificar tu cuenta antes de registrar un voto. Inicia sesión y luego regresa para participar."
+          },
+          "votingRestricted": {
+            "title": "Votación restringida",
+            "description": "Esta encuesta está limitada a una audiencia específica. Si deberías tener acceso, pide al propietario de la encuesta que te agregue o ajuste la privacidad."
+          }
+        },
+        "options": {
+          "fallback": "Opción {number}",
+          "voteCount": "{votes, number} votos ({percentage}%)"
+        },
+        "notifications": {
+          "voteRecorded": {
+            "title": "Voto registrado",
+            "message": "¡Gracias por participar!"
+          },
+          "voteFailed": {
+            "title": "No se pudo votar"
+          },
+          "linkCopied": {
+            "title": "Enlace copiado",
+            "message": "Comparte el enlace para atraer más votantes."
+          },
+          "copyFailed": {
+            "title": "No se pudo copiar el enlace",
+            "message": "Copia el enlace manualmente."
+          }
+        },
+        "buttons": {
+          "share": "Compartir",
+          "analytics": "Análisis",
+          "printSummary": "Imprimir resumen",
+          "vote": "Votar",
+          "voting": "Votando…",
+          "voted": "Votado"
+        },
+        "loading": "Actualizando resultados…",
+        "leadingOption": {
+          "label": "Opción líder",
+          "votes": "{votes, number} votos ({percentage}% de {total, number} total)"
+        },
+        "stats": {
+          "totalVotes": "Total de votos",
+          "participation": "Participación",
+          "status": "Estado"
+        },
+        "milestones": {
+          "label": "Alertas de hitos",
+          "empty": "Elige los conteos de votos sobre los que quieres ser notificado. Te alertaremos cuando tu encuesta alcance esos hitos.",
+          "tracking": "Rastreando {milestones} votos.",
+          "nextUp": "Próximo: {count, number} votos. ¡Anima a tu audiencia a participar!",
+          "achieved": "Ya logrado",
+          "votesBadge": "{count, plural, one {# voto} other {# votos}}",
+          "itemLabel": "{count, plural, one {# voto} other {# votos}}",
+          "itemDescription": "Notificarme cuando esta encuesta alcance {count, plural, one {# voto} other {# votos}}.",
+          "toggleAria": "Alternar notificación de hito para {count, plural, one {# voto} other {# votos}}"
+        },
+        "created": "Creada {date}"
+      },
+      "postCloseBanner": {
+        "status": {
+          "closed": {
+            "title": "Encuesta Cerrada",
+            "description": "Esta encuesta ha sido cerrada y ya no acepta votos.",
+            "badge": "Cerrada"
+          },
+          "locked": {
+            "title": "Encuesta Bloqueada",
+            "description": "Esta encuesta ha sido bloqueada y los resultados son finales.",
+            "badge": "Bloqueada"
+          },
+          "postClose": {
+            "title": "Votación Post-Cierre Activa",
+            "description": "Esta encuesta está en modo post-cierre. Los votos se están rastreando por separado.",
+            "badge": "Post-Cierre"
+          }
+        },
+        "baselineEstablished": "Línea base establecida: {date}",
+        "lockedAt": "Bloqueada en: {date}",
+        "postCloseAvailable": "La votación post-cierre está disponible",
+        "buttons": {
+          "enablePostClose": "Habilitar Post-Cierre",
+          "lockPoll": "Bloquear Encuesta"
+        }
+      },
+      "share": {
+        "title": "Comparte Esta Encuesta",
+        "defaultTitle": "¡Mira esta encuesta!",
+        "nativeShareText": "¡Mira esta encuesta!",
+        "nativeShare": "Compartir vía Sistema",
+        "directLink": {
+          "label": "Enlace Directo"
+        },
+        "copy": "Copiar",
+        "copied": "¡Copiado!",
+        "social": {
+          "twitter": "Twitter",
+          "facebook": "Facebook",
+          "linkedin": "Linkedin",
+          "email": "Correo"
+        },
+        "emailBody": "Mira esta encuesta: {url}",
+        "qrCode": {
+          "title": "Código QR",
+          "show": "Mostrar Código QR",
+          "hide": "Ocultar Código QR",
+          "alt": "Código QR para la encuesta",
+          "generating": "Generando Código QR...",
+          "scanHint": "Escanear para abrir la encuesta en dispositivo móvil",
+          "download": "Descargar QR",
+          "copyLink": "Copiar Enlace"
+        },
+        "embed": {
+          "title": "Insertar Encuesta",
+          "codeLabel": "Código de Inserción",
+          "copyCode": "Copiar Código de Inserción"
+        }
+      },
+      "results": {
+        "heading": "Resultados",
+        "refreshing": "Actualizando resultados de la encuesta...",
+        "summary": "Resultados de la encuesta: {totalVotes, number} votos totales. Opción líder: {topOption} con {topVotes, number} votos ({topPercentage}%).",
+        "status": {
+          "ended": "Encuesta Finalizada",
+          "active": "Activa",
+          "ongoing": "En Curso"
+        },
+        "error": {
+          "title": "Error al cargar los resultados de la encuesta",
+          "retry": "Intentar de Nuevo"
+        },
+        "empty": "No hay resultados de encuesta disponibles",
+        "type": "Tipo: {type}",
+        "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
+        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}",
+        "performance": {
+          "title": "Métricas de Rendimiento",
+          "loadTime": "Tiempo de Carga",
+          "cacheHit": "Acierto de Caché",
+          "yes": "Sí",
+          "no": "No",
+          "cacheSize": "Tamaño de Caché",
+          "items": "{count, plural, one {# elemento} other {# elementos}}",
+          "cacheKeys": "Claves de Caché"
+        },
+        "privacy": {
+          "title": "Protección de Privacidad",
+          "kAnonymity": "K-Anonimato: {status}",
+          "satisfied": "Satisfecho",
+          "notMet": "No Cumplido",
+          "budget": "Presupuesto: {value} ε"
+        },
+        "votingStatus": {
+          "title": "Estado de Votación",
+          "canVote": "Puede Votar",
+          "cannotVote": "No Puede Votar",
+          "hasVoted": "Ha Votado",
+          "notVoted": "No Ha Votado"
+        }
+      },
+      "card": {
+        "untitled": "Encuesta Sin Título",
+        "unknownCreator": "Desconocido",
+        "createdBy": "Creada por {name}",
+        "createdOn": "Creada el {date}",
+        "endsOn": "Termina el {date} a las {time}",
+        "optionsHeading": "Opciones",
+        "optionItem": "{index}. {option}",
+        "moreOptions": "+{count, plural, one {# opción más} other {# opciones más}}",
+        "votes": "{count, plural, one {# voto} other {# votos}}",
+        "participation": "{count, plural, one {# participante} other {# participantes}}",
+        "votingMethod": {
+          "single": "Selección única",
+          "approval": "Votación por aprobación",
+          "ranked": "Voto preferencial",
+          "quadratic": "Votación cuadrática",
+          "range": "Votación por rango",
+          "multiple": "Selección múltiple",
+          "unknown": "Desconocido"
+        },
+        "status": {
+          "active": "Activa",
+          "closed": "Cerrada",
+          "draft": "Borrador",
+          "archived": "Archivada"
+        },
+        "actions": {
+          "view": "Ver",
+          "vote": "Votar"
+        }
+      },
+      "page": {
+        "title": "Encuestas",
+        "subtitle": "Descubre y participa en encuestas de la comunidad",
+        "breadcrumbs": {
+          "home": "Inicio",
+          "dashboard": "Panel",
+          "polls": "Encuestas"
+        },
+        "empty": {
+          "title": "No se encontraron encuestas",
+          "filters": "No hay encuestas que coincidan con tu búsqueda o criterios de filtro. Intenta ajustar tus filtros.",
+          "ctaMessage": "¡Comienza creando tu primera encuesta!"
+        },
+        "cta": {
+          "create": "Crear Encuesta",
+          "view": "Ver",
+          "results": "Resultados"
+        },
+        "metadata": {
+          "votes": "{count, plural, one {# voto} other {# votos}}"
+        },
+        "pagination": {
+          "showing": "Mostrando {start} a {end} de {total} encuestas",
+          "pageLabel": "Página {current} de {total}",
+          "previous": "Anterior",
+          "next": "Siguiente"
+        }
+      },
+      "filters": {
+        "search": {
+          "placeholder": "Buscar encuestas...",
+          "ariaLabel": "Buscar encuestas"
+        },
+        "hashtags": {
+          "label": "Filtrar por etiquetas",
+          "addPlaceholder": "Agregar etiqueta...",
+          "addAria": "Agregar filtro de etiqueta",
+          "remove": "Eliminar etiqueta {hashtag}"
+        },
+        "status": {
+          "all": "Todas",
+          "active": "Activas",
+          "closed": "Cerradas",
+          "trending": "Tendencias"
+        },
+        "trending": {
+          "heading": "Tendencias",
+          "headingWithCount": "Tendencias ({count})",
+          "count": "{count, plural, one {# tendencia} other {# tendencias}}"
+        },
+        "categories": {
+          "label": "Categorías"
+        }
+      },
+      "templates": {
+        "title": "Plantillas de Encuestas",
+        "subtitle": "Elige de nuestra colección de plantillas de encuestas preconstruidas para comenzar rápidamente",
+        "search": {
+          "placeholder": "Buscar plantillas..."
+        },
+        "categories": {
+          "all": "Todas las Categorías",
+          "allTemplates": "Todas las Plantillas"
+        },
+        "sort": {
+          "popular": "Más Populares",
+          "recent": "Agregadas Recientemente",
+          "rating": "Mejor Calificadas",
+          "name": "Nombre A-Z"
+        },
+        "difficulty": {
+          "beginner": "Principiante",
+          "intermediate": "Intermedio",
+          "advanced": "Avanzado"
+        },
+        "metadata": {
+          "estimatedTime": "{minutes} min",
+          "usageCount": "{count, number} usos"
+        },
+        "resultsCount": "Mostrando {showing} de {total} plantillas",
+        "actions": {
+          "use": "Usar Plantilla",
+          "preview": "Vista previa de la plantilla"
+        },
+        "empty": {
+          "title": "No se encontraron plantillas",
+          "message": "Intenta ajustar tu búsqueda o criterios de filtro",
+          "clearFilters": "Limpiar Filtros"
+        }
+      },
+      "community": {
+        "title": "Selección de Encuestas de la Comunidad",
+        "subtitle": "Ve qué encuestas quiere la comunidad y cómo seleccionamos las encuestas destacadas",
+        "week": {
+          "select": "Seleccionar Semana",
+          "current": "Semana Actual",
+          "last": "Semana Pasada",
+          "twoWeeksAgo": "Hace Dos Semanas",
+          "threeWeeksAgo": "Hace Tres Semanas"
+        },
+        "tabs": {
+          "trending": "Sugerencias en Tendencia",
+          "selected": "Encuestas Seleccionadas",
+          "analytics": "Análisis"
+        },
+        "selection": {
+          "title": "Cómo Seleccionamos las Encuestas Destacadas",
+          "engagement": {
+            "title": "Participación de la Comunidad",
+            "highVotes": "Alto número de votos (500+ votos)",
+            "strongScore": "Puntuación de tendencia fuerte (70+)",
+            "activeDiscussion": "Discusión y compartir activos"
+          },
+          "platform": {
+            "title": "Consideraciones de la Plataforma",
+            "costEffective": "Económico de implementar",
+            "broadAppeal": "Atractivo demográfico amplio",
+            "timelyContent": "Contenido oportuno y relevante"
+          }
+        },
+        "trending": {
+          "title": "Sugerencias de Encuestas en Tendencia"
+        },
+        "suggestion": {
+          "suggestedBy": "Sugerida por {name}",
+          "votes": "{count, plural, one {# voto} other {# votos}}",
+          "cost": "costo {level}",
+          "engagement": "participación {level}"
+        },
+        "actions": {
+          "vote": "Votar",
+          "approve": "Aprobar"
+        },
+        "selected": {
+          "weekOf": "Semana del {week}",
+          "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
+          "criteria": {
+            "title": "Criterios de Selección"
+          },
+          "polls": {
+            "title": "Encuestas Seleccionadas",
+            "votes": "{count, plural, one {# voto} other {# votos}}",
+            "featured": "Destacada",
+            "liveNow": "En Vivo Ahora"
+          }
+        },
+        "analytics": {
+          "totalSuggestions": "Total de Sugerencias",
+          "currentlyPublished": "Actualmente publicadas",
+          "communityVotes": "Votos de la Comunidad",
+          "acrossFeatured": "En encuestas destacadas",
+          "featuredPolls": "Encuestas Destacadas",
+          "thisWeek": "Esta semana",
+          "categoryBreakdown": "Desglose por Categoría"
+        }
+      }
+    }
+  },
+  "contact": {
+    "representatives": {
+      "featureDisabled": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto.",
+      "authRequired": "Inicia sesión para contactar a tus representantes.",
+      "header": {
+        "title": "Contacta a tus representantes",
+        "subtitle": "Envía mensajes directamente a tus funcionarios electos",
+        "count": "{formattedCount} {count, plural, one {representante} other {representantes}}"
+      },
+      "elections": {
+        "title": "Próximas elecciones en tus distritos",
+        "loading": "Cargando calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elecciones adicionales registradas",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "actions": {
+        "message": "Enviar mensaje"
+      },
+      "threads": {
+        "loading": "Cargando conversaciones recientes…",
+        "title": "Mensajes recientes",
+        "count": "{formattedCount} {count, plural, one {mensaje} other {mensajes}}",
+        "noMessages": "Aún no hay mensajes"
+      }
+    },
+    "modal": {
+      "a11y": {
+        "liveOpen": "Se abrió el diálogo para contactar a {name}.",
+        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
+      },
+      "disabled": {
+        "title": "Sistema de contacto deshabilitado",
+        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
+      },
+      "header": {
+        "title": "Contactar a {name}",
+        "subtitle": "{office}"
+      },
+      "elections": {
+        "title": "Próximas elecciones vinculadas a este representante",
+        "loading": "Consultando el calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elecciones adicionales registradas",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Usar una plantilla",
+          "active": "Usando: {title}"
+        },
+        "ariaLabel": "Plantillas de mensajes",
+        "instructions": "Selecciona una plantilla:",
+        "clear": "Borrar plantilla",
+        "fillLabel": "Completa los detalles de la plantilla:",
+        "validation": {
+          "missing": "Faltan campos obligatorios: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Asunto",
+          "placeholder": "¿De qué trata este mensaje?",
+          "required": "El asunto es obligatorio"
+        },
+        "message": {
+          "label": "Mensaje",
+          "placeholder": "Escribe tu mensaje aquí...",
+          "required": "El mensaje es obligatorio",
+          "count": "{current} / {max} caracteres"
+        }
+      },
+      "errors": {
+        "missingFields": "Completa el asunto y el mensaje.",
+        "sendFailed": "No se pudo enviar el mensaje."
+      },
+      "success": "¡Mensaje enviado correctamente!",
+      "footer": {
+        "responseTime": "Las respuestas suelen llegar en 2 a 3 días hábiles."
+      },
+      "actions": {
+        "close": "Cerrar",
+        "closeAria": "Cerrar modal de contacto",
+        "send": "Enviar mensaje",
+        "sending": "Enviando...",
+        "sendAria": "Enviar mensaje",
+        "sendingAria": "Enviando mensaje..."
+      }
+    },
+    "bulkModal": {
+      "a11y": {
+        "liveOpen": "Se abrió el diálogo de contacto masivo. {count} seleccionados.",
+        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
+      },
+      "disabled": {
+        "title": "Sistema de contacto deshabilitado",
+        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
+      },
+      "header": {
+        "title": "Contacta a múltiples representantes",
+        "description": "Envía el mismo mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}."
+      },
+      "selection": {
+        "heading": "Selecciona representantes ({formattedCount} seleccionados)"
+      },
+      "elections": {
+        "title": "Próximas elecciones para las divisiones seleccionadas",
+        "loading": "Cargando calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elección(es) adicional(es)",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Usar una plantilla",
+          "active": "Usando: {title}"
+        },
+        "ariaLabel": "Plantillas de mensajes",
+        "instructions": "Selecciona una plantilla:",
+        "clear": "Borrar plantilla",
+        "fillLabel": "Completa los detalles de la plantilla:",
+        "validation": {
+          "missing": "Faltan campos obligatorios: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Asunto",
+          "placeholder": "¿De qué trata este mensaje?",
+          "required": "El asunto es obligatorio"
+        },
+        "message": {
+          "label": "Mensaje",
+          "placeholder": "Escribe tu mensaje aquí...",
+          "required": "El mensaje es obligatorio",
+          "count": "{current} / {max} caracteres"
+        }
+      },
+      "errors": {
+        "missingFields": "Completa el asunto y el mensaje.",
+        "noRepresentatives": "Selecciona al menos un representante.",
+        "partial": "Se envió a {successCount} de {total} representantes. Algunos fallaron.",
+        "allFailed": "No se pudo enviar a ningún representante.",
+        "sendFailed": "No se pudieron enviar los mensajes."
+      },
+      "success": "¡Mensajes enviados correctamente a los {formattedCount} representantes seleccionados!",
+      "results": {
+        "title": "Resultados del envío",
+        "failureFallback": "Error desconocido"
+      },
+      "footer": {
+        "selection": "{formattedCount} {count, plural, one {representante} other {representantes}} seleccionados"
+      },
+      "actions": {
+        "close": "Cerrar diálogo",
+        "closeAria": "Cerrar modal de contacto masivo",
+        "send": "Enviar",
+        "sendLabel": "Enviar a todos ({formattedCount})",
+        "sendingLabel": "Enviando…",
+        "sendAria": "Enviar mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}",
+        "sendingAria": "Enviando mensajes a {formattedCount} {count, plural, one {representante} other {representantes}}"
       }
     }
   },
@@ -364,6 +3451,56 @@
         "signIn": "Iniciar sesión"
       },
       "altSignInDivider": "O continúa con"
+    }
+  },
+  "pwa": {
+    "installer": {
+      "prompt": {
+        "title": "Instala Choices",
+        "subtitle": "Obtén la app para una experiencia rápida y disponible sin conexión.",
+        "dismiss": "Después",
+        "install": "Instalar",
+        "installAria": "Instalar la aplicación Choices"
+      },
+      "benefits": {
+        "homeScreen": "Abre Choices directamente desde tu pantalla de inicio",
+        "performance": "Disfruta de un rendimiento más rápido y fluido",
+        "offline": "Vota sin conexión; las acciones se sincronizan al reconectarte",
+        "notifications": "Recibe notificaciones sobre nuevas encuestas y resultados",
+        "native": "Experimenta controles y navegación tipo aplicación nativa"
+      },
+      "offlineStatus": {
+        "titleOnline": "Votos listos para sincronizar",
+        "titleOffline": "Votos sin conexión guardados",
+        "description": "{count, plural, one {# voto esperando a enviarse} other {# votos esperando a enviarse}}",
+        "syncButton": "Sincronizar ahora"
+      },
+      "offlineBanner": "Estás sin conexión. Los votos se guardan y se sincronizan cuando regreses.",
+      "live": {
+        "installPrompt": "Instala Choices para usarlo cuando quieras.",
+        "installSuccess": "Choices se instaló correctamente. Ya puedes usarlo sin conexión.",
+        "installError": "No se pudo instalar. Inténtalo más tarde.",
+        "offlineVotesPending": "{count, plural, one {# voto sin conexión pendiente.} other {# votos sin conexión pendientes.}}",
+        "offline": "Estás sin conexión. Los votos se sincronizarán cuando vuelvas a conectarte."
+      },
+      "notifications": {
+        "syncSuccess": {
+          "title": "¡Votos sincronizados! 📤",
+          "message": "{count, plural, one {Se envió # voto sin conexión.} other {Se enviaron # votos sin conexión.}}"
+        },
+        "syncError": {
+          "title": "La sincronización falló",
+          "message": "Inténtalo de nuevo cuando tengas una conexión estable."
+        },
+        "installSuccess": {
+          "title": "¡Choices se instaló correctamente! 🎉",
+          "message": "Ahora puedes usar Choices sin conexión y recibir notificaciones."
+        },
+        "installError": {
+          "title": "La instalación falló",
+          "message": "Inténtalo de nuevo más tarde o revisa tu conexión."
+        }
+      }
     }
   },
   "harness": {

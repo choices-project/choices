@@ -149,6 +149,16 @@ export default function SingleChoiceVoting({
                 }
               `}
               data-testid={`option-${index + 1}-radio`}
+              role="radio"
+              aria-checked={selectedOption === index}
+              tabIndex={isDisabled ? -1 : 0}
+              onKeyDown={(e) => {
+                if (isDisabled) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOptionSelect(index);
+                }
+              }}
             >
               <div className="flex items-start space-x-3">
                 {/* Radio Button */}

@@ -8,7 +8,6 @@
  * @date 2025-01-15
  */
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 // Types for FEC API responses
@@ -307,6 +306,14 @@ export class FECClient {
   private checkRateLimits(): void {
     const now = Date.now();
     
+    // Check if hourly reset is needed (1 hour has passed since last reset)
+    const timeSinceLastReset = now - this.lastHourlyReset;
+    if (timeSinceLastReset >= 60 * 60 * 1000) {
+      this.hourlyRequestCount = 0;
+      this.lastHourlyReset = now;
+      logger.debug('Hourly request counter reset', { lastReset: this.lastHourlyReset });
+    }
+    
     // Check hourly limit
     if (this.hourlyRequestCount >= this.config.rateLimit.requestsPerHour) {
       throw new FECApiError(
@@ -475,16 +482,12 @@ export function createFECClient(): FECClient {
   const apiKey = process.env.FEC_API_KEY; // Optional for FEC API
   
   return new FECClient(
-    withOptional(
-      {
-        rateLimit: {
-          requestsPerHour: 1000, // Official limit
-          requestsPerMinute: 20 // Conservative limit
-        }
+    {
+      rateLimit: {
+        requestsPerHour: 1000, // Official limit
+        requestsPerMinute: 20 // Conservative limit
       },
-      {
-        apiKey
-      }
-    )
+      ...(apiKey ? { apiKey } : {})
+    }
   );
 }

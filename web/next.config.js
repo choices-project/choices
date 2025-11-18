@@ -5,10 +5,27 @@ const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
+const defaultDevOrigins = ['http://127.0.0.1:3000', 'http://localhost:3000'];
+const envDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedDevOrigins = Array.from(new Set([...defaultDevOrigins, ...envDevOrigins]));
+const allowedDevWsOrigins = allowedDevOrigins.map((origin) => {
+  if (origin.startsWith('https://')) {
+    return origin.replace('https://', 'wss://');
+  }
+  if (origin.startsWith('http://')) {
+    return origin.replace('http://', 'ws://');
+  }
+  return origin;
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
+  reactStrictMode: process.env.NEXT_DISABLE_STRICT_MODE === '1' ? false : true,
   transpilePackages: ['@choices/civics-shared'],
 
   experimental: {
@@ -51,6 +68,7 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, webpack }) => {
+    const isDev = process.env.NODE_ENV === 'development'
     // Exclude test files from compilation
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
@@ -145,8 +163,8 @@ const nextConfig = {
       '@': new URL('./', import.meta.url).pathname
     }
 
-    // Bundle size optimizations
-    if (!isServer) {
+    // Bundle size optimizations (production-only to avoid dev chunk 404s)
+    if (!isServer && !isDev) {
       // More aggressive code splitting for both dev and prod
       config.optimization = {
         ...config.optimization,
@@ -240,14 +258,14 @@ const nextConfig = {
           name: 'runtime',
         },
       }
+    }
 
-      // More lenient performance hints for development
-      const isDev = process.env.NODE_ENV === 'development';
+    if (!isServer) {
       config.performance = {
         ...config.performance,
         hints: isDev ? false : 'warning', // Disable warnings in dev
-        maxEntrypointSize: isDev ? 5000000 : 512000, // 5MB in dev, 500KB in prod
-        maxAssetSize: isDev ? 1000000 : 512000, // 1MB in dev, 500KB in prod
+        maxEntrypointSize: isDev ? 5_000_000 : 512_000, // 5MB in dev, 500KB in prod
+        maxAssetSize: isDev ? 1_000_000 : 512_000, // 1MB in dev, 500KB in prod
       }
     }
 
@@ -315,6 +333,8 @@ const nextConfig = {
           'https://vercel.live',
           'https://vitals.vercel-insights.com',
           'https://challenges.cloudflare.com', // Turnstile
+          'https://fonts.googleapis.com', // Google Fonts
+          'https://fonts.gstatic.com', // Google Fonts
           'wss://*.supabase.co',
           'wss://*.supabase.io',
         ],
@@ -337,13 +357,16 @@ const nextConfig = {
           "'unsafe-inline'",
           "'unsafe-eval'",
           'http://localhost:*',
+          'http://127.0.0.1:*',
           'https://vercel.live',
           'https://challenges.cloudflare.com', // Turnstile
+          ...allowedDevOrigins,
         ],
         'style-src': [
           "'self'",
           "'unsafe-inline'",
           'https://fonts.googleapis.com',
+          ...allowedDevOrigins,
         ],
         'font-src': [
           "'self'",
@@ -356,6 +379,8 @@ const nextConfig = {
           'blob:',
           'https:',
           'http://localhost:*',
+          'http://127.0.0.1:*',
+          ...allowedDevOrigins,
         ],
         'connect-src': [
           "'self'",
@@ -363,6 +388,12 @@ const nextConfig = {
           'https://*.supabase.io',
           'http://localhost:*',
           'ws://localhost:*',
+          'http://127.0.0.1:*',
+          'ws://127.0.0.1:*',
+          'https://fonts.googleapis.com', // Google Fonts
+          'https://fonts.gstatic.com', // Google Fonts
+          ...allowedDevOrigins,
+          ...allowedDevWsOrigins,
           'wss://*.supabase.co',
           'wss://*.supabase.io',
         ],
@@ -371,6 +402,8 @@ const nextConfig = {
           'data:',
           'blob:',
           'http://localhost:*',
+          'http://127.0.0.1:*',
+          ...allowedDevOrigins,
         ],
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
@@ -394,6 +427,14 @@ const nextConfig = {
             key: isReportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
             value: cspString
           },
+          ...(allowedDevOrigins.length
+            ? [
+                {
+                  key: 'X-Allowed-Dev-Origins',
+                  value: allowedDevOrigins.join(', ')
+                }
+              ]
+            : []),
           // Trusted Types for DOM XSS protection
           {
             key: 'Trusted-Types',
@@ -530,6 +571,9 @@ const nextConfig = {
 
   // Asset prefix
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
+
+  // Allow local tunnels / alternate hosts during dev server runs
+  allowedDevOrigins,
 }
 
 export default bundleAnalyzer(nextConfig);

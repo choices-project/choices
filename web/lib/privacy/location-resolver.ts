@@ -1,11 +1,10 @@
 /**
  * On-Device Location Resolution
- * 
+ *
  * Resolves addresses/coordinates to public jurisdiction IDs only.
  * No plaintext address or GPS ever leaves the device.
  */
 
-import { withOptional } from '../util/objects';
 
 export type JurisdictionID = string; // e.g. "ocd-division/country:us/state:ca/county:alameda"
 
@@ -23,7 +22,7 @@ export type LocationInput = {
 
 /**
  * Resolves location input to public jurisdiction IDs only
- * 
+ *
  * OPTION A: Google Civic API (client-side, key restricted to origins)
  * OPTION B: Offline geospatial lookup (H3/S2 → OCD IDs) bundled as static assets
  */
@@ -53,28 +52,30 @@ export async function resolveJurisdictions(
  * API key must be restricted to specific origins
  */
 async function resolveViaGoogleCivic(input: LocationInput): Promise<ClientResolvedJurisdiction> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_CIVIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('Google Civic API key not configured');
-  }
-
-  let query = '';
+  // Use server proxy endpoint that holds GOOGLE_CIVIC_API_KEY
+  let addressParam = '';
   if (input.address) {
-    query = `address=${encodeURIComponent(input.address)}`;
+    addressParam = input.address;
   } else if (input.coords) {
-    query = `address=${input.coords[1]},${input.coords[0]}`; // lat,lng format
+    addressParam = `${input.coords[1]},${input.coords[0]}`; // lat,lng format
+  }
+  if (!addressParam) {
+    throw new Error('Address or coordinates required for Google Civic resolution');
   }
 
-  const response = await fetch(
-    `https://www.googleapis.com/civicinfo/v2/representatives?${query}&key=${apiKey}`
-  );
+  const response = await fetch('/api/v1/civics/address-lookup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: addressParam })
+  });
 
   if (!response.ok) {
     throw new Error(`Google Civic API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  
+  const payload = await response.json();
+  const data = payload?.jurisdiction ? { divisions: { [payload.jurisdiction.ocd_division_id ?? '']: { name: payload.jurisdiction.county ?? '' } } } : {};
+
   // Extract jurisdiction IDs from the response
   const jurisdictionIds: JurisdictionID[] = [];
   let level: 'federal' | 'state' | 'local' = 'local';
@@ -84,12 +85,12 @@ async function resolveViaGoogleCivic(input: LocationInput): Promise<ClientResolv
     for (const [divisionId, division] of Object.entries(data.divisions)) {
       if (typeof divisionId === 'string' && divisionId.startsWith('ocd-division/')) {
         jurisdictionIds.push(divisionId);
-        
+
         // Use division data for more accurate level determination
         const divisionName = (division && typeof division === 'object' && 'name' in division) ? (division as any).name : '';
         const hasCounty = divisionId.includes('/county:') || (typeof divisionName === 'string' && divisionName.toLowerCase().includes('county'));
         const hasPlace = divisionId.includes('/place:') || (typeof divisionName === 'string' && divisionName.toLowerCase().includes('city'));
-        
+
         // Determine level based on division structure
         if (divisionId.includes('/country:us/state:') && !hasCounty && !hasPlace) {
           level = 'state';
@@ -103,15 +104,11 @@ async function resolveViaGoogleCivic(input: LocationInput): Promise<ClientResolv
   // Generate H3 cell for caching (optional)
   const coarseGrid = input.coords ? generateH3Cell(input.coords) : undefined;
 
-  return withOptional(
-    {
-      jurisdictionIds,
-      level
-    },
-    {
-      coarseGrid
-    }
-  );
+  return {
+    jurisdictionIds,
+    level,
+    ...(coarseGrid ? { coarseGrid } : {}),
+  };
 }
 
 /**
@@ -127,15 +124,15 @@ async function resolveViaOfflineLookup(zipCode: string): Promise<ClientResolvedJ
     a = ((a << 5) - a) + b.charCodeAt(0);
     return a & a;
   }, 0);
-  
+
   // Use zipHash for consistent offline lookup results
   const stateIndex = Math.abs(zipHash) % 50; // 50 states
   const countyIndex = Math.abs(zipHash >> 8) % 10; // 10 counties per state
-  
+
   // Use stateIndex and countyIndex to generate more realistic jurisdiction IDs
   const states = ['ca', 'ny', 'tx', 'fl', 'il', 'pa', 'oh', 'ga', 'nc', 'mi'];
   const counties = ['alameda', 'kings', 'harris', 'miami-dade', 'cook', 'philadelphia', 'franklin', 'fulton', 'mecklenburg', 'wayne'];
-  
+
   const selectedState = states[stateIndex % states.length];
   const selectedCounty = counties[countyIndex % counties.length];
 

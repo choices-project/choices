@@ -23,7 +23,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 import {
   BarChart,
   Bar,
@@ -41,7 +41,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useI18n } from '@/hooks/useI18n';
+import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useAnalyticsActions, useAnalyticsTemporal } from '@/lib/stores/analyticsStore';
+
+import {
+  AnalyticsSummaryTable,
+  type AnalyticsSummaryColumn,
+  type AnalyticsSummaryRow,
+} from './AnalyticsSummaryTable';
+
+const ensureLabel = (value: string, fallback: string): string => {
+  if (!value) return fallback;
+  if (value.startsWith('analytics.')) {
+    return fallback;
+  }
+  return value;
+};
 
 type HourlyData = {
   hour: number;
@@ -70,10 +86,12 @@ type TemporalData = {
   avgActivity: number;
 };
 
+type DateRange = '7d' | '30d' | '90d';
+
 type TemporalAnalysisChartProps = {
   className?: string;
   defaultTab?: 'hourly' | 'daily' | 'velocity';
-  defaultDateRange?: '7d' | '30d' | '90d';
+  defaultDateRange?: DateRange;
 };
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -108,26 +126,328 @@ export default function TemporalAnalysisChart({
   defaultTab = 'hourly',
   defaultDateRange = '30d'
 }: TemporalAnalysisChartProps) {
+  const { t, currentLanguage } = useI18n();
+  const summarySectionId = useId();
+  const cardHeadingId = useId();
+  const cardDescriptionId = useId();
+  const hourlyRegionId = useId();
+  const dailyRegionId = useId();
+  const velocityRegionId = useId();
+  // removed duplicate declarations
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const previousSummaryAnnouncementRef = useRef<string | null>(null);
+  const previousErrorRef = useRef<string | null>(null);
   const { fetchTemporal } = useAnalyticsActions();
   const temporal = useAnalyticsTemporal();
   const data = temporal.data;
   const isLoading = temporal.loading;
   const error = temporal.error;
-  const dateRange = (temporal.meta.range as typeof defaultDateRange) ?? defaultDateRange;
+  const dateRange = (temporal.meta.range as DateRange) ?? defaultDateRange;
+  const dateRangeLabel = t('analytics.temporal.filters.dateRange');
+  const refreshLabel = t('analytics.buttons.refresh');
+  const exportLabel = t('analytics.buttons.export');
 
-  const loadTemporal = useCallback(async (range?: typeof defaultDateRange) => {
+  const loadTemporal = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultDateRange;
     await fetchTemporal(targetRange, {
-      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+      fallback: (r) => generateMockData(r as DateRange),
     });
   }, [dateRange, defaultDateRange, fetchTemporal]);
 
+  const rangeLabels: Record<DateRange, string> = useMemo(
+    () => ({
+      '7d': t('analytics.temporal.ranges.7d'),
+      '30d': t('analytics.temporal.ranges.30d'),
+      '90d': t('analytics.temporal.ranges.90d'),
+    }),
+    [t],
+  );
+
+  const tabLabels = useMemo(
+    () => ({
+      hourly: t('analytics.temporal.tabsLabels.hourly'),
+      daily: t('analytics.temporal.tabsLabels.daily'),
+      velocity: t('analytics.temporal.tabsLabels.velocity'),
+    }),
+    [t],
+  );
+
+  const axisText = useMemo(
+    () => ({
+      hourOfDay: ensureLabel(t('analytics.temporal.axes.hourOfDay'), 'Hour of day'),
+      dayOfWeek: ensureLabel(t('analytics.temporal.axes.dayOfWeek'), 'Day of week'),
+      timestamp: ensureLabel(t('analytics.temporal.axes.timestamp'), 'Timestamp'),
+    }),
+    [t],
+  );
+
+  const tabAnnouncements = useMemo(
+    () => ({
+      hourly: t('analytics.temporal.tabAnnouncements.hourly'),
+      daily: t('analytics.temporal.tabAnnouncements.daily'),
+      velocity: t('analytics.temporal.tabAnnouncements.velocity'),
+    }),
+    [t],
+  );
+
+  const handleRangeChange = useCallback(
+    (range: DateRange) => {
+      ScreenReaderSupport.announce(
+        t('analytics.temporal.announcements.rangeChanged', {
+          range: rangeLabels[range] ?? range,
+        }),
+        'polite',
+      );
+      void loadTemporal(range);
+    },
+    [loadTemporal, rangeLabels, t],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: typeof activeTab) => {
+      setActiveTab(tab);
+      ScreenReaderSupport.announce(tabAnnouncements[tab] ?? tabLabels[tab] ?? tab, 'polite');
+    },
+    [tabAnnouncements, tabLabels],
+  );
+
+  const handleRefresh = useCallback(() => {
+    ScreenReaderSupport.announce(t('analytics.temporal.announcements.refresh'), 'polite');
+    void loadTemporal();
+  }, [loadTemporal, t]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage),
+    [currentLanguage],
+  );
+
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(currentLanguage, {
+        maximumFractionDigits: 1,
+      }),
+    [currentLanguage],
+  );
+
+  const formatNumber = useCallback(
+    (value: number) => numberFormatter.format(value),
+    [numberFormatter],
+  );
+
+  const formatPercent = useCallback(
+    (value: number) => `${percentFormatter.format(value)}%`,
+    [percentFormatter],
+  );
+
+  const hourlyColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'hour', label: t('analytics.tables.columns.hour') },
+      { key: 'activity', label: t('analytics.tables.columns.activity'), isNumeric: true },
+      { key: 'percentageOfPeak', label: t('analytics.tables.columns.percentOfPeak'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const dailyColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'day', label: t('analytics.tables.columns.day') },
+      { key: 'activity', label: t('analytics.tables.columns.activity'), isNumeric: true },
+      { key: 'percentageOfPeak', label: t('analytics.tables.columns.percentOfPeak'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const velocityColumns = useMemo<AnalyticsSummaryColumn[]>(
+    () => [
+      { key: 'timestamp', label: t('analytics.tables.columns.timestamp') },
+      { key: 'velocity', label: t('analytics.tables.columns.velocity'), isNumeric: true },
+    ],
+    [t],
+  );
+
+  const maxHourlyActivity = useMemo(
+    () => (data ? Math.max(...data.hourly.map((h) => h.activity), 0) : 0),
+    [data],
+  );
+  const maxDailyActivity = useMemo(
+    () => (data ? Math.max(...data.daily.map((d) => d.activity), 0) : 0),
+    [data],
+  );
+
+  const hourlyRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.hourly.map((hour) => ({
+            id: hour.label,
+            cells: {
+              hour: hour.label,
+              activity: formatNumber(hour.activity),
+              percentageOfPeak:
+                maxHourlyActivity > 0
+                  ? formatPercent((hour.activity / maxHourlyActivity) * 100)
+                  : formatPercent(0),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent, maxHourlyActivity],
+  );
+
+  const dailyRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.daily.map((day) => ({
+            id: day.day,
+            cells: {
+              day: day.day,
+              activity: formatNumber(day.activity),
+              percentageOfPeak:
+                maxDailyActivity > 0
+                  ? formatPercent((day.activity / maxDailyActivity) * 100)
+                  : formatPercent(0),
+            },
+          }))
+        : [],
+    [data, formatNumber, formatPercent, maxDailyActivity],
+  );
+
+  const velocityRows = useMemo<AnalyticsSummaryRow[]>(
+    () =>
+      data
+        ? data.velocity.map((entry, index) => ({
+            id: `${entry.timestamp}-${index}`,
+            cells: {
+              timestamp: entry.timestamp,
+              velocity: formatNumber(entry.velocity),
+            },
+          }))
+        : [],
+    [data, formatNumber],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      data
+        ? t('analytics.temporal.summaryIntro', {
+            peakHour: formatHour(data.peakHour),
+            peakDay: data.peakDay,
+            avgActivity: formatNumber(data.avgActivity),
+          })
+        : '',
+    [data, formatNumber, t],
+  );
+
+  const summaryCards = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+    return [
+      {
+        id: 'temporal-peak-hour',
+        label: t('analytics.temporal.summaryCards.peakHour.label'),
+        value: formatHour(data.peakHour),
+        subtitle: t('analytics.temporal.summaryCards.peakHour.subtitle'),
+        sr: t('analytics.temporal.summaryCards.peakHour.sr', {
+          value: formatHour(data.peakHour),
+        }),
+      },
+      {
+        id: 'temporal-peak-day',
+        label: t('analytics.temporal.summaryCards.peakDay.label'),
+        value: data.peakDay,
+        subtitle: t('analytics.temporal.summaryCards.peakDay.subtitle'),
+        sr: t('analytics.temporal.summaryCards.peakDay.sr', {
+          value: data.peakDay,
+        }),
+      },
+      {
+        id: 'temporal-avg-activity',
+        label: t('analytics.temporal.summaryCards.avgActivity.label'),
+        value: formatNumber(data.avgActivity),
+        subtitle: t('analytics.temporal.summaryCards.avgActivity.subtitle'),
+        sr: t('analytics.temporal.summaryCards.avgActivity.sr', {
+          value: formatNumber(data.avgActivity),
+        }),
+      },
+    ];
+  }, [data, formatNumber, t]);
+
+  const hourlySummaryText = useMemo(
+    () =>
+      data
+        ? t('analytics.temporal.tabSummaries.hourly', {
+            peakHour: formatHour(data.peakHour),
+            avgActivity: formatNumber(data.avgActivity),
+          })
+        : '',
+    [data, formatNumber, t],
+  );
+
+  const dailySummaryText = useMemo(
+    () =>
+      data
+        ? t('analytics.temporal.tabSummaries.daily', {
+            peakDay: data.peakDay,
+            avgActivity: formatNumber(data.avgActivity),
+          })
+        : '',
+    [data, formatNumber, t],
+  );
+
+  const velocitySummaryText = useMemo(() => {
+    if (!data || data.velocity.length === 0) {
+      return '';
+    }
+    const firstVelocity = data.velocity[0]?.velocity ?? 0;
+    const lastVelocity = data.velocity[data.velocity.length - 1]?.velocity ?? firstVelocity;
+    const delta = lastVelocity - firstVelocity;
+    const trendDirection =
+      delta > 2
+        ? t('analytics.temporal.velocityTrend.increasing')
+        : delta < -2
+          ? t('analytics.temporal.velocityTrend.decreasing')
+          : t('analytics.temporal.velocityTrend.steady');
+
+    return t('analytics.temporal.tabSummaries.velocity', {
+      lastTimestamp: data.velocity[data.velocity.length - 1]?.timestamp ?? '',
+      lastVelocity: formatNumber(lastVelocity),
+      trendDirection,
+    });
+  }, [data, formatNumber, t]);
+
   useEffect(() => {
     void fetchTemporal(defaultDateRange, {
-      fallback: (r) => generateMockData(r as typeof defaultDateRange),
+      fallback: (r) => generateMockData(r as DateRange),
     });
   }, [defaultDateRange, fetchTemporal]);
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Temporal analysis data may be incomplete. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   const handleExport = useCallback(() => {
     if (!data) return;
@@ -188,59 +508,63 @@ export default function TemporalAnalysisChart({
 
   if (!data) {
     return (
-      <Card className={className}>
+      <Card role="region" aria-labelledby={cardHeadingId} aria-describedby={cardDescriptionId} className={className}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle id={cardHeadingId} className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Temporal Analysis
+            {t('analytics.temporal.cardTitle')}
           </CardTitle>
+          <p id={cardDescriptionId} className="text-sm text-gray-600 mt-1">
+            {t('analytics.temporal.cardDescription')}
+          </p>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64 text-red-600">
+          <div className="flex items-center justify-center h-64 text-red-600" role="alert">
             <AlertCircle className="h-5 w-5 mr-2" />
-            <span>{error ?? 'No data available'}</span>
+            <span>{error ?? t('analytics.temporal.errors.noData')}</span>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const maxHourlyActivity = Math.max(...data.hourly.map(h => h.activity), 0);
-  const maxDailyActivity = Math.max(...data.daily.map(d => d.activity), 0);
-
   return (
-    <Card className={className}>
+    <Card role="region" aria-labelledby={cardHeadingId} aria-describedby={cardDescriptionId} className={className}>
       <CardHeader>
-          <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle id={cardHeadingId} className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Temporal Analysis
+              {t('analytics.temporal.cardTitle')}
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              User activity patterns by time of day and day of week
+            <p id={cardDescriptionId} className="text-sm text-gray-600 mt-1">
+              {t('analytics.temporal.cardDescription')}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <label className="sr-only" htmlFor={`temporal-range-${summarySectionId}`}>
+              {dateRangeLabel}
+            </label>
             <select
+              id={`temporal-range-${summarySectionId}`}
               value={dateRange}
               onChange={(e) => {
-                const range = e.target.value as typeof dateRange;
-                void loadTemporal(range);
+                const range = e.target.value as DateRange;
+                handleRangeChange(range);
               }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
+              <option value="7d">{rangeLabels['7d']}</option>
+              <option value="30d">{rangeLabels['30d']}</option>
+              <option value="90d">{rangeLabels['90d']}</option>
             </select>
-            <Button
-              onClick={handleExport}
-              size="sm"
-              variant="outline"
-            >
+            <Button onClick={handleRefresh} size="sm" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {refreshLabel}
+            </Button>
+            <Button onClick={handleExport} size="sm" variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              {exportLabel}
             </Button>
           </div>
         </div>
@@ -248,52 +572,74 @@ export default function TemporalAnalysisChart({
       <CardContent>
         {/* Error Notice */}
         {showError && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2" role="status" aria-live="polite">
             <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-yellow-800">
-              <strong>Note:</strong> Using mock data for demonstration. {error}
+              {t('analytics.temporal.notes.mockData', { error })}
             </p>
           </div>
         )}
 
         {/* Summary Stats */}
-        <div className="mb-6 grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-            <p className="text-sm text-gray-600">Peak Hour</p>
-            <p className="text-2xl font-bold text-blue-700">{formatHour(data.peakHour)}</p>
-            <p className="text-xs text-gray-500 mt-1">Most active time</p>
+        {summaryCards.length > 0 && (
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {summaryCards.map((card) => (
+              <div
+                key={card.id}
+                className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg"
+                role="group"
+                aria-labelledby={`${card.id}-label`}
+                aria-describedby={`${card.id}-value`}
+              >
+                <p id={`${card.id}-label`} className="text-sm text-gray-600">
+                  {card.label}
+                </p>
+                <p id={`${card.id}-value`} className="text-2xl font-bold text-blue-700">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+                <p className="sr-only">{card.sr}</p>
+              </div>
+            ))}
           </div>
-          <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-            <p className="text-sm text-gray-600">Peak Day</p>
-            <p className="text-2xl font-bold text-green-700">{data.peakDay}</p>
-            <p className="text-xs text-gray-500 mt-1">Most active day</p>
-          </div>
-          <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
-            <p className="text-sm text-gray-600">Avg Activity</p>
-            <p className="text-2xl font-bold text-purple-700">{data.avgActivity.toFixed(0)}</p>
-            <p className="text-xs text-gray-500 mt-1">Per time slot</p>
-          </div>
-        </div>
+        )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => handleTabChange(v as typeof activeTab)}
+          aria-label={t('analytics.temporal.tabsGroupLabel')}
+        >
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="hourly">Hourly Pattern</TabsTrigger>
-            <TabsTrigger value="daily">Daily Pattern</TabsTrigger>
-            <TabsTrigger value="velocity">Velocity Trends</TabsTrigger>
+            <TabsTrigger value="hourly">{tabLabels.hourly}</TabsTrigger>
+            <TabsTrigger value="daily">{tabLabels.daily}</TabsTrigger>
+            <TabsTrigger value="velocity">{tabLabels.velocity}</TabsTrigger>
           </TabsList>
 
           {/* Hourly Pattern Tab */}
-          <TabsContent value="hourly" className="mt-6">
+          <TabsContent
+            value="hourly"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${hourlyRegionId}-heading`}
+          >
+            <p id={`${hourlyRegionId}-heading`} className="sr-only">
+              {tabLabels.hourly}
+            </p>
+            {hourlySummaryText ? (
+              <p className="sr-only" aria-live="polite">
+                {hourlySummaryText}
+              </p>
+            ) : null}
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">24-Hour Activity Pattern</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('analytics.temporal.sections.hourly.title')}</h3>
               <p className="text-xs text-gray-600">
-                Shows user activity across all hours of the day (0 = midnight, 12 = noon)
+                {t('analytics.temporal.sections.hourly.description')}
               </p>
             </div>
 
             {/* Heatmap Grid */}
-            <div className="mb-6 grid grid-cols-12 gap-2">
+            <div className="mb-6 grid grid-cols-12 gap-2" role="group" aria-label={t('analytics.temporal.sections.hourly.heatmapLabel')}>
               {data.hourly.map((hour) => (
                 <div
                   key={hour.hour}
@@ -301,7 +647,7 @@ export default function TemporalAnalysisChart({
                   style={{
                     backgroundColor: getActivityColor(hour.activity, maxHourlyActivity)
                   }}
-                  title={`${hour.label}: ${hour.activity} activities`}
+                  aria-hidden="true"
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-xs font-medium text-gray-700">
@@ -313,8 +659,8 @@ export default function TemporalAnalysisChart({
             </div>
 
             {/* Legend */}
-            <div className="mb-6 flex items-center justify-center gap-4 text-xs">
-              <span className="text-gray-600">Low</span>
+            <div className="mb-6 flex items-center justify-center gap-4 text-xs" aria-hidden="true">
+              <span className="text-gray-600">{t('analytics.temporal.sections.hourly.legendLow')}</span>
               <div className="flex gap-1">
                 {[0.2, 0.4, 0.6, 0.8, 1.0].map((ratio) => (
                   <div
@@ -324,11 +670,11 @@ export default function TemporalAnalysisChart({
                   />
                 ))}
               </div>
-              <span className="text-gray-600">High</span>
+              <span className="text-gray-600">{t('analytics.temporal.sections.hourly.legendHigh')}</span>
             </div>
 
             {/* Bar Chart */}
-            <div className="h-64">
+            <div className="h-64" role="img" aria-label={hourlySummaryText || tabLabels.hourly}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.hourly} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -338,8 +684,14 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.hourOfDay,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <YAxis label={{ value: 'Activity Count', angle: -90, position: 'insideLeft' }} />
+                  <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
@@ -356,27 +708,48 @@ export default function TemporalAnalysisChart({
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="activity" name="Activity Count" fill="#3b82f6" />
+                  <Bar dataKey="activity" name={t('analytics.temporal.axes.activityCount')} fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </TabsContent>
 
           {/* Daily Pattern Tab */}
-          <TabsContent value="daily" className="mt-6">
+          <TabsContent
+            value="daily"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${dailyRegionId}-heading`}
+          >
+            <p id={`${dailyRegionId}-heading`} className="sr-only">
+              {tabLabels.daily}
+            </p>
+            {dailySummaryText ? (
+              <p className="sr-only" aria-live="polite">
+                {dailySummaryText}
+              </p>
+            ) : null}
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Day-of-Week Pattern</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('analytics.temporal.sections.daily.title')}</h3>
               <p className="text-xs text-gray-600">
-                Shows user activity across days of the week
+                {t('analytics.temporal.sections.daily.description')}
               </p>
             </div>
 
-            <div className="h-80">
+            <div className="h-80" role="img" aria-label={dailySummaryText || tabLabels.daily}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.daily} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis label={{ value: 'Activity Count', angle: -90, position: 'insideLeft' }} />
+                  <XAxis
+                    dataKey="day"
+                    label={{
+                      value: axisText.dayOfWeek,
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: 12 },
+                    }}
+                  />
+                  <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
@@ -413,7 +786,7 @@ export default function TemporalAnalysisChart({
 
             {/* Top Days */}
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Engagement by Day</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('analytics.temporal.sections.daily.listTitle')}</h3>
               <div className="space-y-2">
                 {data.daily
                   .sort((a, b) => b.activity - a.activity)
@@ -427,7 +800,9 @@ export default function TemporalAnalysisChart({
                         <div>
                           <p className="text-sm font-medium text-gray-900">{day.day}</p>
                           <p className="text-xs text-gray-500">
-                            {((day.activity / maxDailyActivity) * 100).toFixed(0)}% of peak
+                            {t('analytics.temporal.sections.daily.percentOfPeak', {
+                              value: maxDailyActivity > 0 ? ((day.activity / maxDailyActivity) * 100).toFixed(0) : '0',
+                            })}
                           </p>
                         </div>
                       </div>
@@ -439,15 +814,28 @@ export default function TemporalAnalysisChart({
           </TabsContent>
 
           {/* Velocity Trends Tab */}
-          <TabsContent value="velocity" className="mt-6">
+          <TabsContent
+            value="velocity"
+            className="mt-6"
+            role="region"
+            aria-labelledby={`${velocityRegionId}-heading`}
+          >
+            <p id={`${velocityRegionId}-heading`} className="sr-only">
+              {tabLabels.velocity}
+            </p>
+            {velocitySummaryText ? (
+              <p className="sr-only" aria-live="polite">
+                {velocitySummaryText}
+              </p>
+            ) : null}
             <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Engagement Velocity</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('analytics.temporal.sections.velocity.title')}</h3>
               <p className="text-xs text-gray-600">
-                Rate of change in user engagement over time
+                {t('analytics.temporal.sections.velocity.description')}
               </p>
             </div>
 
-            <div className="h-80">
+            <div className="h-80" role="img" aria-label={velocitySummaryText || tabLabels.velocity}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.velocity} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -457,8 +845,14 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.timestamp,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
-                  <YAxis label={{ value: 'Velocity (activities/hour)', angle: -90, position: 'insideLeft' }} />
+                  <YAxis label={{ value: t('analytics.temporal.axes.velocity'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload || payload.length === 0) return null;
@@ -499,9 +893,55 @@ export default function TemporalAnalysisChart({
             variant="outline"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Data
+            {refreshLabel}
           </Button>
         </div>
+
+        <section
+          aria-labelledby={`${summarySectionId}-heading`}
+          className="mt-6 space-y-4"
+        >
+          <h2
+            id={`${summarySectionId}-heading`}
+            className="text-base font-semibold text-foreground"
+          >
+            {t('analytics.tables.heading')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('analytics.tables.description')}
+          </p>
+          {summaryIntro ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm text-foreground"
+            >
+              {summaryIntro}
+            </p>
+          ) : null}
+
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-hourly`}
+            title={t('analytics.temporal.tables.hourly.title')}
+            description={t('analytics.temporal.tables.hourly.description')}
+            columns={hourlyColumns}
+            rows={hourlyRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-daily`}
+            title={t('analytics.temporal.tables.daily.title')}
+            description={t('analytics.temporal.tables.daily.description')}
+            columns={dailyColumns}
+            rows={dailyRows}
+          />
+          <AnalyticsSummaryTable
+            tableId={`${summarySectionId}-velocity`}
+            title={t('analytics.temporal.tables.velocity.title')}
+            description={t('analytics.temporal.tables.velocity.description')}
+            columns={velocityColumns}
+            rows={velocityRows}
+          />
+        </section>
       </CardContent>
     </Card>
   );
@@ -547,10 +987,10 @@ function generateMockData(_range: string): TemporalData {
 
   // Calculate peak values
   const peakHourData: HourlyData = hourly.length > 0
-    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), hourly[0]!)
+    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), { hour: 0, activity: 0, label: '12 AM' })
     : { hour: 0, activity: 0, label: '12 AM' };
   const peakDayData: DailyData = daily.length > 0
-    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), daily[0]!)
+    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), { day: 'Monday', activity: 0, dayIndex: 0 })
     : { day: 'Monday', activity: 0, dayIndex: 0 };
   const avgActivity = hourly.length > 0 ? hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length : 0;
 

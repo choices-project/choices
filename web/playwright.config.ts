@@ -15,7 +15,7 @@ export default defineConfig({
   globalSetup: './tests/e2e/setup/global-setup.ts',
 
   use: {
-    baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:3000',
+    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -62,6 +62,7 @@ export default defineConfig({
         process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
       NEXT_PUBLIC_ENABLE_E2E_HARNESS:
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
+      NEXT_DISABLE_STRICT_MODE: '1',
     },
   },
 })

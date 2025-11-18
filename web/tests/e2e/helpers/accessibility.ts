@@ -6,19 +6,25 @@ type AxeOptions = {
   include?: string[];
   /** Optional array of CSS selectors to exclude from analysis */
   exclude?: string[];
+  /** If true, do not fail the test when violations are detected */
+  allowViolations?: boolean;
 };
 
-export async function runAxeAudit(page: Page, context: string, options: AxeOptions = {}) {
+export type AxeResults = Awaited<ReturnType<AxeBuilder['analyze']>>;
+
+export async function runAxeAudit(page: Page, context: string, options: AxeOptions = {}): Promise<AxeResults> {
+  const { allowViolations = false, include, exclude } = options;
+
   const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
 
-  if (options.include?.length) {
-    for (const selector of options.include) {
+  if (include?.length) {
+    for (const selector of include) {
       builder.include(selector);
     }
   }
 
-  if (options.exclude?.length) {
-    for (const selector of options.exclude) {
+  if (exclude?.length) {
+    for (const selector of exclude) {
       builder.exclude(selector);
     }
   }
@@ -27,10 +33,14 @@ export async function runAxeAudit(page: Page, context: string, options: AxeOptio
 
   if (results.violations.length > 0) {
     console.error(`[axe] ${context} violations detected:`, results.violations);
+    if (!allowViolations) {
+      expect(results.violations, `${context} accessibility violations`).toEqual([]);
+    }
   } else {
     console.info(`[axe] ${context} passed WCAG 2.0/2.1 A/AA checks`);
+    expect(results.violations, `${context} accessibility violations`).toEqual([]);
   }
 
-  expect(results.violations, `${context} accessibility violations`).toEqual([]);
+  return results;
 }
 

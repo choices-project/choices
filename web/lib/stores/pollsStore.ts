@@ -5,6 +5,15 @@ import { immer } from 'zustand/middleware/immer';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
 import {
+  createPollRequest,
+  type PollCreatePayload,
+  type PollCreateRequestResult,
+  type PollUndoVoteRequestResult,
+  type PollVoteRequestResult,
+  undoVoteRequest,
+  voteOnPollRequest,
+} from '@/lib/polls/api';
+import {
   createDefaultPollFilters,
   createDefaultPollPreferences,
 } from '@/lib/polls/defaults';
@@ -17,24 +26,23 @@ import {
   validatePollFilters,
   type PollStatusTransition,
 } from '@/lib/polls/validation';
-import {
-  createPollRequest,
-  type PollCreatePayload,
-  type PollCreateRequestResult,
-  type PollUndoVoteRequestResult,
-  type PollVoteRequestResult,
-  undoVoteRequest,
-  voteOnPollRequest,
-} from '@/lib/polls/api';
 import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
-import { useNotificationStore } from './notificationStore';
+import { notificationStoreUtils } from './notificationStore';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
 export type { PollFilters, PollPreferences } from '@/lib/polls/types';
 export type { PollCardView } from '@/lib/polls/transformers';
+
+export type PollVoteHistoryEntry = {
+  hasVoted: boolean;
+  optionId: string | null;
+  voteId: string | null;
+  lastVotedAt: string | null;
+  source: 'server' | 'client';
+};
 
 export type PollSearch = {
   query: string;
@@ -63,6 +71,7 @@ export type PollsState = {
   isVoting: boolean;
   error: string | null;
   lastFetchedAt: string | null;
+  voteHistory: Record<string, PollVoteHistoryEntry>;
 };
 
 export type PollsActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
@@ -174,6 +183,7 @@ export const initialPollsState: PollsState = {
   isVoting: false,
   error: null,
   lastFetchedAt: null,
+  voteHistory: {},
 };
 
 export const createInitialPollsState = (): PollsState => ({
@@ -187,6 +197,7 @@ export const createInitialPollsState = (): PollsState => ({
   isVoting: false,
   error: null,
   lastFetchedAt: null,
+  voteHistory: {},
 });
 
 const transitionPollStatus = (
@@ -256,29 +267,93 @@ export const createPollsActions = (
       state.isVoting = false;
       state.error = null;
       state.lastFetchedAt = null;
+      state.voteHistory = {};
     });
 
-  const getNotificationState = () => useNotificationStore.getState();
+  const coerceString = (value: unknown): string | null =>
+    typeof value === 'string' && value.trim().length > 0 ? value : null;
 
-  const notifySuccess = (title: string, message: string) => {
-    const { addNotification, settings } = getNotificationState();
-    addNotification({
-      type: 'success',
-      title,
-      message,
-      duration: settings.duration,
-    });
+  const readBoolean = (value: unknown): boolean | undefined =>
+    typeof value === 'boolean' ? value : undefined;
+
+  type VoteHistorySignal =
+    | { kind: 'entry'; entry: PollVoteHistoryEntry }
+    | { kind: 'clear' }
+    | { kind: 'none' };
+
+  const resolveVoteHistorySignal = (poll: PollRow): VoteHistorySignal => {
+    const meta = poll as Record<string, unknown>;
+    const optionId =
+      coerceString(meta.userVote) ??
+      coerceString(meta.user_vote) ??
+      coerceString(meta.userVoteOptionId) ??
+      coerceString(meta.user_vote_option_id);
+    const voteId =
+      coerceString(meta.userVoteId) ??
+      coerceString(meta.user_vote_id) ??
+      coerceString(meta.voteId);
+    const lastVotedAt =
+      coerceString(meta.userVotedAt) ??
+      coerceString(meta.user_voted_at) ??
+      coerceString(meta.lastVotedAt) ??
+      coerceString(meta.last_voted_at);
+    const hasVotedFlag = readBoolean(meta.userHasVoted) ?? readBoolean(meta.user_has_voted);
+    const hasVoted = hasVotedFlag ?? Boolean(optionId ?? voteId);
+
+    if (hasVoted) {
+      return {
+        kind: 'entry',
+        entry: {
+          hasVoted: true,
+          optionId: optionId ?? null,
+          voteId: voteId ?? null,
+          lastVotedAt: lastVotedAt ?? null,
+          source: 'server',
+        },
+      };
+    }
+
+    if (hasVotedFlag === false) {
+      return { kind: 'clear' };
+    }
+
+    return { kind: 'none' };
   };
 
-  const notifyError = (title: string, message: string) => {
-    const { addNotification, settings } = getNotificationState();
-    addNotification({
-      type: 'error',
-      title,
-      message,
-      duration: settings.duration,
-    });
+  const syncVoteHistoryFromPoll = (state: PollsState, poll: PollRow) => {
+    const signal = resolveVoteHistorySignal(poll);
+    if (signal.kind === 'entry') {
+      state.voteHistory[poll.id] = signal.entry;
+      return;
+    }
+    if (signal.kind === 'clear' && state.voteHistory[poll.id]) {
+      delete state.voteHistory[poll.id];
+    }
   };
+
+  const recordClientVote = (pollId: string, optionId: string, voteId?: string) =>
+    setState((state) => {
+      state.voteHistory[pollId] = {
+        hasVoted: true,
+        optionId,
+        voteId: voteId ?? null,
+        lastVotedAt: new Date().toISOString(),
+        source: 'client',
+      };
+    });
+
+  const clearClientVote = (pollId: string) =>
+    setState((state) => {
+      if (state.voteHistory[pollId]) {
+        delete state.voteHistory[pollId];
+      }
+    });
+
+  const notifySuccess = (title: string, message: string) =>
+    notificationStoreUtils.createSuccessWithSettings(title, message);
+
+  const notifyError = (title: string, message: string) =>
+    notificationStoreUtils.createErrorWithSettings(title, message);
 
   const setSearchQuery = (query: string) =>
     setState((state) => {
@@ -321,6 +396,7 @@ export const createPollsActions = (
       state.polls = polls.map((poll) => {
         const next = { ...poll };
         normalizePollStatus(next);
+        syncVoteHistoryFromPoll(state, next);
         return next;
       });
       state.lastFetchedAt = new Date().toISOString();
@@ -330,6 +406,7 @@ export const createPollsActions = (
     setState((state) => {
       const next = { ...poll };
       normalizePollStatus(next);
+      syncVoteHistoryFromPoll(state, next);
       state.polls.unshift(next);
     });
 
@@ -339,12 +416,16 @@ export const createPollsActions = (
       if (target) {
         Object.assign(target, updates);
         normalizePollStatus(target);
+        syncVoteHistoryFromPoll(state, target);
       }
     });
 
   const removePoll = (id: string) =>
     setState((state) => {
       state.polls = state.polls.filter((poll) => poll.id !== id);
+      if (state.voteHistory[id]) {
+        delete state.voteHistory[id];
+      }
     });
 
   const publishPoll = (id: string) =>
@@ -416,8 +497,11 @@ export const createPollsActions = (
               : (poll.total_votes ?? 0) + 1;
           poll.total_votes = Math.max(0, nextTotal);
           poll.updated_at = new Date().toISOString();
+          syncVoteHistoryFromPoll(state, poll);
         }
       });
+
+      recordClientVote(pollId, optionId, result.data.voteId);
 
       logger.info('Vote cast successfully', {
         pollId,
@@ -485,8 +569,11 @@ export const createPollsActions = (
             result.data.totalVotes !== undefined ? result.data.totalVotes : Math.max(0, (poll.total_votes ?? 0) - 1);
           poll.total_votes = Math.max(0, nextTotal);
           poll.updated_at = new Date().toISOString();
+          syncVoteHistoryFromPoll(state, poll);
         }
       });
+
+      clearClientVote(pollId);
 
       notifySuccess('Vote undone', result.message ?? 'You can now submit a new response.');
       return result;
@@ -649,15 +736,39 @@ export const createPollsActions = (
         throw new Error('Failed to load polls');
       }
 
-      const payload = (await response.json()) as PollRow[];
-      setPolls(payload);
+      const payload = (await response.json()) as {
+        success?: boolean;
+        data?: { polls?: PollRow[] };
+        metadata?: {
+          pagination?: {
+            total?: number;
+            totalPages?: number;
+            page?: number;
+          };
+        };
+      };
+
+      const polls = payload?.data?.polls ?? [];
+      const paginationMeta = payload?.metadata?.pagination;
+
+      if (!Array.isArray(polls)) {
+        throw new Error('Malformed polls response');
+      }
+
+      setPolls(polls);
       setState((state) => {
-        state.search.totalResults = payload.length;
-        state.search.totalPages = Math.max(
-          1,
-          Math.ceil(payload.length / Math.max(1, state.preferences.itemsPerPage)),
-        );
-        state.search.currentPage = page;
+        const totalResults =
+          typeof paginationMeta?.total === 'number'
+            ? paginationMeta.total
+            : polls.length;
+        const totalPages =
+          typeof paginationMeta?.totalPages === 'number'
+            ? paginationMeta.totalPages
+            : Math.max(1, Math.ceil(totalResults / Math.max(1, state.preferences.itemsPerPage)));
+
+        state.search.totalResults = totalResults;
+        state.search.totalPages = totalPages;
+        state.search.currentPage = paginationMeta?.page ?? page;
         if (options?.search !== undefined) {
           state.search.query = searchQuery;
         }
@@ -678,7 +789,7 @@ export const createPollsActions = (
         search: searchQuery,
         sortBy,
         trendingOnly,
-        count: payload.length,
+        count: polls.length,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -700,15 +811,23 @@ export const createPollsActions = (
         throw new Error('Failed to load poll');
       }
 
-      const poll = (await response.json()) as PollRow;
+      const payload = (await response.json()) as { success?: boolean; data?: PollRow };
+      const poll = payload?.data;
+
+      if (!poll) {
+        throw new Error('Malformed poll response');
+      }
 
       setState((state) => {
         const existing = state.polls.findIndex((item) => item.id === id);
+        const next = { ...poll };
+        normalizePollStatus(next);
         if (existing >= 0) {
-          state.polls[existing] = poll;
+          state.polls[existing] = next;
         } else {
-          state.polls.unshift(poll);
+          state.polls.unshift(next);
         }
+        syncVoteHistoryFromPoll(state, next);
       });
 
       selectPoll(id);
@@ -820,9 +939,17 @@ export const createPollsActions = (
     return poll.status === 'active' && !poll.closed_at;
   };
 
-  const hasUserVoted = (_pollId: string) => {
-    // Placeholder until user vote history is wired into the store.
+  const hasUserVoted = (pollId: string) => {
+    const historyEntry = get().voteHistory[pollId];
+    if (historyEntry) {
+      return historyEntry.hasVoted;
+    }
+    const poll = getPollById(pollId);
+    if (!poll) {
     return false;
+    }
+    const signal = resolveVoteHistorySignal(poll);
+    return signal.kind === 'entry' ? signal.entry.hasVoted : false;
   };
 
   const getActivePollsCount = () => get().polls.filter((poll) => poll.status === 'active').length;
@@ -885,6 +1012,7 @@ export const usePollsStore = create<PollsStore>()(
             query: state.search.query,
             recentSearches: state.search.recentSearches,
           },
+          voteHistory: state.voteHistory,
         }),
       }
     ),

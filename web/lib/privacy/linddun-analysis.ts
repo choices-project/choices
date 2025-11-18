@@ -13,7 +13,7 @@
 // - Data flow privacy analysis
 // - Retention policy enforcement
 
-import { withOptional } from '@/lib/util/objects';
+ 
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -342,19 +342,32 @@ export class PrivacyThreatAssessmentManager {
       if (!dimensionMap.has(threat.dimension)) {
         dimensionMap.set(threat.dimension, []);
       }
-      dimensionMap.get(threat.dimension)!.push(threat);
+      const list = dimensionMap.get(threat.dimension);
+      if (list) {
+        list.push(threat);
+        dimensionMap.set(threat.dimension, list);
+      }
     });
     
     const aggregated: LINDDUNThreat[] = [];
     
-    dimensionMap.forEach((dimensionThreats, _dimension) => {
+    dimensionMap.forEach((dimensionThreats, dimension) => {
+      if (!dimensionThreats || dimensionThreats.length === 0) {
+        return;
+      }
       const maxRisk = Math.max(...dimensionThreats.map(t => t.riskLevel));
-      const representativeThreat = dimensionThreats.find(t => t.riskLevel === maxRisk)!;
-      
-      aggregated.push(withOptional(representativeThreat, {
+      const representativeThreat = dimensionThreats.find(t => t.riskLevel === maxRisk) ?? dimensionThreats[0];
+      if (!representativeThreat) {
+        return;
+      }
+      aggregated.push({
+        dimension,
+        threat: representativeThreat.threat,
+        mitigation: representativeThreat.mitigation,
+        implementation: representativeThreat.implementation,
         riskLevel: maxRisk,
         status: maxRisk > 0.6 ? 'requires_attention' : 'acceptable'
-      }));
+      });
     });
     
     return aggregated;

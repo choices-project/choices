@@ -7,7 +7,6 @@
  * @author Choices Platform Team
  */
 
-import { withOptional } from '@/lib/util/objects';
 import { logger } from '@/lib/utils/logger';
 
 import { PUSH_CONFIG } from './sw-config';
@@ -100,7 +99,7 @@ export async function requestNotificationPermission(context?: {
     logger.info('Notification permission result:', permission);
     
     // Track permission result
-    const properties = withOptional({ result: permission }, context);
+    const properties = { result: permission, ...(context ?? {}) };
 
     window.dispatchEvent(new CustomEvent('pwa-analytics', {
       detail: {
@@ -160,17 +159,20 @@ export async function subscribeToPushNotifications(): Promise<PushSubscription |
     
     // Convert VAPID public key from base64 to Uint8Array
     const vapidPublicKey = PUSH_CONFIG.vapidPublicKey;
-    
+
     if (!vapidPublicKey) {
-      throw new Error('VAPID public key not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY environment variable.');
+      throw new Error(
+        'VAPID public key not configured. Set NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY environment variable.'
+      );
     }
     
     const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
+    const applicationServerKey: BufferSource = convertedKey;
     
     // Subscribe to push notifications
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: convertedKey,
+      applicationServerKey,
     });
     
     logger.info('Subscribed to push notifications');
@@ -297,18 +299,15 @@ export async function showNotification(options: NotificationOptions): Promise<vo
   try {
     const registration = await navigator.serviceWorker.ready;
     
-    const notificationOptions = withOptional(
-      {
-        body: options.body,
-        icon: options.icon || PUSH_CONFIG.defaultOptions.icon,
-        badge: options.badge || PUSH_CONFIG.defaultOptions.badge,
-        data: options.data,
-        requireInteraction: options.requireInteraction ?? false,
-        silent: options.silent ?? false,
-        // vibrate not supported in NotificationOptions type
-      },
-      options.tag ? { tag: options.tag } : undefined
-    );
+    const notificationOptions = {
+      body: options.body,
+      icon: options.icon || PUSH_CONFIG.defaultOptions.icon,
+      badge: options.badge || PUSH_CONFIG.defaultOptions.badge,
+      data: options.data,
+      requireInteraction: options.requireInteraction ?? false,
+      silent: options.silent ?? false,
+      ...(options.tag ? { tag: options.tag } : {}),
+    };
 
     await registration.showNotification(options.title, notificationOptions);
     

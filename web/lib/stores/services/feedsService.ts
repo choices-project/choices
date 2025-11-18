@@ -6,6 +6,7 @@ export type FetchFeedsParams = {
   category?: string | null;
   district?: string | null;
   limit?: number;
+  offset?: number;
   sort?: string | null;
 };
 
@@ -14,6 +15,9 @@ const buildFeedsQueryString = (params: FetchFeedsParams = {}): string => {
 
   if (params.limit != null) {
     searchParams.set('limit', String(params.limit));
+  }
+  if (params.offset != null) {
+    searchParams.set('offset', String(params.offset));
   }
   if (params.category && params.category !== 'all') {
     searchParams.set('category', params.category);
@@ -47,11 +51,17 @@ export const fetchFeedsFromApi = async (
   }
 
   const raw = await response.json();
-  return parseFeedsPayload(raw, {
+  const fallbackBase = {
     category: params.category ?? 'all',
     district: params.district ?? null,
     sort: params.sort ?? 'trending',
-  });
+  };
+  const fallback: FeedsPayloadFallback = {
+    ...fallbackBase,
+    ...(params.limit != null ? { limit: params.limit } : {}),
+    ...(params.offset != null ? { offset: params.offset } : {}),
+  };
+  return parseFeedsPayload(raw, fallback);
 };
 
 type FeedSearchResponse = {
@@ -60,40 +70,102 @@ type FeedSearchResponse = {
   suggestions?: string[];
 };
 
+type FeedsPayloadFallback = {
+  category: string;
+  district: string | null;
+  sort: string;
+  limit?: number;
+  offset?: number;
+};
+
+const buildPaginationMetadata = (
+  pagination: FeedsApiPayload['pagination'] | undefined,
+  total: number,
+  fallback: Pick<FeedsPayloadFallback, 'limit' | 'offset'>,
+) => {
+  const limit = pagination?.limit ?? fallback.limit ?? total;
+  const offset = pagination?.offset ?? fallback.offset ?? 0;
+  const hasMore =
+    typeof pagination?.hasMore === 'boolean'
+      ? pagination.hasMore
+      : offset + (pagination?.limit ?? fallback.limit ?? total) < total;
+
+  return {
+    total,
+    limit,
+    offset,
+    hasMore,
+  };
+};
+
 export const parseFeedsPayload = (
   raw: unknown,
-  fallback: Pick<FetchFeedsParams, 'category' | 'district' | 'sort'>,
+  fallback: FeedsPayloadFallback,
 ): FeedsApiPayload => {
   if (raw && typeof raw === 'object' && 'success' in raw) {
     const successPayload = raw as ApiSuccessResponse<FeedsApiPayload>;
-    return successPayload.data;
+    const total =
+      typeof successPayload.data.count === 'number'
+        ? successPayload.data.count
+        : successPayload.data.feeds.length;
+    return {
+      ...successPayload.data,
+      count: total,
+      pagination: buildPaginationMetadata(
+        successPayload.data.pagination,
+        total,
+        {
+          ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+          ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+        },
+      ),
+    };
   }
 
   if (raw && typeof raw === 'object' && 'feeds' in raw) {
     const payload = raw as Partial<FeedsApiPayload>;
     if (Array.isArray(payload.feeds)) {
+      const total =
+        typeof payload.count === 'number' ? payload.count : payload.feeds.length;
       return {
         feeds: payload.feeds,
-        count: typeof payload.count === 'number' ? payload.count : payload.feeds.length,
+        count: total,
         filters: {
           category: payload.filters?.category ?? fallback.category ?? 'all',
           district: payload.filters?.district ?? fallback.district ?? null,
           sort: payload.filters?.sort ?? fallback.sort ?? 'trending',
         },
+        pagination: buildPaginationMetadata(
+          payload.pagination,
+          total,
+          {
+            ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+            ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+          },
+        ),
       };
     }
   }
 
   if (Array.isArray(raw)) {
     const feeds = raw as FeedsApiPayload['feeds'];
+    const total = feeds.length;
     return {
       feeds,
-      count: feeds.length,
+      count: total,
       filters: {
         category: fallback.category ?? 'all',
         district: fallback.district ?? null,
         sort: fallback.sort ?? 'trending',
       },
+      pagination: buildPaginationMetadata(
+        undefined,
+        total,
+        {
+          ...(fallback.limit != null ? { limit: fallback.limit } : {}),
+          ...(fallback.offset != null ? { offset: fallback.offset } : {}),
+        },
+      ),
     };
   }
 

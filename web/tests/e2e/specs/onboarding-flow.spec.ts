@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
 import { runAxeAudit } from '../helpers/accessibility';
+import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/onboarding-flow', { waitUntil: 'domcontentloaded', timeout: 45_000 });
@@ -14,7 +14,7 @@ const gotoHarness = async (page: Page) => {
   );
 };
 
-test.describe('Onboarding flow harness', () => {
+test.describe('@axe Onboarding flow harness', () => {
   test.beforeEach(async ({ page }) => {
     await setupExternalAPIMocks(page, { analytics: true, notifications: true, civics: false });
   });

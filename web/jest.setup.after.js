@@ -81,20 +81,55 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock Next.js server components
-jest.mock('next/server', () => ({
-  NextRequest: class MockNextRequest {
-    constructor(url = 'http://localhost:3000') {
-      this.url = url;
-      this.headers = new Map();
-      this.method = 'GET';
-    }
-  },
-  NextResponse: {
-    json: jest.fn((data) => ({ json: () => data })),
-    redirect: jest.fn((url) => ({ url })),
-    next: jest.fn(() => ({ next: true }))
-  }
-}));
+jest.mock('next/server', () => {
+  const createHeaders = (initial = {}) => {
+    const store = new Map(
+      Object.entries(initial).map(([key, value]) => [key.toLowerCase(), value]),
+    );
+    return {
+      get: (key) => store.get(String(key).toLowerCase()) ?? null,
+      set: (key, value) => {
+        store.set(String(key).toLowerCase(), value);
+      },
+      append: (key, value) => {
+        const formattedKey = String(key).toLowerCase();
+        const current = store.get(formattedKey);
+        store.set(
+          formattedKey,
+          current ? `${current}, ${value}` : value,
+        );
+      },
+      entries: () => store.entries(),
+      [Symbol.iterator]: function* iterator() {
+        yield* store.entries();
+      },
+    };
+  };
+
+  const createResponse = (data, init = {}) => {
+    const headers = createHeaders(init.headers);
+    return {
+      status: init.status ?? 200,
+      headers,
+      json: () => Promise.resolve(data),
+    };
+  };
+
+  return {
+    NextRequest: class MockNextRequest {
+      constructor(url = 'http://localhost:3000') {
+        this.url = url;
+        this.headers = new Map();
+        this.method = 'GET';
+      }
+    },
+    NextResponse: {
+      json: jest.fn((data, init) => createResponse(data, init)),
+      redirect: jest.fn((url, init) => createResponse({ url }, init)),
+      next: jest.fn((init) => createResponse({ next: true }, init)),
+    },
+  };
+});
 
 // Mock window.matchMedia (only in browser environment)
 if (typeof window !== 'undefined') {

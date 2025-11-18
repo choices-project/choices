@@ -6,14 +6,14 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { 
   generateAuthenticationOptions,
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
-import { withErrorHandling, successResponse, authError, forbiddenError } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -53,17 +53,17 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
     const challengeArray = new Uint8Array(options.challenge);
     
-    const { error: chalErr } = await supabase.from('webauthn_challenges').insert({
+    const { error: chalErr } = await supabase.from('webauthn_challenges').insert(stripUndefinedDeep({
       user_id: user.id,
       rp_id: rpID,
       kind: 'authentication',
       challenge: Buffer.from(challengeArray).toString('base64'),
       expires_at: expiresAt,
-    });
+    }));
 
     if (chalErr) {
       logger.error('Challenge persist failed:', chalErr);
-      return NextResponse.json({ error: 'Challenge persist failed' }, { status: 500 });
+      return errorResponse('Challenge persist failed', 500, undefined, 'WEBAUTHN_CHALLENGE_PERSIST_FAILED');
     }
 
   return successResponse(responseOptions);

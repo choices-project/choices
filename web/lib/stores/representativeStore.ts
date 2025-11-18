@@ -13,6 +13,7 @@ import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 import { representativeService } from '@/lib/services/representative-service';
 import logger from '@/lib/utils/logger';
 import type {
@@ -25,7 +26,6 @@ import type {
 } from '@/types/representative';
 import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
 
-import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
@@ -33,16 +33,11 @@ import type { BaseStore } from './types';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 
-const extractDivisionIds = (representative: Representative): string[] => {
-  return (
-    representative.ocdDivisionIds ??
-    representative.division_ids ??
-    getRepresentativeDivisionIds(representative)
-  );
-};
+ 
 
 export type RepresentativeFollowRecord = {
   id: string;
+  user_id: string;
   notify_on_votes: boolean;
   notify_on_committee_activity: boolean;
   notify_on_public_statements: boolean;
@@ -110,6 +105,8 @@ export type RepresentativeActions = Pick<BaseStore, 'setLoading' | 'setError' | 
   invalidateAllRepresentativeDetails: () => void;
   resetRepresentativeState: () => void;
   clearSearch: () => void;
+  // Fast-track claim via official email
+  claimAsOfficialViaEmail: () => Promise<boolean>;
 };
 
 export type RepresentativeStore = RepresentativeState & RepresentativeActions;
@@ -184,8 +181,6 @@ export const createRepresentativeActions = (
       state.detailCacheTimestamps[representative.id] = Date.now();
       state.currentRepresentative = representative;
       state.currentRepresentativeId = representative.id;
-      state.representativeDivisions[representative.id] =
-        extractDivisionIds(representative) ?? state.representativeDivisions[representative.id] ?? [];
     });
   };
 
@@ -300,10 +295,10 @@ export const createRepresentativeActions = (
           const representative = response.data as Representative;
           updateDetailCache(representative);
           setState((state) => {
-            const divisions = getRepresentativeDivisionIds(representative);
+            const divisions = getRepresentativeDivisionIds(representative) ?? [];
             representative.ocdDivisionIds = divisions;
             representative.division_ids = divisions;
-            state.representativeDivisions[representative.id] = divisions;
+            state.representativeDivisions[representative.id] = Array.isArray(divisions) ? divisions : [];
           });
           return representative;
         }
@@ -431,7 +426,7 @@ export const createRepresentativeActions = (
 
         const normalised = entries.map<UserRepresentative>((entry) => ({
           id: entry.follow.id,
-          user_id: '', // TODO: populate via authenticated context during hydration
+          user_id: entry.follow.user_id,
           representative_id: entry.representative.id,
           relationship_type: 'following',
           created_at: entry.follow.created_at,
@@ -519,6 +514,30 @@ export const createRepresentativeActions = (
       setState((state) => {
         state.userDivisionIds = divisions;
       });
+    },
+
+    claimAsOfficialViaEmail: async () => {
+      setLoading(true);
+      clearError();
+      try {
+        const response = await fetch('/api/candidates/verify/official-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data?.success === false || data?.data?.ok !== true) {
+          setError(data?.error ?? 'Verification failed');
+          return false;
+        }
+        return true;
+      } catch (error) {
+        logger.error('RepresentativeStore.claimAsOfficialViaEmail error', error);
+        setError(error instanceof Error ? error.message : 'Verification failed');
+        return false;
+      } finally {
+        setLoading(false);
+      }
     }
   };
 };

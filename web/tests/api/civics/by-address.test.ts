@@ -15,8 +15,9 @@ jest.mock('@/lib/civics/env-guard', () => ({
 }));
 
 jest.mock('@/lib/civics/privacy-utils', () => ({
-  generateAddressHMAC: jest.fn(() => 'mock-hmac'),
+  generateAddressHMAC: jest.fn((address: string) => `mock-hmac-${address}`),
   setJurisdictionCookie: jest.fn(() => Promise.resolve()),
+  validateAddressInput: jest.fn(() => ({ valid: true })),
 }));
 
 jest.mock('@/lib/utils/logger', () => ({
@@ -30,12 +31,13 @@ jest.mock('@/lib/utils/logger', () => ({
 const privacyUtilsMock = jest.requireMock('@/lib/civics/privacy-utils') as {
   generateAddressHMAC: jest.Mock;
   setJurisdictionCookie: jest.Mock;
+  validateAddressInput: jest.Mock;
 };
 const envGuardMock = jest.requireMock('@/lib/civics/env-guard') as {
   assertPepperConfig: jest.Mock;
 };
 
-const { generateAddressHMAC, setJurisdictionCookie } = privacyUtilsMock;
+const { generateAddressHMAC, setJurisdictionCookie, validateAddressInput } = privacyUtilsMock;
 const { assertPepperConfig } = envGuardMock;
 
 const originalFetch = global.fetch;
@@ -93,8 +95,8 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(200);
     }
-    expect(payload.ok).toBe(true);
-    expect(payload.jurisdiction).toMatchObject({ state: 'CA' });
+    expect(payload.success).toBe(true);
+    expect(payload.data?.jurisdiction).toMatchObject({ state: 'CA' });
     expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'CA' }));
     expect(generateAddressHMAC).toHaveBeenCalledWith('123 Market St, San Francisco, CA');
     expect(assertPepperConfig).toHaveBeenCalled();
@@ -102,6 +104,7 @@ describe('POST /api/v1/civics/address-lookup', () => {
   });
 
   it('returns 400 when address is missing', async () => {
+    validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Address is required' });
     const response = await POST(createPostRequest({}));
     const payload = await response.json();
 
@@ -109,7 +112,11 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(400);
     }
-    expect(payload.error).toBe('address required');
+    // validationError envelope with details
+    expect(payload.success).toBe(false);
+    if (payload.details) {
+      expect(payload.details.address).toBe('Address is required');
+    }
     expect(global.fetch).not.toHaveBeenCalled();
     expect(setJurisdictionCookie).not.toHaveBeenCalled();
   });
@@ -124,8 +131,30 @@ describe('POST /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(200);
     }
-    expect(payload.jurisdiction).toMatchObject({ state: 'TX', fallback: true });
+    expect(payload.data?.jurisdiction).toMatchObject({ state: 'TX', fallback: true });
     expect(setJurisdictionCookie).toHaveBeenCalledWith(expect.objectContaining({ state: 'TX' }));
+  });
+
+  it('returns 400 when validation fails', async () => {
+    validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Address too short' });
+
+    const response = await POST(createPostRequest({ address: '123' }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.details?.address).toBe('Address too short');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 when feature disabled', async () => {
+    validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Feature disabled' });
+
+    const response = await POST(createPostRequest({ address: '123 Market St, San Francisco, CA' }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.error).toMatch(/disabled/i);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
 
@@ -138,7 +167,7 @@ describe('GET /api/v1/civics/address-lookup', () => {
     if (typeof status === 'number') {
       expect(status).toBe(405);
     }
-    expect(payload.error).toBe('Method not allowed. Use POST with address in body.');
+    expect(payload.error).toBe('Method not allowed. Allowed methods: POST');
   });
 });
 

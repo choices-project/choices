@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useI18n } from '@/hooks/useI18n';
 import type { RepresentativeSearchProps, RepresentativeSearchQuery } from '@/types/representative';
 
 export function RepresentativeSearch({
@@ -23,6 +24,7 @@ export function RepresentativeSearch({
   loading = false,
   className = ''
 }: RepresentativeSearchProps) {
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [filters, setFilters] = useState<Partial<RepresentativeSearchQuery>>({
@@ -71,7 +73,7 @@ export function RepresentativeSearch({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Search className="w-5 h-5" />
-          <span>Find Representatives</span>
+          <span>{t('civics.representatives.search.title')}</span>
         </CardTitle>
       </CardHeader>
       
@@ -80,7 +82,7 @@ export function RepresentativeSearch({
         <div className="space-y-3">
           <div className="flex space-x-2">
             <Input
-              placeholder="Search by name..."
+              placeholder={t('civics.representatives.search.inputs.query')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -91,7 +93,9 @@ export function RepresentativeSearch({
               disabled={loading}
               className="px-6"
             >
-              {loading ? 'Searching...' : 'Search'}
+              {loading
+                ? t('civics.representatives.search.buttons.searching')
+                : t('civics.representatives.search.buttons.search')}
             </Button>
           </div>
 
@@ -100,7 +104,7 @@ export function RepresentativeSearch({
             <div className="flex-1 relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
-                placeholder="Enter your address..."
+                placeholder={t('civics.representatives.search.inputs.location')}
                 value={locationQuery}
                 onChange={(e) => setLocationQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleLocationSearch()}
@@ -112,7 +116,7 @@ export function RepresentativeSearch({
               onClick={handleLocationSearch}
               disabled={loading || !locationQuery.trim()}
             >
-              Find My Reps
+              {t('civics.representatives.search.buttons.find')}
             </Button>
           </div>
         </div>
@@ -126,7 +130,7 @@ export function RepresentativeSearch({
             className="flex items-center space-x-1"
           >
             <Filter className="w-4 h-4" />
-            <span>Advanced Filters</span>
+            <span>{t('civics.representatives.search.advanced.toggle')}</span>
           </Button>
           
           {hasActiveFilters && (
@@ -137,7 +141,7 @@ export function RepresentativeSearch({
               className="flex items-center space-x-1 text-gray-500"
             >
               <X className="w-4 h-4" />
-              <span>Clear All</span>
+              <span>{t('civics.representatives.search.advanced.clearAll')}</span>
             </Button>
           )}
         </div>
@@ -148,22 +152,22 @@ export function RepresentativeSearch({
             {/* State Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                State
+                {t('civics.representatives.search.advanced.state.label')}
               </label>
               <Select
                 value={filters.state ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All States" />
+                  <SelectValue placeholder={t('civics.representatives.search.advanced.state.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All States</SelectItem>
-                  <SelectItem value="CA">California</SelectItem>
-                  <SelectItem value="NY">New York</SelectItem>
-                  <SelectItem value="TX">Texas</SelectItem>
-                  <SelectItem value="FL">Florida</SelectItem>
-                  <SelectItem value="IL">Illinois</SelectItem>
+                  <SelectItem value="">{t('civics.representatives.search.advanced.common.all')}</SelectItem>
+                  <SelectItem value="CA">{t('civics.representatives.search.states.CA')}</SelectItem>
+                  <SelectItem value="NY">{t('civics.representatives.search.states.NY')}</SelectItem>
+                  <SelectItem value="TX">{t('civics.representatives.search.states.TX')}</SelectItem>
+                  <SelectItem value="FL">{t('civics.representatives.search.states.FL')}</SelectItem>
+                  <SelectItem value="IL">{t('civics.representatives.search.states.IL')}</SelectItem>
                   {/* Add more states as needed */}
                 </SelectContent>
               </Select>
@@ -172,22 +176,22 @@ export function RepresentativeSearch({
             {/* Party Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Party
+                {t('civics.representatives.search.advanced.party.label')}
               </label>
               <Select
                 value={filters.party ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, party: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Parties" />
+                  <SelectValue placeholder={t('civics.representatives.search.advanced.party.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Parties</SelectItem>
-                  <SelectItem value="Democratic">Democratic</SelectItem>
-                  <SelectItem value="Republican">Republican</SelectItem>
-                  <SelectItem value="Independent">Independent</SelectItem>
-                  <SelectItem value="Green">Green</SelectItem>
-                  <SelectItem value="Libertarian">Libertarian</SelectItem>
+                  <SelectItem value="">{t('civics.representatives.search.advanced.common.all')}</SelectItem>
+                  <SelectItem value="Democratic">{t('civics.representatives.search.advanced.party.democratic')}</SelectItem>
+                  <SelectItem value="Republican">{t('civics.representatives.search.advanced.party.republican')}</SelectItem>
+                  <SelectItem value="Independent">{t('civics.representatives.search.advanced.party.independent')}</SelectItem>
+                  <SelectItem value="Green">{t('civics.representatives.search.advanced.party.green')}</SelectItem>
+                  <SelectItem value="Libertarian">{t('civics.representatives.search.advanced.party.libertarian')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -195,22 +199,22 @@ export function RepresentativeSearch({
             {/* Office Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Office
+                {t('civics.representatives.search.advanced.office.label')}
               </label>
               <Select
                 value={filters.office ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, office: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Offices" />
+                  <SelectValue placeholder={t('civics.representatives.search.advanced.office.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Offices</SelectItem>
-                  <SelectItem value="Senator">Senator</SelectItem>
-                  <SelectItem value="Representative">Representative</SelectItem>
-                  <SelectItem value="Governor">Governor</SelectItem>
-                  <SelectItem value="State Senator">State Senator</SelectItem>
-                  <SelectItem value="State Representative">State Representative</SelectItem>
+                  <SelectItem value="">{t('civics.representatives.search.advanced.common.all')}</SelectItem>
+                  <SelectItem value="Senator">{t('civics.representatives.search.advanced.office.senator')}</SelectItem>
+                  <SelectItem value="Representative">{t('civics.representatives.search.advanced.office.representative')}</SelectItem>
+                  <SelectItem value="Governor">{t('civics.representatives.search.advanced.office.governor')}</SelectItem>
+                  <SelectItem value="State Senator">{t('civics.representatives.search.advanced.office.stateSenator')}</SelectItem>
+                  <SelectItem value="State Representative">{t('civics.representatives.search.advanced.office.stateRepresentative')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -218,20 +222,20 @@ export function RepresentativeSearch({
             {/* Level Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Level
+                {t('civics.representatives.search.advanced.level.label')}
               </label>
               <Select
                 value={filters.level ?? ''}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, level: value as any }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Levels" />
+                  <SelectValue placeholder={t('civics.representatives.search.advanced.level.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Levels</SelectItem>
-                  <SelectItem value="federal">Federal</SelectItem>
-                  <SelectItem value="state">State</SelectItem>
-                  <SelectItem value="local">Local</SelectItem>
+                  <SelectItem value="">{t('civics.representatives.search.advanced.common.all')}</SelectItem>
+                  <SelectItem value="federal">{t('civics.representatives.search.advanced.level.federal')}</SelectItem>
+                  <SelectItem value="state">{t('civics.representatives.search.advanced.level.state')}</SelectItem>
+                  <SelectItem value="local">{t('civics.representatives.search.advanced.level.local')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -246,7 +250,9 @@ export function RepresentativeSearch({
               disabled={loading}
               className="w-full"
             >
-              {loading ? 'Searching...' : 'Apply Filters'}
+              {loading
+                ? t('civics.representatives.search.buttons.searching')
+                : t('civics.representatives.search.buttons.apply')}
             </Button>
           </div>
         )}

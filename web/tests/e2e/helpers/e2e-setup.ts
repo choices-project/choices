@@ -1,7 +1,30 @@
 import type { Page } from '@playwright/test';
 
+import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
+import { buildDashboardData } from '../../fixtures/api/dashboard';
+import {
+  buildNotification,
+  buildNotificationList,
+} from '../../fixtures/api/notifications';
+import {
+  POLL_FIXTURES,
+  type MockPollRecord,
+  createPollRecord,
+} from '../../fixtures/api/polls';
+import { profileRecord } from '../../fixtures/api/profile';
+import { buildShareAnalytics } from '../../fixtures/api/share';
+import {
+  buildFeedCategoriesResponse,
+  buildFeedInteractionResponse,
+  buildFeedSearchResponse,
+  buildFeedsResponse,
+  FEED_FIXTURES,
+} from '../../msw/feeds-handlers';
+import { normalizeMockPayload } from '../../msw/utils/envelope';
+
 type RouteHandler = Parameters<Page['route']>[1];
 type RoutePattern = Parameters<Page['route']>[0];
+type PlaywrightRoute = Parameters<RouteHandler>[0];
 
 type SeedRecord = {
   user: TestUser;
@@ -29,14 +52,6 @@ export type TestDataPayload = {
 
 export type SeedHandle = string;
 
-import {
-  buildFeedCategoriesResponse,
-  buildFeedInteractionResponse,
-  buildFeedSearchResponse,
-  buildFeedsResponse,
-  FEED_FIXTURES,
-} from '../../msw/feeds-handlers';
-
 const DISABLE_FLAGS = new Set(['0', 'false', 'no', 'off']);
 
 const envFlagEnabled = (value: string | undefined, defaultEnabled: boolean): boolean => {
@@ -54,6 +69,7 @@ export type ExternalMockOptions = {
   notifications: boolean;
   auth: boolean;
   feeds: boolean;
+  api: boolean;
 };
 
 export type LoginOptions = {
@@ -192,6 +208,10 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
   await page.context().clearCookies();
   await page.context().clearPermissions();
   await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  await page.evaluate(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }).catch(() => undefined);
 }
 
 export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
@@ -271,12 +291,53 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     return async () => Promise.resolve();
   }
 
+  const respondJson = async (route: PlaywrightRoute, payload: unknown, status = 200) => {
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      body: JSON.stringify(normalizeMockPayload(payload)),
+    });
+  };
+
+  const parseJsonBody = (route: PlaywrightRoute) => {
+    const raw = route.request().postData();
+    if (!raw) {
+      return {};
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  };
+
+  const hasAuthHeader = (route: PlaywrightRoute) => {
+    const headers = route.request().headers();
+    return typeof headers['authorization'] === 'string' && headers['authorization'].startsWith('Bearer ');
+  };
+
+  const shouldBypassHarnessAuth = (route: PlaywrightRoute) => {
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1') {
+      return false;
+    }
+    const cookieHeader = route.request().headers()['cookie'] ?? '';
+    return cookieHeader.includes('e2e-dashboard-bypass=1');
+  };
+
+  const unauthorizedResponse = () => ({
+    success: false,
+    error: 'Admin authentication required',
+    code: 'AUTH_ERROR',
+    metadata: { timestamp: new Date().toISOString() },
+  });
+
   const options: ExternalMockOptions = {
     civics: overrides.civics ?? true,
     analytics: overrides.analytics ?? true,
     notifications: overrides.notifications ?? true,
     auth: overrides.auth ?? true,
     feeds: overrides.feeds ?? true,
+    api: overrides.api ?? true,
   };
 
   const routes: Array<{ url: RoutePattern; handler: RouteHandler }> = [];
@@ -287,21 +348,13 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
         await route.continue();
         return;
       }
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ok: true,
-          district: '13',
-          state: 'IL',
-          county: 'Sangamon',
-          normalizedInput: {
-            line1: '123 Any St',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704',
-          },
-        }),
+      await respondJson(route, {
+        success: true,
+        data: CIVICS_ADDRESS_LOOKUP,
+        metadata: {
+          integration: 'google-civic',
+          fallback: false,
+        },
       });
     };
     await page.route('**/api/v1/civics/address-lookup', civicsHandler);
@@ -310,10 +363,11 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
 
   if (options.analytics) {
     const analyticsHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true }),
+      await respondJson(route, {
+        success: true,
+        data: {
+          tracked: true,
+        },
       });
     };
     await page.route('**/api/analytics/**', analyticsHandler);
@@ -322,11 +376,54 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
 
   if (options.notifications) {
     const notificationsHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true }),
-      });
+      const method = route.request().method().toUpperCase();
+
+      if (method === 'GET') {
+        await respondJson(
+          route,
+          {
+            success: true,
+            data: buildNotificationList(),
+          },
+          200,
+        );
+        return;
+      }
+
+      if (method === 'POST') {
+        const body = parseJsonBody(route);
+        await respondJson(
+          route,
+          {
+            success: true,
+            data: buildNotification({
+              title: body?.title,
+              message: body?.message,
+            }),
+          },
+          201,
+        );
+        return;
+      }
+
+      if (method === 'PUT') {
+        const body = parseJsonBody(route);
+        const notificationId = body?.notificationId ?? 'notification-1';
+        await respondJson(
+          route,
+          {
+            success: true,
+            data: {
+              id: notificationId,
+              readAt: new Date().toISOString(),
+            },
+          },
+        );
+        return;
+      }
+
+      // For unsupported verbs just continue
+      await route.continue();
     };
     await page.route('**/api/notifications/**', notificationsHandler);
     routes.push({ url: '**/api/notifications/**', handler: notificationsHandler });
@@ -334,113 +431,127 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
 
   if (options.auth) {
     const registerOptionsHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          challenge: 'dGVzdC1jaGFsbGVuZ2U=',
-          rp: { id: 'localhost', name: 'Choices' },
-          user: {
-            id: 'dGVzdC11c2VyLWlk',
-            name: 'user@example.com',
-            displayName: 'Test User',
-          },
-          pubKeyCredParams: [
-            { type: 'public-key', alg: -7 },
-            { type: 'public-key', alg: -257 },
-          ],
-          timeout: 60_000,
-          excludeCredentials: [],
-          authenticatorSelection: {
-            userVerification: 'required',
-            authenticatorAttachment: 'platform',
-          },
-          attestation: 'none',
-          extensions: {},
-        }),
+      await respondJson(route, {
+        challenge: 'dGVzdC1jaGFsbGVuZ2U=',
+        rp: { id: 'localhost', name: 'Choices' },
+        user: {
+          id: 'dGVzdC11c2VyLWlk',
+          name: 'user@example.com',
+          displayName: 'Test User',
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },
+          { type: 'public-key', alg: -257 },
+        ],
+        timeout: 60_000,
+        excludeCredentials: [],
+        authenticatorSelection: {
+          userVerification: 'required',
+          authenticatorAttachment: 'platform',
+        },
+        attestation: 'none',
+        extensions: {},
       });
     };
 
     const registerVerifyHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
+      await respondJson(route, {
+        success: true,
+        data: {
           credentialId: 'test-credential',
           publicKey: 'BASE64_PUBLIC_KEY',
           counter: 0,
           transports: ['internal'],
-        }),
+        },
       });
     };
 
     const authOptionsHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          challenge: 'dGVzdC1jaGFsbGVuZ2U=',
-          allowCredentials: [
-            {
-              id: 'dGVzdC1jaGFsbGVuZ2U=',
-              type: 'public-key',
-              transports: ['internal'],
-            },
-          ],
-          timeout: 60_000,
-          rpId: 'localhost',
-          userVerification: 'required',
-          extensions: {},
-        }),
+      await respondJson(route, {
+        challenge: 'dGVzdC1jaGFsbGVuZ2U=',
+        allowCredentials: [
+          {
+            id: 'dGVzdC1jaGFsbGVuZ2U=',
+            type: 'public-key',
+            transports: ['internal'],
+          },
+        ],
+        timeout: 60_000,
+        rpId: 'localhost',
+        userVerification: 'required',
+        extensions: {},
       });
     };
 
     const authVerifyHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
+      await respondJson(route, {
+        success: true,
+        data: {
           credentialId: 'test-credential',
           newCounter: 1,
-        }),
+        },
       });
     };
 
+    let currentAuthEmail = profileRecord.email as string;
+    const profileState = { ...profileRecord };
+
     const loginHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
+      const payload = parseJsonBody(route);
+      if (typeof payload.email === 'string') {
+        currentAuthEmail = payload.email;
+        profileState.email = payload.email;
+      }
+      await respondJson(route, {
+        success: true,
+        data: {
           token: 'mock-auth-token',
-          user: { id: 'test-user', email: 'user@example.com' },
-        }),
+          user: { id: 'test-user', email: currentAuthEmail },
+        },
       });
     };
 
     const registerHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          user: { id: 'test-user', email: 'user@example.com' },
-        }),
-      });
+      const payload = parseJsonBody(route);
+      if (typeof payload?.email === 'string') {
+        currentAuthEmail = payload.email;
+        profileState.email = payload.email;
+      }
+      await respondJson(route, {
+        success: true,
+        data: { user: { id: 'test-user', email: currentAuthEmail } },
+      }, 201);
     };
 
     const profileHandler: RouteHandler = async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          profile: {
-            id: 'test-profile',
-            user_id: 'test-user',
-            username: 'testuser',
-          },
-        }),
+      if (!hasAuthHeader(route) && !shouldBypassHarnessAuth(route)) {
+        await respondJson(route, unauthorizedResponse(), 401);
+        return;
+      }
+      if (route.request().method() === 'GET') {
+        await respondJson(route, { profile: profileState });
+        return;
+      }
+      if (route.request().method() === 'PUT') {
+        const payload = parseJsonBody(route);
+        if (typeof payload.displayName === 'string') {
+          profileState.display_name = payload.displayName;
+        } else if (typeof payload.display_name === 'string') {
+          profileState.display_name = payload.display_name;
+        }
+        if (typeof payload.bio === 'string') {
+          profileState.bio = payload.bio;
+        }
+        await respondJson(route, { profile: profileState });
+        return;
+      }
+      await respondJson(route, { success: false, error: 'Method not allowed' }, 405);
+    };
+
+    const logoutHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: { message: 'Logged out' },
       });
     };
 
@@ -451,6 +562,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/auth/login', loginHandler);
     await page.route('**/api/auth/register', registerHandler);
     await page.route('**/api/profile', profileHandler);
+    await page.route('**/api/auth/logout', logoutHandler);
 
     routes.push({ url: '**/api/v1/auth/webauthn/native/register/options', handler: registerOptionsHandler });
     routes.push({ url: '**/api/v1/auth/webauthn/native/register/verify', handler: registerVerifyHandler });
@@ -459,6 +571,266 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/auth/login', handler: loginHandler });
     routes.push({ url: '**/api/auth/register', handler: registerHandler });
     routes.push({ url: '**/api/profile', handler: profileHandler });
+    routes.push({ url: '**/api/auth/logout', handler: logoutHandler });
+  }
+
+  if (options.api) {
+    const polls: MockPollRecord[] = POLL_FIXTURES.map((poll) => ({
+      ...poll,
+      options: poll.options.map((option) => ({ ...option })),
+    }));
+
+    const ensurePoll = (
+      payload: Partial<MockPollRecord> & {
+        rawOptions?: string[];
+      },
+    ): MockPollRecord => {
+      const poll = createPollRecord({
+        id: payload.id ?? `poll-${polls.length + 1}`,
+        ...payload,
+        options:
+          payload.options ??
+          payload.rawOptions?.map((text, index) => ({
+            id: `${payload.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
+            text,
+          })) ??
+          [],
+      });
+      polls.push({
+        ...poll,
+        options: poll.options.map((option) => ({ ...option })),
+      });
+      return poll;
+    };
+
+    const extractPollId = (url: string) => {
+      const match = url.match(/\/api\/polls\/([^/]+)/);
+      return match?.[1];
+    };
+
+    const pollsHandler: RouteHandler = async (route) => {
+      if (route.request().method() === 'POST') {
+        const payload = parseJsonBody(route);
+        const inputOptions = Array.isArray(payload.options) ? (payload.options as string[]) : undefined;
+        const poll = ensurePoll({
+          title: payload.title,
+          description: payload.description,
+          category: payload.category,
+          ...(inputOptions ? { rawOptions: inputOptions } : {}),
+        });
+        await respondJson(route, {
+          success: true,
+          data: poll,
+          metadata: { timestamp: new Date().toISOString() },
+        }, 201);
+        return;
+      }
+
+      await respondJson(route, {
+        success: true,
+        data: { polls },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          pagination: {
+            limit: polls.length,
+            offset: 0,
+            total: polls.length,
+            hasMore: false,
+            page: 1,
+            totalPages: 1,
+          },
+        },
+      });
+    };
+
+    const pollDetailHandler: RouteHandler = async (route) => {
+      const pollId = extractPollId(route.request().url());
+      const poll = pollId ? polls.find((p) => p.id === pollId) : undefined;
+      if (!poll) {
+        await respondJson(route, { success: false, error: 'Poll not found' }, 404);
+        return;
+      }
+      await respondJson(route, {
+        success: true,
+        data: poll,
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
+    const pollVoteHandler: RouteHandler = async (route) => {
+      const pollId = extractPollId(route.request().url());
+      const poll = pollId ? polls.find((p) => p.id === pollId) : undefined;
+      const payload = parseJsonBody(route);
+      if (!poll) {
+        await respondJson(route, { success: false, error: 'Poll not found' }, 404);
+        return;
+      }
+      await respondJson(route, {
+        success: true,
+        data: {
+          pollId,
+          optionId: payload.optionId ?? poll?.options[0]?.id ?? null,
+        },
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
+    const pollResultsHandler: RouteHandler = async (route) => {
+      const pollId = extractPollId(route.request().url());
+      const poll = pollId ? polls.find((p) => p.id === pollId) : undefined;
+      if (!poll) {
+        await respondJson(route, { success: false, error: 'Poll not found' }, 404);
+        return;
+      }
+      await respondJson(route, {
+        success: true,
+        data: {
+          pollId,
+          results: poll.options.map((option, index) => ({
+            optionId: option.id,
+            count: index + 1,
+          })),
+        },
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
+    const dashboardHandler: RouteHandler = async (route) => {
+      if (!hasAuthHeader(route) && !shouldBypassHarnessAuth(route)) {
+        await respondJson(route, unauthorizedResponse(), 401);
+        return;
+      }
+      await respondJson(route, buildDashboardData(polls));
+    };
+
+    const civicsStateHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: CIVICS_STATE_FIXTURE,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      });
+    };
+
+    const pwaSubscribeHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: { subscriptionId: 'mock-subscription' },
+      });
+    };
+
+    const pwaNotificationHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: { message: 'Notification recorded' },
+      });
+    };
+
+    const offlineHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: { synced: true },
+      });
+    };
+
+    const shareHandler: RouteHandler = async (route) => {
+      if (route.request().method() === 'POST') {
+        const payload = parseJsonBody(route);
+        await respondJson(route, {
+          success: true,
+          data: {
+            message: 'Share event tracked successfully',
+            shareId: `share-${Date.now()}`,
+            request: payload,
+          },
+          metadata: { timestamp: new Date().toISOString() },
+        }, 201);
+        return;
+      }
+
+      const url = new URL(route.request().url());
+      const days = Number(url.searchParams.get('days') ?? '7');
+      const platform = url.searchParams.get('platform') ?? 'all';
+      const pollId = url.searchParams.get('poll_id') ?? 'all';
+
+      await respondJson(route, {
+        success: true,
+        data: buildShareAnalytics({
+          periodDays: days,
+          filters: { platform, pollId },
+        }),
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
+    const sharedPollHandler: RouteHandler = async (route) => {
+      const match = route.request().url().match(/\/api\/shared\/poll\/([^/?]+)/);
+      const pollId = match?.[1] ?? 'shared-poll';
+
+      await respondJson(route, {
+        success: true,
+        data: {
+          poll: {
+            id: pollId,
+            question: 'Mock shared poll question',
+            createdAt: new Date().toISOString(),
+            isPublic: true,
+            isShareable: true,
+            options: [
+              { id: `${pollId}-opt-1`, text: 'Option A', createdAt: new Date().toISOString() },
+              { id: `${pollId}-opt-2`, text: 'Option B', createdAt: new Date().toISOString() },
+            ],
+            results: [
+              { optionId: `${pollId}-opt-1`, votes: 120 },
+              { optionId: `${pollId}-opt-2`, votes: 45 },
+            ],
+          },
+        },
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
+    const sharedVoteHandler: RouteHandler = async (route) => {
+      const payload = parseJsonBody(route);
+      await respondJson(route, {
+        success: true,
+        data: {
+          voteId: `vote-${Date.now()}`,
+          pollId: payload.poll_id ?? 'shared-poll',
+          optionId: payload.option_id ?? 'shared-option',
+        },
+        metadata: { timestamp: new Date().toISOString() },
+      }, 201);
+    };
+
+    await page.route('**/api/polls', pollsHandler);
+    await page.route('**/api/polls/*/vote', pollVoteHandler);
+    await page.route('**/api/polls/*/results', pollResultsHandler);
+    await page.route('**/api/polls/*', pollDetailHandler);
+    await page.route('**/api/dashboard', dashboardHandler);
+    await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
+    await page.route('**/api/pwa/notifications/subscribe', pwaSubscribeHandler);
+    await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
+    await page.route('**/api/pwa/offline/process', offlineHandler);
+    await page.route('**/api/pwa/offline/sync', offlineHandler);
+    await page.route('**/api/share*', shareHandler);
+    await page.route('**/api/shared/poll/*', sharedPollHandler);
+    await page.route('**/api/shared/vote', sharedVoteHandler);
+
+    routes.push({ url: '**/api/polls', handler: pollsHandler });
+    routes.push({ url: '**/api/polls/*/vote', handler: pollVoteHandler });
+    routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });
+    routes.push({ url: '**/api/polls/*', handler: pollDetailHandler });
+    routes.push({ url: '**/api/dashboard', handler: dashboardHandler });
+    routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
+    routes.push({ url: '**/api/pwa/notifications/subscribe', handler: pwaSubscribeHandler });
+    routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });
+    routes.push({ url: '**/api/pwa/offline/process', handler: offlineHandler });
+    routes.push({ url: '**/api/pwa/offline/sync', handler: offlineHandler });
+    routes.push({ url: '**/api/share*', handler: shareHandler });
+    routes.push({ url: '**/api/shared/poll/*', handler: sharedPollHandler });
+    routes.push({ url: '**/api/shared/vote', handler: sharedVoteHandler });
   }
 
   if (options.feeds) {
@@ -466,10 +838,11 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     const feedsHandler: RouteHandler = async (route) => {
       const requestUrl = new URL(route.request().url());
       const limit = Number(requestUrl.searchParams.get('limit') ?? FEED_FIXTURES.length);
+      const offset = Number(requestUrl.searchParams.get('offset') ?? '0');
       const category = requestUrl.searchParams.get('category');
       const district = requestUrl.searchParams.get('district');
       const sort = requestUrl.searchParams.get('sort');
-      const response = buildFeedsResponse({ limit, category, district, sort });
+      const response = buildFeedsResponse({ limit, offset, category, district, sort });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

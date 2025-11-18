@@ -180,7 +180,10 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     setUsers(users.map(user => 
       user.id === userId ? { ...user, role: newRole } : user
     ));
-    onUserUpdate?.(users.find(user => user.id === userId)!);
+    const updated = users.find(user => user.id === userId);
+    if (updated) {
+      onUserUpdate?.(updated);
+    }
     performanceMetrics.addMetric('user-role-change', 1);
   };
 
