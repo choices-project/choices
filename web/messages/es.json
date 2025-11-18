@@ -2221,6 +2221,10 @@
             "allowComments": {
               "label": "Permitir comentarios",
               "description": "Recopila comentarios cualitativos junto con votos cuantitativos."
+            },
+            "preventDuplicateVotes": {
+              "label": "Prevenir votos duplicados",
+              "description": "Bloquea a los usuarios para que no voten múltiples veces en la misma encuesta."
             }
           },
           "privacy": {

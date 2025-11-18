@@ -33,18 +33,23 @@ jest.mock('@/hooks/useI18n', () => ({
       if (key.includes('description') && key.includes('label')) return 'Description';
       if (key.includes('action.type') || key.includes('actionType')) return 'Action Type';
       if (key.includes('urgency') || key.includes('urgencyLevel')) return 'Urgency Level';
-      if (key.includes('target.signatures') || key.includes('targetSignatures')) return 'Target Signatures';
+      if (key.includes('target.signatures') || key.includes('targetSignatures') || key.includes('signatures.label')) return 'Target Signatures';
       if (key.includes('end.date') || key.includes('endDate')) return 'End Date';
+      if (key.includes('commonCounter')) {
+        const current = params?.current ?? 0;
+        const max = params?.max ?? 0;
+        return `${current}/${max} characters`;
+      }
       if (key.includes('civics.actions.create.buttons.create') || key.includes('buttons.create')) return 'Create action';
       if (key.includes('create.action') || key.includes('createAction') || key.includes('button.create') || key.includes('submit')) return 'Create action';
       if (key.includes('button') && (key.includes('create') || key.includes('submit'))) return 'Create action';
       if (key.includes('common.actions.cancel')) return 'Cancel';
-      // Validation error messages
-      if (key.includes('title') && key.includes('required')) return 'Title is required';
-      if (key.includes('title') && (key.includes('length') || key.includes('200'))) return 'Title must be 200 characters or less';
-      if (key.includes('description') && (key.includes('length') || key.includes('5000'))) return 'Description must be 5000 characters or less';
-      if (key.includes('signatures') && (key.includes('required') || key.includes('range'))) return 'Target signatures is required';
-      if (key.includes('end.date') && (key.includes('future') || key.includes('past'))) return 'End date must be in the future';
+      // Validation error messages - exact keys from messages/en.json
+      if (key === 'civics.actions.create.validation.titleRequired') return 'Title is required.';
+      if (key === 'civics.actions.create.validation.titleMax') return 'Title must be 200 characters or less.';
+      if (key === 'civics.actions.create.validation.descriptionMax') return 'Description must be 5000 characters or less.';
+      if (key === 'civics.actions.create.validation.signaturesRange') return 'Target signatures must be between 1 and 1,000,000.';
+      if (key === 'civics.actions.create.validation.endDateFuture') return 'End date must be in the future.';
       // Default: return key for debugging
       return key;
     },
@@ -152,7 +157,7 @@ describe('CreateCivicActionForm', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/future/i)).toBeInTheDocument();
+      expect(screen.getByText(/end date must be in the future/i)).toBeInTheDocument();
     });
   });
 
