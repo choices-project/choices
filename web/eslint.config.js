@@ -36,9 +36,11 @@ export default [
       'app/auth/page.tsx',
       'app/(app)/candidates/**/*.{ts,tsx}',
       'components/shared/**/*.{ts,tsx}',
-      'features/onboarding/components/**/*.{ts,tsx}',
+      'features/onboarding/**/*.{ts,tsx}',
       'features/civics/**/*.{ts,tsx}',
       'features/contact/**/*.{ts,tsx}',
+      'features/polls/**/*.{ts,tsx}',
+      'features/feeds/**/*.{ts,tsx}',
     ],
     plugins: {
       formatjs,

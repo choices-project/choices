@@ -849,18 +849,26 @@
         }
       },
       "visibility": {
-        "public": "Public",
-        "public.description": "Anyone can see your profile and activity",
-        "public.badge": "Most Social",
-        "friendsOnly": "Friends Only",
-        "friendsOnly.description": "Only people you connect with can see your profile",
-        "friendsOnly.badge": "Balanced",
-        "private": "Private",
-        "private.description": "Only you can see your profile details",
-        "private.badge": "Private",
-        "anonymous": "Anonymous",
-        "anonymous.description": "Vote and participate without revealing your identity",
-        "anonymous.badge": "Most Private"
+        "public": {
+          "label": "Public",
+          "description": "Anyone can see your profile and activity",
+          "badge": "Most Social"
+        },
+        "friendsOnly": {
+          "label": "Friends Only",
+          "description": "Only people you connect with can see your profile",
+          "badge": "Balanced"
+        },
+        "private": {
+          "label": "Private",
+          "description": "Only you can see your profile details",
+          "badge": "Private"
+        },
+        "anonymous": {
+          "label": "Anonymous",
+          "description": "Vote and participate without revealing your identity",
+          "badge": "Most Private"
+        }
       },
       "preferences": {
         "title": "Notification Preferences",
@@ -1991,6 +1999,57 @@
     }
   },
   "feeds": {
+    "core": {
+      "error": {
+        "title": "Error loading feed",
+        "retry": "Try again"
+      },
+      "pullToRefresh": {
+        "pull": "↓ Pull to refresh",
+        "release": "↓ Release to refresh"
+      },
+      "header": {
+        "title": "Unified Feed",
+        "refresh": "Refresh",
+        "refreshing": "Refreshing..."
+      },
+      "themeToggle": {
+        "light": "Switch to light mode",
+        "dark": "Switch to dark mode"
+      },
+      "filters": {
+        "title": "Content Filters",
+        "districtLabel": "Your District: {district}",
+        "districtToggleOn": "✓ Filtered",
+        "districtToggleOff": "Filter by District",
+        "districtDisable": "Disable district filter",
+        "districtEnable": "Enable district filter",
+        "districtHelper": "Showing content for {district} and platform-wide items",
+        "hashtagPlaceholder": "Add hashtags to filter (e.g., climate)",
+        "hashtagAria": "Filter by hashtag",
+        "trendingHeading": "Trending Hashtags",
+        "selectedRemoveAria": "Remove {tag} filter"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "polls": "Polls",
+        "analytics": "Analytics"
+      },
+      "empty": {
+        "filters": "No content matches your filters",
+        "default": "No feeds available",
+        "polls": "Polls view coming soon",
+        "analytics": "Analytics not available"
+      },
+      "actions": {
+        "bookmark": "Bookmark",
+        "share": "Share"
+      },
+      "status": {
+        "online": "Online",
+        "items": "{count, plural, one {{count} item} other {{count} items}}"
+      }
+    },
     "infiniteScroll": {
       "loadingMore": "Loading more...",
       "end": {

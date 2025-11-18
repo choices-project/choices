@@ -3,6 +3,57 @@
     "language": "Idioma"
   },
   "feeds": {
+    "core": {
+      "error": {
+        "title": "Error al cargar el feed",
+        "retry": "Intentar de nuevo"
+      },
+      "pullToRefresh": {
+        "pull": "↓ Desliza para actualizar",
+        "release": "↓ Suelta para actualizar"
+      },
+      "header": {
+        "title": "Feed unificado",
+        "refresh": "Actualizar",
+        "refreshing": "Actualizando..."
+      },
+      "themeToggle": {
+        "light": "Cambiar a modo claro",
+        "dark": "Cambiar a modo oscuro"
+      },
+      "filters": {
+        "title": "Filtros de contenido",
+        "districtLabel": "Tu distrito: {district}",
+        "districtToggleOn": "✓ Filtrado",
+        "districtToggleOff": "Filtrar por distrito",
+        "districtDisable": "Desactivar filtro por distrito",
+        "districtEnable": "Activar filtro por distrito",
+        "districtHelper": "Mostrando contenido para {district} y elementos de toda la plataforma",
+        "hashtagPlaceholder": "Añade hashtags para filtrar (p. ej., climate)",
+        "hashtagAria": "Filtrar por hashtag",
+        "trendingHeading": "Hashtags en tendencia",
+        "selectedRemoveAria": "Quitar filtro {tag}"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "polls": "Encuestas",
+        "analytics": "Analítica"
+      },
+      "empty": {
+        "filters": "Ningún contenido coincide con tus filtros",
+        "default": "No hay feeds disponibles",
+        "polls": "La vista de encuestas estará disponible pronto",
+        "analytics": "La analítica no está disponible"
+      },
+      "actions": {
+        "bookmark": "Guardar",
+        "share": "Compartir"
+      },
+      "status": {
+        "online": "En línea",
+        "items": "{count, plural, one {{count} elemento} other {{count} elementos}}"
+      }
+    },
     "infiniteScroll": {
       "loadingMore": "Cargando más...",
       "end": {
@@ -2018,18 +2069,26 @@
         }
       },
       "visibility": {
-        "public": "Público",
-        "public.description": "Cualquiera puede ver tu perfil y actividad",
-        "public.badge": "Más Social",
-        "friendsOnly": "Solo Amigos",
-        "friendsOnly.description": "Solo las personas con las que te conectas pueden ver tu perfil",
-        "friendsOnly.badge": "Equilibrado",
-        "private": "Privado",
-        "private.description": "Solo tú puedes ver los detalles de tu perfil",
-        "private.badge": "Privado",
-        "anonymous": "Anónimo",
-        "anonymous.description": "Vota y participa sin revelar tu identidad",
-        "anonymous.badge": "Más Privado"
+        "public": {
+          "label": "Público",
+          "description": "Cualquiera puede ver tu perfil y actividad",
+          "badge": "Más Social"
+        },
+        "friendsOnly": {
+          "label": "Solo Amigos",
+          "description": "Solo las personas con las que te conectas pueden ver tu perfil",
+          "badge": "Equilibrado"
+        },
+        "private": {
+          "label": "Privado",
+          "description": "Solo tú puedes ver los detalles de tu perfil",
+          "badge": "Privado"
+        },
+        "anonymous": {
+          "label": "Anónimo",
+          "description": "Vota y participa sin revelar tu identidad",
+          "badge": "Más Privado"
+        }
       },
       "preferences": {
         "title": "Preferencias de Notificaciones",

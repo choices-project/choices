@@ -21,7 +21,7 @@
     "lint": "node ./scripts/run-with-timeout.js 300 eslint .",
     "lint:strict": "node ./scripts/run-with-timeout.js 300 eslint . --max-warnings=0",
     "lint:hooks": "node ./scripts/run-with-timeout.js 180 eslint --config eslint.hooks.config.js \"**/*.{ts,tsx}\" --max-warnings=0",
-    "lint:locale": "node ./scripts/run-with-timeout.js 180 eslint --max-warnings=0 \"app/(app)/candidates/**/*.{ts,tsx}\" \"components/shared/**/*.{ts,tsx}\" \"features/civics/**/*.{ts,tsx}\" \"features/contact/**/*.{ts,tsx}\"",
+    "lint:locale": "node ./scripts/run-with-timeout.js 180 eslint --max-warnings=0 \"app/(app)/candidates/**/*.{ts,tsx}\" \"components/shared/**/*.{ts,tsx}\" \"features/civics/**/*.{ts,tsx}\" \"features/contact/**/*.{ts,tsx}\" \"features/polls/**/*.{ts,tsx}\" \"features/onboarding/**/*.{ts,tsx}\" \"features/feeds/**/*.{ts,tsx}\"",
     "types:dev": "node ./scripts/run-with-timeout.js 180 tsc -p ../tsconfig.json --noEmit",
     "types:ci": "node ./scripts/run-with-timeout.js 180 tsc -p ../tsconfig.ci.json --noEmit",
     "types:tests": "node ./scripts/run-with-timeout.js 180 tsc -p ../tsconfig.tests.json --noEmit",

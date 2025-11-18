@@ -345,29 +345,15 @@ export class CacheInvalidationManager {
    * Expand pattern with data context
    */
   private expandPattern(pattern: string, data: any): string {
-    let expandedPattern = pattern
+    const escapeValue = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-    // Replace common placeholders
-    // Use global replace to handle all occurrences
-    // Escape special regex characters in replacement values
-    const escapeRegex = (str: string): string => {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    };
-    
-    if (data.poll_id) {
-      const escapedPollId = escapeRegex(String(data.poll_id));
-      expandedPattern = expandedPattern.replace(/\*/g, escapedPollId);
-    }
-    if (data.user_id) {
-      const escapedUserId = escapeRegex(String(data.user_id));
-      expandedPattern = expandedPattern.replace(/\*/g, escapedUserId);
-    }
-    if (data.category) {
-      const escapedCategory = escapeRegex(String(data.category));
-      expandedPattern = expandedPattern.replace(/\*/g, escapedCategory);
-    }
-
-    return expandedPattern
+    return pattern.replace(/([A-Za-z0-9_-]+):\*/g, (match, prefix: string) => {
+      const value = this.resolvePlaceholderValue(prefix, data)
+      if (value === undefined || value === null) {
+        return match
+      }
+      return `${prefix}:${escapeValue(String(value))}`
+    })
   }
 
   /**
@@ -375,29 +361,39 @@ export class CacheInvalidationManager {
    */
   private expandTags(tags: string[], data: any): string[] {
     return tags.map(tag => {
-      let expandedTag = tag
+      const escapeValue = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-      // Replace placeholders with actual values
-      // Use global replace and escape special regex characters
-      const escapeRegex = (str: string): string => {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      };
-      
-      if (data.poll_id) {
-        const escapedPollId = escapeRegex(String(data.poll_id));
-        expandedTag = expandedTag.replace(/\*/g, escapedPollId);
-      }
-      if (data.user_id) {
-        const escapedUserId = escapeRegex(String(data.user_id));
-        expandedTag = expandedTag.replace(/\*/g, escapedUserId);
-      }
-      if (data.category) {
-        const escapedCategory = escapeRegex(String(data.category));
-        expandedTag = expandedTag.replace(/\*/g, escapedCategory);
-      }
-
-      return expandedTag
+      return tag.replace(/([A-Za-z0-9_-]+):\*/g, (match, prefix: string) => {
+        const value = this.resolvePlaceholderValue(prefix, data)
+        if (value === undefined || value === null) {
+          return match
+        }
+        return `${prefix}:${escapeValue(String(value))}`
+      })
     })
+  }
+
+  private resolvePlaceholderValue(prefix: string, data: any): string | undefined {
+    const normalized = prefix.toLowerCase()
+    const firstDefined = (...candidates: Array<any>) => candidates.find((candidate) => candidate !== undefined && candidate !== null)
+
+    if (normalized.includes('poll')) {
+      return firstDefined(data.poll_id, data.pollId, data.pollID, data.poll)
+    }
+
+    if (normalized.includes('user')) {
+      return firstDefined(data.user_id, data.userId, data.userID, data.user)
+    }
+
+    if (normalized.includes('category')) {
+      return firstDefined(data.category, data.category_id, data.categoryId)
+    }
+
+    if (normalized.includes('feedback')) {
+      return firstDefined(data.feedback_id, data.feedbackId)
+    }
+
+    return undefined
   }
 
   /**

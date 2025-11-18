@@ -71,10 +71,10 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
             data-testid="profile-visibility"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           >
-            <option value="public">{t('onboarding.profile.visibility.public')}</option>
-            <option value="private">{t('onboarding.profile.visibility.private')}</option>
-            <option value="friends_only">{t('onboarding.profile.visibility.friendsOnly')}</option>
-            <option value="anonymous">{t('onboarding.profile.visibility.anonymous')}</option>
+            <option value="public">{t('onboarding.profile.visibility.public.label')}</option>
+            <option value="private">{t('onboarding.profile.visibility.private.label')}</option>
+            <option value="friends_only">{t('onboarding.profile.visibility.friendsOnly.label')}</option>
+            <option value="anonymous">{t('onboarding.profile.visibility.anonymous.label')}</option>
           </select>
           <button
             onClick={handleNext}
@@ -263,7 +263,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{t('onboarding.profile.visibility.public')}</div>
+                      <div className="font-medium">{t('onboarding.profile.visibility.public.label')}</div>
                       <div className="text-sm text-gray-600">{t('onboarding.profile.visibility.public.description')}</div>
                     </div>
                     <Badge variant="default">{t('onboarding.profile.visibility.public.badge')}</Badge>
@@ -282,7 +282,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{t('onboarding.profile.visibility.friendsOnly')}</div>
+                      <div className="font-medium">{t('onboarding.profile.visibility.friendsOnly.label')}</div>
                       <div className="text-sm text-gray-600">{t('onboarding.profile.visibility.friendsOnly.description')}</div>
                     </div>
                     <Badge variant="outline">{t('onboarding.profile.visibility.friendsOnly.badge')}</Badge>
@@ -301,7 +301,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{t('onboarding.profile.visibility.private')}</div>
+                      <div className="font-medium">{t('onboarding.profile.visibility.private.label')}</div>
                       <div className="text-sm text-gray-600">{t('onboarding.profile.visibility.private.description')}</div>
                     </div>
                     <Badge variant="secondary">{t('onboarding.profile.visibility.private.badge')}</Badge>
@@ -320,7 +320,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{t('onboarding.profile.visibility.anonymous')}</div>
+                      <div className="font-medium">{t('onboarding.profile.visibility.anonymous.label')}</div>
                       <div className="text-sm text-gray-600">{t('onboarding.profile.visibility.anonymous.description')}</div>
                     </div>
                     <Badge variant="destructive">{t('onboarding.profile.visibility.anonymous.badge')}</Badge>
@@ -431,10 +431,10 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
 
   const renderComplete = () => {
     const visibilityLabels = {
-      public: t('onboarding.profile.visibility.public'),
-      friends_only: t('onboarding.profile.visibility.friendsOnly'),
-      private: t('onboarding.profile.visibility.private'),
-      anonymous: t('onboarding.profile.visibility.anonymous'),
+      public: t('onboarding.profile.visibility.public.label'),
+      friends_only: t('onboarding.profile.visibility.friendsOnly.label'),
+      private: t('onboarding.profile.visibility.private.label'),
+      anonymous: t('onboarding.profile.visibility.anonymous.label'),
     };
 
     return (

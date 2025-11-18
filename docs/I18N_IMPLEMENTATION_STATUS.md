@@ -18,6 +18,22 @@ The i18n system uses:
 
 ---
 
+## Extraction & Snapshot Workflow
+
+1. **Local extraction:**  
+   Run `npm run i18n:extract` from `web/` to execute the FormatJS CLI (wrapped by our timeout helper). The command scans `app/**`, `components/**`, `features/**`, and `lib/**` for `t()` usage and rewrites `messages/en.snapshot.json`.
+
+2. **Snapshot diffs are required:**  
+   Commit the updated `messages/en.snapshot.json` alongside any new keys in `messages/en.json` / `messages/es.json`. The snapshot is intentionally verbose so reviewers can confirm namespace changes without re-running extraction.
+
+3. **CI enforcement:**  
+   The **Web CI (Secure)** workflow now runs `npm run i18n:extract` in the “Verify i18n snapshot” step and fails the job if `messages/en.snapshot.json` is stale. This guarantees every PR keeps the snapshot synchronized and prevents missing keys from reaching main.
+
+4. **Developer checklist:**  
+   Before opening a PR, run `npm run i18n:extract`, review the snapshot diff, and ensure translations exist in both `en.json` and `es.json`. The updated snapshot makes it obvious when keys were added but not translated.
+
+---
+
 ## Phase 1: Core Civic Features ✅ COMPLETE
 
 ### Civics Components
@@ -332,6 +348,34 @@ The i18n system uses:
 
 ---
 
+## Phase 4: Feeds Experience ♻️ IN PROGRESS
+
+### Feeds Components
+
+#### ✅ Hashtag-Polls Feed
+- **`HashtagPollsFeed.tsx`** - Fully localized
+  - Date helpers (unknown, invalid, relative hours/yesterday)
+  - Header and metrics (title, subtitle, feed score, poll count)
+  - Filters (selected badge copy, trending label, sort controls)
+  - Tabs (recommended, trending, analytics)
+  - Recommended view (votes, match percent, empty states, CTA copy)
+  - Trending/analytics panels (rank labels, select instructions, percentage helpers)
+  - Error + empty states (retry, empty title)
+  - Namespace: `feeds.hashtagPolls.*`
+
+#### ✅ Unified Feed Core
+- **`FeedCore.tsx`** - Fully localized
+  - Error + retry state
+  - Pull-to-refresh announcements
+  - Header controls (title, refresh button, theme toggle aria labels)
+  - Filters (district helper text, hashtag input placeholder/aria, trending heading, remove-tag aria)
+  - Tabs (feed, polls, analytics) with empty-state copy
+  - Item actions (bookmark/share labels)
+  - Status summary ("Online", "{count} items")
+  - Namespace: `feeds.core.*`
+
+---
+
 ## Message Catalogue Structure
 
 ### Current Namespaces
@@ -379,6 +423,9 @@ polls.*
   - filters.* (search.*, hashtags.*, status.*, trending.*, categories.*)
   - templates.* (title, subtitle, search.*, categories.*, sort.*, difficulty.*, metadata.*, resultsCount, actions.*, empty.*)
   - community.* (title, subtitle, week.*, tabs.*, selection.*, trending.*, suggestion.*, actions.*, selected.*, analytics.*)
+feeds.*
+  - hashtagPolls.* (header, metrics, filters, tabs, analytics, error, empty, date)
+  - core.* (header, themeToggle, filters, tabs, empty, actions, status, pullToRefresh)
 ```
 
 ### Translation Coverage
@@ -398,15 +445,19 @@ polls.*
 - **Rule:** `formatjs/no-literal-string-in-jsx`
 - **Scope:** 
   - `app/(app)/candidates/**/*.{ts,tsx}` - **ERROR**
-  - `components/shared/**/*.{ts,tsx}` - **ERROR** ✅
+  - `components/shared/**/*.{ts,tsx}` - **ERROR**
   - `features/civics/**/*.{ts,tsx}` - **ERROR**
-  - `features/contact/**/*.{ts,tsx}` - **ERROR** ✅
+  - `features/contact/**/*.{ts,tsx}` - **ERROR**
+  - `features/onboarding/**/*.{ts,tsx}` - **ERROR**
+  - `features/polls/**/*.{ts,tsx}` - **ERROR**
+  - `features/feeds/**/*.{ts,tsx}` - **ERROR**
 - **Status:** ✅ Enforced and passing
 
 #### Locale Lint Script
 - **Command:** `npm run lint:locale`
 - **Location:** `web/package.json`
-- **Scope:** Candidates, civics, contact, and shared components
+- **Scope:** Candidates, shared components, civics, contact, polls, onboarding, feeds
+- **CI:** Runs as a blocking step in **Web CI (Secure)**
 - **Status:** ✅ Passing with zero violations
 
 #### CI Integration
@@ -447,7 +498,8 @@ polls.*
 - [x] Add `features/contact/**/*.{ts,tsx}` to formatjs error block
 - [x] Add `components/shared/**/*.{ts,tsx}` to formatjs error block
 - [x] Update `lint:locale` script globs accordingly
-- [ ] Add other feature directories as they reach parity (polls, feeds, profile, dashboard, onboarding)
+- [x] Add `features/polls/**/*.{ts,tsx}` and `features/onboarding/**/*.{ts,tsx}` to the enforcement list
+- [ ] Add remaining feature directories as they reach parity (feeds, profile, dashboard)
 
 #### 2. Shared Components Localization ✅ COMPLETE
 - [x] `BurgerMenu.tsx` - Localize menu labels and aria-labels
@@ -467,14 +519,14 @@ polls.*
 ### Medium Priority (P2)
 
 #### 4. Additional Feature Areas
-- [ ] Polls components
-- [ ] Feeds components
+- [x] Polls components (Phase 3 complete)
+- [x] Onboarding components (Profile/Auth/Values/Complete/Interests)
+- [ ] Feeds components (HashtagPollsFeed + Unified Feed Core localized; enhancers/providers pending)
 - [ ] Profile components
 - [ ] Dashboard components
-- [ ] Onboarding components
 
 #### 5. Documentation
-- [ ] Document i18n extraction process in detail
+- [x] Document i18n extraction process in detail
 - [ ] Create developer guide for adding new translations
 - [ ] Document locale switching behavior
 - [ ] Document pluralization patterns

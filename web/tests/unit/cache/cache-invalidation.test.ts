@@ -49,7 +49,9 @@ describe('CacheInvalidationManager', () => {
 
       expect(expandPattern('poll:*', { poll_id: '123' })).toBe('poll:123');
       expect(expandPattern('poll:*:user:*', { poll_id: '123', user_id: '456' })).toBe('poll:123:user:456');
-      expect(expandPattern('category:*:poll:*:user:*', { category: 'civics', poll_id: '123', user_id: '456' })).toBe('category:123:poll:456:user:civics');
+      expect(expandPattern('category:*:poll:*:user:*', { category: 'civics', poll_id: '123', user_id: '456' })).toBe(
+        'category:civics:poll:123:user:456',
+      );
 
       expect(expandTags(['poll:*'], { poll_id: '999' })).toEqual(['poll:999']);
       expect(expandTags(['user:*'], { user_id: 'abc' })).toEqual(['user:abc']);
