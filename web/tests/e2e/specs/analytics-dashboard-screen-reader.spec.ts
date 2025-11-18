@@ -15,11 +15,15 @@ test.describe('@screen-reader Analytics dashboard harness', () => {
     await refreshButton.waitFor({ state: 'visible' });
     await refreshButton.click();
 
-    const liveRegion = page.locator('#main-content').locator('[role="status"]').first();
+    // Use role="main" to target the analytics dashboard section specifically
+    // This avoids ambiguity from duplicate id="main-content" elements
+    const mainContent = page.getByRole('main').first();
+    const liveRegion = mainContent.locator('[role="status"]').first();
     await expect(liveRegion).toContainText(/Analytics updated at/i, { timeout: 15_000 });
 
     await page.getByRole('tab', { name: 'Trends' }).click();
-    await expect(page.locator('#main-content')).toBeFocused({ timeout: 10_000 });
+    // Use the same main element for focus assertion
+    await expect(mainContent).toBeFocused({ timeout: 10_000 });
   });
 });
 

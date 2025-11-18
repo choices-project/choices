@@ -71,7 +71,11 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
       await expect(page.getByTestId('personal-analytics')).toBeVisible();
       await expect(page.getByTestId('dashboard-settings')).toBeVisible();
-      await expect(page.getByTestId('feeds-live-message')).not.toHaveText('', { timeout: 10_000 });
+      
+      // Wait for feeds-live-message to be attached before asserting text
+      const feedsLiveMessage = page.getByTestId('feeds-live-message');
+      await feedsLiveMessage.waitFor({ state: 'attached', timeout: 15_000 });
+      await expect(feedsLiveMessage).not.toHaveText('', { timeout: 10_000 });
 
       const representativesCard = page.locator('[data-testid="representatives-card"]');
       await expect(representativesCard).toHaveCount(1);
