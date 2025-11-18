@@ -2216,6 +2216,96 @@
         "continue": "Continuar",
         "back": "Volver"
       }
+    },
+    "values": {
+      "title": "¿Qué te importa?",
+      "subtitle": "Selecciona hasta 5 temas que sean más importantes para ti. Esto nos ayuda a mostrarte encuestas relevantes y conectarte con personas afines.",
+      "concerns": {
+        "title": "Preocupaciones Principales ({count}/{max})"
+      },
+      "categories": {
+        "economic": {
+          "title": "Justicia Económica",
+          "concerns": {
+            "fairWages": "salarios justos",
+            "affordableHousing": "vivienda asequible",
+            "healthcareAccess": "acceso a la salud",
+            "educationFunding": "financiamiento educativo",
+            "smallBusinessSupport": "apoyo a pequeñas empresas",
+            "workerRights": "derechos laborales"
+          }
+        },
+        "environmental": {
+          "title": "Protección Ambiental",
+          "concerns": {
+            "climateAction": "acción climática",
+            "cleanEnergy": "energía limpia",
+            "conservation": "conservación",
+            "sustainableLiving": "vida sostenible",
+            "pollutionReduction": "reducción de contaminación"
+          }
+        },
+        "community": {
+          "title": "Bienestar Comunitario",
+          "concerns": {
+            "communitySafety": "seguridad comunitaria",
+            "mentalHealth": "salud mental",
+            "elderlyCare": "cuidado de ancianos",
+            "youthPrograms": "programas juveniles",
+            "disabilityRights": "derechos de discapacidad",
+            "immigrationReform": "reforma migratoria"
+          }
+        },
+        "systemic": {
+          "title": "Cambio Sistémico",
+          "concerns": {
+            "corporateAccountability": "responsabilidad corporativa",
+            "governmentTransparency": "transparencia gubernamental",
+            "campaignFinanceReform": "reforma de financiamiento de campañas",
+            "votingRights": "derechos de voto",
+            "mediaIntegrity": "integridad mediática"
+          }
+        }
+      },
+      "community": {
+        "title": "¿Dónde quieres tener un impacto?",
+        "local": {
+          "label": "Mi comunidad local",
+          "description": "Problemas de ciudad y vecindario"
+        },
+        "regional": {
+          "label": "Mi región/estado",
+          "description": "Preocupaciones estatales y regionales"
+        },
+        "national": {
+          "label": "Problemas nacionales",
+          "description": "Desafíos a nivel país"
+        },
+        "global": {
+          "label": "Desafíos globales",
+          "description": "Cooperación internacional"
+        }
+      },
+      "participation": {
+        "title": "¿Cómo te gustaría participar?",
+        "observer": {
+          "label": "Observador",
+          "description": "Prefiero observar y aprender de otros"
+        },
+        "contributor": {
+          "label": "Contribuidor",
+          "description": "Quiero contribuir ideas y sugerencias"
+        },
+        "leader": {
+          "label": "Líder",
+          "description": "Quiero ayudar a liderar discusiones e iniciativas"
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "continue": "Continuar"
+      },
+      "progress": "Paso {current} de {total}"
     }
   },
   "polls": {

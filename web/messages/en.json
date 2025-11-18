@@ -1047,6 +1047,96 @@
         "continue": "Continue",
         "back": "Back"
       }
+    },
+    "values": {
+      "title": "What matters to you?",
+      "subtitle": "Select up to 5 issues that are most important to you. This helps us show you relevant polls and connect you with like-minded people.",
+      "concerns": {
+        "title": "Primary Concerns ({count}/{max})"
+      },
+      "categories": {
+        "economic": {
+          "title": "Economic Justice",
+          "concerns": {
+            "fairWages": "fair wages",
+            "affordableHousing": "affordable housing",
+            "healthcareAccess": "healthcare access",
+            "educationFunding": "education funding",
+            "smallBusinessSupport": "small business support",
+            "workerRights": "worker rights"
+          }
+        },
+        "environmental": {
+          "title": "Environmental Protection",
+          "concerns": {
+            "climateAction": "climate action",
+            "cleanEnergy": "clean energy",
+            "conservation": "conservation",
+            "sustainableLiving": "sustainable living",
+            "pollutionReduction": "pollution reduction"
+          }
+        },
+        "community": {
+          "title": "Community Wellbeing",
+          "concerns": {
+            "communitySafety": "community safety",
+            "mentalHealth": "mental health",
+            "elderlyCare": "elderly care",
+            "youthPrograms": "youth programs",
+            "disabilityRights": "disability rights",
+            "immigrationReform": "immigration reform"
+          }
+        },
+        "systemic": {
+          "title": "Systemic Change",
+          "concerns": {
+            "corporateAccountability": "corporate accountability",
+            "governmentTransparency": "government transparency",
+            "campaignFinanceReform": "campaign finance reform",
+            "votingRights": "voting rights",
+            "mediaIntegrity": "media integrity"
+          }
+        }
+      },
+      "community": {
+        "title": "Where do you want to make an impact?",
+        "local": {
+          "label": "My local community",
+          "description": "City and neighborhood issues"
+        },
+        "regional": {
+          "label": "My region/state",
+          "description": "State and regional concerns"
+        },
+        "national": {
+          "label": "National issues",
+          "description": "Country-wide challenges"
+        },
+        "global": {
+          "label": "Global challenges",
+          "description": "International cooperation"
+        }
+      },
+      "participation": {
+        "title": "How would you like to participate?",
+        "observer": {
+          "label": "Observer",
+          "description": "I prefer to observe and learn from others"
+        },
+        "contributor": {
+          "label": "Contributor",
+          "description": "I want to contribute ideas and suggestions"
+        },
+        "leader": {
+          "label": "Leader",
+          "description": "I want to help lead discussions and initiatives"
+        }
+      },
+      "actions": {
+        "back": "Back",
+        "continue": "Continue"
+      },
+      "progress": "Step {current} of {total}"
     }
   },
   "polls": {

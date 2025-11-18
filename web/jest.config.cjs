@@ -3,6 +3,11 @@ module.exports = {
   // Global timeout settings
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
+  
+  // Use separate Babel config for Jest (allows Next.js to use SWC)
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './babel.config.cjs' }]
+  },
 
   projects: [
     {
