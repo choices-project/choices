@@ -36,7 +36,7 @@ beforeAll(async () => {
     }
   } catch (err) {
     // Fail fast: MSW server is required for tests that depend on handlers.
-     
+
     console.error('Failed to import ./msw/server in tests/setup. MSW handlers are required: ', (err as Error)?.message ?? err);
     throw err; // ensure CI/test run fails loudly so you can fix missing file/config
   }
@@ -110,87 +110,86 @@ jest.mock('@/lib/stores/storage', () => {
 // Minimal mocks for i18n and next/navigation used by many components in tests
 jest.mock('next-intl', () => {
   const React = jest.requireActual<typeof import('react')>('react');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const englishMessages = require('../messages/en.json') as Record<string, unknown>;
 
-  // Helper to format common translation patterns
-  const formatTranslation = (key: string, vars?: Record<string, unknown>): string => {
-    // Handle common count-based translations
-    if (key.includes('inDays') && vars?.count) {
-      return `In ${vars.count} days`;
+  const humanizeKey = (key: string): string => {
+    const lastSegment = key.split('.').pop() ?? key;
+    const withSpaces = lastSegment
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .trim();
+    if (!withSpaces) {
+      return key;
     }
-    if (key.includes('tomorrow')) {
-      return 'Tomorrow';
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  };
+
+  const resolveMessage = (messages: Record<string, unknown>, key: string): string | undefined => {
+    return key.split('.').reduce<unknown>((acc, segment) => {
+      if (acc && typeof acc === 'object' && segment in (acc as Record<string, unknown>)) {
+        return (acc as Record<string, unknown>)[segment];
+      }
+      return undefined;
+    }, messages) as string | undefined;
+  };
+
+  const applyParams = (template: string, vars?: Record<string, unknown>): string => {
+    if (!vars) {
+      return template;
     }
-    if (key.includes('today')) {
-      return 'Today';
-    }
-    if (key.includes('additional') && vars?.count) {
-      return `(+${vars.count})`;
-    }
-    // Common component/test keys
-    if (/select.*theme/i.test(key) || key === 'Select theme' || key.includes('theme') && key.includes('select')) {
-      return 'Select theme';
-    }
-    if (/end.*date.*future/i.test(key) || key === 'End date must be in the future' || (key.includes('end') && key.includes('date') && key.includes('future'))) {
-      return 'End date must be in the future';
-    }
-    if (/^error$/i.test(key) || (key === 'error' && !key.includes('.'))) {
-      return 'Error';
-    }
-    if (/^retry$/i.test(key) || (key === 'retry' && !key.includes('.'))) {
-      return 'Retry';
-    }
-    if (/^loading$/i.test(key) || (key === 'loading' && !key.includes('.'))) {
-      return 'Loading';
-    }
-    // Handle other common patterns
-    if (key.includes('Petition')) {
-      return 'Petition';
-    }
-    if (key.includes('no civic actions found') || (key.includes('empty') && key.includes('actions'))) {
-      return 'No civic actions found';
-    }
-    if (key.includes('create') && (key.includes('action') || key.includes('button'))) {
-      return 'Create action';
-    }
-    if (key.includes('actions.list.buttons.create')) {
-      return 'Create action';
-    }
-    // Default: return key for tests that need to assert on keys
-    return key;
+    return template.replace(/\{(\w+)\}/g, (_match, param: string) => {
+      if (param in vars) {
+        const value = vars[param];
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value);
+      }
+      return '';
+    });
+  };
+
+  const formatTranslation = (
+    key: string,
+    vars?: Record<string, unknown>,
+    scopedMessages: Record<string, unknown> = englishMessages,
+  ): string => {
+    const raw = resolveMessage(scopedMessages, key);
+    const base = typeof raw === 'string' ? raw : humanizeKey(key);
+    return applyParams(base, vars);
   };
 
   const defaultIntl = {
     locale: 'en',
-    messages: {},
-    formatMessage: formatTranslation,
+    messages: englishMessages,
+    formatMessage: (key: string, vars?: Record<string, unknown>) => formatTranslation(key, vars),
   };
 
   const IntlContext = React.createContext(defaultIntl);
 
-  const NextIntlClientProvider = ({ locale = 'en', messages = {}, children }: {
-    locale?: string;
-    messages?: Record<string, string>;
-    children?: React.ReactNode;
+  const NextIntlClientProvider = ({
+    locale = 'en',
+    messages = englishMessages,
+    children,
   }) => {
     const value = {
       locale,
       messages,
-      formatMessage: (key: string, vars?: Record<string, unknown>) => {
-        // Use provided messages if available, otherwise use smart formatting
-        return (messages && messages[key]) || formatTranslation(key, vars);
-      },
+      formatMessage: (key: string, vars?: Record<string, unknown>) => formatTranslation(key, vars, messages),
     };
-
     return React.createElement(IntlContext.Provider, { value }, children);
   };
 
   const useLocale = () => React.useContext(IntlContext).locale;
-  const useTranslations = (_ns?: string) => {
+  const useTranslations = () => {
     const ctx = React.useContext(IntlContext);
-    return (key: string, vars?: Record<string, unknown>) => ctx.formatMessage(key, vars);
+    return React.useCallback(
+      (key: string, vars?: Record<string, unknown>) => ctx.formatMessage(key, vars),
+      [ctx],
+    );
   };
 
-  // Provide exports used by next-intl
   return {
     NextIntlClientProvider,
     useLocale,
@@ -307,27 +306,28 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'test-anon-key';
 process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service-role-key';
 
 // Mock analytics and external service calls
-jest.mock('@/features/analytics/lib/auth-analytics', () => ({
-  AuthAnalytics: {
-    sendToExternalService: jest.fn().mockResolvedValue(undefined),
-    trackAuthEvent: jest.fn().mockResolvedValue(undefined),
-    trackBiometricEvent: jest.fn().mockResolvedValue(undefined),
-    trackDeviceFlowEvent: jest.fn().mockResolvedValue(undefined),
-    trackPasswordResetEvent: jest.fn().mockResolvedValue(undefined),
-    trackSecurityEvent: jest.fn().mockResolvedValue(undefined),
-  },
-}));
+const createAuthAnalyticsMock = (modulePath: string) => {
+  const actual = jest.requireActual<typeof import('@/features/analytics/lib/auth-analytics')>(modulePath);
+  class MockAuthAnalytics extends actual.AuthAnalytics {
+    // Override network-bound method so tests remain deterministic
+    // eslint-disable-next-line class-methods-use-this
+    async sendToExternalService(): Promise<void> {
+      return Promise.resolve();
+    }
+  }
+  return {
+    ...actual,
+    AuthAnalytics: MockAuthAnalytics,
+  };
+};
 
-jest.mock('@/lib/core/services/analytics/lib/auth-analytics', () => ({
-  AuthAnalytics: {
-    sendToExternalService: jest.fn().mockResolvedValue(undefined),
-    trackAuthEvent: jest.fn().mockResolvedValue(undefined),
-    trackBiometricEvent: jest.fn().mockResolvedValue(undefined),
-    trackDeviceFlowEvent: jest.fn().mockResolvedValue(undefined),
-    trackPasswordResetEvent: jest.fn().mockResolvedValue(undefined),
-    trackSecurityEvent: jest.fn().mockResolvedValue(undefined),
-  },
-}));
+jest.mock('@/features/analytics/lib/auth-analytics', () =>
+  createAuthAnalyticsMock('@/features/analytics/lib/auth-analytics'),
+);
+
+jest.mock('@/lib/core/services/analytics/lib/auth-analytics', () =>
+  createAuthAnalyticsMock('@/lib/core/services/analytics/lib/auth-analytics'),
+);
 
 // Mock rate limiter to prevent undefined promise errors
 // Use a factory function to avoid out-of-scope variable references in jest.mock

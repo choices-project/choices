@@ -28,6 +28,13 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/hooks/useI18n', () => ({
   useI18n: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
+      // Validation error messages - exact keys from messages/en.json
+      if (key === 'civics.actions.create.validation.titleRequired') return 'Title is required.';
+      if (key === 'civics.actions.create.validation.titleMax') return 'Title must be 200 characters or less.';
+      if (key === 'civics.actions.create.validation.descriptionMax') return 'Description must be 5000 characters or less.';
+      if (key === 'civics.actions.create.validation.signaturesRange') return 'Target signatures must be between 1 and 1,000,000.';
+      if (key === 'civics.actions.create.validation.endDateFuture') return 'End date must be in the future.';
+
       // Return readable labels for common keys
       if (key.includes('title') && key.includes('label')) return 'Title';
       if (key.includes('description') && key.includes('label')) return 'Description';
@@ -44,12 +51,6 @@ jest.mock('@/hooks/useI18n', () => ({
       if (key.includes('create.action') || key.includes('createAction') || key.includes('button.create') || key.includes('submit')) return 'Create action';
       if (key.includes('button') && (key.includes('create') || key.includes('submit'))) return 'Create action';
       if (key.includes('common.actions.cancel')) return 'Cancel';
-      // Validation error messages - exact keys from messages/en.json
-      if (key === 'civics.actions.create.validation.titleRequired') return 'Title is required.';
-      if (key === 'civics.actions.create.validation.titleMax') return 'Title must be 200 characters or less.';
-      if (key === 'civics.actions.create.validation.descriptionMax') return 'Description must be 5000 characters or less.';
-      if (key === 'civics.actions.create.validation.signaturesRange') return 'Target signatures must be between 1 and 1,000,000.';
-      if (key === 'civics.actions.create.validation.endDateFuture') return 'End date must be in the future.';
       // Default: return key for debugging
       return key;
     },

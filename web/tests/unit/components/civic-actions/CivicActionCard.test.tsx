@@ -63,7 +63,7 @@ describe('CivicActionCard', () => {
   it('displays urgency level badge', () => {
     render(<CivicActionCard action={mockAction} />);
 
-    expect(screen.getByText('high')).toBeInTheDocument();
+    expect(screen.getByText(/high urgency/i)).toBeInTheDocument();
   });
 
   it('displays signature progress for petitions', () => {
@@ -174,7 +174,7 @@ describe('CivicActionCard', () => {
     render(<CivicActionCard action={expiredAction} />);
 
     // Check for the specific "This action has ended" message
-    expect(screen.getByText('This action has ended')).toBeInTheDocument();
+    expect(screen.getByText('This action has ended.')).toBeInTheDocument();
   });
 
   it('shows inactive status for completed actions', () => {
@@ -196,7 +196,7 @@ describe('CivicActionCard', () => {
   it('calls onView when view details link is clicked', () => {
     render(<CivicActionCard action={mockAction} onView={mockOnView} />);
 
-    const viewLink = screen.getByText('View Details');
+    const viewLink = screen.getByText(/view details/i);
     fireEvent.click(viewLink);
 
     expect(mockOnView).toHaveBeenCalledWith('1');

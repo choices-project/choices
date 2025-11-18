@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { CivicActionList } from '@/features/civics/components/civic-actions/CivicActionList';
@@ -61,10 +61,30 @@ const mockActions: CivicAction[] = [
   },
 ];
 
+const flushPromises = async () => {
+  await act(async () => {
+    await Promise.resolve();
+  });
+};
+
+const settleLastFetch = async () => {
+  const lastCall = mockFetch.mock.results.at(-1);
+  const maybePromise = lastCall?.value as Promise<unknown> | undefined;
+  if (maybePromise?.then) {
+    await act(async () => {
+      try {
+        await maybePromise;
+      } catch {
+        // swallow rejections so component error handling can proceed
+      }
+    });
+  }
+};
+
 describe('CivicActionList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFetch.mockClear();
+    mockFetch.mockReset();
     const { isFeatureEnabled } = jest.requireMock('@/lib/core/feature-flags');
     isFeatureEnabled.mockReturnValue(true);
     global.fetch = mockFetch as unknown as typeof global.fetch;
@@ -91,6 +111,8 @@ describe('CivicActionList', () => {
     mockFetch.mockRejectedValue(new Error('Fetch failed'));
 
     render(<CivicActionList initialActions={[]} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await settleLastFetch();
 
     await waitFor(() => {
       expect(screen.getByText(/error/i)).toBeInTheDocument();
@@ -109,9 +131,10 @@ describe('CivicActionList', () => {
 
     render(<CivicActionList initialActions={[]} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/no civic actions found/i)).toBeInTheDocument();
-    });
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await settleLastFetch();
+
+    await screen.findByText(/no civic actions found/i, undefined, { timeout: 3000 });
   });
 
   it('shows create button when showCreateButton is true', () => {
@@ -240,12 +263,12 @@ describe('CivicActionList', () => {
 
     render(<CivicActionList initialActions={[]} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/retry/i)).toBeInTheDocument();
-    });
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await settleLastFetch();
 
-    const retryButton = screen.getByText(/retry/i);
+    const retryButton = await screen.findByRole('button', { name: /retry/i }, { timeout: 3000 });
     fireEvent.click(retryButton);
+    await settleLastFetch();
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
