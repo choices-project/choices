@@ -6,7 +6,7 @@ module.exports = {
   
   // Use separate Babel config for Jest (allows Next.js to use SWC)
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './babel.config.cjs' }]
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './jest/babel.config.cjs' }]
   },
 
   projects: [
