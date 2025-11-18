@@ -352,8 +352,7 @@ const createApiRateLimiter = () => ({
 
 // Use inline factories (no out-of-scope variable captured by the jest.mock factory)
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
-jest.mock('lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
-jest.mock('../../lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
+// Note: Only mock the primary path - other import paths will resolve to the same module
 
 type SupabaseOp = 'select' | 'insert' | 'update' | 'delete' | 'rpc';
 
