@@ -149,16 +149,24 @@ describe('CreateCivicActionForm', () => {
     fireEvent.change(titleInput, { target: { value: 'Valid Title' } });
 
     const endDateInput = screen.getByLabelText(/end date/i);
+    // Set a past date - validation should catch this
     fireEvent.change(endDateInput, {
       target: { value: '2020-01-01T00:00' },
+    });
+
+    // Wait for the input value to be set
+    await waitFor(() => {
+      expect(endDateInput).toHaveValue('2020-01-01T00:00');
     });
 
     const submitButton = screen.getByRole('button', { name: /create action/i });
     fireEvent.click(submitButton);
 
+    // Wait for validation error to appear - check for the exact error message
     await waitFor(() => {
-      expect(screen.getByText(/end date must be in the future/i)).toBeInTheDocument();
-    });
+      // The error message should be "End date must be in the future."
+      expect(screen.getByText(/End date must be in the future/i)).toBeInTheDocument();
+    }, { timeout: 3000 });
   });
 
   it('submits form with valid data', async () => {
