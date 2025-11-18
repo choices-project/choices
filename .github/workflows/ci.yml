@@ -71,6 +71,8 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: 'test-jwt-secret-for-unit-tests'
 
     steps:
     - name: Checkout code
@@ -287,6 +289,8 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: 'test-jwt-secret-for-unit-tests'
 
     services:
       postgres:

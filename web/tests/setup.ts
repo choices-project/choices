@@ -32,9 +32,10 @@ beforeAll(async () => {
       authServer.listen({ onUnhandledRequest: 'warn' });
     }
   } catch (err) {
-    // If the import fails, leave the no-op fallback so tests can proceed.
+    // Fail fast: MSW server is required for tests that depend on handlers.
     // eslint-disable-next-line no-console
-    console.warn('Could not import ./msw/server in tests/setup — using fallback no-op server:', (err as Error)?.message ?? err);
+    console.error('Failed to import ./msw/server in tests/setup. MSW handlers are required: ', (err as Error)?.message ?? err);
+    throw err; // ensure CI/test run fails loudly so you can fix missing file/config
   }
 });
 
@@ -121,6 +122,22 @@ jest.mock('next-intl', () => {
     }
     if (key.includes('additional') && vars?.count) {
       return `(+${vars.count})`;
+    }
+    // Common component/test keys
+    if (/select.*theme/i.test(key) || key === 'Select theme' || key.includes('theme') && key.includes('select')) {
+      return 'Select theme';
+    }
+    if (/end.*date.*future/i.test(key) || key === 'End date must be in the future' || (key.includes('end') && key.includes('date') && key.includes('future'))) {
+      return 'End date must be in the future';
+    }
+    if (/^error$/i.test(key) || (key === 'error' && !key.includes('.'))) {
+      return 'Error';
+    }
+    if (/^retry$/i.test(key) || (key === 'retry' && !key.includes('.'))) {
+      return 'Retry';
+    }
+    if (/^loading$/i.test(key) || (key === 'loading' && !key.includes('.'))) {
+      return 'Loading';
     }
     // Handle other common patterns
     if (key.includes('Petition')) {
@@ -310,7 +327,8 @@ jest.mock('@/lib/core/services/analytics/lib/auth-analytics', () => ({
 }));
 
 // Mock rate limiter to prevent undefined promise errors
-jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+// Use a shared mock object to ensure consistency across different import paths
+const apiRateLimiterMock = {
   apiRateLimiter: {
     checkLimit: jest.fn().mockResolvedValue({
       allowed: true,
@@ -330,7 +348,11 @@ jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
     clearRateLimit: jest.fn().mockResolvedValue(true),
     getRateLimitStatus: jest.fn().mockResolvedValue(null),
   },
-}));
+};
+
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
+jest.mock('lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
+jest.mock('../../lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
 
 type SupabaseOp = 'select' | 'insert' | 'update' | 'delete' | 'rpc';
 
