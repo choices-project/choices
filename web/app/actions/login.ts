@@ -1,5 +1,6 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { logger } from '@/lib/utils/logger'
@@ -61,6 +62,72 @@ export async function loginAction(formData: FormData) {
   if (!authData.session) {
     logger.error('No session returned from authentication', { userId: authData.user.id });
     throw new Error('Authentication failed - no session created');
+  }
+
+  // Explicitly set session cookies for server actions
+  // Supabase SSR should handle this via cookie adapter, but we ensure it works
+  // We set both the Supabase SSR cookie names AND the custom names for compatibility
+  try {
+    const cookieStore = cookies()
+    const isProduction = process.env.NODE_ENV === 'production'
+    const maxAge = 60 * 60 * 24 * 7 // 7 days
+
+    // Extract project reference from Supabase URL for cookie naming
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default'
+    
+    // Supabase SSR uses these cookie names
+    const ssrAccessTokenName = `sb-${projectRef}-auth-token`
+    const ssrRefreshTokenName = `sb-${projectRef}-auth-token.refresh`
+
+    // Set Supabase SSR cookie names (what createServerClient expects)
+    cookieStore.set(ssrAccessTokenName, authData.session.access_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
+    })
+
+    cookieStore.set(ssrRefreshTokenName, authData.session.refresh_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
+    })
+
+    // Also set custom cookie names for API route compatibility
+    cookieStore.set('sb-access-token', authData.session.access_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
+    })
+
+    cookieStore.set('sb-refresh-token', authData.session.refresh_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
+    })
+
+    logger.info('Session cookies set explicitly', {
+      userId: authData.user.id,
+      ssrAccessTokenName,
+      ssrRefreshTokenName,
+      hasAccessToken: !!authData.session.access_token,
+      hasRefreshToken: !!authData.session.refresh_token,
+      secure: isProduction,
+    })
+  } catch (cookieError) {
+    logger.error('Failed to set session cookies', {
+      error: cookieError instanceof Error ? cookieError.message : 'Unknown error',
+      userId: authData.user.id,
+    })
+    // Don't throw - Supabase SSR might have set them via adapter
   }
   
   // Check if user has completed onboarding based on key fields

@@ -3,6 +3,7 @@ import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+import { logger } from '@/lib/utils/logger'
 import type { Database } from '@/types/supabase'
 
 // Environment validation
@@ -49,28 +50,47 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   }
 
   const isProduction = process.env.NODE_ENV === 'production'
-  
+
   const cookieAdapter = {
-    get: (name: string) => cookieStore?.get(name)?.value,
+    get: (name: string) => {
+      const value = cookieStore?.get(name)?.value
+      logger.debug('Supabase SSR cookie get', { name, hasValue: !!value })
+      return value
+    },
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
         // Ensure proper cookie settings for production
-        cookieStore?.set(name, value, {
+        const cookieOptions = {
           ...options,
           secure: isProduction, // HTTPS only in production
           sameSite: 'lax' as const, // CSRF protection
           path: '/', // Available site-wide
           httpOnly: options.httpOnly !== false, // Default to httpOnly for security
+        }
+        cookieStore?.set(name, value, cookieOptions)
+        logger.debug('Supabase SSR cookie set', { 
+          name, 
+          hasValue: !!value,
+          secure: isProduction,
+          sameSite: 'lax',
+          path: '/',
         })
-      } catch {
-        // Ignore errors when cookies are unavailable (e.g., build time)
+      } catch (error) {
+        logger.error('Failed to set Supabase SSR cookie', {
+          name,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
       }
     },
     remove: (name: string, _options: Record<string, unknown>) => {
       try {
         cookieStore?.delete(name)
-      } catch {
-        // Ignore errors when cookies are unavailable (e.g., build time)
+        logger.debug('Supabase SSR cookie removed', { name })
+      } catch (error) {
+        logger.error('Failed to remove Supabase SSR cookie', {
+          name,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
       }
     },
   }
