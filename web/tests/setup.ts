@@ -11,6 +11,9 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
+// Set test environment variables before any imports that might use them
+process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-jwt-secret-for-unit-tests';
+
 // Note: Avoid importing the React type name directly to prevent self-referential typeof issues below.
 
 // Defer loading MSW server until runtime to avoid top-level transform issues.
@@ -215,9 +218,34 @@ Object.defineProperty(global, 'crypto', {
 (globalThis as any).btoa = (str: string) => Buffer.from(str, 'binary').toString('base64');
 (globalThis as any).atob = (str: string) => Buffer.from(str, 'base64').toString('binary');
 
+// Mock global fetch to prevent real network requests in tests
+global.fetch = jest.fn().mockImplementation((_input, _init) =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    json: async () => ({}),
+    text: async () => '',
+    blob: async () => new Blob(),
+    arrayBuffer: async () => new ArrayBuffer(0),
+    formData: async () => new FormData(),
+    headers: new Headers(),
+    redirected: false,
+    type: 'default' as ResponseType,
+    url: '',
+    clone: jest.fn(),
+    body: null,
+    bodyUsed: false,
+  }),
+) as unknown as typeof fetch;
+
 // Mock console methods to reduce noise in tests
-const originalConsoleError = console.error;
-const originalConsoleWarn = console.warn;
+const originalConsole = {
+  error: console.error.bind(console),
+  warn: console.warn.bind(console),
+  info: console.info.bind(console),
+  log: console.log.bind(console),
+};
 
 // Silence unimplemented audio playback warnings in jsdom
 if (typeof window !== 'undefined' && window.HTMLMediaElement) {
@@ -229,8 +257,7 @@ beforeAll(() => {
     if (typeof args[0] === 'string' && args[0].includes('Warning: ReactDOM.render is deprecated')) {
       return;
     }
-
-    originalConsoleError.apply(console, args as []);
+    originalConsole.error('[ERROR]', ...args);
   };
 
   console.warn = (...args: unknown[]) => {
@@ -240,20 +267,70 @@ beforeAll(() => {
     ) {
       return;
     }
+    originalConsole.warn('[WARN]', ...args);
+  };
 
-    originalConsoleWarn.apply(console, args as []);
+  console.info = (...args: unknown[]) => {
+    originalConsole.info('[INFO]', ...args);
   };
 });
 
 afterAll(() => {
-  console.error = originalConsoleError;
-  console.warn = originalConsoleWarn;
+  console.error = originalConsole.error;
+  console.warn = originalConsole.warn;
+  console.info = originalConsole.info;
 });
 
 // Mock environment variables for Supabase tests
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'https://test.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'test-anon-key';
 process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service-role-key';
+
+// Mock analytics and external service calls
+jest.mock('@/features/analytics/lib/auth-analytics', () => ({
+  AuthAnalytics: {
+    sendToExternalService: jest.fn().mockResolvedValue(undefined),
+    trackAuthEvent: jest.fn().mockResolvedValue(undefined),
+    trackBiometricEvent: jest.fn().mockResolvedValue(undefined),
+    trackDeviceFlowEvent: jest.fn().mockResolvedValue(undefined),
+    trackPasswordResetEvent: jest.fn().mockResolvedValue(undefined),
+    trackSecurityEvent: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('@/lib/core/services/analytics/lib/auth-analytics', () => ({
+  AuthAnalytics: {
+    sendToExternalService: jest.fn().mockResolvedValue(undefined),
+    trackAuthEvent: jest.fn().mockResolvedValue(undefined),
+    trackBiometricEvent: jest.fn().mockResolvedValue(undefined),
+    trackDeviceFlowEvent: jest.fn().mockResolvedValue(undefined),
+    trackPasswordResetEvent: jest.fn().mockResolvedValue(undefined),
+    trackSecurityEvent: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+// Mock rate limiter to prevent undefined promise errors
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn().mockResolvedValue({
+      allowed: true,
+      remaining: 50,
+      resetTime: Date.now() + 900000,
+      totalHits: 1,
+    }),
+    getViolationsForIP: jest.fn().mockResolvedValue([]),
+    getAllViolations: jest.fn().mockResolvedValue([]),
+    getMetrics: jest.fn().mockResolvedValue({
+      totalViolations: 0,
+      violationsByIP: new Map(),
+      violationsByEndpoint: new Map(),
+      violationsLastHour: 0,
+      topViolatingIPs: [],
+    }),
+    clearRateLimit: jest.fn().mockResolvedValue(true),
+    getRateLimitStatus: jest.fn().mockResolvedValue(null),
+  },
+}));
 
 type SupabaseOp = 'select' | 'insert' | 'update' | 'delete' | 'rpc';
 

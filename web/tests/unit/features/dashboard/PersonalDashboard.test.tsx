@@ -421,8 +421,10 @@ describe('PersonalDashboard', () => {
 
     render(<PersonalDashboard />);
 
-    expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
-    expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
+      expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    });
   });
 });
