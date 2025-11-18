@@ -32,9 +32,6 @@ export default function PollsPage() {
     setFilters,
     setTrendingOnly,
     setCurrentPage,
-    setSearchQuery,
-    searchPolls,
-    clearSearch,
   } = usePollsActions();
 
   const initializedRef = useRef(false);
