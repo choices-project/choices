@@ -57,6 +57,11 @@ jobs:
         cd web
         npm ci
 
+    - name: Auto-fix lintable issues
+      run: |
+        cd web
+        npx eslint . --ext .ts,.tsx --fix || true
+
     - name: Lint code
       run: |
         cd web

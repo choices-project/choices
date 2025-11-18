@@ -152,7 +152,7 @@ export default function CommunityPollSelection() {
         };
       })
       .sort((a, b) => (a.week < b.week ? 1 : -1));
-  }, [pollSuggestions]);
+  }, [pollSuggestions, formatWeek]);
 
   const categories = useMemo(() => {
     const derived = pollSuggestions.reduce<Record<string, { id: string; name: string; icon: string; color: string }>>(
@@ -209,7 +209,7 @@ export default function CommunityPollSelection() {
     }
   };
 
-  const formatWeek = (dateString: string) => {
+  const formatWeek = useCallback((dateString: string) => {
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) {
       return t('polls.community.week.current');
@@ -218,7 +218,7 @@ export default function CommunityPollSelection() {
     weekStart.setDate(date.getDate() - date.getDay());
     const isoDate = weekStart.toISOString().split('T')[0];
     return isoDate ?? t('polls.community.week.current');
-  };
+  }, [t]);
 
   const renderTrendingView = () => (
     <div className="space-y-6">

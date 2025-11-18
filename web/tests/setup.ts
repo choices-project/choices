@@ -18,8 +18,11 @@ process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-jwt-secret-for-unit-tes
 
 // Defer loading MSW server until runtime to avoid top-level transform issues.
 let authServer: any = {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   listen: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   close: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   resetHandlers: () => {}
 };
 
@@ -33,7 +36,7 @@ beforeAll(async () => {
     }
   } catch (err) {
     // Fail fast: MSW server is required for tests that depend on handlers.
-    // eslint-disable-next-line no-console
+     
     console.error('Failed to import ./msw/server in tests/setup. MSW handlers are required: ', (err as Error)?.message ?? err);
     throw err; // ensure CI/test run fails loudly so you can fix missing file/config
   }
