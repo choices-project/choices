@@ -327,8 +327,8 @@ jest.mock('@/lib/core/services/analytics/lib/auth-analytics', () => ({
 }));
 
 // Mock rate limiter to prevent undefined promise errors
-// Use a shared mock object to ensure consistency across different import paths
-const apiRateLimiterMock = {
+// Use a factory function to avoid out-of-scope variable references in jest.mock
+const createApiRateLimiter = () => ({
   apiRateLimiter: {
     checkLimit: jest.fn().mockResolvedValue({
       allowed: true,
@@ -348,11 +348,12 @@ const apiRateLimiterMock = {
     clearRateLimit: jest.fn().mockResolvedValue(true),
     getRateLimitStatus: jest.fn().mockResolvedValue(null),
   },
-};
+});
 
-jest.mock('@/lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
-jest.mock('lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
-jest.mock('../../lib/rate-limiting/api-rate-limiter', () => apiRateLimiterMock);
+// Use inline factories (no out-of-scope variable captured by the jest.mock factory)
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
+jest.mock('lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
+jest.mock('../../lib/rate-limiting/api-rate-limiter', () => createApiRateLimiter());
 
 type SupabaseOp = 'select' | 'insert' | 'update' | 'delete' | 'rpc';
 
