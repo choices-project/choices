@@ -75,7 +75,6 @@ export default function TrendsChart({
   const summarySectionId = useId();
   const cardHeadingId = useId();
   const chartDescriptionId = useId();
-  const chartAxesDescriptionId = useId();
   const chartRegionId = useId();
   const isMobile = useIsMobile();
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
@@ -303,20 +302,6 @@ export default function TrendsChart({
       maxVelocity: Math.max(...velocity),
     };
   }, [data]);
-
-  const chartAxesDescription = useMemo(() => {
-    if (!axisStats) {
-      return '';
-    }
-    return t('analytics.trends.chart.axesDescription', {
-      startDate: formatDate(axisStats.startDate ?? ''),
-      endDate: formatDate(axisStats.endDate ?? ''),
-      minVotes: formatNumber(axisStats.minVotes),
-      maxVotes: formatNumber(axisStats.maxVotes),
-      minParticipation: formatPercent(axisStats.minParticipation),
-      maxParticipation: formatPercent(axisStats.maxParticipation),
-    });
-  }, [axisStats, formatDate, formatNumber, formatPercent, t]);
 
   useEffect(() => {
     void fetchTrends(defaultRange, {
