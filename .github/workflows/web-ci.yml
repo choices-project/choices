@@ -105,6 +105,10 @@ jobs:
       - name: Contract tests
         run: npm run test:contracts
 
+      - name: Install root dependencies
+        working-directory: ..
+        run: npm ci --ignore-scripts
+
       - name: Governance check
         working-directory: ..
         run: npm run governance:check
