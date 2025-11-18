@@ -8,10 +8,10 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
  * @fileoverview Modern Supabase Authentication Login Action
- * 
+ *
  * Implementation using Supabase native authentication.
  * Handles user login with email and password validation.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -31,7 +31,7 @@ export async function loginAction(formData: FormData) {
 
   // Get Supabase client
   const supabase = await getSupabaseServerClient();
-  
+
   if (!supabase) {
     throw new Error('Supabase client not available');
   }
@@ -51,13 +51,13 @@ export async function loginAction(formData: FormData) {
     throw new Error('Authentication failed');
   }
 
-  logger.info('User authenticated successfully', { 
+  logger.info('User authenticated successfully', {
     userId: authData.user.id,
     email: authData.user.email,
     hasSession: !!authData.session,
     sessionExpiresAt: authData.session?.expires_at,
   });
-  
+
   // Verify session cookies will be set
   if (!authData.session) {
     logger.error('No session returned from authentication', { userId: authData.user.id });
@@ -66,7 +66,7 @@ export async function loginAction(formData: FormData) {
 
   // Explicitly set session cookies for server actions
   // Supabase SSR should handle this via cookie adapter, but we ensure it works
-  // We set both the Supabase SSR cookie names AND the custom names for compatibility
+  // Supabase SSR stores the session as JSON in a cookie named sb-{project-ref}-auth-token
   try {
     const cookieStore = cookies()
     const isProduction = process.env.NODE_ENV === 'production'
@@ -76,12 +76,25 @@ export async function loginAction(formData: FormData) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default'
     
-    // Supabase SSR uses these cookie names
-    const ssrAccessTokenName = `sb-${projectRef}-auth-token`
-    const ssrRefreshTokenName = `sb-${projectRef}-auth-token.refresh`
+    // Supabase SSR uses this cookie name and stores the entire session as JSON
+    const ssrAuthTokenName = `sb-${projectRef}-auth-token`
+    
+    // Store the entire session object as JSON (what Supabase SSR expects)
+    const sessionData = JSON.stringify({
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
+      expires_in: authData.session.expires_in,
+      expires_at: authData.session.expires_at,
+      token_type: authData.session.token_type,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email,
+        // Include other user fields that might be needed
+      },
+    })
 
-    // Set Supabase SSR cookie names (what createServerClient expects)
-    cookieStore.set(ssrAccessTokenName, authData.session.access_token, {
+    // Set Supabase SSR cookie (what createServerClient expects)
+    cookieStore.set(ssrAuthTokenName, sessionData, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
@@ -89,15 +102,7 @@ export async function loginAction(formData: FormData) {
       maxAge: maxAge,
     })
 
-    cookieStore.set(ssrRefreshTokenName, authData.session.refresh_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: maxAge,
-    })
-
-    // Also set custom cookie names for API route compatibility
+    // Also set individual token cookies for API route compatibility
     cookieStore.set('sb-access-token', authData.session.access_token, {
       httpOnly: true,
       secure: isProduction,
@@ -116,11 +121,11 @@ export async function loginAction(formData: FormData) {
 
     logger.info('Session cookies set explicitly', {
       userId: authData.user.id,
-      ssrAccessTokenName,
-      ssrRefreshTokenName,
+      ssrAuthTokenName,
       hasAccessToken: !!authData.session.access_token,
       hasRefreshToken: !!authData.session.refresh_token,
       secure: isProduction,
+      sessionExpiresAt: authData.session.expires_at,
     })
   } catch (cookieError) {
     logger.error('Failed to set session cookies', {
@@ -129,7 +134,7 @@ export async function loginAction(formData: FormData) {
     })
     // Don't throw - Supabase SSR might have set them via adapter
   }
-  
+
   // Check if user has completed onboarding based on key fields
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
@@ -144,15 +149,15 @@ export async function loginAction(formData: FormData) {
 
   // Supabase automatically sets session cookies
   // No need for manual session management
-  
+
   // Check onboarding completion based on presence of key fields
   const isOnboardingCompleted = !!(
-    profile?.demographics && 
-    profile?.primary_concerns && 
+    profile?.demographics &&
+    profile?.primary_concerns &&
     profile?.community_focus &&
     profile?.participation_style
   );
-  
+
   // Redirect based on onboarding status
   if (isOnboardingCompleted) {
     logger.info('User has completed onboarding, redirecting to dashboard');
