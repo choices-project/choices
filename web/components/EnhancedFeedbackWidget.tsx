@@ -53,7 +53,15 @@ const createDefaultUserJourney = (): UserJourney => {
       screenResolution: 'unknown',
       viewportSize: 'unknown',
       timeOnPage: 0,
-      sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+      sessionId: (() => {
+        // Use cryptographically secure random number generator
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+          const array = new Uint8Array(11);
+          crypto.getRandomValues(array);
+          return `anonymous_${Array.from(array, byte => byte.toString(36)).join('').slice(0, 11)}`;
+        }
+        return `anonymous_${Math.random().toString(36).slice(2)}`;
+      })(),
       sessionStartTime: now,
       totalPageViews: 0,
       activeFeatures: [],
@@ -86,7 +94,15 @@ const createDefaultUserJourney = (): UserJourney => {
     screenResolution: `${window.screen.width}x${window.screen.height}`,
     viewportSize: `${window.innerWidth}x${window.innerHeight}`,
     timeOnPage: 0,
-    sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+    sessionId: (() => {
+      // Use cryptographically secure random number generator
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(11);
+        crypto.getRandomValues(array);
+        return `anonymous_${Array.from(array, byte => byte.toString(36)).join('').slice(0, 11)}`;
+      }
+      return `anonymous_${Math.random().toString(36).slice(2)}`;
+    })(),
     sessionStartTime: now,
     totalPageViews: 0,
     activeFeatures: [],

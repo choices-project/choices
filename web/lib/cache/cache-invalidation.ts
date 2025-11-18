@@ -348,16 +348,23 @@ export class CacheInvalidationManager {
     let expandedPattern = pattern
 
     // Replace common placeholders
-    // Note: Only replaces the FIRST occurrence of '*'
-    // Multiple wildcards in same pattern need sequential replacement
+    // Use global replace to handle all occurrences
+    // Escape special regex characters in replacement values
+    const escapeRegex = (str: string): string => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+    
     if (data.poll_id) {
-      expandedPattern = expandedPattern.replace(/\*/, data.poll_id)
+      const escapedPollId = escapeRegex(String(data.poll_id));
+      expandedPattern = expandedPattern.replace(/\*/g, escapedPollId);
     }
     if (data.user_id) {
-      expandedPattern = expandedPattern.replace(/\*/, data.user_id)
+      const escapedUserId = escapeRegex(String(data.user_id));
+      expandedPattern = expandedPattern.replace(/\*/g, escapedUserId);
     }
     if (data.category) {
-      expandedPattern = expandedPattern.replace(/\*/, data.category)
+      const escapedCategory = escapeRegex(String(data.category));
+      expandedPattern = expandedPattern.replace(/\*/g, escapedCategory);
     }
 
     return expandedPattern
@@ -371,15 +378,22 @@ export class CacheInvalidationManager {
       let expandedTag = tag
 
       // Replace placeholders with actual values
-      // Only replaces first occurrence - for multiple wildcards, use {poll_id}, {user_id} syntax
+      // Use global replace and escape special regex characters
+      const escapeRegex = (str: string): string => {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      };
+      
       if (data.poll_id) {
-        expandedTag = expandedTag.replace(/\*/, data.poll_id)
+        const escapedPollId = escapeRegex(String(data.poll_id));
+        expandedTag = expandedTag.replace(/\*/g, escapedPollId);
       }
       if (data.user_id) {
-        expandedTag = expandedTag.replace(/\*/, data.user_id)
+        const escapedUserId = escapeRegex(String(data.user_id));
+        expandedTag = expandedTag.replace(/\*/g, escapedUserId);
       }
       if (data.category) {
-        expandedTag = expandedTag.replace(/\*/, data.category)
+        const escapedCategory = escapeRegex(String(data.category));
+        expandedTag = expandedTag.replace(/\*/g, escapedCategory);
       }
 
       return expandedTag

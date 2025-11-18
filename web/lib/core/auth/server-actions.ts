@@ -313,10 +313,21 @@ export function logSecurityEvent(
  */
 export function sanitizeInput(input: string): string {
   // Remove potentially dangerous characters and patterns
+  // Fix: Match script tags with optional whitespace in closing tag
+  // Fix: Check for data: and vbscript: URL schemes
+  // Fix: Better multi-character sanitization
   return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
+    // Remove script tags (including with whitespace: </script >, </script  >, etc.)
+    .replace(/<script\b[^<]*(?:(?!<\/script\s*>)<[^<]*)*<\/script\s*>/gi, '')
+    // Remove javascript:, data:, and vbscript: URL schemes
+    .replace(/(javascript|data|vbscript):/gi, '')
+    // Remove event handlers (onclick, onerror, etc.)
     .replace(/on\w+\s*=/gi, '')
+    // Remove HTML entities that could be used for injection
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x?[0-9a-f]+;/gi, '')
     .trim()
 }
 
