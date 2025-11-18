@@ -39,6 +39,12 @@ jest.mock('@/hooks/useI18n', () => ({
       if (key.includes('create.action') || key.includes('createAction') || key.includes('button.create') || key.includes('submit')) return 'Create action';
       if (key.includes('button') && (key.includes('create') || key.includes('submit'))) return 'Create action';
       if (key.includes('common.actions.cancel')) return 'Cancel';
+      // Validation error messages
+      if (key.includes('title') && key.includes('required')) return 'Title is required';
+      if (key.includes('title') && (key.includes('length') || key.includes('200'))) return 'Title must be 200 characters or less';
+      if (key.includes('description') && (key.includes('length') || key.includes('5000'))) return 'Description must be 5000 characters or less';
+      if (key.includes('signatures') && (key.includes('required') || key.includes('range'))) return 'Target signatures is required';
+      if (key.includes('end.date') && (key.includes('future') || key.includes('past'))) return 'End date must be in the future';
       // Default: return key for debugging
       return key;
     },

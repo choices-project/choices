@@ -1052,6 +1052,10 @@
             "allowComments": {
               "label": "Allow comments",
               "description": "Collect qualitative feedback alongside quantitative votes."
+            },
+            "preventDuplicateVotes": {
+              "label": "Prevent duplicate votes",
+              "description": "Block users from voting multiple times on the same poll."
             }
           },
           "privacy": {
