@@ -1959,6 +1959,263 @@
         "continue": "Continuar",
         "reminder": "Siempre podrás agregar esta información más adelante"
       }
+    },
+    "profile": {
+      "test": {
+        "title": "Configuración de Perfil",
+        "subtitle": "Configura la información de tu perfil"
+      },
+      "overview": {
+        "title": "Configura Tu Perfil",
+        "subtitle": "Ayúdanos a personalizar tu experiencia mientras mantienes el control. **Todo es opcional** - puedes omitir cualquier paso o cambiar la configuración más tarde.",
+        "whyWeAsk": "**Por qué lo pedimos:** Tu perfil nos ayuda a mostrarte candidatos y temas relevantes, pero nunca compartimos tu información personal. Tu privacidad está protegida con cifrado de extremo a extremo.",
+        "cards": {
+          "profile": {
+            "title": "Perfil",
+            "description": "Establece tu nombre para mostrar y la visibilidad de tu perfil",
+            "features": {
+              "chooseName": "Elegir nombre para mostrar",
+              "setVisibility": "Establecer nivel de visibilidad",
+              "controlPrivacy": "Controlar la privacidad"
+            }
+          },
+          "visibility": {
+            "title": "Visibilidad",
+            "description": "Controla quién puede ver tu perfil y actividad",
+            "features": {
+              "public": "Perfiles públicos",
+              "private": "Opciones privadas",
+              "anonymous": "Votación anónima"
+            }
+          },
+          "notifications": {
+            "title": "Notificaciones",
+            "description": "Elige cómo quieres ser notificado",
+            "features": {
+              "email": "Notificaciones por correo",
+              "push": "Notificaciones push",
+              "custom": "Preferencias personalizadas"
+            }
+          }
+        }
+      },
+      "profile": {
+        "title": "Tu Perfil",
+        "subtitle": "Configura la información básica de tu perfil",
+        "cardTitle": "Información del Perfil",
+        "cardDescription": "Esta información será visible para otros usuarios según tu configuración de privacidad"
+      },
+      "fields": {
+        "displayName": {
+          "label": "Nombre para Mostrar (Opcional)",
+          "placeholder": "Ingresa tu nombre para mostrar o déjalo en blanco",
+          "error": "El nombre para mostrar es obligatorio",
+          "howWeUse": "**Cómo lo usamos:** Muestra tu nombre cuando haces preguntas a candidatos o comentas sobre temas. Puedes usar tu nombre real, un seudónimo o dejarlo en blanco para permanecer anónimo."
+        },
+        "visibility": {
+          "label": "Visibilidad del Perfil",
+          "howWeUse": "**Cómo lo usamos:** Controla quién puede ver tu perfil y actividad. Elige lo que te resulte cómodo - siempre puedes cambiar esto más tarde."
+        }
+      },
+      "visibility": {
+        "public": "Público",
+        "public.description": "Cualquiera puede ver tu perfil y actividad",
+        "public.badge": "Más Social",
+        "friendsOnly": "Solo Amigos",
+        "friendsOnly.description": "Solo las personas con las que te conectas pueden ver tu perfil",
+        "friendsOnly.badge": "Equilibrado",
+        "private": "Privado",
+        "private.description": "Solo tú puedes ver los detalles de tu perfil",
+        "private.badge": "Privado",
+        "anonymous": "Anónimo",
+        "anonymous.description": "Vota y participa sin revelar tu identidad",
+        "anonymous.badge": "Más Privado"
+      },
+      "preferences": {
+        "title": "Preferencias de Notificaciones",
+        "subtitle": "Elige cómo quieres mantenerte actualizado",
+        "cardTitle": "Configuración de Notificaciones",
+        "cardDescription": "Controla cómo y cuándo recibes notificaciones",
+        "whyWeOffer": "**Por qué ofrecemos notificaciones:** Mantente actualizado sobre desarrollos políticos importantes, respuestas de candidatos a tus preguntas y nuevas funciones que te ayudan a participar en la democracia.",
+        "email": {
+          "label": "Notificaciones por Correo (Opcional)",
+          "description": "Recibe actualizaciones sobre respuestas de candidatos, noticias electorales y actualizaciones de la plataforma"
+        },
+        "push": {
+          "label": "Notificaciones del Navegador (Opcional)",
+          "description": "Recibe alertas en tiempo real cuando los candidatos respondan a tus preguntas"
+        },
+        "whatYoullReceive": {
+          "title": "Lo que recibirás:",
+          "candidateResponses": "Respuestas de candidatos a tus preguntas",
+          "campaignFinance": "Actualizaciones sobre transparencia en financiamiento de campañas",
+          "newCandidates": "Nuevos candidatos en tu área",
+          "electionDeadlines": "Fechas límite y eventos electorales importantes",
+          "platformUpdates": "Actualizaciones de la plataforma y nuevas funciones"
+        }
+      },
+      "complete": {
+        "title": "Resumen del Perfil",
+        "subtitle": "Revisa tu perfil y configuración de notificaciones",
+        "cardTitle": "Tu Configuración",
+        "displayName": "Nombre para Mostrar",
+        "notSet": "No establecido",
+        "visibility": "Visibilidad del Perfil",
+        "emailNotifications": "Notificaciones por Correo",
+        "pushNotifications": "Notificaciones Push",
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado"
+      },
+      "actions": {
+        "startSetup": "Comenzar Configuración",
+        "skip": "Omitir por ahora - Lo configuraré más tarde",
+        "back": "Volver",
+        "nextNotifications": "Siguiente: Notificaciones",
+        "reviewSettings": "Revisar Configuración",
+        "completeSetup": "Completar Configuración",
+        "continue": "Continuar"
+      }
+    },
+    "auth": {
+      "test": {
+        "title": "Configuración de Autenticación",
+        "subtitle": "Elige tu método de autenticación"
+      },
+      "overview": {
+        "title": "Protege Tu Cuenta",
+        "subtitle": "Elige cómo te gustaría autenticarte. Siempre puedes cambiar esto más tarde.",
+        "continueWith": "Continuar con {method}"
+      },
+      "setup": {
+        "title": "Configurar Autenticación",
+        "subtitle": "Completa la configuración de autenticación"
+      },
+      "options": {
+        "ariaLabel": "Seleccionar método de autenticación {method}",
+        "email": {
+          "title": "Correo",
+          "description": "Inicio de sesión seguro con verificación por correo",
+          "bullets": {
+            "noPassword": "No se necesita contraseña",
+            "magicLink": "Inicio de sesión con enlace mágico",
+            "secure": "Verificación segura"
+          }
+        },
+        "social": {
+          "title": "Inicio de Sesión Social",
+          "description": "Inicia sesión con Google o GitHub",
+          "bullets": {
+            "oneClick": "Inicio de sesión con un clic",
+            "trusted": "Proveedores confiables",
+            "enhanced": "Seguridad mejorada"
+          }
+        },
+        "webauthn": {
+          "title": "Clave de Acceso",
+          "description": "Autenticación biométrica segura",
+          "bullets": {
+            "biometric": "Huella dactilar/Reconocimiento facial",
+            "noPassword": "Sin contraseñas",
+            "maximum": "Máxima seguridad"
+          }
+        },
+        "anonymous": {
+          "title": "Anónimo",
+          "description": "Vota sin crear una cuenta",
+          "bullets": {
+            "noPersonal": "Sin información personal",
+            "maximum": "Máxima privacidad",
+            "limited": "Funciones limitadas"
+          }
+        },
+        "skip": {
+          "title": "Omitir por Ahora",
+          "description": "Configurar autenticación más tarde",
+          "bullets": {
+            "continue": "Continuar incorporación",
+            "setupLater": "Configurar más tarde",
+            "limited": "Acceso limitado"
+          }
+        }
+      },
+      "email": {
+        "cardTitle": "Autenticación por Correo",
+        "cardDescription": "Te enviaremos un enlace de inicio de sesión seguro",
+        "fields": {
+          "email": {
+            "label": "Dirección de Correo",
+            "placeholder": "tu@correo.com"
+          }
+        },
+        "validation": {
+          "required": "Por favor ingresa tu dirección de correo"
+        },
+        "errors": {
+          "sendFailed": "No se pudo enviar el correo de verificación"
+        },
+        "success": {
+          "checkEmail": "¡Revisa tu correo para el enlace de inicio de sesión!",
+          "sent": "Hemos enviado un enlace de inicio de sesión seguro a tu dirección de correo."
+        },
+        "actions": {
+          "sending": "Enviando...",
+          "sendLink": "Enviar Enlace de Inicio de Sesión"
+        }
+      },
+      "social": {
+        "google": "Google",
+        "github": "GitHub",
+        "cardTitle": "Autenticación Social",
+        "cardDescription": "Elige tu proveedor de inicio de sesión social preferido",
+        "actions": {
+          "continueWithGoogle": "Continuar con Google",
+          "continueWithGitHub": "Continuar con GitHub"
+        },
+        "errors": {
+          "signInFailed": "No se pudo iniciar sesión con {provider}"
+        }
+      },
+      "webauthn": {
+        "cardTitle": "Autenticación con Clave de Acceso",
+        "cardDescription": "Configura autenticación biométrica segura",
+        "benefits": {
+          "title": "Seguro y Conveniente",
+          "biometric": "Usa tu huella dactilar o reconocimiento facial",
+          "noPassword": "No hay contraseñas que recordar",
+          "crossDevice": "Funciona en todos tus dispositivos",
+          "maximum": "Máxima seguridad con privacidad"
+        },
+        "actions": {
+          "create": "Crear Clave de Acceso"
+        },
+        "success": {
+          "registered": "¡Clave de acceso registrada exitosamente!",
+          "canUse": "Ahora puedes usar tu autenticación biométrica para iniciar sesión."
+        }
+      },
+      "anonymous": {
+        "cardTitle": "Acceso Anónimo",
+        "cardDescription": "Puedes votar de forma anónima sin crear una cuenta",
+        "limitations": {
+          "title": "Funciones Limitadas",
+          "noPolls": "No se pueden crear encuestas",
+          "noPreferences": "No se pueden guardar preferencias",
+          "limitedAnalytics": "Acceso limitado a análisis",
+          "noResearch": "No se puede participar en investigaciones"
+        },
+        "actions": {
+          "continue": "Continuar de Forma Anónima"
+        }
+      },
+      "errors": {
+        "unexpected": "Ocurrió un error inesperado. Por favor intenta de nuevo.",
+        "serviceUnavailable": "Servicio de autenticación no disponible",
+        "dismiss": "Descartar"
+      },
+      "actions": {
+        "continue": "Continuar",
+        "back": "Volver"
+      }
     }
   },
   "polls": {

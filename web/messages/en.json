@@ -790,6 +790,263 @@
         "continue": "Continue",
         "reminder": "You can always add this information later"
       }
+    },
+    "profile": {
+      "test": {
+        "title": "Profile Setup",
+        "subtitle": "Set up your profile information"
+      },
+      "overview": {
+        "title": "Set Up Your Profile",
+        "subtitle": "Help us personalize your experience while keeping you in control. **Everything is optional** - you can skip any step or change settings later.",
+        "whyWeAsk": "**Why we ask:** Your profile helps us show you relevant candidates and issues, but we never share your personal information. Your privacy is protected with end-to-end encryption.",
+        "cards": {
+          "profile": {
+            "title": "Profile",
+            "description": "Set your display name and profile visibility",
+            "features": {
+              "chooseName": "Choose display name",
+              "setVisibility": "Set visibility level",
+              "controlPrivacy": "Control privacy"
+            }
+          },
+          "visibility": {
+            "title": "Visibility",
+            "description": "Control who can see your profile and activity",
+            "features": {
+              "public": "Public profiles",
+              "private": "Private options",
+              "anonymous": "Anonymous voting"
+            }
+          },
+          "notifications": {
+            "title": "Notifications",
+            "description": "Choose how you want to be notified",
+            "features": {
+              "email": "Email notifications",
+              "push": "Push notifications",
+              "custom": "Custom preferences"
+            }
+          }
+        }
+      },
+      "profile": {
+        "title": "Your Profile",
+        "subtitle": "Set up your basic profile information",
+        "cardTitle": "Profile Information",
+        "cardDescription": "This information will be visible to other users based on your privacy settings"
+      },
+      "fields": {
+        "displayName": {
+          "label": "Display Name (Optional)",
+          "placeholder": "Enter your display name or leave blank",
+          "error": "Display name is required",
+          "howWeUse": "**How we use this:** Shows your name when you ask questions to candidates or comment on issues. You can use your real name, a pseudonym, or leave it blank to stay anonymous."
+        },
+        "visibility": {
+          "label": "Profile Visibility",
+          "howWeUse": "**How we use this:** Controls who can see your profile and activity. Choose what feels comfortable for you - you can always change this later."
+        }
+      },
+      "visibility": {
+        "public": "Public",
+        "public.description": "Anyone can see your profile and activity",
+        "public.badge": "Most Social",
+        "friendsOnly": "Friends Only",
+        "friendsOnly.description": "Only people you connect with can see your profile",
+        "friendsOnly.badge": "Balanced",
+        "private": "Private",
+        "private.description": "Only you can see your profile details",
+        "private.badge": "Private",
+        "anonymous": "Anonymous",
+        "anonymous.description": "Vote and participate without revealing your identity",
+        "anonymous.badge": "Most Private"
+      },
+      "preferences": {
+        "title": "Notification Preferences",
+        "subtitle": "Choose how you want to stay updated",
+        "cardTitle": "Notification Settings",
+        "cardDescription": "Control how and when you receive notifications",
+        "whyWeOffer": "**Why we offer notifications:** Stay updated on important political developments, candidate responses to your questions, and new features that help you participate in democracy.",
+        "email": {
+          "label": "Email Notifications (Optional)",
+          "description": "Get updates about candidate responses, election news, and platform updates"
+        },
+        "push": {
+          "label": "Browser Notifications (Optional)",
+          "description": "Get real-time alerts when candidates respond to your questions"
+        },
+        "whatYoullReceive": {
+          "title": "What you'll receive:",
+          "candidateResponses": "Responses from candidates to your questions",
+          "campaignFinance": "Updates on campaign finance transparency",
+          "newCandidates": "New candidates in your area",
+          "electionDeadlines": "Important election deadlines and events",
+          "platformUpdates": "Platform updates and new features"
+        }
+      },
+      "complete": {
+        "title": "Profile Summary",
+        "subtitle": "Review your profile and notification settings",
+        "cardTitle": "Your Settings",
+        "displayName": "Display Name",
+        "notSet": "Not set",
+        "visibility": "Profile Visibility",
+        "emailNotifications": "Email Notifications",
+        "pushNotifications": "Push Notifications",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "actions": {
+        "startSetup": "Start Setup",
+        "skip": "Skip for now - I'll set this up later",
+        "back": "Back",
+        "nextNotifications": "Next: Notifications",
+        "reviewSettings": "Review Settings",
+        "completeSetup": "Complete Setup",
+        "continue": "Continue"
+      }
+    },
+    "auth": {
+      "test": {
+        "title": "Authentication Setup",
+        "subtitle": "Choose your authentication method"
+      },
+      "overview": {
+        "title": "Secure Your Account",
+        "subtitle": "Choose how you'd like to authenticate. You can always change this later.",
+        "continueWith": "Continue with {method}"
+      },
+      "setup": {
+        "title": "Set Up Authentication",
+        "subtitle": "Complete your authentication setup"
+      },
+      "options": {
+        "ariaLabel": "Select {method} authentication method",
+        "email": {
+          "title": "Email",
+          "description": "Secure login with email verification",
+          "bullets": {
+            "noPassword": "No password needed",
+            "magicLink": "Magic link login",
+            "secure": "Secure verification"
+          }
+        },
+        "social": {
+          "title": "Social Login",
+          "description": "Sign in with Google or GitHub",
+          "bullets": {
+            "oneClick": "One-click login",
+            "trusted": "Trusted providers",
+            "enhanced": "Enhanced security"
+          }
+        },
+        "webauthn": {
+          "title": "Passkey",
+          "description": "Secure biometric authentication",
+          "bullets": {
+            "biometric": "Fingerprint/Face ID",
+            "noPassword": "No passwords",
+            "maximum": "Maximum security"
+          }
+        },
+        "anonymous": {
+          "title": "Anonymous",
+          "description": "Vote without creating an account",
+          "bullets": {
+            "noPersonal": "No personal info",
+            "maximum": "Maximum privacy",
+            "limited": "Limited features"
+          }
+        },
+        "skip": {
+          "title": "Skip for Now",
+          "description": "Set up authentication later",
+          "bullets": {
+            "continue": "Continue onboarding",
+            "setupLater": "Setup later",
+            "limited": "Limited access"
+          }
+        }
+      },
+      "email": {
+        "cardTitle": "Email Authentication",
+        "cardDescription": "We'll send you a secure login link",
+        "fields": {
+          "email": {
+            "label": "Email Address",
+            "placeholder": "your@email.com"
+          }
+        },
+        "validation": {
+          "required": "Please enter your email address"
+        },
+        "errors": {
+          "sendFailed": "Failed to send verification email"
+        },
+        "success": {
+          "checkEmail": "Check your email for the login link!",
+          "sent": "We've sent a secure login link to your email address."
+        },
+        "actions": {
+          "sending": "Sending...",
+          "sendLink": "Send Login Link"
+        }
+      },
+      "social": {
+        "google": "Google",
+        "github": "GitHub",
+        "cardTitle": "Social Authentication",
+        "cardDescription": "Choose your preferred social login provider",
+        "actions": {
+          "continueWithGoogle": "Continue with Google",
+          "continueWithGitHub": "Continue with GitHub"
+        },
+        "errors": {
+          "signInFailed": "Failed to sign in with {provider}"
+        }
+      },
+      "webauthn": {
+        "cardTitle": "Passkey Authentication",
+        "cardDescription": "Set up secure biometric authentication",
+        "benefits": {
+          "title": "Secure & Convenient",
+          "biometric": "Use your fingerprint or Face ID",
+          "noPassword": "No passwords to remember",
+          "crossDevice": "Works across all your devices",
+          "maximum": "Maximum security with privacy"
+        },
+        "actions": {
+          "create": "Create Passkey"
+        },
+        "success": {
+          "registered": "Passkey registered successfully!",
+          "canUse": "You can now use your biometric authentication to sign in."
+        }
+      },
+      "anonymous": {
+        "cardTitle": "Anonymous Access",
+        "cardDescription": "You can vote anonymously without creating an account",
+        "limitations": {
+          "title": "Limited Features",
+          "noPolls": "Cannot create polls",
+          "noPreferences": "Cannot save preferences",
+          "limitedAnalytics": "Limited access to analytics",
+          "noResearch": "Cannot participate in research"
+        },
+        "actions": {
+          "continue": "Continue Anonymously"
+        }
+      },
+      "errors": {
+        "unexpected": "An unexpected error occurred. Please try again.",
+        "serviceUnavailable": "Authentication service not available",
+        "dismiss": "Dismiss"
+      },
+      "actions": {
+        "continue": "Continue",
+        "back": "Back"
+      }
     }
   },
   "polls": {
