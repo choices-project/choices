@@ -173,7 +173,17 @@ test.describe('@smoke Critical user journeys', () => {
       readySelector: '[data-testid="push-notifications-harness"]',
       readyTimeout: 40_000, // Increase for this harness
     });
-    await expect(page.getByTestId('notification-preferences')).toBeVisible();
+    
+    // Wait for stores to hydrate if needed
+    await page.waitForFunction(
+      () => {
+        const element = document.querySelector('[data-testid="push-notifications-harness"]');
+        return element !== null && !element.textContent?.includes('Preparing');
+      },
+      { timeout: 40_000 }
+    );
+    
+    await expect(page.getByTestId('notification-preferences')).toBeVisible({ timeout: 10_000 });
 
     await page.evaluate(async () => {
       await window.__pushNotificationsHarness?.subscribe();

@@ -2628,6 +2628,72 @@
           "message": "Intenta ajustar tu búsqueda o criterios de filtro",
           "clearFilters": "Limpiar Filtros"
         }
+      },
+      "community": {
+        "title": "Selección de Encuestas de la Comunidad",
+        "subtitle": "Ve qué encuestas quiere la comunidad y cómo seleccionamos las encuestas destacadas",
+        "week": {
+          "select": "Seleccionar Semana",
+          "current": "Semana Actual",
+          "last": "Semana Pasada",
+          "twoWeeksAgo": "Hace Dos Semanas",
+          "threeWeeksAgo": "Hace Tres Semanas"
+        },
+        "tabs": {
+          "trending": "Sugerencias en Tendencia",
+          "selected": "Encuestas Seleccionadas",
+          "analytics": "Análisis"
+        },
+        "selection": {
+          "title": "Cómo Seleccionamos las Encuestas Destacadas",
+          "engagement": {
+            "title": "Participación de la Comunidad",
+            "highVotes": "Alto número de votos (500+ votos)",
+            "strongScore": "Puntuación de tendencia fuerte (70+)",
+            "activeDiscussion": "Discusión y compartir activos"
+          },
+          "platform": {
+            "title": "Consideraciones de la Plataforma",
+            "costEffective": "Económico de implementar",
+            "broadAppeal": "Atractivo demográfico amplio",
+            "timelyContent": "Contenido oportuno y relevante"
+          }
+        },
+        "trending": {
+          "title": "Sugerencias de Encuestas en Tendencia"
+        },
+        "suggestion": {
+          "suggestedBy": "Sugerida por {name}",
+          "votes": "{count, plural, one {# voto} other {# votos}}",
+          "cost": "costo {level}",
+          "engagement": "participación {level}"
+        },
+        "actions": {
+          "vote": "Votar",
+          "approve": "Aprobar"
+        },
+        "selected": {
+          "weekOf": "Semana del {week}",
+          "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
+          "criteria": {
+            "title": "Criterios de Selección"
+          },
+          "polls": {
+            "title": "Encuestas Seleccionadas",
+            "votes": "{count, plural, one {# voto} other {# votos}}",
+            "featured": "Destacada",
+            "liveNow": "En Vivo Ahora"
+          }
+        },
+        "analytics": {
+          "totalSuggestions": "Total de Sugerencias",
+          "currentlyPublished": "Actualmente publicadas",
+          "communityVotes": "Votos de la Comunidad",
+          "acrossFeatured": "En encuestas destacadas",
+          "featuredPolls": "Encuestas Destacadas",
+          "thisWeek": "Esta semana",
+          "categoryBreakdown": "Desglose por Categoría"
+        }
       }
     }
   },

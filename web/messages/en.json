@@ -1459,6 +1459,72 @@
           "message": "Try adjusting your search or filter criteria",
           "clearFilters": "Clear Filters"
         }
+      },
+      "community": {
+        "title": "Community Poll Selection",
+        "subtitle": "See what polls the community wants and how we select featured polls",
+        "week": {
+          "select": "Select Week",
+          "current": "Current Week",
+          "last": "Last Week",
+          "twoWeeksAgo": "Two Weeks Ago",
+          "threeWeeksAgo": "Three Weeks Ago"
+        },
+        "tabs": {
+          "trending": "Trending Suggestions",
+          "selected": "Selected Polls",
+          "analytics": "Analytics"
+        },
+        "selection": {
+          "title": "How We Select Featured Polls",
+          "engagement": {
+            "title": "Community Engagement",
+            "highVotes": "High vote count (500+ votes)",
+            "strongScore": "Strong trending score (70+)",
+            "activeDiscussion": "Active discussion and sharing"
+          },
+          "platform": {
+            "title": "Platform Considerations",
+            "costEffective": "Cost-effective to implement",
+            "broadAppeal": "Broad demographic appeal",
+            "timelyContent": "Timely and relevant content"
+          }
+        },
+        "trending": {
+          "title": "Trending Poll Suggestions"
+        },
+        "suggestion": {
+          "suggestedBy": "Suggested by {name}",
+          "votes": "{count, plural, one {# vote} other {# votes}}",
+          "cost": "{level} cost",
+          "engagement": "{level} engagement"
+        },
+        "actions": {
+          "vote": "Vote",
+          "approve": "Approve"
+        },
+        "selected": {
+          "weekOf": "Week of {week}",
+          "totalVotes": "{count, plural, one {# total vote} other {# total votes}}",
+          "criteria": {
+            "title": "Selection Criteria"
+          },
+          "polls": {
+            "title": "Selected Polls",
+            "votes": "{count, plural, one {# vote} other {# votes}}",
+            "featured": "Featured",
+            "liveNow": "Live Now"
+          }
+        },
+        "analytics": {
+          "totalSuggestions": "Total Suggestions",
+          "currentlyPublished": "Currently published",
+          "communityVotes": "Community Votes",
+          "acrossFeatured": "Across featured polls",
+          "featuredPolls": "Featured Polls",
+          "thisWeek": "This week",
+          "categoryBreakdown": "Category Breakdown"
+        }
       }
     }
   },

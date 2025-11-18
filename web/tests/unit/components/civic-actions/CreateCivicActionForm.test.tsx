@@ -25,6 +25,27 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
+jest.mock('@/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      // Return readable labels for common keys
+      if (key.includes('title') && key.includes('label')) return 'Title';
+      if (key.includes('description') && key.includes('label')) return 'Description';
+      if (key.includes('action.type') || key.includes('actionType')) return 'Action Type';
+      if (key.includes('urgency') || key.includes('urgencyLevel')) return 'Urgency Level';
+      if (key.includes('target.signatures') || key.includes('targetSignatures')) return 'Target Signatures';
+      if (key.includes('end.date') || key.includes('endDate')) return 'End Date';
+      if (key.includes('civics.actions.create.buttons.create') || key.includes('buttons.create')) return 'Create action';
+      if (key.includes('create.action') || key.includes('createAction') || key.includes('button.create') || key.includes('submit')) return 'Create action';
+      if (key.includes('button') && (key.includes('create') || key.includes('submit'))) return 'Create action';
+      if (key.includes('common.actions.cancel')) return 'Cancel';
+      // Default: return key for debugging
+      return key;
+    },
+    currentLanguage: 'en',
+  }),
+}));
+
 // Mock fetch
 const mockFetch = jest.fn();
 global.fetch = mockFetch as unknown as typeof global.fetch;
